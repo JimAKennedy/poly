@@ -369,7 +369,26 @@ TEST(GoldenDeterminism, EnvelopeBlockIndependence) {
         << "Envelope: 0.05 vs 2.0 PPQ blocks differ";
 }
 
-// --- Test 12: Envelope modulation deterministic across loop restarts ---
+// --- Test 12: Swing + humanize deterministic across block sizes ---
+TEST(GoldenDeterminism, SwingHumanizeBlockIndependence) {
+    poly::Engine engine;
+    auto state = makeTestState();
+
+    state.lanes[2].swingAmount = 0.5f;
+    state.lanes[2].humanizeMs = 5.0f;
+    state.lanes[0].noteDuration = 0.75f;
+
+    auto small  = renderSorted(engine, state, 0.0, 16.0, 0.05);
+    auto medium = renderSorted(engine, state, 0.0, 16.0, 0.5);
+    auto large  = renderSorted(engine, state, 0.0, 16.0, 2.0);
+
+    EXPECT_EQ(serialize(small), serialize(medium))
+        << "Swing/humanize: 0.05 vs 0.5 PPQ blocks differ";
+    EXPECT_EQ(serialize(small), serialize(large))
+        << "Swing/humanize: 0.05 vs 2.0 PPQ blocks differ";
+}
+
+// --- Test 13: Envelope modulation deterministic across loop restarts ---
 TEST(GoldenDeterminism, EnvelopeLoopRestart) {
     poly::Engine engine;
     auto state = makeTestState();
