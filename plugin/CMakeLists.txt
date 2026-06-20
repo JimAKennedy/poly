@@ -5,12 +5,22 @@ smtg_add_vst3plugin(poly_plugin
     source/controller.h
     source/controller.cpp
     source/plugids.h
+    source/ui/lane_grid_view.h
+    source/ui/lane_grid_view.cpp
+    source/ui/velocity_view.h
+    source/ui/velocity_view.cpp
+)
+
+smtg_target_add_plugin_resources(poly_plugin
+    RESOURCES
+        resource/poly.uidesc
 )
 
 target_link_libraries(poly_plugin
     PRIVATE
         poly_engine
         sdk
+        vstgui_support
 )
 
 if(APPLE)

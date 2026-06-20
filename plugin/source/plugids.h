@@ -43,6 +43,11 @@ static constexpr Steinberg::Vst::ParamID kMacroHumanize = 205;
 static constexpr Steinberg::Vst::ParamID kActiveLaneCount = 300;
 static constexpr Steinberg::Vst::ParamID kSeed = 301;
 
+static constexpr Steinberg::Vst::ParamID kVelocityOutputBase = 400;
+inline Steinberg::Vst::ParamID velocityOutput(int lane) {
+    return kVelocityOutputBase + static_cast<Steinberg::Vst::ParamID>(lane);
+}
+
 } // namespace ParamIDs
 
 } // namespace poly

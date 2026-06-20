@@ -162,7 +162,9 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(
         outputEvents->addEvent(ev);
     }
 
-    // Emit noteons and schedule noteoffs
+    // Emit noteons, schedule noteoffs, track per-lane velocity
+    float laneVelocity[kMaxLanes] = {};
+
     for (size_t i = 0; i < noteBuffer_.count; ++i) {
         const auto& note = noteBuffer_.events[i];
 
@@ -184,6 +186,26 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(
             .pitch = note.pitch,
             .channel = note.channel,
         });
+
+        if (note.channel >= 0 && note.channel < kMaxLanes) {
+            laneVelocity[note.channel] = note.velocity;
+        }
+    }
+
+    if (noteBuffer_.count > 0) {
+        if (auto* outParams = data.outputParameterChanges) {
+            for (int lane = 0; lane < kMaxLanes; ++lane) {
+                if (laneVelocity[lane] > 0.0f) {
+                    Steinberg::int32 idx;
+                    auto* queue = outParams->addParameterData(
+                        ParamIDs::velocityOutput(lane), idx);
+                    if (queue) {
+                        Steinberg::int32 ptIdx;
+                        queue->addPoint(0, laneVelocity[lane], ptIdx);
+                    }
+                }
+            }
+        }
     }
 
     return Steinberg::kResultOk;
