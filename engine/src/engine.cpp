@@ -1,4 +1,5 @@
 #include "poly/engine.h"
+#include "poly/envelope.h"
 #include "poly/euclidean.h"
 #include "poly/rng.h"
 
@@ -54,9 +55,48 @@ void Engine::renderRange(const TransportContext& tc,
 
             if (!pattern[static_cast<size_t>(cycleStep)]) continue;
 
-            // Probability gate: channel 0 = probability roll
+            // Envelope modulation: evaluate all active envelopes at this PPQ
+            float velMod = 1.0f;
+            float probMod = 0.0f;
+
+            for (int e = 0; e < cfg.envelopeCount; ++e) {
+                const auto& ea = cfg.envelopes[e];
+                if (!ea.active) continue;
+                const auto& env = ea.envelope;
+                double phase = computeEnvelopePhase(ppq, env.periodBars, env.phaseOffset);
+                float value = evaluateShape(env.shape, static_cast<float>(phase));
+                switch (env.target) {
+                case EnvTarget::Velocity:
+                    velMod *= (1.0f - env.depth * (1.0f - value));
+                    break;
+                case EnvTarget::Density:
+                    probMod += env.depth * (value * 2.0f - 1.0f);
+                    break;
+                default:
+                    break;
+                }
+            }
+
+            for (int e = 0; e < state.globalEnvelopeCount; ++e) {
+                const auto& env = state.globalEnvelopes[e];
+                double phase = computeEnvelopePhase(ppq, env.periodBars, env.phaseOffset);
+                float value = evaluateShape(env.shape, static_cast<float>(phase));
+                switch (env.target) {
+                case EnvTarget::Velocity:
+                    velMod *= (1.0f - env.depth * (1.0f - value));
+                    break;
+                case EnvTarget::Density:
+                    probMod += env.depth * (value * 2.0f - 1.0f);
+                    break;
+                default:
+                    break;
+                }
+            }
+
+            // Probability gate with density envelope modulation
+            float effectiveProb = std::clamp(cfg.probability + probMod, 0.0f, 1.0f);
             float probRoll = deterministicRand(state.seed, cfg.id, absStep, 0);
-            if (probRoll >= cfg.probability) continue;
+            if (probRoll >= effectiveProb) continue;
 
             // Velocity with spread: channel 1 = velocity variation
             float velBase = cfg.baseVelocity / 127.0f;
@@ -75,6 +115,9 @@ void Engine::renderRange(const TransportContext& tc,
             // Ghost floor: minimum velocity presence
             float ghostFloor = cfg.ghostFloor / 127.0f;
             if (vel < ghostFloor) vel = ghostFloor;
+
+            // Apply velocity envelope modulation
+            vel *= velMod;
 
             vel = std::clamp(vel, 0.0f, 1.0f);
 

@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-06-20T21:22:39Z | Files: 47 | Described: 0/47
-<!-- gsd:codebase-meta {"generatedAt":"2026-06-20T21:22:39Z","fingerprint":"d732315518aa1c37c4db2187877320292aaa97f5","fileCount":47,"truncated":false} -->
+Generated: 2026-06-20T21:28:35Z | Files: 48 | Described: 0/48
+<!-- gsd:codebase-meta {"generatedAt":"2026-06-20T21:28:35Z","fingerprint":"58b36bb851d093b37f0d27c7ee5f1f1272ab8bbe","fileCount":48,"truncated":false} -->
 
 ### (root)/
 - `.clang-format`
@@ -70,6 +70,7 @@ Generated: 2026-06-20T21:22:39Z | Files: 47 | Described: 0/47
 
 ### tests/
 - `tests/CMakeLists.txt`
+- `tests/dynamic_shaping_tests.cpp`
 - `tests/euclidean_tests.cpp`
 - `tests/golden_tests.cpp`
 
