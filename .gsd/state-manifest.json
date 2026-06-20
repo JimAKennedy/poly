@@ -1,0 +1,1668 @@
+{
+  "version": 1,
+  "exported_at": "2026-06-20T20:18:44.258Z",
+  "milestones": [
+    {
+      "id": "M001",
+      "title": "Definition and Architecture De-risking",
+      "status": "active",
+      "depends_on": [],
+      "created_at": "2026-06-20T19:29:14.412Z",
+      "completed_at": null,
+      "vision": "Lock the Cubase-first VST3 model, establish poly_engine isolation boundary, and prove deterministic timing before any feature work. An empty instrument loads in Cubase, the engine compiles without the VST3 SDK, and golden tests verify byte-identical output under transport stress.",
+      "success_criteria": [
+        "Empty VST3 instrument instantiates in Cubase without error",
+        "poly_engine compiles and passes tests with no VST3 SDK dependency",
+        "Engine harness produces deterministic event stream that is byte-identical under loop restart, tempo change, and position jump",
+        "Repository layout matches planned structure with engine/plugin/tests separation",
+        "Phase 0 documentation (PRD, engine-spec, Cubase workflow) complete"
+      ],
+      "key_risks": [
+        {
+          "risk": "VST3 note output and event routing semantics may not work as expected for MIDI-only instrument in Cubase",
+          "whyItMatters": "Cubase expects instruments to have a silent audio output bus; incorrect event routing would block all downstream work"
+        },
+        {
+          "risk": "Envelope phase drift across process blocks and loop boundaries",
+          "whyItMatters": "Determinism is a core product principle — if timing accumulates rather than deriving from absolute PPQ, output varies across loop restarts and the engine is fundamentally broken"
+        },
+        {
+          "risk": "CMake integration with Steinberg VST3 SDK may have undocumented constraints",
+          "whyItMatters": "The SDK ships its own CMake helpers (smtg_add_vst3plugin) that may conflict with project-level CMake conventions or C++20 flags"
+        }
+      ],
+      "proof_strategy": [
+        {
+          "riskOrUnknown": "VST3 MIDI-only instrument routing in Cubase",
+          "retireIn": "S01",
+          "whatWillBeProven": "Empty VST3 with silent audio bus loads and routes correctly in Cubase"
+        },
+        {
+          "riskOrUnknown": "Deterministic timing under transport stress",
+          "retireIn": "S03",
+          "whatWillBeProven": "Golden tests produce byte-identical event streams across loop restart, tempo ramp, and position jump scenarios"
+        },
+        {
+          "riskOrUnknown": "Engine isolation from VST3 SDK",
+          "retireIn": "S02",
+          "whatWillBeProven": "poly_engine static library compiles and runs its test suite with zero VST3 SDK headers or libraries"
+        }
+      ],
+      "verification_contract": "",
+      "verification_integration": "",
+      "verification_operational": "",
+      "verification_uat": "",
+      "definition_of_done": [],
+      "requirement_coverage": "Not provided.",
+      "boundary_map_markdown": "Not provided.",
+      "sequence": 0
+    },
+    {
+      "id": "M002",
+      "title": "Core Groove Engine MVP",
+      "status": "active",
+      "depends_on": [],
+      "created_at": "2026-06-20T19:29:17.825Z",
+      "completed_at": null,
+      "vision": "A musically useful polymetric groove generator with no ML. Lane-independent Euclidean rhythms with dynamics-first velocity shaping, superimposed multi-period envelopes, coherent macro controls, real-time-safe VST3 plugin integration, and a minimal but legible VSTGUI editor. The plugin is stable under start/stop, loop, and tempo changes in Cubase.",
+      "success_criteria": [
+        "Stable under start/stop, loop, and tempo change in Cubase",
+        "Repeatable output when randomness disabled (seed-deterministic)",
+        "Visible lane-to-audio correspondence in the UI",
+        "Audible velocity and emphasis variation across lanes",
+        "Patch save/load round-trips correctly with version stamp",
+        "No heap allocation, locks, exceptions, or I/O in process()"
+      ],
+      "key_risks": [
+        {
+          "risk": "Envelope-lane interaction complexity when multiple envelopes modulate same target",
+          "whyItMatters": "Stacking envelopes on velocity or density could produce degenerate output (all silent, all max) if combination logic is not carefully bounded"
+        },
+        {
+          "risk": "Real-time safety in VST3 process() with full engine running",
+          "whyItMatters": "Engine pre-allocation strategy must handle worst-case 8 lanes with multiple envelopes without any dynamic allocation in the audio callback"
+        },
+        {
+          "risk": "VSTGUI learning curve and .uidesc workflow",
+          "whyItMatters": "First VSTGUI project for the portfolio; editor development may take longer than estimated and block validation of the full plugin experience"
+        },
+        {
+          "risk": "Macro-to-parameter mapping coherence",
+          "whyItMatters": "If macros map as simple multiplies rather than coherent musical transformations, they will feel like generic knobs rather than compositional tools"
+        }
+      ],
+      "proof_strategy": [
+        {
+          "riskOrUnknown": "Envelope stacking produces musically valid output",
+          "retireIn": "S03",
+          "whatWillBeProven": "Golden tests verify bounded, non-degenerate output when multiple envelopes target the same parameter simultaneously"
+        },
+        {
+          "riskOrUnknown": "process() is real-time safe under full load",
+          "retireIn": "S05",
+          "whatWillBeProven": "Debug allocator hook confirms zero allocations in renderRange(); stress test with 8 lanes and max envelopes passes"
+        },
+        {
+          "riskOrUnknown": "Macro mapping feels musical, not mechanical",
+          "retireIn": "S04",
+          "whatWillBeProven": "Macro sweep golden tests show non-linear, musically coherent parameter evolution across the range"
+        }
+      ],
+      "verification_contract": "",
+      "verification_integration": "",
+      "verification_operational": "",
+      "verification_uat": "",
+      "definition_of_done": [],
+      "requirement_coverage": "Not provided.",
+      "boundary_map_markdown": "Not provided.",
+      "sequence": 0
+    },
+    {
+      "id": "M003",
+      "title": "Musical Refinement and Cubase Polish",
+      "status": "active",
+      "depends_on": [],
+      "created_at": "2026-06-20T19:29:22.573Z",
+      "completed_at": null,
+      "vision": "Turn the groove generator into a composition tool. Extended envelope system with full target set, scene/snapshot switching with morph, structural constraints that protect musical anchors, polished Cubase automation mapping, MIDI export workflow for composition integration, and phase/envelope interaction visualizations. The user can write a full rhythmic section while keeping structural anchors intact.",
+      "success_criteria": [
+        "User can write a full rhythmic section while keeping structural anchors intact",
+        "Multiple simultaneous envelopes per lane with full target set functional",
+        "Scene A/B switching and morph produces smooth musical transitions",
+        "Constraints protect structural elements (kick anchor, backbeat, density ranges)",
+        "MIDI capture/drag-to-track/freeze workflow functional in Cubase",
+        "Phase and envelope visualizations help users understand evolving polymetric structure"
+      ],
+      "key_risks": [
+        {
+          "risk": "Scene morph between arbitrary GrooveStates may produce non-musical intermediate states",
+          "whyItMatters": "Interpolating between two groove configurations could create transient rhythmic chaos unless the morph path is carefully constrained"
+        },
+        {
+          "risk": "Constraint interactions with envelope modulation create conflicting demands",
+          "whyItMatters": "An envelope pushing density down while a constraint demands minimum density creates a contradiction that needs a clear resolution policy"
+        },
+        {
+          "risk": "MIDI drag-to-track and freeze workflows depend on undocumented Cubase VST3 extension behavior",
+          "whyItMatters": "Cubase MIDI export interop may require reverse-engineering host-specific APIs not covered by the VST3 standard"
+        }
+      ],
+      "proof_strategy": [
+        {
+          "riskOrUnknown": "Scene morph musicality",
+          "retireIn": "S02",
+          "whatWillBeProven": "Morph between divergent scenes produces bounded, non-degenerate intermediate states in listening tests"
+        },
+        {
+          "riskOrUnknown": "Constraint-envelope interaction",
+          "retireIn": "S03",
+          "whatWillBeProven": "Resolution policy for conflicting constraint/envelope demands produces predictable, audible results"
+        },
+        {
+          "riskOrUnknown": "Cubase MIDI export interop",
+          "retireIn": "S05",
+          "whatWillBeProven": "At least one of drag-to-track or pattern export works in Cubase without host-specific hacks"
+        }
+      ],
+      "verification_contract": "",
+      "verification_integration": "",
+      "verification_operational": "",
+      "verification_uat": "",
+      "definition_of_done": [],
+      "requirement_coverage": "Not provided.",
+      "boundary_map_markdown": "Not provided.",
+      "sequence": 0
+    }
+  ],
+  "slices": [
+    {
+      "milestone_id": "M001",
+      "id": "S01",
+      "title": "S01",
+      "status": "complete",
+      "risk": "medium",
+      "depends": [],
+      "demo": "Empty VST3 plugin instantiates in Cubase without error; clean build with all warnings enabled",
+      "created_at": "2026-06-20T19:31:25.493Z",
+      "completed_at": "2026-06-20T19:52:24.861Z",
+      "full_summary_md": "---\nid: S01\nparent: M001\nmilestone: M001\nprovides:\n  - (none)\nrequires:\n  []\naffects:\n  []\nkey_files:\n  - CMakeLists.txt\n  - engine/CMakeLists.txt\n  - engine/include/poly/types.h\n  - engine/include/poly/engine.h\n  - engine/src/engine.cpp\n  - plugin/CMakeLists.txt\n  - plugin/source/factory.cpp\n  - plugin/source/plugids.h\n  - plugin/source/processor.h\n  - plugin/source/processor.cpp\n  - plugin/source/controller.h\n  - plugin/source/controller.cpp\n  - cmake/jk_warnings.cmake\nkey_decisions:\n  - VST3 SDK fetched via FetchContent (not local path) for reproducibility\n  - Engine uses pre-allocated NoteEventBuffer (std::array<NoteEvent, 256>) for RT safety\n  - Processor declares stereo audio out + MIDI event out (Cubase requires audio bus even for MIDI instruments)\n  - State serialization includes version int32 from day one per project convention\n  - Platform entry points (macmain.cpp etc.) included directly in plugin sources since static lib linking strips unreferenced symbols\npatterns_established:\n  - Engine isolation: poly_engine has zero VST3 SDK dependency\n  - jk_warnings.cmake suppresses SDK warnings including deprecation\n  - Versioned state: kStateVersion written as first int32 in getState()\nobservability_surfaces:\n  - none\ndrill_down_paths:\n  []\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-06-20T19:52:24.862Z\nblocker_discovered: false\n---\n\n# S01: Build System and VST3 Skeleton\n\n**CMake build system with VST3 SDK FetchContent, poly_engine static lib, and poly_plugin VST3 instrument skeleton producing a clean .vst3 bundle**\n\n## What Happened\n\nEstablished the full build infrastructure for Poly. The top-level CMakeLists.txt fetches the Steinberg VST3 SDK v3.7.12 via FetchContent, sets C++20, and includes the shared jk_warnings.cmake module (extended to suppress SDK deprecation warnings). poly_engine is a standalone STATIC library with no VST3 SDK dependency — it defines TransportContext, NoteEvent, NoteEventBuffer (pre-allocated for RT safety), and the Engine::renderRange() contract. poly_plugin uses smtg_add_vst3plugin with factory registration (kInstrumentSynth), PolyProcessor (AudioEffect with stereo audio out + MIDI event out, versioned state), and PolyController stub. Platform entry points (macmain.cpp/dllmain.cpp/linuxmain.cpp) are included per-platform. The build produces a valid .vst3 bundle with zero warnings from project source files.\n\n## Verification\n\nClean build with zero project warnings, .vst3 bundle at build/VST3/Debug/poly_plugin.vst3, engine isolation confirmed via grep (no VST3 SDK references in engine/)\n\n## Requirements Advanced\n\nNone.\n\n## Requirements Validated\n\nNone.\n\n## New Requirements Surfaced\n\nNone.\n\n## Requirements Invalidated or Re-scoped\n\nNone.\n\n## Operational Readiness\n\nNone.\n\n## Deviations\n\nNone.\n\n## Known Limitations\n\nNone.\n\n## Follow-ups\n\nNone.\n\n## Files Created/Modified\n\nNone.\n",
+      "full_uat_md": "# S01: Build System and VST3 Skeleton — UAT\n\n**Milestone:** M001\n**Written:** 2026-06-20T19:52:24.862Z\n\n## UAT: Build System and VST3 Skeleton\\n\\n### Checks\\n- [ ] `cmake -B build -DCMAKE_BUILD_TYPE=Debug` completes without error\\n- [ ] `cmake --build build` produces `build/VST3/Debug/poly_plugin.vst3`\\n- [ ] No warnings from `engine/` or `plugin/source/` files\\n- [ ] `poly_engine` compiles independently (no VST3 SDK includes)\\n- [ ] .vst3 bundle loads in Cubase without crash (manual test)\n",
+      "goal": "Stand up CMake build system with VST3 SDK integration, create poly_engine static library scaffold and poly_plugin VST3 instrument skeleton. An empty VST3 plugin builds cleanly with all warnings enabled and produces a valid .vst3 bundle.",
+      "success_criteria": "1. cmake --build produces a .vst3 bundle without errors or warnings\\n2. poly_engine compiles as a standalone static library without VST3 SDK headers\\n3. poly_plugin links poly_engine and the VST3 SDK\\n4. Factory registers processor + controller with correct class IDs\\n5. jk_warnings.cmake applied to both targets",
+      "proof_level": "",
+      "integration_closure": "",
+      "observability_impact": "",
+      "sequence": 1,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M001",
+      "id": "S02",
+      "title": "S02",
+      "status": "complete",
+      "risk": "low",
+      "depends": [],
+      "demo": "Harness accepts a patch and transport config, outputs structured note events to stdout; engine compiles without VST3 SDK",
+      "created_at": "2026-06-20T19:31:25.493Z",
+      "completed_at": "2026-06-20T19:57:15.832Z",
+      "full_summary_md": "---\nid: S02\nparent: M001\nmilestone: M001\nprovides:\n  - (none)\nrequires:\n  []\naffects:\n  []\nkey_files:\n  - engine/include/poly/types.h\n  - engine/include/poly/engine.h\n  - engine/src/engine.cpp\n  - tools/harness/main.cpp\n  - tools/harness/CMakeLists.txt\n  - plugin/source/processor.h\nkey_decisions:\n  - Fixed-size std::array everywhere instead of std::vector for RT safety\n  - Harness output format designed for golden test diffing\n  - GrooveState added as member to PolyProcessor for future process() wiring\npatterns_established:\n  - (none)\nobservability_surfaces:\n  - none\ndrill_down_paths:\n  []\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-06-20T19:57:15.832Z\nblocker_discovered: false\n---\n\n# S02: Engine Domain Model and Headless Harness\n\n**Full domain model with RT-safe fixed-size containers, headless CLI harness, and verified engine isolation**\n\n## What Happened\n\nImplemented the complete engine domain model from IMPLEMENTATION_PLAN.md §3: Role (8 roles), Cycle, AccentMask, EnvTarget (8 targets), Shape (5 shapes), Envelope, EnvelopeAssign, LaneConfig, MacroValues (6 macros), and GrooveState. All containers use std::array with compile-time limits — no std::vector anywhere in the domain model. Built a headless CLI harness (tools/harness/) that simulates transport and prints events in a diffable text format for golden tests. Verified complete engine isolation: zero Steinberg symbols in libpoly_engine.a or poly_harness.\n\n## Verification\n\nEngine and harness build clean. Harness runs and produces correct output. nm/grep confirm zero VST3 dependency in engine.\n\n## Requirements Advanced\n\nNone.\n\n## Requirements Validated\n\nNone.\n\n## New Requirements Surfaced\n\nNone.\n\n## Requirements Invalidated or Re-scoped\n\nNone.\n\n## Operational Readiness\n\nNone.\n\n## Deviations\n\nNone.\n\n## Known Limitations\n\nNone.\n\n## Follow-ups\n\nNone.\n\n## Files Created/Modified\n\n- `engine/include/poly/types.h` — Full domain model: Role, Cycle, AccentMask, EnvTarget, Shape, Envelope, LaneConfig, MacroValues, GrooveState\n- `engine/include/poly/engine.h` — renderRange() now accepts const GrooveState&\n- `engine/src/engine.cpp` — Updated signature to match\n- `plugin/source/processor.h` — Added Engine, GrooveState, NoteEventBuffer members\n- `tools/harness/main.cpp` — New headless CLI harness\n- `tools/harness/CMakeLists.txt` — Harness build target\n- `CMakeLists.txt` — Added tools/harness subdirectory\n",
+      "full_uat_md": "# S02: Engine Domain Model and Headless Harness — UAT\n\n**Milestone:** M001\n**Written:** 2026-06-20T19:57:15.832Z\n\n## UAT: M001 S02 — Engine Domain Model and Headless Harness\\n\\n- [ ] `cmake --build build --target poly_engine` compiles with zero warnings\\n- [ ] `cmake --build build --target poly_harness` compiles and links\\n- [ ] `./build/tools/harness/poly_harness` runs and prints header + event lines\\n- [ ] `nm build/engine/libpoly_engine.a | grep -i steinberg` returns empty\\n- [ ] Domain model types match IMPLEMENTATION_PLAN.md §3 spec\n",
+      "goal": "Implement the full engine domain model (LaneConfig, Envelope, GrooveState, TransportContext) from IMPLEMENTATION_PLAN.md §3, expand Engine::renderRange() signature to accept GrooveState, add a headless CLI harness for testing the engine without the VST3 SDK, and verify engine isolation (compiles without VST3 SDK).",
+      "success_criteria": "Engine domain model headers match §3 spec. Engine compiles and links independently of VST3 SDK. Headless harness runs and produces output. All existing tests still pass.",
+      "proof_level": "",
+      "integration_closure": "",
+      "observability_impact": "",
+      "sequence": 2,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M001",
+      "id": "S03",
+      "title": "S03",
+      "status": "complete",
+      "risk": "high",
+      "depends": [],
+      "demo": "Golden test suite passes: byte-identical event stream under loop, tempo, and jump stress scenarios",
+      "created_at": "2026-06-20T19:31:25.493Z",
+      "completed_at": "2026-06-20T20:05:56.792Z",
+      "full_summary_md": "---\nid: S03\nparent: M001\nmilestone: M001\nprovides:\n  - (none)\nrequires:\n  []\naffects:\n  []\nkey_files:\n  - engine/include/poly/euclidean.h\n  - engine/src/euclidean.cpp\n  - engine/include/poly/rng.h\n  - engine/src/engine.cpp\n  - tests/euclidean_tests.cpp\n  - tests/golden_tests.cpp\n  - tests/golden/default_patch_4bars.txt\nkey_decisions:\n  - Bresenham formula for Euclidean rhythms (equivalent to Bjorklund, simpler)\n  - All phase from absolute PPQ — no accumulators\n  - splitmix64-style position hash for deterministic RNG\n  - Channel parameter separates probability/velocity randomness\n  - Golden tests sort by PPQ+pitch (within-block lane ordering is non-deterministic by design)\npatterns_established:\n  - Position-based deterministic RNG pattern: deterministicRand(seed, lane, step, channel)\n  - Golden test pattern: renderSorted() + serialize() for cross-scenario comparison\nobservability_surfaces:\n  - none\ndrill_down_paths:\n  []\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-06-20T20:05:56.793Z\nblocker_discovered: false\n---\n\n# S03: Timing Determinism Prototype\n\n**Engine produces deterministic polymetric output proven by 18 tests covering block-size independence, loop restart, position jump, and tempo invariance**\n\n## What Happened\n\nImplemented the core timing engine in four tasks: (T01) Euclidean rhythm algorithm with Bresenham distribution and rotation, (T02) PPQ-based absolute-position cycle timing in renderRange(), (T03) position-seeded deterministic RNG for probability gating and velocity spread, (T04) 8-test golden determinism suite plus a checked-in reference file. The engine is a pure function of (patch, seed, transport position) with zero accumulated state. All phase computation derives from absolute PPQ — no drift under loop restarts, tempo changes, or position jumps. The polymetric 5/16 ghost lane correctly shows phase variation against the 4/4 grid.\n\n## Verification\n\n18/18 tests pass: 10 Euclidean algorithm tests + 8 golden determinism tests. Block-size independence verified across 0.05, 0.1, 0.2, 0.5, 1.0, 2.0 PPQ. Harness produces audible polymetric output (79 events over 4 bars).\n\n## Requirements Advanced\n\nNone.\n\n## Requirements Validated\n\nNone.\n\n## New Requirements Surfaced\n\nNone.\n\n## Requirements Invalidated or Re-scoped\n\nNone.\n\n## Operational Readiness\n\nNone.\n\n## Deviations\n\nNone.\n\n## Known Limitations\n\nNone.\n\n## Follow-ups\n\nNone.\n\n## Files Created/Modified\n\nNone.\n",
+      "full_uat_md": "# S03: Timing Determinism Prototype — UAT\n\n**Milestone:** M001\n**Written:** 2026-06-20T20:05:56.793Z\n\n## UAT: Timing Determinism Prototype\n\n### Automated Verification\n- [x] Euclidean algorithm: 10 unit tests (distribution, rotation, edge cases, maximal evenness)\n- [x] Block-size independence: identical sorted event sets across 6 different block sizes\n- [x] Loop restart: sub-range from straight-through matches standalone render of same range\n- [x] Position jump: jump-then-continue matches straight-through of target range\n- [x] Tempo independence: PPQ positions identical at 120 BPM and 90 BPM\n- [x] Seed determinism: same seed reproduces, different seed differs\n- [x] Transport guard: not-playing produces zero events\n- [x] Polymetric drift: 5/16 ghost lane shows bar-to-bar phase variation against 4/4\n\n### Manual Verification\n- [x] Harness output shows correct pitch mapping (36=kick, 38=snare, 42=HH, 45=ghost)\n- [x] Velocity variation visible in output (spread applied per-event)\n- [x] Probability filtering visibly drops ~10% of hi-hat hits (p=0.9) and ~30% of ghost hits (p=0.7)\n\n",
+      "goal": "Implement timing/cycle math in renderRange() and prove it deterministic under transport stress with golden tests",
+      "success_criteria": "Golden test suite passes: byte-identical event stream under loop restart, tempo change, and position jump scenarios. Harness produces audible polymetric output.",
+      "proof_level": "",
+      "integration_closure": "",
+      "observability_impact": "",
+      "sequence": 3,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M001",
+      "id": "S04",
+      "title": "S04",
+      "status": "complete",
+      "risk": "low",
+      "depends": [],
+      "demo": "Complete docs/ directory with PRD, engine-spec, Cubase workflow guide, wireframe images, and automation mapping specification",
+      "created_at": "2026-06-20T19:31:25.493Z",
+      "completed_at": "2026-06-20T20:14:49.534Z",
+      "full_summary_md": "---\nid: S04\nparent: M001\nmilestone: M001\nprovides:\n  - (none)\nrequires:\n  []\naffects:\n  []\nkey_files:\n  - docs/PRD.md\n  - docs/engine-spec.md\n  - docs/cubase-workflow.md\n  - docs/automation-mapping.md\n  - docs/wireframes.md\nkey_decisions: []\npatterns_established:\n  - (none)\nobservability_surfaces:\n  - none\ndrill_down_paths:\n  []\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-06-20T20:14:49.534Z\nblocker_discovered: false\n---\n\n# S04: Specification and Design\n\n**Completed Phase 0 documentation: PRD, engine specification, Cubase workflow guide, automation mapping spec, and UI wireframes.**\n\n## What Happened\n\nWrote five specification documents that formalize the project's Phase 0 deliverables. The PRD synthesizes product vision into requirements. The engine spec documents the renderRange() contract with accurate type references. The Cubase workflow guide covers the canonical setup-to-export user journey. The automation mapping spec defines ParamID layout and exposed vs internal parameter decisions. The wireframes describe three progressive-disclosure views (overview, lane editor, envelope editor) with ASCII layouts and navigation flow.\n\n## Verification\n\nAll 5 files exist in docs/. Engine spec references 39 real types from codebase headers. ParamID ranges are non-conflicting. Wireframe views match PRD lane/envelope/macro concepts.\n\n## Requirements Advanced\n\nNone.\n\n## Requirements Validated\n\nNone.\n\n## New Requirements Surfaced\n\nNone.\n\n## Requirements Invalidated or Re-scoped\n\nNone.\n\n## Operational Readiness\n\nNone.\n\n## Deviations\n\nNone.\n\n## Known Limitations\n\nNone.\n\n## Follow-ups\n\nNone.\n\n## Files Created/Modified\n\nNone.\n",
+      "full_uat_md": "# S04: Specification and Design — UAT\n\n**Milestone:** M001\n**Written:** 2026-06-20T20:14:49.535Z\n\n## S04 UAT: Specification and Design\\n\\n- [ ] docs/PRD.md exists and covers scope, lanes, velocity, envelopes, macros, determinism, success criteria\\n- [ ] docs/engine-spec.md exists and references real types from engine/include/poly/\\n- [ ] docs/cubase-workflow.md covers load → route → record → export workflow\\n- [ ] docs/automation-mapping.md defines ParamID layout with non-conflicting ranges\\n- [ ] docs/wireframes.md describes lane overview, lane editor, and envelope editor views\n",
+      "goal": "Complete Phase 0 documentation: PRD, engine specification, Cubase workflow guide, automation mapping spec, and UI wireframes.",
+      "success_criteria": "All five docs exist in docs/, are internally consistent with the implemented engine, and reference concrete types/APIs from the codebase.",
+      "proof_level": "Manual review — docs reference real types and match implemented behavior.",
+      "integration_closure": "Docs form the authoritative Phase 0 reference for Phase 1 implementation work.",
+      "observability_impact": "None — documentation only.",
+      "sequence": 4,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M001",
+      "id": "S05",
+      "title": "S05",
+      "status": "complete",
+      "risk": "low",
+      "depends": [],
+      "demo": "Comprehensive review of M001 deliverables: architecture decisions, test coverage analysis, engine API surface audit, and milestone retrospective",
+      "created_at": "2026-06-20T20:09:14.185Z",
+      "completed_at": "2026-06-20T20:18:44.251Z",
+      "full_summary_md": "---\nid: S05\nparent: M001\nmilestone: M001\nprovides:\n  - (none)\nrequires:\n  []\naffects:\n  []\nkey_files:\n  - docs/review/architecture-decisions.md\n  - docs/review/test-coverage.md\n  - docs/review/api-audit.md\n  - docs/review/retrospective.md\nkey_decisions: []\npatterns_established:\n  - (none)\nobservability_surfaces:\n  - none\ndrill_down_paths:\n  []\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-06-20T20:18:44.251Z\nblocker_discovered: false\n---\n\n# S05: Milestone Review Documentation\n\n**Comprehensive M001 review: 6 architecture decisions audited, 18 tests analyzed, 21 API symbols reviewed, retrospective with risks and Phase 1 recommendations.**\n\n## What Happened\n\nFour review documents covering M001 from different angles. Architecture decisions review validates 6 key choices with rationale and confidence levels. Test coverage analysis identifies 8 testable gaps and 8 Phase 1 additions. API audit maps 21 symbols against PRD requirements and flags 4 design concerns. Retrospective covers what worked, what to improve, 6 retired risks, 7 remaining risks, and 7 prioritized Phase 1 recommendations.\n\n## Verification\n\nAll docs exist in docs/review/. Architecture decisions cover S01-S04. Test analysis covers all 18 tests. API audit covers all 4 public headers. Retrospective covers all 5 slices.\n\n## Requirements Advanced\n\nNone.\n\n## Requirements Validated\n\nNone.\n\n## New Requirements Surfaced\n\nNone.\n\n## Requirements Invalidated or Re-scoped\n\nNone.\n\n## Operational Readiness\n\nNone.\n\n## Deviations\n\nNone.\n\n## Known Limitations\n\nNone.\n\n## Follow-ups\n\nNone.\n\n## Files Created/Modified\n\nNone.\n",
+      "full_uat_md": "# S05: Milestone Review Documentation — UAT\n\n**Milestone:** M001\n**Written:** 2026-06-20T20:18:44.251Z\n\n## S05 UAT: Milestone Review Documentation\\n\\n- [ ] docs/review/architecture-decisions.md covers all major M001 decisions with rationale\\n- [ ] docs/review/test-coverage.md analyzes all 18 tests and identifies gaps\\n- [ ] docs/review/api-audit.md covers all public headers and maps to PRD\\n- [ ] docs/review/retrospective.md covers all slices, risks, and recommendations\n",
+      "goal": "Comprehensive review of M001 deliverables: architecture decisions audit, test coverage analysis, engine API surface review, and milestone retrospective.",
+      "success_criteria": "Review document covers all M001 slices with evidence-backed assessments. Architecture decisions are documented. Test coverage gaps identified. Engine API reviewed for completeness.",
+      "proof_level": "Manual review — document is internally consistent and references actual deliverables.",
+      "integration_closure": "Review document provides the foundation for M001 milestone validation and informs Phase 1 planning.",
+      "observability_impact": "None — documentation only.",
+      "sequence": 5,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M002",
+      "id": "S01",
+      "title": "Lane Generator Core",
+      "status": "pending",
+      "risk": "medium",
+      "depends": [],
+      "demo": "Engine produces correct Euclidean rhythms for various hitCount/cycle configs; identical seed produces identical output across runs",
+      "created_at": "2026-06-20T19:33:12.184Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Implement lane generator with cycle/subdivision/hitCount/rotation using Euclidean distribution, plus per-lane probability gating and seeded reproducible RNG",
+      "success_criteria": "Euclidean distribution correct for all valid hitCount <= cycle length; rotation shifts pattern correctly; probability gates individual hits; same seed reproduces identical sequence; each lane operates independently",
+      "proof_level": "Unit tests for Euclidean math, rotation, and probability gating; golden tests for seed reproducibility across multiple runs",
+      "integration_closure": "Lane generator integrates with renderRange(); each lane produces independent NoteEvents into the output buffer",
+      "observability_impact": "Harness can dump per-lane hit patterns with step indices for debugging",
+      "sequence": 1,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M002",
+      "id": "S02",
+      "title": "Dynamic Shaping",
+      "status": "pending",
+      "risk": "low",
+      "depends": [
+        "S01"
+      ],
+      "demo": "Lane output shows natural velocity variation with distinct accents, ghost notes, and controlled randomization",
+      "created_at": "2026-06-20T19:33:12.184Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Implement the velocity and emphasis model: base velocity, accent mask, emphasis probability, ghost floor, velocity spread, and humanize timing jitter",
+      "success_criteria": "Accent positions produce higher velocity; ghost notes stay above floor; velocity spread creates bounded variation; emphasis probability controls accent expression rate; humanize applies PPQ-based timing jitter",
+      "proof_level": "Unit tests for velocity calculation at each shaping stage; golden tests for shaped output determinism",
+      "integration_closure": "Dynamic shaping applies to lane generator output before NoteEvent emission; all shaping parameters derive from LaneConfig",
+      "observability_impact": "Harness shows per-hit velocity breakdown (base, accent, ghost, spread) for tuning",
+      "sequence": 2,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M002",
+      "id": "S03",
+      "title": "Envelope Superposition v1",
+      "status": "pending",
+      "risk": "high",
+      "depends": [
+        "S01"
+      ],
+      "demo": "Velocity and density evolve over multi-bar periods; overlapping envelopes with non-dividing periods create emergent evolving patterns",
+      "created_at": "2026-06-20T19:33:12.184Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Implement superimposed envelopes targeting velocity and density with multi-period, independent phase-offset support and non-dividing cycle lengths",
+      "success_criteria": "Envelope phase derived from absolute PPQ (no accumulation); multiple envelopes on same target combine correctly with bounded output; non-dividing periods create long-form evolution; shape types (ramp, sine, curve) implemented",
+      "proof_level": "Unit tests for envelope phase math and combination; golden tests for multi-envelope interaction; boundary tests for degenerate stacking",
+      "integration_closure": "Envelopes modulate lane parameters: density affects hit generation, velocity affects post-generation shaping; envelope values cached per-block",
+      "observability_impact": "Harness can dump envelope values over time for visual debugging of evolving patterns",
+      "sequence": 3,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M002",
+      "id": "S04",
+      "title": "Macro Controls",
+      "status": "pending",
+      "risk": "medium",
+      "depends": [
+        "S01",
+        "S02",
+        "S03"
+      ],
+      "demo": "Each macro visibly and audibly affects multiple lane parameters in a musically coherent way across its full range",
+      "created_at": "2026-06-20T19:33:12.184Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Implement 5 core macros (complexity, density, syncopation, swing, tension) with coherent multi-parameter mapping that feels musical, not mechanical",
+      "success_criteria": "Each macro maps to multiple lane/dynamic/envelope parameters coherently (not single multiply); all 5 macros functional with full-range sweep producing musical results; macro values included in serializable GrooveState",
+      "proof_level": "Unit tests for macro-to-parameter resolution; golden tests for macro sweep output showing non-linear parameter evolution",
+      "integration_closure": "Macros resolve into concrete per-lane parameters before renderRange(); macro resolution is a pre-pass, not interleaved with generation",
+      "observability_impact": "Harness shows resolved parameter values after macro application for each lane",
+      "sequence": 4,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M002",
+      "id": "S05",
+      "title": "Plugin Integration and State",
+      "status": "pending",
+      "risk": "high",
+      "depends": [
+        "S01",
+        "S02",
+        "S03",
+        "S04"
+      ],
+      "demo": "Plugin generates polymetric rhythms in Cubase; save project and reload preserves complete patch; loop and transport jumps handled correctly",
+      "created_at": "2026-06-20T19:33:12.184Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Wire complete engine into VST3 plugin: EditController with all params, processor process() reading ProcessContext and emitting notes to output IEventList, versioned patch save/load via getState/setState",
+      "success_criteria": "process() is real-time safe (zero alloc/lock/throw verified by debug hook); all engine params exposed via EditController with proper units; state versioned with kStateVersion as first int32; IParameterChanges consumed into lock-free snapshot; silent audio output bus declared; loop restart and position jump produce correct output",
+      "proof_level": "RT safety audit via debug allocator hook; Cubase manual test (load, play, save, reload, loop, jump); state version round-trip unit test",
+      "integration_closure": "Plugin wraps engine completely; IParameterChanges queue consumed lock-free; ProcessContext transport state fed to engine TransportContext; NoteEvents drained to output IEventList",
+      "observability_impact": "Non-RT thread debug logging for parameter change events and state save/load operations",
+      "sequence": 5,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M002",
+      "id": "S06",
+      "title": "Minimal VSTGUI Editor",
+      "status": "pending",
+      "risk": "medium",
+      "depends": [
+        "S05"
+      ],
+      "demo": "UI shows lane activity in real time, macro knobs control all 5 macros, velocity view updates during playback",
+      "created_at": "2026-06-20T19:33:12.184Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Build minimal VSTGUI editor with 4-8 lane grid, macro control row, and per-lane velocity/accent visualization using .uidesc",
+      "success_criteria": "Lane grid displays 4-8 lanes with hit and accent indicators; macro row provides controls for all 5 macros; velocity view updates in sync with playback; UI responds to both automation and direct manipulation",
+      "proof_level": "Visual Cubase test with playback; UI parameter changes reflected in audio output; automation writes update UI state",
+      "integration_closure": "Editor communicates with controller via standard VST3 parameter model; no direct engine access from UI thread",
+      "observability_impact": "UI provides real-time visual feedback for lane state, macro values, and velocity distribution",
+      "sequence": 6,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M003",
+      "id": "S01",
+      "title": "Extended Envelope System",
+      "status": "pending",
+      "risk": "medium",
+      "depends": [],
+      "demo": "Envelopes target length, looseness, activation, and fill alongside velocity/density; 4/8/16/custom bar phrase lengths create section-scale evolution",
+      "created_at": "2026-06-20T19:33:53.933Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Multiple simultaneous envelopes per lane with full target set and phrase modulation lengths",
+      "success_criteria": "",
+      "proof_level": "",
+      "integration_closure": "",
+      "observability_impact": "",
+      "sequence": 1,
+      "replan_triggered_at": null,
+      "is_sketch": 1,
+      "sketch_scope": "Extend envelope system to support full EnvTarget set (NoteLength, TimingLooseness, ActivationWeight, FillLikelihood) with multiple simultaneous envelopes per lane. Add phrase/section modulation lengths (4, 8, 16, custom bars). Builds on M002 S03 envelope foundation."
+    },
+    {
+      "milestone_id": "M003",
+      "id": "S02",
+      "title": "Scene and Snapshot System",
+      "status": "pending",
+      "risk": "high",
+      "depends": [
+        "S01"
+      ],
+      "demo": "User stores two scenes, switches instantly, and morphs between them with a crossfader producing smooth musical transitions",
+      "created_at": "2026-06-20T19:33:53.933Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Scene/snapshot switching with A/B comparison and morph between configurations",
+      "success_criteria": "",
+      "proof_level": "",
+      "integration_closure": "",
+      "observability_impact": "",
+      "sequence": 2,
+      "replan_triggered_at": null,
+      "is_sketch": 1,
+      "sketch_scope": "Scene storage captures complete GrooveState. A/B instant switching. Morph crossfader interpolates between scenes with musically bounded intermediate states. Scene count TBD (2 minimum, possibly 4-8). Depends on S01 because scenes must capture extended envelope state."
+    },
+    {
+      "milestone_id": "M003",
+      "id": "S03",
+      "title": "Constraint Layer",
+      "status": "pending",
+      "risk": "high",
+      "depends": [],
+      "demo": "Anchor kick remains stable even when density envelope bottoms out; backbeat survives high-syncopation macro settings",
+      "created_at": "2026-06-20T19:33:53.933Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Musical constraints that protect structural elements during envelope modulation and macro changes",
+      "success_criteria": "",
+      "proof_level": "",
+      "integration_closure": "",
+      "observability_impact": "",
+      "sequence": 3,
+      "replan_triggered_at": null,
+      "is_sketch": 1,
+      "sketch_scope": "Implement constraint types: anchor kick preservation, backbeat protection, per-lane density range limits. Constraints override envelope/macro modulation when they would violate structural rules. Clear resolution policy for constraint-envelope conflicts."
+    },
+    {
+      "milestone_id": "M003",
+      "id": "S04",
+      "title": "Cubase Automation Polish",
+      "status": "pending",
+      "risk": "low",
+      "depends": [],
+      "demo": "Cubase automation lanes show well-organized, clearly named parameters; high-value controls are easy to find and automate",
+      "created_at": "2026-06-20T19:33:53.933Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Improved automation mapping for high-value controls with better parameter grouping",
+      "success_criteria": "",
+      "proof_level": "",
+      "integration_closure": "",
+      "observability_impact": "",
+      "sequence": 4,
+      "replan_triggered_at": null,
+      "is_sketch": 1,
+      "sketch_scope": "Review and improve automation parameter naming, grouping, and units for Cubase. Identify high-value controls for prominent exposure. May involve parameter unit reorganization in EditController."
+    },
+    {
+      "milestone_id": "M003",
+      "id": "S05",
+      "title": "MIDI Export Workflow",
+      "status": "pending",
+      "risk": "high",
+      "depends": [
+        "S03"
+      ],
+      "demo": "User captures a generated groove as MIDI on a Cubase track for further editing",
+      "created_at": "2026-06-20T19:33:53.933Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "MIDI capture to track, drag-to-track, freeze support, and pattern export for Cubase composition integration",
+      "success_criteria": "",
+      "proof_level": "",
+      "integration_closure": "",
+      "observability_impact": "",
+      "sequence": 5,
+      "replan_triggered_at": null,
+      "is_sketch": 1,
+      "sketch_scope": "Implement at least one MIDI export path: capture-to-track, drag-to-track, or pattern file export. Freeze support if Cubase VST3 API allows. Exported MIDI should respect active constraints. Depends on S03 because export should reflect constrained output."
+    },
+    {
+      "milestone_id": "M003",
+      "id": "S06",
+      "title": "Phase and Envelope Visualization",
+      "status": "pending",
+      "risk": "medium",
+      "depends": [
+        "S01"
+      ],
+      "demo": "UI shows how lane cycles align and diverge over time; envelope curves visible with their modulation targets",
+      "created_at": "2026-06-20T19:33:53.934Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Visual display of phase relationships between lanes and envelope interaction patterns",
+      "success_criteria": "",
+      "proof_level": "",
+      "integration_closure": "",
+      "observability_impact": "",
+      "sequence": 6,
+      "replan_triggered_at": null,
+      "is_sketch": 1,
+      "sketch_scope": "Add visualization views showing inter-lane phase relationships (convergence/divergence patterns) and envelope curves with target mapping. Helps users understand why the groove evolves the way it does. Builds on extended envelope system from S01."
+    }
+  ],
+  "tasks": [
+    {
+      "milestone_id": "M001",
+      "slice_id": "S01",
+      "id": "T01",
+      "title": "Top-level CMakeLists.txt with VST3 SDK v3.7.12 via FetchContent, C++20, jk_warnings.cmake",
+      "status": "complete",
+      "one_liner": "Top-level CMakeLists.txt with VST3 SDK v3.7.12 via FetchContent, C++20, jk_warnings.cmake",
+      "narrative": "Created the root CMakeLists.txt that fetches the Steinberg VST3 SDK via FetchContent, sets C++20 standard, disables SDK examples/validator, enables VSTGUI support, and adds engine/ and plugin/ subdirectories. The jk_suppress_sdk_warnings() function was extended to also suppress deprecation warnings on sdk and sdk_common targets (they use deprecated std::wstring_convert internally).",
+      "verification_result": "cmake -B build -DCMAKE_BUILD_TYPE=Debug completes without error; SDK is fetched and configured",
+      "duration": "",
+      "completed_at": "2026-06-20T19:51:34.131Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "CMakeLists.txt",
+        "cmake/jk_warnings.cmake"
+      ],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T01\nparent: S01\nmilestone: M001\nkey_files:\n  - CMakeLists.txt\n  - cmake/jk_warnings.cmake\nkey_decisions: []\nduration: \nverification_result: passed\ncompleted_at: 2026-06-20T19:51:34.131Z\nblocker_discovered: false\n---\n\n# T01: Top-level CMakeLists.txt with VST3 SDK v3.7.12 via FetchContent, C++20, jk_warnings.cmake\n\n**Top-level CMakeLists.txt with VST3 SDK v3.7.12 via FetchContent, C++20, jk_warnings.cmake**\n\n## What Happened\n\nCreated the root CMakeLists.txt that fetches the Steinberg VST3 SDK via FetchContent, sets C++20 standard, disables SDK examples/validator, enables VSTGUI support, and adds engine/ and plugin/ subdirectories. The jk_suppress_sdk_warnings() function was extended to also suppress deprecation warnings on sdk and sdk_common targets (they use deprecated std::wstring_convert internally).\n\n## Verification\n\ncmake -B build -DCMAKE_BUILD_TYPE=Debug completes without error; SDK is fetched and configured\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `cmake -B build -DCMAKE_BUILD_TYPE=Debug` | 0 | pass | 17800ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `CMakeLists.txt`\n- `cmake/jk_warnings.cmake`\n",
+      "description": "Create the top-level CMakeLists.txt that:\n1. Sets project(poly) with C++20 standard\n2. Fetches the Steinberg VST3 SDK via FetchContent from GitHub\n3. Includes cmake/jk_warnings.cmake\n4. Adds engine/ and plugin/ subdirectories\n5. Adds VST3 SDK build output paths",
+      "estimate": "15min",
+      "files": [
+        "CMakeLists.txt"
+      ],
+      "verify": "cmake -B build -DCMAKE_BUILD_TYPE=Debug completes without error",
+      "inputs": [
+        "cmake/jk_warnings.cmake",
+        "IMPLEMENTATION_PLAN.md section 2"
+      ],
+      "expected_output": [
+        "CMakeLists.txt"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S01",
+      "id": "T02",
+      "title": "poly_engine static library scaffold with types.h, engine.h, and stub renderRange()",
+      "status": "complete",
+      "one_liner": "poly_engine static library scaffold with types.h, engine.h, and stub renderRange()",
+      "narrative": "Created engine/ directory with CMakeLists.txt (STATIC lib, public include dir, jk_target_warnings), types.h (TransportContext, NoteEvent, NoteEventBuffer with pre-allocated fixed array for RT safety), engine.h (Engine class with renderRange signature), and engine.cpp (empty stub). Confirmed zero VST3 SDK references via grep.",
+      "verification_result": "poly_engine compiles as standalone static lib; grep confirms no VST3 includes in engine/",
+      "duration": "",
+      "completed_at": "2026-06-20T19:51:41.338Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "engine/CMakeLists.txt",
+        "engine/include/poly/types.h",
+        "engine/include/poly/engine.h",
+        "engine/src/engine.cpp"
+      ],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T02\nparent: S01\nmilestone: M001\nkey_files:\n  - engine/CMakeLists.txt\n  - engine/include/poly/types.h\n  - engine/include/poly/engine.h\n  - engine/src/engine.cpp\nkey_decisions: []\nduration: \nverification_result: passed\ncompleted_at: 2026-06-20T19:51:41.338Z\nblocker_discovered: false\n---\n\n# T02: poly_engine static library scaffold with types.h, engine.h, and stub renderRange()\n\n**poly_engine static library scaffold with types.h, engine.h, and stub renderRange()**\n\n## What Happened\n\nCreated engine/ directory with CMakeLists.txt (STATIC lib, public include dir, jk_target_warnings), types.h (TransportContext, NoteEvent, NoteEventBuffer with pre-allocated fixed array for RT safety), engine.h (Engine class with renderRange signature), and engine.cpp (empty stub). Confirmed zero VST3 SDK references via grep.\n\n## Verification\n\npoly_engine compiles as standalone static lib; grep confirms no VST3 includes in engine/\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `cmake --build build --target poly_engine` | 0 | pass | 2000ms |\n| 2 | `grep -r 'pluginterfaces|public.sdk|steinberg|Steinberg|vst3sdk' engine/` | 1 | pass - no VST3 references | 50ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `engine/CMakeLists.txt`\n- `engine/include/poly/types.h`\n- `engine/include/poly/engine.h`\n- `engine/src/engine.cpp`\n",
+      "description": "Create engine/ directory with:\n1. engine/CMakeLists.txt — add_library(poly_engine STATIC) with public include path\n2. engine/include/poly/engine.h — Engine class declaration with renderRange stub\n3. engine/include/poly/types.h — NoteEvent, TransportContext, basic type declarations\n4. engine/src/engine.cpp — empty renderRange implementation\nMust NOT link or include any VST3 SDK headers. Apply jk_target_warnings.",
+      "estimate": "15min",
+      "files": [
+        "engine/CMakeLists.txt",
+        "engine/include/poly/engine.h",
+        "engine/include/poly/types.h",
+        "engine/src/engine.cpp"
+      ],
+      "verify": "poly_engine target compiles as standalone static lib; grep confirms no VST3 includes",
+      "inputs": [
+        "IMPLEMENTATION_PLAN.md section 3 (domain model)"
+      ],
+      "expected_output": [
+        "engine/CMakeLists.txt",
+        "engine/include/poly/engine.h",
+        "engine/include/poly/types.h",
+        "engine/src/engine.cpp"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S01",
+      "id": "T03",
+      "title": "poly_plugin VST3 instrument skeleton with factory, processor, controller producing .vst3 bundle",
+      "status": "complete",
+      "one_liner": "poly_plugin VST3 instrument skeleton with factory, processor, controller producing .vst3 bundle",
+      "narrative": "Created plugin/ directory with: CMakeLists.txt using smtg_add_vst3plugin + sdk link + platform entry points (macmain.cpp/dllmain.cpp/linuxmain.cpp); factory.cpp with BEGIN_FACTORY_DEF registering PolyProcessor as kInstrumentSynth and PolyController; processor.h/.cpp with AudioEffect subclass implementing initialize (stereo audio out + MIDI event out), process (silence output), and versioned getState/setState; controller.h/.cpp with EditController stub; plugids.h with unique FUIDs. Cubase requires an audio output bus even for MIDI-only instruments — declared as stereo.",
+      "verification_result": "cmake --build produces .vst3 bundle at build/VST3/Debug/poly_plugin.vst3",
+      "duration": "",
+      "completed_at": "2026-06-20T19:51:50.353Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "plugin/CMakeLists.txt",
+        "plugin/source/factory.cpp",
+        "plugin/source/plugids.h",
+        "plugin/source/processor.h",
+        "plugin/source/processor.cpp",
+        "plugin/source/controller.h",
+        "plugin/source/controller.cpp"
+      ],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T03\nparent: S01\nmilestone: M001\nkey_files:\n  - plugin/CMakeLists.txt\n  - plugin/source/factory.cpp\n  - plugin/source/plugids.h\n  - plugin/source/processor.h\n  - plugin/source/processor.cpp\n  - plugin/source/controller.h\n  - plugin/source/controller.cpp\nkey_decisions: []\nduration: \nverification_result: passed\ncompleted_at: 2026-06-20T19:51:50.353Z\nblocker_discovered: false\n---\n\n# T03: poly_plugin VST3 instrument skeleton with factory, processor, controller producing .vst3 bundle\n\n**poly_plugin VST3 instrument skeleton with factory, processor, controller producing .vst3 bundle**\n\n## What Happened\n\nCreated plugin/ directory with: CMakeLists.txt using smtg_add_vst3plugin + sdk link + platform entry points (macmain.cpp/dllmain.cpp/linuxmain.cpp); factory.cpp with BEGIN_FACTORY_DEF registering PolyProcessor as kInstrumentSynth and PolyController; processor.h/.cpp with AudioEffect subclass implementing initialize (stereo audio out + MIDI event out), process (silence output), and versioned getState/setState; controller.h/.cpp with EditController stub; plugids.h with unique FUIDs. Cubase requires an audio output bus even for MIDI-only instruments — declared as stereo.\n\n## Verification\n\ncmake --build produces .vst3 bundle at build/VST3/Debug/poly_plugin.vst3\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `cmake --build build --config Debug` | 0 | pass | 5000ms |\n| 2 | `find build -name '*.vst3' -type d` | 0 | pass - build/VST3/Debug/poly_plugin.vst3 | 100ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `plugin/CMakeLists.txt`\n- `plugin/source/factory.cpp`\n- `plugin/source/plugids.h`\n- `plugin/source/processor.h`\n- `plugin/source/processor.cpp`\n- `plugin/source/controller.h`\n- `plugin/source/controller.cpp`\n",
+      "description": "Create plugin/ directory with:\n1. plugin/CMakeLists.txt — smtg_add_vst3plugin(poly_plugin ...) linking poly_engine\n2. plugin/source/factory.cpp — BEGIN_FACTORY_DEF / DEF_CLASS2 for processor + controller\n3. plugin/source/plugids.h — processor/controller class IDs and plugin constants\n4. plugin/source/processor.h/.cpp — PolyProcessor inheriting AudioEffect with empty process()\n5. plugin/source/controller.h/.cpp — PolyController inheriting EditController\nApply jk_target_warnings. Declare a silent audio output bus (Cubase requirement for instruments).",
+      "estimate": "25min",
+      "files": [
+        "plugin/CMakeLists.txt",
+        "plugin/source/factory.cpp",
+        "plugin/source/plugids.h",
+        "plugin/source/processor.h",
+        "plugin/source/processor.cpp",
+        "plugin/source/controller.h",
+        "plugin/source/controller.cpp"
+      ],
+      "verify": "cmake --build build produces a .vst3 bundle; find build -name '*.vst3' returns a result",
+      "inputs": [
+        "engine/include/poly/engine.h",
+        "cmake/jk_warnings.cmake"
+      ],
+      "expected_output": [
+        "plugin/CMakeLists.txt",
+        "plugin/source/factory.cpp",
+        "plugin/source/plugids.h",
+        "plugin/source/processor.h",
+        "plugin/source/processor.cpp",
+        "plugin/source/controller.h",
+        "plugin/source/controller.cpp"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S01",
+      "id": "T04",
+      "title": "Full clean build verified: zero project warnings, .vst3 bundle present, engine isolation confirmed",
+      "status": "complete",
+      "one_liner": "Full clean build verified: zero project warnings, .vst3 bundle present, engine isolation confirmed",
+      "narrative": "Ran cmake --build --clean-first and verified: (1) zero warnings from poly_engine and poly_plugin source files (-Wall -Wextra enabled), (2) SDK warnings suppressed via jk_suppress_sdk_warnings(), (3) .vst3 bundle produced at build/VST3/Debug/poly_plugin.vst3, (4) poly_engine has zero VST3 SDK references.",
+      "verification_result": "cmake --build --clean-first with warning grep returns zero project warnings; find confirms .vst3 bundle",
+      "duration": "",
+      "completed_at": "2026-06-20T19:51:54.800Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        ".gitignore"
+      ],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T04\nparent: S01\nmilestone: M001\nkey_files:\n  - .gitignore\nkey_decisions: []\nduration: \nverification_result: passed\ncompleted_at: 2026-06-20T19:51:54.800Z\nblocker_discovered: false\n---\n\n# T04: Full clean build verified: zero project warnings, .vst3 bundle present, engine isolation confirmed\n\n**Full clean build verified: zero project warnings, .vst3 bundle present, engine isolation confirmed**\n\n## What Happened\n\nRan cmake --build --clean-first and verified: (1) zero warnings from poly_engine and poly_plugin source files (-Wall -Wextra enabled), (2) SDK warnings suppressed via jk_suppress_sdk_warnings(), (3) .vst3 bundle produced at build/VST3/Debug/poly_plugin.vst3, (4) poly_engine has zero VST3 SDK references.\n\n## Verification\n\ncmake --build --clean-first with warning grep returns zero project warnings; find confirms .vst3 bundle\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `cmake --build build --clean-first 2>&1 | grep 'warning:' | grep -v '_deps/' | grep -v 'duplicate libraries' | grep -v 'Xcode.app'` | 1 | pass - zero project warnings | 45000ms |\n| 2 | `find build -name '*.vst3' -type d` | 0 | pass - bundle exists | 50ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `.gitignore`\n",
+      "description": "1. Run full cmake configure + build from clean state\n2. Verify zero warnings with -Wall -Wextra\n3. Verify .vst3 bundle exists in build output\n4. Verify poly_engine compiles independently (no VST3 SDK leakage)\n5. Update .gitignore if needed for SDK artifacts",
+      "estimate": "10min",
+      "files": [
+        ".gitignore"
+      ],
+      "verify": "cmake --build build --clean-first 2>&1 | grep -c 'warning:' returns 0; find build -name '*.vst3' returns a path",
+      "inputs": [
+        "CMakeLists.txt",
+        "engine/CMakeLists.txt",
+        "plugin/CMakeLists.txt"
+      ],
+      "expected_output": [
+        "Clean build log",
+        ".vst3 bundle path"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S02",
+      "id": "T01",
+      "title": "Full engine domain model (LaneConfig, Envelope, GrooveState, MacroValues) with fixed-size containers for RT safety",
+      "status": "complete",
+      "one_liner": "Full engine domain model (LaneConfig, Envelope, GrooveState, MacroValues) with fixed-size containers for RT safety",
+      "narrative": "Expanded types.h with the complete domain model from IMPLEMENTATION_PLAN.md §3: Role enum (8 roles), Cycle struct, AccentMask (fixed array), EnvTarget (8 targets), Shape (5 shapes), Envelope, EnvelopeAssign, LaneConfig with all fields, MacroValues (6 macros), and GrooveState. All containers use std::array with compile-time limits (kMaxLanes=8, kMaxSteps=64, kMaxEnvelopesPerLane=4, kMaxGlobalEnvelopes=8) — no std::vector anywhere in the hot path. Updated Engine::renderRange() to accept const GrooveState&. Added engine_/grooveState_/noteBuffer_ members to PolyProcessor for future wiring.",
+      "verification_result": "poly_engine and poly_plugin both build clean. One expected -Wunused-private-field warning on engine_ (not wired until M002 S05).",
+      "duration": "",
+      "completed_at": "2026-06-20T19:55:34.816Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "engine/include/poly/types.h",
+        "engine/include/poly/engine.h",
+        "engine/src/engine.cpp",
+        "plugin/source/processor.h"
+      ],
+      "key_decisions": [
+        "Used fixed-size std::array everywhere instead of std::vector for RT safety",
+        "Added sampleRate/blockSize/playing/loopStartPpq/loopEndPpq to TransportContext for future timing work",
+        "LaneConfig.active flag enables partial lane activation without resizing"
+      ],
+      "full_summary_md": "---\nid: T01\nparent: S02\nmilestone: M001\nkey_files:\n  - engine/include/poly/types.h\n  - engine/include/poly/engine.h\n  - engine/src/engine.cpp\n  - plugin/source/processor.h\nkey_decisions:\n  - Used fixed-size std::array everywhere instead of std::vector for RT safety\n  - Added sampleRate/blockSize/playing/loopStartPpq/loopEndPpq to TransportContext for future timing work\n  - LaneConfig.active flag enables partial lane activation without resizing\nduration: \nverification_result: passed\ncompleted_at: 2026-06-20T19:55:34.816Z\nblocker_discovered: false\n---\n\n# T01: Full engine domain model (LaneConfig, Envelope, GrooveState, MacroValues) with fixed-size containers for RT safety\n\n**Full engine domain model (LaneConfig, Envelope, GrooveState, MacroValues) with fixed-size containers for RT safety**\n\n## What Happened\n\nExpanded types.h with the complete domain model from IMPLEMENTATION_PLAN.md §3: Role enum (8 roles), Cycle struct, AccentMask (fixed array), EnvTarget (8 targets), Shape (5 shapes), Envelope, EnvelopeAssign, LaneConfig with all fields, MacroValues (6 macros), and GrooveState. All containers use std::array with compile-time limits (kMaxLanes=8, kMaxSteps=64, kMaxEnvelopesPerLane=4, kMaxGlobalEnvelopes=8) — no std::vector anywhere in the hot path. Updated Engine::renderRange() to accept const GrooveState&. Added engine_/grooveState_/noteBuffer_ members to PolyProcessor for future wiring.\n\n## Verification\n\npoly_engine and poly_plugin both build clean. One expected -Wunused-private-field warning on engine_ (not wired until M002 S05).\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `cmake --build build --target poly_engine` | 0 | pass | 1200ms |\n| 2 | `cmake --build build --target poly_plugin` | 0 | pass (1 expected unused field warning) | 8000ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `engine/include/poly/types.h`\n- `engine/include/poly/engine.h`\n- `engine/src/engine.cpp`\n- `plugin/source/processor.h`\n",
+      "description": "Expand types.h with the full domain model from IMPLEMENTATION_PLAN.md §3: Role enum, Cycle struct, AccentMask, EnvTarget enum, Shape enum, Envelope struct, EnvelopeAssign, LaneConfig struct, MacroValues, GrooveState. Use fixed-size containers (std::array, inline arrays) instead of std::vector for RT safety. Update Engine::renderRange() signature to accept const GrooveState&.",
+      "estimate": "30min",
+      "files": [
+        "engine/include/poly/types.h",
+        "engine/include/poly/engine.h",
+        "engine/src/engine.cpp"
+      ],
+      "verify": "cmake --build build --target poly_engine compiles clean with zero warnings",
+      "inputs": [
+        "IMPLEMENTATION_PLAN.md §3"
+      ],
+      "expected_output": [
+        "engine/include/poly/types.h with full domain model",
+        "engine/include/poly/engine.h with updated renderRange signature"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S02",
+      "id": "T02",
+      "title": "Headless CLI harness that runs the engine over simulated transport and prints events in diffable text format",
+      "status": "complete",
+      "one_liner": "Headless CLI harness that runs the engine over simulated transport and prints events in diffable text format",
+      "narrative": "Created tools/harness/ with a CLI program that: instantiates Engine, creates a 4-lane GrooveState with musically sensible defaults (kick 4-on-floor, snare backbeat, hi-hat 8ths, ghost tom in polymetric 5/16), iterates renderRange() over configurable transport blocks, and prints NoteEvents to stdout. The harness links only against poly_engine — no VST3 SDK dependency. Output format is diffable text suitable for golden tests in S03. Accepts CLI args for bars, tempo, and block size.",
+      "verification_result": "poly_harness builds and runs, producing expected header and 0 events (engine stub).",
+      "duration": "",
+      "completed_at": "2026-06-20T19:56:38.407Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "tools/harness/main.cpp",
+        "tools/harness/CMakeLists.txt",
+        "CMakeLists.txt"
+      ],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T02\nparent: S02\nmilestone: M001\nkey_files:\n  - tools/harness/main.cpp\n  - tools/harness/CMakeLists.txt\n  - CMakeLists.txt\nkey_decisions: []\nduration: \nverification_result: passed\ncompleted_at: 2026-06-20T19:56:38.406Z\nblocker_discovered: false\n---\n\n# T02: Headless CLI harness that runs the engine over simulated transport and prints events in diffable text format\n\n**Headless CLI harness that runs the engine over simulated transport and prints events in diffable text format**\n\n## What Happened\n\nCreated tools/harness/ with a CLI program that: instantiates Engine, creates a 4-lane GrooveState with musically sensible defaults (kick 4-on-floor, snare backbeat, hi-hat 8ths, ghost tom in polymetric 5/16), iterates renderRange() over configurable transport blocks, and prints NoteEvents to stdout. The harness links only against poly_engine — no VST3 SDK dependency. Output format is diffable text suitable for golden tests in S03. Accepts CLI args for bars, tempo, and block size.\n\n## Verification\n\npoly_harness builds and runs, producing expected header and 0 events (engine stub).\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `cmake --build build --target poly_harness` | 0 | pass | 2000ms |\n| 2 | `./build/tools/harness/poly_harness` | 0 | pass — 0 events from stub engine, correct header output | 50ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `tools/harness/main.cpp`\n- `tools/harness/CMakeLists.txt`\n- `CMakeLists.txt`\n",
+      "description": "Create tools/harness/ with a CLI program that instantiates Engine, configures a GrooveState with sensible defaults, runs renderRange() over a simulated transport range, and prints NoteEvents to stdout in a diffable text format. Add CMakeLists.txt for the harness target. The harness must link only against poly_engine, not the VST3 SDK.",
+      "estimate": "25min",
+      "files": [
+        "tools/harness/main.cpp",
+        "tools/harness/CMakeLists.txt",
+        "CMakeLists.txt"
+      ],
+      "verify": "cmake --build build --target poly_harness && ./build/tools/harness/poly_harness runs and produces output",
+      "inputs": [
+        "engine/include/poly/types.h",
+        "engine/include/poly/engine.h"
+      ],
+      "expected_output": [
+        "tools/harness/main.cpp",
+        "tools/harness/CMakeLists.txt"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S02",
+      "id": "T03",
+      "title": "Confirmed zero VST3 SDK dependency in poly_engine and poly_harness",
+      "status": "complete",
+      "one_liner": "Confirmed zero VST3 SDK dependency in poly_engine and poly_harness",
+      "narrative": "Verified engine isolation three ways: (1) nm on libpoly_engine.a shows no Steinberg symbols, (2) nm on poly_harness binary shows no Steinberg symbols, (3) grep across engine/ source finds no VST3/Steinberg includes. The engine compiles, links, and runs completely independently of the VST3 SDK.",
+      "verification_result": "nm and grep checks all returned empty (exit 1 = no matches).",
+      "duration": "",
+      "completed_at": "2026-06-20T19:56:55.973Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T03\nparent: S02\nmilestone: M001\nkey_files: []\nkey_decisions: []\nduration: \nverification_result: passed\ncompleted_at: 2026-06-20T19:56:55.973Z\nblocker_discovered: false\n---\n\n# T03: Confirmed zero VST3 SDK dependency in poly_engine and poly_harness\n\n**Confirmed zero VST3 SDK dependency in poly_engine and poly_harness**\n\n## What Happened\n\nVerified engine isolation three ways: (1) nm on libpoly_engine.a shows no Steinberg symbols, (2) nm on poly_harness binary shows no Steinberg symbols, (3) grep across engine/ source finds no VST3/Steinberg includes. The engine compiles, links, and runs completely independently of the VST3 SDK.\n\n## Verification\n\nnm and grep checks all returned empty (exit 1 = no matches).\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `nm build/engine/libpoly_engine.a | grep -i steinberg` | 1 | pass — no Steinberg symbols | 50ms |\n| 2 | `nm build/tools/harness/poly_harness | grep -i steinberg` | 1 | pass — no Steinberg symbols | 50ms |\n| 3 | `grep -r steinberg/vst3/pluginterfaces engine/ -i` | 1 | pass — no VST3 includes in engine source | 30ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\nNone.\n",
+      "description": "Verify that poly_engine and poly_harness compile and link without any VST3 SDK symbols. Check that no VST3 headers are included transitively. Run the harness binary to confirm it executes.",
+      "estimate": "10min",
+      "files": [],
+      "verify": "nm build/engine/libpoly_engine.a | grep -i steinberg returns empty; ./build/tools/harness/poly_harness exits 0",
+      "inputs": [
+        "build artifacts"
+      ],
+      "expected_output": [
+        "Verification evidence that engine has zero VST3 dependency"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S03",
+      "id": "T01",
+      "title": "Implemented Euclidean rhythm algorithm with Bresenham distribution, rotation support, and 10 unit tests",
+      "status": "complete",
+      "one_liner": "Implemented Euclidean rhythm algorithm with Bresenham distribution, rotation support, and 10 unit tests",
+      "narrative": "Implemented the Bjorklund/Bresenham Euclidean rhythm algorithm as a pure function in poly_engine. The algorithm distributes k pulses across n steps maximally evenly using the modular arithmetic formula (i*k)%n < k, with rotation applied via index shifting. Set up Google Test infrastructure via FetchContent. All 10 unit tests pass covering: four-on-the-floor, single pulse, tresillo (3,8), cinquillo (5,8), edge cases (zero pulses, overflow), rotation shift/preservation, and maximal evenness verification.",
+      "verification_result": "Built poly_tests target, ran all 10 Euclidean tests — all pass in 0ms",
+      "duration": "",
+      "completed_at": "2026-06-20T20:01:57.790Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "engine/include/poly/euclidean.h",
+        "engine/src/euclidean.cpp",
+        "tests/euclidean_tests.cpp",
+        "tests/CMakeLists.txt"
+      ],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T01\nparent: S03\nmilestone: M001\nkey_files:\n  - engine/include/poly/euclidean.h\n  - engine/src/euclidean.cpp\n  - tests/euclidean_tests.cpp\n  - tests/CMakeLists.txt\nkey_decisions: []\nduration: \nverification_result: passed\ncompleted_at: 2026-06-20T20:01:57.790Z\nblocker_discovered: false\n---\n\n# T01: Implemented Euclidean rhythm algorithm with Bresenham distribution, rotation support, and 10 unit tests\n\n**Implemented Euclidean rhythm algorithm with Bresenham distribution, rotation support, and 10 unit tests**\n\n## What Happened\n\nImplemented the Bjorklund/Bresenham Euclidean rhythm algorithm as a pure function in poly_engine. The algorithm distributes k pulses across n steps maximally evenly using the modular arithmetic formula (i*k)%n < k, with rotation applied via index shifting. Set up Google Test infrastructure via FetchContent. All 10 unit tests pass covering: four-on-the-floor, single pulse, tresillo (3,8), cinquillo (5,8), edge cases (zero pulses, overflow), rotation shift/preservation, and maximal evenness verification.\n\n## Verification\n\nBuilt poly_tests target, ran all 10 Euclidean tests — all pass in 0ms\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `build/tests/poly_tests` | 0 | 10 tests passed | 50ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `engine/include/poly/euclidean.h`\n- `engine/src/euclidean.cpp`\n- `tests/euclidean_tests.cpp`\n- `tests/CMakeLists.txt`\n",
+      "description": "Implement Bjorklund algorithm to distribute hitCount pulses across steps. Pure function in engine, unit tested against known patterns: (3,8), (5,8), (4,16), (1,4), (4,4). Include rotation support.",
+      "estimate": "30min",
+      "files": [
+        "engine/include/poly/euclidean.h",
+        "engine/src/euclidean.cpp",
+        "tests/euclidean_tests.cpp"
+      ],
+      "verify": "cd build && cmake --build . --target poly_tests && ctest --test-dir . -R euclidean",
+      "inputs": [
+        "engine/include/poly/types.h"
+      ],
+      "expected_output": [
+        "engine/include/poly/euclidean.h",
+        "engine/src/euclidean.cpp",
+        "tests/euclidean_tests.cpp"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S03",
+      "id": "T02",
+      "title": "Implemented core cycle timing in renderRange() with PPQ-based absolute positioning",
+      "status": "complete",
+      "one_liner": "Implemented core cycle timing in renderRange() with PPQ-based absolute positioning",
+      "narrative": "Implemented the core rendering loop in Engine::renderRange(). For each active lane: computes step PPQ from subdivision, maps absolute step indices into the Euclidean pattern via cycle modulo, and emits NoteEvents for hits falling within [ppqStart, ppqEnd). All phase computation derives from absolute PPQ position — no accumulators. Verified block-size independence: identical event sets across block sizes 0.1, 0.5, and 1.0 PPQ (within-block lane ordering varies but event set is identical when sorted).",
+      "verification_result": "Harness produces 47 events over 2 bars with 4 lanes. Sorted event sets identical across three different block sizes (0.1, 0.5, 1.0 PPQ).",
+      "duration": "",
+      "completed_at": "2026-06-20T20:03:11.658Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "engine/src/engine.cpp"
+      ],
+      "key_decisions": [
+        "Phase derived from absolute PPQ, never accumulated",
+        "Velocity expressed as 0-1 float (baseVelocity/127)",
+        "Note duration set to half step length",
+        "Event ordering within a block follows lane index order — golden tests should sort by PPQ+pitch"
+      ],
+      "full_summary_md": "---\nid: T02\nparent: S03\nmilestone: M001\nkey_files:\n  - engine/src/engine.cpp\nkey_decisions:\n  - Phase derived from absolute PPQ, never accumulated\n  - Velocity expressed as 0-1 float (baseVelocity/127)\n  - Note duration set to half step length\n  - Event ordering within a block follows lane index order — golden tests should sort by PPQ+pitch\nduration: \nverification_result: passed\ncompleted_at: 2026-06-20T20:03:11.658Z\nblocker_discovered: false\n---\n\n# T02: Implemented core cycle timing in renderRange() with PPQ-based absolute positioning\n\n**Implemented core cycle timing in renderRange() with PPQ-based absolute positioning**\n\n## What Happened\n\nImplemented the core rendering loop in Engine::renderRange(). For each active lane: computes step PPQ from subdivision, maps absolute step indices into the Euclidean pattern via cycle modulo, and emits NoteEvents for hits falling within [ppqStart, ppqEnd). All phase computation derives from absolute PPQ position — no accumulators. Verified block-size independence: identical event sets across block sizes 0.1, 0.5, and 1.0 PPQ (within-block lane ordering varies but event set is identical when sorted).\n\n## Verification\n\nHarness produces 47 events over 2 bars with 4 lanes. Sorted event sets identical across three different block sizes (0.1, 0.5, 1.0 PPQ).\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `poly_harness 2 120 (0.5|0.1|1.0) | sort | diff` | 0 | Identical event sets across block sizes | 100ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `engine/src/engine.cpp`\n",
+      "description": "Implement the core rendering loop: for each active lane, compute step positions from absolute PPQ using cycle length and subdivision, check which steps fall within [ppqStart, ppqEnd], emit NoteEvent for each hit. No probability or velocity modulation yet — just raw Euclidean hits at baseVelocity. Handle block-boundary alignment correctly.",
+      "estimate": "45min",
+      "files": [
+        "engine/src/engine.cpp",
+        "engine/include/poly/engine.h"
+      ],
+      "verify": "cd build && cmake --build . && ./tools/harness/poly_harness 4 120 0.1 | head -20",
+      "inputs": [
+        "engine/include/poly/types.h",
+        "engine/include/poly/euclidean.h"
+      ],
+      "expected_output": [
+        "engine/src/engine.cpp"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S03",
+      "id": "T03",
+      "title": "Implemented position-based deterministic RNG for probability gating and velocity spread",
+      "status": "complete",
+      "one_liner": "Implemented position-based deterministic RNG for probability gating and velocity spread",
+      "narrative": "Added deterministicRand() in rng.h using splitmix64-style hashing keyed on (seed, laneId, absStep, channel). Channel 0 drives probability gating, channel 1 drives velocity spread. Integrated into renderRange() — hits are filtered when roll >= probability, velocity varies by +/- spread. Verified block-size independence: sorted event sets identical across 0.5, 0.1, and 0.05 PPQ block sizes with RNG active. No accumulator state — pure function of position.",
+      "verification_result": "Sorted diff across three block sizes (0.5, 0.1, 0.05 PPQ) shows identical event sets. Velocity varies per event. Probability filtering visibly drops ~10% of hi-hat hits (p=0.9).",
+      "duration": "",
+      "completed_at": "2026-06-20T20:04:13.674Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "engine/include/poly/rng.h",
+        "engine/src/engine.cpp"
+      ],
+      "key_decisions": [
+        "splitmix64-style hash for position-based RNG",
+        "Channel parameter separates probability from velocity randomness",
+        "No state between blocks — pure function of (seed, lane, step, channel)"
+      ],
+      "full_summary_md": "---\nid: T03\nparent: S03\nmilestone: M001\nkey_files:\n  - engine/include/poly/rng.h\n  - engine/src/engine.cpp\nkey_decisions:\n  - splitmix64-style hash for position-based RNG\n  - Channel parameter separates probability from velocity randomness\n  - No state between blocks — pure function of (seed, lane, step, channel)\nduration: \nverification_result: passed\ncompleted_at: 2026-06-20T20:04:13.674Z\nblocker_discovered: false\n---\n\n# T03: Implemented position-based deterministic RNG for probability gating and velocity spread\n\n**Implemented position-based deterministic RNG for probability gating and velocity spread**\n\n## What Happened\n\nAdded deterministicRand() in rng.h using splitmix64-style hashing keyed on (seed, laneId, absStep, channel). Channel 0 drives probability gating, channel 1 drives velocity spread. Integrated into renderRange() — hits are filtered when roll >= probability, velocity varies by +/- spread. Verified block-size independence: sorted event sets identical across 0.5, 0.1, and 0.05 PPQ block sizes with RNG active. No accumulator state — pure function of position.\n\n## Verification\n\nSorted diff across three block sizes (0.5, 0.1, 0.05 PPQ) shows identical event sets. Velocity varies per event. Probability filtering visibly drops ~10% of hi-hat hits (p=0.9).\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `poly_harness 2 120 (0.5|0.1|0.05) | sort | diff` | 0 | Identical event sets across block sizes with RNG | 80ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `engine/include/poly/rng.h`\n- `engine/src/engine.cpp`\n",
+      "description": "Implement position-seeded RNG: state derived from (seed, laneId, absolute step index) so output is identical regardless of block boundaries. Apply probability gating (skip hits when roll > lane.probability) and velocity spread (baseVelocity +/- spread). No accumulator state — pure function of position.",
+      "estimate": "30min",
+      "files": [
+        "engine/include/poly/rng.h",
+        "engine/src/engine.cpp"
+      ],
+      "verify": "cd build && cmake --build . && ./tools/harness/poly_harness 4 120 0.05 > /tmp/a.txt && ./tools/harness/poly_harness 4 120 0.2 > /tmp/b.txt && diff <(grep -v '^#' /tmp/a.txt) <(grep -v '^#' /tmp/b.txt)",
+      "inputs": [
+        "engine/include/poly/types.h"
+      ],
+      "expected_output": [
+        "engine/include/poly/rng.h",
+        "engine/src/engine.cpp"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S03",
+      "id": "T04",
+      "title": "Built 8-test golden determinism suite proving byte-identical output under all transport stress scenarios",
+      "status": "complete",
+      "one_liner": "Built 8-test golden determinism suite proving byte-identical output under all transport stress scenarios",
+      "narrative": "Created golden_tests.cpp with 8 determinism tests: (1) same-patch-same-seed reproducibility, (2) block-size independence (0.05/0.5/2.0 PPQ), (3) loop restart produces identical sub-range, (4) position jump+continue matches straight-through, (5) different seed produces different output, (6) tempo independence in PPQ space, (7) not-playing produces zero events, (8) polymetric phase variation proves 5/16 ghost lane drifts against 4/4. Also generated golden reference file for CI regression detection (79 sorted events for default patch over 4 bars). Full suite: 18 tests, all pass in <1ms.",
+      "verification_result": "18/18 tests pass (10 Euclidean + 8 GoldenDeterminism)",
+      "duration": "",
+      "completed_at": "2026-06-20T20:05:33.949Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "tests/golden_tests.cpp",
+        "tests/golden/default_patch_4bars.txt",
+        "tests/CMakeLists.txt"
+      ],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T04\nparent: S03\nmilestone: M001\nkey_files:\n  - tests/golden_tests.cpp\n  - tests/golden/default_patch_4bars.txt\n  - tests/CMakeLists.txt\nkey_decisions: []\nduration: \nverification_result: passed\ncompleted_at: 2026-06-20T20:05:33.949Z\nblocker_discovered: false\n---\n\n# T04: Built 8-test golden determinism suite proving byte-identical output under all transport stress scenarios\n\n**Built 8-test golden determinism suite proving byte-identical output under all transport stress scenarios**\n\n## What Happened\n\nCreated golden_tests.cpp with 8 determinism tests: (1) same-patch-same-seed reproducibility, (2) block-size independence (0.05/0.5/2.0 PPQ), (3) loop restart produces identical sub-range, (4) position jump+continue matches straight-through, (5) different seed produces different output, (6) tempo independence in PPQ space, (7) not-playing produces zero events, (8) polymetric phase variation proves 5/16 ghost lane drifts against 4/4. Also generated golden reference file for CI regression detection (79 sorted events for default patch over 4 bars). Full suite: 18 tests, all pass in <1ms.\n\n## Verification\n\n18/18 tests pass (10 Euclidean + 8 GoldenDeterminism)\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `build/tests/poly_tests` | 0 | 18 tests passed (10 Euclidean + 8 GoldenDeterminism) | 50ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `tests/golden_tests.cpp`\n- `tests/golden/default_patch_4bars.txt`\n- `tests/CMakeLists.txt`\n",
+      "description": "Set up Google Test in CMake. Write golden tests: (1) straight playback captures reference, (2) same patch+seed reproduces identical output, (3) loop restart produces identical sub-range, (4) different block sizes produce identical events, (5) position jump then continue matches straight-through. Store reference as checked-in .golden files.",
+      "estimate": "45min",
+      "files": [
+        "tests/CMakeLists.txt",
+        "tests/golden_tests.cpp",
+        "tests/golden/",
+        "CMakeLists.txt"
+      ],
+      "verify": "cd build && cmake --build . --target poly_tests && ctest --test-dir . --output-on-failure",
+      "inputs": [
+        "engine/include/poly/engine.h",
+        "engine/include/poly/types.h"
+      ],
+      "expected_output": [
+        "tests/CMakeLists.txt",
+        "tests/golden_tests.cpp"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S04",
+      "id": "T01",
+      "title": "Wrote docs/PRD.md covering scope, lane architecture, velocity model, envelope system, determinism contract, and MVP success criteria.",
+      "status": "complete",
+      "one_liner": "Wrote docs/PRD.md covering scope, lane architecture, velocity model, envelope system, determinism contract, and MVP success criteria.",
+      "narrative": "Synthesized the roadmap vision and implementation plan into a formal PRD. Covers product principles, lane architecture (4-8 lanes with all properties), velocity/dynamics multi-level model, envelope superposition design, macro controls, determinism guarantees, state serialization conventions, and real-time safety constraints. References actual types from the engine codebase.",
+      "verification_result": "File exists at docs/PRD.md. Content references match roadmap.md and IMPLEMENTATION_PLAN.md.",
+      "duration": "",
+      "completed_at": "2026-06-20T20:14:17.078Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "docs/PRD.md"
+      ],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T01\nparent: S04\nmilestone: M001\nkey_files:\n  - docs/PRD.md\nkey_decisions: []\nduration: \nverification_result: untested\ncompleted_at: 2026-06-20T20:14:17.078Z\nblocker_discovered: false\n---\n\n# T01: Wrote docs/PRD.md covering scope, lane architecture, velocity model, envelope system, determinism contract, and MVP success criteria.\n\n**Wrote docs/PRD.md covering scope, lane architecture, velocity model, envelope system, determinism contract, and MVP success criteria.**\n\n## What Happened\n\nSynthesized the roadmap vision and implementation plan into a formal PRD. Covers product principles, lane architecture (4-8 lanes with all properties), velocity/dynamics multi-level model, envelope superposition design, macro controls, determinism guarantees, state serialization conventions, and real-time safety constraints. References actual types from the engine codebase.\n\n## Verification\n\nFile exists at docs/PRD.md. Content references match roadmap.md and IMPLEMENTATION_PLAN.md.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| — | No verification commands discovered | — | — | — |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `docs/PRD.md`\n",
+      "description": "Write docs/PRD.md synthesizing the roadmap vision into a formal requirements document covering scope, user stories, lane architecture, velocity/dynamics model, envelope system, and MVP success criteria.",
+      "estimate": "20min",
+      "files": [
+        "docs/PRD.md"
+      ],
+      "verify": "File exists, references match roadmap.md and IMPLEMENTATION_PLAN.md",
+      "inputs": [
+        "docs/roadmap.md",
+        "IMPLEMENTATION_PLAN.md"
+      ],
+      "expected_output": [
+        "docs/PRD.md"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S04",
+      "id": "T02",
+      "title": "Wrote docs/engine-spec.md covering the poly_engine contract, timing model, lane processing pipeline, deterministic RNG, and data model.",
+      "status": "complete",
+      "one_liner": "Wrote docs/engine-spec.md covering the poly_engine contract, timing model, lane processing pipeline, deterministic RNG, and data model.",
+      "narrative": "Documented the engine architecture, renderRange() API, PPQ-derived timing model, Euclidean rhythm generation, probability gate, velocity computation, and position-seeded RNG. All 39 type references verified against actual codebase headers. Includes future extension sections for accent mask application, envelope evaluation, humanization, and macro resolution — noting what's designed but not yet implemented.",
+      "verification_result": "All referenced types (TransportContext, GrooveState, NoteEvent, LaneConfig, etc.) exist in engine/include/poly/. Spec matches implemented renderRange() behavior.",
+      "duration": "",
+      "completed_at": "2026-06-20T20:14:22.235Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "docs/engine-spec.md"
+      ],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T02\nparent: S04\nmilestone: M001\nkey_files:\n  - docs/engine-spec.md\nkey_decisions: []\nduration: \nverification_result: untested\ncompleted_at: 2026-06-20T20:14:22.235Z\nblocker_discovered: false\n---\n\n# T02: Wrote docs/engine-spec.md covering the poly_engine contract, timing model, lane processing pipeline, deterministic RNG, and data model.\n\n**Wrote docs/engine-spec.md covering the poly_engine contract, timing model, lane processing pipeline, deterministic RNG, and data model.**\n\n## What Happened\n\nDocumented the engine architecture, renderRange() API, PPQ-derived timing model, Euclidean rhythm generation, probability gate, velocity computation, and position-seeded RNG. All 39 type references verified against actual codebase headers. Includes future extension sections for accent mask application, envelope evaluation, humanization, and macro resolution — noting what's designed but not yet implemented.\n\n## Verification\n\nAll referenced types (TransportContext, GrooveState, NoteEvent, LaneConfig, etc.) exist in engine/include/poly/. Spec matches implemented renderRange() behavior.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| — | No verification commands discovered | — | — | — |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `docs/engine-spec.md`\n",
+      "description": "Write docs/engine-spec.md covering the poly_engine contract: timing model (PPQ-derived, no accumulation), cycle math, Euclidean rhythm generation, velocity/emphasis pipeline, envelope superposition design, and the renderRange() API. Reference actual types from engine/include/poly/.",
+      "estimate": "25min",
+      "files": [
+        "docs/engine-spec.md"
+      ],
+      "verify": "All referenced types exist in engine/include/poly/; spec matches implemented renderRange() behavior",
+      "inputs": [
+        "engine/include/poly/engine.h",
+        "engine/include/poly/types.h",
+        "engine/include/poly/euclidean.h",
+        "engine/include/poly/rng.h",
+        "engine/src/engine.cpp"
+      ],
+      "expected_output": [
+        "docs/engine-spec.md"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S04",
+      "id": "T03",
+      "title": "Wrote docs/cubase-workflow.md documenting the canonical Cubase setup, routing, recording, freeze/export, and troubleshooting workflows.",
+      "status": "complete",
+      "one_liner": "Wrote docs/cubase-workflow.md documenting the canonical Cubase setup, routing, recording, freeze/export, and troubleshooting workflows.",
+      "narrative": "Documented the full user workflow: instrument track setup, MIDI send routing, monitoring configuration, transport behavior (loop/tempo/jump determinism), recording modes, editing recorded MIDI, freeze/export procedures, and a troubleshooting table for common issues.",
+      "verification_result": "Document covers load, route, record, export workflow steps as required.",
+      "duration": "",
+      "completed_at": "2026-06-20T20:14:26.516Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "docs/cubase-workflow.md"
+      ],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T03\nparent: S04\nmilestone: M001\nkey_files:\n  - docs/cubase-workflow.md\nkey_decisions: []\nduration: \nverification_result: untested\ncompleted_at: 2026-06-20T20:14:26.516Z\nblocker_discovered: false\n---\n\n# T03: Wrote docs/cubase-workflow.md documenting the canonical Cubase setup, routing, recording, freeze/export, and troubleshooting workflows.\n\n**Wrote docs/cubase-workflow.md documenting the canonical Cubase setup, routing, recording, freeze/export, and troubleshooting workflows.**\n\n## What Happened\n\nDocumented the full user workflow: instrument track setup, MIDI send routing, monitoring configuration, transport behavior (loop/tempo/jump determinism), recording modes, editing recorded MIDI, freeze/export procedures, and a troubleshooting table for common issues.\n\n## Verification\n\nDocument covers load, route, record, export workflow steps as required.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| — | No verification commands discovered | — | — | — |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `docs/cubase-workflow.md`\n",
+      "description": "Write docs/cubase-workflow.md documenting the canonical Cubase routing and recording workflow: instrument track setup, MIDI output routing, recording generated patterns, freeze/export, and monitoring configuration.",
+      "estimate": "15min",
+      "files": [
+        "docs/cubase-workflow.md"
+      ],
+      "verify": "Document covers load, route, record, export workflow steps",
+      "inputs": [
+        "docs/roadmap.md"
+      ],
+      "expected_output": [
+        "docs/cubase-workflow.md"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S04",
+      "id": "T04",
+      "title": "Wrote docs/automation-mapping.md specifying ParamID ranges, exposed vs internal parameters, and normalized/plain conversion conventions.",
+      "status": "complete",
+      "one_liner": "Wrote docs/automation-mapping.md specifying ParamID ranges, exposed vs internal parameters, and normalized/plain conversion conventions.",
+      "narrative": "Defined the ParamID layout (0-99 global, 100-199 macros, 1000+ per-lane with 800-stride formula). Documented 13 automatable parameters (1 global, 6 macros, 7 per-lane) and explained why structural parameters (cycle steps, hit count, rotation, seed) are excluded from automation. Included normalized↔plain conversion formulas and thread safety notes.",
+      "verification_result": "ParamID ranges don't conflict. Exposed vs internal distinction is clear with rationale for each exclusion.",
+      "duration": "",
+      "completed_at": "2026-06-20T20:14:31.712Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "docs/automation-mapping.md"
+      ],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T04\nparent: S04\nmilestone: M001\nkey_files:\n  - docs/automation-mapping.md\nkey_decisions: []\nduration: \nverification_result: untested\ncompleted_at: 2026-06-20T20:14:31.712Z\nblocker_discovered: false\n---\n\n# T04: Wrote docs/automation-mapping.md specifying ParamID ranges, exposed vs internal parameters, and normalized/plain conversion conventions.\n\n**Wrote docs/automation-mapping.md specifying ParamID ranges, exposed vs internal parameters, and normalized/plain conversion conventions.**\n\n## What Happened\n\nDefined the ParamID layout (0-99 global, 100-199 macros, 1000+ per-lane with 800-stride formula). Documented 13 automatable parameters (1 global, 6 macros, 7 per-lane) and explained why structural parameters (cycle steps, hit count, rotation, seed) are excluded from automation. Included normalized↔plain conversion formulas and thread safety notes.\n\n## Verification\n\nParamID ranges don't conflict. Exposed vs internal distinction is clear with rationale for each exclusion.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| — | No verification commands discovered | — | — | — |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `docs/automation-mapping.md`\n",
+      "description": "Write docs/automation-mapping.md specifying which parameters are exposed to Cubase automation (lane velocity, probability, macro controls) vs which remain internal compound controls. Define ParamID ranges and normalized/plain value conventions.",
+      "estimate": "15min",
+      "files": [
+        "docs/automation-mapping.md"
+      ],
+      "verify": "ParamID ranges don't conflict; exposed vs internal distinction is clear",
+      "inputs": [
+        "plugin/source/controller.h",
+        "plugin/source/plugids.h",
+        "IMPLEMENTATION_PLAN.md"
+      ],
+      "expected_output": [
+        "docs/automation-mapping.md"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S04",
+      "id": "T05",
+      "title": "Wrote docs/wireframes.md with ASCII wireframes for all three views: lane overview, focused lane editor, and envelope editor.",
+      "status": "complete",
+      "one_liner": "Wrote docs/wireframes.md with ASCII wireframes for all three views: lane overview, focused lane editor, and envelope editor.",
+      "narrative": "Created text-based wireframe layouts for the three primary views with progressive disclosure navigation flow. Lane overview shows 4-8 lane rows with compact parameter display plus macro sliders. Focused lane editor shows all per-lane parameters including accent mask grid and envelope list. Envelope editor shows waveform preview, settings, and both per-lane and global envelope management. Included widget descriptions, navigation flow diagram, and responsive layout notes.",
+      "verification_result": "All three views described. Layout references match lane/envelope/macro concepts from PRD.",
+      "duration": "",
+      "completed_at": "2026-06-20T20:14:36.571Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "docs/wireframes.md"
+      ],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T05\nparent: S04\nmilestone: M001\nkey_files:\n  - docs/wireframes.md\nkey_decisions: []\nduration: \nverification_result: untested\ncompleted_at: 2026-06-20T20:14:36.571Z\nblocker_discovered: false\n---\n\n# T05: Wrote docs/wireframes.md with ASCII wireframes for all three views: lane overview, focused lane editor, and envelope editor.\n\n**Wrote docs/wireframes.md with ASCII wireframes for all three views: lane overview, focused lane editor, and envelope editor.**\n\n## What Happened\n\nCreated text-based wireframe layouts for the three primary views with progressive disclosure navigation flow. Lane overview shows 4-8 lane rows with compact parameter display plus macro sliders. Focused lane editor shows all per-lane parameters including accent mask grid and envelope list. Envelope editor shows waveform preview, settings, and both per-lane and global envelope management. Included widget descriptions, navigation flow diagram, and responsive layout notes.\n\n## Verification\n\nAll three views described. Layout references match lane/envelope/macro concepts from PRD.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| — | No verification commands discovered | — | — | — |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `docs/wireframes.md`\n",
+      "description": "Write docs/wireframes.md with text-based wireframe layouts for the three primary views: lane overview (4-8 lane grid with macro row), focused lane editor (per-lane detail), and envelope editor. Include ASCII art layouts showing widget placement and information hierarchy.",
+      "estimate": "20min",
+      "files": [
+        "docs/wireframes.md"
+      ],
+      "verify": "All three views described; layout references match lane/envelope/macro concepts from PRD",
+      "inputs": [
+        "docs/roadmap.md",
+        "docs/PRD.md"
+      ],
+      "expected_output": [
+        "docs/wireframes.md"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S05",
+      "id": "T01",
+      "title": "Documented 6 architecture decisions with rationale, alternatives, confidence levels, and Phase 1 impact.",
+      "status": "complete",
+      "one_liner": "Documented 6 architecture decisions with rationale, alternatives, confidence levels, and Phase 1 impact.",
+      "narrative": "Audited all major architecture decisions from M001: engine isolation, PPQ-derived timing, Euclidean rhythms, position-seeded RNG, fixed-capacity buffers, and ParamID layout. Each decision includes alternatives considered and confidence assessment. All are high confidence except ParamID layout (medium-high, not yet implemented in controller).",
+      "verification_result": "All 6 decisions from S01-S04 covered. Rationale and alternatives documented for each.",
+      "duration": "",
+      "completed_at": "2026-06-20T20:18:19.815Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "docs/review/architecture-decisions.md"
+      ],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T01\nparent: S05\nmilestone: M001\nkey_files:\n  - docs/review/architecture-decisions.md\nkey_decisions: []\nduration: \nverification_result: untested\ncompleted_at: 2026-06-20T20:18:19.815Z\nblocker_discovered: false\n---\n\n# T01: Documented 6 architecture decisions with rationale, alternatives, confidence levels, and Phase 1 impact.\n\n**Documented 6 architecture decisions with rationale, alternatives, confidence levels, and Phase 1 impact.**\n\n## What Happened\n\nAudited all major architecture decisions from M001: engine isolation, PPQ-derived timing, Euclidean rhythms, position-seeded RNG, fixed-capacity buffers, and ParamID layout. Each decision includes alternatives considered and confidence assessment. All are high confidence except ParamID layout (medium-high, not yet implemented in controller).\n\n## Verification\n\nAll 6 decisions from S01-S04 covered. Rationale and alternatives documented for each.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| — | No verification commands discovered | — | — | — |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `docs/review/architecture-decisions.md`\n",
+      "description": "Audit all architecture decisions made during M001: engine isolation, PPQ-derived timing, Euclidean rhythm choice, position-seeded RNG, fixed-capacity buffers, ParamID layout. Document rationale, alternatives considered, and confidence level for each.",
+      "estimate": "15min",
+      "files": [
+        "docs/review/architecture-decisions.md"
+      ],
+      "verify": "All major decisions from S01-S04 covered with rationale",
+      "inputs": [
+        "docs/engine-spec.md",
+        "docs/automation-mapping.md",
+        "IMPLEMENTATION_PLAN.md",
+        "engine/include/poly/types.h"
+      ],
+      "expected_output": [
+        "docs/review/architecture-decisions.md"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S05",
+      "id": "T02",
+      "title": "Analyzed 18 tests across 2 files, identified 8 testable gaps and 8 recommended Phase 1 additions.",
+      "status": "complete",
+      "one_liner": "Analyzed 18 tests across 2 files, identified 8 testable gaps and 8 recommended Phase 1 additions.",
+      "narrative": "Cataloged all 10 Euclidean and 8 golden determinism tests with what each proves. Identified 6 not-yet-testable features (accent masks, envelopes, humanization, macros, emphasis, ghost floor) and 8 currently-testable gaps (lane toggle, buffer overflow, negative PPQ, etc.). Test:code ratio is 3.6:1.",
+      "verification_result": "All test files analyzed. Gaps mapped to unimplemented features with specific test recommendations.",
+      "duration": "",
+      "completed_at": "2026-06-20T20:18:24.523Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "docs/review/test-coverage.md"
+      ],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T02\nparent: S05\nmilestone: M001\nkey_files:\n  - docs/review/test-coverage.md\nkey_decisions: []\nduration: \nverification_result: untested\ncompleted_at: 2026-06-20T20:18:24.523Z\nblocker_discovered: false\n---\n\n# T02: Analyzed 18 tests across 2 files, identified 8 testable gaps and 8 recommended Phase 1 additions.\n\n**Analyzed 18 tests across 2 files, identified 8 testable gaps and 8 recommended Phase 1 additions.**\n\n## What Happened\n\nCataloged all 10 Euclidean and 8 golden determinism tests with what each proves. Identified 6 not-yet-testable features (accent masks, envelopes, humanization, macros, emphasis, ghost floor) and 8 currently-testable gaps (lane toggle, buffer overflow, negative PPQ, etc.). Test:code ratio is 3.6:1.\n\n## Verification\n\nAll test files analyzed. Gaps mapped to unimplemented features with specific test recommendations.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| — | No verification commands discovered | — | — | — |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `docs/review/test-coverage.md`\n",
+      "description": "Analyze the current test suite: what is covered (Euclidean algorithm, determinism, block-splitting, loop, tempo, jump), what gaps exist (accent masks, envelopes, humanization, macros, edge cases), and recommended additions for Phase 1.",
+      "estimate": "15min",
+      "files": [
+        "docs/review/test-coverage.md"
+      ],
+      "verify": "All existing test files analyzed; gaps mapped to unimplemented features",
+      "inputs": [
+        "tests/euclidean_tests.cpp",
+        "tests/golden_tests.cpp"
+      ],
+      "expected_output": [
+        "docs/review/test-coverage.md"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S05",
+      "id": "T03",
+      "title": "Audited 21 public API symbols across 4 headers, identified 4 design concerns and 7 Phase 1 additions needed.",
+      "status": "complete",
+      "one_liner": "Audited 21 public API symbols across 4 headers, identified 4 design concerns and 7 Phase 1 additions needed.",
+      "narrative": "Cataloged the complete public API surface: 3 functions, 13 types, 5 constants. Mapped implementation status against PRD requirements (6 implemented, 7 defined but not applied, 6 missing entirely). Flagged 4 API design concerns: no event sorting, no note-off events, stateless engine limitations, and no overflow diagnostic.",
+      "verification_result": "All public headers reviewed. Phase 1 gaps identified with priority-ranked API addition suggestions.",
+      "duration": "",
+      "completed_at": "2026-06-20T20:18:29.236Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "docs/review/api-audit.md"
+      ],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T03\nparent: S05\nmilestone: M001\nkey_files:\n  - docs/review/api-audit.md\nkey_decisions: []\nduration: \nverification_result: untested\ncompleted_at: 2026-06-20T20:18:29.236Z\nblocker_discovered: false\n---\n\n# T03: Audited 21 public API symbols across 4 headers, identified 4 design concerns and 7 Phase 1 additions needed.\n\n**Audited 21 public API symbols across 4 headers, identified 4 design concerns and 7 Phase 1 additions needed.**\n\n## What Happened\n\nCataloged the complete public API surface: 3 functions, 13 types, 5 constants. Mapped implementation status against PRD requirements (6 implemented, 7 defined but not applied, 6 missing entirely). Flagged 4 API design concerns: no event sorting, no note-off events, stateless engine limitations, and no overflow diagnostic.\n\n## Verification\n\nAll public headers reviewed. Phase 1 gaps identified with priority-ranked API addition suggestions.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| — | No verification commands discovered | — | — | — |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `docs/review/api-audit.md`\n",
+      "description": "Review the poly_engine public API: types, functions, constants. Assess completeness against PRD requirements, identify missing APIs for Phase 1 (envelope evaluation, macro resolution, accent application, humanization), and flag any API design concerns.",
+      "estimate": "15min",
+      "files": [
+        "docs/review/api-audit.md"
+      ],
+      "verify": "All public headers reviewed; Phase 1 gaps identified with specific API suggestions",
+      "inputs": [
+        "engine/include/poly/engine.h",
+        "engine/include/poly/types.h",
+        "engine/include/poly/euclidean.h",
+        "engine/include/poly/rng.h",
+        "docs/PRD.md"
+      ],
+      "expected_output": [
+        "docs/review/api-audit.md"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M001",
+      "slice_id": "S05",
+      "id": "T04",
+      "title": "Wrote retrospective covering all 5 slices, 6 risks retired, 7 risks remaining, and 7 Phase 1 recommendations.",
+      "status": "complete",
+      "one_liner": "Wrote retrospective covering all 5 slices, 6 risks retired, 7 risks remaining, and 7 Phase 1 recommendations.",
+      "narrative": "Summarized delivery across all slices. Documented what worked well (engine isolation, position-seeded RNG, PPQ timing, data model first, C++20 designated initializers) and what could improve (documentation ordering, slice titles, missing CI, no static analysis). Listed 6 retired risks with evidence and 7 remaining risks with mitigations. Provided 7 prioritized Phase 1 recommendations.",
+      "verification_result": "All 5 slices covered. Risks and recommendations are specific and actionable.",
+      "duration": "",
+      "completed_at": "2026-06-20T20:18:33.430Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "docs/review/retrospective.md"
+      ],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T04\nparent: S05\nmilestone: M001\nkey_files:\n  - docs/review/retrospective.md\nkey_decisions: []\nduration: \nverification_result: untested\ncompleted_at: 2026-06-20T20:18:33.430Z\nblocker_discovered: false\n---\n\n# T04: Wrote retrospective covering all 5 slices, 6 risks retired, 7 risks remaining, and 7 Phase 1 recommendations.\n\n**Wrote retrospective covering all 5 slices, 6 risks retired, 7 risks remaining, and 7 Phase 1 recommendations.**\n\n## What Happened\n\nSummarized delivery across all slices. Documented what worked well (engine isolation, position-seeded RNG, PPQ timing, data model first, C++20 designated initializers) and what could improve (documentation ordering, slice titles, missing CI, no static analysis). Listed 6 retired risks with evidence and 7 remaining risks with mitigations. Provided 7 prioritized Phase 1 recommendations.\n\n## Verification\n\nAll 5 slices covered. Risks and recommendations are specific and actionable.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| — | No verification commands discovered | — | — | — |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `docs/review/retrospective.md`\n",
+      "description": "Write a retrospective covering M001 execution: what was delivered per slice, what worked well, what could improve, risks retired, risks remaining, and recommendations for Phase 1 planning.",
+      "estimate": "15min",
+      "files": [
+        "docs/review/retrospective.md"
+      ],
+      "verify": "All 5 slices covered; risks and recommendations are actionable",
+      "inputs": [
+        ".gsd/milestones/M001/M001-ROADMAP.md",
+        "docs/PRD.md",
+        "docs/engine-spec.md"
+      ],
+      "expected_output": [
+        "docs/review/retrospective.md"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    }
+  ],
+  "decisions": [],
+  "verification_evidence": [
+    {
+      "id": 1,
+      "task_id": "T01",
+      "slice_id": "S01",
+      "milestone_id": "M001",
+      "command": "cmake -B build -DCMAKE_BUILD_TYPE=Debug",
+      "exit_code": 0,
+      "verdict": "pass",
+      "duration_ms": 17800,
+      "created_at": "2026-06-20T19:51:34.131Z"
+    },
+    {
+      "id": 2,
+      "task_id": "T02",
+      "slice_id": "S01",
+      "milestone_id": "M001",
+      "command": "cmake --build build --target poly_engine",
+      "exit_code": 0,
+      "verdict": "pass",
+      "duration_ms": 2000,
+      "created_at": "2026-06-20T19:51:41.338Z"
+    },
+    {
+      "id": 3,
+      "task_id": "T02",
+      "slice_id": "S01",
+      "milestone_id": "M001",
+      "command": "grep -r 'pluginterfaces|public.sdk|steinberg|Steinberg|vst3sdk' engine/",
+      "exit_code": 1,
+      "verdict": "pass - no VST3 references",
+      "duration_ms": 50,
+      "created_at": "2026-06-20T19:51:41.338Z"
+    },
+    {
+      "id": 4,
+      "task_id": "T03",
+      "slice_id": "S01",
+      "milestone_id": "M001",
+      "command": "cmake --build build --config Debug",
+      "exit_code": 0,
+      "verdict": "pass",
+      "duration_ms": 5000,
+      "created_at": "2026-06-20T19:51:50.353Z"
+    },
+    {
+      "id": 5,
+      "task_id": "T03",
+      "slice_id": "S01",
+      "milestone_id": "M001",
+      "command": "find build -name '*.vst3' -type d",
+      "exit_code": 0,
+      "verdict": "pass - build/VST3/Debug/poly_plugin.vst3",
+      "duration_ms": 100,
+      "created_at": "2026-06-20T19:51:50.353Z"
+    },
+    {
+      "id": 6,
+      "task_id": "T04",
+      "slice_id": "S01",
+      "milestone_id": "M001",
+      "command": "cmake --build build --clean-first 2>&1 | grep 'warning:' | grep -v '_deps/' | grep -v 'duplicate libraries' | grep -v 'Xcode.app'",
+      "exit_code": 1,
+      "verdict": "pass - zero project warnings",
+      "duration_ms": 45000,
+      "created_at": "2026-06-20T19:51:54.800Z"
+    },
+    {
+      "id": 7,
+      "task_id": "T04",
+      "slice_id": "S01",
+      "milestone_id": "M001",
+      "command": "find build -name '*.vst3' -type d",
+      "exit_code": 0,
+      "verdict": "pass - bundle exists",
+      "duration_ms": 50,
+      "created_at": "2026-06-20T19:51:54.800Z"
+    },
+    {
+      "id": 8,
+      "task_id": "T01",
+      "slice_id": "S02",
+      "milestone_id": "M001",
+      "command": "cmake --build build --target poly_engine",
+      "exit_code": 0,
+      "verdict": "pass",
+      "duration_ms": 1200,
+      "created_at": "2026-06-20T19:55:34.816Z"
+    },
+    {
+      "id": 9,
+      "task_id": "T01",
+      "slice_id": "S02",
+      "milestone_id": "M001",
+      "command": "cmake --build build --target poly_plugin",
+      "exit_code": 0,
+      "verdict": "pass (1 expected unused field warning)",
+      "duration_ms": 8000,
+      "created_at": "2026-06-20T19:55:34.816Z"
+    },
+    {
+      "id": 10,
+      "task_id": "T02",
+      "slice_id": "S02",
+      "milestone_id": "M001",
+      "command": "cmake --build build --target poly_harness",
+      "exit_code": 0,
+      "verdict": "pass",
+      "duration_ms": 2000,
+      "created_at": "2026-06-20T19:56:38.407Z"
+    },
+    {
+      "id": 11,
+      "task_id": "T02",
+      "slice_id": "S02",
+      "milestone_id": "M001",
+      "command": "./build/tools/harness/poly_harness",
+      "exit_code": 0,
+      "verdict": "pass — 0 events from stub engine, correct header output",
+      "duration_ms": 50,
+      "created_at": "2026-06-20T19:56:38.407Z"
+    },
+    {
+      "id": 12,
+      "task_id": "T03",
+      "slice_id": "S02",
+      "milestone_id": "M001",
+      "command": "nm build/engine/libpoly_engine.a | grep -i steinberg",
+      "exit_code": 1,
+      "verdict": "pass — no Steinberg symbols",
+      "duration_ms": 50,
+      "created_at": "2026-06-20T19:56:55.973Z"
+    },
+    {
+      "id": 13,
+      "task_id": "T03",
+      "slice_id": "S02",
+      "milestone_id": "M001",
+      "command": "nm build/tools/harness/poly_harness | grep -i steinberg",
+      "exit_code": 1,
+      "verdict": "pass — no Steinberg symbols",
+      "duration_ms": 50,
+      "created_at": "2026-06-20T19:56:55.973Z"
+    },
+    {
+      "id": 14,
+      "task_id": "T03",
+      "slice_id": "S02",
+      "milestone_id": "M001",
+      "command": "grep -r steinberg/vst3/pluginterfaces engine/ -i",
+      "exit_code": 1,
+      "verdict": "pass — no VST3 includes in engine source",
+      "duration_ms": 30,
+      "created_at": "2026-06-20T19:56:55.973Z"
+    },
+    {
+      "id": 15,
+      "task_id": "T01",
+      "slice_id": "S03",
+      "milestone_id": "M001",
+      "command": "build/tests/poly_tests",
+      "exit_code": 0,
+      "verdict": "10 tests passed",
+      "duration_ms": 50,
+      "created_at": "2026-06-20T20:01:57.790Z"
+    },
+    {
+      "id": 16,
+      "task_id": "T02",
+      "slice_id": "S03",
+      "milestone_id": "M001",
+      "command": "poly_harness 2 120 (0.5|0.1|1.0) | sort | diff",
+      "exit_code": 0,
+      "verdict": "Identical event sets across block sizes",
+      "duration_ms": 100,
+      "created_at": "2026-06-20T20:03:11.658Z"
+    },
+    {
+      "id": 17,
+      "task_id": "T03",
+      "slice_id": "S03",
+      "milestone_id": "M001",
+      "command": "poly_harness 2 120 (0.5|0.1|0.05) | sort | diff",
+      "exit_code": 0,
+      "verdict": "Identical event sets across block sizes with RNG",
+      "duration_ms": 80,
+      "created_at": "2026-06-20T20:04:13.674Z"
+    },
+    {
+      "id": 18,
+      "task_id": "T04",
+      "slice_id": "S03",
+      "milestone_id": "M001",
+      "command": "build/tests/poly_tests",
+      "exit_code": 0,
+      "verdict": "18 tests passed (10 Euclidean + 8 GoldenDeterminism)",
+      "duration_ms": 50,
+      "created_at": "2026-06-20T20:05:33.949Z"
+    }
+  ]
+}
