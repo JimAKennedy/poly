@@ -335,3 +335,63 @@ TEST(GoldenDeterminism, DynamicShapingLoopRestart) {
     EXPECT_EQ(serialize(firstTwo), serialize(looped))
         << "Dynamic shaping: loop restart differs from straight-through";
 }
+
+// --- Test 11: Envelope modulation deterministic across block sizes ---
+TEST(GoldenDeterminism, EnvelopeBlockIndependence) {
+    poly::Engine engine;
+    auto state = makeTestState();
+
+    // Per-lane velocity envelope on kick: 3-bar sine
+    state.lanes[0].envelopes[0].envelope = {
+        poly::EnvTarget::Velocity, 3.0f, poly::Shape::Sine, 0.8f, 0.0f};
+    state.lanes[0].envelopes[0].active = true;
+    state.lanes[0].envelopeCount = 1;
+
+    // Per-lane density envelope on hi-hat: 7-bar ramp
+    state.lanes[2].envelopes[0].envelope = {
+        poly::EnvTarget::Density, 7.0f, poly::Shape::Ramp, 0.6f, 0.25f};
+    state.lanes[2].envelopes[0].active = true;
+    state.lanes[2].envelopeCount = 1;
+
+    // Global velocity envelope: 5-bar triangle
+    state.globalEnvelopes[0] = {
+        poly::EnvTarget::Velocity, 5.0f, poly::Shape::Triangle, 0.5f, 0.1f};
+    state.globalEnvelopeCount = 1;
+
+    // 8 bars = 32 PPQ — enough for non-dividing periods to show emergence
+    auto small  = renderSorted(engine, state, 0.0, 32.0, 0.05);
+    auto medium = renderSorted(engine, state, 0.0, 32.0, 0.5);
+    auto large  = renderSorted(engine, state, 0.0, 32.0, 2.0);
+
+    EXPECT_EQ(serialize(small), serialize(medium))
+        << "Envelope: 0.05 vs 0.5 PPQ blocks differ";
+    EXPECT_EQ(serialize(small), serialize(large))
+        << "Envelope: 0.05 vs 2.0 PPQ blocks differ";
+}
+
+// --- Test 12: Envelope modulation deterministic across loop restarts ---
+TEST(GoldenDeterminism, EnvelopeLoopRestart) {
+    poly::Engine engine;
+    auto state = makeTestState();
+
+    state.lanes[0].envelopes[0].envelope = {
+        poly::EnvTarget::Velocity, 3.0f, poly::Shape::Sine, 0.8f, 0.0f};
+    state.lanes[0].envelopes[0].active = true;
+    state.lanes[0].envelopeCount = 1;
+
+    state.globalEnvelopes[0] = {
+        poly::EnvTarget::Velocity, 5.0f, poly::Shape::Triangle, 0.5f, 0.1f};
+    state.globalEnvelopeCount = 1;
+
+    auto straight = renderSorted(engine, state, 0.0, 32.0, 0.5);
+
+    std::vector<EventRecord> firstHalf;
+    for (const auto& e : straight) {
+        if (e.ppq < 16.0) firstHalf.push_back(e);
+    }
+
+    auto looped = renderSorted(engine, state, 0.0, 16.0, 0.5);
+
+    EXPECT_EQ(serialize(firstHalf), serialize(looped))
+        << "Envelope: loop restart differs from straight-through";
+}
