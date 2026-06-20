@@ -287,3 +287,51 @@ TEST(GoldenDeterminism, PolymetricPhaseVariation) {
     }
     EXPECT_TRUE(hasDifference) << "Polymetric ghost lane should show phase drift across bars";
 }
+
+// --- Test 9: Dynamic shaping features maintain determinism across block sizes ---
+TEST(GoldenDeterminism, DynamicShapingBlockIndependence) {
+    poly::Engine engine;
+    auto state = makeTestState();
+
+    // Configure dynamic shaping on the kick lane
+    state.lanes[0].accents.steps[0] = true;
+    state.lanes[0].accents.steps[2] = true;
+    state.lanes[0].emphasisProb = 0.7f;
+    state.lanes[0].ghostFloor = 20;
+
+    // Ghost lane already has ghostFloor=25; add accents
+    state.lanes[3].accents.steps[0] = true;
+    state.lanes[3].accents.steps[3] = true;
+    state.lanes[3].emphasisProb = 0.5f;
+
+    auto small  = renderSorted(engine, state, 0.0, 16.0, 0.05);
+    auto medium = renderSorted(engine, state, 0.0, 16.0, 0.5);
+    auto large  = renderSorted(engine, state, 0.0, 16.0, 2.0);
+
+    EXPECT_EQ(serialize(small), serialize(medium))
+        << "Dynamic shaping: 0.05 vs 0.5 PPQ blocks differ";
+    EXPECT_EQ(serialize(small), serialize(large))
+        << "Dynamic shaping: 0.05 vs 2.0 PPQ blocks differ";
+}
+
+// --- Test 10: Dynamic shaping deterministic across loop restarts ---
+TEST(GoldenDeterminism, DynamicShapingLoopRestart) {
+    poly::Engine engine;
+    auto state = makeTestState();
+
+    state.lanes[0].accents.steps[0] = true;
+    state.lanes[0].emphasisProb = 0.8f;
+    state.lanes[3].ghostFloor = 40;
+
+    auto straight = renderSorted(engine, state, 0.0, 16.0, 0.5);
+
+    std::vector<EventRecord> firstTwo;
+    for (const auto& e : straight) {
+        if (e.ppq < 8.0) firstTwo.push_back(e);
+    }
+
+    auto looped = renderSorted(engine, state, 0.0, 8.0, 0.5);
+
+    EXPECT_EQ(serialize(firstTwo), serialize(looped))
+        << "Dynamic shaping: loop restart differs from straight-through";
+}

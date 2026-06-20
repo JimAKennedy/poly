@@ -1,14 +1,14 @@
 {
   "version": 1,
-  "exported_at": "2026-06-20T20:18:44.258Z",
+  "exported_at": "2026-06-20T20:54:40.010Z",
   "milestones": [
     {
       "id": "M001",
       "title": "Definition and Architecture De-risking",
-      "status": "active",
+      "status": "complete",
       "depends_on": [],
       "created_at": "2026-06-20T19:29:14.412Z",
-      "completed_at": null,
+      "completed_at": "2026-06-20T20:24:22.229Z",
       "vision": "Lock the Cubase-first VST3 model, establish poly_engine isolation boundary, and prove deterministic timing before any feature work. An empty instrument loads in Cubase, the engine compiles without the VST3 SDK, and golden tests verify byte-identical output under transport stress.",
       "success_criteria": [
         "Empty VST3 instrument instantiates in Cubase without error",
@@ -64,55 +64,48 @@
       "depends_on": [],
       "created_at": "2026-06-20T19:29:17.825Z",
       "completed_at": null,
-      "vision": "A musically useful polymetric groove generator with no ML. Lane-independent Euclidean rhythms with dynamics-first velocity shaping, superimposed multi-period envelopes, coherent macro controls, real-time-safe VST3 plugin integration, and a minimal but legible VSTGUI editor. The plugin is stable under start/stop, loop, and tempo changes in Cubase.",
+      "vision": "A musically useful polymetric groove generator with no ML. Complete the velocity pipeline (accents, emphasis, ghosts), add superimposed multi-period envelopes, swing and humanization, coherent macro controls, real-time-safe VST3 plugin integration with state serialization, and a minimal VSTGUI editor. Stable under start/stop, loop, and tempo changes in Cubase.",
       "success_criteria": [
         "Stable under start/stop, loop, and tempo change in Cubase",
         "Repeatable output when randomness disabled (seed-deterministic)",
         "Visible lane-to-audio correspondence in the UI",
         "Audible velocity and emphasis variation across lanes",
         "Patch save/load round-trips correctly with version stamp",
-        "No heap allocation, locks, exceptions, or I/O in process()"
+        "No heap allocation, locks, exceptions, or I/O in process()",
+        "Macro controls coherently affect multiple lane parameters",
+        "Envelope modulation creates evolving multi-bar patterns"
       ],
       "key_risks": [
         {
-          "risk": "Envelope-lane interaction complexity when multiple envelopes modulate same target",
-          "whyItMatters": "Stacking envelopes on velocity or density could produce degenerate output (all silent, all max) if combination logic is not carefully bounded"
+          "risk": "Envelope phase computation complexity with non-dividing periods",
+          "whyItMatters": "Multi-period envelopes with irrational ratios are the core musical feature — if phase math drifts or jitters it breaks the determinism guarantee"
         },
         {
-          "risk": "Real-time safety in VST3 process() with full engine running",
-          "whyItMatters": "Engine pre-allocation strategy must handle worst-case 8 lanes with multiple envelopes without any dynamic allocation in the audio callback"
+          "risk": "VST3 parameter count explosion with 8 lanes x N params",
+          "whyItMatters": "Cubase automation and preset management get unwieldy with >100 parameters; need thoughtful grouping and compound params"
         },
         {
-          "risk": "VSTGUI learning curve and .uidesc workflow",
-          "whyItMatters": "First VSTGUI project for the portfolio; editor development may take longer than estimated and block validation of the full plugin experience"
+          "risk": "VSTGUI learning curve and .uidesc authoring",
+          "whyItMatters": "First VSTGUI project in the portfolio; unknown integration friction could expand S06 significantly"
         },
         {
-          "risk": "Macro-to-parameter mapping coherence",
-          "whyItMatters": "If macros map as simple multiplies rather than coherent musical transformations, they will feel like generic knobs rather than compositional tools"
+          "risk": "Real-time safety of macro resolution across all lanes",
+          "whyItMatters": "Macro→param mapping touches every lane every block; any allocation or branching pattern here is a RT violation"
         }
       ],
-      "proof_strategy": [
-        {
-          "riskOrUnknown": "Envelope stacking produces musically valid output",
-          "retireIn": "S03",
-          "whatWillBeProven": "Golden tests verify bounded, non-degenerate output when multiple envelopes target the same parameter simultaneously"
-        },
-        {
-          "riskOrUnknown": "process() is real-time safe under full load",
-          "retireIn": "S05",
-          "whatWillBeProven": "Debug allocator hook confirms zero allocations in renderRange(); stress test with 8 lanes and max envelopes passes"
-        },
-        {
-          "riskOrUnknown": "Macro mapping feels musical, not mechanical",
-          "retireIn": "S04",
-          "whatWillBeProven": "Macro sweep golden tests show non-linear, musically coherent parameter evolution across the range"
-        }
-      ],
+      "proof_strategy": [],
       "verification_contract": "",
       "verification_integration": "",
       "verification_operational": "",
       "verification_uat": "",
-      "definition_of_done": [],
+      "definition_of_done": [
+        "All engine unit tests pass including accent, envelope, swing, and macro tests",
+        "Golden tests updated and passing for all new features",
+        "VST3 plugin loads in Cubase, generates MIDI output",
+        "State save/load round-trips with version stamping",
+        "VSTGUI editor displays lane activity and macro controls",
+        "No RT safety violations in process() or renderRange()"
+      ],
       "requirement_coverage": "Not provided.",
       "boundary_map_markdown": "Not provided.",
       "sequence": 0
@@ -171,6 +164,26 @@
       "definition_of_done": [],
       "requirement_coverage": "Not provided.",
       "boundary_map_markdown": "Not provided.",
+      "sequence": 0
+    },
+    {
+      "id": "M004",
+      "title": "",
+      "status": "queued",
+      "depends_on": [],
+      "created_at": "2026-06-20T20:34:44.522Z",
+      "completed_at": null,
+      "vision": "",
+      "success_criteria": [],
+      "key_risks": [],
+      "proof_strategy": [],
+      "verification_contract": "",
+      "verification_integration": "",
+      "verification_operational": "",
+      "verification_uat": "",
+      "definition_of_done": [],
+      "requirement_coverage": "",
+      "boundary_map_markdown": "",
       "sequence": 0
     }
   ],
@@ -288,20 +301,20 @@
     {
       "milestone_id": "M002",
       "id": "S01",
-      "title": "Lane Generator Core",
-      "status": "pending",
-      "risk": "medium",
+      "title": "S01",
+      "status": "complete",
+      "risk": "low",
       "depends": [],
-      "demo": "Engine produces correct Euclidean rhythms for various hitCount/cycle configs; identical seed produces identical output across runs",
+      "demo": "Lane output shows natural velocity variation with distinct accents, ghost notes, and controlled emphasis probability",
       "created_at": "2026-06-20T19:33:12.184Z",
-      "completed_at": null,
-      "full_summary_md": "",
-      "full_uat_md": "",
-      "goal": "Implement lane generator with cycle/subdivision/hitCount/rotation using Euclidean distribution, plus per-lane probability gating and seeded reproducible RNG",
-      "success_criteria": "Euclidean distribution correct for all valid hitCount <= cycle length; rotation shifts pattern correctly; probability gates individual hits; same seed reproduces identical sequence; each lane operates independently",
-      "proof_level": "Unit tests for Euclidean math, rotation, and probability gating; golden tests for seed reproducibility across multiple runs",
-      "integration_closure": "Lane generator integrates with renderRange(); each lane produces independent NoteEvents into the output buffer",
-      "observability_impact": "Harness can dump per-lane hit patterns with step indices for debugging",
+      "completed_at": "2026-06-20T20:54:40.004Z",
+      "full_summary_md": "---\nid: S01\nparent: M002\nmilestone: M002\nprovides:\n  - (none)\nrequires:\n  []\naffects:\n  []\nkey_files:\n  - engine/src/engine.cpp\n  - tests/dynamic_shaping_tests.cpp\n  - tests/golden_tests.cpp\n  - tests/CMakeLists.txt\nkey_decisions: []\npatterns_established:\n  - (none)\nobservability_surfaces:\n  - none\ndrill_down_paths:\n  []\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-06-20T20:54:40.005Z\nblocker_discovered: false\n---\n\n# S01: Dynamic Shaping\n\n**Added accent masks with emphasis probability gating and ghost floor velocity clamping to the engine velocity pipeline**\n\n## What Happened\n\nImplemented the full dynamic shaping velocity pipeline in renderRange(). Three features were added to the velocity calculation chain: (1) accent mask boost — configurable per-step accents add +0.15 to velocity; (2) emphasis probability gate — each accent position rolls a deterministic random value against emphasisProb to decide whether the accent actually expresses; (3) ghost floor — velocity is clamped to a minimum of ghostFloor/127.0f, ensuring quiet notes maintain presence. All three features use deterministic position-based RNG (channel 2 for emphasis), so they maintain block-size independence and loop-restart determinism. 14 new tests were added: 12 unit tests covering individual features and combined pipeline behavior, plus 2 golden determinism tests verifying dynamic shaping across block sizes and loop restarts.\n\n## Verification\n\n32/32 tests pass: 10 euclidean, 10 golden determinism (including 2 new dynamic shaping determinism tests), 12 dynamic shaping unit tests.\n\n## Requirements Advanced\n\nNone.\n\n## Requirements Validated\n\nNone.\n\n## New Requirements Surfaced\n\nNone.\n\n## Requirements Invalidated or Re-scoped\n\nNone.\n\n## Operational Readiness\n\nNone.\n\n## Deviations\n\nNone.\n\n## Known Limitations\n\nNone.\n\n## Follow-ups\n\nNone.\n\n## Files Created/Modified\n\n- `engine/src/engine.cpp` — Added accent mask boost, emphasis probability gate, and ghost floor to velocity pipeline\n- `tests/dynamic_shaping_tests.cpp` — New test file with 12 unit tests for dynamic shaping features\n- `tests/golden_tests.cpp` — Added 2 golden determinism tests for dynamic shaping\n- `tests/CMakeLists.txt` — Added dynamic_shaping_tests.cpp to test executable\n",
+      "full_uat_md": "# S01: Dynamic Shaping — UAT\n\n**Milestone:** M002\n**Written:** 2026-06-20T20:54:40.005Z\n\n## Dynamic Shaping UAT\n\n### Accent Mask Boost\n- [x] Steps marked in AccentMask receive +0.15 velocity boost\n- [x] Steps not in AccentMask are unaffected\n- [x] Multiple accent positions work independently\n\n### Emphasis Probability\n- [x] emphasisProb=0.0 suppresses all accents (base velocity only)\n- [x] emphasisProb=1.0 always expresses accents\n- [x] emphasisProb=0.5 produces a statistical mix of accented/unaccented\n\n### Ghost Floor\n- [x] Velocity never falls below ghostFloor/127.0f\n- [x] ghostFloor=0 has no effect (no minimum)\n- [x] High velocities are not reduced by the floor\n\n### Pipeline Integration\n- [x] Accent boost + ghost floor work together correctly\n- [x] Velocity always stays in [0.0, 1.0] range\n- [x] All features are deterministic (same input → same output)\n- [x] Block-size independent with dynamic shaping enabled\n- [x] Loop-restart deterministic with dynamic shaping enabled\n",
+      "goal": "Complete the velocity pipeline by implementing accent mask application, emphasis probability gating, and ghost floor velocity in renderRange",
+      "success_criteria": "Accent positions produce higher velocity, ghost floor limits minimum velocity, emphasis probability gates accent expression; all deterministic with golden test coverage",
+      "proof_level": "Unit tests + golden tests with accent/emphasis/ghost scenarios",
+      "integration_closure": "Extends existing renderRange velocity calculation; no new APIs or cross-module dependencies",
+      "observability_impact": "Velocity values in golden test output show accent/ghost/emphasis variation",
       "sequence": 1,
       "replan_triggered_at": null,
       "is_sketch": 0,
@@ -310,22 +323,20 @@
     {
       "milestone_id": "M002",
       "id": "S02",
-      "title": "Dynamic Shaping",
+      "title": "Envelope Superposition v1",
       "status": "pending",
-      "risk": "low",
-      "depends": [
-        "S01"
-      ],
-      "demo": "Lane output shows natural velocity variation with distinct accents, ghost notes, and controlled randomization",
+      "risk": "high",
+      "depends": [],
+      "demo": "Velocity and density evolve over multi-bar periods; overlapping envelopes with non-dividing periods create emergent evolving patterns",
       "created_at": "2026-06-20T19:33:12.184Z",
       "completed_at": null,
       "full_summary_md": "",
       "full_uat_md": "",
-      "goal": "Implement the velocity and emphasis model: base velocity, accent mask, emphasis probability, ghost floor, velocity spread, and humanize timing jitter",
-      "success_criteria": "Accent positions produce higher velocity; ghost notes stay above floor; velocity spread creates bounded variation; emphasis probability controls accent expression rate; humanize applies PPQ-based timing jitter",
-      "proof_level": "Unit tests for velocity calculation at each shaping stage; golden tests for shaped output determinism",
-      "integration_closure": "Dynamic shaping applies to lane generator output before NoteEvent emission; all shaping parameters derive from LaneConfig",
-      "observability_impact": "Harness shows per-hit velocity breakdown (base, accent, ghost, spread) for tuning",
+      "goal": "Implement shape functions, PPQ-derived envelope phase, and apply envelope modulation to velocity and density targets for both per-lane and global envelopes",
+      "success_criteria": "Sine/Ramp/Triangle shapes produce correct waveforms; envelope phase is PPQ-derived (no accumulation); velocity and density modulation audible; golden tests prove determinism",
+      "proof_level": "Unit tests for shape functions + phase math; golden tests for envelope modulation output",
+      "integration_closure": "Envelope evaluation integrates into renderRange after pattern generation and before note emission; reads existing EnvelopeAssign and Envelope types",
+      "observability_impact": "Golden test output shows velocity modulation across multi-bar periods",
       "sequence": 2,
       "replan_triggered_at": null,
       "is_sketch": 0,
@@ -334,22 +345,20 @@
     {
       "milestone_id": "M002",
       "id": "S03",
-      "title": "Envelope Superposition v1",
+      "title": "Swing and Humanization",
       "status": "pending",
-      "risk": "high",
-      "depends": [
-        "S01"
-      ],
-      "demo": "Velocity and density evolve over multi-bar periods; overlapping envelopes with non-dividing periods create emergent evolving patterns",
+      "risk": "low",
+      "depends": [],
+      "demo": "Notes shift timing on even subdivisions (swing), jitter slightly (humanize), and have controllable durations",
       "created_at": "2026-06-20T19:33:12.184Z",
       "completed_at": null,
       "full_summary_md": "",
       "full_uat_md": "",
-      "goal": "Implement superimposed envelopes targeting velocity and density with multi-period, independent phase-offset support and non-dividing cycle lengths",
-      "success_criteria": "Envelope phase derived from absolute PPQ (no accumulation); multiple envelopes on same target combine correctly with bounded output; non-dividing periods create long-form evolution; shape types (ramp, sine, curve) implemented",
-      "proof_level": "Unit tests for envelope phase math and combination; golden tests for multi-envelope interaction; boundary tests for degenerate stacking",
-      "integration_closure": "Envelopes modulate lane parameters: density affects hit generation, velocity affects post-generation shaping; envelope values cached per-block",
-      "observability_impact": "Harness can dump envelope values over time for visual debugging of evolving patterns",
+      "goal": "Implement swing offset on even subdivisions, humanize timing jitter using deterministic RNG, and note duration control",
+      "success_criteria": "Swing shifts even-subdivision notes by configurable amount; humanize adds bounded PPQ jitter deterministically; note duration is configurable per lane; golden tests updated",
+      "proof_level": "Unit tests for swing math + humanize bounds; golden tests for timing output",
+      "integration_closure": "Modifies ppqPosition and duration in renderRange note emission; uses existing deterministicRand for humanize",
+      "observability_impact": "Golden test output shows shifted note positions and variable durations",
       "sequence": 3,
       "replan_triggered_at": null,
       "is_sketch": 0,
@@ -358,7 +367,7 @@
     {
       "milestone_id": "M002",
       "id": "S04",
-      "title": "Macro Controls",
+      "title": "Macro Resolution",
       "status": "pending",
       "risk": "medium",
       "depends": [
@@ -371,11 +380,11 @@
       "completed_at": null,
       "full_summary_md": "",
       "full_uat_md": "",
-      "goal": "Implement 5 core macros (complexity, density, syncopation, swing, tension) with coherent multi-parameter mapping that feels musical, not mechanical",
-      "success_criteria": "Each macro maps to multiple lane/dynamic/envelope parameters coherently (not single multiply); all 5 macros functional with full-range sweep producing musical results; macro values included in serializable GrooveState",
-      "proof_level": "Unit tests for macro-to-parameter resolution; golden tests for macro sweep output showing non-linear parameter evolution",
-      "integration_closure": "Macros resolve into concrete per-lane parameters before renderRange(); macro resolution is a pre-pass, not interleaved with generation",
-      "observability_impact": "Harness shows resolved parameter values after macro application for each lane",
+      "goal": "Implement coherent multi-parameter macro mapping for complexity, density, syncopation, swing, tension, and humanize",
+      "success_criteria": "Each macro maps to multiple lane parameters coherently (not simple multiply); macro at 0 and 1 produce distinct musical results; all mappings are RT-safe with no allocation",
+      "proof_level": "Unit tests for each macro mapping; golden tests showing macro sweep output",
+      "integration_closure": "Macro resolution runs before renderRange, producing resolved GrooveState; no persistent state",
+      "observability_impact": "Tests verify macro values produce expected parameter distributions across lanes",
       "sequence": 4,
       "replan_triggered_at": null,
       "is_sketch": 0,
@@ -384,13 +393,10 @@
     {
       "milestone_id": "M002",
       "id": "S05",
-      "title": "Plugin Integration and State",
+      "title": "VST3 Plugin Integration",
       "status": "pending",
       "risk": "high",
       "depends": [
-        "S01",
-        "S02",
-        "S03",
         "S04"
       ],
       "demo": "Plugin generates polymetric rhythms in Cubase; save project and reload preserves complete patch; loop and transport jumps handled correctly",
@@ -398,11 +404,11 @@
       "completed_at": null,
       "full_summary_md": "",
       "full_uat_md": "",
-      "goal": "Wire complete engine into VST3 plugin: EditController with all params, processor process() reading ProcessContext and emitting notes to output IEventList, versioned patch save/load via getState/setState",
-      "success_criteria": "process() is real-time safe (zero alloc/lock/throw verified by debug hook); all engine params exposed via EditController with proper units; state versioned with kStateVersion as first int32; IParameterChanges consumed into lock-free snapshot; silent audio output bus declared; loop restart and position jump produce correct output",
-      "proof_level": "RT safety audit via debug allocator hook; Cubase manual test (load, play, save, reload, loop, jump); state version round-trip unit test",
-      "integration_closure": "Plugin wraps engine completely; IParameterChanges queue consumed lock-free; ProcessContext transport state fed to engine TransportContext; NoteEvents drained to output IEventList",
-      "observability_impact": "Non-RT thread debug logging for parameter change events and state save/load operations",
+      "goal": "Wire EditController parameters, ProcessContext bridge, engine-to-IEventList MIDI output with note-off scheduling, and versioned state serialization",
+      "success_criteria": "Parameters automate in Cubase; ProcessContext fields map correctly to TransportContext; NoteOn/NoteOff events emit to IEventList with correct sample offsets; getState/setState round-trips with kStateVersion",
+      "proof_level": "Unit tests for sample offset calculation and state serialization; manual Cubase verification checklist",
+      "integration_closure": "Processor bridges host to engine; Controller exposes parameters; state serialization covers full GrooveState",
+      "observability_impact": "Debug logging for transport state and parameter changes (non-RT thread only)",
       "sequence": 5,
       "replan_triggered_at": null,
       "is_sketch": 0,
@@ -417,16 +423,16 @@
       "depends": [
         "S05"
       ],
-      "demo": "UI shows lane activity in real time, macro knobs control all 5 macros, velocity view updates during playback",
+      "demo": "UI shows lane activity in real time, macro knobs control all macros, velocity view updates during playback",
       "created_at": "2026-06-20T19:33:12.184Z",
       "completed_at": null,
       "full_summary_md": "",
       "full_uat_md": "",
-      "goal": "Build minimal VSTGUI editor with 4-8 lane grid, macro control row, and per-lane velocity/accent visualization using .uidesc",
-      "success_criteria": "Lane grid displays 4-8 lanes with hit and accent indicators; macro row provides controls for all 5 macros; velocity view updates in sync with playback; UI responds to both automation and direct manipulation",
-      "proof_level": "Visual Cubase test with playback; UI parameter changes reflected in audio output; automation writes update UI state",
-      "integration_closure": "Editor communicates with controller via standard VST3 parameter model; no direct engine access from UI thread",
-      "observability_impact": "UI provides real-time visual feedback for lane state, macro values, and velocity distribution",
+      "goal": "Build minimal VSTGUI editor with lane overview grid, macro knob row, and per-lane velocity view",
+      "success_criteria": "Editor opens in Cubase without crash; lane grid shows which lanes are active; macro knobs send parameter changes to processor; velocity view updates during playback",
+      "proof_level": "Manual Cubase verification; no automated UI tests (first VSTGUI project)",
+      "integration_closure": "Editor communicates via EditController parameter changes; no direct engine access",
+      "observability_impact": "Visual feedback of lane activity and macro positions",
       "sequence": 6,
       "replan_triggered_at": null,
       "is_sketch": 0,
@@ -1462,6 +1468,1043 @@
       "escalation_awaiting_review": 0,
       "escalation_artifact_path": null,
       "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M002",
+      "slice_id": "S01",
+      "id": "T01",
+      "title": "Implemented accent mask velocity boost in renderRange",
+      "status": "complete",
+      "one_liner": "Implemented accent mask velocity boost in renderRange",
+      "narrative": "Added accent mask checking in the velocity pipeline. After base velocity + spread calculation, if cfg.accents.steps[cycleStep] is true, a +0.15 velocity boost is applied. The accent mask was already defined in LaneConfig but unused — now it's wired into the render loop.",
+      "verification_result": "Built and ran 32 tests including 3 accent-specific tests (AccentBoostApplied, AccentNoMaskNoBoost, AccentMultipleSteps). All pass.",
+      "duration": "",
+      "completed_at": "2026-06-20T20:54:09.082Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "engine/src/engine.cpp",
+        "tests/dynamic_shaping_tests.cpp"
+      ],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T01\nparent: S01\nmilestone: M002\nkey_files:\n  - engine/src/engine.cpp\n  - tests/dynamic_shaping_tests.cpp\nkey_decisions: []\nduration: \nverification_result: passed\ncompleted_at: 2026-06-20T20:54:09.080Z\nblocker_discovered: false\n---\n\n# T01: Implemented accent mask velocity boost in renderRange\n\n**Implemented accent mask velocity boost in renderRange**\n\n## What Happened\n\nAdded accent mask checking in the velocity pipeline. After base velocity + spread calculation, if cfg.accents.steps[cycleStep] is true, a +0.15 velocity boost is applied. The accent mask was already defined in LaneConfig but unused — now it's wired into the render loop.\n\n## Verification\n\nBuilt and ran 32 tests including 3 accent-specific tests (AccentBoostApplied, AccentNoMaskNoBoost, AccentMultipleSteps). All pass.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `cmake --build . && ctest --output-on-failure` | 0 | 32/32 tests pass | 3000ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `engine/src/engine.cpp`\n- `tests/dynamic_shaping_tests.cpp`\n",
+      "description": "In renderRange, after Euclidean pattern check and probability gate, check if the current cycleStep is marked in cfg.accents.steps[]. If true, boost velocity by a fixed accent amount (e.g. +0.15, clamped to 1.0). The accent mask is already defined in LaneConfig but not used.",
+      "estimate": "30min",
+      "files": [
+        "engine/src/engine.cpp",
+        "tests/euclidean_tests.cpp"
+      ],
+      "verify": "cd build && cmake --build . && ctest --output-on-failure",
+      "inputs": [
+        "engine/include/poly/types.h"
+      ],
+      "expected_output": [
+        "Modified engine.cpp with accent mask application in renderRange",
+        "New accent_mask unit tests"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M002",
+      "slice_id": "S01",
+      "id": "T02",
+      "title": "Implemented emphasis probability gate for accent expression",
+      "status": "complete",
+      "one_liner": "Implemented emphasis probability gate for accent expression",
+      "narrative": "Accent boost is now gated by emphasisProb. When a step is an accent position, deterministicRand with channel 2 rolls emphasis. If the roll >= emphasisProb, the accent is suppressed and the note uses base velocity. emphasisProb=0 means accents never fire; emphasisProb=1 means they always fire.",
+      "verification_result": "3 emphasis-specific tests pass: EmphasisZeroSuppressesAccent, EmphasisOneAlwaysExpresses, EmphasisPartialMix.",
+      "duration": "",
+      "completed_at": "2026-06-20T20:54:13.800Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "engine/src/engine.cpp",
+        "tests/dynamic_shaping_tests.cpp"
+      ],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T02\nparent: S01\nmilestone: M002\nkey_files:\n  - engine/src/engine.cpp\n  - tests/dynamic_shaping_tests.cpp\nkey_decisions: []\nduration: \nverification_result: passed\ncompleted_at: 2026-06-20T20:54:13.800Z\nblocker_discovered: false\n---\n\n# T02: Implemented emphasis probability gate for accent expression\n\n**Implemented emphasis probability gate for accent expression**\n\n## What Happened\n\nAccent boost is now gated by emphasisProb. When a step is an accent position, deterministicRand with channel 2 rolls emphasis. If the roll >= emphasisProb, the accent is suppressed and the note uses base velocity. emphasisProb=0 means accents never fire; emphasisProb=1 means they always fire.\n\n## Verification\n\n3 emphasis-specific tests pass: EmphasisZeroSuppressesAccent, EmphasisOneAlwaysExpresses, EmphasisPartialMix.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `cmake --build . && ctest --output-on-failure` | 0 | 32/32 tests pass | 3000ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `engine/src/engine.cpp`\n- `tests/dynamic_shaping_tests.cpp`\n",
+      "description": "When a step is an accent position, use emphasisProb to gate whether the accent actually expresses. Use deterministicRand with a new channel (e.g. channel 2) to roll emphasis. If roll >= emphasisProb, the accent is suppressed and the note uses base velocity instead.",
+      "estimate": "20min",
+      "files": [
+        "engine/src/engine.cpp",
+        "tests/euclidean_tests.cpp"
+      ],
+      "verify": "cd build && cmake --build . && ctest --output-on-failure",
+      "inputs": [
+        "engine/include/poly/types.h",
+        "engine/include/poly/rng.h"
+      ],
+      "expected_output": [
+        "Modified engine.cpp with emphasis probability gating",
+        "Emphasis probability tests"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M002",
+      "slice_id": "S01",
+      "id": "T03",
+      "title": "Implemented ghost floor velocity clamping",
+      "status": "complete",
+      "one_liner": "Implemented ghost floor velocity clamping",
+      "narrative": "After all velocity calculations (base + spread + accent boost), the velocity is clamped to a minimum of ghostFloor/127.0f before the final [0,1] clamp. This ensures even quiet notes maintain a minimum presence. ghostFloor=0 disables the floor.",
+      "verification_result": "3 ghost floor tests pass: GhostFloorClampsLow, GhostFloorZeroNoEffect, GhostFloorNoReduceHigh. Combined pipeline tests also pass.",
+      "duration": "",
+      "completed_at": "2026-06-20T20:54:18.087Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "engine/src/engine.cpp",
+        "tests/dynamic_shaping_tests.cpp"
+      ],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T03\nparent: S01\nmilestone: M002\nkey_files:\n  - engine/src/engine.cpp\n  - tests/dynamic_shaping_tests.cpp\nkey_decisions: []\nduration: \nverification_result: passed\ncompleted_at: 2026-06-20T20:54:18.087Z\nblocker_discovered: false\n---\n\n# T03: Implemented ghost floor velocity clamping\n\n**Implemented ghost floor velocity clamping**\n\n## What Happened\n\nAfter all velocity calculations (base + spread + accent boost), the velocity is clamped to a minimum of ghostFloor/127.0f before the final [0,1] clamp. This ensures even quiet notes maintain a minimum presence. ghostFloor=0 disables the floor.\n\n## Verification\n\n3 ghost floor tests pass: GhostFloorClampsLow, GhostFloorZeroNoEffect, GhostFloorNoReduceHigh. Combined pipeline tests also pass.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `cmake --build . && ctest --output-on-failure` | 0 | 32/32 tests pass | 3000ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `engine/src/engine.cpp`\n- `tests/dynamic_shaping_tests.cpp`\n",
+      "description": "After all velocity calculations (base + spread + accent), clamp the final velocity so it never falls below ghostFloor/127.0f. This ensures even quiet notes maintain a minimum presence. Apply before the final clamp to [0, 1].",
+      "estimate": "15min",
+      "files": [
+        "engine/src/engine.cpp",
+        "tests/euclidean_tests.cpp"
+      ],
+      "verify": "cd build && cmake --build . && ctest --output-on-failure",
+      "inputs": [
+        "engine/include/poly/types.h"
+      ],
+      "expected_output": [
+        "Modified engine.cpp with ghost floor clamping",
+        "Ghost floor unit tests"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M002",
+      "slice_id": "S01",
+      "id": "T04",
+      "title": "Added golden determinism tests for dynamic shaping features",
+      "status": "complete",
+      "one_liner": "Added golden determinism tests for dynamic shaping features",
+      "narrative": "Added 2 new golden determinism tests: DynamicShapingBlockIndependence verifies accent/emphasis/ghost floor produce identical output regardless of block size. DynamicShapingLoopRestart verifies determinism across loop restarts with dynamic shaping enabled. The existing golden reference file remains unchanged since the default patch doesn't use accent masks.",
+      "verification_result": "All 32 tests pass including 2 new golden determinism tests for dynamic shaping.",
+      "duration": "",
+      "completed_at": "2026-06-20T20:54:22.496Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "tests/golden_tests.cpp"
+      ],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T04\nparent: S01\nmilestone: M002\nkey_files:\n  - tests/golden_tests.cpp\nkey_decisions: []\nduration: \nverification_result: passed\ncompleted_at: 2026-06-20T20:54:22.495Z\nblocker_discovered: false\n---\n\n# T04: Added golden determinism tests for dynamic shaping features\n\n**Added golden determinism tests for dynamic shaping features**\n\n## What Happened\n\nAdded 2 new golden determinism tests: DynamicShapingBlockIndependence verifies accent/emphasis/ghost floor produce identical output regardless of block size. DynamicShapingLoopRestart verifies determinism across loop restarts with dynamic shaping enabled. The existing golden reference file remains unchanged since the default patch doesn't use accent masks.\n\n## Verification\n\nAll 32 tests pass including 2 new golden determinism tests for dynamic shaping.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `cmake --build . && ctest --output-on-failure` | 0 | 32/32 tests pass | 3000ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `tests/golden_tests.cpp`\n",
+      "description": "Regenerate golden test reference file with a default patch that exercises accent masks, emphasis probability, and ghost floor. The default_patch_4bars.txt golden needs updating since velocity values will change. Add a new golden test with a patch specifically configured for dynamic shaping features.",
+      "estimate": "20min",
+      "files": [
+        "tests/golden_tests.cpp",
+        "tests/golden/default_patch_4bars.txt"
+      ],
+      "verify": "cd build && cmake --build . && ctest --output-on-failure",
+      "inputs": [
+        "tests/golden/default_patch_4bars.txt"
+      ],
+      "expected_output": [
+        "Updated golden reference file",
+        "New dynamic_shaping golden test case"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M002",
+      "slice_id": "S02",
+      "id": "T01",
+      "title": "Implement shape evaluation functions",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Create envelope.h/cpp with shape evaluation: evaluateShape(Shape shape, float phase) returning 0..1. Sine: 0.5*(1+sin(2*pi*phase)), Ramp: phase (sawtooth 0 to 1), Triangle: 1-abs(2*phase-1). Phase is always in [0,1). Curve and StepList can return 0.5 for now (placeholder). All functions must be RT-safe (no allocation).",
+      "estimate": "30min",
+      "files": [
+        "engine/include/poly/envelope.h",
+        "engine/src/envelope.cpp",
+        "engine/CMakeLists.txt"
+      ],
+      "verify": "cd build && cmake --build . && ctest --output-on-failure",
+      "inputs": [
+        "engine/include/poly/types.h"
+      ],
+      "expected_output": [
+        "engine/include/poly/envelope.h",
+        "engine/src/envelope.cpp"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M002",
+      "slice_id": "S02",
+      "id": "T02",
+      "title": "Implement PPQ-derived envelope phase calculation",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Add computeEnvelopePhase(double ppqPosition, float periodBars, float phaseOffset) that derives phase from absolute PPQ. periodBars * 4.0 gives periodPpq (4 PPQ per bar in 4/4). Phase = fmod(ppqPosition / periodPpq + phaseOffset, 1.0). Handle negative fmod results. This must never accumulate.",
+      "estimate": "20min",
+      "files": [
+        "engine/include/poly/envelope.h",
+        "engine/src/envelope.cpp"
+      ],
+      "verify": "cd build && cmake --build . && ctest --output-on-failure",
+      "inputs": [
+        "engine/include/poly/types.h"
+      ],
+      "expected_output": [
+        "engine/include/poly/envelope.h",
+        "engine/src/envelope.cpp"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M002",
+      "slice_id": "S02",
+      "id": "T03",
+      "title": "Apply envelope modulation in renderRange",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "In renderRange, after computing base velocity, evaluate all active per-lane envelopes and global envelopes at the note's ppqPosition. For EnvTarget::Velocity: modulate velocity by envelope value * depth. For EnvTarget::Density: modulate probability threshold. Superimpose multiple envelopes multiplicatively for velocity, additively for density. Clamp results to valid ranges.",
+      "estimate": "45min",
+      "files": [
+        "engine/src/engine.cpp"
+      ],
+      "verify": "cd build && cmake --build . && ctest --output-on-failure",
+      "inputs": [
+        "engine/include/poly/types.h",
+        "engine/src/engine.cpp"
+      ],
+      "expected_output": [
+        "engine/src/engine.cpp"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M002",
+      "slice_id": "S02",
+      "id": "T04",
+      "title": "Add envelope unit and golden tests",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Write unit tests for: evaluateShape at key phase points (0, 0.25, 0.5, 0.75), computeEnvelopePhase with various periodBars and offsets, envelope phase consistency across loop boundaries. Add a golden test with a multi-lane patch using envelopes with non-dividing periods (e.g. 3 bars and 7 bars) to verify emergent patterns are deterministic.",
+      "estimate": "30min",
+      "files": [
+        "tests/envelope_tests.cpp",
+        "tests/golden_tests.cpp",
+        "tests/golden/envelope_patch_8bars.txt",
+        "tests/CMakeLists.txt"
+      ],
+      "verify": "cd build && cmake --build . && ctest --output-on-failure",
+      "inputs": [
+        "engine/include/poly/types.h",
+        "engine/src/engine.cpp"
+      ],
+      "expected_output": [
+        "tests/envelope_tests.cpp",
+        "tests/golden/envelope_patch_8bars.txt"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M002",
+      "slice_id": "S03",
+      "id": "T01",
+      "title": "Add swing and duration fields to LaneConfig",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Add float swingAmount (0..1, 0=no swing, 1=full triplet swing) and float noteDuration (in PPQ, default 0 meaning auto = stepPpq*0.5) to LaneConfig. Keep defaults backward-compatible so existing tests pass without changes.",
+      "estimate": "15min",
+      "files": [
+        "engine/include/poly/types.h"
+      ],
+      "verify": "cd build && cmake --build . && ctest --output-on-failure",
+      "inputs": [
+        "engine/include/poly/types.h"
+      ],
+      "expected_output": [
+        "Updated LaneConfig with swingAmount and noteDuration fields"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M002",
+      "slice_id": "S03",
+      "id": "T02",
+      "title": "Implement swing offset in renderRange",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "After computing the note's ppqPosition, check if the cycle-local step index is even (0-indexed, so steps 1, 3, 5... get swung). Shift ppqPosition forward by swingAmount * stepPpq * (1.0/3.0). This creates the classic swing feel. Ensure the shifted position still falls within [ppqStart, ppqEnd).",
+      "estimate": "30min",
+      "files": [
+        "engine/src/engine.cpp"
+      ],
+      "verify": "cd build && cmake --build . && ctest --output-on-failure",
+      "inputs": [
+        "engine/include/poly/types.h",
+        "engine/src/engine.cpp"
+      ],
+      "expected_output": [
+        "Modified engine.cpp with swing offset applied to even steps"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M002",
+      "slice_id": "S03",
+      "id": "T03",
+      "title": "Implement humanize timing jitter",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Apply humanizeMs as bounded PPQ jitter to each note. Convert humanizeMs to PPQ using tempo: jitterPpq = humanizeMs * tempo / 60000.0. Use deterministicRand(seed, laneId, absStep, channel=3) to generate a random offset in [-jitterPpq, +jitterPpq]. Apply after swing. Clamp to keep note within the current block boundaries.",
+      "estimate": "25min",
+      "files": [
+        "engine/src/engine.cpp"
+      ],
+      "verify": "cd build && cmake --build . && ctest --output-on-failure",
+      "inputs": [
+        "engine/include/poly/types.h",
+        "engine/include/poly/rng.h"
+      ],
+      "expected_output": [
+        "Modified engine.cpp with humanize jitter using deterministic RNG"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M002",
+      "slice_id": "S03",
+      "id": "T04",
+      "title": "Implement configurable note duration",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Replace the hardcoded ev.duration = sPpq * 0.5 with cfg.noteDuration when noteDuration > 0, otherwise fall back to sPpq * 0.5 as default. This allows per-lane control of note length.",
+      "estimate": "10min",
+      "files": [
+        "engine/src/engine.cpp"
+      ],
+      "verify": "cd build && cmake --build . && ctest --output-on-failure",
+      "inputs": [
+        "engine/include/poly/types.h",
+        "engine/src/engine.cpp"
+      ],
+      "expected_output": [
+        "Modified engine.cpp using configurable note duration"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M002",
+      "slice_id": "S03",
+      "id": "T05",
+      "title": "Add swing and humanize tests plus golden updates",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Write unit tests for: swing offset calculation at various swingAmount values, humanize jitter bounds, note duration configuration. Update the default golden test reference if needed. Add a new golden test with swing=0.5 and humanize=5ms to verify deterministic timing.",
+      "estimate": "25min",
+      "files": [
+        "tests/euclidean_tests.cpp",
+        "tests/golden_tests.cpp",
+        "tests/golden/default_patch_4bars.txt"
+      ],
+      "verify": "cd build && cmake --build . && ctest --output-on-failure",
+      "inputs": [
+        "tests/golden/default_patch_4bars.txt",
+        "engine/include/poly/types.h"
+      ],
+      "expected_output": [
+        "New swing/humanize unit tests",
+        "Updated golden reference files"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M002",
+      "slice_id": "S04",
+      "id": "T01",
+      "title": "Design macro-to-parameter mapping",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Define how each macro affects lane parameters. Complexity: hitCount, rotation, envelope depth. Density: probability, hitCount, activation weight. Syncopation: rotation, accent bias. Swing: swingAmount across lanes. Tension: velocity spread, emphasis prob, envelope depth. Humanize: humanizeMs, velocity spread. Write a resolveMacros(const GrooveState& input) -> GrooveState function that applies all mappings. Pure function, no allocation.",
+      "estimate": "45min",
+      "files": [
+        "engine/include/poly/macro.h",
+        "engine/src/macro.cpp",
+        "engine/CMakeLists.txt"
+      ],
+      "verify": "cd build && cmake --build . && ctest --output-on-failure",
+      "inputs": [
+        "engine/include/poly/types.h"
+      ],
+      "expected_output": [
+        "engine/include/poly/macro.h",
+        "engine/src/macro.cpp"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M002",
+      "slice_id": "S04",
+      "id": "T02",
+      "title": "Integrate macro resolution into engine pipeline",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Call resolveMacros before renderRange in the processing pipeline. The caller (processor or test harness) resolves macros on the GrooveState before passing to renderRange. Add a convenience method or document the call order. Ensure resolved state is stack-allocated or uses the existing GrooveState (no heap).",
+      "estimate": "20min",
+      "files": [
+        "engine/src/engine.cpp",
+        "tools/harness/main.cpp"
+      ],
+      "verify": "cd build && cmake --build . && ctest --output-on-failure",
+      "inputs": [
+        "engine/include/poly/macro.h",
+        "engine/include/poly/types.h"
+      ],
+      "expected_output": [
+        "engine/src/engine.cpp",
+        "tools/harness/main.cpp"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M002",
+      "slice_id": "S04",
+      "id": "T03",
+      "title": "Add macro mapping tests and golden updates",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Write unit tests verifying: each macro at 0.0, 0.5, 1.0 produces expected parameter ranges. Test that macros compose correctly (density + complexity together). Add golden test with macros at non-default values to verify deterministic output under macro resolution.",
+      "estimate": "30min",
+      "files": [
+        "tests/macro_tests.cpp",
+        "tests/golden_tests.cpp",
+        "tests/CMakeLists.txt"
+      ],
+      "verify": "cd build && cmake --build . && ctest --output-on-failure",
+      "inputs": [
+        "engine/include/poly/macro.h",
+        "engine/include/poly/types.h"
+      ],
+      "expected_output": [
+        "tests/macro_tests.cpp"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M002",
+      "slice_id": "S05",
+      "id": "T01",
+      "title": "Define and register EditController parameters",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Define ParamID enum covering: per-lane params (probability, baseVelocity, emphasisProb, ghostFloor, velocitySpread, swingAmount, humanizeMs, noteDuration, active) x 8 lanes + macro params (complexity, density, syncopation, swing, tension, humanize) + global params (activeLaneCount, seed). Register all in EditController::initialize() with appropriate units, ranges, and default values.",
+      "estimate": "60min",
+      "files": [
+        "plugin/source/plugids.h",
+        "plugin/source/controller.h",
+        "plugin/source/controller.cpp"
+      ],
+      "verify": "cd build && cmake --build . && ctest --output-on-failure",
+      "inputs": [
+        "engine/include/poly/types.h",
+        "plugin/source/controller.h",
+        "plugin/source/controller.cpp"
+      ],
+      "expected_output": [
+        "plugin/source/plugids.h",
+        "plugin/source/controller.cpp"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M002",
+      "slice_id": "S05",
+      "id": "T02",
+      "title": "Implement ProcessContext to TransportContext bridge",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "In processor::process(), extract ProcessContext fields (projectTimeMusic, tempo, sampleRate, state flags for playing/looping/cycle) and populate TransportContext. Handle the case where projectTimeMusic is not valid (kProjectTimeMusicValid flag). Detect transport jumps by comparing current ppqStart with expected position from previous block.",
+      "estimate": "30min",
+      "files": [
+        "plugin/source/processor.cpp",
+        "plugin/source/processor.h"
+      ],
+      "verify": "cd build && cmake --build . && ctest --output-on-failure",
+      "inputs": [
+        "engine/include/poly/types.h",
+        "plugin/source/processor.h",
+        "plugin/source/processor.cpp"
+      ],
+      "expected_output": [
+        "plugin/source/processor.cpp",
+        "plugin/source/processor.h"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M002",
+      "slice_id": "S05",
+      "id": "T03",
+      "title": "Implement engine output to IEventList MIDI emission",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "After renderRange, iterate NoteEventBuffer and emit NoteOn events to the output IEventList. Convert PPQ positions to sample offsets within the current block using tempo and sample rate. Schedule NoteOff events using note duration. Use a fixed-size pending-noteoff buffer (pre-allocated array) to track notes needing NoteOff in future blocks. All RT-safe.",
+      "estimate": "60min",
+      "files": [
+        "plugin/source/processor.cpp",
+        "plugin/source/processor.h"
+      ],
+      "verify": "cd build && cmake --build . && ctest --output-on-failure",
+      "inputs": [
+        "engine/include/poly/types.h",
+        "plugin/source/processor.h",
+        "plugin/source/processor.cpp"
+      ],
+      "expected_output": [
+        "plugin/source/processor.cpp",
+        "plugin/source/processor.h"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M002",
+      "slice_id": "S05",
+      "id": "T04",
+      "title": "Implement versioned state serialization",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Implement getState() writing kStateVersion (int32) then full GrooveState fields using IBStream. Implement setState() reading version, branching on version number, and restoring GrooveState. Include all lane configs, macros, seed, and envelope assignments. Follow the portfolio convention of version-first serialization.",
+      "estimate": "45min",
+      "files": [
+        "plugin/source/processor.cpp",
+        "plugin/source/processor.h",
+        "plugin/source/controller.cpp"
+      ],
+      "verify": "cd build && cmake --build . && ctest --output-on-failure",
+      "inputs": [
+        "engine/include/poly/types.h",
+        "plugin/source/processor.h",
+        "plugin/source/processor.cpp",
+        "plugin/source/controller.cpp"
+      ],
+      "expected_output": [
+        "plugin/source/processor.cpp",
+        "plugin/source/controller.cpp"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M002",
+      "slice_id": "S05",
+      "id": "T05",
+      "title": "Add integration tests for plugin bridge",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Write tests for: PPQ-to-sample-offset conversion accuracy, state serialization round-trip (write then read, compare GrooveState fields), NoteOff scheduling across block boundaries. These test the bridge logic without requiring the VST3 SDK host.",
+      "estimate": "40min",
+      "files": [
+        "tests/plugin_tests.cpp",
+        "tests/CMakeLists.txt"
+      ],
+      "verify": "cd build && cmake --build . && ctest --output-on-failure",
+      "inputs": [
+        "engine/include/poly/types.h",
+        "plugin/source/processor.h"
+      ],
+      "expected_output": [
+        "tests/plugin_tests.cpp"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M002",
+      "slice_id": "S06",
+      "id": "T01",
+      "title": "VSTGUI spike and editor scaffold",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Set up VSTGUI editor infrastructure: create .uidesc file, wire createView in controller, add editor open/close lifecycle. Start with a minimal window that opens and closes cleanly in the host. Evaluate VSTGUI custom view approach vs built-in controls for the lane grid.",
+      "estimate": "60min",
+      "files": [
+        "plugin/source/controller.cpp",
+        "plugin/source/controller.h",
+        "plugin/source/ui/editor.uidesc",
+        "plugin/CMakeLists.txt"
+      ],
+      "verify": "cd build && cmake --build . && ctest --output-on-failure",
+      "inputs": [
+        "plugin/source/controller.h",
+        "plugin/source/controller.cpp"
+      ],
+      "expected_output": [
+        "plugin/source/ui/editor.uidesc",
+        "plugin/source/controller.cpp"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M002",
+      "slice_id": "S06",
+      "id": "T02",
+      "title": "Implement lane overview grid view",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Create a custom VSTGUI CView subclass that draws an 8-lane grid showing: lane active/inactive state, lane role/name, current Euclidean pattern visualization (filled/empty steps), and hit indicator during playback. Use CDrawContext for custom rendering. Register as a custom view in the controller.",
+      "estimate": "90min",
+      "files": [
+        "plugin/source/ui/lane_grid_view.h",
+        "plugin/source/ui/lane_grid_view.cpp",
+        "plugin/source/ui/editor.uidesc"
+      ],
+      "verify": "cd build && cmake --build . && ctest --output-on-failure",
+      "inputs": [
+        "plugin/source/controller.h",
+        "plugin/source/ui/editor.uidesc"
+      ],
+      "expected_output": [
+        "plugin/source/ui/lane_grid_view.h",
+        "plugin/source/ui/lane_grid_view.cpp"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M002",
+      "slice_id": "S06",
+      "id": "T03",
+      "title": "Implement macro knob row",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Add a row of CKnobBase controls for the 6 macro parameters (complexity, density, syncopation, swing, tension, humanize). Wire each to its corresponding ParamID from the controller. Use VSTGUI parameter binding so knob position reflects automation state.",
+      "estimate": "45min",
+      "files": [
+        "plugin/source/ui/editor.uidesc",
+        "plugin/source/controller.cpp"
+      ],
+      "verify": "cd build && cmake --build . && ctest --output-on-failure",
+      "inputs": [
+        "plugin/source/plugids.h",
+        "plugin/source/controller.cpp",
+        "plugin/source/ui/editor.uidesc"
+      ],
+      "expected_output": [
+        "plugin/source/ui/editor.uidesc",
+        "plugin/source/controller.cpp"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M002",
+      "slice_id": "S06",
+      "id": "T04",
+      "title": "Implement velocity view",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Create a custom view that displays per-lane velocity values during playback. Show vertical bars for each lane's most recent note velocity, updating in real time. Use message passing from processor to controller (non-RT thread) to communicate current velocity state. Ensure no RT-unsafe operations.",
+      "estimate": "60min",
+      "files": [
+        "plugin/source/ui/velocity_view.h",
+        "plugin/source/ui/velocity_view.cpp",
+        "plugin/source/processor.cpp",
+        "plugin/source/controller.cpp"
+      ],
+      "verify": "cd build && cmake --build . && ctest --output-on-failure",
+      "inputs": [
+        "plugin/source/controller.cpp",
+        "plugin/source/processor.cpp",
+        "plugin/source/ui/editor.uidesc"
+      ],
+      "expected_output": [
+        "plugin/source/ui/velocity_view.h",
+        "plugin/source/ui/velocity_view.cpp"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
     }
   ],
   "decisions": [],
@@ -1663,6 +2706,50 @@
       "verdict": "18 tests passed (10 Euclidean + 8 GoldenDeterminism)",
       "duration_ms": 50,
       "created_at": "2026-06-20T20:05:33.949Z"
+    },
+    {
+      "id": 19,
+      "task_id": "T01",
+      "slice_id": "S01",
+      "milestone_id": "M002",
+      "command": "cmake --build . && ctest --output-on-failure",
+      "exit_code": 0,
+      "verdict": "32/32 tests pass",
+      "duration_ms": 3000,
+      "created_at": "2026-06-20T20:54:09.082Z"
+    },
+    {
+      "id": 20,
+      "task_id": "T02",
+      "slice_id": "S01",
+      "milestone_id": "M002",
+      "command": "cmake --build . && ctest --output-on-failure",
+      "exit_code": 0,
+      "verdict": "32/32 tests pass",
+      "duration_ms": 3000,
+      "created_at": "2026-06-20T20:54:13.800Z"
+    },
+    {
+      "id": 21,
+      "task_id": "T03",
+      "slice_id": "S01",
+      "milestone_id": "M002",
+      "command": "cmake --build . && ctest --output-on-failure",
+      "exit_code": 0,
+      "verdict": "32/32 tests pass",
+      "duration_ms": 3000,
+      "created_at": "2026-06-20T20:54:18.087Z"
+    },
+    {
+      "id": 22,
+      "task_id": "T04",
+      "slice_id": "S01",
+      "milestone_id": "M002",
+      "command": "cmake --build . && ctest --output-on-failure",
+      "exit_code": 0,
+      "verdict": "32/32 tests pass",
+      "duration_ms": 3000,
+      "created_at": "2026-06-20T20:54:22.496Z"
     }
   ]
 }

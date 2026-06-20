@@ -1,13 +1,27 @@
 # Codebase Map
 
-Generated: 2026-06-20T20:20:42Z | Files: 35 | Described: 0/35
-<!-- gsd:codebase-meta {"generatedAt":"2026-06-20T20:20:42Z","fingerprint":"22ffd846a05e22318552ba81baac1750e4c1eadc","fileCount":35,"truncated":false} -->
+Generated: 2026-06-20T21:22:39Z | Files: 47 | Described: 0/47
+<!-- gsd:codebase-meta {"generatedAt":"2026-06-20T21:22:39Z","fingerprint":"d732315518aa1c37c4db2187877320292aaa97f5","fileCount":47,"truncated":false} -->
 
 ### (root)/
+- `.clang-format`
+- `.clang-tidy`
+- `.cmakelintrc`
 - `.gitignore`
+- `.gitleaks.toml`
+- `.pre-commit-config.yaml`
 - `CLAUDE.md`
 - `CMakeLists.txt`
 - `IMPLEMENTATION_PLAN.md`
+
+### .github/
+- `.github/lsan.supp`
+- `.github/tsan.supp`
+- `.github/ubsan.supp`
+
+### .github/workflows/
+- `.github/workflows/ci.yml`
+- `.github/workflows/sanitizers.yml`
 
 ### cmake/
 - `cmake/jk_warnings.cmake`
@@ -49,6 +63,10 @@ Generated: 2026-06-20T20:20:42Z | Files: 35 | Described: 0/35
 - `plugin/source/plugids.h`
 - `plugin/source/processor.cpp`
 - `plugin/source/processor.h`
+
+### scripts/
+- `scripts/check-pragma-once.sh`
+- `scripts/check-realtime-safety.sh`
 
 ### tests/
 - `tests/CMakeLists.txt`

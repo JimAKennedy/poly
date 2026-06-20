@@ -11,6 +11,7 @@ enable_testing()
 add_executable(poly_tests
     euclidean_tests.cpp
     golden_tests.cpp
+    dynamic_shaping_tests.cpp
 )
 
 target_link_libraries(poly_tests
