@@ -1,4 +1,5 @@
 #include "poly/engine.h"
+#include "poly/macro.h"
 #include "poly/types.h"
 #include <gtest/gtest.h>
 
@@ -413,4 +414,28 @@ TEST(GoldenDeterminism, EnvelopeLoopRestart) {
 
     EXPECT_EQ(serialize(firstHalf), serialize(looped))
         << "Envelope: loop restart differs from straight-through";
+}
+
+// --- Test 14: Macro-resolved state deterministic across block sizes ---
+TEST(GoldenDeterminism, MacroResolvedBlockIndependence) {
+    poly::Engine engine;
+    auto state = makeTestState();
+
+    state.macros.complexity = 0.7f;
+    state.macros.density = 0.6f;
+    state.macros.syncopation = 0.3f;
+    state.macros.swing = 0.2f;
+    state.macros.tension = 0.4f;
+    state.macros.humanize = 0.3f;
+
+    auto resolved = poly::resolveMacros(state);
+
+    auto small  = renderSorted(engine, resolved, 0.0, 16.0, 0.05);
+    auto medium = renderSorted(engine, resolved, 0.0, 16.0, 0.5);
+    auto large  = renderSorted(engine, resolved, 0.0, 16.0, 2.0);
+
+    EXPECT_EQ(serialize(small), serialize(medium))
+        << "Macro-resolved: 0.05 vs 0.5 PPQ blocks differ";
+    EXPECT_EQ(serialize(small), serialize(large))
+        << "Macro-resolved: 0.05 vs 2.0 PPQ blocks differ";
 }

@@ -1,4 +1,5 @@
 #include "poly/engine.h"
+#include "poly/macro.h"
 #include "poly/types.h"
 
 #include <cstdio>
@@ -76,7 +77,7 @@ int main(int argc, char* argv[]) {
     std::printf("# ppq_position  pitch  velocity  duration  channel\n");
 
     poly::Engine engine;
-    poly::GrooveState state = makeDefaultState();
+    poly::GrooveState state = poly::resolveMacros(makeDefaultState());
     poly::NoteEventBuffer buffer;
 
     int totalEvents = 0;
