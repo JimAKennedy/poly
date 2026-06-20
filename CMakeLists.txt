@@ -36,3 +36,6 @@ jk_suppress_sdk_warnings()
 add_subdirectory(engine)
 add_subdirectory(plugin)
 add_subdirectory(tools/harness)
+
+enable_testing()
+add_subdirectory(tests)
