@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-06-20T21:35:30Z | Files: 51 | Described: 0/51
-<!-- gsd:codebase-meta {"generatedAt":"2026-06-20T21:35:30Z","fingerprint":"d39f04a0e45c7dc2e9bee33dd994bf4e75d2a9a3","fileCount":51,"truncated":false} -->
+Generated: 2026-06-20T23:41:03Z | Files: 65 | Described: 0/65
+<!-- gsd:codebase-meta {"generatedAt":"2026-06-20T23:41:03Z","fingerprint":"61215a43eaa02f007277826b48cae99d1cc4f055","fileCount":65,"truncated":false} -->
 
 ### (root)/
 - `.clang-format`
@@ -30,6 +30,7 @@ Generated: 2026-06-20T21:35:30Z | Files: 51 | Described: 0/51
 - `docs/automation-mapping.md`
 - `docs/cubase-workflow.md`
 - `docs/engine-spec.md`
+- `docs/M002-UAT-SCRIPT.md`
 - `docs/PRD.md`
 - `docs/roadmap.md`
 - `docs/wireframes.md`
@@ -44,19 +45,27 @@ Generated: 2026-06-20T21:35:30Z | Files: 51 | Described: 0/51
 - `engine/CMakeLists.txt`
 
 ### engine/include/poly/
+- `engine/include/poly/bridge.h`
 - `engine/include/poly/engine.h`
 - `engine/include/poly/envelope.h`
 - `engine/include/poly/euclidean.h`
+- `engine/include/poly/macro.h`
 - `engine/include/poly/rng.h`
+- `engine/include/poly/state_io.h`
 - `engine/include/poly/types.h`
 
 ### engine/src/
+- `engine/src/bridge.cpp`
 - `engine/src/engine.cpp`
 - `engine/src/envelope.cpp`
 - `engine/src/euclidean.cpp`
+- `engine/src/macro.cpp`
 
 ### plugin/
 - `plugin/CMakeLists.txt`
+
+### plugin/resource/
+- `plugin/resource/poly.uidesc`
 
 ### plugin/source/
 - `plugin/source/controller.cpp`
@@ -65,6 +74,12 @@ Generated: 2026-06-20T21:35:30Z | Files: 51 | Described: 0/51
 - `plugin/source/plugids.h`
 - `plugin/source/processor.cpp`
 - `plugin/source/processor.h`
+
+### plugin/source/ui/
+- `plugin/source/ui/lane_grid_view.cpp`
+- `plugin/source/ui/lane_grid_view.h`
+- `plugin/source/ui/velocity_view.cpp`
+- `plugin/source/ui/velocity_view.h`
 
 ### scripts/
 - `scripts/check-pragma-once.sh`
@@ -76,6 +91,9 @@ Generated: 2026-06-20T21:35:30Z | Files: 51 | Described: 0/51
 - `tests/envelope_tests.cpp`
 - `tests/euclidean_tests.cpp`
 - `tests/golden_tests.cpp`
+- `tests/macro_tests.cpp`
+- `tests/plugin_tests.cpp`
+- `tests/swing_humanize_tests.cpp`
 
 ### tests/golden/
 - `tests/golden/default_patch_4bars.txt`

@@ -21,17 +21,17 @@ Macro resolution runs before renderRange, producing resolved GrooveState; no per
 
 ## Tasks
 
-- [ ] **T01: Design macro-to-parameter mapping** `est:45min`
+- [x] **T01: Design macro-to-parameter mapping** `est:45min`
   Define how each macro affects lane parameters. Complexity: hitCount, rotation, envelope depth. Density: probability, hitCount, activation weight. Syncopation: rotation, accent bias. Swing: swingAmount across lanes. Tension: velocity spread, emphasis prob, envelope depth. Humanize: humanizeMs, velocity spread. Write a resolveMacros(const GrooveState& input) -> GrooveState function that applies all mappings. Pure function, no allocation.
   - Files: `engine/include/poly/macro.h`, `engine/src/macro.cpp`, `engine/CMakeLists.txt`
   - Verify: cd build && cmake --build . && ctest --output-on-failure
 
-- [ ] **T02: Integrate macro resolution into engine pipeline** `est:20min`
+- [x] **T02: Integrate macro resolution into engine pipeline** `est:20min`
   Call resolveMacros before renderRange in the processing pipeline. The caller (processor or test harness) resolves macros on the GrooveState before passing to renderRange. Add a convenience method or document the call order. Ensure resolved state is stack-allocated or uses the existing GrooveState (no heap).
   - Files: `engine/src/engine.cpp`, `tools/harness/main.cpp`
   - Verify: cd build && cmake --build . && ctest --output-on-failure
 
-- [ ] **T03: Add macro mapping tests and golden updates** `est:30min`
+- [x] **T03: Add macro mapping tests and golden updates** `est:30min`
   Write unit tests verifying: each macro at 0.0, 0.5, 1.0 produces expected parameter ranges. Test that macros compose correctly (density + complexity together). Add golden test with macros at non-default values to verify deterministic output under macro resolution.
   - Files: `tests/macro_tests.cpp`, `tests/golden_tests.cpp`, `tests/CMakeLists.txt`
   - Verify: cd build && cmake --build . && ctest --output-on-failure

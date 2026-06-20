@@ -24,13 +24,13 @@
 - [x] **S03: S03** `risk:low` `depends:[]`
   > After this: Notes shift timing on even subdivisions (swing), jitter slightly (humanize), and have controllable durations
 
-- [ ] **S04: Macro Resolution** `risk:medium` `depends:[S01,S02,S03]`
+- [x] **S04: S04** `risk:medium` `depends:[]`
   > After this: Each macro visibly and audibly affects multiple lane parameters in a musically coherent way across its full range
 
-- [ ] **S05: VST3 Plugin Integration** `risk:high` `depends:[S04]`
+- [x] **S05: S05** `risk:high` `depends:[]`
   > After this: Plugin generates polymetric rhythms in Cubase; save project and reload preserves complete patch; loop and transport jumps handled correctly
 
-- [ ] **S06: Minimal VSTGUI Editor** `risk:medium` `depends:[S05]`
+- [x] **S06: S06** `risk:medium` `depends:[]`
   > After this: UI shows lane activity in real time, macro knobs control all macros, velocity view updates during playback
 
 ## Boundary Map
