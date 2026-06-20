@@ -1,0 +1,136 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  code-quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install pre-commit
+      - run: pre-commit run --all-files
+
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            cmake-args: -G Xcode
+          - os: ubuntu-latest
+            cmake-args: -G Ninja -DCMAKE_BUILD_TYPE=Release
+          - os: windows-latest
+            cmake-args: -G "Visual Studio 17 2022"
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Ninja (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get install -y ninja-build
+      - name: Cache VST3 SDK
+        uses: actions/cache@v4
+        with:
+          path: build/_deps/vst3sdk-src
+          key: vst3sdk-${{ matrix.os }}-${{ hashFiles('CMakeLists.txt') }}
+      - name: Cache GoogleTest
+        uses: actions/cache@v4
+        with:
+          path: build/_deps/googletest-src
+          key: gtest-${{ matrix.os }}-${{ hashFiles('tests/CMakeLists.txt') }}
+      - name: Configure
+        run: cmake -S . -B build ${{ matrix.cmake-args }}
+      - name: Build
+        run: cmake --build build --config Release --parallel
+      - name: Test
+        run: ctest --test-dir build --build-config Release --output-on-failure
+      - name: Upload plugin
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugin-${{ matrix.os }}
+          path: build/**/*.vst3
+          retention-days: 14
+
+  engine-isolation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Ninja
+        run: sudo apt-get install -y ninja-build
+      - name: Configure engine-only (no VST3 SDK)
+        run: cmake -S . -B build-engine -G Ninja -DCMAKE_BUILD_TYPE=Release -DPOLY_ENGINE_ONLY=ON
+      - name: Build engine
+        run: cmake --build build-engine --parallel
+      - name: Run engine tests
+        run: ctest --test-dir build-engine --output-on-failure
+      - name: Verify no VST3 SDK fetched
+        run: |
+          if [ -d "build-engine/_deps/vst3sdk-src" ]; then
+            echo "::error::Engine build fetched VST3 SDK — isolation violated"
+            exit 1
+          fi
+
+  secrets-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  code-coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: sudo apt-get install -y ninja-build lcov
+      - name: Configure with coverage
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=ON -DPOLY_ENGINE_ONLY=ON
+      - name: Build and test
+        run: |
+          cmake --build build
+          ctest --test-dir build --output-on-failure
+      - name: Generate coverage
+        run: |
+          lcov --capture --directory build --output-file coverage.info \
+               --ignore-errors mismatch
+          lcov --remove coverage.info '/usr/*' '*/build/_deps/*' '*/tests/*' \
+               --output-file coverage.filtered.info
+          genhtml coverage.filtered.info --output-directory coverage-report
+      - name: Check 60% threshold
+        run: |
+          COVERAGE=$(lcov --summary coverage.filtered.info 2>&1 | grep 'lines' | awk '{print $2}' | tr -d '%')
+          echo "Coverage: ${COVERAGE}%"
+          if (( $(echo "$COVERAGE < 60" | bc -l) )); then
+            echo "::error::Coverage ${COVERAGE}% below 60% threshold"
+            exit 1
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage-report/
+
+  ci-complete:
+    needs: [code-quality, build, engine-isolation, secrets-scan, code-coverage]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check all jobs passed
+        run: |
+          if [[ "${{ needs.code-quality.result }}" != "success" ]] || \
+             [[ "${{ needs.build.result }}" != "success" ]] || \
+             [[ "${{ needs.engine-isolation.result }}" != "success" ]] || \
+             [[ "${{ needs.secrets-scan.result }}" != "success" ]] || \
+             [[ "${{ needs.code-coverage.result }}" != "success" ]]; then
+            echo "One or more CI jobs failed"
+            exit 1
+          fi
+          echo "All CI jobs passed"
