@@ -1,5 +1,6 @@
 add_library(poly_engine STATIC
     src/engine.cpp
+    src/euclidean.cpp
 )
 
 target_include_directories(poly_engine
