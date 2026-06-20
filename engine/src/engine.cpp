@@ -62,7 +62,21 @@ void Engine::renderRange(const TransportContext& tc,
             float velBase = cfg.baseVelocity / 127.0f;
             float velRand = deterministicRand(state.seed, cfg.id, absStep, 1);
             float spread = cfg.velocitySpread * (velRand * 2.0f - 1.0f);
-            float vel = std::clamp(velBase + spread, 0.0f, 1.0f);
+            float vel = velBase + spread;
+
+            // Accent mask boost gated by emphasis probability (channel 2)
+            if (cfg.accents.steps[static_cast<size_t>(cycleStep)]) {
+                float emphRoll = deterministicRand(state.seed, cfg.id, absStep, 2);
+                if (emphRoll < cfg.emphasisProb) {
+                    vel += 0.15f;
+                }
+            }
+
+            // Ghost floor: minimum velocity presence
+            float ghostFloor = cfg.ghostFloor / 127.0f;
+            if (vel < ghostFloor) vel = ghostFloor;
+
+            vel = std::clamp(vel, 0.0f, 1.0f);
 
             NoteEvent ev{};
             ev.ppqPosition = ppq;
