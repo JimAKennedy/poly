@@ -1,0 +1,2 @@
+# ThreadSanitizer suppressions for Poly
+# Add entries as third-party SDK race reports are discovered.
