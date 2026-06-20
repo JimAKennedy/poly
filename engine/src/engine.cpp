@@ -140,7 +140,7 @@ void Engine::renderRange(const TransportContext& tc,
             ev.duration = cfg.noteDuration > 0.0f
                               ? static_cast<double>(cfg.noteDuration)
                               : sPpq * 0.5;
-            ev.channel = 0;
+            ev.channel = static_cast<int16_t>(lane);
 
             out.push(ev);
         }

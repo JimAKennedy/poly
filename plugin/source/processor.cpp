@@ -17,6 +17,25 @@ namespace poly {
 
 PolyProcessor::PolyProcessor() {
     setControllerClass(kPolyControllerUID);
+
+    struct LaneDef { int16_t note; int steps; int sub; int hits; Role role; };
+    static constexpr LaneDef kDefs[kMaxLanes] = {
+        {36, 4,  4, 4, Role::AnchorPulse}, // Kick: 4-on-the-floor
+        {38, 4,  4, 2, Role::Backbeat},     // Snare: backbeat
+        {42, 8,  8, 8, Role::Shimmer},      // Closed HH: 8ths
+        {45, 5, 16, 3, Role::Ghost},        // Low Tom: polymetric 5/16
+        {46, 7,  8, 4, Role::Accent},       // Open HH: polymetric 7/8
+        {39, 3, 16, 2, Role::Ornament},     // Clap: polymetric 3/16
+        {43, 6, 16, 4, Role::Fill},         // Low Tom 2: polymetric 6/16
+        {50, 9, 16, 5, Role::Custom},       // High Tom: polymetric 9/16
+    };
+    for (int i = 0; i < kMaxLanes; ++i) {
+        grooveState_.lanes[i].id = i;
+        grooveState_.lanes[i].role = kDefs[i].role;
+        grooveState_.lanes[i].midiNote = kDefs[i].note;
+        grooveState_.lanes[i].cycle = {kDefs[i].steps, kDefs[i].sub};
+        grooveState_.lanes[i].hitCount = kDefs[i].hits;
+    }
 }
 
 Steinberg::tresult PLUGIN_API PolyProcessor::initialize(
