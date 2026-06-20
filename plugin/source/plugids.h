@@ -14,4 +14,35 @@ static const Steinberg::FUID kPolyControllerUID(
 static constexpr auto kPolyPluginName = "Poly";
 static constexpr auto kPolyVersionString = "0.1.0";
 
+namespace ParamIDs {
+
+static constexpr int kParamsPerLane = 16;
+
+static constexpr int kProbability = 0;
+static constexpr int kBaseVelocity = 1;
+static constexpr int kEmphasisProb = 2;
+static constexpr int kGhostFloor = 3;
+static constexpr int kVelocitySpread = 4;
+static constexpr int kSwingAmount = 5;
+static constexpr int kHumanizeMs = 6;
+static constexpr int kNoteDuration = 7;
+static constexpr int kActive = 8;
+static constexpr int kLaneParamCount = 9;
+
+inline Steinberg::Vst::ParamID laneParam(int lane, int offset) {
+    return static_cast<Steinberg::Vst::ParamID>(lane * kParamsPerLane + offset);
+}
+
+static constexpr Steinberg::Vst::ParamID kMacroComplexity = 200;
+static constexpr Steinberg::Vst::ParamID kMacroDensity = 201;
+static constexpr Steinberg::Vst::ParamID kMacroSyncopation = 202;
+static constexpr Steinberg::Vst::ParamID kMacroSwing = 203;
+static constexpr Steinberg::Vst::ParamID kMacroTension = 204;
+static constexpr Steinberg::Vst::ParamID kMacroHumanize = 205;
+
+static constexpr Steinberg::Vst::ParamID kActiveLaneCount = 300;
+static constexpr Steinberg::Vst::ParamID kSeed = 301;
+
+} // namespace ParamIDs
+
 } // namespace poly
