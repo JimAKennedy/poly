@@ -21,7 +21,7 @@
 - [x] **S02: S02** `risk:high` `depends:[]`
   > After this: Velocity and density evolve over multi-bar periods; overlapping envelopes with non-dividing periods create emergent evolving patterns
 
-- [ ] **S03: Swing and Humanization** `risk:low` `depends:[]`
+- [x] **S03: S03** `risk:low` `depends:[]`
   > After this: Notes shift timing on even subdivisions (swing), jitter slightly (humanize), and have controllable durations
 
 - [ ] **S04: Macro Resolution** `risk:medium` `depends:[S01,S02,S03]`

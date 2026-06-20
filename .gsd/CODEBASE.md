@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-06-20T21:28:35Z | Files: 48 | Described: 0/48
-<!-- gsd:codebase-meta {"generatedAt":"2026-06-20T21:28:35Z","fingerprint":"58b36bb851d093b37f0d27c7ee5f1f1272ab8bbe","fileCount":48,"truncated":false} -->
+Generated: 2026-06-20T21:35:30Z | Files: 51 | Described: 0/51
+<!-- gsd:codebase-meta {"generatedAt":"2026-06-20T21:35:30Z","fingerprint":"d39f04a0e45c7dc2e9bee33dd994bf4e75d2a9a3","fileCount":51,"truncated":false} -->
 
 ### (root)/
 - `.clang-format`
@@ -45,12 +45,14 @@ Generated: 2026-06-20T21:28:35Z | Files: 48 | Described: 0/48
 
 ### engine/include/poly/
 - `engine/include/poly/engine.h`
+- `engine/include/poly/envelope.h`
 - `engine/include/poly/euclidean.h`
 - `engine/include/poly/rng.h`
 - `engine/include/poly/types.h`
 
 ### engine/src/
 - `engine/src/engine.cpp`
+- `engine/src/envelope.cpp`
 - `engine/src/euclidean.cpp`
 
 ### plugin/
@@ -71,6 +73,7 @@ Generated: 2026-06-20T21:28:35Z | Files: 48 | Described: 0/48
 ### tests/
 - `tests/CMakeLists.txt`
 - `tests/dynamic_shaping_tests.cpp`
+- `tests/envelope_tests.cpp`
 - `tests/euclidean_tests.cpp`
 - `tests/golden_tests.cpp`
 

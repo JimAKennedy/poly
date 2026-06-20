@@ -124,6 +124,8 @@ struct LaneConfig {
     uint8_t ghostFloor = 30;
     float velocitySpread = 0.05f;
     float humanizeMs = 0.0f;
+    float swingAmount = 0.0f;
+    float noteDuration = 0.0f;
     bool active = true;
     std::array<EnvelopeAssign, kMaxEnvelopesPerLane> envelopes{};
     int envelopeCount = 0;

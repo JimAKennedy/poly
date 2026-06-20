@@ -121,11 +121,25 @@ void Engine::renderRange(const TransportContext& tc,
 
             vel = std::clamp(vel, 0.0f, 1.0f);
 
+            // Swing: shift odd cycle-steps (1, 3, 5...) forward
+            if (cfg.swingAmount > 0.0f && (cycleStep % 2) == 1) {
+                ppq += cfg.swingAmount * sPpq * (1.0 / 3.0);
+            }
+
+            // Humanize: bounded PPQ jitter from deterministic RNG
+            if (cfg.humanizeMs > 0.0f && tc.tempo > 0.0) {
+                double jitterPpq = cfg.humanizeMs * tc.tempo / 60000.0;
+                float jitterRand = deterministicRand(state.seed, cfg.id, absStep, 3);
+                ppq += jitterPpq * (jitterRand * 2.0f - 1.0f);
+            }
+
             NoteEvent ev{};
             ev.ppqPosition = ppq;
             ev.pitch = cfg.midiNote;
             ev.velocity = vel;
-            ev.duration = sPpq * 0.5;
+            ev.duration = cfg.noteDuration > 0.0f
+                              ? static_cast<double>(cfg.noteDuration)
+                              : sPpq * 0.5;
             ev.channel = 0;
 
             out.push(ev);

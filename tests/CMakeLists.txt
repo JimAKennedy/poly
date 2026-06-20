@@ -13,6 +13,7 @@ add_executable(poly_tests
     envelope_tests.cpp
     golden_tests.cpp
     dynamic_shaping_tests.cpp
+    swing_humanize_tests.cpp
 )
 
 target_link_libraries(poly_tests
