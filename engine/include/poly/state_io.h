@@ -1,0 +1,155 @@
+#pragma once
+
+#include "poly/types.h"
+
+#include <cstddef>
+#include <cstdint>
+
+namespace poly {
+
+static constexpr int32_t kCurrentStateVersion = 1;
+
+template<typename WriteFn>
+bool writeGrooveState(WriteFn&& write, const GrooveState& state) {
+    int32_t version = kCurrentStateVersion;
+    if (!write(&version, sizeof(version))) return false;
+    if (!write(&state.activeLaneCount, sizeof(state.activeLaneCount))) return false;
+    if (!write(&state.seed, sizeof(state.seed))) return false;
+    if (!write(&state.macros, sizeof(state.macros))) return false;
+
+    for (int i = 0; i < kMaxLanes; ++i) {
+        const auto& lane = state.lanes[i];
+        if (!write(&lane.id, sizeof(lane.id))) return false;
+        auto role = static_cast<uint8_t>(lane.role);
+        if (!write(&role, sizeof(role))) return false;
+        if (!write(&lane.midiNote, sizeof(lane.midiNote))) return false;
+        if (!write(&lane.cycle.steps, sizeof(lane.cycle.steps))) return false;
+        if (!write(&lane.cycle.subdivision, sizeof(lane.cycle.subdivision))) return false;
+        if (!write(&lane.hitCount, sizeof(lane.hitCount))) return false;
+        if (!write(&lane.rotation, sizeof(lane.rotation))) return false;
+        if (!write(&lane.probability, sizeof(lane.probability))) return false;
+        if (!write(&lane.baseVelocity, sizeof(lane.baseVelocity))) return false;
+
+        uint64_t accentBits = 0;
+        for (int s = 0; s < kMaxSteps; ++s) {
+            if (lane.accents.steps[static_cast<size_t>(s)])
+                accentBits |= (uint64_t{1} << s);
+        }
+        if (!write(&accentBits, sizeof(accentBits))) return false;
+
+        if (!write(&lane.emphasisProb, sizeof(lane.emphasisProb))) return false;
+        if (!write(&lane.ghostFloor, sizeof(lane.ghostFloor))) return false;
+        if (!write(&lane.velocitySpread, sizeof(lane.velocitySpread))) return false;
+        if (!write(&lane.humanizeMs, sizeof(lane.humanizeMs))) return false;
+        if (!write(&lane.swingAmount, sizeof(lane.swingAmount))) return false;
+        if (!write(&lane.noteDuration, sizeof(lane.noteDuration))) return false;
+        uint8_t active = lane.active ? 1 : 0;
+        if (!write(&active, sizeof(active))) return false;
+        if (!write(&lane.envelopeCount, sizeof(lane.envelopeCount))) return false;
+
+        for (int e = 0; e < kMaxEnvelopesPerLane; ++e) {
+            const auto& ea = lane.envelopes[static_cast<size_t>(e)];
+            auto target = static_cast<uint8_t>(ea.envelope.target);
+            if (!write(&target, sizeof(target))) return false;
+            if (!write(&ea.envelope.periodBars, sizeof(ea.envelope.periodBars))) return false;
+            auto shape = static_cast<uint8_t>(ea.envelope.shape);
+            if (!write(&shape, sizeof(shape))) return false;
+            if (!write(&ea.envelope.depth, sizeof(ea.envelope.depth))) return false;
+            if (!write(&ea.envelope.phaseOffset, sizeof(ea.envelope.phaseOffset))) return false;
+            uint8_t envActive = ea.active ? 1 : 0;
+            if (!write(&envActive, sizeof(envActive))) return false;
+        }
+    }
+
+    if (!write(&state.globalEnvelopeCount, sizeof(state.globalEnvelopeCount))) return false;
+    for (int e = 0; e < kMaxGlobalEnvelopes; ++e) {
+        const auto& env = state.globalEnvelopes[static_cast<size_t>(e)];
+        auto target = static_cast<uint8_t>(env.target);
+        if (!write(&target, sizeof(target))) return false;
+        if (!write(&env.periodBars, sizeof(env.periodBars))) return false;
+        auto shape = static_cast<uint8_t>(env.shape);
+        if (!write(&shape, sizeof(shape))) return false;
+        if (!write(&env.depth, sizeof(env.depth))) return false;
+        if (!write(&env.phaseOffset, sizeof(env.phaseOffset))) return false;
+    }
+
+    return true;
+}
+
+template<typename ReadFn>
+bool readGrooveState(ReadFn&& read, GrooveState& state) {
+    int32_t version = 0;
+    if (!read(&version, sizeof(version))) return false;
+    if (version != kCurrentStateVersion) return false;
+
+    if (!read(&state.activeLaneCount, sizeof(state.activeLaneCount))) return false;
+    if (!read(&state.seed, sizeof(state.seed))) return false;
+    if (!read(&state.macros, sizeof(state.macros))) return false;
+
+    for (int i = 0; i < kMaxLanes; ++i) {
+        auto& lane = state.lanes[i];
+        if (!read(&lane.id, sizeof(lane.id))) return false;
+        uint8_t role = 0;
+        if (!read(&role, sizeof(role))) return false;
+        lane.role = static_cast<Role>(role);
+        if (!read(&lane.midiNote, sizeof(lane.midiNote))) return false;
+        if (!read(&lane.cycle.steps, sizeof(lane.cycle.steps))) return false;
+        if (!read(&lane.cycle.subdivision, sizeof(lane.cycle.subdivision))) return false;
+        if (!read(&lane.hitCount, sizeof(lane.hitCount))) return false;
+        if (!read(&lane.rotation, sizeof(lane.rotation))) return false;
+        if (!read(&lane.probability, sizeof(lane.probability))) return false;
+        if (!read(&lane.baseVelocity, sizeof(lane.baseVelocity))) return false;
+
+        uint64_t accentBits = 0;
+        if (!read(&accentBits, sizeof(accentBits))) return false;
+        for (int s = 0; s < kMaxSteps; ++s) {
+            lane.accents.steps[static_cast<size_t>(s)] =
+                (accentBits & (uint64_t{1} << s)) != 0;
+        }
+
+        if (!read(&lane.emphasisProb, sizeof(lane.emphasisProb))) return false;
+        if (!read(&lane.ghostFloor, sizeof(lane.ghostFloor))) return false;
+        if (!read(&lane.velocitySpread, sizeof(lane.velocitySpread))) return false;
+        if (!read(&lane.humanizeMs, sizeof(lane.humanizeMs))) return false;
+        if (!read(&lane.swingAmount, sizeof(lane.swingAmount))) return false;
+        if (!read(&lane.noteDuration, sizeof(lane.noteDuration))) return false;
+        uint8_t active = 0;
+        if (!read(&active, sizeof(active))) return false;
+        lane.active = (active != 0);
+        if (!read(&lane.envelopeCount, sizeof(lane.envelopeCount))) return false;
+
+        for (int e = 0; e < kMaxEnvelopesPerLane; ++e) {
+            auto& ea = lane.envelopes[static_cast<size_t>(e)];
+            uint8_t target = 0;
+            if (!read(&target, sizeof(target))) return false;
+            ea.envelope.target = static_cast<EnvTarget>(target);
+            if (!read(&ea.envelope.periodBars, sizeof(ea.envelope.periodBars))) return false;
+            uint8_t shape = 0;
+            if (!read(&shape, sizeof(shape))) return false;
+            ea.envelope.shape = static_cast<Shape>(shape);
+            if (!read(&ea.envelope.depth, sizeof(ea.envelope.depth))) return false;
+            if (!read(&ea.envelope.phaseOffset, sizeof(ea.envelope.phaseOffset))) return false;
+            uint8_t envActive = 0;
+            if (!read(&envActive, sizeof(envActive))) return false;
+            ea.active = (envActive != 0);
+        }
+    }
+
+    if (!read(&state.globalEnvelopeCount, sizeof(state.globalEnvelopeCount))) return false;
+    for (int e = 0; e < kMaxGlobalEnvelopes; ++e) {
+        auto& env = state.globalEnvelopes[static_cast<size_t>(e)];
+        uint8_t target = 0;
+        if (!read(&target, sizeof(target))) return false;
+        env.target = static_cast<EnvTarget>(target);
+        if (!read(&env.periodBars, sizeof(env.periodBars))) return false;
+        uint8_t shape = 0;
+        if (!read(&shape, sizeof(shape))) return false;
+        env.shape = static_cast<Shape>(shape);
+        if (!read(&env.depth, sizeof(env.depth))) return false;
+        if (!read(&env.phaseOffset, sizeof(env.phaseOffset))) return false;
+    }
+
+    return true;
+}
+
+} // namespace poly

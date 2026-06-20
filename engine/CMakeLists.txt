@@ -1,4 +1,5 @@
 add_library(poly_engine STATIC
+    src/bridge.cpp
     src/engine.cpp
     src/envelope.cpp
     src/euclidean.cpp

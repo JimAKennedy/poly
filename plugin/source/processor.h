@@ -1,6 +1,7 @@
 #pragma once
 
 #include "public.sdk/source/vst/vstaudioeffect.h"
+#include "poly/bridge.h"
 #include "poly/engine.h"
 
 namespace poly {
@@ -22,9 +23,14 @@ public:
     Steinberg::tresult PLUGIN_API setState(Steinberg::IBStream* state) override;
 
 private:
+    void applyParameter(Steinberg::Vst::ParamID id, double normalized);
+
     Engine engine_;
     GrooveState grooveState_{};
     NoteEventBuffer noteBuffer_{};
+    TransportContext tc_{};
+    PendingNoteOffBuffer pendingNoteOffs_{};
+    double expectedNextPpq_ = -1.0;
 };
 
 } // namespace poly
