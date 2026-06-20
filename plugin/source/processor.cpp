@@ -46,7 +46,7 @@ Steinberg::tresult PLUGIN_API PolyProcessor::initialize(
 
     addAudioOutput(STR16("Stereo Out"),
                    Steinberg::Vst::SpeakerArr::kStereo);
-    addEventOutput(STR16("MIDI Out"), 1);
+    addEventOutput(STR16("MIDI Out"), 16);
 
     return Steinberg::kResultOk;
 }
