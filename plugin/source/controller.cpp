@@ -4,10 +4,14 @@
 #include "poly/state_io.h"
 #include "poly/types.h"
 
+#include "ui/lane_grid_view.h"
+#include "ui/velocity_view.h"
+
 #include "pluginterfaces/base/ibstream.h"
 #include "pluginterfaces/base/ustring.h"
 
 #include <cstdio>
+#include <cstring>
 
 namespace poly {
 
@@ -60,14 +64,15 @@ Steinberg::tresult PLUGIN_API PolyController::initialize(
     }
 
     auto addSimple = [this](Steinberg::Vst::ParamID id, const char* title,
-                            Steinberg::int32 steps, double defNorm) {
+                            Steinberg::int32 steps, double defNorm,
+                            Steinberg::int32 flags = ParameterInfo::kCanAutomate) {
         ParameterInfo info = {};
         info.id = id;
         Steinberg::UString(info.title, 128).fromAscii(title);
         Steinberg::UString(info.units, 128).fromAscii("");
         info.stepCount = steps;
         info.defaultNormalizedValue = defNorm;
-        info.flags = ParameterInfo::kCanAutomate;
+        info.flags = flags;
         info.unitId = Steinberg::Vst::kRootUnitId;
         parameters.addParameter(info);
     };
@@ -81,7 +86,38 @@ Steinberg::tresult PLUGIN_API PolyController::initialize(
     addSimple(ParamIDs::kActiveLaneCount,  "Active Lanes",      7, 3.0 / 7.0);
     addSimple(ParamIDs::kSeed,             "Seed",              0, 0.0);
 
+    for (int lane = 0; lane < kMaxLanes; ++lane) {
+        char title[64];
+        std::snprintf(title, sizeof(title), "L%d Velocity Out", lane + 1);
+        addSimple(ParamIDs::velocityOutput(lane), title, 0, 0.0,
+                  ParameterInfo::kIsReadOnly);
+    }
+
     return Steinberg::kResultOk;
+}
+
+Steinberg::IPlugView* PLUGIN_API PolyController::createView(
+    Steinberg::FIDString name) {
+    if (Steinberg::FIDStringsEqual(name, Steinberg::Vst::ViewType::kEditor)) {
+        auto* view = new VSTGUI::VST3Editor(this, "view", "poly.uidesc");
+        view->setDelegate(this);
+        return view;
+    }
+    return nullptr;
+}
+
+VSTGUI::CView* PolyController::createCustomView(
+    VSTGUI::UTF8StringPtr name,
+    const VSTGUI::UIAttributes& /*attributes*/,
+    const VSTGUI::IUIDescription* /*description*/,
+    VSTGUI::VST3Editor* /*editor*/) {
+    if (std::strcmp(name, "LaneGridView") == 0) {
+        return new LaneGridView(VSTGUI::CRect(0, 0, 580, 160), this);
+    }
+    if (std::strcmp(name, "VelocityView") == 0) {
+        return new VelocityView(VSTGUI::CRect(0, 0, 580, 80), this);
+    }
+    return nullptr;
 }
 
 Steinberg::tresult PLUGIN_API PolyController::setComponentState(
