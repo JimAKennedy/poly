@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-06-21T01:08:19.758Z",
+  "exported_at": "2026-06-21T01:28:20.127Z",
   "milestones": [
     {
       "id": "M001",
@@ -492,23 +492,23 @@
     {
       "milestone_id": "M003",
       "id": "S01",
-      "title": "Extended Envelope System",
-      "status": "pending",
+      "title": "S01",
+      "status": "complete",
       "risk": "medium",
       "depends": [],
       "demo": "Envelopes target length, looseness, activation, and fill alongside velocity/density; 4/8/16/custom bar phrase lengths create section-scale evolution",
       "created_at": "2026-06-20T19:33:53.933Z",
-      "completed_at": null,
-      "full_summary_md": "",
-      "full_uat_md": "",
-      "goal": "Multiple simultaneous envelopes per lane with full target set and phrase modulation lengths",
-      "success_criteria": "",
-      "proof_level": "",
-      "integration_closure": "",
-      "observability_impact": "",
+      "completed_at": "2026-06-21T01:28:20.121Z",
+      "full_summary_md": "---\nid: S01\nparent: M003\nmilestone: M003\nprovides:\n  - (none)\nrequires:\n  []\naffects:\n  []\nkey_files: []\nkey_decisions:\n  - FillLikelihood/ActivationWeight use separate RNG channels (4, 5) to maintain determinism independence\n  - Envelope evaluation moved before pattern check to enable fill notes on non-pattern steps\n  - State version bumped 1->2 with full v1 backwards compatibility\n  - Curve uses exp-based easing; StepList uses 16 fixed entries (no heap allocation)\npatterns_established:\n  - Per-target modulation semantics: multiplicative for scaling targets, additive for probability/bias targets, gate-based for activation targets\n  - evaluateShapeFull() takes full Envelope struct for shapes needing extra parameters, delegates to evaluateShape() for simple shapes\nobservability_surfaces:\n  - none\ndrill_down_paths:\n  []\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-06-21T01:28:20.122Z\nblocker_discovered: false\n---\n\n# S01: Extended Envelope System\n\n**All 8 envelope targets operational with Curve/StepList shapes, state v2 serialization, and comprehensive golden tests**\n\n## What Happened\n\nExtended the envelope modulation system from 2 targets (Velocity, Density) to all 8 planned targets. Restructured renderRange() to evaluate envelopes before the pattern check, enabling FillLikelihood to inject notes on non-pattern steps. Each target has carefully chosen modulation semantics: multiplicative for Velocity and NoteLength, additive for Probability/AccentBias/TimingLooseness, and gate-based for ActivationWeight and FillLikelihood. Added two new envelope shapes: Curve (exponential easing with curvature parameter) and StepList (quantized lookup table with 16 entries). Bumped state serialization to v2 with full backwards compatibility for v1 presets. Added 12 new tests covering all targets and shapes, plus a golden test exercising all new targets simultaneously across block sizes.\n\n## Verification\n\n133/133 tests pass including 15 golden determinism tests. New tests cover: all 8 envelope targets individually, Curve shape with positive/negative/zero curvature, StepList lookup and empty fallback, zero-depth neutrality across all targets, and block-size independence for extended targets.\n\n## Requirements Advanced\n\nNone.\n\n## Requirements Validated\n\nNone.\n\n## New Requirements Surfaced\n\nNone.\n\n## Requirements Invalidated or Re-scoped\n\nNone.\n\n## Operational Readiness\n\nNone.\n\n## Deviations\n\nNone.\n\n## Known Limitations\n\nNone.\n\n## Follow-ups\n\nNone.\n\n## Files Created/Modified\n\n- `engine/src/engine.cpp` — Restructured renderRange() with all 8 EnvTarget cases, FillLikelihood gate, ActivationWeight suppression\n- `engine/include/poly/types.h` — Added curvature, stepValues[16], stepCount to Envelope struct\n- `engine/src/envelope.cpp` — Added evaluateShapeFull() for Curve and StepList shapes\n- `engine/include/poly/envelope.h` — Declared evaluateShapeFull()\n- `engine/include/poly/state_io.h` — Bumped to v2 with curvature/stepList serialization and v1 backwards compat\n- `tests/envelope_tests.cpp` — 12 new tests for all targets and shapes\n- `tests/golden_tests.cpp` — Added ExtendedEnvelopeTargetsBlockIndependence golden test\n",
+      "full_uat_md": "# S01: Extended Envelope System — UAT\n\n**Milestone:** M003\n**Written:** 2026-06-21T01:28:20.122Z\n\n## UAT: Extended Envelope System (M003/S01)\n\n### Envelope Target Coverage\n- [ ] Create a patch with a Velocity envelope (Sine, 4 bars) — velocity should cycle smoothly\n- [ ] Add a Probability envelope (Ramp, 2 bars) — note density should increase over the ramp\n- [ ] Add an AccentBias envelope — accented steps should fire more/less based on envelope position\n- [ ] Add a NoteLength envelope — note durations should modulate with the envelope\n- [ ] Add a TimingLooseness envelope — timing jitter should increase at envelope peaks\n- [ ] Add an ActivationWeight envelope with negative bias — lane should drop out at envelope troughs\n- [ ] Add a FillLikelihood envelope — extra notes should appear on non-pattern steps at envelope peaks\n\n### New Shapes\n- [ ] Set envelope shape to Curve with positive curvature — should ease-in (slow start, fast end)\n- [ ] Set Curve with negative curvature — should ease-out (fast start, slow end)\n- [ ] Set shape to StepList with 4 entries at [0, 0.5, 1.0, 0.25] — modulation should step discretely\n\n### Preset Compatibility\n- [ ] Load a v1 preset — should load without errors, new fields default to neutral values\n- [ ] Save and reload a v2 preset — all envelope parameters including curvature and step values should round-trip\n\n### Determinism\n- [ ] Play a patch with multiple extended envelopes, stop and replay from same position — output must be identical\n",
+      "goal": "Implement all 8 envelope targets and all 5 shapes so envelopes can modulate any lane parameter over any timescale",
+      "success_criteria": "All EnvTarget variants (Velocity, Density, Probability, AccentBias, NoteLength, TimingLooseness, ActivationWeight, FillLikelihood) modulate their respective parameters in renderRange(). All Shape variants (Ramp, Sine, Triangle, Curve, StepList) produce distinct waveforms. Golden tests confirm determinism.",
+      "proof_level": "Unit tests for each target and shape; golden test update; all 121+ existing tests still pass",
+      "integration_closure": "Engine-only change. Plugin layer and UI untouched. Existing Velocity/Density behavior unchanged for backwards compat.",
+      "observability_impact": "No new observability surfaces needed; existing golden tests cover determinism.",
       "sequence": 1,
       "replan_triggered_at": null,
-      "is_sketch": 1,
+      "is_sketch": 0,
       "sketch_scope": "Extend envelope system to support full EnvTarget set (NoteLength, TimingLooseness, ActivationWeight, FillLikelihood) with multiple simultaneous envelopes per lane. Add phrase/section modulation lengths (4, 8, 16, custom bars). Builds on M002 S03 envelope foundation."
     },
     {
@@ -525,14 +525,14 @@
       "completed_at": null,
       "full_summary_md": "",
       "full_uat_md": "",
-      "goal": "Scene/snapshot switching with A/B comparison and morph between configurations",
-      "success_criteria": "",
-      "proof_level": "",
-      "integration_closure": "",
-      "observability_impact": "",
+      "goal": "Add A/B scene system with crossfade morph so users can design two groove states and smoothly transition between them",
+      "success_criteria": "Two GrooveState slots (A/B) stored and switchable. Morph parameter (0.0=A, 1.0=B) interpolates all lane parameters. Scene select and morph are automatable in Cubase. State serialization preserves both scenes.",
+      "proof_level": "Unit tests for interpolation, serialization round-trip, and parameter mapping; manual Cubase QA for automation morph",
+      "integration_closure": "Requires state version bump (kCurrentStateVersion 1 to 2). Processor owns scene state. Controller exposes 2 new params.",
+      "observability_impact": "Scene index readable via output parameter for UI feedback.",
       "sequence": 2,
       "replan_triggered_at": null,
-      "is_sketch": 1,
+      "is_sketch": 0,
       "sketch_scope": "Scene storage captures complete GrooveState. A/B instant switching. Morph crossfader interpolates between scenes with musically bounded intermediate states. Scene count TBD (2 minimum, possibly 4-8). Depends on S01 because scenes must capture extended envelope state."
     },
     {
@@ -547,14 +547,14 @@
       "completed_at": null,
       "full_summary_md": "",
       "full_uat_md": "",
-      "goal": "Musical constraints that protect structural elements during envelope modulation and macro changes",
-      "success_criteria": "",
-      "proof_level": "",
-      "integration_closure": "",
-      "observability_impact": "",
+      "goal": "Add constraint layer that protects structural anchors (kick, backbeat) and enforces density bounds so macros and envelopes cannot destroy groove coherence",
+      "success_criteria": "Anchor steps always fire regardless of probability/envelope attenuation. Backbeat emphasis is preserved when syncopation/tension macros are active. Per-lane density stays within configured min/max hit bounds. Constraints applied after macro resolution, before output.",
+      "proof_level": "Unit tests for each constraint type; integration test with macros at extremes verifying anchors survive",
+      "integration_closure": "Constraint applied in renderRange after macro resolution. No UI changes. State serialization extended for constraint config.",
+      "observability_impact": "None required; constraints are pure engine logic.",
       "sequence": 3,
       "replan_triggered_at": null,
-      "is_sketch": 1,
+      "is_sketch": 0,
       "sketch_scope": "Implement constraint types: anchor kick preservation, backbeat protection, per-lane density range limits. Constraints override envelope/macro modulation when they would violate structural rules. Clear resolution policy for constraint-envelope conflicts."
     },
     {
@@ -569,14 +569,14 @@
       "completed_at": null,
       "full_summary_md": "",
       "full_uat_md": "",
-      "goal": "Improved automation mapping for high-value controls with better parameter grouping",
-      "success_criteria": "",
-      "proof_level": "",
-      "integration_closure": "",
-      "observability_impact": "",
+      "goal": "Organize VST3 parameters with proper units, display formatting, and unit hierarchy for clean Cubase automation lanes",
+      "success_criteria": "All parameters display with correct units in Cubase (%, ms, beats). Parameters grouped into named VST3 Units (per-lane, macros, global). Automation lane names are concise and scannable.",
+      "proof_level": "Build succeeds; plugin_tests pass; manual Cubase verification of automation lane display",
+      "integration_closure": "Controller-only changes. No engine or state format changes.",
+      "observability_impact": "None.",
       "sequence": 4,
       "replan_triggered_at": null,
-      "is_sketch": 1,
+      "is_sketch": 0,
       "sketch_scope": "Review and improve automation parameter naming, grouping, and units for Cubase. Identify high-value controls for prominent exposure. May involve parameter unit reorganization in EditController."
     },
     {
@@ -593,14 +593,14 @@
       "completed_at": null,
       "full_summary_md": "",
       "full_uat_md": "",
-      "goal": "MIDI capture to track, drag-to-track, freeze support, and pattern export for Cubase composition integration",
-      "success_criteria": "",
-      "proof_level": "",
-      "integration_closure": "",
-      "observability_impact": "",
+      "goal": "Enable MIDI capture and export so users can freeze generated grooves into standard MIDI files for downstream editing in Cubase",
+      "success_criteria": "Ring buffer captures last N bars of generated MIDI. Export produces valid Standard MIDI File (type 0). Export triggered via parameter or mechanism accessible from Cubase. Captured MIDI is tempo-independent (stored in PPQ).",
+      "proof_level": "Unit tests for ring buffer, SMF writer byte-level verification, round-trip import test",
+      "integration_closure": "Processor accumulates events in capture buffer. Export runs on non-RT thread (message-based trigger). No engine changes.",
+      "observability_impact": "Capture buffer fill level exposed as read-only output parameter.",
       "sequence": 5,
       "replan_triggered_at": null,
-      "is_sketch": 1,
+      "is_sketch": 0,
       "sketch_scope": "Implement at least one MIDI export path: capture-to-track, drag-to-track, or pattern file export. Freeze support if Cubase VST3 API allows. Exported MIDI should respect active constraints. Depends on S03 because export should reflect constrained output."
     },
     {
@@ -617,14 +617,14 @@
       "completed_at": null,
       "full_summary_md": "",
       "full_uat_md": "",
-      "goal": "Visual display of phase relationships between lanes and envelope interaction patterns",
-      "success_criteria": "",
-      "proof_level": "",
-      "integration_closure": "",
-      "observability_impact": "",
+      "goal": "Add visual displays for envelope curves and cycle phase alignment so users can see how their groove evolves over time",
+      "success_criteria": "Envelope curve view renders shape with current phase marker. Cycle phase indicators show position within each lane cycle. Phase alignment overview shows multi-lane cycle interactions. All new views have visual regression baselines.",
+      "proof_level": "Visual regression tests with baselines; interaction tests for phase update; build on all platforms",
+      "integration_closure": "New VSTGUI custom views registered in controller. Requires read-only output params for current phase values. poly.uidesc updated.",
+      "observability_impact": "Phase output parameters provide real-time feedback on engine state to UI.",
       "sequence": 6,
       "replan_triggered_at": null,
-      "is_sketch": 1,
+      "is_sketch": 0,
       "sketch_scope": "Add visualization views showing inter-lane phase relationships (convergence/divergence patterns) and envelope curves with target mapping. Helps users understand why the groove evolves the way it does. Builds on extended envelope system from S01."
     },
     {
@@ -2705,6 +2705,995 @@
       "escalation_override_applied_at": null
     },
     {
+      "milestone_id": "M003",
+      "slice_id": "S01",
+      "id": "T01",
+      "title": "Implemented all 8 envelope targets in renderRange with restructured flow for FillLikelihood and ActivationWeight",
+      "status": "complete",
+      "one_liner": "Implemented all 8 envelope targets in renderRange with restructured flow for FillLikelihood and ActivationWeight",
+      "narrative": "Added switch cases for Probability, AccentBias, NoteLength, TimingLooseness, ActivationWeight, and FillLikelihood. Restructured the inner loop to evaluate envelopes before the pattern check so FillLikelihood can add notes on non-pattern steps. ActivationWeight uses a separate RNG channel (5) to suppress notes. AccentBias modulates emphasisProb. TimingLooseness adds to humanize jitter. NoteLength multiplies note duration. Used a lambda to deduplicate per-lane and global envelope evaluation.",
+      "verification_result": "cmake --build build && ctest --test-dir build: 133/133 pass",
+      "duration": "",
+      "completed_at": "2026-06-21T01:26:00.936Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "engine/src/engine.cpp"
+      ],
+      "key_decisions": [
+        "FillLikelihood uses RNG channel 4, ActivationWeight uses channel 5 to avoid collision with existing channels 0-3",
+        "Envelope evaluation moved before pattern check to enable fill notes on non-pattern steps",
+        "AccentBias is additive to emphasisProb, NoteLength is multiplicative on duration"
+      ],
+      "full_summary_md": "---\nid: T01\nparent: S01\nmilestone: M003\nkey_files:\n  - engine/src/engine.cpp\nkey_decisions:\n  - FillLikelihood uses RNG channel 4, ActivationWeight uses channel 5 to avoid collision with existing channels 0-3\n  - Envelope evaluation moved before pattern check to enable fill notes on non-pattern steps\n  - AccentBias is additive to emphasisProb, NoteLength is multiplicative on duration\nduration: \nverification_result: passed\ncompleted_at: 2026-06-21T01:26:00.935Z\nblocker_discovered: false\n---\n\n# T01: Implemented all 8 envelope targets in renderRange with restructured flow for FillLikelihood and ActivationWeight\n\n**Implemented all 8 envelope targets in renderRange with restructured flow for FillLikelihood and ActivationWeight**\n\n## What Happened\n\nAdded switch cases for Probability, AccentBias, NoteLength, TimingLooseness, ActivationWeight, and FillLikelihood. Restructured the inner loop to evaluate envelopes before the pattern check so FillLikelihood can add notes on non-pattern steps. ActivationWeight uses a separate RNG channel (5) to suppress notes. AccentBias modulates emphasisProb. TimingLooseness adds to humanize jitter. NoteLength multiplies note duration. Used a lambda to deduplicate per-lane and global envelope evaluation.\n\n## Verification\n\ncmake --build build && ctest --test-dir build: 133/133 pass\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `ctest --test-dir build --output-on-failure` | 0 | 133/133 tests pass | 1630ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `engine/src/engine.cpp`\n",
+      "description": "Add switch cases in renderRange() for the 6 unhandled EnvTarget values: Probability (refine existing density-style), AccentBias (modulate emphasisProb), NoteLength (modulate note duration), TimingLooseness (modulate humanizeMs equivalent), ActivationWeight (modulate lane active probability per-cycle), FillLikelihood (add fill notes at envelope peaks). Each target needs clear modulation semantics: multiplicative for velocity-like targets, additive for probability-like targets.",
+      "estimate": "2h",
+      "files": [
+        "engine/src/engine.cpp",
+        "engine/include/poly/types.h"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build -R envelope",
+      "inputs": [
+        "engine/include/poly/types.h",
+        "engine/src/engine.cpp",
+        "docs/roadmap.md"
+      ],
+      "expected_output": [
+        "engine/src/engine.cpp"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M003",
+      "slice_id": "S01",
+      "id": "T02",
+      "title": "Implemented Curve (exponential ease) and StepList (quantized lookup) shapes with new Envelope fields and state version bump",
+      "status": "complete",
+      "one_liner": "Implemented Curve (exponential ease) and StepList (quantized lookup) shapes with new Envelope fields and state version bump",
+      "narrative": "Added curvature (float), stepValues (array of 16 floats), and stepCount (int) to the Envelope struct. Curve shape uses exp() for positive curvature (ease-in) and inverted exp() for negative curvature (ease-out), falling back to linear when curvature is near zero. StepList quantizes phase to stepCount bins and returns the corresponding value. Added evaluateShapeFull() that takes the full Envelope struct for shapes needing extra parameters. Bumped kCurrentStateVersion to 2 with backwards-compatible v1 read path.",
+      "verification_result": "cmake --build build && ctest --test-dir build: 133/133 pass including new shape tests",
+      "duration": "",
+      "completed_at": "2026-06-21T01:26:10.105Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "engine/include/poly/types.h",
+        "engine/src/envelope.cpp",
+        "engine/include/poly/envelope.h",
+        "engine/include/poly/state_io.h"
+      ],
+      "key_decisions": [
+        "State version bumped 1->2; v1 read path preserved for backwards compat",
+        "Curve uses exp-based easing rather than power curve for smoother control",
+        "StepList uses 16 fixed entries (kMaxStepListEntries) to avoid heap allocation"
+      ],
+      "full_summary_md": "---\nid: T02\nparent: S01\nmilestone: M003\nkey_files:\n  - engine/include/poly/types.h\n  - engine/src/envelope.cpp\n  - engine/include/poly/envelope.h\n  - engine/include/poly/state_io.h\nkey_decisions:\n  - State version bumped 1->2; v1 read path preserved for backwards compat\n  - Curve uses exp-based easing rather than power curve for smoother control\n  - StepList uses 16 fixed entries (kMaxStepListEntries) to avoid heap allocation\nduration: \nverification_result: passed\ncompleted_at: 2026-06-21T01:26:10.104Z\nblocker_discovered: false\n---\n\n# T02: Implemented Curve (exponential ease) and StepList (quantized lookup) shapes with new Envelope fields and state version bump\n\n**Implemented Curve (exponential ease) and StepList (quantized lookup) shapes with new Envelope fields and state version bump**\n\n## What Happened\n\nAdded curvature (float), stepValues (array of 16 floats), and stepCount (int) to the Envelope struct. Curve shape uses exp() for positive curvature (ease-in) and inverted exp() for negative curvature (ease-out), falling back to linear when curvature is near zero. StepList quantizes phase to stepCount bins and returns the corresponding value. Added evaluateShapeFull() that takes the full Envelope struct for shapes needing extra parameters. Bumped kCurrentStateVersion to 2 with backwards-compatible v1 read path.\n\n## Verification\n\ncmake --build build && ctest --test-dir build: 133/133 pass including new shape tests\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `ctest --test-dir build --output-on-failure` | 0 | 133/133 tests pass | 1630ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `engine/include/poly/types.h`\n- `engine/src/envelope.cpp`\n- `engine/include/poly/envelope.h`\n- `engine/include/poly/state_io.h`\n",
+      "description": "Replace the stub implementations in evaluateShape(). Curve: implement exponential ease-in/ease-out using a curvature parameter (repurpose depth or add a shape parameter field). StepList: add a step values array to the Envelope struct (fixed-size, e.g. 16 floats) and implement lookup by quantized phase. Update state_io for any new fields (bump kCurrentStateVersion).",
+      "estimate": "1.5h",
+      "files": [
+        "engine/src/envelope.cpp",
+        "engine/include/poly/types.h",
+        "engine/include/poly/state_io.h"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build -R envelope",
+      "inputs": [
+        "engine/src/envelope.cpp",
+        "engine/include/poly/types.h"
+      ],
+      "expected_output": [
+        "engine/src/envelope.cpp",
+        "engine/include/poly/types.h"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M003",
+      "slice_id": "S01",
+      "id": "T03",
+      "title": "Added comprehensive tests for all 8 envelope targets and Curve/StepList shapes, covering modulation behavior and zero-depth neutrality",
+      "status": "complete",
+      "one_liner": "Added comprehensive tests for all 8 envelope targets and Curve/StepList shapes, covering modulation behavior and zero-depth neutrality",
+      "narrative": "Added 11 new test cases: CurveDefaultIsRamp, CurveWithCurvature (positive and negative), StepListLookup, StepListEmptyReturnsHalf, StepListFallbackThroughSimple, ProbabilityModulation, AccentBiasModulation, NoteLengthModulation, TimingLoosenessModulation, ActivationWeightSuppression, FillLikelihoodAddsNotes, and ZeroDepthNoEffectAllTargets. Each target test verifies the modulation direction and that depth=0 has no effect.",
+      "verification_result": "ctest --test-dir build -R Envelope: 30/30 pass",
+      "duration": "",
+      "completed_at": "2026-06-21T01:26:16.347Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "tests/envelope_tests.cpp"
+      ],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T03\nparent: S01\nmilestone: M003\nkey_files:\n  - tests/envelope_tests.cpp\nkey_decisions: []\nduration: \nverification_result: passed\ncompleted_at: 2026-06-21T01:26:16.347Z\nblocker_discovered: false\n---\n\n# T03: Added comprehensive tests for all 8 envelope targets and Curve/StepList shapes, covering modulation behavior and zero-depth neutrality\n\n**Added comprehensive tests for all 8 envelope targets and Curve/StepList shapes, covering modulation behavior and zero-depth neutrality**\n\n## What Happened\n\nAdded 11 new test cases: CurveDefaultIsRamp, CurveWithCurvature (positive and negative), StepListLookup, StepListEmptyReturnsHalf, StepListFallbackThroughSimple, ProbabilityModulation, AccentBiasModulation, NoteLengthModulation, TimingLoosenessModulation, ActivationWeightSuppression, FillLikelihoodAddsNotes, and ZeroDepthNoEffectAllTargets. Each target test verifies the modulation direction and that depth=0 has no effect.\n\n## Verification\n\nctest --test-dir build -R Envelope: 30/30 pass\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `ctest --test-dir build --output-on-failure -R Envelope` | 0 | 30/30 envelope tests pass | 150ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `tests/envelope_tests.cpp`\n",
+      "description": "Add tests for all 8 envelope targets applied in renderRange: verify each target modulates the correct parameter, verify modulation direction and clamping, verify per-lane and global envelopes interact correctly. Add shape tests for Curve and StepList evaluateShape outputs. Test edge cases: depth=0 (no modulation), depth=1 (full modulation), phase boundaries.",
+      "estimate": "1.5h",
+      "files": [
+        "tests/envelope_tests.cpp"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build -R envelope",
+      "inputs": [
+        "engine/include/poly/types.h",
+        "engine/src/engine.cpp",
+        "engine/src/envelope.cpp"
+      ],
+      "expected_output": [
+        "tests/envelope_tests.cpp"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M003",
+      "slice_id": "S01",
+      "id": "T04",
+      "title": "Golden tests verified unchanged for default patch; added ExtendedEnvelopeTargetsBlockIndependence golden test",
+      "status": "complete",
+      "one_liner": "Golden tests verified unchanged for default patch; added ExtendedEnvelopeTargetsBlockIndependence golden test",
+      "narrative": "Confirmed existing golden reference file unchanged (default patch has no envelopes active). Added test 15 (ExtendedEnvelopeTargetsBlockIndependence) that exercises AccentBias on kick, NoteLength on snare, TimingLooseness on hi-hat, ActivationWeight on ghost lane, and global FillLikelihood envelope simultaneously — verified identical output across 0.05, 0.5, and 2.0 PPQ block sizes.",
+      "verification_result": "ctest --test-dir build -R Golden: 15/15 pass",
+      "duration": "",
+      "completed_at": "2026-06-21T01:26:21.622Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "tests/golden_tests.cpp"
+      ],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T04\nparent: S01\nmilestone: M003\nkey_files:\n  - tests/golden_tests.cpp\nkey_decisions: []\nduration: \nverification_result: passed\ncompleted_at: 2026-06-21T01:26:21.622Z\nblocker_discovered: false\n---\n\n# T04: Golden tests verified unchanged for default patch; added ExtendedEnvelopeTargetsBlockIndependence golden test\n\n**Golden tests verified unchanged for default patch; added ExtendedEnvelopeTargetsBlockIndependence golden test**\n\n## What Happened\n\nConfirmed existing golden reference file unchanged (default patch has no envelopes active). Added test 15 (ExtendedEnvelopeTargetsBlockIndependence) that exercises AccentBias on kick, NoteLength on snare, TimingLooseness on hi-hat, ActivationWeight on ghost lane, and global FillLikelihood envelope simultaneously — verified identical output across 0.05, 0.5, and 2.0 PPQ block sizes.\n\n## Verification\n\nctest --test-dir build -R Golden: 15/15 pass\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `ctest --test-dir build --output-on-failure -R Golden` | 0 | 15/15 golden tests pass | 80ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `tests/golden_tests.cpp`\n",
+      "description": "Regenerate the golden reference file if the default patch now produces different output due to envelope changes (it should not if no envelopes are active by default, but verify). Add a new golden test with a patch that exercises multiple envelope targets simultaneously to enforce determinism of the full envelope system.",
+      "estimate": "30m",
+      "files": [
+        "tests/golden_tests.cpp",
+        "tests/golden/default_patch_4bars.txt"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build -R golden",
+      "inputs": [
+        "tests/golden/default_patch_4bars.txt",
+        "tests/golden_tests.cpp"
+      ],
+      "expected_output": [
+        "tests/golden_tests.cpp"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M003",
+      "slice_id": "S02",
+      "id": "T01",
+      "title": "Scene data model and interpolation",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Add SceneState struct containing two GrooveState slots (sceneA, sceneB), a scene select enum (A/B/Morph), and a morph amount (0.0-1.0). Implement interpolateGrooveState(a, b, t) that lerps all numeric LaneConfig fields, MacroValues, and envelope parameters. Discrete fields (role, midiNote, cycle) snap at t=0.5.",
+      "estimate": "2h",
+      "files": [
+        "engine/include/poly/types.h",
+        "engine/include/poly/scene.h",
+        "engine/src/scene.cpp"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build",
+      "inputs": [
+        "engine/include/poly/types.h"
+      ],
+      "expected_output": [
+        "engine/include/poly/scene.h",
+        "engine/src/scene.cpp"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M003",
+      "slice_id": "S02",
+      "id": "T02",
+      "title": "Scene state serialization",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Extend state_io to serialize SceneState (both GrooveStates plus scene select and morph). Bump kCurrentStateVersion to 2. Add backwards-compat read path that loads v1 state into sceneA and initializes sceneB as a copy.",
+      "estimate": "1h",
+      "files": [
+        "engine/include/poly/state_io.h",
+        "engine/include/poly/types.h"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build -R plugin",
+      "inputs": [
+        "engine/include/poly/state_io.h"
+      ],
+      "expected_output": [
+        "engine/include/poly/state_io.h"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M003",
+      "slice_id": "S02",
+      "id": "T03",
+      "title": "Scene plugin integration",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Update PolyProcessor to hold SceneState instead of single GrooveState. Resolve active groove from scene select + morph before passing to resolveMacros. Add kSceneSelect and kSceneMorph parameters to ParamIDs and controller. Wire applyParameter for the new IDs.",
+      "estimate": "1.5h",
+      "files": [
+        "plugin/source/processor.h",
+        "plugin/source/processor.cpp",
+        "plugin/source/controller.cpp",
+        "plugin/source/plugids.h"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build",
+      "inputs": [
+        "plugin/source/processor.cpp",
+        "plugin/source/plugids.h"
+      ],
+      "expected_output": [
+        "plugin/source/processor.cpp",
+        "plugin/source/controller.cpp",
+        "plugin/source/plugids.h"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M003",
+      "slice_id": "S02",
+      "id": "T04",
+      "title": "Scene tests",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Unit tests for interpolateGrooveState at t=0, t=0.5, t=1 boundaries. Verify discrete field snapping. Verify serialization round-trip for v2 format. Verify v1 backwards compatibility loading.",
+      "estimate": "1h",
+      "files": [
+        "tests/scene_tests.cpp"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build -R scene",
+      "inputs": [
+        "engine/include/poly/scene.h"
+      ],
+      "expected_output": [
+        "tests/scene_tests.cpp"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M003",
+      "slice_id": "S03",
+      "id": "T01",
+      "title": "Constraint data model",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Add ConstraintConfig to LaneConfig: anchorSteps (AccentMask marking steps that must always fire), backbeatProtect (bool, preserves emphasis on steps 2/4 in 4-beat cycles), densityMin/densityMax (int, min/max Euclidean hits after macro resolution). Add global ConstraintConfig to GrooveState for cross-lane density ceiling.",
+      "estimate": "1h",
+      "files": [
+        "engine/include/poly/types.h"
+      ],
+      "verify": "cmake --build build",
+      "inputs": [
+        "engine/include/poly/types.h"
+      ],
+      "expected_output": [
+        "engine/include/poly/types.h"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M003",
+      "slice_id": "S03",
+      "id": "T02",
+      "title": "Anchor and backbeat constraints",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "In renderRange, after probability gate: if the step is in anchorSteps, force it to fire (skip probability roll). For backbeat protection: if backbeatProtect is true and the step is at a backbeat position (step 2, 6 in 8-step; step 1, 3 in 4-step), preserve base velocity and emphasisProb from pre-macro values. Apply after macro resolution but before envelope modulation.",
+      "estimate": "1.5h",
+      "files": [
+        "engine/src/engine.cpp"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build -R constraint",
+      "inputs": [
+        "engine/src/engine.cpp",
+        "engine/include/poly/types.h"
+      ],
+      "expected_output": [
+        "engine/src/engine.cpp"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M003",
+      "slice_id": "S03",
+      "id": "T03",
+      "title": "Density guardrails",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "After macro resolution clamps hitCount, enforce densityMin and densityMax bounds on the resolved hitCount. If macro-driven hitCount falls below densityMin, force it up. If above densityMax, force it down. Apply in resolveMacros output or as a post-resolution step before renderRange.",
+      "estimate": "1h",
+      "files": [
+        "engine/src/engine.cpp",
+        "engine/src/macro.cpp"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build -R constraint",
+      "inputs": [
+        "engine/src/macro.cpp"
+      ],
+      "expected_output": [
+        "engine/src/macro.cpp"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M003",
+      "slice_id": "S03",
+      "id": "T04",
+      "title": "Constraint serialization",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Extend state_io to read/write the new ConstraintConfig fields. Bump state version if not already bumped by S02. Handle backwards compat for older versions (default: no anchors, no backbeat protect, density bounds 0/maxSteps).",
+      "estimate": "45m",
+      "files": [
+        "engine/include/poly/state_io.h"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build -R plugin",
+      "inputs": [
+        "engine/include/poly/state_io.h"
+      ],
+      "expected_output": [
+        "engine/include/poly/state_io.h"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M003",
+      "slice_id": "S03",
+      "id": "T05",
+      "title": "Constraint tests",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Test anchor steps always fire with probability=0. Test backbeat protection preserves emphasis under extreme syncopation macro. Test density guardrails clamp hitCount at extremes (density macro=0 with densityMin=2, density macro=1 with densityMax=4). Test serialization round-trip.",
+      "estimate": "1h",
+      "files": [
+        "tests/constraint_tests.cpp"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build -R constraint",
+      "inputs": [
+        "engine/include/poly/types.h",
+        "engine/src/engine.cpp"
+      ],
+      "expected_output": [
+        "tests/constraint_tests.cpp"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M003",
+      "slice_id": "S04",
+      "id": "T01",
+      "title": "VST3 Unit hierarchy",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Implement IUnitInfo in PolyController. Create unit hierarchy: root -> Lane 1..8 (each with their params), Macros unit, Global unit. Register units in initialize(). Assign each parameter unitId to the correct unit.",
+      "estimate": "1.5h",
+      "files": [
+        "plugin/source/controller.h",
+        "plugin/source/controller.cpp",
+        "plugin/source/plugids.h"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build -R plugin",
+      "inputs": [
+        "plugin/source/controller.cpp"
+      ],
+      "expected_output": [
+        "plugin/source/controller.cpp",
+        "plugin/source/controller.h"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M003",
+      "slice_id": "S04",
+      "id": "T02",
+      "title": "Parameter display formatting",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Add proper units strings to all parameters: Probability -> '%', Humanize -> 'ms', Note Duration -> 'beats', Velocity -> '0-127', Swing -> '%'. Set appropriate stepCount for discrete params. Add getParamStringByValue/getParamValueByString overrides for formatted display where needed.",
+      "estimate": "1h",
+      "files": [
+        "plugin/source/controller.cpp"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build -R plugin",
+      "inputs": [
+        "plugin/source/controller.cpp"
+      ],
+      "expected_output": [
+        "plugin/source/controller.cpp"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M003",
+      "slice_id": "S04",
+      "id": "T03",
+      "title": "Parameter naming cleanup",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Rename automation lane labels for scannability. Macros get 'Macro | Complexity' format. Ensure names are unique and under the VST3 128-char title limit. Verify no ParamID collisions with any new params from S02/S03.",
+      "estimate": "45m",
+      "files": [
+        "plugin/source/controller.cpp"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build -R plugin",
+      "inputs": [
+        "plugin/source/controller.cpp",
+        "plugin/source/plugids.h"
+      ],
+      "expected_output": [
+        "plugin/source/controller.cpp"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M003",
+      "slice_id": "S05",
+      "id": "T01",
+      "title": "MIDI capture ring buffer",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Implement MidiCaptureBuffer: fixed-capacity ring buffer storing NoteEvents with absolute PPQ positions. Configurable capture length in bars (default 8). Push from process() after renderRange. Clear on transport jump or capture reset. Pre-allocate in initialize() for RT safety.",
+      "estimate": "1.5h",
+      "files": [
+        "engine/include/poly/midi_capture.h",
+        "engine/src/midi_capture.cpp",
+        "engine/CMakeLists.txt"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build -R midi_capture",
+      "inputs": [
+        "engine/include/poly/types.h"
+      ],
+      "expected_output": [
+        "engine/include/poly/midi_capture.h",
+        "engine/src/midi_capture.cpp"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M003",
+      "slice_id": "S05",
+      "id": "T02",
+      "title": "Standard MIDI File writer",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Implement writeSMF(): takes a span of NoteEvents and writes a valid Type 0 SMF with tempo track. PPQ positions converted to MIDI ticks (480 PPQN standard). Variable-length quantity encoding for delta times. Write to a provided output buffer or stream.",
+      "estimate": "2h",
+      "files": [
+        "engine/include/poly/smf_writer.h",
+        "engine/src/smf_writer.cpp",
+        "engine/CMakeLists.txt"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build -R smf",
+      "inputs": [
+        "engine/include/poly/types.h"
+      ],
+      "expected_output": [
+        "engine/include/poly/smf_writer.h",
+        "engine/src/smf_writer.cpp"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M003",
+      "slice_id": "S05",
+      "id": "T03",
+      "title": "Export trigger and plugin integration",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Add export trigger parameter (kExportTrigger) that when set to 1.0 initiates capture export. In process(), detect trigger and defer actual file write to a non-RT path (use IMessage to controller, controller writes file). Add capture length parameter. Wire up in processor and controller.",
+      "estimate": "1.5h",
+      "files": [
+        "plugin/source/processor.cpp",
+        "plugin/source/processor.h",
+        "plugin/source/controller.cpp",
+        "plugin/source/plugids.h"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build",
+      "inputs": [
+        "plugin/source/processor.cpp",
+        "engine/include/poly/midi_capture.h",
+        "engine/include/poly/smf_writer.h"
+      ],
+      "expected_output": [
+        "plugin/source/processor.cpp",
+        "plugin/source/controller.cpp"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M003",
+      "slice_id": "S05",
+      "id": "T04",
+      "title": "MIDI export tests",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Test ring buffer wrap-around behavior. Test SMF writer produces valid MIDI header, track header, and note events. Verify variable-length encoding. Test round-trip: generate events -> capture -> export -> parse and compare. Test capture clear on transport jump.",
+      "estimate": "1h",
+      "files": [
+        "tests/midi_capture_tests.cpp",
+        "tests/smf_writer_tests.cpp"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build -R midi",
+      "inputs": [
+        "engine/include/poly/midi_capture.h",
+        "engine/include/poly/smf_writer.h"
+      ],
+      "expected_output": [
+        "tests/midi_capture_tests.cpp",
+        "tests/smf_writer_tests.cpp"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M003",
+      "slice_id": "S06",
+      "id": "T01",
+      "title": "Envelope curve custom view",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Implement EnvelopeCurveView (VSTGUI CView subclass) that draws the current envelope shape as a filled curve. Takes envelope shape, period, depth, and current phase as inputs. Renders shape waveform with a vertical phase-position marker. Register in controller createCustomView.",
+      "estimate": "2h",
+      "files": [
+        "plugin/source/ui/envelope_curve_view.h",
+        "plugin/source/ui/envelope_curve_view.cpp",
+        "plugin/source/controller.cpp",
+        "plugin/resource/poly.uidesc"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build",
+      "inputs": [
+        "plugin/source/ui/lane_grid_view.h",
+        "engine/include/poly/envelope.h"
+      ],
+      "expected_output": [
+        "plugin/source/ui/envelope_curve_view.h",
+        "plugin/source/ui/envelope_curve_view.cpp"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M003",
+      "slice_id": "S06",
+      "id": "T02",
+      "title": "Cycle phase indicators",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Add per-lane phase output parameters (kLanePhaseOutput base) emitted from process() showing current normalized position within each lane cycle. Display as a small circular or linear progress indicator in LaneGridView for each lane row.",
+      "estimate": "1.5h",
+      "files": [
+        "plugin/source/processor.cpp",
+        "plugin/source/plugids.h",
+        "plugin/source/ui/lane_grid_view.cpp",
+        "plugin/source/ui/lane_grid_view.h"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build",
+      "inputs": [
+        "plugin/source/processor.cpp",
+        "plugin/source/ui/lane_grid_view.cpp"
+      ],
+      "expected_output": [
+        "plugin/source/processor.cpp",
+        "plugin/source/ui/lane_grid_view.cpp"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M003",
+      "slice_id": "S06",
+      "id": "T03",
+      "title": "Phase alignment overview",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Implement PhaseAlignmentView: compact multi-lane visualization showing all active lane cycles as concentric rings or parallel timelines, with phase markers. Shows where cycles align and diverge. Register in createCustomView and add to poly.uidesc.",
+      "estimate": "2h",
+      "files": [
+        "plugin/source/ui/phase_alignment_view.h",
+        "plugin/source/ui/phase_alignment_view.cpp",
+        "plugin/source/controller.cpp",
+        "plugin/resource/poly.uidesc"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build",
+      "inputs": [
+        "plugin/source/ui/lane_grid_view.h"
+      ],
+      "expected_output": [
+        "plugin/source/ui/phase_alignment_view.h",
+        "plugin/source/ui/phase_alignment_view.cpp"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M003",
+      "slice_id": "S06",
+      "id": "T04",
+      "title": "Visual regression baselines for new views",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Add visual regression test cases for EnvelopeCurveView and PhaseAlignmentView. Render each view in key states (default, mid-phase, multiple shapes). Generate baseline PNGs. Add to visual_smoke_tests.cpp.",
+      "estimate": "1h",
+      "files": [
+        "tests/ui/visual/visual_smoke_tests.cpp"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build -R visual",
+      "inputs": [
+        "tests/ui/visual/visual_smoke_tests.cpp",
+        "tests/ui/visual/visual_test_harness.h"
+      ],
+      "expected_output": [
+        "tests/ui/visual/visual_smoke_tests.cpp"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
       "milestone_id": "M006",
       "slice_id": "S01",
       "id": "T01",
@@ -3731,6 +4720,50 @@
       "verdict": "flags and upload step correct",
       "duration_ms": 0,
       "created_at": "2026-06-21T01:07:29.780Z"
+    },
+    {
+      "id": 56,
+      "task_id": "T01",
+      "slice_id": "S01",
+      "milestone_id": "M003",
+      "command": "ctest --test-dir build --output-on-failure",
+      "exit_code": 0,
+      "verdict": "133/133 tests pass",
+      "duration_ms": 1630,
+      "created_at": "2026-06-21T01:26:00.936Z"
+    },
+    {
+      "id": 57,
+      "task_id": "T02",
+      "slice_id": "S01",
+      "milestone_id": "M003",
+      "command": "ctest --test-dir build --output-on-failure",
+      "exit_code": 0,
+      "verdict": "133/133 tests pass",
+      "duration_ms": 1630,
+      "created_at": "2026-06-21T01:26:10.105Z"
+    },
+    {
+      "id": 58,
+      "task_id": "T03",
+      "slice_id": "S01",
+      "milestone_id": "M003",
+      "command": "ctest --test-dir build --output-on-failure -R Envelope",
+      "exit_code": 0,
+      "verdict": "30/30 envelope tests pass",
+      "duration_ms": 150,
+      "created_at": "2026-06-21T01:26:16.347Z"
+    },
+    {
+      "id": 59,
+      "task_id": "T04",
+      "slice_id": "S01",
+      "milestone_id": "M003",
+      "command": "ctest --test-dir build --output-on-failure -R Golden",
+      "exit_code": 0,
+      "verdict": "15/15 golden tests pass",
+      "duration_ms": 80,
+      "created_at": "2026-06-21T01:26:21.622Z"
     }
   ]
 }

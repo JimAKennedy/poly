@@ -56,49 +56,78 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
             int stepsInCycle = cfg.cycle.steps;
             int64_t cycleStep = ((absStep % stepsInCycle) + stepsInCycle) % stepsInCycle;
 
-            if (!pattern[static_cast<size_t>(cycleStep)])
-                continue;
-
-            // Envelope modulation: evaluate all active envelopes at this PPQ
+            // Envelope modulation: evaluate before pattern check (FillLikelihood needs it)
             float velMod = 1.0f;
             float probMod = 0.0f;
+            float accentMod = 0.0f;
+            float durationMod = 1.0f;
+            float humanizeMod = 0.0f;
+            float activationMod = 0.0f;
+            float fillMod = 0.0f;
+
+            auto applyEnvelope = [&](const Envelope& env) {
+                double phase = computeEnvelopePhase(ppq, env.periodBars, env.phaseOffset);
+                float value = evaluateShapeFull(env, static_cast<float>(phase));
+                switch (env.target) {
+                case EnvTarget::Velocity:
+                    velMod *= (1.0f - env.depth * (1.0f - value));
+                    break;
+                case EnvTarget::Density:
+                    probMod += env.depth * (value * 2.0f - 1.0f);
+                    break;
+                case EnvTarget::Probability:
+                    probMod += env.depth * (value * 2.0f - 1.0f);
+                    break;
+                case EnvTarget::AccentBias:
+                    accentMod += env.depth * (value * 2.0f - 1.0f);
+                    break;
+                case EnvTarget::NoteLength:
+                    durationMod *= (1.0f - env.depth * (1.0f - value));
+                    break;
+                case EnvTarget::TimingLooseness:
+                    humanizeMod += env.depth * value;
+                    break;
+                case EnvTarget::ActivationWeight:
+                    activationMod += env.depth * (value * 2.0f - 1.0f);
+                    break;
+                case EnvTarget::FillLikelihood:
+                    fillMod += env.depth * value;
+                    break;
+                }
+            };
 
             for (int e = 0; e < cfg.envelopeCount; ++e) {
                 const auto& ea = cfg.envelopes[e];
                 if (!ea.active)
                     continue;
-                const auto& env = ea.envelope;
-                double phase = computeEnvelopePhase(ppq, env.periodBars, env.phaseOffset);
-                float value = evaluateShape(env.shape, static_cast<float>(phase));
-                switch (env.target) {
-                case EnvTarget::Velocity:
-                    velMod *= (1.0f - env.depth * (1.0f - value));
-                    break;
-                case EnvTarget::Density:
-                    probMod += env.depth * (value * 2.0f - 1.0f);
-                    break;
-                default:
-                    break;
-                }
+                applyEnvelope(ea.envelope);
             }
 
             for (int e = 0; e < state.globalEnvelopeCount; ++e) {
-                const auto& env = state.globalEnvelopes[e];
-                double phase = computeEnvelopePhase(ppq, env.periodBars, env.phaseOffset);
-                float value = evaluateShape(env.shape, static_cast<float>(phase));
-                switch (env.target) {
-                case EnvTarget::Velocity:
-                    velMod *= (1.0f - env.depth * (1.0f - value));
-                    break;
-                case EnvTarget::Density:
-                    probMod += env.depth * (value * 2.0f - 1.0f);
-                    break;
-                default:
-                    break;
-                }
+                applyEnvelope(state.globalEnvelopes[e]);
             }
 
-            // Probability gate with density envelope modulation
+            bool isPatternStep = pattern[static_cast<size_t>(cycleStep)];
+
+            if (!isPatternStep) {
+                // Non-pattern step: only fire as a fill note
+                if (fillMod <= 0.0f)
+                    continue;
+                float fillProb = std::clamp(fillMod, 0.0f, 1.0f);
+                float fillRoll = deterministicRand(state.seed, cfg.id, absStep, 4);
+                if (fillRoll >= fillProb)
+                    continue;
+            }
+
+            // ActivationWeight: envelope-driven lane suppression
+            if (activationMod < 0.0f) {
+                float activationProb = std::clamp(1.0f + activationMod, 0.0f, 1.0f);
+                float actRoll = deterministicRand(state.seed, cfg.id, absStep, 5);
+                if (actRoll >= activationProb)
+                    continue;
+            }
+
+            // Probability gate with density/probability envelope modulation
             float effectiveProb = std::clamp(cfg.probability + probMod, 0.0f, 1.0f);
             float probRoll = deterministicRand(state.seed, cfg.id, absStep, 0);
             if (probRoll >= effectiveProb)
@@ -110,10 +139,11 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
             float spread = cfg.velocitySpread * (velRand * 2.0f - 1.0f);
             float vel = velBase + spread;
 
-            // Accent mask boost gated by emphasis probability (channel 2)
+            // Accent mask boost gated by emphasis probability + AccentBias envelope
             if (cfg.accents.steps[static_cast<size_t>(cycleStep)]) {
+                float effectiveEmphasis = std::clamp(cfg.emphasisProb + accentMod, 0.0f, 1.0f);
                 float emphRoll = deterministicRand(state.seed, cfg.id, absStep, 2);
-                if (emphRoll < cfg.emphasisProb) {
+                if (emphRoll < effectiveEmphasis) {
                     vel += 0.15f;
                 }
             }
@@ -134,8 +164,10 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
             }
 
             // Humanize: bounded PPQ jitter from deterministic RNG
-            if (cfg.humanizeMs > 0.0f && tc.tempo > 0.0) {
-                double jitterPpq = cfg.humanizeMs * tc.tempo / 60000.0;
+            // TimingLooseness envelope adds additional jitter range
+            float effectiveHumanize = cfg.humanizeMs + humanizeMod * 10.0f;
+            if (effectiveHumanize > 0.0f && tc.tempo > 0.0) {
+                double jitterPpq = static_cast<double>(effectiveHumanize) * tc.tempo / 60000.0;
                 float jitterRand = deterministicRand(state.seed, cfg.id, absStep, 3);
                 ppq += jitterPpq * (jitterRand * 2.0f - 1.0f);
             }
@@ -144,7 +176,8 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
             ev.ppqPosition = ppq;
             ev.pitch = cfg.midiNote;
             ev.velocity = vel;
-            ev.duration = cfg.noteDuration > 0.0f ? static_cast<double>(cfg.noteDuration) : sPpq * 0.5;
+            double baseDuration = cfg.noteDuration > 0.0f ? static_cast<double>(cfg.noteDuration) : sPpq * 0.5;
+            ev.duration = baseDuration * static_cast<double>(std::clamp(durationMod, 0.01f, 4.0f));
             ev.channel = static_cast<int16_t>(lane);
 
             out.push(ev);

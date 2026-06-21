@@ -81,12 +81,17 @@ enum class EnvTarget : uint8_t {
 
 enum class Shape : uint8_t { Ramp, Sine, Triangle, Curve, StepList };
 
+static constexpr int kMaxStepListEntries = 16;
+
 struct Envelope {
     EnvTarget target = EnvTarget::Velocity;
     float periodBars = 4.0f;
     Shape shape = Shape::Sine;
     float depth = 1.0f;
     float phaseOffset = 0.0f;
+    float curvature = 0.0f;
+    std::array<float, kMaxStepListEntries> stepValues{};
+    int stepCount = 0;
 };
 
 struct EnvelopeAssign {

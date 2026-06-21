@@ -13,22 +13,22 @@
 
 ## Slices
 
-- [ ] **S01: Extended Envelope System** `[sketch]` `risk:medium` `depends:[]`
+- [x] **S01: S01** `risk:medium` `depends:[]`
   > After this: Envelopes target length, looseness, activation, and fill alongside velocity/density; 4/8/16/custom bar phrase lengths create section-scale evolution
 
-- [ ] **S02: Scene and Snapshot System** `[sketch]` `risk:high` `depends:[S01]`
+- [ ] **S02: Scene and Snapshot System** `risk:high` `depends:[S01]`
   > After this: User stores two scenes, switches instantly, and morphs between them with a crossfader producing smooth musical transitions
 
-- [ ] **S03: Constraint Layer** `[sketch]` `risk:high` `depends:[]`
+- [ ] **S03: Constraint Layer** `risk:high` `depends:[]`
   > After this: Anchor kick remains stable even when density envelope bottoms out; backbeat survives high-syncopation macro settings
 
-- [ ] **S04: Cubase Automation Polish** `[sketch]` `risk:low` `depends:[]`
+- [ ] **S04: Cubase Automation Polish** `risk:low` `depends:[]`
   > After this: Cubase automation lanes show well-organized, clearly named parameters; high-value controls are easy to find and automate
 
-- [ ] **S05: MIDI Export Workflow** `[sketch]` `risk:high` `depends:[S03]`
+- [ ] **S05: MIDI Export Workflow** `risk:high` `depends:[S03]`
   > After this: User captures a generated groove as MIDI on a Cubase track for further editing
 
-- [ ] **S06: Phase and Envelope Visualization** `[sketch]` `risk:medium` `depends:[S01]`
+- [ ] **S06: Phase and Envelope Visualization** `risk:medium` `depends:[S01]`
   > After this: UI shows how lane cycles align and diverge over time; envelope curves visible with their modulation targets
 
 ## Boundary Map

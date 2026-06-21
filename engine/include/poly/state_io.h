@@ -7,7 +7,7 @@
 
 namespace poly {
 
-static constexpr int32_t kCurrentStateVersion = 1;
+static constexpr int32_t kCurrentStateVersion = 2;
 
 template <typename WriteFn> bool writeGrooveState(WriteFn&& write, const GrooveState& state) {
     int32_t version = kCurrentStateVersion;
@@ -82,6 +82,14 @@ template <typename WriteFn> bool writeGrooveState(WriteFn&& write, const GrooveS
                 return false;
             if (!write(&ea.envelope.phaseOffset, sizeof(ea.envelope.phaseOffset)))
                 return false;
+            if (!write(&ea.envelope.curvature, sizeof(ea.envelope.curvature)))
+                return false;
+            if (!write(&ea.envelope.stepCount, sizeof(ea.envelope.stepCount)))
+                return false;
+            for (int s = 0; s < kMaxStepListEntries; ++s) {
+                if (!write(&ea.envelope.stepValues[static_cast<size_t>(s)], sizeof(float)))
+                    return false;
+            }
             uint8_t envActive = ea.active ? 1 : 0;
             if (!write(&envActive, sizeof(envActive)))
                 return false;
@@ -104,6 +112,14 @@ template <typename WriteFn> bool writeGrooveState(WriteFn&& write, const GrooveS
             return false;
         if (!write(&env.phaseOffset, sizeof(env.phaseOffset)))
             return false;
+        if (!write(&env.curvature, sizeof(env.curvature)))
+            return false;
+        if (!write(&env.stepCount, sizeof(env.stepCount)))
+            return false;
+        for (int s = 0; s < kMaxStepListEntries; ++s) {
+            if (!write(&env.stepValues[static_cast<size_t>(s)], sizeof(float)))
+                return false;
+        }
     }
 
     return true;
@@ -113,7 +129,7 @@ template <typename ReadFn> bool readGrooveState(ReadFn&& read, GrooveState& stat
     int32_t version = 0;
     if (!read(&version, sizeof(version)))
         return false;
-    if (version != kCurrentStateVersion)
+    if (version != 1 && version != 2)
         return false;
 
     if (!read(&state.activeLaneCount, sizeof(state.activeLaneCount)))
@@ -188,6 +204,16 @@ template <typename ReadFn> bool readGrooveState(ReadFn&& read, GrooveState& stat
                 return false;
             if (!read(&ea.envelope.phaseOffset, sizeof(ea.envelope.phaseOffset)))
                 return false;
+            if (version >= 2) {
+                if (!read(&ea.envelope.curvature, sizeof(ea.envelope.curvature)))
+                    return false;
+                if (!read(&ea.envelope.stepCount, sizeof(ea.envelope.stepCount)))
+                    return false;
+                for (int s = 0; s < kMaxStepListEntries; ++s) {
+                    if (!read(&ea.envelope.stepValues[static_cast<size_t>(s)], sizeof(float)))
+                        return false;
+                }
+            }
             uint8_t envActive = 0;
             if (!read(&envActive, sizeof(envActive)))
                 return false;
@@ -213,6 +239,16 @@ template <typename ReadFn> bool readGrooveState(ReadFn&& read, GrooveState& stat
             return false;
         if (!read(&env.phaseOffset, sizeof(env.phaseOffset)))
             return false;
+        if (version >= 2) {
+            if (!read(&env.curvature, sizeof(env.curvature)))
+                return false;
+            if (!read(&env.stepCount, sizeof(env.stepCount)))
+                return false;
+            for (int s = 0; s < kMaxStepListEntries; ++s) {
+                if (!read(&env.stepValues[static_cast<size_t>(s)], sizeof(float)))
+                    return false;
+            }
+        }
     }
 
     return true;

@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-06-21T01:08:45Z | Files: 65 | Described: 0/65
-<!-- gsd:codebase-meta {"generatedAt":"2026-06-21T01:08:45Z","fingerprint":"61215a43eaa02f007277826b48cae99d1cc4f055","fileCount":65,"truncated":false} -->
+Generated: 2026-06-21T01:10:50Z | Files: 74 | Described: 0/74
+<!-- gsd:codebase-meta {"generatedAt":"2026-06-21T01:10:50Z","fingerprint":"d97793746aa674ae71c8998c3ba4ce62804a2def","fileCount":74,"truncated":false} -->
 
 ### (root)/
 - `.clang-format`
@@ -24,6 +24,7 @@ Generated: 2026-06-21T01:08:45Z | Files: 65 | Described: 0/65
 - `.github/workflows/sanitizers.yml`
 
 ### cmake/
+- `cmake/jk_ui_test_harness.cmake`
 - `cmake/jk_warnings.cmake`
 
 ### docs/
@@ -97,6 +98,18 @@ Generated: 2026-06-21T01:08:45Z | Files: 65 | Described: 0/65
 
 ### tests/golden/
 - `tests/golden/default_patch_4bars.txt`
+
+### tests/ui/interaction/
+- `tests/ui/interaction/headless_ui_host.cpp`
+- `tests/ui/interaction/headless_ui_host.h`
+- `tests/ui/interaction/interaction_smoke_tests.cpp`
+
+### tests/ui/visual/
+- `tests/ui/visual/image_compare.cpp`
+- `tests/ui/visual/image_compare.h`
+- `tests/ui/visual/visual_smoke_tests.cpp`
+- `tests/ui/visual/visual_test_harness.cpp`
+- `tests/ui/visual/visual_test_harness.h`
 
 ### tools/harness/
 - `tools/harness/CMakeLists.txt`
