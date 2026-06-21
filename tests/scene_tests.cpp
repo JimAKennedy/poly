@@ -196,7 +196,9 @@ TEST(SceneIO, V2BackwardsCompat) {
         buffer.insert(buffer.end(), p, p + size);
         return true;
     };
-    ASSERT_TRUE(poly::writeGrooveState(write, gs));
+    int32_t v2 = 2;
+    ASSERT_TRUE(write(&v2, sizeof(v2)));
+    ASSERT_TRUE(poly::writeGrooveStateBody(write, gs, 2));
 
     size_t pos = 0;
     auto read = [&buffer, &pos](void* data, size_t size) -> bool {

@@ -8,11 +8,12 @@
 
 namespace poly {
 
-static constexpr int32_t kCurrentStateVersion = 3;
+static constexpr int32_t kCurrentStateVersion = 4;
 
 // --- Internal body-only write (no version header, always writes latest body format) ---
 
-template <typename WriteFn> bool writeGrooveStateBody(WriteFn&& write, const GrooveState& state) {
+template <typename WriteFn>
+bool writeGrooveStateBody(WriteFn&& write, const GrooveState& state, int32_t bodyVersion = kCurrentStateVersion) {
     if (!write(&state.activeLaneCount, sizeof(state.activeLaneCount)))
         return false;
     if (!write(&state.seed, sizeof(state.seed)))
@@ -94,6 +95,23 @@ template <typename WriteFn> bool writeGrooveStateBody(WriteFn&& write, const Gro
             if (!write(&envActive, sizeof(envActive)))
                 return false;
         }
+
+        if (bodyVersion >= 4) {
+            uint64_t anchorBits = 0;
+            for (int s = 0; s < kMaxSteps; ++s) {
+                if (lane.constraints.anchorSteps.steps[static_cast<size_t>(s)])
+                    anchorBits |= (uint64_t{1} << s);
+            }
+            if (!write(&anchorBits, sizeof(anchorBits)))
+                return false;
+            uint8_t bbp = lane.constraints.backbeatProtect ? 1 : 0;
+            if (!write(&bbp, sizeof(bbp)))
+                return false;
+            if (!write(&lane.constraints.densityMin, sizeof(lane.constraints.densityMin)))
+                return false;
+            if (!write(&lane.constraints.densityMax, sizeof(lane.constraints.densityMax)))
+                return false;
+        }
     }
 
     if (!write(&state.globalEnvelopeCount, sizeof(state.globalEnvelopeCount)))
@@ -120,6 +138,11 @@ template <typename WriteFn> bool writeGrooveStateBody(WriteFn&& write, const Gro
             if (!write(&env.stepValues[static_cast<size_t>(s)], sizeof(float)))
                 return false;
         }
+    }
+
+    if (bodyVersion >= 4) {
+        if (!write(&state.globalDensityCeiling, sizeof(state.globalDensityCeiling)))
+            return false;
     }
 
     return true;
@@ -215,6 +238,23 @@ template <typename ReadFn> bool readGrooveStateBody(ReadFn&& read, GrooveState& 
                 return false;
             ea.active = (envActive != 0);
         }
+
+        if (version >= 4) {
+            uint64_t anchorBits = 0;
+            if (!read(&anchorBits, sizeof(anchorBits)))
+                return false;
+            for (int s = 0; s < kMaxSteps; ++s) {
+                lane.constraints.anchorSteps.steps[static_cast<size_t>(s)] = (anchorBits & (uint64_t{1} << s)) != 0;
+            }
+            uint8_t bbp = 0;
+            if (!read(&bbp, sizeof(bbp)))
+                return false;
+            lane.constraints.backbeatProtect = (bbp != 0);
+            if (!read(&lane.constraints.densityMin, sizeof(lane.constraints.densityMin)))
+                return false;
+            if (!read(&lane.constraints.densityMax, sizeof(lane.constraints.densityMax)))
+                return false;
+        }
     }
 
     if (!read(&state.globalEnvelopeCount, sizeof(state.globalEnvelopeCount)))
@@ -247,13 +287,18 @@ template <typename ReadFn> bool readGrooveStateBody(ReadFn&& read, GrooveState& 
         }
     }
 
+    if (version >= 4) {
+        if (!read(&state.globalDensityCeiling, sizeof(state.globalDensityCeiling)))
+            return false;
+    }
+
     return true;
 }
 
-// --- Public: single GrooveState (v2 format, for engine-layer tests) ---
+// --- Public: single GrooveState (for engine-layer tests) ---
 
 template <typename WriteFn> bool writeGrooveState(WriteFn&& write, const GrooveState& state) {
-    int32_t version = 2;
+    int32_t version = kCurrentStateVersion;
     if (!write(&version, sizeof(version)))
         return false;
     return writeGrooveStateBody(write, state);
@@ -263,7 +308,7 @@ template <typename ReadFn> bool readGrooveState(ReadFn&& read, GrooveState& stat
     int32_t version = 0;
     if (!read(&version, sizeof(version)))
         return false;
-    if (version != 1 && version != 2)
+    if (version < 1 || version > kCurrentStateVersion)
         return false;
     return readGrooveStateBody(read, state, version);
 }
@@ -300,9 +345,10 @@ template <typename ReadFn> bool readSceneState(ReadFn&& read, SceneState& scene)
         scene.select = SceneSelect::A;
         scene.morphAmount = 0.0f;
     } else {
-        if (!readGrooveStateBody(read, scene.sceneA, 2))
+        int32_t bodyVersion = (version == 3) ? 2 : version;
+        if (!readGrooveStateBody(read, scene.sceneA, bodyVersion))
             return false;
-        if (!readGrooveStateBody(read, scene.sceneB, 2))
+        if (!readGrooveStateBody(read, scene.sceneB, bodyVersion))
             return false;
         uint8_t select = 0;
         if (!read(&select, sizeof(select)))

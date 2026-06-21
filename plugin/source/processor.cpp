@@ -10,6 +10,7 @@
 #include "pluginterfaces/vst/ivstprocesscontext.h"
 
 #include "plugids.h"
+#include "poly/constraint.h"
 #include "poly/macro.h"
 #include "poly/scene.h"
 #include "poly/state_io.h"
@@ -152,11 +153,11 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
     // --- Resolve scene and render ---
     GrooveState resolved;
     if (sceneState_.select == SceneSelect::Morph) {
-        resolved =
-            resolveMacros(interpolateGrooveState(sceneState_.sceneA, sceneState_.sceneB, sceneState_.morphAmount));
+        GrooveState base = interpolateGrooveState(sceneState_.sceneA, sceneState_.sceneB, sceneState_.morphAmount);
+        resolved = resolveConstraints(base, resolveMacros(base));
     } else {
         const auto& base = (sceneState_.select == SceneSelect::B) ? sceneState_.sceneB : sceneState_.sceneA;
-        resolved = resolveMacros(base);
+        resolved = resolveConstraints(base, resolveMacros(base));
     }
     engine_.renderRange(tc_, resolved, noteBuffer_);
 
