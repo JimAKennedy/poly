@@ -1,16 +1,16 @@
 {
   "nodes": [
     {
-      "id": "milestone:M002",
-      "label": "M002: Core Groove Engine MVP",
+      "id": "milestone:M003",
+      "label": "M003: Musical Refinement and Cubase Polish",
       "type": "milestone",
-      "description": "Active milestone: M002",
+      "description": "Active milestone: M003",
       "confidence": "EXTRACTED",
       "sourceFile": "STATE.md"
     },
     {
-      "id": "concept:phase:validating-milestone",
-      "label": "Phase: validating-milestone",
+      "id": "concept:phase:refining",
+      "label": "Phase: refining",
       "type": "concept",
       "confidence": "EXTRACTED",
       "sourceFile": "STATE.md"
@@ -176,6 +176,13 @@
       "label": "T04: Milestone Retrospective",
       "type": "task",
       "confidence": "EXTRACTED"
+    },
+    {
+      "id": "milestone:M002",
+      "label": "M002: Core Groove Engine MVP",
+      "type": "milestone",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M002/M002-ROADMAP.md"
     },
     {
       "id": "slice:M002:S01",
@@ -370,11 +377,99 @@
       "confidence": "EXTRACTED"
     },
     {
-      "id": "milestone:M003",
-      "label": "M003: Musical Refinement and Cubase Polish",
+      "id": "milestone:M006",
+      "label": "M006: UI Test Framework Adoption",
       "type": "milestone",
       "confidence": "EXTRACTED",
-      "sourceFile": "milestones/M003/M003-ROADMAP.md"
+      "sourceFile": "milestones/M006/M006-ROADMAP.md"
+    },
+    {
+      "id": "slice:M006:S01",
+      "label": "S01: Harness Integration and Smoke Tests",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M006/slices/S01/S01-PLAN.md"
+    },
+    {
+      "id": "task:M006:S01:T01",
+      "label": "T01: Copy harness files and CMake module",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M006:S01:T02",
+      "label": "T02: Wire CMake targets for UI tests",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M006:S01:T03",
+      "label": "T03: Write visual rendering smoke test",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M006:S01:T04",
+      "label": "T04: Write headless host smoke test",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M006:S02",
+      "label": "S02: Interaction Test Suite",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M006/slices/S02/S02-PLAN.md"
+    },
+    {
+      "id": "task:M006:S02:T01",
+      "label": "T01: Macro knob interaction tests",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M006:S02:T02",
+      "label": "T02: Controller lifecycle edge cases",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M006:S02:T03",
+      "label": "T03: View tree inspection tests",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M006:S03",
+      "label": "S03: Visual Regression Baselines",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M006/slices/S03/S03-PLAN.md"
+    },
+    {
+      "id": "task:M006:S03:T01",
+      "label": "T01: Visual regression tests with state variation",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M006:S03:T02",
+      "label": "T02: Generate and commit baseline reference PNGs",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M006:S04",
+      "label": "S04: CI Pipeline Integration",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M006/slices/S04/S04-PLAN.md"
+    },
+    {
+      "id": "task:M006:S04:T01",
+      "label": "T01: Add UI test flags and visual diff upload to ci.yml",
+      "type": "task",
+      "confidence": "EXTRACTED"
     }
   ],
   "edges": [
@@ -713,7 +808,91 @@
       "to": "task:M002:S06:T04",
       "type": "contains",
       "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M006",
+      "to": "slice:M006:S01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M006:S01",
+      "to": "task:M006:S01:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M006:S01",
+      "to": "task:M006:S01:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M006:S01",
+      "to": "task:M006:S01:T03",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M006:S01",
+      "to": "task:M006:S01:T04",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M006",
+      "to": "slice:M006:S02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M006:S02",
+      "to": "task:M006:S02:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M006:S02",
+      "to": "task:M006:S02:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M006:S02",
+      "to": "task:M006:S02:T03",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M006",
+      "to": "slice:M006:S03",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M006:S03",
+      "to": "task:M006:S03:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M006:S03",
+      "to": "task:M006:S03:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M006",
+      "to": "slice:M006:S04",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M006:S04",
+      "to": "task:M006:S04:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
     }
   ],
-  "builtAt": "2026-06-20T22:20:10.921Z"
+  "builtAt": "2026-06-21T01:07:40.627Z"
 }

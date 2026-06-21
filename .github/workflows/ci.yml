@@ -23,11 +23,11 @@ jobs:
       matrix:
         include:
           - os: macos-14
-            cmake-args: -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES=arm64
+            cmake-args: -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES=arm64 -DBUILD_VISUAL_TESTS=ON -DBUILD_INTERACTION_TESTS=ON
           - os: ubuntu-latest
-            cmake-args: -G Ninja -DCMAKE_BUILD_TYPE=Release
+            cmake-args: -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_INTERACTION_TESTS=ON
           - os: windows-2022
-            cmake-args: -G "Visual Studio 17 2022"
+            cmake-args: -G "Visual Studio 17 2022" -DBUILD_INTERACTION_TESTS=ON
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -53,6 +53,14 @@ jobs:
         run: cmake --build build --config Release --parallel
       - name: Test
         run: ctest --test-dir build --build-config Release --output-on-failure
+      - name: Upload visual diffs
+        if: failure() && runner.os == 'macOS'
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-diffs
+          path: build/tests/visual_output/*_diff.png
+          retention-days: 14
+          if-no-files-found: ignore
       - name: Upload plugin
         uses: actions/upload-artifact@v4
         with:
