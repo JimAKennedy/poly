@@ -35,9 +35,51 @@ TEST(EnvelopeShape, TriangleKeyPoints) {
     EXPECT_NEAR(poly::evaluateShape(poly::Shape::Triangle, 0.75f), 0.5f, kEps);
 }
 
-TEST(EnvelopeShape, PlaceholderShapes) {
-    EXPECT_NEAR(poly::evaluateShape(poly::Shape::Curve, 0.0f), 0.5f, kEps);
+TEST(EnvelopeShape, CurveDefaultIsRamp) {
+    EXPECT_NEAR(poly::evaluateShape(poly::Shape::Curve, 0.0f), 0.0f, kEps);
     EXPECT_NEAR(poly::evaluateShape(poly::Shape::Curve, 0.5f), 0.5f, kEps);
+    EXPECT_NEAR(poly::evaluateShape(poly::Shape::Curve, 1.0f), 1.0f, kEps);
+}
+
+TEST(EnvelopeShape, CurveWithCurvature) {
+    poly::Envelope env{};
+    env.shape = poly::Shape::Curve;
+    env.curvature = 3.0f;
+    float v0 = poly::evaluateShapeFull(env, 0.0f);
+    float vMid = poly::evaluateShapeFull(env, 0.5f);
+    float v1 = poly::evaluateShapeFull(env, 1.0f);
+    EXPECT_NEAR(v0, 0.0f, kEps);
+    EXPECT_NEAR(v1, 1.0f, kEps);
+    EXPECT_LT(vMid, 0.5f);
+
+    env.curvature = -3.0f;
+    vMid = poly::evaluateShapeFull(env, 0.5f);
+    EXPECT_GT(vMid, 0.5f);
+}
+
+TEST(EnvelopeShape, StepListLookup) {
+    poly::Envelope env{};
+    env.shape = poly::Shape::StepList;
+    env.stepCount = 4;
+    env.stepValues[0] = 0.0f;
+    env.stepValues[1] = 0.25f;
+    env.stepValues[2] = 0.75f;
+    env.stepValues[3] = 1.0f;
+
+    EXPECT_NEAR(poly::evaluateShapeFull(env, 0.0f), 0.0f, kEps);
+    EXPECT_NEAR(poly::evaluateShapeFull(env, 0.3f), 0.25f, kEps);
+    EXPECT_NEAR(poly::evaluateShapeFull(env, 0.6f), 0.75f, kEps);
+    EXPECT_NEAR(poly::evaluateShapeFull(env, 0.99f), 1.0f, kEps);
+}
+
+TEST(EnvelopeShape, StepListEmptyReturnsHalf) {
+    poly::Envelope env{};
+    env.shape = poly::Shape::StepList;
+    env.stepCount = 0;
+    EXPECT_NEAR(poly::evaluateShapeFull(env, 0.5f), 0.5f, kEps);
+}
+
+TEST(EnvelopeShape, StepListFallbackThroughSimple) {
     EXPECT_NEAR(poly::evaluateShape(poly::Shape::StepList, 0.0f), 0.5f, kEps);
     EXPECT_NEAR(poly::evaluateShape(poly::Shape::StepList, 0.75f), 0.5f, kEps);
 }
@@ -246,6 +288,166 @@ TEST(EnvelopeIntegration, Deterministic) {
     for (size_t i = 0; i < events1.size(); ++i) {
         EXPECT_EQ(events1[i].ppqPosition, events2[i].ppqPosition);
         EXPECT_EQ(events1[i].velocity, events2[i].velocity);
+    }
+}
+
+// --- Extended target tests ---
+
+TEST(EnvelopeTargets, ProbabilityModulation) {
+    auto cfg = makeEnvelopeLane();
+    cfg.probability = 0.5f;
+
+    auto noEnv = renderOneLane(cfg, 0.0, 16.0);
+
+    cfg.envelopes[0].envelope.target = poly::EnvTarget::Probability;
+    cfg.envelopes[0].envelope.periodBars = 4.0f;
+    cfg.envelopes[0].envelope.shape = poly::Shape::Ramp;
+    cfg.envelopes[0].envelope.depth = 1.0f;
+    cfg.envelopes[0].active = true;
+    cfg.envelopeCount = 1;
+
+    auto withEnv = renderOneLane(cfg, 0.0, 16.0);
+    EXPECT_NE(noEnv.size(), withEnv.size());
+}
+
+TEST(EnvelopeTargets, AccentBiasModulation) {
+    auto cfg = makeEnvelopeLane();
+    cfg.emphasisProb = 0.0f;
+    for (int i = 0; i < 4; ++i)
+        cfg.accents.steps[i] = true;
+    cfg.baseVelocity = 80;
+    cfg.velocitySpread = 0.0f;
+
+    auto noAccent = renderOneLane(cfg, 0.0, 16.0);
+    float baseVel = 80.0f / 127.0f;
+    for (const auto& e : noAccent)
+        EXPECT_NEAR(e.velocity, baseVel, 0.01f);
+
+    cfg.envelopes[0].envelope.target = poly::EnvTarget::AccentBias;
+    cfg.envelopes[0].envelope.periodBars = 4.0f;
+    cfg.envelopes[0].envelope.shape = poly::Shape::Ramp;
+    cfg.envelopes[0].envelope.depth = 1.0f;
+    cfg.envelopes[0].active = true;
+    cfg.envelopeCount = 1;
+
+    auto withAccent = renderOneLane(cfg, 0.0, 16.0);
+    ASSERT_FALSE(withAccent.empty());
+    bool anyBoosted = false;
+    for (const auto& e : withAccent) {
+        if (e.velocity > baseVel + 0.01f)
+            anyBoosted = true;
+    }
+    EXPECT_TRUE(anyBoosted);
+}
+
+TEST(EnvelopeTargets, NoteLengthModulation) {
+    auto cfg = makeEnvelopeLane();
+    cfg.noteDuration = 1.0f;
+
+    auto noEnv = renderOneLane(cfg, 0.0, 4.0);
+    ASSERT_EQ(noEnv.size(), 4u);
+    for (const auto& e : noEnv)
+        EXPECT_NEAR(e.duration, 1.0, 1e-6);
+
+    cfg.envelopes[0].envelope.target = poly::EnvTarget::NoteLength;
+    cfg.envelopes[0].envelope.periodBars = 4.0f;
+    cfg.envelopes[0].envelope.shape = poly::Shape::Ramp;
+    cfg.envelopes[0].envelope.depth = 1.0f;
+    cfg.envelopes[0].active = true;
+    cfg.envelopeCount = 1;
+
+    auto withEnv = renderOneLane(cfg, 0.0, 4.0);
+    ASSERT_EQ(withEnv.size(), 4u);
+    EXPECT_LT(withEnv[0].duration, 1.0);
+    EXPECT_GT(withEnv[3].duration, withEnv[0].duration);
+}
+
+TEST(EnvelopeTargets, TimingLoosenessModulation) {
+    auto cfg = makeEnvelopeLane();
+    cfg.humanizeMs = 0.0f;
+
+    auto tight = renderOneLane(cfg, 0.0, 4.0);
+
+    cfg.envelopes[0].envelope.target = poly::EnvTarget::TimingLooseness;
+    cfg.envelopes[0].envelope.periodBars = 4.0f;
+    cfg.envelopes[0].envelope.shape = poly::Shape::Ramp;
+    cfg.envelopes[0].envelope.depth = 1.0f;
+    cfg.envelopes[0].active = true;
+    cfg.envelopeCount = 1;
+
+    auto loose = renderOneLane(cfg, 0.0, 4.0);
+    ASSERT_EQ(tight.size(), loose.size());
+
+    bool anyShifted = false;
+    for (size_t i = 0; i < tight.size(); ++i) {
+        if (std::abs(tight[i].ppqPosition - loose[i].ppqPosition) > 1e-9)
+            anyShifted = true;
+    }
+    EXPECT_TRUE(anyShifted);
+}
+
+TEST(EnvelopeTargets, ActivationWeightSuppression) {
+    auto cfg = makeEnvelopeLane();
+    cfg.probability = 1.0f;
+
+    auto full = renderOneLane(cfg, 0.0, 16.0);
+
+    cfg.envelopes[0].envelope.target = poly::EnvTarget::ActivationWeight;
+    cfg.envelopes[0].envelope.periodBars = 4.0f;
+    cfg.envelopes[0].envelope.shape = poly::Shape::Ramp;
+    cfg.envelopes[0].envelope.depth = 1.0f;
+    cfg.envelopes[0].active = true;
+    cfg.envelopeCount = 1;
+
+    auto suppressed = renderOneLane(cfg, 0.0, 16.0);
+    EXPECT_LT(suppressed.size(), full.size());
+}
+
+TEST(EnvelopeTargets, FillLikelihoodAddsNotes) {
+    auto cfg = makeEnvelopeLane();
+    cfg.cycle = {.steps = 8, .subdivision = 8};
+    cfg.hitCount = 2;
+    cfg.probability = 1.0f;
+
+    auto sparse = renderOneLane(cfg, 0.0, 4.0);
+
+    cfg.envelopes[0].envelope.target = poly::EnvTarget::FillLikelihood;
+    cfg.envelopes[0].envelope.periodBars = 1.0f;
+    cfg.envelopes[0].envelope.shape = poly::Shape::Ramp;
+    cfg.envelopes[0].envelope.depth = 1.0f;
+    cfg.envelopes[0].active = true;
+    cfg.envelopeCount = 1;
+
+    auto filled = renderOneLane(cfg, 0.0, 4.0);
+    EXPECT_GT(filled.size(), sparse.size());
+}
+
+TEST(EnvelopeTargets, ZeroDepthNoEffectAllTargets) {
+    auto cfg = makeEnvelopeLane();
+    cfg.probability = 0.8f;
+    cfg.emphasisProb = 0.5f;
+    cfg.accents.steps[0] = true;
+    cfg.humanizeMs = 0.0f;
+    cfg.noteDuration = 1.0f;
+
+    auto baseline = renderOneLane(cfg, 0.0, 4.0);
+
+    poly::EnvTarget targets[] = {
+        poly::EnvTarget::Probability, poly::EnvTarget::AccentBias,  poly::EnvTarget::NoteLength,
+        poly::EnvTarget::TimingLooseness, poly::EnvTarget::ActivationWeight, poly::EnvTarget::FillLikelihood,
+    };
+
+    for (auto target : targets) {
+        auto testCfg = cfg;
+        testCfg.envelopes[0].envelope.target = target;
+        testCfg.envelopes[0].envelope.periodBars = 4.0f;
+        testCfg.envelopes[0].envelope.shape = poly::Shape::Sine;
+        testCfg.envelopes[0].envelope.depth = 0.0f;
+        testCfg.envelopes[0].active = true;
+        testCfg.envelopeCount = 1;
+
+        auto result = renderOneLane(testCfg, 0.0, 4.0);
+        EXPECT_EQ(result.size(), baseline.size()) << "Target " << static_cast<int>(target) << " with depth=0 changed note count";
     }
 }
 

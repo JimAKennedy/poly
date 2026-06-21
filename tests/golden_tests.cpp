@@ -421,3 +421,43 @@ TEST(GoldenDeterminism, MacroResolvedBlockIndependence) {
     EXPECT_EQ(serialize(small), serialize(medium)) << "Macro-resolved: 0.05 vs 0.5 PPQ blocks differ";
     EXPECT_EQ(serialize(small), serialize(large)) << "Macro-resolved: 0.05 vs 2.0 PPQ blocks differ";
 }
+
+// --- Test 15: Extended envelope targets deterministic across block sizes ---
+TEST(GoldenDeterminism, ExtendedEnvelopeTargetsBlockIndependence) {
+    poly::Engine engine;
+    auto state = makeTestState();
+
+    // AccentBias on kick
+    state.lanes[0].accents.steps[0] = true;
+    state.lanes[0].accents.steps[2] = true;
+    state.lanes[0].emphasisProb = 0.3f;
+    state.lanes[0].envelopes[0].envelope = {poly::EnvTarget::AccentBias, 3.0f, poly::Shape::Sine, 0.8f, 0.0f};
+    state.lanes[0].envelopes[0].active = true;
+    state.lanes[0].envelopeCount = 1;
+
+    // NoteLength on snare
+    state.lanes[1].envelopes[0].envelope = {poly::EnvTarget::NoteLength, 5.0f, poly::Shape::Triangle, 0.7f, 0.15f};
+    state.lanes[1].envelopes[0].active = true;
+    state.lanes[1].envelopeCount = 1;
+
+    // TimingLooseness on hi-hat
+    state.lanes[2].envelopes[0].envelope = {poly::EnvTarget::TimingLooseness, 7.0f, poly::Shape::Ramp, 0.5f, 0.0f};
+    state.lanes[2].envelopes[0].active = true;
+    state.lanes[2].envelopeCount = 1;
+
+    // ActivationWeight on ghost lane
+    state.lanes[3].envelopes[0].envelope = {poly::EnvTarget::ActivationWeight, 4.0f, poly::Shape::Sine, 0.6f, 0.0f};
+    state.lanes[3].envelopes[0].active = true;
+    state.lanes[3].envelopeCount = 1;
+
+    // Global FillLikelihood envelope
+    state.globalEnvelopes[0] = {poly::EnvTarget::FillLikelihood, 8.0f, poly::Shape::Triangle, 0.3f, 0.0f};
+    state.globalEnvelopeCount = 1;
+
+    auto small = renderSorted(engine, state, 0.0, 32.0, 0.05);
+    auto medium = renderSorted(engine, state, 0.0, 32.0, 0.5);
+    auto large = renderSorted(engine, state, 0.0, 32.0, 2.0);
+
+    EXPECT_EQ(serialize(small), serialize(medium)) << "Extended envelope: 0.05 vs 0.5 PPQ blocks differ";
+    EXPECT_EQ(serialize(small), serialize(large)) << "Extended envelope: 0.05 vs 2.0 PPQ blocks differ";
+}

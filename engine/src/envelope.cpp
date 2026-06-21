@@ -15,11 +15,36 @@ float evaluateShape(Shape shape, float phase) {
     case Shape::Triangle:
         return 1.0f - std::abs(2.0f * phase - 1.0f);
     case Shape::Curve:
-        return 0.5f;
+        return phase;
     case Shape::StepList:
         return 0.5f;
     }
     return 0.5f;
+}
+
+float evaluateShapeFull(const Envelope& env, float phase) {
+    switch (env.shape) {
+    case Shape::Curve: {
+        float c = env.curvature;
+        if (c > 0.01f) {
+            return (std::exp(c * phase) - 1.0f) / (std::exp(c) - 1.0f);
+        }
+        if (c < -0.01f) {
+            return 1.0f - (std::exp(-c * (1.0f - phase)) - 1.0f) / (std::exp(-c) - 1.0f);
+        }
+        return phase;
+    }
+    case Shape::StepList: {
+        if (env.stepCount <= 0)
+            return 0.5f;
+        int idx = static_cast<int>(phase * env.stepCount);
+        if (idx >= env.stepCount)
+            idx = env.stepCount - 1;
+        return env.stepValues[static_cast<size_t>(idx)];
+    }
+    default:
+        return evaluateShape(env.shape, phase);
+    }
 }
 
 double computeEnvelopePhase(double ppqPosition, float periodBars, float phaseOffset) {
