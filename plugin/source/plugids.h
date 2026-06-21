@@ -51,4 +51,17 @@ static constexpr Steinberg::Vst::ParamID kSceneMorph = 501;
 
 } // namespace ParamIDs
 
+namespace UnitIDs {
+
+static constexpr Steinberg::Vst::UnitID kLaneBase = 1;
+inline Steinberg::Vst::UnitID lane(int idx) {
+    return kLaneBase + static_cast<Steinberg::Vst::UnitID>(idx);
+}
+static constexpr Steinberg::Vst::UnitID kMacros = 9;
+static constexpr Steinberg::Vst::UnitID kGlobal = 10;
+static constexpr Steinberg::Vst::UnitID kScene = 11;
+static constexpr Steinberg::Vst::UnitID kOutput = 12;
+
+} // namespace UnitIDs
+
 } // namespace poly
