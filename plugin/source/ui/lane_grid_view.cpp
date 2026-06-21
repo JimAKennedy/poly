@@ -1,5 +1,7 @@
 #include "lane_grid_view.h"
 
+#include <cmath>
+
 #include "vstgui/lib/cdrawcontext.h"
 #include "vstgui/lib/cfont.h"
 
@@ -63,10 +65,34 @@ void LaneGridView::draw(VSTGUI::CDrawContext* context) {
         auto probId = ParamIDs::laneParam(lane, ParamIDs::kProbability);
         double prob = controller_->getParamNormalized(probId);
         if (active && prob > 0.0) {
-            double barW = (laneW - 120) * prob;
+            double barW = (laneW - 140) * prob;
             CRect barRect(laneRect.left + 95, laneRect.top + 2, laneRect.left + 95 + barW, laneRect.bottom - 2);
             context->setFillColor(CColor(0x4A, 0x9E, 0xFF, 0x60));
             context->drawRect(barRect, kDrawFilled);
+        }
+
+        if (active) {
+            double phase = controller_->getParamNormalized(ParamIDs::lanePhaseOutput(lane));
+            double indicatorR = (laneH - 4) * 0.4;
+            double indicatorCx = laneRect.right - 40;
+            double indicatorCy = y + laneH * 0.5;
+
+            CRect bgCircle(indicatorCx - indicatorR, indicatorCy - indicatorR, indicatorCx + indicatorR,
+                           indicatorCy + indicatorR);
+            context->setFrameColor(CColor(0x50, 0x50, 0x50, 0xFF));
+            context->setLineWidth(2.0);
+            context->drawEllipse(bgCircle, kDrawStroked);
+
+            if (phase > 0.001) {
+                constexpr double kTwoPi = 6.283185307179586;
+                double angle = kTwoPi * phase - kTwoPi * 0.25;
+                double dotX = indicatorCx + indicatorR * 0.75 * std::cos(angle);
+                double dotY = indicatorCy + indicatorR * 0.75 * std::sin(angle);
+                constexpr double kDotR = 2.5;
+                CRect dot(dotX - kDotR, dotY - kDotR, dotX + kDotR, dotY + kDotR);
+                context->setFillColor(CColor(0x4A, 0x9E, 0xFF, 0xFF));
+                context->drawEllipse(dot, kDrawFilled);
+            }
         }
     }
 

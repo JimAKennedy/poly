@@ -46,6 +46,16 @@ inline Steinberg::Vst::ParamID velocityOutput(int lane) {
     return kVelocityOutputBase + static_cast<Steinberg::Vst::ParamID>(lane);
 }
 
+static constexpr Steinberg::Vst::ParamID kLanePhaseOutputBase = 420;
+inline Steinberg::Vst::ParamID lanePhaseOutput(int lane) {
+    return kLanePhaseOutputBase + static_cast<Steinberg::Vst::ParamID>(lane);
+}
+
+static constexpr Steinberg::Vst::ParamID kEnvelopeValueOutputBase = 430;
+inline Steinberg::Vst::ParamID envelopeValueOutput(int lane) {
+    return kEnvelopeValueOutputBase + static_cast<Steinberg::Vst::ParamID>(lane);
+}
+
 static constexpr Steinberg::Vst::ParamID kSceneSelect = 500;
 static constexpr Steinberg::Vst::ParamID kSceneMorph = 501;
 
