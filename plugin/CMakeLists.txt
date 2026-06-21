@@ -7,6 +7,8 @@ smtg_add_vst3plugin(poly_plugin
     source/plugids.h
     source/ui/envelope_curve_view.h
     source/ui/envelope_curve_view.cpp
+    source/ui/header_view.h
+    source/ui/header_view.cpp
     source/ui/lane_grid_view.h
     source/ui/lane_grid_view.cpp
     source/ui/phase_alignment_view.h

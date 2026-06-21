@@ -22,7 +22,7 @@ void PhaseAlignmentView::draw(VSTGUI::CDrawContext* context) {
 
     auto bounds = getViewSize();
 
-    context->setFillColor(CColor(0x25, 0x25, 0x25, 0xFF));
+    context->setFillColor(CColor(0x1E, 0x1E, 0x26, 0xFF));
     context->drawRect(bounds, kDrawFilled);
 
     auto font = makeOwned<CFontDesc>("Arial", 8.0);
@@ -52,7 +52,7 @@ void PhaseAlignmentView::draw(VSTGUI::CDrawContext* context) {
 
     if (activeCount == 0) {
         context->setFont(font);
-        context->setFontColor(CColor(0x80, 0x80, 0x80, 0xFF));
+        context->setFontColor(CColor(0x50, 0x50, 0x5C, 0xFF));
         CRect msgRect(bounds.left, cy - 8, bounds.right, cy + 8);
         context->drawString("No active lanes", msgRect, kCenterText);
         setDirty(false);
@@ -94,7 +94,7 @@ void PhaseAlignmentView::draw(VSTGUI::CDrawContext* context) {
     }
 
     context->setFont(font);
-    context->setFontColor(CColor(0xA0, 0xA0, 0xA0, 0xFF));
+    context->setFontColor(CColor(0x6A, 0x6A, 0x80, 0xFF));
     CRect titleRect(bounds.left, bounds.bottom - kLabelH - 2, bounds.right, bounds.bottom - 2);
     context->drawString("Phase Alignment", titleRect, kCenterText);
 

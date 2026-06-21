@@ -24,7 +24,7 @@ void EnvelopeCurveView::draw(VSTGUI::CDrawContext* context) {
 
     auto bounds = getViewSize();
 
-    context->setFillColor(CColor(0x25, 0x25, 0x25, 0xFF));
+    context->setFillColor(CColor(0x1E, 0x1E, 0x26, 0xFF));
     context->drawRect(bounds, kDrawFilled);
 
     auto font = makeOwned<CFontDesc>("Arial", 9.0);
@@ -38,7 +38,7 @@ void EnvelopeCurveView::draw(VSTGUI::CDrawContext* context) {
     double plotW = plotRight - plotLeft;
     double plotH = plotBottom - plotTop;
 
-    context->setFrameColor(CColor(0x40, 0x40, 0x40, 0xFF));
+    context->setFrameColor(CColor(0x30, 0x30, 0x3C, 0xFF));
     context->setLineWidth(1.0);
     CRect plotFrame(plotLeft, plotTop, plotRight, plotBottom);
     context->drawRect(plotFrame, kDrawStroked);
@@ -106,7 +106,7 @@ void EnvelopeCurveView::draw(VSTGUI::CDrawContext* context) {
     }
 
     context->setFont(font);
-    context->setFontColor(CColor(0xA0, 0xA0, 0xA0, 0xFF));
+    context->setFontColor(CColor(0x6A, 0x6A, 0x80, 0xFF));
     CRect labelRect(plotLeft, plotBottom + 2, plotRight, bounds.bottom - 2);
     context->drawString("Envelope", labelRect, kCenterText);
 
