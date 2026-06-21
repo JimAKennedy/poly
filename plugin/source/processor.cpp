@@ -380,12 +380,12 @@ Steinberg::tresult PLUGIN_API PolyProcessor::notify(Steinberg::Vst::IMessage* me
             double ppqOffset = (exportEventCount_ > 0) ? exportEvents_[0].ppqPosition : 0.0;
             auto smf = writeSMF(exportEvents_.data(), exportEventCount_, exportTempo_, ppqOffset);
 
-            if (auto* reply = allocateMessage()) {
+            if (auto* reply = allocateMessage()) { // RT-SAFE-OK: notify() runs on message thread
                 reply->setMessageID("MidiExportData");
                 if (auto* attrs = reply->getAttributes()) {
                     attrs->setBinary("smf", smf.data(), static_cast<Steinberg::uint32>(smf.size()));
                 }
-                sendMessage(reply);
+                sendMessage(reply); // RT-SAFE-OK: notify() runs on message thread
                 reply->release();
             }
 
