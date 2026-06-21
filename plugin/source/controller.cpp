@@ -10,7 +10,9 @@
 #include "poly/scene.h"
 #include "poly/state_io.h"
 #include "poly/types.h"
+#include "ui/envelope_curve_view.h"
 #include "ui/lane_grid_view.h"
+#include "ui/phase_alignment_view.h"
 #include "ui/velocity_view.h"
 
 namespace poly {
@@ -104,6 +106,18 @@ Steinberg::tresult PLUGIN_API PolyController::initialize(Steinberg::FUnknown* co
         addParam(ParamIDs::velocityOutput(lane), title, "", 0, 0.0, UnitIDs::kOutput, ParameterInfo::kIsReadOnly);
     }
 
+    for (int lane = 0; lane < kMaxLanes; ++lane) {
+        char title[32];
+        std::snprintf(title, sizeof(title), "L%d Phase", lane + 1);
+        addParam(ParamIDs::lanePhaseOutput(lane), title, "", 0, 0.0, UnitIDs::kOutput, ParameterInfo::kIsReadOnly);
+    }
+
+    for (int lane = 0; lane < kMaxLanes; ++lane) {
+        char title[32];
+        std::snprintf(title, sizeof(title), "L%d Envelope", lane + 1);
+        addParam(ParamIDs::envelopeValueOutput(lane), title, "", 0, 0.0, UnitIDs::kOutput, ParameterInfo::kIsReadOnly);
+    }
+
     addParam(ParamIDs::kSceneSelect, "Select", "", 2, 0.0, UnitIDs::kScene);
     addParam(ParamIDs::kSceneMorph, "Morph", "%", 0, 0.0, UnitIDs::kScene);
 
@@ -132,6 +146,12 @@ VSTGUI::CView* PolyController::createCustomView(VSTGUI::UTF8StringPtr name, cons
     }
     if (std::strcmp(name, "VelocityView") == 0) {
         return new VelocityView(VSTGUI::CRect(0, 0, 580, 80), this);
+    }
+    if (std::strcmp(name, "EnvelopeCurveView") == 0) {
+        return new EnvelopeCurveView(VSTGUI::CRect(0, 0, 380, 150), this);
+    }
+    if (std::strcmp(name, "PhaseAlignmentView") == 0) {
+        return new PhaseAlignmentView(VSTGUI::CRect(0, 0, 190, 150), this);
     }
     return nullptr;
 }

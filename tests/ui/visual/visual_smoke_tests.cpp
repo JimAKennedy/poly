@@ -12,7 +12,9 @@
 #include "controller.h"
 #include "image_compare.h"
 #include "plugids.h"
+#include "ui/envelope_curve_view.h"
 #include "ui/lane_grid_view.h"
+#include "ui/phase_alignment_view.h"
 #include "ui/velocity_view.h"
 #include "visual_test_harness.h"
 
@@ -178,6 +180,63 @@ TEST_F(VisualRegressionTest, VelocityHighTension) {
     auto rr = checkRegression(view, "velocity_high_tension");
     EXPECT_TRUE(rr.rendered);
     EXPECT_TRUE(rr.matched) << "VelocityView high-tension rendering differs from baseline";
+
+    delete view;
+}
+
+//------------------------------------------------------------------------
+// EnvelopeCurveView regression tests
+//------------------------------------------------------------------------
+
+TEST_F(VisualRegressionTest, EnvelopeCurveDefault) {
+    auto* view = new poly::EnvelopeCurveView(VSTGUI::CRect(0, 0, 380, 150), controller_);
+
+    auto rr = checkRegression(view, "envelope_curve_default");
+    EXPECT_TRUE(rr.rendered);
+    EXPECT_TRUE(rr.matched) << "EnvelopeCurveView default rendering differs from baseline";
+
+    delete view;
+}
+
+TEST_F(VisualRegressionTest, EnvelopeCurveMidPhase) {
+    for (int lane = 0; lane < 4; ++lane) {
+        setParam(poly::ParamIDs::lanePhaseOutput(lane), (lane + 1) * 0.2);
+        setParam(poly::ParamIDs::envelopeValueOutput(lane), 0.3 + lane * 0.15);
+    }
+
+    auto* view = new poly::EnvelopeCurveView(VSTGUI::CRect(0, 0, 380, 150), controller_);
+
+    auto rr = checkRegression(view, "envelope_curve_mid_phase");
+    EXPECT_TRUE(rr.rendered);
+    EXPECT_TRUE(rr.matched) << "EnvelopeCurveView mid-phase rendering differs from baseline";
+
+    delete view;
+}
+
+//------------------------------------------------------------------------
+// PhaseAlignmentView regression tests
+//------------------------------------------------------------------------
+
+TEST_F(VisualRegressionTest, PhaseAlignmentDefault) {
+    auto* view = new poly::PhaseAlignmentView(VSTGUI::CRect(0, 0, 190, 150), controller_);
+
+    auto rr = checkRegression(view, "phase_alignment_default");
+    EXPECT_TRUE(rr.rendered);
+    EXPECT_TRUE(rr.matched) << "PhaseAlignmentView default rendering differs from baseline";
+
+    delete view;
+}
+
+TEST_F(VisualRegressionTest, PhaseAlignmentMultiPhase) {
+    for (int lane = 0; lane < 4; ++lane) {
+        setParam(poly::ParamIDs::lanePhaseOutput(lane), lane * 0.25);
+    }
+
+    auto* view = new poly::PhaseAlignmentView(VSTGUI::CRect(0, 0, 190, 150), controller_);
+
+    auto rr = checkRegression(view, "phase_alignment_multi_phase");
+    EXPECT_TRUE(rr.rendered);
+    EXPECT_TRUE(rr.matched) << "PhaseAlignmentView multi-phase rendering differs from baseline";
 
     delete view;
 }
