@@ -184,6 +184,7 @@ lcov.info
 test-results/
 Testing/
 CTestTestfile.cmake
+tests/ui/visual/references/
 
 # -----------------------------------------------------------------------------
 # Documentation Generation

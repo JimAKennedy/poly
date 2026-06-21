@@ -16,8 +16,8 @@
 #include "pluginterfaces/vst/ivsteditcontroller.h"
 #include "pluginterfaces/vst/vsttypes.h"
 #include "vstgui/lib/cframe.h"
-#include "vstgui/lib/cpoint.h"
 #include "vstgui/lib/controls/ccontrol.h"
+#include "vstgui/lib/cpoint.h"
 #include "vstgui/lib/cview.h"
 #include "vstgui/lib/cviewcontainer.h"
 
@@ -31,14 +31,12 @@ struct ParameterEdit {
 };
 
 //------------------------------------------------------------------------
-using ControllerFactory =
-    std::function<Steinberg::Vst::IEditController*()>;
+using ControllerFactory = std::function<Steinberg::Vst::IEditController*()>;
 
 //------------------------------------------------------------------------
 class HeadlessUIHost {
 public:
-    explicit HeadlessUIHost(ControllerFactory factory,
-                            std::string resourceDir = "");
+    explicit HeadlessUIHost(ControllerFactory factory, std::string resourceDir = "");
     ~HeadlessUIHost();
 
     HeadlessUIHost(const HeadlessUIHost&) = delete;
@@ -48,8 +46,7 @@ public:
     void close();
 
     void simulateClick(double x, double y);
-    void simulateDrag(double startX, double startY, double endX,
-                      double endY, int steps = 20);
+    void simulateDrag(double startX, double startY, double endX, double endY, int steps = 20);
     void simulateMouseMove(double x, double y);
     void simulateKeyPress(char character);
     void simulateScroll(double x, double y, float deltaY);
@@ -66,8 +63,7 @@ public:
     bool isOpen() const;
 
 private:
-    VSTGUI::CControl* findControlByTag(VSTGUI::CViewContainer* container,
-                                       int32_t tag) const;
+    VSTGUI::CControl* findControlByTag(VSTGUI::CViewContainer* container, int32_t tag) const;
 
     struct Impl;
     Impl* pImpl = nullptr;
@@ -77,5 +73,5 @@ private:
 void initPlatformOnce();
 
 //------------------------------------------------------------------------
-}  // namespace InteractionTest
-}  // namespace JKDigital
+} // namespace InteractionTest
+} // namespace JKDigital

@@ -23,24 +23,16 @@ struct CompareResult {
 };
 
 //------------------------------------------------------------------------
-CompareResult compareImages(const std::vector<uint8_t>& actual,
-                            const std::vector<uint8_t>& reference,
-                            uint32_t width, uint32_t height,
-                            uint8_t tolerance = 2,
-                            double maxDiffPercent = 0.0);
+CompareResult compareImages(const std::vector<uint8_t>& actual, const std::vector<uint8_t>& reference, uint32_t width,
+                            uint32_t height, uint8_t tolerance = 2, double maxDiffPercent = 0.0);
 
 //------------------------------------------------------------------------
-bool generateDiffImage(const std::vector<uint8_t>& actual,
-                       const std::vector<uint8_t>& reference,
-                       uint32_t width, uint32_t height,
-                       const std::string& outputPath,
-                       uint8_t tolerance = 2);
+bool generateDiffImage(const std::vector<uint8_t>& actual, const std::vector<uint8_t>& reference, uint32_t width,
+                       uint32_t height, const std::string& outputPath, uint8_t tolerance = 2);
 
 //------------------------------------------------------------------------
-bool writeRGBAToPNG(const std::vector<uint8_t>& pixels,
-                    uint32_t width, uint32_t height,
-                    const std::string& path);
+bool writeRGBAToPNG(const std::vector<uint8_t>& pixels, uint32_t width, uint32_t height, const std::string& path);
 
 //------------------------------------------------------------------------
-}  // namespace VisualTest
-}  // namespace JKDigital
+} // namespace VisualTest
+} // namespace JKDigital

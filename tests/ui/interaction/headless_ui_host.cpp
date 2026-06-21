@@ -8,7 +8,14 @@
 
 #include <cstring>
 #include <mutex>
+
+#ifdef _WIN32
+#include <direct.h>
+#define getcwd _getcwd
+#define chdir _chdir
+#else
 #include <unistd.h>
+#endif
 
 #include "pluginterfaces/base/ftypes.h"
 #include "pluginterfaces/base/ipluginbase.h"
@@ -18,7 +25,6 @@
 #include "public.sdk/source/common/pluginview.h"
 #include "public.sdk/source/vst/hosting/hostclasses.h"
 #include "public.sdk/source/vst/vstguieditor.h"
-
 #include "vstgui/lib/cframe.h"
 #include "vstgui/lib/controls/ccontrol.h"
 #include "vstgui/lib/events.h"
@@ -61,8 +67,7 @@ public:
         return kResultOk;
     }
 
-    tresult PLUGIN_API performEdit(ParamID id,
-                                   ParamValue valueNormalized) override {
+    tresult PLUGIN_API performEdit(ParamID id, ParamValue valueNormalized) override {
         editLog.push_back({id, valueNormalized});
         return kResultOk;
     }
@@ -81,8 +86,7 @@ public:
     void clearEditLog() { editLog.clear(); }
 
     tresult PLUGIN_API queryInterface(const TUID iid, void** obj) override {
-        if (FUnknownPrivate::iidEqual(iid, IComponentHandler::iid) ||
-            FUnknownPrivate::iidEqual(iid, FUnknown::iid)) {
+        if (FUnknownPrivate::iidEqual(iid, IComponentHandler::iid) || FUnknownPrivate::iidEqual(iid, FUnknown::iid)) {
             *obj = this;
             addRef();
             return kResultTrue;
@@ -100,14 +104,10 @@ private:
 //------------------------------------------------------------------------
 class TestPlugFrame : public IPlugFrame {
 public:
-    tresult PLUGIN_API resizeView(IPlugView* /*view*/,
-                                  ViewRect* /*newSize*/) override {
-        return kResultOk;
-    }
+    tresult PLUGIN_API resizeView(IPlugView* /*view*/, ViewRect* /*newSize*/) override { return kResultOk; }
 
     tresult PLUGIN_API queryInterface(const TUID iid, void** obj) override {
-        if (FUnknownPrivate::iidEqual(iid, IPlugFrame::iid) ||
-            FUnknownPrivate::iidEqual(iid, FUnknown::iid)) {
+        if (FUnknownPrivate::iidEqual(iid, IPlugFrame::iid) || FUnknownPrivate::iidEqual(iid, FUnknown::iid)) {
             *obj = this;
             addRef();
             return kResultTrue;
@@ -139,23 +139,20 @@ static void* createHiddenNSView(int width, int height) {
         } size;
     };
 
-    CGRect rect = {{0, 0},
-                   {static_cast<double>(width), static_cast<double>(height)}};
+    CGRect rect = {{0, 0}, {static_cast<double>(width), static_cast<double>(height)}};
 
-    id allocated = ((id(*)(Class, SEL))objc_msgSend)(nsViewClass, allocSel);
+    id allocated = ((id (*)(Class, SEL))objc_msgSend)(nsViewClass, allocSel);
     if (!allocated)
         return nullptr;
 
-    id view = ((id(*)(id, SEL, CGRect))objc_msgSend)(allocated, initFrameSel,
-                                                      rect);
+    id view = ((id (*)(id, SEL, CGRect))objc_msgSend)(allocated, initFrameSel, rect);
     return reinterpret_cast<void*>(view);
 }
 
 static void releaseNSView(void* view) {
     if (view) {
         SEL releaseSel = sel_registerName("release");
-        ((void (*)(id, SEL))objc_msgSend)(reinterpret_cast<id>(view),
-                                          releaseSel);
+        ((void (*)(id, SEL))objc_msgSend)(reinterpret_cast<id>(view), releaseSel);
     }
 }
 
@@ -176,9 +173,7 @@ struct HeadlessUIHost::Impl {
 };
 
 //------------------------------------------------------------------------
-HeadlessUIHost::HeadlessUIHost(ControllerFactory factory,
-                               std::string resourceDir)
-    : pImpl(new Impl) {
+HeadlessUIHost::HeadlessUIHost(ControllerFactory factory, std::string resourceDir) : pImpl(new Impl) {
     pImpl->factory = std::move(factory);
     pImpl->resourceDir = std::move(resourceDir);
 }
@@ -270,8 +265,7 @@ bool HeadlessUIHost::open() {
 
     auto* pluginView = static_cast<CPluginView*>(pImpl->plugView);
     auto* editorView = static_cast<Steinberg::Vst::EditorView*>(pluginView);
-    auto* vstGuiEditor =
-        static_cast<Steinberg::Vst::VSTGUIEditor*>(editorView);
+    auto* vstGuiEditor = static_cast<Steinberg::Vst::VSTGUIEditor*>(editorView);
     pImpl->frame = vstGuiEditor->getFrame();
 
     pImpl->opened = true;
@@ -322,16 +316,14 @@ void HeadlessUIHost::simulateClick(double x, double y) {
 }
 
 //------------------------------------------------------------------------
-void HeadlessUIHost::simulateDrag(double startX, double startY,
-                                  double endX, double endY, int steps) {
+void HeadlessUIHost::simulateDrag(double startX, double startY, double endX, double endY, int steps) {
     auto* frame = getFrame();
     if (!frame)
         return;
 
     CPoint startPos(startX, startY);
 
-    MouseDownEvent downEvent(startPos,
-                             MouseEventButtonState(MouseButton::Left));
+    MouseDownEvent downEvent(startPos, MouseEventButtonState(MouseButton::Left));
     frame->dispatchEvent(static_cast<Event&>(downEvent));
 
     for (int i = 1; i <= steps; ++i) {
@@ -339,8 +331,7 @@ void HeadlessUIHost::simulateDrag(double startX, double startY,
         double mx = startX + (endX - startX) * t;
         double my = startY + (endY - startY) * t;
 
-        MouseMoveEvent moveEvent(CPoint(mx, my),
-                                 MouseEventButtonState(MouseButton::Left));
+        MouseMoveEvent moveEvent(CPoint(mx, my), MouseEventButtonState(MouseButton::Left));
         frame->dispatchEvent(static_cast<Event&>(moveEvent));
     }
 
@@ -403,8 +394,7 @@ std::string HeadlessUIHost::getParameterString(ParamID id) const {
 
     Steinberg::Vst::String128 text;
     ParamValue normalized = pImpl->controller->getParamNormalized(id);
-    if (pImpl->controller->getParamStringByValue(id, normalized, text) ==
-        kResultOk) {
+    if (pImpl->controller->getParamStringByValue(id, normalized, text) == kResultOk) {
         std::string result;
         for (int i = 0; text[i] != 0; ++i) {
             result += static_cast<char>(text[i]);
@@ -433,8 +423,7 @@ CPoint HeadlessUIHost::getControlCenter(int32_t tag) const {
         parent = parent->getParentView();
     }
 
-    return CPoint(r.left + r.getWidth() / 2.0,
-                  r.top + r.getHeight() / 2.0);
+    return CPoint(r.left + r.getWidth() / 2.0, r.top + r.getHeight() / 2.0);
 }
 
 //------------------------------------------------------------------------
@@ -477,11 +466,12 @@ CFrame* HeadlessUIHost::getFrame() const {
 }
 
 //------------------------------------------------------------------------
-bool HeadlessUIHost::isOpen() const { return pImpl->opened; }
+bool HeadlessUIHost::isOpen() const {
+    return pImpl->opened;
+}
 
 //------------------------------------------------------------------------
-CControl* HeadlessUIHost::findControlByTag(CViewContainer* container,
-                                           int32_t tag) const {
+CControl* HeadlessUIHost::findControlByTag(CViewContainer* container, int32_t tag) const {
     if (!container)
         return nullptr;
 
@@ -491,8 +481,7 @@ CControl* HeadlessUIHost::findControlByTag(CViewContainer* container,
             continue;
 
         auto* control = dynamic_cast<CControl*>(child);
-        if (control && control->getTag() == tag &&
-            control->getMouseEnabled())
+        if (control && control->getTag() == tag && control->getMouseEnabled())
             return control;
 
         auto* childContainer = dynamic_cast<CViewContainer*>(child);
@@ -506,5 +495,5 @@ CControl* HeadlessUIHost::findControlByTag(CViewContainer* container,
 }
 
 //------------------------------------------------------------------------
-}  // namespace InteractionTest
-}  // namespace JKDigital
+} // namespace InteractionTest
+} // namespace JKDigital
