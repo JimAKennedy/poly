@@ -107,6 +107,11 @@ Steinberg::tresult PLUGIN_API PolyController::initialize(Steinberg::FUnknown* co
     addParam(ParamIDs::kSceneSelect, "Select", "", 2, 0.0, UnitIDs::kScene);
     addParam(ParamIDs::kSceneMorph, "Morph", "%", 0, 0.0, UnitIDs::kScene);
 
+    addUnit(new Unit(USTRING("Export"), UnitIDs::kExport, kRootUnitId));
+    addParam(ParamIDs::kExportTrigger, "Export", "", 1, 0.0, UnitIDs::kExport);
+    addParam(ParamIDs::kCaptureLength, "Capture Bars", "bars", 31, 7.0 / 31.0, UnitIDs::kExport);
+    addParam(ParamIDs::kCaptureReady, "Capture Ready", "", 0, 0.0, UnitIDs::kExport, ParameterInfo::kIsReadOnly);
+
     return Steinberg::kResultOk;
 }
 

@@ -1,9 +1,12 @@
 #pragma once
 
+#include <atomic>
+
 #include "public.sdk/source/vst/vstaudioeffect.h"
 
 #include "poly/bridge.h"
 #include "poly/engine.h"
+#include "poly/midi_capture.h"
 #include "poly/scene.h"
 
 namespace poly {
@@ -21,6 +24,7 @@ public:
     Steinberg::tresult PLUGIN_API initialize(Steinberg::FUnknown* context) override;
     Steinberg::tresult PLUGIN_API setActive(Steinberg::TBool state) override;
     Steinberg::tresult PLUGIN_API process(Steinberg::Vst::ProcessData& data) override;
+    Steinberg::tresult PLUGIN_API notify(Steinberg::Vst::IMessage* message) override;
     Steinberg::tresult PLUGIN_API getState(Steinberg::IBStream* state) override;
     Steinberg::tresult PLUGIN_API setState(Steinberg::IBStream* state) override;
 
@@ -32,6 +36,13 @@ private:
     NoteEventBuffer noteBuffer_{};
     TransportContext tc_{};
     PendingNoteOffBuffer pendingNoteOffs_{};
+    MidiCaptureBuffer captureBuffer_;
+    std::array<NoteEvent, MidiCaptureBuffer::kCapacity> exportEvents_{};
+    size_t exportEventCount_ = 0;
+    double exportTempo_ = 120.0;
+    std::atomic<bool> exportReady_{false};
+    bool exportTriggered_ = false;
+    int captureLengthBars_ = MidiCaptureBuffer::kDefaultCaptureBars;
     double expectedNextPpq_ = -1.0;
 };
 
