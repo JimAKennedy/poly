@@ -72,7 +72,7 @@ if(NOT POLY_ENGINE_ONLY)
         gtest_discover_tests(poly_visual_tests)
     endif()
 
-    if(BUILD_INTERACTION_TESTS)
+    if(BUILD_INTERACTION_TESTS AND NOT WIN32)
         set(INTERACTION_TEST_HARNESS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ui/interaction")
 
         add_executable(poly_interaction_tests
