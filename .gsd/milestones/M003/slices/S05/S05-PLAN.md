@@ -21,22 +21,22 @@ Processor accumulates events in capture buffer. Export runs on non-RT thread (me
 
 ## Tasks
 
-- [ ] **T01: MIDI capture ring buffer** `est:1.5h`
+- [x] **T01: MIDI capture ring buffer** `est:1.5h`
   Implement MidiCaptureBuffer: fixed-capacity ring buffer storing NoteEvents with absolute PPQ positions. Configurable capture length in bars (default 8). Push from process() after renderRange. Clear on transport jump or capture reset. Pre-allocate in initialize() for RT safety.
   - Files: `engine/include/poly/midi_capture.h`, `engine/src/midi_capture.cpp`, `engine/CMakeLists.txt`
   - Verify: cmake --build build && ctest --test-dir build -R midi_capture
 
-- [ ] **T02: Standard MIDI File writer** `est:2h`
+- [x] **T02: Standard MIDI File writer** `est:2h`
   Implement writeSMF(): takes a span of NoteEvents and writes a valid Type 0 SMF with tempo track. PPQ positions converted to MIDI ticks (480 PPQN standard). Variable-length quantity encoding for delta times. Write to a provided output buffer or stream.
   - Files: `engine/include/poly/smf_writer.h`, `engine/src/smf_writer.cpp`, `engine/CMakeLists.txt`
   - Verify: cmake --build build && ctest --test-dir build -R smf
 
-- [ ] **T03: Export trigger and plugin integration** `est:1.5h`
+- [x] **T03: Export trigger and plugin integration** `est:1.5h`
   Add export trigger parameter (kExportTrigger) that when set to 1.0 initiates capture export. In process(), detect trigger and defer actual file write to a non-RT path (use IMessage to controller, controller writes file). Add capture length parameter. Wire up in processor and controller.
   - Files: `plugin/source/processor.cpp`, `plugin/source/processor.h`, `plugin/source/controller.cpp`, `plugin/source/plugids.h`
   - Verify: cmake --build build && ctest --test-dir build
 
-- [ ] **T04: MIDI export tests** `est:1h`
+- [x] **T04: MIDI export tests** `est:1h`
   Test ring buffer wrap-around behavior. Test SMF writer produces valid MIDI header, track header, and note events. Verify variable-length encoding. Test round-trip: generate events -> capture -> export -> parse and compare. Test capture clear on transport jump.
   - Files: `tests/midi_capture_tests.cpp`, `tests/smf_writer_tests.cpp`
   - Verify: cmake --build build && ctest --test-dir build -R midi

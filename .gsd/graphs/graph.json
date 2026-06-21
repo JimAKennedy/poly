@@ -16,6 +16,14 @@
       "sourceFile": "STATE.md"
     },
     {
+      "id": "lesson:L1",
+      "label": "L1",
+      "type": "lesson",
+      "description": "clang-format CI failure in 3/5 runs (actions 7, 9, 10)",
+      "confidence": "EXTRACTED",
+      "sourceFile": "KNOWLEDGE.md"
+    },
+    {
       "id": "milestone:M001",
       "label": "M001: Definition and Architecture De-risking",
       "type": "milestone",
@@ -1260,5 +1268,5 @@
       "confidence": "EXTRACTED"
     }
   ],
-  "builtAt": "2026-06-21T01:28:20.133Z"
+  "builtAt": "2026-06-21T03:21:48.340Z"
 }

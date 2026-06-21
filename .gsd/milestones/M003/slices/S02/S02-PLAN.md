@@ -21,22 +21,22 @@ Requires state version bump (kCurrentStateVersion 1 to 2). Processor owns scene 
 
 ## Tasks
 
-- [ ] **T01: Scene data model and interpolation** `est:2h`
+- [x] **T01: Scene data model and interpolation** `est:2h`
   Add SceneState struct containing two GrooveState slots (sceneA, sceneB), a scene select enum (A/B/Morph), and a morph amount (0.0-1.0). Implement interpolateGrooveState(a, b, t) that lerps all numeric LaneConfig fields, MacroValues, and envelope parameters. Discrete fields (role, midiNote, cycle) snap at t=0.5.
   - Files: `engine/include/poly/types.h`, `engine/include/poly/scene.h`, `engine/src/scene.cpp`
   - Verify: cmake --build build && ctest --test-dir build
 
-- [ ] **T02: Scene state serialization** `est:1h`
+- [x] **T02: Scene state serialization** `est:1h`
   Extend state_io to serialize SceneState (both GrooveStates plus scene select and morph). Bump kCurrentStateVersion to 2. Add backwards-compat read path that loads v1 state into sceneA and initializes sceneB as a copy.
   - Files: `engine/include/poly/state_io.h`, `engine/include/poly/types.h`
   - Verify: cmake --build build && ctest --test-dir build -R plugin
 
-- [ ] **T03: Scene plugin integration** `est:1.5h`
+- [x] **T03: Scene plugin integration** `est:1.5h`
   Update PolyProcessor to hold SceneState instead of single GrooveState. Resolve active groove from scene select + morph before passing to resolveMacros. Add kSceneSelect and kSceneMorph parameters to ParamIDs and controller. Wire applyParameter for the new IDs.
   - Files: `plugin/source/processor.h`, `plugin/source/processor.cpp`, `plugin/source/controller.cpp`, `plugin/source/plugids.h`
   - Verify: cmake --build build && ctest --test-dir build
 
-- [ ] **T04: Scene tests** `est:1h`
+- [x] **T04: Scene tests** `est:1h`
   Unit tests for interpolateGrooveState at t=0, t=0.5, t=1 boundaries. Verify discrete field snapping. Verify serialization round-trip for v2 format. Verify v1 backwards compatibility loading.
   - Files: `tests/scene_tests.cpp`
   - Verify: cmake --build build && ctest --test-dir build -R scene

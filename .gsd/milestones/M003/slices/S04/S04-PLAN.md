@@ -21,17 +21,17 @@ Controller-only changes. No engine or state format changes.
 
 ## Tasks
 
-- [ ] **T01: VST3 Unit hierarchy** `est:1.5h`
+- [x] **T01: VST3 Unit hierarchy** `est:1.5h`
   Implement IUnitInfo in PolyController. Create unit hierarchy: root -> Lane 1..8 (each with their params), Macros unit, Global unit. Register units in initialize(). Assign each parameter unitId to the correct unit.
   - Files: `plugin/source/controller.h`, `plugin/source/controller.cpp`, `plugin/source/plugids.h`
   - Verify: cmake --build build && ctest --test-dir build -R plugin
 
-- [ ] **T02: Parameter display formatting** `est:1h`
+- [x] **T02: Parameter display formatting** `est:1h`
   Add proper units strings to all parameters: Probability -> '%', Humanize -> 'ms', Note Duration -> 'beats', Velocity -> '0-127', Swing -> '%'. Set appropriate stepCount for discrete params. Add getParamStringByValue/getParamValueByString overrides for formatted display where needed.
   - Files: `plugin/source/controller.cpp`
   - Verify: cmake --build build && ctest --test-dir build -R plugin
 
-- [ ] **T03: Parameter naming cleanup** `est:45m`
+- [x] **T03: Parameter naming cleanup** `est:45m`
   Rename automation lane labels for scannability. Macros get 'Macro | Complexity' format. Ensure names are unique and under the VST3 128-char title limit. Verify no ParamID collisions with any new params from S02/S03.
   - Files: `plugin/source/controller.cpp`
   - Verify: cmake --build build && ctest --test-dir build -R plugin
