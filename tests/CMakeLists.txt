@@ -97,6 +97,15 @@ if(NOT POLY_ENGINE_ONLY)
             UIDESC_RESOURCE_DIR="${CMAKE_SOURCE_DIR}/plugin/resource"
         )
 
+        # On Linux/Windows, vstgui_support requires VST3 module init symbols
+        # (getPlatformModuleHandle, ModuleInitializer, ModuleTerminator).
+        # macOS uses -Wl,-undefined,dynamic_lookup instead.
+        if(NOT APPLE)
+            target_sources(poly_interaction_tests PRIVATE
+                ${vst3sdk_SOURCE_DIR}/public.sdk/source/main/moduleinit.cpp
+            )
+        endif()
+
         target_compile_features(poly_interaction_tests PRIVATE cxx_std_20)
         jk_target_warnings(poly_interaction_tests)
         gtest_discover_tests(poly_interaction_tests)
