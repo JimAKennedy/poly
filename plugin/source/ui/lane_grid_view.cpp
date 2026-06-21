@@ -18,7 +18,7 @@ void LaneGridView::draw(VSTGUI::CDrawContext* context) {
     using namespace VSTGUI;
 
     auto bounds = getViewSize();
-    context->setFillColor(CColor(0x25, 0x25, 0x25, 0xFF));
+    context->setFillColor(CColor(0x1E, 0x1E, 0x26, 0xFF));
     context->drawRect(bounds, kDrawFilled);
 
     constexpr int kMaxLanes = 8;
@@ -38,11 +38,11 @@ void LaneGridView::draw(VSTGUI::CDrawContext* context) {
         double activeNorm = controller_->getParamNormalized(activeId);
         bool active = activeNorm > 0.5;
 
-        CColor bg = active ? CColor(0x4A, 0x9E, 0xFF, 0x30) : CColor(0x50, 0x50, 0x50, 0xFF);
+        CColor bg = active ? CColor(0x4A, 0x9E, 0xFF, 0x18) : CColor(0x2A, 0x2A, 0x36, 0xFF);
         context->setFillColor(bg);
         context->drawRect(laneRect, kDrawFilled);
 
-        CColor border = active ? CColor(0x4A, 0x9E, 0xFF, 0xCC) : CColor(0x70, 0x70, 0x70, 0xFF);
+        CColor border = active ? CColor(0x4A, 0x9E, 0xFF, 0x60) : CColor(0x3A, 0x3A, 0x48, 0xFF);
         context->setFrameColor(border);
         context->setLineWidth(1.0);
         context->drawRect(laneRect, kDrawStroked);
@@ -51,7 +51,7 @@ void LaneGridView::draw(VSTGUI::CDrawContext* context) {
         textRect.left += 8;
         textRect.right = textRect.left + 80;
         context->setFont(font);
-        context->setFontColor(active ? CColor(0xFF, 0xFF, 0xFF, 0xFF) : CColor(0xA0, 0xA0, 0xA0, 0xFF));
+        context->setFontColor(active ? CColor(0xE8, 0xE8, 0xEC, 0xFF) : CColor(0x68, 0x68, 0x78, 0xFF));
         context->drawString(kLaneNames[lane], textRect, kLeftText);
 
         char laneNum[8];
@@ -59,7 +59,7 @@ void LaneGridView::draw(VSTGUI::CDrawContext* context) {
         CRect numRect = laneRect;
         numRect.right -= 8;
         numRect.left = numRect.right - 30;
-        context->setFontColor(CColor(0x80, 0x80, 0x80, 0xFF));
+        context->setFontColor(CColor(0x50, 0x50, 0x5C, 0xFF));
         context->drawString(laneNum, numRect, kRightText);
 
         auto probId = ParamIDs::laneParam(lane, ParamIDs::kProbability);
@@ -79,8 +79,8 @@ void LaneGridView::draw(VSTGUI::CDrawContext* context) {
 
             CRect bgCircle(indicatorCx - indicatorR, indicatorCy - indicatorR, indicatorCx + indicatorR,
                            indicatorCy + indicatorR);
-            context->setFrameColor(CColor(0x50, 0x50, 0x50, 0xFF));
-            context->setLineWidth(2.0);
+            context->setFrameColor(CColor(0x3A, 0x3A, 0x48, 0xFF));
+            context->setLineWidth(1.5);
             context->drawEllipse(bgCircle, kDrawStroked);
 
             if (phase > 0.001) {

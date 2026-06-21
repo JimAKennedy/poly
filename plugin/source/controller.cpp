@@ -11,6 +11,7 @@
 #include "poly/state_io.h"
 #include "poly/types.h"
 #include "ui/envelope_curve_view.h"
+#include "ui/header_view.h"
 #include "ui/lane_grid_view.h"
 #include "ui/phase_alignment_view.h"
 #include "ui/velocity_view.h"
@@ -141,17 +142,20 @@ Steinberg::IPlugView* PLUGIN_API PolyController::createView(Steinberg::FIDString
 VSTGUI::CView* PolyController::createCustomView(VSTGUI::UTF8StringPtr name, const VSTGUI::UIAttributes& /*attributes*/,
                                                 const VSTGUI::IUIDescription* /*description*/,
                                                 VSTGUI::VST3Editor* /*editor*/) {
+    if (std::strcmp(name, "HeaderView") == 0) {
+        return new HeaderView(VSTGUI::CRect(0, 0, 600, 32));
+    }
     if (std::strcmp(name, "LaneGridView") == 0) {
-        return new LaneGridView(VSTGUI::CRect(0, 0, 580, 160), this);
+        return new LaneGridView(VSTGUI::CRect(0, 0, 580, 156), this);
     }
     if (std::strcmp(name, "VelocityView") == 0) {
-        return new VelocityView(VSTGUI::CRect(0, 0, 580, 80), this);
+        return new VelocityView(VSTGUI::CRect(0, 0, 580, 76), this);
     }
     if (std::strcmp(name, "EnvelopeCurveView") == 0) {
-        return new EnvelopeCurveView(VSTGUI::CRect(0, 0, 380, 150), this);
+        return new EnvelopeCurveView(VSTGUI::CRect(0, 0, 380, 146), this);
     }
     if (std::strcmp(name, "PhaseAlignmentView") == 0) {
-        return new PhaseAlignmentView(VSTGUI::CRect(0, 0, 190, 150), this);
+        return new PhaseAlignmentView(VSTGUI::CRect(0, 0, 190, 146), this);
     }
     return nullptr;
 }

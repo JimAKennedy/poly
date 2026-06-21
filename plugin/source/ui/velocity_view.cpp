@@ -17,7 +17,7 @@ void VelocityView::draw(VSTGUI::CDrawContext* context) {
 
     auto bounds = getViewSize();
 
-    context->setFillColor(CColor(0x25, 0x25, 0x25, 0xFF));
+    context->setFillColor(CColor(0x1E, 0x1E, 0x26, 0xFF));
     context->drawRect(bounds, kDrawFilled);
 
     constexpr int kMaxLanes = 8;
@@ -40,7 +40,7 @@ void VelocityView::draw(VSTGUI::CDrawContext* context) {
         }
 
         CRect bgRect(x, bounds.top + kPad, x + barW, bounds.top + kPad + maxBarH);
-        context->setFillColor(CColor(0x50, 0x50, 0x50, 0xFF));
+        context->setFillColor(CColor(0x2A, 0x2A, 0x36, 0xFF));
         context->drawRect(bgRect, kDrawFilled);
 
         if (vel > 0.001) {
@@ -56,7 +56,7 @@ void VelocityView::draw(VSTGUI::CDrawContext* context) {
         snprintf(label, sizeof(label), "L%d", lane + 1);
         CRect labelRect(x, bgRect.bottom + 1, x + barW, bounds.bottom - 1);
         context->setFont(font);
-        context->setFontColor(active ? CColor(0xCC, 0xCC, 0xCC, 0xFF) : CColor(0x80, 0x80, 0x80, 0xFF));
+        context->setFontColor(active ? CColor(0xC0, 0xC0, 0xC8, 0xFF) : CColor(0x50, 0x50, 0x5C, 0xFF));
         context->drawString(label, labelRect, kCenterText);
     }
 
