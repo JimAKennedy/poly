@@ -16,10 +16,6 @@ static double stepPpq(const Cycle& cycle) {
     return 4.0 / cycle.subdivision;
 }
 
-static double cyclePpq(const Cycle& cycle) {
-    return stepPpq(cycle) * cycle.steps;
-}
-
 void Engine::renderRange(const TransportContext& tc, const GrooveState& state, NoteEventBuffer& out) {
     out.clear();
 
@@ -37,7 +33,6 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
         euclidean(cfg.hitCount, cfg.cycle.steps, cfg.rotation, pattern);
 
         const double sPpq = stepPpq(cfg.cycle);
-        const double cPpq = cyclePpq(cfg.cycle);
 
         // Find the range of absolute step indices that could fall in [ppqStart, ppqEnd).
         // Step i occurs at PPQ = i * sPpq. We need i such that i*sPpq >= ppqStart
