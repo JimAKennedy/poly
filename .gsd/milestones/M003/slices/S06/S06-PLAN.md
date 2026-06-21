@@ -21,22 +21,22 @@ New VSTGUI custom views registered in controller. Requires read-only output para
 
 ## Tasks
 
-- [ ] **T01: Envelope curve custom view** `est:2h`
+- [x] **T01: Envelope curve custom view** `est:2h`
   Implement EnvelopeCurveView (VSTGUI CView subclass) that draws the current envelope shape as a filled curve. Takes envelope shape, period, depth, and current phase as inputs. Renders shape waveform with a vertical phase-position marker. Register in controller createCustomView.
   - Files: `plugin/source/ui/envelope_curve_view.h`, `plugin/source/ui/envelope_curve_view.cpp`, `plugin/source/controller.cpp`, `plugin/resource/poly.uidesc`
   - Verify: cmake --build build && ctest --test-dir build
 
-- [ ] **T02: Cycle phase indicators** `est:1.5h`
+- [x] **T02: Cycle phase indicators** `est:1.5h`
   Add per-lane phase output parameters (kLanePhaseOutput base) emitted from process() showing current normalized position within each lane cycle. Display as a small circular or linear progress indicator in LaneGridView for each lane row.
   - Files: `plugin/source/processor.cpp`, `plugin/source/plugids.h`, `plugin/source/ui/lane_grid_view.cpp`, `plugin/source/ui/lane_grid_view.h`
   - Verify: cmake --build build && ctest --test-dir build
 
-- [ ] **T03: Phase alignment overview** `est:2h`
+- [x] **T03: Phase alignment overview** `est:2h`
   Implement PhaseAlignmentView: compact multi-lane visualization showing all active lane cycles as concentric rings or parallel timelines, with phase markers. Shows where cycles align and diverge. Register in createCustomView and add to poly.uidesc.
   - Files: `plugin/source/ui/phase_alignment_view.h`, `plugin/source/ui/phase_alignment_view.cpp`, `plugin/source/controller.cpp`, `plugin/resource/poly.uidesc`
   - Verify: cmake --build build && ctest --test-dir build
 
-- [ ] **T04: Visual regression baselines for new views** `est:1h`
+- [x] **T04: Visual regression baselines for new views** `est:1h`
   Add visual regression test cases for EnvelopeCurveView and PhaseAlignmentView. Render each view in key states (default, mid-phase, multiple shapes). Generate baseline PNGs. Add to visual_smoke_tests.cpp.
   - Files: `tests/ui/visual/visual_smoke_tests.cpp`
   - Verify: cmake --build build && ctest --test-dir build -R visual

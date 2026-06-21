@@ -28,7 +28,7 @@
 - [x] **S05: S05** `risk:high` `depends:[]`
   > After this: User captures a generated groove as MIDI on a Cubase track for further editing
 
-- [ ] **S06: Phase and Envelope Visualization** `risk:medium` `depends:[S01]`
+- [x] **S06: S06** `risk:medium` `depends:[]`
   > After this: UI shows how lane cycles align and diverge over time; envelope curves visible with their modulation targets
 
 ## Boundary Map
