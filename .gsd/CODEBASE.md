@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-06-21T01:10:50Z | Files: 74 | Described: 0/74
-<!-- gsd:codebase-meta {"generatedAt":"2026-06-21T01:10:50Z","fingerprint":"d97793746aa674ae71c8998c3ba4ce62804a2def","fileCount":74,"truncated":false} -->
+Generated: 2026-06-21T01:31:09Z | Files: 74 | Described: 0/74
+<!-- gsd:codebase-meta {"generatedAt":"2026-06-21T01:31:09Z","fingerprint":"d97793746aa674ae71c8998c3ba4ce62804a2def","fileCount":74,"truncated":false} -->
 
 ### (root)/
 - `.clang-format`
