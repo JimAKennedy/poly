@@ -11,6 +11,7 @@
 
 #include "plugids.h"
 #include "poly/constraint.h"
+#include "poly/envelope.h"
 #include "poly/macro.h"
 #include "poly/scene.h"
 #include "poly/smf_writer.h"
@@ -229,8 +230,8 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
         exportReady_.store(true, std::memory_order_release);
     }
 
-    if (noteBuffer_.count > 0) {
-        if (auto* outParams = data.outputParameterChanges) {
+    if (auto* outParams = data.outputParameterChanges) {
+        if (noteBuffer_.count > 0) {
             for (int lane = 0; lane < kMaxLanes; ++lane) {
                 if (laneVelocity[lane] > 0.0f) {
                     Steinberg::int32 idx;
@@ -240,6 +241,36 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
                         queue->addPoint(0, laneVelocity[lane], ptIdx);
                     }
                 }
+            }
+        }
+
+        for (int lane = 0; lane < kMaxLanes; ++lane) {
+            if (!resolved.lanes[lane].active)
+                continue;
+
+            double cycleBeats = resolved.lanes[lane].cycle.steps * (4.0 / resolved.lanes[lane].cycle.subdivision);
+            double lanePhase = std::fmod(tc_.ppqStart / cycleBeats, 1.0);
+            if (lanePhase < 0.0)
+                lanePhase += 1.0;
+
+            Steinberg::int32 idx;
+            auto* phaseQueue = outParams->addParameterData(ParamIDs::lanePhaseOutput(lane), idx);
+            if (phaseQueue) {
+                Steinberg::int32 ptIdx;
+                phaseQueue->addPoint(0, lanePhase, ptIdx);
+            }
+
+            double envValue = 0.5;
+            if (resolved.lanes[lane].envelopeCount > 0) {
+                const auto& env = resolved.lanes[lane].envelopes[0].envelope;
+                double envPhase = computeEnvelopePhase(tc_.ppqStart, env.periodBars, env.phaseOffset);
+                envValue = static_cast<double>(evaluateShapeFull(env, static_cast<float>(envPhase)));
+            }
+
+            auto* envQueue = outParams->addParameterData(ParamIDs::envelopeValueOutput(lane), idx);
+            if (envQueue) {
+                Steinberg::int32 ptIdx;
+                envQueue->addPoint(0, envValue, ptIdx);
             }
         }
     }
