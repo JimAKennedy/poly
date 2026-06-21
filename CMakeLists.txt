@@ -20,6 +20,8 @@ option(ENABLE_ASAN "Enable AddressSanitizer" OFF)
 option(ENABLE_UBSAN "Enable UndefinedBehaviorSanitizer" OFF)
 option(ENABLE_TSAN "Enable ThreadSanitizer" OFF)
 option(ENABLE_COVERAGE "Enable code coverage" OFF)
+option(BUILD_VISUAL_TESTS "Build visual regression tests" OFF)
+option(BUILD_INTERACTION_TESTS "Build headless UI interaction tests" OFF)
 
 if(ENABLE_ASAN)
     add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
