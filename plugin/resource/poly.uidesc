@@ -4,17 +4,22 @@
 		"bitmaps": {},
 		"fonts": {},
 		"colors": {
-			"bg": "#1a1a1fff",
-			"panel.bg": "#252525ff",
+			"bg": "#16161cff",
+			"header.bg": "#181822ff",
+			"panel.bg": "#1e1e26ff",
+			"section.bg": "#222230ff",
 			"lane.active": "#4a9effcc",
 			"lane.inactive": "#505050ff",
 			"lane.hit": "#f5a623ff",
-			"knob.back": "#505050ff",
+			"knob.back": "#2a2a36ff",
 			"knob.fill": "#4a9effcc",
-			"knob.frame": "#707070ff",
-			"text.bright": "#ffffffff",
-			"text.dim": "#a0a0a0ff",
-			"velocity.bar": "#27ae60cc"
+			"knob.frame": "#3a3a48ff",
+			"text.bright": "#e8e8ecff",
+			"text.dim": "#8888a0ff",
+			"text.section": "#6a6a80ff",
+			"velocity.bar": "#27ae60cc",
+			"accent.blue": "#4a9effff",
+			"accent.line": "#4a9eff40"
 		},
 		"control-tags": {
 			"MacroComplexity": "200",
@@ -33,23 +38,62 @@
 					"background-color": "bg",
 					"background-color-draw-style": "filled",
 					"class": "CViewContainer",
-					"minSize": "600, 520",
+					"minSize": "600, 550",
 					"mouse-enabled": "true",
 					"opacity": "1",
 					"origin": "0, 0",
-					"size": "600, 520",
+					"size": "600, 550",
 					"transparent": "false"
 				},
 				"children": {
+					"CView#headerView": {
+						"attributes": {
+							"class": "CView",
+							"custom-view-name": "HeaderView",
+							"mouse-enabled": "false",
+							"opacity": "1",
+							"origin": "0, 0",
+							"size": "600, 32",
+							"transparent": "false"
+						}
+					},
+					"CTextLabel#lanesLabel": {
+						"attributes": {
+							"class": "CTextLabel",
+							"font": "~ NormalFontVerySmall",
+							"font-color": "text.section",
+							"mouse-enabled": "false",
+							"opacity": "1",
+							"origin": "14, 35",
+							"size": "80, 12",
+							"text-alignment": "left",
+							"title": "LANES",
+							"transparent": "true"
+						}
+					},
 					"CView#laneGrid": {
 						"attributes": {
 							"class": "CView",
 							"custom-view-name": "LaneGridView",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "10, 10",
-							"size": "580, 160",
+							"origin": "10, 48",
+							"size": "580, 156",
 							"transparent": "false"
+						}
+					},
+					"CTextLabel#macrosLabel": {
+						"attributes": {
+							"class": "CTextLabel",
+							"font": "~ NormalFontVerySmall",
+							"font-color": "text.section",
+							"mouse-enabled": "false",
+							"opacity": "1",
+							"origin": "14, 208",
+							"size": "80, 12",
+							"text-alignment": "left",
+							"title": "MACROS",
+							"transparent": "true"
 						}
 					},
 					"CViewContainer#macroRow": {
@@ -59,7 +103,7 @@
 							"class": "CViewContainer",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "10, 180",
+							"origin": "10, 221",
 							"size": "580, 80",
 							"transparent": "false"
 						},
@@ -276,15 +320,43 @@
 							}
 						}
 					},
+					"CTextLabel#velocityLabel": {
+						"attributes": {
+							"class": "CTextLabel",
+							"font": "~ NormalFontVerySmall",
+							"font-color": "text.section",
+							"mouse-enabled": "false",
+							"opacity": "1",
+							"origin": "14, 305",
+							"size": "80, 12",
+							"text-alignment": "left",
+							"title": "VELOCITY",
+							"transparent": "true"
+						}
+					},
 					"CView#velocityView": {
 						"attributes": {
 							"class": "CView",
 							"custom-view-name": "VelocityView",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "10, 270",
-							"size": "580, 80",
+							"origin": "10, 318",
+							"size": "580, 76",
 							"transparent": "false"
+						}
+					},
+					"CTextLabel#vizLabel": {
+						"attributes": {
+							"class": "CTextLabel",
+							"font": "~ NormalFontVerySmall",
+							"font-color": "text.section",
+							"mouse-enabled": "false",
+							"opacity": "1",
+							"origin": "14, 398",
+							"size": "100, 12",
+							"text-alignment": "left",
+							"title": "VISUALIZATION",
+							"transparent": "true"
 						}
 					},
 					"CView#envelopeCurveView": {
@@ -293,8 +365,8 @@
 							"custom-view-name": "EnvelopeCurveView",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "10, 360",
-							"size": "380, 150",
+							"origin": "10, 411",
+							"size": "380, 130",
 							"transparent": "false"
 						}
 					},
@@ -304,8 +376,8 @@
 							"custom-view-name": "PhaseAlignmentView",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "400, 360",
-							"size": "190, 150",
+							"origin": "400, 411",
+							"size": "190, 130",
 							"transparent": "false"
 						}
 					}

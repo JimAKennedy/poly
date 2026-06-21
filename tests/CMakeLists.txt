@@ -18,6 +18,7 @@ add_executable(poly_tests
     macro_tests.cpp
     midi_capture_tests.cpp
     plugin_tests.cpp
+    preset_tests.cpp
     scene_tests.cpp
     smf_writer_tests.cpp
 )
@@ -41,6 +42,8 @@ if(NOT POLY_ENGINE_ONLY)
         ${CMAKE_SOURCE_DIR}/plugin/source/plugids.h
         ${CMAKE_SOURCE_DIR}/plugin/source/ui/envelope_curve_view.h
         ${CMAKE_SOURCE_DIR}/plugin/source/ui/envelope_curve_view.cpp
+        ${CMAKE_SOURCE_DIR}/plugin/source/ui/header_view.h
+        ${CMAKE_SOURCE_DIR}/plugin/source/ui/header_view.cpp
         ${CMAKE_SOURCE_DIR}/plugin/source/ui/lane_grid_view.h
         ${CMAKE_SOURCE_DIR}/plugin/source/ui/lane_grid_view.cpp
         ${CMAKE_SOURCE_DIR}/plugin/source/ui/phase_alignment_view.h
