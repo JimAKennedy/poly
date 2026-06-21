@@ -1,15 +1,14 @@
 #pragma once
 
-#include "vstgui/lib/cview.h"
-#include "vstgui/lib/ccolor.h"
 #include "public.sdk/source/vst/vsteditcontroller.h"
+#include "vstgui/lib/ccolor.h"
+#include "vstgui/lib/cview.h"
 
 namespace poly {
 
 class VelocityView : public VSTGUI::CView {
 public:
-    VelocityView(const VSTGUI::CRect& size,
-                 Steinberg::Vst::EditController* controller);
+    VelocityView(const VSTGUI::CRect& size, Steinberg::Vst::EditController* controller);
 
     void draw(VSTGUI::CDrawContext* context) override;
 

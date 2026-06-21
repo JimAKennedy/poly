@@ -46,7 +46,8 @@ struct NoteEventBuffer {
     void clear() { count = 0; }
 
     bool push(const NoteEvent& e) {
-        if (count >= kMaxEventsPerBlock) return false;
+        if (count >= kMaxEventsPerBlock)
+            return false;
         events[count++] = e;
         return true;
     }
@@ -54,16 +55,7 @@ struct NoteEventBuffer {
 
 // --- Lane Model ---
 
-enum class Role : uint8_t {
-    AnchorPulse,
-    Backbeat,
-    Shimmer,
-    Accent,
-    Ghost,
-    Ornament,
-    Fill,
-    Custom
-};
+enum class Role : uint8_t { AnchorPulse, Backbeat, Shimmer, Accent, Ghost, Ornament, Fill, Custom };
 
 struct Cycle {
     int steps = 4;
@@ -87,13 +79,7 @@ enum class EnvTarget : uint8_t {
     FillLikelihood
 };
 
-enum class Shape : uint8_t {
-    Ramp,
-    Sine,
-    Triangle,
-    Curve,
-    StepList
-};
+enum class Shape : uint8_t { Ramp, Sine, Triangle, Curve, StepList };
 
 struct Envelope {
     EnvTarget target = EnvTarget::Velocity;

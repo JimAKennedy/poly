@@ -1,18 +1,22 @@
-#include "poly/euclidean.h"
-#include <gtest/gtest.h>
 #include <string>
+
+#include <gtest/gtest.h>
+
+#include "poly/euclidean.h"
 
 namespace {
 
 std::string patternStr(const std::array<bool, poly::kMaxSteps>& p, int n) {
     std::string s;
-    for (int i = 0; i < n; ++i) s += p[i] ? '1' : '0';
+    for (int i = 0; i < n; ++i)
+        s += p[i] ? '1' : '0';
     return s;
 }
 
 int countHits(const std::array<bool, poly::kMaxSteps>& p, int n) {
     int c = 0;
-    for (int i = 0; i < n; ++i) c += p[i] ? 1 : 0;
+    for (int i = 0; i < n; ++i)
+        c += p[i] ? 1 : 0;
     return c;
 }
 
@@ -97,14 +101,20 @@ TEST(Euclidean, MaximallyEvenSpacing) {
     int lastHit = -1;
     for (int i = 0; i < 8; ++i) {
         if (p[i]) {
-            if (lastHit >= 0) gaps.push_back(i - lastHit);
+            if (lastHit >= 0)
+                gaps.push_back(i - lastHit);
             lastHit = i;
         }
     }
     // Wrap-around gap
     if (lastHit >= 0) {
         int first = -1;
-        for (int i = 0; i < 8; ++i) { if (p[i]) { first = i; break; } }
+        for (int i = 0; i < 8; ++i) {
+            if (p[i]) {
+                first = i;
+                break;
+            }
+        }
         gaps.push_back(8 - lastHit + first);
     }
 
