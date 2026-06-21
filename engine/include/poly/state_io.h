@@ -3,16 +3,16 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "poly/scene.h"
 #include "poly/types.h"
 
 namespace poly {
 
-static constexpr int32_t kCurrentStateVersion = 2;
+static constexpr int32_t kCurrentStateVersion = 3;
 
-template <typename WriteFn> bool writeGrooveState(WriteFn&& write, const GrooveState& state) {
-    int32_t version = kCurrentStateVersion;
-    if (!write(&version, sizeof(version)))
-        return false;
+// --- Internal body-only write (no version header, always writes latest body format) ---
+
+template <typename WriteFn> bool writeGrooveStateBody(WriteFn&& write, const GrooveState& state) {
     if (!write(&state.activeLaneCount, sizeof(state.activeLaneCount)))
         return false;
     if (!write(&state.seed, sizeof(state.seed)))
@@ -21,7 +21,7 @@ template <typename WriteFn> bool writeGrooveState(WriteFn&& write, const GrooveS
         return false;
 
     for (int i = 0; i < kMaxLanes; ++i) {
-        const auto& lane = state.lanes[i];
+        const auto& lane = state.lanes[static_cast<size_t>(i)];
         if (!write(&lane.id, sizeof(lane.id)))
             return false;
         auto role = static_cast<uint8_t>(lane.role);
@@ -125,13 +125,9 @@ template <typename WriteFn> bool writeGrooveState(WriteFn&& write, const GrooveS
     return true;
 }
 
-template <typename ReadFn> bool readGrooveState(ReadFn&& read, GrooveState& state) {
-    int32_t version = 0;
-    if (!read(&version, sizeof(version)))
-        return false;
-    if (version != 1 && version != 2)
-        return false;
+// --- Internal body-only read (version-aware, no version header) ---
 
+template <typename ReadFn> bool readGrooveStateBody(ReadFn&& read, GrooveState& state, int32_t version) {
     if (!read(&state.activeLaneCount, sizeof(state.activeLaneCount)))
         return false;
     if (!read(&state.seed, sizeof(state.seed)))
@@ -140,7 +136,7 @@ template <typename ReadFn> bool readGrooveState(ReadFn&& read, GrooveState& stat
         return false;
 
     for (int i = 0; i < kMaxLanes; ++i) {
-        auto& lane = state.lanes[i];
+        auto& lane = state.lanes[static_cast<size_t>(i)];
         if (!read(&lane.id, sizeof(lane.id)))
             return false;
         uint8_t role = 0;
@@ -251,6 +247,70 @@ template <typename ReadFn> bool readGrooveState(ReadFn&& read, GrooveState& stat
         }
     }
 
+    return true;
+}
+
+// --- Public: single GrooveState (v2 format, for engine-layer tests) ---
+
+template <typename WriteFn> bool writeGrooveState(WriteFn&& write, const GrooveState& state) {
+    int32_t version = 2;
+    if (!write(&version, sizeof(version)))
+        return false;
+    return writeGrooveStateBody(write, state);
+}
+
+template <typename ReadFn> bool readGrooveState(ReadFn&& read, GrooveState& state) {
+    int32_t version = 0;
+    if (!read(&version, sizeof(version)))
+        return false;
+    if (version != 1 && version != 2)
+        return false;
+    return readGrooveStateBody(read, state, version);
+}
+
+// --- Public: SceneState (v3 format, used by processor/controller) ---
+
+template <typename WriteFn> bool writeSceneState(WriteFn&& write, const SceneState& scene) {
+    int32_t version = kCurrentStateVersion;
+    if (!write(&version, sizeof(version)))
+        return false;
+    if (!writeGrooveStateBody(write, scene.sceneA))
+        return false;
+    if (!writeGrooveStateBody(write, scene.sceneB))
+        return false;
+    auto select = static_cast<uint8_t>(scene.select);
+    if (!write(&select, sizeof(select)))
+        return false;
+    if (!write(&scene.morphAmount, sizeof(scene.morphAmount)))
+        return false;
+    return true;
+}
+
+template <typename ReadFn> bool readSceneState(ReadFn&& read, SceneState& scene) {
+    int32_t version = 0;
+    if (!read(&version, sizeof(version)))
+        return false;
+    if (version < 1 || version > kCurrentStateVersion)
+        return false;
+
+    if (version <= 2) {
+        if (!readGrooveStateBody(read, scene.sceneA, version))
+            return false;
+        scene.sceneB = scene.sceneA;
+        scene.select = SceneSelect::A;
+        scene.morphAmount = 0.0f;
+    } else {
+        if (!readGrooveStateBody(read, scene.sceneA, 2))
+            return false;
+        if (!readGrooveStateBody(read, scene.sceneB, 2))
+            return false;
+        uint8_t select = 0;
+        if (!read(&select, sizeof(select)))
+            return false;
+        scene.select = static_cast<SceneSelect>(select);
+        if (!read(&scene.morphAmount, sizeof(scene.morphAmount)))
+            return false;
+    }
     return true;
 }
 
