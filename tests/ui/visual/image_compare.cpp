@@ -19,16 +19,12 @@ namespace JKDigital {
 namespace VisualTest {
 
 //------------------------------------------------------------------------
-CompareResult compareImages(const std::vector<uint8_t>& actual,
-                            const std::vector<uint8_t>& reference,
-                            uint32_t width, uint32_t height,
-                            uint8_t tolerance,
-                            double maxDiffPercent) {
+CompareResult compareImages(const std::vector<uint8_t>& actual, const std::vector<uint8_t>& reference, uint32_t width,
+                            uint32_t height, uint8_t tolerance, double maxDiffPercent) {
     CompareResult result;
     result.totalPixels = width * height;
 
-    if (actual.size() != reference.size() ||
-        actual.size() != static_cast<size_t>(width) * height * 4) {
+    if (actual.size() != reference.size() || actual.size() != static_cast<size_t>(width) * height * 4) {
         result.matched = false;
         result.diffPixels = result.totalPixels;
         result.diffPercentage = 100.0;
@@ -40,8 +36,7 @@ CompareResult compareImages(const std::vector<uint8_t>& actual,
         bool pixelMatch = true;
 
         for (int c = 0; c < 4; ++c) {
-            int diff = std::abs(static_cast<int>(actual[offset + c]) -
-                                static_cast<int>(reference[offset + c]));
+            int diff = std::abs(static_cast<int>(actual[offset + c]) - static_cast<int>(reference[offset + c]));
             if (diff > tolerance) {
                 pixelMatch = false;
                 break;
@@ -54,22 +49,16 @@ CompareResult compareImages(const std::vector<uint8_t>& actual,
     }
 
     result.diffPercentage =
-        result.totalPixels > 0
-            ? (static_cast<double>(result.diffPixels) / result.totalPixels) * 100.0
-            : 0.0;
+        result.totalPixels > 0 ? (static_cast<double>(result.diffPixels) / result.totalPixels) * 100.0 : 0.0;
     result.matched = (result.diffPercentage <= maxDiffPercent);
 
     return result;
 }
 
 //------------------------------------------------------------------------
-bool generateDiffImage(const std::vector<uint8_t>& actual,
-                       const std::vector<uint8_t>& reference,
-                       uint32_t width, uint32_t height,
-                       const std::string& outputPath,
-                       uint8_t tolerance) {
-    if (actual.size() != reference.size() ||
-        actual.size() != static_cast<size_t>(width) * height * 4) {
+bool generateDiffImage(const std::vector<uint8_t>& actual, const std::vector<uint8_t>& reference, uint32_t width,
+                       uint32_t height, const std::string& outputPath, uint8_t tolerance) {
+    if (actual.size() != reference.size() || actual.size() != static_cast<size_t>(width) * height * 4) {
         return false;
     }
 
@@ -81,8 +70,7 @@ bool generateDiffImage(const std::vector<uint8_t>& actual,
         bool pixelMatch = true;
 
         for (int c = 0; c < 4; ++c) {
-            int diff = std::abs(static_cast<int>(actual[offset + c]) -
-                                static_cast<int>(reference[offset + c]));
+            int diff = std::abs(static_cast<int>(actual[offset + c]) - static_cast<int>(reference[offset + c]));
             if (diff > tolerance) {
                 pixelMatch = false;
                 break;
@@ -106,18 +94,14 @@ bool generateDiffImage(const std::vector<uint8_t>& actual,
 }
 
 //------------------------------------------------------------------------
-bool writeRGBAToPNG(const std::vector<uint8_t>& pixels,
-                    uint32_t width, uint32_t height,
-                    const std::string& path) {
+bool writeRGBAToPNG(const std::vector<uint8_t>& pixels, uint32_t width, uint32_t height, const std::string& path) {
 #ifdef __APPLE__
     CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
     if (!colorSpace)
         return false;
 
-    CGContextRef ctx = CGBitmapContextCreate(
-        const_cast<uint8_t*>(pixels.data()),
-        width, height, 8, width * 4, colorSpace,
-        kCGImageAlphaPremultipliedLast);
+    CGContextRef ctx = CGBitmapContextCreate(const_cast<uint8_t*>(pixels.data()), width, height, 8, width * 4,
+                                             colorSpace, kCGImageAlphaPremultipliedLast);
 
     CGColorSpaceRelease(colorSpace);
     if (!ctx)
@@ -128,10 +112,8 @@ bool writeRGBAToPNG(const std::vector<uint8_t>& pixels,
     if (!image)
         return false;
 
-    CFStringRef cfPath =
-        CFStringCreateWithCString(nullptr, path.c_str(), kCFStringEncodingUTF8);
-    CFURLRef url = CFURLCreateWithFileSystemPath(
-        nullptr, cfPath, kCFURLPOSIXPathStyle, false);
+    CFStringRef cfPath = CFStringCreateWithCString(nullptr, path.c_str(), kCFStringEncodingUTF8);
+    CFURLRef url = CFURLCreateWithFileSystemPath(nullptr, cfPath, kCFURLPOSIXPathStyle, false);
     CFRelease(cfPath);
 
     if (!url) {
@@ -139,8 +121,7 @@ bool writeRGBAToPNG(const std::vector<uint8_t>& pixels,
         return false;
     }
 
-    CGImageDestinationRef dest =
-        CGImageDestinationCreateWithURL(url, CFSTR("public.png"), 1, nullptr);
+    CGImageDestinationRef dest = CGImageDestinationCreateWithURL(url, CFSTR("public.png"), 1, nullptr);
     CFRelease(url);
 
     if (!dest) {
@@ -165,5 +146,5 @@ bool writeRGBAToPNG(const std::vector<uint8_t>& pixels,
 }
 
 //------------------------------------------------------------------------
-}  // namespace VisualTest
-}  // namespace JKDigital
+} // namespace VisualTest
+} // namespace JKDigital

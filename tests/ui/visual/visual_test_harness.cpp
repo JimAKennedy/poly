@@ -45,8 +45,7 @@ SharedPointer<CBitmap> renderViewToBitmap(CView* view, double scaleFactor) {
     const CRect& viewSize = view->getViewSize();
     CPoint size(viewSize.getWidth(), viewSize.getHeight());
 
-    return renderBitmapOffscreen(size, scaleFactor,
-                                 [&](CDrawContext& ctx) { view->draw(&ctx); });
+    return renderBitmapOffscreen(size, scaleFactor, [&](CDrawContext& ctx) { view->draw(&ctx); });
 }
 
 //------------------------------------------------------------------------
@@ -54,8 +53,7 @@ bool saveBitmapToPNG(CBitmap* bitmap, const std::string& path) {
     if (!bitmap || !bitmap->getPlatformBitmap())
         return false;
 
-    auto pngData = getPlatformFactory().createBitmapMemoryPNGRepresentation(
-        bitmap->getPlatformBitmap());
+    auto pngData = getPlatformFactory().createBitmapMemoryPNGRepresentation(bitmap->getPlatformBitmap());
 
     if (pngData.empty())
         return false;
@@ -71,8 +69,7 @@ bool saveBitmapToPNG(CBitmap* bitmap, const std::string& path) {
 }
 
 //------------------------------------------------------------------------
-bool loadPNG(const std::string& path, uint32_t& width, uint32_t& height,
-             std::vector<uint8_t>& pixels) {
+bool loadPNG(const std::string& path, uint32_t& width, uint32_t& height, std::vector<uint8_t>& pixels) {
     auto platformBitmap = getPlatformFactory().createBitmapFromPath(path.c_str());
     if (!platformBitmap)
         return false;
@@ -98,19 +95,31 @@ bool loadPNG(const std::string& path, uint32_t& width, uint32_t& height,
             uint8_t r, g, b, a;
 
             switch (pixelFormat) {
-                case IPlatformBitmapPixelAccess::kBGRA:
-                    b = src[0]; g = src[1]; r = src[2]; a = src[3];
-                    break;
-                case IPlatformBitmapPixelAccess::kARGB:
-                    a = src[0]; r = src[1]; g = src[2]; b = src[3];
-                    break;
-                case IPlatformBitmapPixelAccess::kABGR:
-                    a = src[0]; b = src[1]; g = src[2]; r = src[3];
-                    break;
-                case IPlatformBitmapPixelAccess::kRGBA:
-                default:
-                    r = src[0]; g = src[1]; b = src[2]; a = src[3];
-                    break;
+            case IPlatformBitmapPixelAccess::kBGRA:
+                b = src[0];
+                g = src[1];
+                r = src[2];
+                a = src[3];
+                break;
+            case IPlatformBitmapPixelAccess::kARGB:
+                a = src[0];
+                r = src[1];
+                g = src[2];
+                b = src[3];
+                break;
+            case IPlatformBitmapPixelAccess::kABGR:
+                a = src[0];
+                b = src[1];
+                g = src[2];
+                r = src[3];
+                break;
+            case IPlatformBitmapPixelAccess::kRGBA:
+            default:
+                r = src[0];
+                g = src[1];
+                b = src[2];
+                a = src[3];
+                break;
             }
 
             dstRow[x * 4 + 0] = r;
@@ -144,5 +153,5 @@ std::string getReferenceDir() {
 }
 
 //------------------------------------------------------------------------
-}  // namespace VisualTest
-}  // namespace JKDigital
+} // namespace VisualTest
+} // namespace JKDigital

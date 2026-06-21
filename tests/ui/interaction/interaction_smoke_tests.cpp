@@ -3,16 +3,15 @@
 // Tests controller lifecycle, macro knob interaction, and view tree.
 //------------------------------------------------------------------------
 
-#include "headless_ui_host.h"
-
 #include <gtest/gtest.h>
 
+#include "vstgui/lib/cviewcontainer.h"
+
 #include "controller.h"
+#include "headless_ui_host.h"
 #include "plugids.h"
 #include "ui/lane_grid_view.h"
 #include "ui/velocity_view.h"
-
-#include "vstgui/lib/cviewcontainer.h"
 
 using namespace JKDigital::InteractionTest;
 
@@ -20,12 +19,11 @@ namespace {
 
 auto makeControllerFactory() {
     return []() -> Steinberg::Vst::IEditController* {
-        return static_cast<Steinberg::Vst::IEditController*>(
-            poly::PolyController::createInstance(nullptr));
+        return static_cast<Steinberg::Vst::IEditController*>(poly::PolyController::createInstance(nullptr));
     };
 }
 
-}  // namespace
+} // namespace
 
 // -----------------------------------------------------------------------
 // Smoke tests
@@ -46,8 +44,7 @@ TEST_F(InteractionSmokeTest, ControllerLifecycle) {
     ASSERT_TRUE(host.open()) << "Failed to open headless UI host";
     EXPECT_TRUE(host.isOpen());
 
-    double complexity =
-        host.getParameterValue(poly::ParamIDs::kMacroComplexity);
+    double complexity = host.getParameterValue(poly::ParamIDs::kMacroComplexity);
     EXPECT_GE(complexity, 0.0);
     EXPECT_LE(complexity, 1.0);
 
@@ -66,10 +63,8 @@ TEST_F(InteractionSmokeTest, MacroKnobExists) {
 
     ASSERT_TRUE(host.open());
 
-    auto center =
-        host.getControlCenter(poly::ParamIDs::kMacroComplexity);
-    EXPECT_NE(center, VSTGUI::CPoint(-1, -1))
-        << "Complexity knob should be findable by tag";
+    auto center = host.getControlCenter(poly::ParamIDs::kMacroComplexity);
+    EXPECT_NE(center, VSTGUI::CPoint(-1, -1)) << "Complexity knob should be findable by tag";
 
     host.close();
 }
@@ -85,8 +80,7 @@ protected:
 #ifndef __APPLE__
         GTEST_SKIP() << "Headless UI host requires macOS";
 #endif
-        host_ = std::make_unique<HeadlessUIHost>(
-            makeControllerFactory(), UIDESC_RESOURCE_DIR);
+        host_ = std::make_unique<HeadlessUIHost>(makeControllerFactory(), UIDESC_RESOURCE_DIR);
         ASSERT_TRUE(host_->open());
     }
 
@@ -106,8 +100,7 @@ TEST_F(MacroKnobTest, ScrollComplexityChangesValue) {
     host_->simulateScroll(center.x, center.y, 5.0f);
     double after = host_->getParameterValue(poly::ParamIDs::kMacroComplexity);
 
-    EXPECT_NE(before, after)
-        << "Scrolling on Complexity knob should change parameter";
+    EXPECT_NE(before, after) << "Scrolling on Complexity knob should change parameter";
 }
 
 TEST_F(MacroKnobTest, ScrollDensityChangesValue) {
@@ -118,24 +111,18 @@ TEST_F(MacroKnobTest, ScrollDensityChangesValue) {
     host_->simulateScroll(center.x, center.y, 5.0f);
     double after = host_->getParameterValue(poly::ParamIDs::kMacroDensity);
 
-    EXPECT_NE(before, after)
-        << "Scrolling on Density knob should change parameter";
+    EXPECT_NE(before, after) << "Scrolling on Density knob should change parameter";
 }
 
 TEST_F(MacroKnobTest, AllMacroKnobsDiscoverable) {
     const Steinberg::Vst::ParamID macroIds[] = {
-        poly::ParamIDs::kMacroComplexity,
-        poly::ParamIDs::kMacroDensity,
-        poly::ParamIDs::kMacroSyncopation,
-        poly::ParamIDs::kMacroSwing,
-        poly::ParamIDs::kMacroTension,
-        poly::ParamIDs::kMacroHumanize,
+        poly::ParamIDs::kMacroComplexity, poly::ParamIDs::kMacroDensity, poly::ParamIDs::kMacroSyncopation,
+        poly::ParamIDs::kMacroSwing,      poly::ParamIDs::kMacroTension, poly::ParamIDs::kMacroHumanize,
     };
 
     for (auto id : macroIds) {
         auto center = host_->getControlCenter(id);
-        EXPECT_NE(center, VSTGUI::CPoint(-1, -1))
-            << "Macro knob with tag " << id << " should be discoverable";
+        EXPECT_NE(center, VSTGUI::CPoint(-1, -1)) << "Macro knob with tag " << id << " should be discoverable";
 
         auto rect = host_->getControlRect(id);
         EXPECT_GT(rect.getWidth(), 0) << "Knob " << id << " should have width";
@@ -152,8 +139,7 @@ TEST_F(MacroKnobTest, ScrollGeneratesEditLog) {
     host_->simulateScroll(center.x, center.y, 3.0f);
 
     const auto& edits = host_->getEditLog();
-    EXPECT_FALSE(edits.empty())
-        << "Scrolling should generate parameter edits in the log";
+    EXPECT_FALSE(edits.empty()) << "Scrolling should generate parameter edits in the log";
 
     bool foundComplexity = false;
     for (const auto& edit : edits) {
@@ -163,8 +149,7 @@ TEST_F(MacroKnobTest, ScrollGeneratesEditLog) {
             EXPECT_LE(edit.value, 1.0);
         }
     }
-    EXPECT_TRUE(foundComplexity)
-        << "Edit log should contain Complexity parameter edits";
+    EXPECT_TRUE(foundComplexity) << "Edit log should contain Complexity parameter edits";
 }
 
 TEST_F(MacroKnobTest, DragSyncopationChangesValue) {
@@ -175,8 +160,7 @@ TEST_F(MacroKnobTest, DragSyncopationChangesValue) {
     host_->simulateDrag(center.x, center.y, center.x, center.y - 30);
     double after = host_->getParameterValue(poly::ParamIDs::kMacroSyncopation);
 
-    EXPECT_NE(before, after)
-        << "Dragging Syncopation knob upward should change parameter";
+    EXPECT_NE(before, after) << "Dragging Syncopation knob upward should change parameter";
 }
 
 // -----------------------------------------------------------------------
@@ -232,8 +216,7 @@ TEST_F(LifecycleTest, EditLogClearWorks) {
     }
 
     host.clearEditLog();
-    EXPECT_TRUE(host.getEditLog().empty())
-        << "Edit log should be empty after clearing";
+    EXPECT_TRUE(host.getEditLog().empty()) << "Edit log should be empty after clearing";
 
     host.close();
 }
@@ -249,8 +232,7 @@ protected:
 #ifndef __APPLE__
         GTEST_SKIP() << "Headless UI host requires macOS";
 #endif
-        host_ = std::make_unique<HeadlessUIHost>(
-            makeControllerFactory(), UIDESC_RESOURCE_DIR);
+        host_ = std::make_unique<HeadlessUIHost>(makeControllerFactory(), UIDESC_RESOURCE_DIR);
         ASSERT_TRUE(host_->open());
     }
 
@@ -265,8 +247,7 @@ protected:
 TEST_F(ViewTreeTest, FrameHasChildren) {
     auto* frame = host_->getFrame();
     ASSERT_NE(frame, nullptr);
-    EXPECT_GT(frame->getNbViews(), 0u)
-        << "CFrame should have child views from uidesc";
+    EXPECT_GT(frame->getNbViews(), 0u) << "CFrame should have child views from uidesc";
 }
 
 TEST_F(ViewTreeTest, MacroKnobBoundsAreSensible) {
@@ -283,21 +264,20 @@ TEST_F(ViewTreeTest, CustomViewsInTree) {
     bool foundLaneGrid = false;
     bool foundVelocity = false;
 
-    std::function<void(VSTGUI::CViewContainer*)> walk =
-        [&](VSTGUI::CViewContainer* container) {
-            for (uint32_t i = 0; i < container->getNbViews(); ++i) {
-                auto* child = container->getView(i);
-                if (!child)
-                    continue;
-                if (dynamic_cast<poly::LaneGridView*>(child))
-                    foundLaneGrid = true;
-                if (dynamic_cast<poly::VelocityView*>(child))
-                    foundVelocity = true;
-                auto* sub = dynamic_cast<VSTGUI::CViewContainer*>(child);
-                if (sub)
-                    walk(sub);
-            }
-        };
+    std::function<void(VSTGUI::CViewContainer*)> walk = [&](VSTGUI::CViewContainer* container) {
+        for (uint32_t i = 0; i < container->getNbViews(); ++i) {
+            auto* child = container->getView(i);
+            if (!child)
+                continue;
+            if (dynamic_cast<poly::LaneGridView*>(child))
+                foundLaneGrid = true;
+            if (dynamic_cast<poly::VelocityView*>(child))
+                foundVelocity = true;
+            auto* sub = dynamic_cast<VSTGUI::CViewContainer*>(child);
+            if (sub)
+                walk(sub);
+        }
+    };
 
     walk(frame);
 

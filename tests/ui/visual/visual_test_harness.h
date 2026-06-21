@@ -32,8 +32,7 @@ void initPlatformOnce();
  * @param scaleFactor The bitmap scale factor (1.0 = 1x, 2.0 = retina)
  * @return Shared pointer to the rendered bitmap, or nullptr on failure
  */
-VSTGUI::SharedPointer<VSTGUI::CBitmap> renderViewToBitmap(
-    VSTGUI::CView* view, double scaleFactor = 1.0);
+VSTGUI::SharedPointer<VSTGUI::CBitmap> renderViewToBitmap(VSTGUI::CView* view, double scaleFactor = 1.0);
 
 //------------------------------------------------------------------------
 /**
@@ -55,8 +54,7 @@ bool saveBitmapToPNG(VSTGUI::CBitmap* bitmap, const std::string& path);
  * @param pixels Output: RGBA pixel data (4 bytes per pixel)
  * @return true on success
  */
-bool loadPNG(const std::string& path, uint32_t& width, uint32_t& height,
-             std::vector<uint8_t>& pixels);
+bool loadPNG(const std::string& path, uint32_t& width, uint32_t& height, std::vector<uint8_t>& pixels);
 
 //------------------------------------------------------------------------
 /**
@@ -76,5 +74,5 @@ std::string getOutputDir();
 std::string getReferenceDir();
 
 //------------------------------------------------------------------------
-}  // namespace VisualTest
-}  // namespace JKDigital
+} // namespace VisualTest
+} // namespace JKDigital
