@@ -16,6 +16,7 @@ add_executable(poly_tests
     swing_humanize_tests.cpp
     macro_tests.cpp
     plugin_tests.cpp
+    scene_tests.cpp
 )
 
 target_link_libraries(poly_tests

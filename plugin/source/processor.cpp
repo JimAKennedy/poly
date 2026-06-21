@@ -11,6 +11,7 @@
 
 #include "plugids.h"
 #include "poly/macro.h"
+#include "poly/scene.h"
 #include "poly/state_io.h"
 
 namespace poly {
@@ -36,11 +37,11 @@ PolyProcessor::PolyProcessor() {
         {50, 9, 16, 5, Role::Custom},     // High Tom: polymetric 9/16
     };
     for (int i = 0; i < kMaxLanes; ++i) {
-        grooveState_.lanes[i].id = i;
-        grooveState_.lanes[i].role = kDefs[i].role;
-        grooveState_.lanes[i].midiNote = kDefs[i].note;
-        grooveState_.lanes[i].cycle = {kDefs[i].steps, kDefs[i].sub};
-        grooveState_.lanes[i].hitCount = kDefs[i].hits;
+        sceneState_.sceneA.lanes[i].id = i;
+        sceneState_.sceneA.lanes[i].role = kDefs[i].role;
+        sceneState_.sceneA.lanes[i].midiNote = kDefs[i].note;
+        sceneState_.sceneA.lanes[i].cycle = {kDefs[i].steps, kDefs[i].sub};
+        sceneState_.sceneA.lanes[i].hitCount = kDefs[i].hits;
     }
 }
 
@@ -148,8 +149,15 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
         pendingNoteOffs_.clear();
     }
 
-    // --- Resolve macros and render ---
-    GrooveState resolved = resolveMacros(grooveState_);
+    // --- Resolve scene and render ---
+    GrooveState resolved;
+    if (sceneState_.select == SceneSelect::Morph) {
+        resolved =
+            resolveMacros(interpolateGrooveState(sceneState_.sceneA, sceneState_.sceneB, sceneState_.morphAmount));
+    } else {
+        const auto& base = (sceneState_.select == SceneSelect::B) ? sceneState_.sceneB : sceneState_.sceneA;
+        resolved = resolveMacros(base);
+    }
     engine_.renderRange(tc_, resolved, noteBuffer_);
 
     // --- Emit MIDI events ---
@@ -224,10 +232,22 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
 void PolyProcessor::applyParameter(Steinberg::Vst::ParamID id, double normalized) {
     using namespace ParamIDs;
 
+    if (id == kSceneSelect) {
+        int sel = static_cast<int>(std::round(normalized * 2.0));
+        sceneState_.select = static_cast<SceneSelect>(std::clamp(sel, 0, 2));
+        return;
+    }
+    if (id == kSceneMorph) {
+        sceneState_.morphAmount = static_cast<float>(normalized);
+        return;
+    }
+
+    auto& gs = (sceneState_.select == SceneSelect::B) ? sceneState_.sceneB : sceneState_.sceneA;
+
     if (id < static_cast<Steinberg::Vst::ParamID>(kMaxLanes * kParamsPerLane)) {
         int lane = static_cast<int>(id) / kParamsPerLane;
         int offset = static_cast<int>(id) % kParamsPerLane;
-        auto& cfg = grooveState_.lanes[lane];
+        auto& cfg = gs.lanes[lane];
 
         switch (offset) {
         case kProbability:
@@ -263,28 +283,28 @@ void PolyProcessor::applyParameter(Steinberg::Vst::ParamID id, double normalized
     } else {
         switch (id) {
         case kMacroComplexity:
-            grooveState_.macros.complexity = static_cast<float>(normalized);
+            gs.macros.complexity = static_cast<float>(normalized);
             break;
         case kMacroDensity:
-            grooveState_.macros.density = static_cast<float>(normalized);
+            gs.macros.density = static_cast<float>(normalized);
             break;
         case kMacroSyncopation:
-            grooveState_.macros.syncopation = static_cast<float>(normalized);
+            gs.macros.syncopation = static_cast<float>(normalized);
             break;
         case kMacroSwing:
-            grooveState_.macros.swing = static_cast<float>(normalized);
+            gs.macros.swing = static_cast<float>(normalized);
             break;
         case kMacroTension:
-            grooveState_.macros.tension = static_cast<float>(normalized);
+            gs.macros.tension = static_cast<float>(normalized);
             break;
         case kMacroHumanize:
-            grooveState_.macros.humanize = static_cast<float>(normalized);
+            gs.macros.humanize = static_cast<float>(normalized);
             break;
         case kActiveLaneCount:
-            grooveState_.activeLaneCount = 1 + static_cast<int>(std::round(normalized * 7.0));
+            gs.activeLaneCount = 1 + static_cast<int>(std::round(normalized * 7.0));
             break;
         case kSeed:
-            grooveState_.seed = static_cast<uint64_t>(std::round(normalized * 999999.0));
+            gs.seed = static_cast<uint64_t>(std::round(normalized * 999999.0));
             break;
         default:
             break;
@@ -302,7 +322,7 @@ Steinberg::tresult PLUGIN_API PolyProcessor::getState(Steinberg::IBStream* state
                Steinberg::kResultOk;
     };
 
-    return writeGrooveState(write, grooveState_) ? Steinberg::kResultOk : Steinberg::kResultFalse;
+    return writeSceneState(write, sceneState_) ? Steinberg::kResultOk : Steinberg::kResultFalse;
 }
 
 Steinberg::tresult PLUGIN_API PolyProcessor::setState(Steinberg::IBStream* state) {
@@ -314,7 +334,7 @@ Steinberg::tresult PLUGIN_API PolyProcessor::setState(Steinberg::IBStream* state
         return state->read(data, static_cast<Steinberg::int32>(size), &bytesRead) == Steinberg::kResultOk;
     };
 
-    return readGrooveState(read, grooveState_) ? Steinberg::kResultOk : Steinberg::kResultFalse;
+    return readSceneState(read, sceneState_) ? Steinberg::kResultOk : Steinberg::kResultFalse;
 }
 
 } // namespace poly

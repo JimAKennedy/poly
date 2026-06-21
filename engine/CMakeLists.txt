@@ -4,6 +4,7 @@ add_library(poly_engine STATIC
     src/envelope.cpp
     src/euclidean.cpp
     src/macro.cpp
+    src/scene.cpp
 )
 
 target_include_directories(poly_engine

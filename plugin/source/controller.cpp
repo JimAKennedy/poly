@@ -7,6 +7,7 @@
 #include "pluginterfaces/base/ustring.h"
 
 #include "plugids.h"
+#include "poly/scene.h"
 #include "poly/state_io.h"
 #include "poly/types.h"
 #include "ui/lane_grid_view.h"
@@ -89,6 +90,9 @@ Steinberg::tresult PLUGIN_API PolyController::initialize(Steinberg::FUnknown* co
         addSimple(ParamIDs::velocityOutput(lane), title, 0, 0.0, ParameterInfo::kIsReadOnly);
     }
 
+    addSimple(ParamIDs::kSceneSelect, "Scene Select", 2, 0.0);
+    addSimple(ParamIDs::kSceneMorph, "Scene Morph", 0, 0.0);
+
     return Steinberg::kResultOk;
 }
 
@@ -117,15 +121,16 @@ Steinberg::tresult PLUGIN_API PolyController::setComponentState(Steinberg::IBStr
     if (!state)
         return Steinberg::kInvalidArgument;
 
-    GrooveState gs{};
+    SceneState scene{};
     auto read = [state](void* data, size_t size) -> bool {
         Steinberg::int32 bytesRead;
         return state->read(data, static_cast<Steinberg::int32>(size), &bytesRead) == Steinberg::kResultOk;
     };
 
-    if (!readGrooveState(read, gs))
+    if (!readSceneState(read, scene))
         return Steinberg::kResultFalse;
 
+    const auto& gs = scene.sceneA;
     for (int lane = 0; lane < kMaxLanes; ++lane) {
         const auto& cfg = gs.lanes[lane];
         setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kProbability), cfg.probability);
@@ -147,6 +152,8 @@ Steinberg::tresult PLUGIN_API PolyController::setComponentState(Steinberg::IBStr
     setParamNormalized(ParamIDs::kMacroHumanize, gs.macros.humanize);
     setParamNormalized(ParamIDs::kActiveLaneCount, (gs.activeLaneCount - 1) / 7.0);
     setParamNormalized(ParamIDs::kSeed, gs.seed / 999999.0);
+    setParamNormalized(ParamIDs::kSceneSelect, static_cast<double>(static_cast<uint8_t>(scene.select)) / 2.0);
+    setParamNormalized(ParamIDs::kSceneMorph, static_cast<double>(scene.morphAmount));
 
     return Steinberg::kResultOk;
 }
