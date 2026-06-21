@@ -1,0 +1,312 @@
+#include <cstring>
+#include <vector>
+
+#include <gtest/gtest.h>
+
+#include "poly/scene.h"
+#include "poly/state_io.h"
+
+// --- Interpolation tests ---
+
+TEST(Scene, InterpolateAtZero_ReturnsA) {
+    poly::GrooveState a{}, b{};
+    a.macros.complexity = 0.2f;
+    a.macros.density = 0.8f;
+    a.lanes[0].probability = 0.9f;
+    a.lanes[0].baseVelocity = 100;
+    a.lanes[0].role = poly::Role::AnchorPulse;
+    a.lanes[0].midiNote = 36;
+
+    b.macros.complexity = 0.8f;
+    b.macros.density = 0.2f;
+    b.lanes[0].probability = 0.3f;
+    b.lanes[0].baseVelocity = 50;
+    b.lanes[0].role = poly::Role::Ghost;
+    b.lanes[0].midiNote = 45;
+
+    auto result = poly::interpolateGrooveState(a, b, 0.0f);
+
+    EXPECT_FLOAT_EQ(result.macros.complexity, 0.2f);
+    EXPECT_FLOAT_EQ(result.macros.density, 0.8f);
+    EXPECT_FLOAT_EQ(result.lanes[0].probability, 0.9f);
+    EXPECT_EQ(result.lanes[0].baseVelocity, 100);
+    EXPECT_EQ(static_cast<uint8_t>(result.lanes[0].role), static_cast<uint8_t>(poly::Role::AnchorPulse));
+    EXPECT_EQ(result.lanes[0].midiNote, 36);
+}
+
+TEST(Scene, InterpolateAtOne_ReturnsB) {
+    poly::GrooveState a{}, b{};
+    a.macros.complexity = 0.2f;
+    a.lanes[0].probability = 0.9f;
+    a.lanes[0].baseVelocity = 100;
+
+    b.macros.complexity = 0.8f;
+    b.lanes[0].probability = 0.3f;
+    b.lanes[0].baseVelocity = 50;
+
+    auto result = poly::interpolateGrooveState(a, b, 1.0f);
+
+    EXPECT_FLOAT_EQ(result.macros.complexity, 0.8f);
+    EXPECT_FLOAT_EQ(result.lanes[0].probability, 0.3f);
+    EXPECT_EQ(result.lanes[0].baseVelocity, 50);
+}
+
+TEST(Scene, InterpolateAtHalf_LerpsNumeric) {
+    poly::GrooveState a{}, b{};
+    a.macros.complexity = 0.0f;
+    a.lanes[0].probability = 0.0f;
+    a.lanes[0].baseVelocity = 0;
+
+    b.macros.complexity = 1.0f;
+    b.lanes[0].probability = 1.0f;
+    b.lanes[0].baseVelocity = 100;
+
+    auto result = poly::interpolateGrooveState(a, b, 0.5f);
+
+    EXPECT_FLOAT_EQ(result.macros.complexity, 0.5f);
+    EXPECT_FLOAT_EQ(result.lanes[0].probability, 0.5f);
+    EXPECT_EQ(result.lanes[0].baseVelocity, 50);
+}
+
+TEST(Scene, DiscreteFieldsSnapAtHalf) {
+    poly::GrooveState a{}, b{};
+    a.lanes[0].role = poly::Role::AnchorPulse;
+    a.lanes[0].midiNote = 36;
+    a.lanes[0].cycle = {4, 4};
+
+    b.lanes[0].role = poly::Role::Ghost;
+    b.lanes[0].midiNote = 45;
+    b.lanes[0].cycle = {5, 16};
+
+    auto r1 = poly::interpolateGrooveState(a, b, 0.49f);
+    EXPECT_EQ(static_cast<uint8_t>(r1.lanes[0].role), static_cast<uint8_t>(poly::Role::AnchorPulse));
+    EXPECT_EQ(r1.lanes[0].midiNote, 36);
+    EXPECT_EQ(r1.lanes[0].cycle.steps, 4);
+
+    auto r2 = poly::interpolateGrooveState(a, b, 0.5f);
+    EXPECT_EQ(static_cast<uint8_t>(r2.lanes[0].role), static_cast<uint8_t>(poly::Role::Ghost));
+    EXPECT_EQ(r2.lanes[0].midiNote, 45);
+    EXPECT_EQ(r2.lanes[0].cycle.steps, 5);
+}
+
+TEST(Scene, InterpolateEnvelopes) {
+    poly::GrooveState a{}, b{};
+    a.lanes[0].envelopeCount = 1;
+    a.lanes[0].envelopes[0].active = true;
+    a.lanes[0].envelopes[0].envelope.depth = 0.0f;
+    a.lanes[0].envelopes[0].envelope.periodBars = 4.0f;
+
+    b.lanes[0].envelopeCount = 1;
+    b.lanes[0].envelopes[0].active = true;
+    b.lanes[0].envelopes[0].envelope.depth = 1.0f;
+    b.lanes[0].envelopes[0].envelope.periodBars = 8.0f;
+
+    auto result = poly::interpolateGrooveState(a, b, 0.5f);
+    EXPECT_FLOAT_EQ(result.lanes[0].envelopes[0].envelope.depth, 0.5f);
+    EXPECT_FLOAT_EQ(result.lanes[0].envelopes[0].envelope.periodBars, 6.0f);
+}
+
+TEST(Scene, InterpolateSeedSnaps) {
+    poly::GrooveState a{}, b{};
+    a.seed = 100;
+    b.seed = 200;
+
+    auto r1 = poly::interpolateGrooveState(a, b, 0.49f);
+    EXPECT_EQ(r1.seed, 100u);
+
+    auto r2 = poly::interpolateGrooveState(a, b, 0.5f);
+    EXPECT_EQ(r2.seed, 200u);
+}
+
+TEST(Scene, InterpolateActiveLaneCount) {
+    poly::GrooveState a{}, b{};
+    a.activeLaneCount = 2;
+    b.activeLaneCount = 8;
+
+    auto result = poly::interpolateGrooveState(a, b, 0.5f);
+    EXPECT_EQ(result.activeLaneCount, 5);
+}
+
+// --- Scene serialization tests ---
+
+TEST(SceneIO, RoundTrip) {
+    poly::SceneState original{};
+    original.sceneA.activeLaneCount = 4;
+    original.sceneA.macros.complexity = 0.7f;
+    original.sceneA.lanes[0].probability = 0.9f;
+    original.sceneA.lanes[0].baseVelocity = 110;
+    original.sceneA.lanes[0].envelopeCount = 1;
+    original.sceneA.lanes[0].envelopes[0].active = true;
+    original.sceneA.lanes[0].envelopes[0].envelope.target = poly::EnvTarget::Velocity;
+    original.sceneA.lanes[0].envelopes[0].envelope.depth = 0.8f;
+
+    original.sceneB.activeLaneCount = 6;
+    original.sceneB.macros.complexity = 0.3f;
+    original.sceneB.lanes[0].probability = 0.4f;
+    original.sceneB.lanes[0].baseVelocity = 60;
+
+    original.select = poly::SceneSelect::Morph;
+    original.morphAmount = 0.65f;
+
+    std::vector<uint8_t> buffer;
+    auto write = [&buffer](const void* data, size_t size) -> bool {
+        auto p = static_cast<const uint8_t*>(data);
+        buffer.insert(buffer.end(), p, p + size);
+        return true;
+    };
+    ASSERT_TRUE(poly::writeSceneState(write, original));
+
+    size_t pos = 0;
+    auto read = [&buffer, &pos](void* data, size_t size) -> bool {
+        if (pos + size > buffer.size())
+            return false;
+        std::memcpy(data, buffer.data() + pos, size);
+        pos += size;
+        return true;
+    };
+
+    poly::SceneState restored{};
+    ASSERT_TRUE(poly::readSceneState(read, restored));
+
+    EXPECT_EQ(restored.sceneA.activeLaneCount, 4);
+    EXPECT_FLOAT_EQ(restored.sceneA.macros.complexity, 0.7f);
+    EXPECT_FLOAT_EQ(restored.sceneA.lanes[0].probability, 0.9f);
+    EXPECT_EQ(restored.sceneA.lanes[0].baseVelocity, 110);
+    EXPECT_FLOAT_EQ(restored.sceneA.lanes[0].envelopes[0].envelope.depth, 0.8f);
+
+    EXPECT_EQ(restored.sceneB.activeLaneCount, 6);
+    EXPECT_FLOAT_EQ(restored.sceneB.macros.complexity, 0.3f);
+    EXPECT_FLOAT_EQ(restored.sceneB.lanes[0].probability, 0.4f);
+    EXPECT_EQ(restored.sceneB.lanes[0].baseVelocity, 60);
+
+    EXPECT_EQ(static_cast<uint8_t>(restored.select), static_cast<uint8_t>(poly::SceneSelect::Morph));
+    EXPECT_FLOAT_EQ(restored.morphAmount, 0.65f);
+}
+
+TEST(SceneIO, V2BackwardsCompat) {
+    poly::GrooveState gs{};
+    gs.activeLaneCount = 3;
+    gs.macros.density = 0.42f;
+    gs.lanes[0].probability = 0.77f;
+    gs.seed = 42;
+
+    std::vector<uint8_t> buffer;
+    auto write = [&buffer](const void* data, size_t size) -> bool {
+        auto p = static_cast<const uint8_t*>(data);
+        buffer.insert(buffer.end(), p, p + size);
+        return true;
+    };
+    ASSERT_TRUE(poly::writeGrooveState(write, gs));
+
+    size_t pos = 0;
+    auto read = [&buffer, &pos](void* data, size_t size) -> bool {
+        if (pos + size > buffer.size())
+            return false;
+        std::memcpy(data, buffer.data() + pos, size);
+        pos += size;
+        return true;
+    };
+
+    poly::SceneState scene{};
+    ASSERT_TRUE(poly::readSceneState(read, scene));
+
+    EXPECT_EQ(scene.sceneA.activeLaneCount, 3);
+    EXPECT_FLOAT_EQ(scene.sceneA.macros.density, 0.42f);
+    EXPECT_FLOAT_EQ(scene.sceneA.lanes[0].probability, 0.77f);
+    EXPECT_EQ(scene.sceneA.seed, 42u);
+
+    EXPECT_EQ(scene.sceneB.activeLaneCount, 3);
+    EXPECT_FLOAT_EQ(scene.sceneB.macros.density, 0.42f);
+    EXPECT_FLOAT_EQ(scene.sceneB.lanes[0].probability, 0.77f);
+
+    EXPECT_EQ(static_cast<uint8_t>(scene.select), static_cast<uint8_t>(poly::SceneSelect::A));
+    EXPECT_FLOAT_EQ(scene.morphAmount, 0.0f);
+}
+
+TEST(SceneIO, V1BackwardsCompat) {
+    poly::GrooveState gs{};
+    gs.activeLaneCount = 2;
+    gs.lanes[0].probability = 0.5f;
+
+    std::vector<uint8_t> buffer;
+    // Manually write v1 format (no curvature/stepValues)
+    int32_t version = 1;
+    auto pushRaw = [&buffer](const void* data, size_t size) {
+        auto p = static_cast<const uint8_t*>(data);
+        buffer.insert(buffer.end(), p, p + size);
+    };
+    pushRaw(&version, sizeof(version));
+    pushRaw(&gs.activeLaneCount, sizeof(gs.activeLaneCount));
+    pushRaw(&gs.seed, sizeof(gs.seed));
+    pushRaw(&gs.macros, sizeof(gs.macros));
+
+    for (int i = 0; i < poly::kMaxLanes; ++i) {
+        const auto& lane = gs.lanes[i];
+        pushRaw(&lane.id, sizeof(lane.id));
+        uint8_t role = static_cast<uint8_t>(lane.role);
+        pushRaw(&role, sizeof(role));
+        pushRaw(&lane.midiNote, sizeof(lane.midiNote));
+        pushRaw(&lane.cycle.steps, sizeof(lane.cycle.steps));
+        pushRaw(&lane.cycle.subdivision, sizeof(lane.cycle.subdivision));
+        pushRaw(&lane.hitCount, sizeof(lane.hitCount));
+        pushRaw(&lane.rotation, sizeof(lane.rotation));
+        pushRaw(&lane.probability, sizeof(lane.probability));
+        pushRaw(&lane.baseVelocity, sizeof(lane.baseVelocity));
+        uint64_t accentBits = 0;
+        pushRaw(&accentBits, sizeof(accentBits));
+        pushRaw(&lane.emphasisProb, sizeof(lane.emphasisProb));
+        pushRaw(&lane.ghostFloor, sizeof(lane.ghostFloor));
+        pushRaw(&lane.velocitySpread, sizeof(lane.velocitySpread));
+        pushRaw(&lane.humanizeMs, sizeof(lane.humanizeMs));
+        pushRaw(&lane.swingAmount, sizeof(lane.swingAmount));
+        pushRaw(&lane.noteDuration, sizeof(lane.noteDuration));
+        uint8_t active = lane.active ? 1 : 0;
+        pushRaw(&active, sizeof(active));
+        pushRaw(&lane.envelopeCount, sizeof(lane.envelopeCount));
+
+        for (int e = 0; e < poly::kMaxEnvelopesPerLane; ++e) {
+            const auto& ea = lane.envelopes[e];
+            uint8_t target = static_cast<uint8_t>(ea.envelope.target);
+            pushRaw(&target, sizeof(target));
+            pushRaw(&ea.envelope.periodBars, sizeof(ea.envelope.periodBars));
+            uint8_t shape = static_cast<uint8_t>(ea.envelope.shape);
+            pushRaw(&shape, sizeof(shape));
+            pushRaw(&ea.envelope.depth, sizeof(ea.envelope.depth));
+            pushRaw(&ea.envelope.phaseOffset, sizeof(ea.envelope.phaseOffset));
+            // v1: no curvature, no stepCount, no stepValues
+            uint8_t envActive = ea.active ? 1 : 0;
+            pushRaw(&envActive, sizeof(envActive));
+        }
+    }
+
+    pushRaw(&gs.globalEnvelopeCount, sizeof(gs.globalEnvelopeCount));
+    for (int e = 0; e < poly::kMaxGlobalEnvelopes; ++e) {
+        const auto& env = gs.globalEnvelopes[e];
+        uint8_t target = static_cast<uint8_t>(env.target);
+        pushRaw(&target, sizeof(target));
+        pushRaw(&env.periodBars, sizeof(env.periodBars));
+        uint8_t shape = static_cast<uint8_t>(env.shape);
+        pushRaw(&shape, sizeof(shape));
+        pushRaw(&env.depth, sizeof(env.depth));
+        pushRaw(&env.phaseOffset, sizeof(env.phaseOffset));
+        // v1: no curvature, no stepCount, no stepValues
+    }
+
+    size_t pos = 0;
+    auto read = [&buffer, &pos](void* data, size_t size) -> bool {
+        if (pos + size > buffer.size())
+            return false;
+        std::memcpy(data, buffer.data() + pos, size);
+        pos += size;
+        return true;
+    };
+
+    poly::SceneState scene{};
+    ASSERT_TRUE(poly::readSceneState(read, scene));
+
+    EXPECT_EQ(scene.sceneA.activeLaneCount, 2);
+    EXPECT_FLOAT_EQ(scene.sceneA.lanes[0].probability, 0.5f);
+    EXPECT_EQ(scene.sceneA.lanes[0].envelopes[0].envelope.curvature, 0.0f);
+    EXPECT_EQ(scene.sceneA.lanes[0].envelopes[0].envelope.stepCount, 0);
+    EXPECT_EQ(static_cast<uint8_t>(scene.select), static_cast<uint8_t>(poly::SceneSelect::A));
+}

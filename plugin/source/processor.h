@@ -4,6 +4,7 @@
 
 #include "poly/bridge.h"
 #include "poly/engine.h"
+#include "poly/scene.h"
 
 namespace poly {
 
@@ -27,7 +28,7 @@ private:
     void applyParameter(Steinberg::Vst::ParamID id, double normalized);
 
     Engine engine_;
-    GrooveState grooveState_{};
+    SceneState sceneState_{};
     NoteEventBuffer noteBuffer_{};
     TransportContext tc_{};
     PendingNoteOffBuffer pendingNoteOffs_{};
