@@ -26,72 +26,86 @@ struct LaneParamDef {
 };
 
 static constexpr LaneParamDef kLaneParamDefs[] = {
-    {ParamIDs::kProbability, "Probability", "", 0, 1.0},
+    {ParamIDs::kProbability, "Probability", "%", 0, 1.0},
     {ParamIDs::kBaseVelocity, "Base Velocity", "", 127, 100.0 / 127.0},
-    {ParamIDs::kEmphasisProb, "Emphasis Prob", "", 0, 0.5},
+    {ParamIDs::kEmphasisProb, "Emphasis", "%", 0, 0.5},
     {ParamIDs::kGhostFloor, "Ghost Floor", "", 127, 30.0 / 127.0},
-    {ParamIDs::kVelocitySpread, "Velocity Spread", "", 0, 0.05},
-    {ParamIDs::kSwingAmount, "Swing Amount", "", 0, 0.0},
+    {ParamIDs::kVelocitySpread, "Spread", "%", 0, 0.05},
+    {ParamIDs::kSwingAmount, "Swing", "%", 0, 0.0},
     {ParamIDs::kHumanizeMs, "Humanize", "ms", 0, 0.0},
-    {ParamIDs::kNoteDuration, "Note Duration", "beats", 0, 0.0},
+    {ParamIDs::kNoteDuration, "Duration", "beats", 0, 0.0},
     {ParamIDs::kActive, "Active", "", 1, 1.0},
 };
 
 } // namespace
 
 Steinberg::tresult PLUGIN_API PolyController::initialize(Steinberg::FUnknown* context) {
-    auto result = EditController::initialize(context);
+    auto result = EditControllerEx1::initialize(context);
     if (result != Steinberg::kResultOk)
         return result;
 
+    using namespace Steinberg::Vst;
     using Steinberg::Vst::ParameterInfo;
+
+    addUnit(new Unit(USTRING("Root"), kRootUnitId));
+    for (int lane = 0; lane < kMaxLanes; ++lane) {
+        Steinberg::Vst::String128 unitName;
+        char ascii[32];
+        std::snprintf(ascii, sizeof(ascii), "Lane %d", lane + 1);
+        Steinberg::UString(unitName, 128).fromAscii(ascii);
+        addUnit(new Unit(unitName, UnitIDs::lane(lane), kRootUnitId));
+    }
+    addUnit(new Unit(USTRING("Macros"), UnitIDs::kMacros, kRootUnitId));
+    addUnit(new Unit(USTRING("Global"), UnitIDs::kGlobal, kRootUnitId));
+    addUnit(new Unit(USTRING("Scene"), UnitIDs::kScene, kRootUnitId));
+    addUnit(new Unit(USTRING("Output"), UnitIDs::kOutput, kRootUnitId));
 
     for (int lane = 0; lane < kMaxLanes; ++lane) {
         for (const auto& def : kLaneParamDefs) {
             ParameterInfo info = {};
             info.id = ParamIDs::laneParam(lane, def.offset);
-            char ascii[64];
-            std::snprintf(ascii, sizeof(ascii), "L%d %s", lane + 1, def.name);
-            Steinberg::UString(info.title, 128).fromAscii(ascii);
+            Steinberg::UString(info.title, 128).fromAscii(def.name);
             Steinberg::UString(info.units, 128).fromAscii(def.units);
             info.stepCount = def.steps;
             info.defaultNormalizedValue = def.defaultNorm;
             info.flags = ParameterInfo::kCanAutomate;
-            info.unitId = Steinberg::Vst::kRootUnitId;
+            info.unitId = UnitIDs::lane(lane);
             parameters.addParameter(info);
         }
     }
 
-    auto addSimple = [this](Steinberg::Vst::ParamID id, const char* title, Steinberg::int32 steps, double defNorm,
-                            Steinberg::int32 flags = ParameterInfo::kCanAutomate) {
+    auto addParam = [this](Steinberg::Vst::ParamID id, const char* title, const char* units, Steinberg::int32 steps,
+                           double defNorm, Steinberg::Vst::UnitID unitId,
+                           Steinberg::int32 flags = ParameterInfo::kCanAutomate) {
         ParameterInfo info = {};
         info.id = id;
         Steinberg::UString(info.title, 128).fromAscii(title);
-        Steinberg::UString(info.units, 128).fromAscii("");
+        Steinberg::UString(info.units, 128).fromAscii(units);
         info.stepCount = steps;
         info.defaultNormalizedValue = defNorm;
         info.flags = flags;
-        info.unitId = Steinberg::Vst::kRootUnitId;
+        info.unitId = unitId;
         parameters.addParameter(info);
     };
 
-    addSimple(ParamIDs::kMacroComplexity, "Macro Complexity", 0, 0.5);
-    addSimple(ParamIDs::kMacroDensity, "Macro Density", 0, 0.5);
-    addSimple(ParamIDs::kMacroSyncopation, "Macro Syncopation", 0, 0.0);
-    addSimple(ParamIDs::kMacroSwing, "Macro Swing", 0, 0.0);
-    addSimple(ParamIDs::kMacroTension, "Macro Tension", 0, 0.0);
-    addSimple(ParamIDs::kMacroHumanize, "Macro Humanize", 0, 0.0);
-    addSimple(ParamIDs::kActiveLaneCount, "Active Lanes", 7, 3.0 / 7.0);
-    addSimple(ParamIDs::kSeed, "Seed", 0, 0.0);
+    addParam(ParamIDs::kMacroComplexity, "Complexity", "%", 0, 0.5, UnitIDs::kMacros);
+    addParam(ParamIDs::kMacroDensity, "Density", "%", 0, 0.5, UnitIDs::kMacros);
+    addParam(ParamIDs::kMacroSyncopation, "Syncopation", "%", 0, 0.0, UnitIDs::kMacros);
+    addParam(ParamIDs::kMacroSwing, "Swing", "%", 0, 0.0, UnitIDs::kMacros);
+    addParam(ParamIDs::kMacroTension, "Tension", "%", 0, 0.0, UnitIDs::kMacros);
+    addParam(ParamIDs::kMacroHumanize, "Humanize", "%", 0, 0.0, UnitIDs::kMacros);
+
+    addParam(ParamIDs::kActiveLaneCount, "Active Lanes", "", 7, 3.0 / 7.0, UnitIDs::kGlobal);
+    addParam(ParamIDs::kSeed, "Seed", "", 0, 0.0, UnitIDs::kGlobal);
 
     for (int lane = 0; lane < kMaxLanes; ++lane) {
-        char title[64];
-        std::snprintf(title, sizeof(title), "L%d Velocity Out", lane + 1);
-        addSimple(ParamIDs::velocityOutput(lane), title, 0, 0.0, ParameterInfo::kIsReadOnly);
+        char title[32];
+        std::snprintf(title, sizeof(title), "Lane %d", lane + 1);
+        addParam(ParamIDs::velocityOutput(lane), title, "", 0, 0.0, UnitIDs::kOutput, ParameterInfo::kIsReadOnly);
     }
 
-    addSimple(ParamIDs::kSceneSelect, "Scene Select", 2, 0.0);
-    addSimple(ParamIDs::kSceneMorph, "Scene Morph", 0, 0.0);
+    addParam(ParamIDs::kSceneSelect, "Select", "", 2, 0.0, UnitIDs::kScene);
+    addParam(ParamIDs::kSceneMorph, "Morph", "%", 0, 0.0, UnitIDs::kScene);
 
     return Steinberg::kResultOk;
 }
