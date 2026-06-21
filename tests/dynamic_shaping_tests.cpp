@@ -1,9 +1,10 @@
-#include "poly/engine.h"
-#include "poly/types.h"
-#include <gtest/gtest.h>
-
 #include <algorithm>
 #include <vector>
+
+#include <gtest/gtest.h>
+
+#include "poly/engine.h"
+#include "poly/types.h"
 
 namespace {
 
@@ -22,8 +23,7 @@ poly::LaneConfig makeBasicLane() {
     return cfg;
 }
 
-std::vector<poly::NoteEvent> renderLane(const poly::LaneConfig& cfg,
-                                         uint64_t seed = 42) {
+std::vector<poly::NoteEvent> renderLane(const poly::LaneConfig& cfg, uint64_t seed = 42) {
     poly::Engine engine;
     poly::GrooveState state{};
     state.activeLaneCount = 1;
@@ -93,7 +93,8 @@ TEST(DynamicShaping, AccentMultipleSteps) {
 
 TEST(DynamicShaping, EmphasisZeroSuppressesAccent) {
     auto cfg = makeBasicLane();
-    for (int i = 0; i < 4; ++i) cfg.accents.steps[i] = true;
+    for (int i = 0; i < 4; ++i)
+        cfg.accents.steps[i] = true;
     cfg.emphasisProb = 0.0f;
 
     auto events = renderLane(cfg);
@@ -105,7 +106,8 @@ TEST(DynamicShaping, EmphasisZeroSuppressesAccent) {
 
 TEST(DynamicShaping, EmphasisOneAlwaysExpresses) {
     auto cfg = makeBasicLane();
-    for (int i = 0; i < 4; ++i) cfg.accents.steps[i] = true;
+    for (int i = 0; i < 4; ++i)
+        cfg.accents.steps[i] = true;
     cfg.emphasisProb = 1.0f;
 
     auto events = renderLane(cfg);
@@ -119,7 +121,8 @@ TEST(DynamicShaping, EmphasisPartialMix) {
     auto cfg = makeBasicLane();
     cfg.cycle = {.steps = 16, .subdivision = 16};
     cfg.hitCount = 16;
-    for (int i = 0; i < 16; ++i) cfg.accents.steps[i] = true;
+    for (int i = 0; i < 16; ++i)
+        cfg.accents.steps[i] = true;
     cfg.emphasisProb = 0.5f;
 
     poly::Engine engine;
@@ -139,8 +142,10 @@ TEST(DynamicShaping, EmphasisPartialMix) {
     float baseVel = 100.0f / 127.0f;
     int accented = 0, plain = 0;
     for (size_t i = 0; i < buf.count; ++i) {
-        if (buf.events[i].velocity > baseVel + 0.1f) accented++;
-        else plain++;
+        if (buf.events[i].velocity > baseVel + 0.1f)
+            accented++;
+        else
+            plain++;
     }
     EXPECT_GT(accented, 0) << "Expected some accented notes";
     EXPECT_GT(plain, 0) << "Expected some unaccented notes";

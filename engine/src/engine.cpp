@@ -1,10 +1,11 @@
 #include "poly/engine.h"
-#include "poly/envelope.h"
-#include "poly/euclidean.h"
-#include "poly/rng.h"
 
 #include <algorithm>
 #include <cmath>
+
+#include "poly/envelope.h"
+#include "poly/euclidean.h"
+#include "poly/rng.h"
 
 namespace poly {
 
@@ -19,17 +20,18 @@ static double cyclePpq(const Cycle& cycle) {
     return stepPpq(cycle) * cycle.steps;
 }
 
-void Engine::renderRange(const TransportContext& tc,
-                         const GrooveState& state,
-                         NoteEventBuffer& out) {
+void Engine::renderRange(const TransportContext& tc, const GrooveState& state, NoteEventBuffer& out) {
     out.clear();
 
-    if (!tc.playing || tc.ppqEnd <= tc.ppqStart) return;
+    if (!tc.playing || tc.ppqEnd <= tc.ppqStart)
+        return;
 
     for (int lane = 0; lane < state.activeLaneCount; ++lane) {
         const auto& cfg = state.lanes[lane];
-        if (!cfg.active) continue;
-        if (cfg.cycle.steps <= 0 || cfg.cycle.subdivision <= 0) continue;
+        if (!cfg.active)
+            continue;
+        if (cfg.cycle.steps <= 0 || cfg.cycle.subdivision <= 0)
+            continue;
 
         std::array<bool, kMaxSteps> pattern{};
         euclidean(cfg.hitCount, cfg.cycle.steps, cfg.rotation, pattern);
@@ -41,19 +43,21 @@ void Engine::renderRange(const TransportContext& tc,
         // Step i occurs at PPQ = i * sPpq. We need i such that i*sPpq >= ppqStart
         // and i*sPpq < ppqEnd.
         int64_t firstStep = static_cast<int64_t>(std::ceil(tc.ppqStart / sPpq));
-        int64_t lastStep  = static_cast<int64_t>(std::ceil(tc.ppqEnd / sPpq));
+        int64_t lastStep = static_cast<int64_t>(std::ceil(tc.ppqEnd / sPpq));
 
         for (int64_t absStep = firstStep; absStep < lastStep; ++absStep) {
             double ppq = absStep * sPpq;
 
             // Floating point guard: must be within [ppqStart, ppqEnd)
-            if (ppq < tc.ppqStart || ppq >= tc.ppqEnd) continue;
+            if (ppq < tc.ppqStart || ppq >= tc.ppqEnd)
+                continue;
 
             // Map to position within the cycle
             int stepsInCycle = cfg.cycle.steps;
             int64_t cycleStep = ((absStep % stepsInCycle) + stepsInCycle) % stepsInCycle;
 
-            if (!pattern[static_cast<size_t>(cycleStep)]) continue;
+            if (!pattern[static_cast<size_t>(cycleStep)])
+                continue;
 
             // Envelope modulation: evaluate all active envelopes at this PPQ
             float velMod = 1.0f;
@@ -61,7 +65,8 @@ void Engine::renderRange(const TransportContext& tc,
 
             for (int e = 0; e < cfg.envelopeCount; ++e) {
                 const auto& ea = cfg.envelopes[e];
-                if (!ea.active) continue;
+                if (!ea.active)
+                    continue;
                 const auto& env = ea.envelope;
                 double phase = computeEnvelopePhase(ppq, env.periodBars, env.phaseOffset);
                 float value = evaluateShape(env.shape, static_cast<float>(phase));
@@ -96,7 +101,8 @@ void Engine::renderRange(const TransportContext& tc,
             // Probability gate with density envelope modulation
             float effectiveProb = std::clamp(cfg.probability + probMod, 0.0f, 1.0f);
             float probRoll = deterministicRand(state.seed, cfg.id, absStep, 0);
-            if (probRoll >= effectiveProb) continue;
+            if (probRoll >= effectiveProb)
+                continue;
 
             // Velocity with spread: channel 1 = velocity variation
             float velBase = cfg.baseVelocity / 127.0f;
@@ -114,7 +120,8 @@ void Engine::renderRange(const TransportContext& tc,
 
             // Ghost floor: minimum velocity presence
             float ghostFloor = cfg.ghostFloor / 127.0f;
-            if (vel < ghostFloor) vel = ghostFloor;
+            if (vel < ghostFloor)
+                vel = ghostFloor;
 
             // Apply velocity envelope modulation
             vel *= velMod;
@@ -137,9 +144,7 @@ void Engine::renderRange(const TransportContext& tc,
             ev.ppqPosition = ppq;
             ev.pitch = cfg.midiNote;
             ev.velocity = vel;
-            ev.duration = cfg.noteDuration > 0.0f
-                              ? static_cast<double>(cfg.noteDuration)
-                              : sPpq * 0.5;
+            ev.duration = cfg.noteDuration > 0.0f ? static_cast<double>(cfg.noteDuration) : sPpq * 0.5;
             ev.channel = static_cast<int16_t>(lane);
 
             out.push(ev);

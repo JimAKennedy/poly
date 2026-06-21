@@ -1,9 +1,9 @@
-#include "poly/macro.h"
-#include "poly/types.h"
+#include <cmath>
 
 #include <gtest/gtest.h>
 
-#include <cmath>
+#include "poly/macro.h"
+#include "poly/types.h"
 
 namespace {
 
@@ -77,8 +77,7 @@ TEST(Macro, ComplexityScalesEnvelopeDepth) {
     state.macros.complexity = 1.0f;
     auto high = poly::resolveMacros(state);
 
-    EXPECT_LT(low.lanes[0].envelopes[0].envelope.depth,
-              high.lanes[0].envelopes[0].envelope.depth);
+    EXPECT_LT(low.lanes[0].envelopes[0].envelope.depth, high.lanes[0].envelopes[0].envelope.depth);
 }
 
 // --- Density ---

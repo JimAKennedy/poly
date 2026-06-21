@@ -6,7 +6,6 @@ namespace poly {
 
 float evaluateShape(Shape shape, float phase);
 
-double computeEnvelopePhase(double ppqPosition, float periodBars,
-                            float phaseOffset);
+double computeEnvelopePhase(double ppqPosition, float periodBars, float phaseOffset);
 
 } // namespace poly

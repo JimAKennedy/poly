@@ -22,11 +22,11 @@ float evaluateShape(Shape shape, float phase) {
     return 0.5f;
 }
 
-double computeEnvelopePhase(double ppqPosition, float periodBars,
-                            float phaseOffset) {
+double computeEnvelopePhase(double ppqPosition, float periodBars, float phaseOffset) {
     double periodPpq = static_cast<double>(periodBars) * 4.0;
     double raw = std::fmod(ppqPosition / periodPpq + static_cast<double>(phaseOffset), 1.0);
-    if (raw < 0.0) raw += 1.0;
+    if (raw < 0.0)
+        raw += 1.0;
     return raw;
 }
 

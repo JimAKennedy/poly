@@ -1,9 +1,9 @@
+#include <cstdio>
+#include <cstdlib>
+
 #include "poly/engine.h"
 #include "poly/macro.h"
 #include "poly/types.h"
-
-#include <cstdio>
-#include <cstdlib>
 
 static poly::GrooveState makeDefaultState() {
     poly::GrooveState state{};
@@ -61,9 +61,12 @@ int main(int argc, char* argv[]) {
     double tempo = 120.0;
     double blockSizePpq = 0.1;
 
-    if (argc > 1) bars = std::atof(argv[1]);
-    if (argc > 2) tempo = std::atof(argv[2]);
-    if (argc > 3) blockSizePpq = std::atof(argv[3]);
+    if (argc > 1)
+        bars = std::atof(argv[1]);
+    if (argc > 2)
+        tempo = std::atof(argv[2]);
+    if (argc > 3)
+        blockSizePpq = std::atof(argv[3]);
 
     if (bars <= 0.0 || tempo <= 0.0 || blockSizePpq <= 0.0) {
         std::fprintf(stderr, "Usage: poly_harness [bars=4] [tempo=120] [block_ppq=0.1]\n");
@@ -72,8 +75,8 @@ int main(int argc, char* argv[]) {
 
     double totalPpq = bars * 4.0;
 
-    std::printf("# poly_harness: bars=%.1f tempo=%.0f block_ppq=%.3f total_ppq=%.1f\n",
-                bars, tempo, blockSizePpq, totalPpq);
+    std::printf("# poly_harness: bars=%.1f tempo=%.0f block_ppq=%.3f total_ppq=%.1f\n", bars, tempo, blockSizePpq,
+                totalPpq);
     std::printf("# ppq_position  pitch  velocity  duration  channel\n");
 
     poly::Engine engine;
@@ -85,7 +88,8 @@ int main(int argc, char* argv[]) {
 
     while (ppq < totalPpq) {
         double blockEnd = ppq + blockSizePpq;
-        if (blockEnd > totalPpq) blockEnd = totalPpq;
+        if (blockEnd > totalPpq)
+            blockEnd = totalPpq;
 
         poly::TransportContext tc{};
         tc.ppqStart = ppq;
@@ -97,9 +101,7 @@ int main(int argc, char* argv[]) {
 
         for (size_t i = 0; i < buffer.count; ++i) {
             const auto& e = buffer.events[i];
-            std::printf("%.6f  %3d  %.3f  %.6f  %d\n",
-                        e.ppqPosition, e.pitch, e.velocity,
-                        e.duration, e.channel);
+            std::printf("%.6f  %3d  %.3f  %.6f  %d\n", e.ppqPosition, e.pitch, e.velocity, e.duration, e.channel);
             ++totalEvents;
         }
 

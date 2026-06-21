@@ -5,10 +5,13 @@ namespace poly {
 void euclidean(int k, int n, int rotation, std::array<bool, kMaxSteps>& out) {
     out.fill(false);
 
-    if (n <= 0 || k <= 0) return;
-    if (n > kMaxSteps) n = kMaxSteps;
+    if (n <= 0 || k <= 0)
+        return;
+    if (n > kMaxSteps)
+        n = kMaxSteps;
     if (k >= n) {
-        for (int i = 0; i < n; ++i) out[i] = true;
+        for (int i = 0; i < n; ++i)
+            out[i] = true;
         return;
     }
 
