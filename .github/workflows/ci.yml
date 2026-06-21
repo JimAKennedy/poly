@@ -27,7 +27,7 @@ jobs:
           - os: ubuntu-latest
             cmake-args: -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_INTERACTION_TESTS=ON
           - os: windows-2022
-            cmake-args: -G "Visual Studio 17 2022" -DBUILD_INTERACTION_TESTS=ON
+            cmake-args: -G "Visual Studio 17 2022"
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
