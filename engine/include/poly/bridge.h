@@ -6,8 +6,7 @@
 
 namespace poly {
 
-int32_t ppqToSampleOffset(double ppqPosition, double ppqBlockStart,
-                          double tempo, double sampleRate, int32_t blockSize);
+int32_t ppqToSampleOffset(double ppqPosition, double ppqBlockStart, double tempo, double sampleRate, int32_t blockSize);
 
 struct PendingNoteOff {
     double ppqOff = 0.0;
@@ -20,8 +19,7 @@ public:
     static constexpr size_t kCapacity = 512;
 
     bool push(const PendingNoteOff& noff);
-    size_t flushDue(double ppqStart, double ppqEnd,
-                    PendingNoteOff* out, size_t maxOut);
+    size_t flushDue(double ppqStart, double ppqEnd, PendingNoteOff* out, size_t maxOut);
     void clear();
     size_t count() const { return count_; }
 

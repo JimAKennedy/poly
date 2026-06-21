@@ -3,8 +3,9 @@ repos:
     rev: v5.0.0
     hooks:
       - id: trailing-whitespace
-        exclude: '\.uidesc$'
+        exclude: '^(\.gsd/|\.bg-shell/|.*\.uidesc$)'
       - id: end-of-file-fixer
+        exclude: '^(\.gsd/|\.bg-shell/|.*\.uidesc$)'
       - id: check-yaml
       - id: check-added-large-files
         args: ['--maxkb=1000']

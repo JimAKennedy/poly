@@ -1,33 +1,39 @@
 #include "processor.h"
-#include "plugids.h"
 
-#include "poly/macro.h"
-#include "poly/state_io.h"
+#include <algorithm>
+#include <cmath>
+#include <cstring>
 
 #include "pluginterfaces/base/ibstream.h"
 #include "pluginterfaces/vst/ivstevents.h"
 #include "pluginterfaces/vst/ivstparameterchanges.h"
 #include "pluginterfaces/vst/ivstprocesscontext.h"
 
-#include <algorithm>
-#include <cmath>
-#include <cstring>
+#include "plugids.h"
+#include "poly/macro.h"
+#include "poly/state_io.h"
 
 namespace poly {
 
 PolyProcessor::PolyProcessor() {
     setControllerClass(kPolyControllerUID);
 
-    struct LaneDef { int16_t note; int steps; int sub; int hits; Role role; };
+    struct LaneDef {
+        int16_t note;
+        int steps;
+        int sub;
+        int hits;
+        Role role;
+    };
     static constexpr LaneDef kDefs[kMaxLanes] = {
-        {36, 4,  4, 4, Role::AnchorPulse}, // Kick: 4-on-the-floor
-        {38, 4,  4, 2, Role::Backbeat},     // Snare: backbeat
-        {42, 8,  8, 8, Role::Shimmer},      // Closed HH: 8ths
-        {45, 5, 16, 3, Role::Ghost},        // Low Tom: polymetric 5/16
-        {46, 7,  8, 4, Role::Accent},       // Open HH: polymetric 7/8
-        {39, 3, 16, 2, Role::Ornament},     // Clap: polymetric 3/16
-        {43, 6, 16, 4, Role::Fill},         // Low Tom 2: polymetric 6/16
-        {50, 9, 16, 5, Role::Custom},       // High Tom: polymetric 9/16
+        {36, 4, 4, 4, Role::AnchorPulse}, // Kick: 4-on-the-floor
+        {38, 4, 4, 2, Role::Backbeat},    // Snare: backbeat
+        {42, 8, 8, 8, Role::Shimmer},     // Closed HH: 8ths
+        {45, 5, 16, 3, Role::Ghost},      // Low Tom: polymetric 5/16
+        {46, 7, 8, 4, Role::Accent},      // Open HH: polymetric 7/8
+        {39, 3, 16, 2, Role::Ornament},   // Clap: polymetric 3/16
+        {43, 6, 16, 4, Role::Fill},       // Low Tom 2: polymetric 6/16
+        {50, 9, 16, 5, Role::Custom},     // High Tom: polymetric 9/16
     };
     for (int i = 0; i < kMaxLanes; ++i) {
         grooveState_.lanes[i].id = i;
@@ -38,21 +44,18 @@ PolyProcessor::PolyProcessor() {
     }
 }
 
-Steinberg::tresult PLUGIN_API PolyProcessor::initialize(
-    Steinberg::FUnknown* context) {
+Steinberg::tresult PLUGIN_API PolyProcessor::initialize(Steinberg::FUnknown* context) {
     auto result = AudioEffect::initialize(context);
     if (result != Steinberg::kResultOk)
         return result;
 
-    addAudioOutput(STR16("Stereo Out"),
-                   Steinberg::Vst::SpeakerArr::kStereo);
+    addAudioOutput(STR16("Stereo Out"), Steinberg::Vst::SpeakerArr::kStereo);
     addEventOutput(STR16("MIDI Out"), 16);
 
     return Steinberg::kResultOk;
 }
 
-Steinberg::tresult PLUGIN_API PolyProcessor::setActive(
-    Steinberg::TBool state) {
+Steinberg::tresult PLUGIN_API PolyProcessor::setActive(Steinberg::TBool state) {
     if (state) {
         pendingNoteOffs_.clear();
         noteBuffer_.clear();
@@ -61,8 +64,7 @@ Steinberg::tresult PLUGIN_API PolyProcessor::setActive(
     return AudioEffect::setActive(state);
 }
 
-Steinberg::tresult PLUGIN_API PolyProcessor::process(
-    Steinberg::Vst::ProcessData& data) {
+Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData& data) {
 
     // --- Silence audio outputs ---
     if (data.numOutputs > 0) {
@@ -80,13 +82,12 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(
         Steinberg::int32 numParams = paramChanges->getParameterCount();
         for (Steinberg::int32 i = 0; i < numParams; ++i) {
             auto* queue = paramChanges->getParameterData(i);
-            if (!queue) continue;
+            if (!queue)
+                continue;
             Steinberg::Vst::ParamValue value;
             Steinberg::int32 sampleOffset;
             Steinberg::int32 pointCount = queue->getPointCount();
-            if (pointCount > 0 &&
-                queue->getPoint(pointCount - 1, sampleOffset, value) ==
-                    Steinberg::kResultOk) {
+            if (pointCount > 0 && queue->getPoint(pointCount - 1, sampleOffset, value) == Steinberg::kResultOk) {
                 applyParameter(queue->getParameterId(), value);
             }
         }
@@ -98,23 +99,17 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(
         tc_.tempo = ctx.tempo;
         tc_.sampleRate = ctx.sampleRate;
         tc_.blockSize = data.numSamples;
-        tc_.playing =
-            (ctx.state & Steinberg::Vst::ProcessContext::kPlaying) != 0;
-        tc_.looping =
-            (ctx.state & Steinberg::Vst::ProcessContext::kCycleActive) != 0;
+        tc_.playing = (ctx.state & Steinberg::Vst::ProcessContext::kPlaying) != 0;
+        tc_.looping = (ctx.state & Steinberg::Vst::ProcessContext::kCycleActive) != 0;
 
-        if (ctx.state &
-            Steinberg::Vst::ProcessContext::kProjectTimeMusicValid) {
+        if (ctx.state & Steinberg::Vst::ProcessContext::kProjectTimeMusicValid) {
             double ppqStart = ctx.projectTimeMusic;
-            double beatsPerSample =
-                tc_.tempo > 0.0 ? tc_.tempo / (60.0 * tc_.sampleRate) : 0.0;
+            double beatsPerSample = tc_.tempo > 0.0 ? tc_.tempo / (60.0 * tc_.sampleRate) : 0.0;
             tc_.ppqStart = ppqStart;
             tc_.ppqEnd = ppqStart + data.numSamples * beatsPerSample;
 
             constexpr double kJumpThreshold = 0.001;
-            tc_.jumped = (expectedNextPpq_ >= 0.0 &&
-                          std::abs(ppqStart - expectedNextPpq_) >
-                              kJumpThreshold);
+            tc_.jumped = (expectedNextPpq_ >= 0.0 && std::abs(ppqStart - expectedNextPpq_) > kJumpThreshold);
             expectedNextPpq_ = tc_.ppqEnd;
         } else {
             tc_.ppqStart = 0.0;
@@ -129,14 +124,14 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(
         }
     }
 
-    if (!tc_.playing) return Steinberg::kResultOk;
+    if (!tc_.playing)
+        return Steinberg::kResultOk;
 
     // --- Handle transport jump: kill pending noteoffs ---
     if (tc_.jumped) {
         if (data.outputEvents) {
             PendingNoteOff allOffs[PendingNoteOffBuffer::kCapacity];
-            size_t n = pendingNoteOffs_.flushDue(
-                -1e12, 1e12, allOffs, PendingNoteOffBuffer::kCapacity);
+            size_t n = pendingNoteOffs_.flushDue(-1e12, 1e12, allOffs, PendingNoteOffBuffer::kCapacity);
             for (size_t i = 0; i < n; ++i) {
                 Steinberg::Vst::Event ev = {};
                 ev.busIndex = 0;
@@ -159,19 +154,18 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(
 
     // --- Emit MIDI events ---
     auto* outputEvents = data.outputEvents;
-    if (!outputEvents) return Steinberg::kResultOk;
+    if (!outputEvents)
+        return Steinberg::kResultOk;
 
     // Flush due noteoffs
     PendingNoteOff dueOffs[kMaxEventsPerBlock];
-    size_t numDue = pendingNoteOffs_.flushDue(
-        tc_.ppqStart, tc_.ppqEnd, dueOffs, kMaxEventsPerBlock);
+    size_t numDue = pendingNoteOffs_.flushDue(tc_.ppqStart, tc_.ppqEnd, dueOffs, kMaxEventsPerBlock);
 
     for (size_t i = 0; i < numDue; ++i) {
         Steinberg::Vst::Event ev = {};
         ev.busIndex = 0;
-        ev.sampleOffset = ppqToSampleOffset(
-            dueOffs[i].ppqOff, tc_.ppqStart, tc_.tempo, tc_.sampleRate,
-            data.numSamples);
+        ev.sampleOffset =
+            ppqToSampleOffset(dueOffs[i].ppqOff, tc_.ppqStart, tc_.tempo, tc_.sampleRate, data.numSamples);
         ev.ppqPosition = dueOffs[i].ppqOff;
         ev.type = Steinberg::Vst::Event::kNoteOffEvent;
         ev.noteOff.channel = dueOffs[i].channel;
@@ -189,9 +183,7 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(
 
         Steinberg::Vst::Event ev = {};
         ev.busIndex = 0;
-        ev.sampleOffset = ppqToSampleOffset(
-            note.ppqPosition, tc_.ppqStart, tc_.tempo, tc_.sampleRate,
-            data.numSamples);
+        ev.sampleOffset = ppqToSampleOffset(note.ppqPosition, tc_.ppqStart, tc_.tempo, tc_.sampleRate, data.numSamples);
         ev.ppqPosition = note.ppqPosition;
         ev.type = Steinberg::Vst::Event::kNoteOnEvent;
         ev.noteOn.channel = note.channel;
@@ -216,8 +208,7 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(
             for (int lane = 0; lane < kMaxLanes; ++lane) {
                 if (laneVelocity[lane] > 0.0f) {
                     Steinberg::int32 idx;
-                    auto* queue = outParams->addParameterData(
-                        ParamIDs::velocityOutput(lane), idx);
+                    auto* queue = outParams->addParameterData(ParamIDs::velocityOutput(lane), idx);
                     if (queue) {
                         Steinberg::int32 ptIdx;
                         queue->addPoint(0, laneVelocity[lane], ptIdx);
@@ -230,8 +221,7 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(
     return Steinberg::kResultOk;
 }
 
-void PolyProcessor::applyParameter(Steinberg::Vst::ParamID id,
-                                    double normalized) {
+void PolyProcessor::applyParameter(Steinberg::Vst::ParamID id, double normalized) {
     using namespace ParamIDs;
 
     if (id < static_cast<Steinberg::Vst::ParamID>(kMaxLanes * kParamsPerLane)) {
@@ -244,15 +234,13 @@ void PolyProcessor::applyParameter(Steinberg::Vst::ParamID id,
             cfg.probability = static_cast<float>(normalized);
             break;
         case kBaseVelocity:
-            cfg.baseVelocity =
-                static_cast<uint8_t>(std::round(normalized * 127.0));
+            cfg.baseVelocity = static_cast<uint8_t>(std::round(normalized * 127.0));
             break;
         case kEmphasisProb:
             cfg.emphasisProb = static_cast<float>(normalized);
             break;
         case kGhostFloor:
-            cfg.ghostFloor =
-                static_cast<uint8_t>(std::round(normalized * 127.0));
+            cfg.ghostFloor = static_cast<uint8_t>(std::round(normalized * 127.0));
             break;
         case kVelocitySpread:
             cfg.velocitySpread = static_cast<float>(normalized);
@@ -293,12 +281,10 @@ void PolyProcessor::applyParameter(Steinberg::Vst::ParamID id,
             grooveState_.macros.humanize = static_cast<float>(normalized);
             break;
         case kActiveLaneCount:
-            grooveState_.activeLaneCount =
-                1 + static_cast<int>(std::round(normalized * 7.0));
+            grooveState_.activeLaneCount = 1 + static_cast<int>(std::round(normalized * 7.0));
             break;
         case kSeed:
-            grooveState_.seed =
-                static_cast<uint64_t>(std::round(normalized * 999999.0));
+            grooveState_.seed = static_cast<uint64_t>(std::round(normalized * 999999.0));
             break;
         default:
             break;
@@ -306,33 +292,29 @@ void PolyProcessor::applyParameter(Steinberg::Vst::ParamID id,
     }
 }
 
-Steinberg::tresult PLUGIN_API PolyProcessor::getState(
-    Steinberg::IBStream* state) {
-    if (!state) return Steinberg::kInvalidArgument;
+Steinberg::tresult PLUGIN_API PolyProcessor::getState(Steinberg::IBStream* state) {
+    if (!state)
+        return Steinberg::kInvalidArgument;
 
     auto write = [state](const void* data, size_t size) -> bool {
         Steinberg::int32 written;
-        return state->write(const_cast<void*>(data),
-                            static_cast<Steinberg::int32>(size),
-                            &written) == Steinberg::kResultOk;
+        return state->write(const_cast<void*>(data), static_cast<Steinberg::int32>(size), &written) ==
+               Steinberg::kResultOk;
     };
 
-    return writeGrooveState(write, grooveState_) ? Steinberg::kResultOk
-                                                 : Steinberg::kResultFalse;
+    return writeGrooveState(write, grooveState_) ? Steinberg::kResultOk : Steinberg::kResultFalse;
 }
 
-Steinberg::tresult PLUGIN_API PolyProcessor::setState(
-    Steinberg::IBStream* state) {
-    if (!state) return Steinberg::kInvalidArgument;
+Steinberg::tresult PLUGIN_API PolyProcessor::setState(Steinberg::IBStream* state) {
+    if (!state)
+        return Steinberg::kInvalidArgument;
 
     auto read = [state](void* data, size_t size) -> bool {
         Steinberg::int32 bytesRead;
-        return state->read(data, static_cast<Steinberg::int32>(size),
-                           &bytesRead) == Steinberg::kResultOk;
+        return state->read(data, static_cast<Steinberg::int32>(size), &bytesRead) == Steinberg::kResultOk;
     };
 
-    return readGrooveState(read, grooveState_) ? Steinberg::kResultOk
-                                               : Steinberg::kResultFalse;
+    return readGrooveState(read, grooveState_) ? Steinberg::kResultOk : Steinberg::kResultFalse;
 }
 
 } // namespace poly

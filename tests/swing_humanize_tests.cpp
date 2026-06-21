@@ -1,11 +1,12 @@
-#include "poly/engine.h"
-#include "poly/rng.h"
-#include "poly/types.h"
-#include <gtest/gtest.h>
-
 #include <algorithm>
 #include <cmath>
 #include <vector>
+
+#include <gtest/gtest.h>
+
+#include "poly/engine.h"
+#include "poly/rng.h"
+#include "poly/types.h"
 
 namespace {
 
@@ -24,10 +25,8 @@ poly::LaneConfig makeBasicLane() {
     return cfg;
 }
 
-std::vector<poly::NoteEvent> renderLane(const poly::LaneConfig& cfg,
-                                         double ppqEnd = 4.0,
-                                         uint64_t seed = 42,
-                                         double tempo = 120.0) {
+std::vector<poly::NoteEvent> renderLane(const poly::LaneConfig& cfg, double ppqEnd = 4.0, uint64_t seed = 42,
+                                        double tempo = 120.0) {
     poly::Engine engine;
     poly::GrooveState state{};
     state.activeLaneCount = 1;
@@ -47,10 +46,7 @@ std::vector<poly::NoteEvent> renderLane(const poly::LaneConfig& cfg,
     for (size_t i = 0; i < buf.count; ++i) {
         events.push_back(buf.events[i]);
     }
-    std::sort(events.begin(), events.end(),
-              [](const auto& a, const auto& b) {
-                  return a.ppqPosition < b.ppqPosition;
-              });
+    std::sort(events.begin(), events.end(), [](const auto& a, const auto& b) { return a.ppqPosition < b.ppqPosition; });
     return events;
 }
 
@@ -66,8 +62,7 @@ TEST(SwingHumanize, NoSwingNoOffset) {
     ASSERT_EQ(events.size(), 8u);
     const double sPpq = 0.5;
     for (size_t i = 0; i < events.size(); ++i) {
-        EXPECT_DOUBLE_EQ(events[i].ppqPosition, i * sPpq)
-            << "Step " << i << " should be unshifted";
+        EXPECT_DOUBLE_EQ(events[i].ppqPosition, i * sPpq) << "Step " << i << " should be unshifted";
     }
 }
 
@@ -85,8 +80,7 @@ TEST(SwingHumanize, SwingShiftsOddSteps) {
         if (i % 2 == 1) {
             expected += swingOffset;
         }
-        EXPECT_NEAR(events[i].ppqPosition, expected, 1e-9)
-            << "Step " << i;
+        EXPECT_NEAR(events[i].ppqPosition, expected, 1e-9) << "Step " << i;
     }
 }
 
@@ -104,8 +98,7 @@ TEST(SwingHumanize, FullSwingTripleFeel) {
         if (i % 2 == 1) {
             expected += swingOffset;
         }
-        EXPECT_NEAR(events[i].ppqPosition, expected, 1e-9)
-            << "Step " << i;
+        EXPECT_NEAR(events[i].ppqPosition, expected, 1e-9) << "Step " << i;
     }
 }
 
@@ -216,7 +209,8 @@ TEST(SwingHumanize, SwingPlusHumanize) {
     std::vector<double> nominals;
     for (int i = 0; i < 8; ++i) {
         double n = i * sPpq;
-        if (i % 2 == 1) n += swingOffset;
+        if (i % 2 == 1)
+            n += swingOffset;
         nominals.push_back(n);
     }
 
@@ -225,8 +219,7 @@ TEST(SwingHumanize, SwingPlusHumanize) {
         for (double n : nominals) {
             minDist = std::min(minDist, std::abs(e.ppqPosition - n));
         }
-        EXPECT_LE(minDist, jitterPpq + 1e-9)
-            << "Note at " << e.ppqPosition << " exceeds jitter bound from any nominal";
+        EXPECT_LE(minDist, jitterPpq + 1e-9) << "Note at " << e.ppqPosition << " exceeds jitter bound from any nominal";
     }
 }
 

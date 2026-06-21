@@ -1,10 +1,11 @@
+#include <cmath>
+#include <vector>
+
+#include <gtest/gtest.h>
+
 #include "poly/engine.h"
 #include "poly/envelope.h"
 #include "poly/types.h"
-#include <gtest/gtest.h>
-
-#include <cmath>
-#include <vector>
 
 namespace {
 
@@ -88,11 +89,9 @@ poly::LaneConfig makeEnvelopeLane() {
     return cfg;
 }
 
-std::vector<poly::NoteEvent> renderOneLane(const poly::LaneConfig& cfg,
-                                            double ppqStart, double ppqEnd,
-                                            uint64_t seed = 42,
-                                            int globalEnvCount = 0,
-                                            const poly::Envelope* globalEnvs = nullptr) {
+std::vector<poly::NoteEvent> renderOneLane(const poly::LaneConfig& cfg, double ppqStart, double ppqEnd,
+                                           uint64_t seed = 42, int globalEnvCount = 0,
+                                           const poly::Envelope* globalEnvs = nullptr) {
     poly::Engine engine;
     poly::GrooveState state{};
     state.activeLaneCount = 1;
@@ -130,8 +129,7 @@ TEST(EnvelopeIntegration, NoEnvelopeUnchanged) {
 
 TEST(EnvelopeIntegration, SineVelocityModulation) {
     auto cfg = makeEnvelopeLane();
-    cfg.envelopes[0].envelope = {poly::EnvTarget::Velocity, 4.0f,
-                                  poly::Shape::Sine, 1.0f, 0.0f};
+    cfg.envelopes[0].envelope = {poly::EnvTarget::Velocity, 4.0f, poly::Shape::Sine, 1.0f, 0.0f};
     cfg.envelopes[0].active = true;
     cfg.envelopeCount = 1;
 
@@ -151,8 +149,7 @@ TEST(EnvelopeIntegration, SineVelocityModulation) {
 
 TEST(EnvelopeIntegration, ZeroDepthNoEffect) {
     auto cfg = makeEnvelopeLane();
-    cfg.envelopes[0].envelope = {poly::EnvTarget::Velocity, 4.0f,
-                                  poly::Shape::Sine, 0.0f, 0.0f};
+    cfg.envelopes[0].envelope = {poly::EnvTarget::Velocity, 4.0f, poly::Shape::Sine, 0.0f, 0.0f};
     cfg.envelopes[0].active = true;
     cfg.envelopeCount = 1;
 
@@ -165,8 +162,7 @@ TEST(EnvelopeIntegration, ZeroDepthNoEffect) {
 
 TEST(EnvelopeIntegration, InactiveEnvelopeIgnored) {
     auto cfg = makeEnvelopeLane();
-    cfg.envelopes[0].envelope = {poly::EnvTarget::Velocity, 4.0f,
-                                  poly::Shape::Sine, 1.0f, 0.0f};
+    cfg.envelopes[0].envelope = {poly::EnvTarget::Velocity, 4.0f, poly::Shape::Sine, 1.0f, 0.0f};
     cfg.envelopes[0].active = false;
     cfg.envelopeCount = 1;
 
@@ -180,8 +176,7 @@ TEST(EnvelopeIntegration, InactiveEnvelopeIgnored) {
 TEST(EnvelopeIntegration, DensityModulation) {
     auto cfg = makeEnvelopeLane();
     cfg.probability = 0.5f;
-    cfg.envelopes[0].envelope = {poly::EnvTarget::Density, 4.0f,
-                                  poly::Shape::Ramp, 1.0f, 0.0f};
+    cfg.envelopes[0].envelope = {poly::EnvTarget::Density, 4.0f, poly::Shape::Ramp, 1.0f, 0.0f};
     cfg.envelopes[0].active = true;
     cfg.envelopeCount = 1;
 
@@ -203,8 +198,7 @@ TEST(EnvelopeIntegration, DensityModulation) {
 TEST(EnvelopeIntegration, GlobalEnvelopeApplied) {
     auto cfg = makeEnvelopeLane();
 
-    poly::Envelope globalEnv{poly::EnvTarget::Velocity, 4.0f,
-                              poly::Shape::Triangle, 1.0f, 0.0f};
+    poly::Envelope globalEnv{poly::EnvTarget::Velocity, 4.0f, poly::Shape::Triangle, 1.0f, 0.0f};
 
     auto events = renderOneLane(cfg, 0.0, 4.0, 42, 1, &globalEnv);
     ASSERT_EQ(events.size(), 4u);
@@ -221,11 +215,9 @@ TEST(EnvelopeIntegration, MultipleEnvelopesMultiplicative) {
     auto cfg = makeEnvelopeLane();
 
     // Two velocity envelopes, both sine but different periods
-    cfg.envelopes[0].envelope = {poly::EnvTarget::Velocity, 4.0f,
-                                  poly::Shape::Sine, 1.0f, 0.0f};
+    cfg.envelopes[0].envelope = {poly::EnvTarget::Velocity, 4.0f, poly::Shape::Sine, 1.0f, 0.0f};
     cfg.envelopes[0].active = true;
-    cfg.envelopes[1].envelope = {poly::EnvTarget::Velocity, 8.0f,
-                                  poly::Shape::Sine, 1.0f, 0.0f};
+    cfg.envelopes[1].envelope = {poly::EnvTarget::Velocity, 8.0f, poly::Shape::Sine, 1.0f, 0.0f};
     cfg.envelopes[1].active = true;
     cfg.envelopeCount = 2;
 
@@ -244,8 +236,7 @@ TEST(EnvelopeIntegration, MultipleEnvelopesMultiplicative) {
 
 TEST(EnvelopeIntegration, Deterministic) {
     auto cfg = makeEnvelopeLane();
-    cfg.envelopes[0].envelope = {poly::EnvTarget::Velocity, 3.0f,
-                                  poly::Shape::Sine, 0.8f, 0.1f};
+    cfg.envelopes[0].envelope = {poly::EnvTarget::Velocity, 3.0f, poly::Shape::Sine, 0.8f, 0.1f};
     cfg.envelopes[0].active = true;
     cfg.envelopeCount = 1;
 

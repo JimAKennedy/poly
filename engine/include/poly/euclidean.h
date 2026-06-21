@@ -1,7 +1,8 @@
 #pragma once
 
-#include "poly/types.h"
 #include <array>
+
+#include "poly/types.h"
 
 namespace poly {
 

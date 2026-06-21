@@ -1,13 +1,14 @@
-#include "poly/engine.h"
-#include "poly/macro.h"
-#include "poly/types.h"
-#include <gtest/gtest.h>
-
 #include <algorithm>
 #include <cmath>
 #include <sstream>
 #include <string>
 #include <vector>
+
+#include <gtest/gtest.h>
+
+#include "poly/engine.h"
+#include "poly/macro.h"
+#include "poly/types.h"
 
 namespace {
 
@@ -65,21 +66,20 @@ struct EventRecord {
     double duration;
 
     bool operator<(const EventRecord& o) const {
-        if (ppq != o.ppq) return ppq < o.ppq;
-        if (pitch != o.pitch) return pitch < o.pitch;
+        if (ppq != o.ppq)
+            return ppq < o.ppq;
+        if (pitch != o.pitch)
+            return pitch < o.pitch;
         return velocity < o.velocity;
     }
 
     bool operator==(const EventRecord& o) const {
-        return ppq == o.ppq && pitch == o.pitch &&
-               velocity == o.velocity && duration == o.duration;
+        return ppq == o.ppq && pitch == o.pitch && velocity == o.velocity && duration == o.duration;
     }
 };
 
-std::vector<EventRecord> renderSorted(poly::Engine& engine,
-                                       const poly::GrooveState& state,
-                                       double ppqStart, double ppqEnd,
-                                       double blockPpq) {
+std::vector<EventRecord> renderSorted(poly::Engine& engine, const poly::GrooveState& state, double ppqStart,
+                                      double ppqEnd, double blockPpq) {
     std::vector<EventRecord> all;
     poly::NoteEventBuffer buf;
     double ppq = ppqStart;
@@ -95,10 +95,8 @@ std::vector<EventRecord> renderSorted(poly::Engine& engine,
         engine.renderRange(tc, state, buf);
 
         for (size_t i = 0; i < buf.count; ++i) {
-            all.push_back({buf.events[i].ppqPosition,
-                           buf.events[i].pitch,
-                           buf.events[i].velocity,
-                           buf.events[i].duration});
+            all.push_back(
+                {buf.events[i].ppqPosition, buf.events[i].pitch, buf.events[i].velocity, buf.events[i].duration});
         }
         ppq = end;
     }
@@ -135,14 +133,12 @@ TEST(GoldenDeterminism, BlockSizeIndependence) {
     poly::Engine engine;
     auto state = makeTestState();
 
-    auto small  = renderSorted(engine, state, 0.0, 16.0, 0.05);
+    auto small = renderSorted(engine, state, 0.0, 16.0, 0.05);
     auto medium = renderSorted(engine, state, 0.0, 16.0, 0.5);
-    auto large  = renderSorted(engine, state, 0.0, 16.0, 2.0);
+    auto large = renderSorted(engine, state, 0.0, 16.0, 2.0);
 
-    EXPECT_EQ(serialize(small), serialize(medium))
-        << "0.05 vs 0.5 PPQ blocks differ";
-    EXPECT_EQ(serialize(small), serialize(large))
-        << "0.05 vs 2.0 PPQ blocks differ";
+    EXPECT_EQ(serialize(small), serialize(medium)) << "0.05 vs 0.5 PPQ blocks differ";
+    EXPECT_EQ(serialize(small), serialize(large)) << "0.05 vs 2.0 PPQ blocks differ";
 }
 
 // --- Test 3: Loop restart produces identical sub-range ---
@@ -156,7 +152,8 @@ TEST(GoldenDeterminism, LoopRestart) {
     // Extract just bars 0-2 from the straight-through
     std::vector<EventRecord> firstTwo;
     for (const auto& e : straight) {
-        if (e.ppq < 8.0) firstTwo.push_back(e);
+        if (e.ppq < 8.0)
+            firstTwo.push_back(e);
     }
 
     // Render bars 0-2 as if starting fresh (simulating loop restart)
@@ -176,10 +173,9 @@ TEST(GoldenDeterminism, PositionJump) {
 
     // Jump: render bars 0-1, then jump to bar 2 and continue
     auto ignored = renderSorted(engine, state, 0.0, 4.0, 0.5);
-    auto jumped  = renderSorted(engine, state, 8.0, 16.0, 0.5);
+    auto jumped = renderSorted(engine, state, 8.0, 16.0, 0.5);
 
-    EXPECT_EQ(serialize(straight), serialize(jumped))
-        << "Position jump then continue differs from straight-through";
+    EXPECT_EQ(serialize(straight), serialize(jumped)) << "Position jump then continue differs from straight-through";
 }
 
 // --- Test 5: Different seed produces different output ---
@@ -217,17 +213,14 @@ TEST(GoldenDeterminism, TempoIndependence) {
 
         engine.renderRange(tc, state, buf);
         for (size_t i = 0; i < buf.count; ++i) {
-            at90.push_back({buf.events[i].ppqPosition,
-                            buf.events[i].pitch,
-                            buf.events[i].velocity,
-                            buf.events[i].duration});
+            at90.push_back(
+                {buf.events[i].ppqPosition, buf.events[i].pitch, buf.events[i].velocity, buf.events[i].duration});
         }
         ppq = end;
     }
     std::sort(at90.begin(), at90.end());
 
-    EXPECT_EQ(serialize(at120), serialize(at90))
-        << "Tempo change affected PPQ positions";
+    EXPECT_EQ(serialize(at120), serialize(at90)) << "Tempo change affected PPQ positions";
 }
 
 // --- Test 7: Not playing produces no events ---
@@ -269,8 +262,10 @@ TEST(GoldenDeterminism, PolymetricPhaseVariation) {
     // (the 5-step cycle misaligns with 4/4)
     std::vector<double> bar0, bar1;
     for (const auto& e : events) {
-        if (e.pitch == 45 && e.ppq < 4.0) bar0.push_back(std::fmod(e.ppq, 4.0));
-        if (e.pitch == 45 && e.ppq >= 4.0 && e.ppq < 8.0) bar1.push_back(e.ppq - 4.0);
+        if (e.pitch == 45 && e.ppq < 4.0)
+            bar0.push_back(std::fmod(e.ppq, 4.0));
+        if (e.pitch == 45 && e.ppq >= 4.0 && e.ppq < 8.0)
+            bar1.push_back(e.ppq - 4.0);
     }
 
     EXPECT_FALSE(bar0.empty());
@@ -305,14 +300,12 @@ TEST(GoldenDeterminism, DynamicShapingBlockIndependence) {
     state.lanes[3].accents.steps[3] = true;
     state.lanes[3].emphasisProb = 0.5f;
 
-    auto small  = renderSorted(engine, state, 0.0, 16.0, 0.05);
+    auto small = renderSorted(engine, state, 0.0, 16.0, 0.05);
     auto medium = renderSorted(engine, state, 0.0, 16.0, 0.5);
-    auto large  = renderSorted(engine, state, 0.0, 16.0, 2.0);
+    auto large = renderSorted(engine, state, 0.0, 16.0, 2.0);
 
-    EXPECT_EQ(serialize(small), serialize(medium))
-        << "Dynamic shaping: 0.05 vs 0.5 PPQ blocks differ";
-    EXPECT_EQ(serialize(small), serialize(large))
-        << "Dynamic shaping: 0.05 vs 2.0 PPQ blocks differ";
+    EXPECT_EQ(serialize(small), serialize(medium)) << "Dynamic shaping: 0.05 vs 0.5 PPQ blocks differ";
+    EXPECT_EQ(serialize(small), serialize(large)) << "Dynamic shaping: 0.05 vs 2.0 PPQ blocks differ";
 }
 
 // --- Test 10: Dynamic shaping deterministic across loop restarts ---
@@ -328,13 +321,13 @@ TEST(GoldenDeterminism, DynamicShapingLoopRestart) {
 
     std::vector<EventRecord> firstTwo;
     for (const auto& e : straight) {
-        if (e.ppq < 8.0) firstTwo.push_back(e);
+        if (e.ppq < 8.0)
+            firstTwo.push_back(e);
     }
 
     auto looped = renderSorted(engine, state, 0.0, 8.0, 0.5);
 
-    EXPECT_EQ(serialize(firstTwo), serialize(looped))
-        << "Dynamic shaping: loop restart differs from straight-through";
+    EXPECT_EQ(serialize(firstTwo), serialize(looped)) << "Dynamic shaping: loop restart differs from straight-through";
 }
 
 // --- Test 11: Envelope modulation deterministic across block sizes ---
@@ -343,31 +336,26 @@ TEST(GoldenDeterminism, EnvelopeBlockIndependence) {
     auto state = makeTestState();
 
     // Per-lane velocity envelope on kick: 3-bar sine
-    state.lanes[0].envelopes[0].envelope = {
-        poly::EnvTarget::Velocity, 3.0f, poly::Shape::Sine, 0.8f, 0.0f};
+    state.lanes[0].envelopes[0].envelope = {poly::EnvTarget::Velocity, 3.0f, poly::Shape::Sine, 0.8f, 0.0f};
     state.lanes[0].envelopes[0].active = true;
     state.lanes[0].envelopeCount = 1;
 
     // Per-lane density envelope on hi-hat: 7-bar ramp
-    state.lanes[2].envelopes[0].envelope = {
-        poly::EnvTarget::Density, 7.0f, poly::Shape::Ramp, 0.6f, 0.25f};
+    state.lanes[2].envelopes[0].envelope = {poly::EnvTarget::Density, 7.0f, poly::Shape::Ramp, 0.6f, 0.25f};
     state.lanes[2].envelopes[0].active = true;
     state.lanes[2].envelopeCount = 1;
 
     // Global velocity envelope: 5-bar triangle
-    state.globalEnvelopes[0] = {
-        poly::EnvTarget::Velocity, 5.0f, poly::Shape::Triangle, 0.5f, 0.1f};
+    state.globalEnvelopes[0] = {poly::EnvTarget::Velocity, 5.0f, poly::Shape::Triangle, 0.5f, 0.1f};
     state.globalEnvelopeCount = 1;
 
     // 8 bars = 32 PPQ — enough for non-dividing periods to show emergence
-    auto small  = renderSorted(engine, state, 0.0, 32.0, 0.05);
+    auto small = renderSorted(engine, state, 0.0, 32.0, 0.05);
     auto medium = renderSorted(engine, state, 0.0, 32.0, 0.5);
-    auto large  = renderSorted(engine, state, 0.0, 32.0, 2.0);
+    auto large = renderSorted(engine, state, 0.0, 32.0, 2.0);
 
-    EXPECT_EQ(serialize(small), serialize(medium))
-        << "Envelope: 0.05 vs 0.5 PPQ blocks differ";
-    EXPECT_EQ(serialize(small), serialize(large))
-        << "Envelope: 0.05 vs 2.0 PPQ blocks differ";
+    EXPECT_EQ(serialize(small), serialize(medium)) << "Envelope: 0.05 vs 0.5 PPQ blocks differ";
+    EXPECT_EQ(serialize(small), serialize(large)) << "Envelope: 0.05 vs 2.0 PPQ blocks differ";
 }
 
 // --- Test 12: Swing + humanize deterministic across block sizes ---
@@ -379,14 +367,12 @@ TEST(GoldenDeterminism, SwingHumanizeBlockIndependence) {
     state.lanes[2].humanizeMs = 5.0f;
     state.lanes[0].noteDuration = 0.75f;
 
-    auto small  = renderSorted(engine, state, 0.0, 16.0, 0.05);
+    auto small = renderSorted(engine, state, 0.0, 16.0, 0.05);
     auto medium = renderSorted(engine, state, 0.0, 16.0, 0.5);
-    auto large  = renderSorted(engine, state, 0.0, 16.0, 2.0);
+    auto large = renderSorted(engine, state, 0.0, 16.0, 2.0);
 
-    EXPECT_EQ(serialize(small), serialize(medium))
-        << "Swing/humanize: 0.05 vs 0.5 PPQ blocks differ";
-    EXPECT_EQ(serialize(small), serialize(large))
-        << "Swing/humanize: 0.05 vs 2.0 PPQ blocks differ";
+    EXPECT_EQ(serialize(small), serialize(medium)) << "Swing/humanize: 0.05 vs 0.5 PPQ blocks differ";
+    EXPECT_EQ(serialize(small), serialize(large)) << "Swing/humanize: 0.05 vs 2.0 PPQ blocks differ";
 }
 
 // --- Test 13: Envelope modulation deterministic across loop restarts ---
@@ -394,26 +380,24 @@ TEST(GoldenDeterminism, EnvelopeLoopRestart) {
     poly::Engine engine;
     auto state = makeTestState();
 
-    state.lanes[0].envelopes[0].envelope = {
-        poly::EnvTarget::Velocity, 3.0f, poly::Shape::Sine, 0.8f, 0.0f};
+    state.lanes[0].envelopes[0].envelope = {poly::EnvTarget::Velocity, 3.0f, poly::Shape::Sine, 0.8f, 0.0f};
     state.lanes[0].envelopes[0].active = true;
     state.lanes[0].envelopeCount = 1;
 
-    state.globalEnvelopes[0] = {
-        poly::EnvTarget::Velocity, 5.0f, poly::Shape::Triangle, 0.5f, 0.1f};
+    state.globalEnvelopes[0] = {poly::EnvTarget::Velocity, 5.0f, poly::Shape::Triangle, 0.5f, 0.1f};
     state.globalEnvelopeCount = 1;
 
     auto straight = renderSorted(engine, state, 0.0, 32.0, 0.5);
 
     std::vector<EventRecord> firstHalf;
     for (const auto& e : straight) {
-        if (e.ppq < 16.0) firstHalf.push_back(e);
+        if (e.ppq < 16.0)
+            firstHalf.push_back(e);
     }
 
     auto looped = renderSorted(engine, state, 0.0, 16.0, 0.5);
 
-    EXPECT_EQ(serialize(firstHalf), serialize(looped))
-        << "Envelope: loop restart differs from straight-through";
+    EXPECT_EQ(serialize(firstHalf), serialize(looped)) << "Envelope: loop restart differs from straight-through";
 }
 
 // --- Test 14: Macro-resolved state deterministic across block sizes ---
@@ -430,12 +414,10 @@ TEST(GoldenDeterminism, MacroResolvedBlockIndependence) {
 
     auto resolved = poly::resolveMacros(state);
 
-    auto small  = renderSorted(engine, resolved, 0.0, 16.0, 0.05);
+    auto small = renderSorted(engine, resolved, 0.0, 16.0, 0.05);
     auto medium = renderSorted(engine, resolved, 0.0, 16.0, 0.5);
-    auto large  = renderSorted(engine, resolved, 0.0, 16.0, 2.0);
+    auto large = renderSorted(engine, resolved, 0.0, 16.0, 2.0);
 
-    EXPECT_EQ(serialize(small), serialize(medium))
-        << "Macro-resolved: 0.05 vs 0.5 PPQ blocks differ";
-    EXPECT_EQ(serialize(small), serialize(large))
-        << "Macro-resolved: 0.05 vs 2.0 PPQ blocks differ";
+    EXPECT_EQ(serialize(small), serialize(medium)) << "Macro-resolved: 0.05 vs 0.5 PPQ blocks differ";
+    EXPECT_EQ(serialize(small), serialize(large)) << "Macro-resolved: 0.05 vs 2.0 PPQ blocks differ";
 }

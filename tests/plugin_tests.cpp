@@ -1,11 +1,11 @@
-#include "poly/bridge.h"
-#include "poly/state_io.h"
-#include "poly/types.h"
+#include <cstring>
+#include <vector>
 
 #include <gtest/gtest.h>
 
-#include <cstring>
-#include <vector>
+#include "poly/bridge.h"
+#include "poly/state_io.h"
+#include "poly/types.h"
 
 // --- ppqToSampleOffset tests ---
 
@@ -128,9 +128,7 @@ TEST(PendingNoteOff, Clear) {
 TEST(PendingNoteOff, PushOverflow) {
     poly::PendingNoteOffBuffer buf;
     for (size_t i = 0; i < poly::PendingNoteOffBuffer::kCapacity; ++i) {
-        EXPECT_TRUE(buf.push({.ppqOff = static_cast<double>(i),
-                              .pitch = 36,
-                              .channel = 0}));
+        EXPECT_TRUE(buf.push({.ppqOff = static_cast<double>(i), .pitch = 36, .channel = 0}));
     }
     EXPECT_FALSE(buf.push({.ppqOff = 999.0, .pitch = 36, .channel = 0}));
     EXPECT_EQ(buf.count(), poly::PendingNoteOffBuffer::kCapacity);
@@ -212,7 +210,8 @@ TEST(StateIO, RoundTrip) {
     // Read
     size_t pos = 0;
     auto read = [&buffer, &pos](void* data, size_t size) -> bool {
-        if (pos + size > buffer.size()) return false;
+        if (pos + size > buffer.size())
+            return false;
         std::memcpy(data, buffer.data() + pos, size);
         pos += size;
         return true;
@@ -255,30 +254,25 @@ TEST(StateIO, RoundTrip) {
     EXPECT_EQ(lr.envelopeCount, lo.envelopeCount);
     EXPECT_EQ(static_cast<uint8_t>(lr.envelopes[0].envelope.target),
               static_cast<uint8_t>(lo.envelopes[0].envelope.target));
-    EXPECT_FLOAT_EQ(lr.envelopes[0].envelope.periodBars,
-                    lo.envelopes[0].envelope.periodBars);
+    EXPECT_FLOAT_EQ(lr.envelopes[0].envelope.periodBars, lo.envelopes[0].envelope.periodBars);
     EXPECT_EQ(static_cast<uint8_t>(lr.envelopes[0].envelope.shape),
               static_cast<uint8_t>(lo.envelopes[0].envelope.shape));
-    EXPECT_FLOAT_EQ(lr.envelopes[0].envelope.depth,
-                    lo.envelopes[0].envelope.depth);
-    EXPECT_FLOAT_EQ(lr.envelopes[0].envelope.phaseOffset,
-                    lo.envelopes[0].envelope.phaseOffset);
+    EXPECT_FLOAT_EQ(lr.envelopes[0].envelope.depth, lo.envelopes[0].envelope.depth);
+    EXPECT_FLOAT_EQ(lr.envelopes[0].envelope.phaseOffset, lo.envelopes[0].envelope.phaseOffset);
     EXPECT_EQ(lr.envelopes[0].active, lo.envelopes[0].active);
 
     // Verify lane 1
     EXPECT_EQ(restored.lanes[1].id, original.lanes[1].id);
     EXPECT_EQ(restored.lanes[1].midiNote, original.lanes[1].midiNote);
     EXPECT_EQ(restored.lanes[1].cycle.steps, original.lanes[1].cycle.steps);
-    EXPECT_FLOAT_EQ(restored.lanes[1].probability,
-                    original.lanes[1].probability);
+    EXPECT_FLOAT_EQ(restored.lanes[1].probability, original.lanes[1].probability);
     EXPECT_EQ(restored.lanes[1].active, original.lanes[1].active);
 
     // Verify global envelopes
     EXPECT_EQ(restored.globalEnvelopeCount, original.globalEnvelopeCount);
     EXPECT_EQ(static_cast<uint8_t>(restored.globalEnvelopes[0].target),
               static_cast<uint8_t>(original.globalEnvelopes[0].target));
-    EXPECT_FLOAT_EQ(restored.globalEnvelopes[0].periodBars,
-                    original.globalEnvelopes[0].periodBars);
+    EXPECT_FLOAT_EQ(restored.globalEnvelopes[0].periodBars, original.globalEnvelopes[0].periodBars);
 }
 
 TEST(StateIO, BadVersionFails) {
@@ -289,7 +283,8 @@ TEST(StateIO, BadVersionFails) {
 
     size_t pos = 0;
     auto read = [&buffer, &pos](void* data, size_t size) -> bool {
-        if (pos + size > buffer.size()) return false;
+        if (pos + size > buffer.size())
+            return false;
         std::memcpy(data, buffer.data() + pos, size);
         pos += size;
         return true;
@@ -315,7 +310,8 @@ TEST(StateIO, TruncatedStreamFails) {
 
     size_t pos = 0;
     auto read = [&buffer, &pos](void* data, size_t size) -> bool {
-        if (pos + size > buffer.size()) return false;
+        if (pos + size > buffer.size())
+            return false;
         std::memcpy(data, buffer.data() + pos, size);
         pos += size;
         return true;
@@ -339,7 +335,8 @@ TEST(StateIO, DefaultStateRoundTrip) {
 
     size_t pos = 0;
     auto read = [&buffer, &pos](void* data, size_t size) -> bool {
-        if (pos + size > buffer.size()) return false;
+        if (pos + size > buffer.size())
+            return false;
         std::memcpy(data, buffer.data() + pos, size);
         pos += size;
         return true;
