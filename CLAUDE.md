@@ -34,6 +34,11 @@ See `IMPLEMENTATION_PLAN.md` for the full architecture, domain model, and phase 
 - Same `(patch, seed, transport)` inputs must produce identical output every time
 - Golden tests enforce determinism in CI
 
+### Code Formatting
+- **Before every commit**, run `clang-format -i --style=file` on all new/modified `.cpp`/`.h` files
+- On macOS the binary is at `/opt/homebrew/opt/llvm/bin/clang-format` (not in PATH by default)
+- CI runs `pre-commit run --all-files` which includes clang-format — unformatted files fail the build
+
 ### Compiler Warnings
 Uses `jk_warnings.cmake` from `cmake/` — `-Wall -Wextra` (GCC/Clang), `/W4` (MSVC) from day one.
 
