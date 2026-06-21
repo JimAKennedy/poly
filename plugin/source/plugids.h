@@ -49,6 +49,10 @@ inline Steinberg::Vst::ParamID velocityOutput(int lane) {
 static constexpr Steinberg::Vst::ParamID kSceneSelect = 500;
 static constexpr Steinberg::Vst::ParamID kSceneMorph = 501;
 
+static constexpr Steinberg::Vst::ParamID kExportTrigger = 600;
+static constexpr Steinberg::Vst::ParamID kCaptureLength = 601;
+static constexpr Steinberg::Vst::ParamID kCaptureReady = 602;
+
 } // namespace ParamIDs
 
 namespace UnitIDs {
@@ -61,6 +65,7 @@ static constexpr Steinberg::Vst::UnitID kMacros = 9;
 static constexpr Steinberg::Vst::UnitID kGlobal = 10;
 static constexpr Steinberg::Vst::UnitID kScene = 11;
 static constexpr Steinberg::Vst::UnitID kOutput = 12;
+static constexpr Steinberg::Vst::UnitID kExport = 13;
 
 } // namespace UnitIDs
 
