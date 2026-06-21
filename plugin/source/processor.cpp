@@ -13,6 +13,7 @@
 #include "poly/constraint.h"
 #include "poly/macro.h"
 #include "poly/scene.h"
+#include "poly/smf_writer.h"
 #include "poly/state_io.h"
 
 namespace poly {
@@ -61,6 +62,8 @@ Steinberg::tresult PLUGIN_API PolyProcessor::setActive(Steinberg::TBool state) {
     if (state) {
         pendingNoteOffs_.clear();
         noteBuffer_.clear();
+        captureBuffer_.clear();
+        exportTriggered_ = false;
         expectedNextPpq_ = -1.0;
     }
     return AudioEffect::setActive(state);
@@ -129,8 +132,9 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
     if (!tc_.playing)
         return Steinberg::kResultOk;
 
-    // --- Handle transport jump: kill pending noteoffs ---
+    // --- Handle transport jump: kill pending noteoffs, clear capture ---
     if (tc_.jumped) {
+        captureBuffer_.clear();
         if (data.outputEvents) {
             PendingNoteOff allOffs[PendingNoteOffBuffer::kCapacity];
             size_t n = pendingNoteOffs_.flushDue(-1e12, 1e12, allOffs, PendingNoteOffBuffer::kCapacity);
@@ -210,6 +214,19 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
         if (note.channel >= 0 && note.channel < kMaxLanes) {
             laneVelocity[note.channel] = note.velocity;
         }
+    }
+
+    // --- Push to capture buffer ---
+    for (size_t i = 0; i < noteBuffer_.count; ++i) {
+        captureBuffer_.push(noteBuffer_.events[i]);
+    }
+
+    // --- Export trigger: snapshot to staging buffer ---
+    if (exportTriggered_ && !exportReady_.load(std::memory_order_acquire)) {
+        exportTriggered_ = false;
+        exportEventCount_ = captureBuffer_.copyRaw(exportEvents_.data(), exportEvents_.size());
+        exportTempo_ = tc_.tempo;
+        exportReady_.store(true, std::memory_order_release);
     }
 
     if (noteBuffer_.count > 0) {
@@ -307,10 +324,46 @@ void PolyProcessor::applyParameter(Steinberg::Vst::ParamID id, double normalized
         case kSeed:
             gs.seed = static_cast<uint64_t>(std::round(normalized * 999999.0));
             break;
+        case kExportTrigger:
+            if (normalized > 0.5)
+                exportTriggered_ = true;
+            break;
+        case kCaptureLength:
+            captureLengthBars_ = 1 + static_cast<int>(std::round(normalized * 31.0));
+            break;
         default:
             break;
         }
     }
+}
+
+Steinberg::tresult PLUGIN_API PolyProcessor::notify(Steinberg::Vst::IMessage* message) {
+    if (!message)
+        return Steinberg::kInvalidArgument;
+
+    if (Steinberg::FIDStringsEqual(message->getMessageID(), "RequestMidiExport")) {
+        if (exportReady_.load(std::memory_order_acquire)) {
+            std::sort(exportEvents_.begin(), exportEvents_.begin() + exportEventCount_,
+                      [](const NoteEvent& a, const NoteEvent& b) { return a.ppqPosition < b.ppqPosition; });
+
+            double ppqOffset = (exportEventCount_ > 0) ? exportEvents_[0].ppqPosition : 0.0;
+            auto smf = writeSMF(exportEvents_.data(), exportEventCount_, exportTempo_, ppqOffset);
+
+            if (auto* reply = allocateMessage()) {
+                reply->setMessageID("MidiExportData");
+                if (auto* attrs = reply->getAttributes()) {
+                    attrs->setBinary("smf", smf.data(), static_cast<Steinberg::uint32>(smf.size()));
+                }
+                sendMessage(reply);
+                reply->release();
+            }
+
+            exportReady_.store(false, std::memory_order_release);
+        }
+        return Steinberg::kResultOk;
+    }
+
+    return AudioEffect::notify(message);
 }
 
 Steinberg::tresult PLUGIN_API PolyProcessor::getState(Steinberg::IBStream* state) {

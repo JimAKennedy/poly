@@ -16,8 +16,10 @@ add_executable(poly_tests
     dynamic_shaping_tests.cpp
     swing_humanize_tests.cpp
     macro_tests.cpp
+    midi_capture_tests.cpp
     plugin_tests.cpp
     scene_tests.cpp
+    smf_writer_tests.cpp
 )
 
 target_link_libraries(poly_tests
