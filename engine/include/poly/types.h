@@ -99,6 +99,15 @@ struct EnvelopeAssign {
     bool active = true;
 };
 
+// --- Constraints ---
+
+struct ConstraintConfig {
+    AccentMask anchorSteps{};
+    bool backbeatProtect = false;
+    int densityMin = 0;
+    int densityMax = kMaxSteps;
+};
+
 // --- Lane Config ---
 
 struct LaneConfig {
@@ -120,6 +129,7 @@ struct LaneConfig {
     bool active = true;
     std::array<EnvelopeAssign, kMaxEnvelopesPerLane> envelopes{};
     int envelopeCount = 0;
+    ConstraintConfig constraints{};
 };
 
 // --- Macros ---
@@ -142,6 +152,7 @@ struct GrooveState {
     int globalEnvelopeCount = 0;
     MacroValues macros{};
     uint64_t seed = 0;
+    int globalDensityCeiling = 0;
 };
 
 } // namespace poly

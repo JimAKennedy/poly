@@ -59,6 +59,10 @@ LaneConfig interpolateLane(const LaneConfig& a, const LaneConfig& b, float t) {
         r.envelopes[idx].envelope = interpolateEnvelope(a.envelopes[idx].envelope, b.envelopes[idx].envelope, t);
         r.envelopes[idx].active = snap(a.envelopes[idx].active, b.envelopes[idx].active, t);
     }
+    r.constraints.anchorSteps = snap(a.constraints.anchorSteps, b.constraints.anchorSteps, t);
+    r.constraints.backbeatProtect = snap(a.constraints.backbeatProtect, b.constraints.backbeatProtect, t);
+    r.constraints.densityMin = snap(a.constraints.densityMin, b.constraints.densityMin, t);
+    r.constraints.densityMax = snap(a.constraints.densityMax, b.constraints.densityMax, t);
     return r;
 }
 
@@ -83,6 +87,7 @@ GrooveState interpolateGrooveState(const GrooveState& a, const GrooveState& b, f
         lerpf(a.macros.tension, b.macros.tension, t),         lerpf(a.macros.humanize, b.macros.humanize, t),
     };
     r.seed = snap(a.seed, b.seed, t);
+    r.globalDensityCeiling = snap(a.globalDensityCeiling, b.globalDensityCeiling, t);
     return r;
 }
 

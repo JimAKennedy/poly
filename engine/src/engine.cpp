@@ -108,30 +108,30 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
             }
 
             bool isPatternStep = pattern[static_cast<size_t>(cycleStep)];
+            bool isAnchor = cfg.constraints.anchorSteps.steps[static_cast<size_t>(cycleStep)];
 
-            if (!isPatternStep) {
-                // Non-pattern step: only fire as a fill note
-                if (fillMod <= 0.0f)
-                    continue;
-                float fillProb = std::clamp(fillMod, 0.0f, 1.0f);
-                float fillRoll = deterministicRand(state.seed, cfg.id, absStep, 4);
-                if (fillRoll >= fillProb)
+            if (!isAnchor) {
+                if (!isPatternStep) {
+                    if (fillMod <= 0.0f)
+                        continue;
+                    float fillProb = std::clamp(fillMod, 0.0f, 1.0f);
+                    float fillRoll = deterministicRand(state.seed, cfg.id, absStep, 4);
+                    if (fillRoll >= fillProb)
+                        continue;
+                }
+
+                if (activationMod < 0.0f) {
+                    float activationProb = std::clamp(1.0f + activationMod, 0.0f, 1.0f);
+                    float actRoll = deterministicRand(state.seed, cfg.id, absStep, 5);
+                    if (actRoll >= activationProb)
+                        continue;
+                }
+
+                float effectiveProb = std::clamp(cfg.probability + probMod, 0.0f, 1.0f);
+                float probRoll = deterministicRand(state.seed, cfg.id, absStep, 0);
+                if (probRoll >= effectiveProb)
                     continue;
             }
-
-            // ActivationWeight: envelope-driven lane suppression
-            if (activationMod < 0.0f) {
-                float activationProb = std::clamp(1.0f + activationMod, 0.0f, 1.0f);
-                float actRoll = deterministicRand(state.seed, cfg.id, absStep, 5);
-                if (actRoll >= activationProb)
-                    continue;
-            }
-
-            // Probability gate with density/probability envelope modulation
-            float effectiveProb = std::clamp(cfg.probability + probMod, 0.0f, 1.0f);
-            float probRoll = deterministicRand(state.seed, cfg.id, absStep, 0);
-            if (probRoll >= effectiveProb)
-                continue;
 
             // Velocity with spread: channel 1 = velocity variation
             float velBase = cfg.baseVelocity / 127.0f;
