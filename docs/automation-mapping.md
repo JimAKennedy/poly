@@ -4,78 +4,102 @@
 
 Poly exposes a curated set of parameters to Cubase automation — those that are musically meaningful to automate in real time. Internal compound parameters and structural settings (cycle length, hit count, pattern rotation) are deliberately kept internal: automating them would create discontinuities that break determinism guarantees.
 
-## ParamID Layout
+## VST3 Unit Hierarchy
 
-ParamIDs are organized in ranges to avoid conflicts and allow future expansion.
+Parameters are organized into named VST3 Units for clean grouping in Cubase's automation lanes.
+
+| UnitID | Name | Parent | Contents |
+|--------|------|--------|----------|
+| 0 | Root | — | (container) |
+| 1–8 | Lane 1–8 | Root | Per-lane parameters |
+| 9 | Macros | Root | 6 macro controls |
+| 10 | Global | Root | Active Lanes, Seed |
+| 11 | Scene | Root | Select, Morph |
+| 12 | Output | Root | Per-lane velocity readouts |
+
+In Cubase, automation lane names appear as `Unit / Parameter` (e.g., `Lane 1 / Probability`).
+
+## ParamID Layout
 
 | Range | Category | Description |
 |-------|----------|-------------|
-| 0–99 | Global | Seed, master controls |
-| 100–199 | Macros | High-level compound controls |
-| 1000–1799 | Lane 0 | Per-lane parameters (100 IDs per lane) |
-| 1800–2599 | Lane 1 | |
-| 2600–3399 | Lane 2 | |
-| 3400–4199 | Lane 3 | |
-| 4200–4999 | Lane 4 | |
-| 5000–5799 | Lane 5 | |
-| 5800–6599 | Lane 6 | |
-| 6600–7399 | Lane 7 | |
+| 0–127 | Lanes | Per-lane parameters (16 IDs per lane × 8 lanes) |
+| 200–205 | Macros | High-level compound controls |
+| 300–301 | Global | Active Lanes, Seed |
+| 400–407 | Output | Per-lane velocity readouts (read-only) |
+| 500–501 | Scene | Scene Select, Scene Morph |
 
 ### Lane Offset Formula
 
 ```
-ParamID = kLaneBase + (laneIndex * kLaneStride) + paramOffset
+ParamID = lane * 16 + offset
 ```
 
-Where `kLaneBase = 1000` and `kLaneStride = 800`.
+Where `lane` is 0–7 and `offset` is the parameter within the lane.
 
 ## Exposed Parameters (Automatable)
 
-### Global Parameters
+### Per-Lane Parameters (offsets within lane range)
 
-| ParamID | Name | Normalized Range | Plain Range | Unit |
-|---------|------|-----------------|-------------|------|
-| 0 | Active Lane Count | 0.0–1.0 | 4–8 | count |
+| Offset | Name | Unit | Steps | Default | Plain Range |
+|--------|------|------|-------|---------|-------------|
+| 0 | Probability | % | 0 | 1.0 | 0–100% |
+| 1 | Base Velocity | — | 127 | 100 | 0–127 |
+| 2 | Emphasis | % | 0 | 0.5 | 0–100% |
+| 3 | Ghost Floor | — | 127 | 30 | 0–127 |
+| 4 | Spread | % | 0 | 0.05 | 0–100% |
+| 5 | Swing | % | 0 | 0.0 | 0–100% |
+| 6 | Humanize | ms | 0 | 0.0 | 0–50 ms |
+| 7 | Duration | beats | 0 | 0.0 | 0–4 beats |
+| 8 | Active | — | 1 | 1.0 | Off/On |
 
 ### Macro Parameters
 
-| ParamID | Name | Normalized Range | Plain Range | Unit |
-|---------|------|-----------------|-------------|------|
-| 100 | Complexity | 0.0–1.0 | 0.0–1.0 | — |
-| 101 | Density | 0.0–1.0 | 0.0–1.0 | — |
-| 102 | Syncopation | 0.0–1.0 | 0.0–1.0 | — |
-| 103 | Swing | 0.0–1.0 | 0.0–1.0 | — |
-| 104 | Tension | 0.0–1.0 | 0.0–1.0 | — |
-| 105 | Humanize | 0.0–1.0 | 0.0–1.0 | — |
+| ParamID | Name | Unit | Default |
+|---------|------|------|---------|
+| 200 | Complexity | % | 0.5 |
+| 201 | Density | % | 0.5 |
+| 202 | Syncopation | % | 0.0 |
+| 203 | Swing | % | 0.0 |
+| 204 | Tension | % | 0.0 |
+| 205 | Humanize | % | 0.0 |
 
-### Per-Lane Parameters (offsets within lane range)
+### Global Parameters
 
-| Offset | Name | Normalized Range | Plain Range | Unit |
-|--------|------|-----------------|-------------|------|
-| 0 | Probability | 0.0–1.0 | 0.0–1.0 | — |
-| 1 | Base Velocity | 0.0–1.0 | 0–127 | velocity |
-| 2 | Emphasis Probability | 0.0–1.0 | 0.0–1.0 | — |
-| 3 | Ghost Floor | 0.0–1.0 | 0–127 | velocity |
-| 4 | Velocity Spread | 0.0–1.0 | 0.0–1.0 | — |
-| 5 | Humanize | 0.0–1.0 | 0.0–50.0 | ms |
-| 6 | Lane Active | 0.0–1.0 | off/on | toggle |
+| ParamID | Name | Steps | Default | Plain Range |
+|---------|------|-------|---------|-------------|
+| 300 | Active Lanes | 7 | 4 | 1–8 |
+| 301 | Seed | 0 | 0 | 0–999999 |
+
+### Scene Parameters
+
+| ParamID | Name | Unit | Steps | Default |
+|---------|------|------|-------|---------|
+| 500 | Select | — | 2 | A (0) |
+| 501 | Morph | % | 0 | 0.0 |
+
+### Output Parameters (Read-Only)
+
+| ParamID | Name | Description |
+|---------|------|-------------|
+| 400–407 | Lane 1–8 | Last triggered velocity per lane |
 
 ## Internal Parameters (Not Automatable)
 
-These parameters are set via the editor UI or presets only. They are excluded from automation because changing them mid-playback would break deterministic output or create musical discontinuities.
+These are set via the editor UI or presets only. They are excluded from automation because changing them mid-playback would break deterministic output or create musical discontinuities.
 
 | Parameter | Reason |
 |-----------|--------|
-| Cycle Steps | Changes pattern length mid-bar → broken cycles |
-| Subdivision | Redefines step grid → note position discontinuity |
-| Hit Count | Recomputes Euclidean pattern → all note positions shift |
-| Rotation | Shifts pattern phase → note positions jump |
+| Cycle Steps | Changes pattern length mid-bar — broken cycles |
+| Subdivision | Redefines step grid — note position discontinuity |
+| Hit Count | Recomputes Euclidean pattern — all note positions shift |
+| Rotation | Shifts pattern phase — note positions jump |
 | MIDI Note | Drum voice change is a preset choice, not an automation target |
-| Seed | Changing seed changes all probability/velocity rolls simultaneously |
 | Envelope assignments | Structural change to modulation routing |
 | Role | Semantic label, no runtime effect |
+| Constraint config | Structural guardrails, not real-time controls |
 
-## Normalized ↔ Plain Conversion
+## Normalized / Plain Conversion
 
 All VST3 parameters use normalized `[0.0, 1.0]` range internally. Conversion:
 
@@ -106,9 +130,3 @@ VST3 supports sample-accurate parameter changes within a block. Poly handles thi
 ### Default Values
 
 All parameters have meaningful defaults that produce a playable groove without user intervention. The macro defaults (all 0.5 or 0.0) represent a neutral starting point.
-
-## Future Considerations
-
-- **Scene switching**: A dedicated scene/snapshot parameter may be added in Phase 2 for automating groove transitions
-- **Envelope depth**: Per-lane envelope depth parameters may be exposed for real-time control of modulation intensity
-- **Per-lane mute groups**: Automatable mute/solo per lane for arrangement-driven lane activation
