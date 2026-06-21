@@ -433,7 +433,7 @@ TEST(EnvelopeTargets, ZeroDepthNoEffectAllTargets) {
     auto baseline = renderOneLane(cfg, 0.0, 4.0);
 
     poly::EnvTarget targets[] = {
-        poly::EnvTarget::Probability, poly::EnvTarget::AccentBias,  poly::EnvTarget::NoteLength,
+        poly::EnvTarget::Probability,     poly::EnvTarget::AccentBias,       poly::EnvTarget::NoteLength,
         poly::EnvTarget::TimingLooseness, poly::EnvTarget::ActivationWeight, poly::EnvTarget::FillLikelihood,
     };
 
@@ -447,7 +447,8 @@ TEST(EnvelopeTargets, ZeroDepthNoEffectAllTargets) {
         testCfg.envelopeCount = 1;
 
         auto result = renderOneLane(testCfg, 0.0, 4.0);
-        EXPECT_EQ(result.size(), baseline.size()) << "Target " << static_cast<int>(target) << " with depth=0 changed note count";
+        EXPECT_EQ(result.size(), baseline.size())
+            << "Target " << static_cast<int>(target) << " with depth=0 changed note count";
     }
 }
 
