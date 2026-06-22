@@ -9,9 +9,39 @@
 
 namespace poly {
 
+static const VSTGUI::CColor kLaneColors[] = {
+    VSTGUI::CColor(0x4A, 0x9E, 0xFF, 0xFF), VSTGUI::CColor(0xF5, 0xA6, 0x23, 0xFF),
+    VSTGUI::CColor(0x27, 0xAE, 0x60, 0xFF), VSTGUI::CColor(0xE7, 0x4C, 0x3C, 0xFF),
+    VSTGUI::CColor(0x9B, 0x59, 0xB6, 0xFF), VSTGUI::CColor(0x1A, 0xBC, 0x9C, 0xFF),
+    VSTGUI::CColor(0xE6, 0x7E, 0x22, 0xFF), VSTGUI::CColor(0x34, 0x98, 0xDB, 0xFF),
+};
+
 LaneGridView::LaneGridView(const VSTGUI::CRect& size, Steinberg::Vst::EditController* controller)
     : CView(size), controller_(controller) {
-    setWantsFocus(false);
+    setMouseEnabled(true);
+}
+
+LaneGridView::~LaneGridView() {
+    if (refreshTimer_) {
+        refreshTimer_->stop();
+        refreshTimer_ = nullptr;
+    }
+}
+
+bool LaneGridView::attached(CView* parent) {
+    if (CView::attached(parent)) {
+        refreshTimer_ = VSTGUI::makeOwned<VSTGUI::CVSTGUITimer>([this](VSTGUI::CVSTGUITimer*) { invalid(); }, 33);
+        return true;
+    }
+    return false;
+}
+
+bool LaneGridView::removed(CView* parent) {
+    if (refreshTimer_) {
+        refreshTimer_->stop();
+        refreshTimer_ = nullptr;
+    }
+    return CView::removed(parent);
 }
 
 void LaneGridView::draw(VSTGUI::CDrawContext* context) {
@@ -21,8 +51,6 @@ void LaneGridView::draw(VSTGUI::CDrawContext* context) {
     context->setFillColor(CColor(0x1E, 0x1E, 0x26, 0xFF));
     context->drawRect(bounds, kDrawFilled);
 
-    constexpr int kMaxLanes = 8;
-    constexpr double kPad = 4.0;
     double laneH = (bounds.getHeight() - kPad * (kMaxLanes + 1)) / kMaxLanes;
     double laneW = bounds.getWidth() - kPad * 2;
 
@@ -38,11 +66,14 @@ void LaneGridView::draw(VSTGUI::CDrawContext* context) {
         double activeNorm = controller_->getParamNormalized(activeId);
         bool active = activeNorm > 0.5;
 
-        CColor bg = active ? CColor(0x4A, 0x9E, 0xFF, 0x18) : CColor(0x2A, 0x2A, 0x36, 0xFF);
+        auto laneColor = kLaneColors[lane];
+        CColor bg =
+            active ? CColor(laneColor.red, laneColor.green, laneColor.blue, 0x18) : CColor(0x2A, 0x2A, 0x36, 0xFF);
         context->setFillColor(bg);
         context->drawRect(laneRect, kDrawFilled);
 
-        CColor border = active ? CColor(0x4A, 0x9E, 0xFF, 0x60) : CColor(0x3A, 0x3A, 0x48, 0xFF);
+        CColor border =
+            active ? CColor(laneColor.red, laneColor.green, laneColor.blue, 0x60) : CColor(0x3A, 0x3A, 0x48, 0xFF);
         context->setFrameColor(border);
         context->setLineWidth(1.0);
         context->drawRect(laneRect, kDrawStroked);
@@ -67,7 +98,7 @@ void LaneGridView::draw(VSTGUI::CDrawContext* context) {
         if (active && prob > 0.0) {
             double barW = (laneW - 140) * prob;
             CRect barRect(laneRect.left + 95, laneRect.top + 2, laneRect.left + 95 + barW, laneRect.bottom - 2);
-            context->setFillColor(CColor(0x4A, 0x9E, 0xFF, 0x60));
+            context->setFillColor(CColor(laneColor.red, laneColor.green, laneColor.blue, 0x60));
             context->drawRect(barRect, kDrawFilled);
         }
 
@@ -90,13 +121,96 @@ void LaneGridView::draw(VSTGUI::CDrawContext* context) {
                 double dotY = indicatorCy + indicatorR * 0.75 * std::sin(angle);
                 constexpr double kDotR = 2.5;
                 CRect dot(dotX - kDotR, dotY - kDotR, dotX + kDotR, dotY + kDotR);
-                context->setFillColor(CColor(0x4A, 0x9E, 0xFF, 0xFF));
+                context->setFillColor(laneColor);
                 context->drawEllipse(dot, kDrawFilled);
             }
         }
     }
 
     setDirty(false);
+}
+
+VSTGUI::CRect LaneGridView::laneRect(int lane) const {
+    auto bounds = getViewSize();
+    double laneH = (bounds.getHeight() - kPad * (kMaxLanes + 1)) / kMaxLanes;
+    double laneW = bounds.getWidth() - kPad * 2;
+    double y = bounds.top + kPad + lane * (laneH + kPad);
+    return VSTGUI::CRect(bounds.left + kPad, y, bounds.left + kPad + laneW, y + laneH);
+}
+
+int LaneGridView::hitTestLane(const VSTGUI::CPoint& where) const {
+    for (int i = 0; i < kMaxLanes; ++i) {
+        if (laneRect(i).pointInside(where))
+            return i;
+    }
+    return -1;
+}
+
+double LaneGridView::probabilityFromX(int lane, VSTGUI::CCoord x) const {
+    auto lr = laneRect(lane);
+    double barLeft = lr.left + 95;
+    double barW = lr.getWidth() - 140;
+    double norm = (x - barLeft) / barW;
+    if (norm < 0.0)
+        norm = 0.0;
+    if (norm > 1.0)
+        norm = 1.0;
+    return norm;
+}
+
+VSTGUI::CMouseEventResult LaneGridView::onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) {
+    if (!(buttons & VSTGUI::kLButton))
+        return VSTGUI::kMouseEventNotHandled;
+
+    int lane = hitTestLane(where);
+    if (lane < 0)
+        return VSTGUI::kMouseEventNotHandled;
+
+    auto lr = laneRect(lane);
+    double clickX = where.x - lr.left;
+
+    if (clickX < 90) {
+        auto activeId = ParamIDs::laneParam(lane, ParamIDs::kActive);
+        double cur = controller_->getParamNormalized(activeId);
+        double next = cur > 0.5 ? 0.0 : 1.0;
+        controller_->beginEdit(activeId);
+        controller_->setParamNormalized(activeId, next);
+        controller_->performEdit(activeId, next);
+        controller_->endEdit(activeId);
+        invalid();
+        return VSTGUI::kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+    }
+
+    auto probId = ParamIDs::laneParam(lane, ParamIDs::kProbability);
+    dragLane_ = lane;
+    controller_->beginEdit(probId);
+    double prob = probabilityFromX(lane, where.x);
+    controller_->setParamNormalized(probId, prob);
+    controller_->performEdit(probId, prob);
+    invalid();
+    return VSTGUI::kMouseEventHandled;
+}
+
+VSTGUI::CMouseEventResult LaneGridView::onMouseMoved(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) {
+    if (dragLane_ < 0)
+        return VSTGUI::kMouseEventNotHandled;
+
+    auto probId = ParamIDs::laneParam(dragLane_, ParamIDs::kProbability);
+    double prob = probabilityFromX(dragLane_, where.x);
+    controller_->setParamNormalized(probId, prob);
+    controller_->performEdit(probId, prob);
+    invalid();
+    return VSTGUI::kMouseEventHandled;
+}
+
+VSTGUI::CMouseEventResult LaneGridView::onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) {
+    if (dragLane_ < 0)
+        return VSTGUI::kMouseEventNotHandled;
+
+    auto probId = ParamIDs::laneParam(dragLane_, ParamIDs::kProbability);
+    controller_->endEdit(probId);
+    dragLane_ = -1;
+    return VSTGUI::kMouseEventHandled;
 }
 
 } // namespace poly

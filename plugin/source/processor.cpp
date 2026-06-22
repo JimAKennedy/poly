@@ -66,6 +66,7 @@ Steinberg::tresult PLUGIN_API PolyProcessor::setActive(Steinberg::TBool state) {
         captureBuffer_.clear();
         exportTriggered_ = false;
         expectedNextPpq_ = -1.0;
+        macroSmoother_.initialized = false;
     }
     return AudioEffect::setActive(state);
 }
@@ -155,15 +156,23 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
         pendingNoteOffs_.clear();
     }
 
-    // --- Resolve scene and render ---
-    GrooveState resolved;
+    // --- Resolve scene with smoothed macros and render ---
+    GrooveState base;
     if (sceneState_.select == SceneSelect::Morph) {
-        GrooveState base = interpolateGrooveState(sceneState_.sceneA, sceneState_.sceneB, sceneState_.morphAmount);
-        resolved = resolveConstraints(base, resolveMacros(base));
+        base = interpolateGrooveState(sceneState_.sceneA, sceneState_.sceneB, sceneState_.morphAmount);
+    } else if (sceneState_.select == SceneSelect::B) {
+        base = sceneState_.sceneB;
     } else {
-        const auto& base = (sceneState_.select == SceneSelect::B) ? sceneState_.sceneB : sceneState_.sceneA;
-        resolved = resolveConstraints(base, resolveMacros(base));
+        base = sceneState_.sceneA;
     }
+
+    macroSmoother_.setTarget(base.macros);
+    if (tc_.jumped)
+        macroSmoother_.snapToTarget();
+    macroSmoother_.advance(tc_.sampleRate, tc_.blockSize);
+    base.macros = macroSmoother_.current;
+
+    GrooveState resolved = resolveConstraints(base, resolveMacros(base));
     engine_.renderRange(tc_, resolved, noteBuffer_);
 
     // --- Emit MIDI events ---
