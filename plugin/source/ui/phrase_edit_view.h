@@ -20,10 +20,10 @@ public:
 
 private:
     static constexpr int kMaxLanes = 8;
-    static constexpr int kKnobCount = 5;
+    static constexpr int kKnobCount = 6;
     static constexpr double kDragSensitivity = 200.0;
 
-    enum class ValueFormat { Beats, Percent, BipolarSteps };
+    enum class ValueFormat { Beats, Percent, BipolarSteps, BipolarMs };
 
     struct KnobDef {
         int paramOffset;

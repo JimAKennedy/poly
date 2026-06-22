@@ -45,6 +45,7 @@ static constexpr LaneParamDef kLaneParamDefs[] = {
     {ParamIDs::kMutationRate, "Mutation", "%", 0, 0.0},
     {ParamIDs::kDriftRate, "Drift Rate", "st/bar", 0, 0.5},
     {ParamIDs::kTimingOffset, "Timing Offset", "ms", 0, 0.5},
+    {ParamIDs::kKotekanSource, "Kotekan Source", "", 8, 0.0},
 };
 
 } // namespace
@@ -209,6 +210,10 @@ Steinberg::tresult PLUGIN_API PolyController::setComponentState(Steinberg::IBStr
         setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kMutationRate), cfg.mutationRate);
         setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kDriftRate),
                            static_cast<double>((cfg.driftRate + 4.0f) / 8.0f));
+        setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kTimingOffset),
+                           static_cast<double>((cfg.timingOffsetMs + 20.0f) / 40.0f));
+        setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kKotekanSource),
+                           static_cast<double>(cfg.kotekanSourceLane + 1) / 8.0);
     }
 
     setParamNormalized(ParamIDs::kMacroComplexity, gs.macros.complexity);
