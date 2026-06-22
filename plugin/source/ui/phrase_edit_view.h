@@ -20,13 +20,16 @@ public:
 
 private:
     static constexpr int kMaxLanes = 8;
-    static constexpr int kKnobCount = 3;
+    static constexpr int kKnobCount = 5;
     static constexpr double kDragSensitivity = 200.0;
+
+    enum class ValueFormat { Beats, Percent, BipolarSteps };
 
     struct KnobDef {
         int paramOffset;
         const char* label;
-        double maxBeats;
+        double maxValue;
+        ValueFormat format;
     };
     static const KnobDef kKnobs[kKnobCount];
 
@@ -36,7 +39,7 @@ private:
     int hitTestTab(const VSTGUI::CPoint& where) const;
     int hitTestKnob(const VSTGUI::CPoint& where) const;
     void drawKnob(VSTGUI::CDrawContext* ctx, const VSTGUI::CRect& rect, double value, const VSTGUI::CColor& color,
-                  const char* label, double maxBeats, bool enabled);
+                  const KnobDef& def, bool enabled);
     void drawPhraseSchematic(VSTGUI::CDrawContext* ctx, const VSTGUI::CColor& color, double lenBeats, double gapBeats,
                              double ofsBeats);
 
