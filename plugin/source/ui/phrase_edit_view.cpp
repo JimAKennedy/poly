@@ -21,9 +21,11 @@ static const CColor kLaneColors[] = {
 static const char* kLaneNames[] = {"Kick", "Snare", "HH Cl", "HH Op", "Tom H", "Tom L", "Ride", "Crash"};
 
 const PhraseEditView::KnobDef PhraseEditView::kKnobs[kKnobCount] = {
-    {ParamIDs::kPhraseLength, "Len", 64.0},
-    {ParamIDs::kPhraseGap, "Gap", 64.0},
-    {ParamIDs::kPhraseOffset, "Ofs", 64.0},
+    {ParamIDs::kPhraseLength, "Len", 64.0, ValueFormat::Beats},
+    {ParamIDs::kPhraseGap, "Gap", 64.0, ValueFormat::Beats},
+    {ParamIDs::kPhraseOffset, "Ofs", 64.0, ValueFormat::Beats},
+    {ParamIDs::kMutationRate, "Mut", 100.0, ValueFormat::Percent},
+    {ParamIDs::kDriftRate, "Drift", 4.0, ValueFormat::BipolarSteps},
 };
 
 PhraseEditView::PhraseEditView(const CRect& size, Steinberg::Vst::EditController* controller)
@@ -61,9 +63,9 @@ CRect PhraseEditView::laneTabRect(int lane) const {
 }
 
 CRect PhraseEditView::knobRect(int knob) const {
+    static constexpr double kKnobX[] = {308, 364, 420, 490, 546};
     auto bounds = getViewSize();
-    double startX = bounds.left + 310.0;
-    double x = startX + knob * 90.0;
+    double x = bounds.left + kKnobX[knob];
     return CRect(x, bounds.top + 16, x + 32, bounds.top + 48);
 }
 
@@ -91,7 +93,8 @@ int PhraseEditView::hitTestKnob(const CPoint& where) const {
 }
 
 void PhraseEditView::drawKnob(CDrawContext* ctx, const CRect& rect, double value, const CColor& color,
-                              const char* label, double maxBeats, bool enabled) {
+                              const KnobDef& def, bool enabled) {
+    const char* label = def.label;
     double cx = rect.left + rect.getWidth() / 2;
     double cy = rect.top + rect.getHeight() / 2;
     double r = std::min(rect.getWidth(), rect.getHeight()) / 2 - 2;
@@ -139,14 +142,27 @@ void PhraseEditView::drawKnob(CDrawContext* ctx, const CRect& rect, double value
     CRect labelRect(rect.left - 8, rect.bottom + 1, rect.right + 8, rect.bottom + 12);
     ctx->drawString(label, labelRect, kCenterText);
 
-    double beats = value * maxBeats;
     char valStr[16];
     if (!enabled) {
         std::snprintf(valStr, sizeof(valStr), "--");
-    } else if (beats < 0.05) {
-        std::snprintf(valStr, sizeof(valStr), "off");
+    } else if (def.format == ValueFormat::Beats) {
+        double beats = value * def.maxValue;
+        if (beats < 0.05)
+            std::snprintf(valStr, sizeof(valStr), "off");
+        else
+            std::snprintf(valStr, sizeof(valStr), "%.1f bt", beats);
+    } else if (def.format == ValueFormat::Percent) {
+        double pct = value * def.maxValue;
+        if (pct < 0.5)
+            std::snprintf(valStr, sizeof(valStr), "off");
+        else
+            std::snprintf(valStr, sizeof(valStr), "%.0f%%", pct);
     } else {
-        std::snprintf(valStr, sizeof(valStr), "%.1f bt", beats);
+        double steps = (value - 0.5) * 2.0 * def.maxValue;
+        if (std::fabs(steps) < 0.05)
+            std::snprintf(valStr, sizeof(valStr), "off");
+        else
+            std::snprintf(valStr, sizeof(valStr), "%+.1f st", steps);
     }
     auto smallFont = makeOwned<CFontDesc>("Arial", 8.0);
     ctx->setFont(smallFont);
@@ -315,14 +331,14 @@ void PhraseEditView::draw(CDrawContext* context) {
         auto r = knobRect(k);
         auto paramId = ParamIDs::laneParam(selectedLane_, kKnobs[k].paramOffset);
         double value = controller_->getParamNormalized(paramId);
-        bool enabled = (k == 0) || lenActive;
-        drawKnob(context, r, value, laneColor, kKnobs[k].label, kKnobs[k].maxBeats, enabled);
+        bool enabled = (k == 0) || (k <= 2 && lenActive) || (k >= 3);
+        drawKnob(context, r, value, laneColor, kKnobs[k], enabled);
     }
 
     double gapValue = controller_->getParamNormalized(ParamIDs::laneParam(selectedLane_, kKnobs[1].paramOffset));
     double ofsValue = controller_->getParamNormalized(ParamIDs::laneParam(selectedLane_, kKnobs[2].paramOffset));
-    drawPhraseSchematic(context, laneColor, lenValue * kKnobs[0].maxBeats, gapValue * kKnobs[1].maxBeats,
-                        ofsValue * kKnobs[2].maxBeats);
+    drawPhraseSchematic(context, laneColor, lenValue * kKnobs[0].maxValue, gapValue * kKnobs[1].maxValue,
+                        ofsValue * kKnobs[2].maxValue);
 
     setDirty(false);
 }
@@ -340,7 +356,7 @@ CMouseEventResult PhraseEditView::onMouseDown(CPoint& where, const CButtonState&
 
     int knob = hitTestKnob(where);
     if (knob >= 0) {
-        if (knob > 0) {
+        if (knob >= 1 && knob <= 2) {
             auto lenId = ParamIDs::laneParam(selectedLane_, kKnobs[0].paramOffset);
             if (controller_->getParamNormalized(lenId) < 0.005)
                 return kMouseEventNotHandled;
