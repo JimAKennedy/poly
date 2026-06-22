@@ -21,12 +21,12 @@ Complement computed from source lane Euclidean output; paired lane skips its own
 
 ## Tasks
 
-- [ ] **T01: Add kotekan linking fields to LaneConfig** `est:15min`
+- [x] **T01: Add kotekan linking fields to LaneConfig** `est:15min`
   Add kotekanSourceLane (int, -1=none, 0-7=source lane index) to LaneConfig. When set, this lane's pattern is the complement of the source lane's Euclidean pattern (all gaps filled, all hits removed). The lane keeps its own midiNote, baseVelocity, and other params.
   - Files: `engine/include/poly/types.h`
   - Verify: Build compiles; existing tests pass unchanged
 
-- [ ] **T02: Implement kotekan complement generation in renderRange** `est:1h`
+- [x] **T02: Implement kotekan complement generation in renderRange** `est:1h`
   In renderRange(), when processing a lane with kotekanSourceLane >= 0:
   - Look up source lane config
   - Generate source lane Euclidean pattern
@@ -37,7 +37,7 @@ Complement computed from source lane Euclidean output; paired lane skips its own
   - Files: `engine/src/engine.cpp`
   - Verify: Build + existing tests pass; kotekanSourceLane=-1 produces identical output
 
-- [ ] **T03: State serialization and golden tests for kotekan** `est:45min`
+- [x] **T03: State serialization and golden tests for kotekan** `est:45min`
   Serialize kotekanSourceLane. Add golden tests:
   1. Kotekan pair: lane A plays E(3,8), lane B is complement (plays the 5 gaps)
   2. Source + complement notes together fill all 8 positions exactly
@@ -46,7 +46,7 @@ Complement computed from source lane Euclidean output; paired lane skips its own
   - Files: `plugin/source/processor.cpp`, `tests/golden_tests.cpp`
   - Verify: ctest --test-dir build -R golden passes
 
-- [ ] **T04: Lane grid view shows kotekan pairs** `est:45min`
+- [x] **T04: Lane grid view shows kotekan pairs** `est:45min`
   Update lane_grid_view to visually indicate kotekan-linked lanes — show a link icon or connecting line between paired lanes, and render complement steps in a distinct color.
   - Files: `plugin/source/ui/lane_grid_view.cpp`, `plugin/source/ui/lane_grid_view.h`
   - Verify: Build compiles; visual smoke test passes

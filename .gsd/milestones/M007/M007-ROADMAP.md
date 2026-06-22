@@ -25,10 +25,10 @@
 - [x] **S03: S03** `risk:high` `depends:[]`
   > After this: Two lanes with identical patterns gradually phase against each other over bars, creating Reich-style emergent rhythms
 
-- [ ] **S04: Lane Timing Offset** `risk:low` `depends:[]`
+- [x] **S04: S04** `risk:low` `depends:[]`
   > After this: Kick channel offset +5ms, hi-hat -3ms creating a human pocket feel that swing alone cannot achieve
 
-- [ ] **S05: Kotekan Pairs** `risk:medium` `depends:[S01]`
+- [x] **S05: S05** `risk:medium` `depends:[]`
   > After this: Mark two lanes as a kotekan pair — one gets the Euclidean hits, the other fills the gaps, creating interlocking Balinese-style patterns on two MIDI notes
 
 - [ ] **S06: Updated Factory Presets** `risk:low` `depends:[S01,S02,S03,S04,S05]`

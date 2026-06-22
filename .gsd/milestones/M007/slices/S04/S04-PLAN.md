@@ -21,12 +21,12 @@ Offset applied at NoteEvent emission in renderRange; converts ms to samples usin
 
 ## Tasks
 
-- [ ] **T01: Add timingOffsetMs to LaneConfig** `est:15min`
+- [x] **T01: Add timingOffsetMs to LaneConfig** `est:15min`
   Add timingOffsetMs (float, milliseconds, default 0.0) to LaneConfig. Positive = late (behind the beat), negative = early (ahead of the beat). Range: -20.0 to +20.0 ms.
   - Files: `engine/include/poly/types.h`
   - Verify: Build compiles; existing tests pass unchanged
 
-- [ ] **T02: Apply timing offset in renderRange** `est:30min`
+- [x] **T02: Apply timing offset in renderRange** `est:30min`
   In renderRange(), after swing and humanize adjustments (lines 157-168), add timing offset:
   - offsetPpq = timingOffsetMs * tempo / 60000.0
   - ppq += offsetPpq
@@ -35,7 +35,7 @@ Offset applied at NoteEvent emission in renderRange; converts ms to samples usin
   - Files: `engine/src/engine.cpp`
   - Verify: Build + existing tests pass; offset 0 produces identical output
 
-- [ ] **T03: State serialization and golden tests for timing offset** `est:45min`
+- [x] **T03: State serialization and golden tests for timing offset** `est:45min`
   Serialize timingOffsetMs in processor.cpp. Add golden tests:
   1. timingOffsetMs=0 matches baseline
   2. timingOffsetMs=5.0 shifts all events forward by 5ms equivalent PPQ

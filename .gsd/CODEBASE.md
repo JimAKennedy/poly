@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-06-22T20:05:02Z | Files: 98 | Described: 0/98
-<!-- gsd:codebase-meta {"generatedAt":"2026-06-22T20:05:02Z","fingerprint":"1de7f4d184e70103319037288261d06a016058e3","fileCount":98,"truncated":false} -->
+Generated: 2026-06-22T21:10:04Z | Files: 101 | Described: 0/101
+<!-- gsd:codebase-meta {"generatedAt":"2026-06-22T21:10:04Z","fingerprint":"9d693e4c891f6b5b743ae441a4fe87ac0fe3a796","fileCount":101,"truncated":false} -->
 
 ### (root)/
 - `.clang-format`
@@ -22,7 +22,8 @@ Generated: 2026-06-22T20:05:02Z | Files: 98 | Described: 0/98
 
 ### .github/workflows/
 - `.github/workflows/ci.yml`
-- `.github/workflows/codeql.yml`
+- `.github/workflows/nfr-review-nightly.yml`
+- `.github/workflows/nfr-review.yml`
 - `.github/workflows/sanitizers.yml`
 
 ### cmake/
@@ -36,6 +37,8 @@ Generated: 2026-06-22T20:05:02Z | Files: 98 | Described: 0/98
 - `docs/M002-UAT-SCRIPT.md`
 - `docs/PRD.md`
 - `docs/roadmap.md`
+- `docs/UAT-SCRIPT.md`
+- `docs/ui-guide.md`
 - `docs/wireframes.md`
 
 ### docs/review/
