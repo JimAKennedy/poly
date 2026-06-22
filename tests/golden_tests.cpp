@@ -617,6 +617,95 @@ TEST(GoldenPhrase, BlockSizeIndependence) {
     EXPECT_EQ(serialize(small), serialize(large)) << "Phrase: 0.05 vs 2.0 PPQ blocks differ";
 }
 
+// --- Test 22: mutationRate=0 produces identical output to baseline ---
+TEST(GoldenMutation, ZeroRateMatchesBaseline) {
+    poly::Engine engine;
+    auto state = makeTestState();
+    auto baseline = renderSorted(engine, state, 0.0, 16.0, 0.5);
+
+    for (int i = 0; i < state.activeLaneCount; ++i)
+        state.lanes[i].mutationRate = 0.0f;
+
+    auto withZeroMutation = renderSorted(engine, state, 0.0, 16.0, 0.5);
+    EXPECT_EQ(serialize(baseline), serialize(withZeroMutation))
+        << "mutationRate=0 should produce identical output to default";
+}
+
+// --- Test 23: mutationRate>0 produces deterministic variations ---
+TEST(GoldenMutation, DeterministicVariations) {
+    poly::Engine engine;
+    auto state = makeTestState();
+    state.lanes[2].mutationRate = 0.3f;
+
+    auto run1 = renderSorted(engine, state, 0.0, 32.0, 0.5);
+    auto run2 = renderSorted(engine, state, 0.0, 32.0, 0.5);
+
+    ASSERT_EQ(run1.size(), run2.size());
+    EXPECT_EQ(serialize(run1), serialize(run2)) << "Mutation must be deterministic across runs";
+
+    auto noMutation = makeTestState();
+    auto baseline = renderSorted(engine, noMutation, 0.0, 32.0, 0.5);
+    EXPECT_NE(serialize(run1), serialize(baseline)) << "mutationRate=0.3 should differ from no mutation";
+}
+
+// --- Test 24: Mutation respects anchor steps ---
+TEST(GoldenMutation, RespectsAnchors) {
+    poly::Engine engine;
+    poly::GrooveState state{};
+    state.activeLaneCount = 1;
+    state.seed = 42;
+
+    auto& kick = state.lanes[0];
+    kick.id = 0;
+    kick.midiNote = 36;
+    kick.cycle = {.steps = 4, .subdivision = 4};
+    kick.hitCount = 4;
+    kick.baseVelocity = 100;
+    kick.probability = 1.0f;
+
+    kick.constraints.anchorSteps.steps[0] = true;
+    kick.constraints.anchorSteps.steps[2] = true;
+
+    auto baseline = renderSorted(engine, state, 0.0, 16.0, 0.5);
+
+    kick.mutationRate = 1.0f;
+    auto mutated = renderSorted(engine, state, 0.0, 16.0, 0.5);
+
+    auto anchorEvents = [](const std::vector<EventRecord>& events, int steps, int sub) {
+        std::vector<EventRecord> anchors;
+        double sPpq = 4.0 / sub;
+        for (const auto& e : events) {
+            int64_t absStep = static_cast<int64_t>(std::round(e.ppq / sPpq));
+            int cycleStep = static_cast<int>(((absStep % steps) + steps) % steps);
+            if (cycleStep == 0 || cycleStep == 2)
+                anchors.push_back(e);
+        }
+        return anchors;
+    };
+
+    auto baselineAnchors = anchorEvents(baseline, kick.cycle.steps, kick.cycle.subdivision);
+    auto mutatedAnchors = anchorEvents(mutated, kick.cycle.steps, kick.cycle.subdivision);
+
+    EXPECT_EQ(serialize(baselineAnchors), serialize(mutatedAnchors))
+        << "Anchor steps must be identical with and without mutation";
+    EXPECT_FALSE(baselineAnchors.empty()) << "Should have anchor step events";
+}
+
+// --- Test 25: Mutation deterministic across block sizes ---
+TEST(GoldenMutation, BlockSizeIndependence) {
+    poly::Engine engine;
+    auto state = makeTestState();
+    for (int i = 0; i < state.activeLaneCount; ++i)
+        state.lanes[i].mutationRate = 0.4f;
+
+    auto small = renderSorted(engine, state, 0.0, 32.0, 0.05);
+    auto medium = renderSorted(engine, state, 0.0, 32.0, 0.5);
+    auto large = renderSorted(engine, state, 0.0, 32.0, 2.0);
+
+    EXPECT_EQ(serialize(small), serialize(medium)) << "Mutation: 0.05 vs 0.5 PPQ blocks differ";
+    EXPECT_EQ(serialize(small), serialize(large)) << "Mutation: 0.05 vs 2.0 PPQ blocks differ";
+}
+
 // --- Test 21: Phrase with phraseOffset shifts the gap position ---
 TEST(GoldenPhrase, OffsetShiftsGap) {
     poly::Engine engine;
