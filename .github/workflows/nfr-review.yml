@@ -1,0 +1,32 @@
+name: NFR Review
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  nfr-review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download nightly baseline
+        id: baseline
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          name: nfr-review-baseline
+          workflow: nfr-review-nightly.yml
+          branch: main
+          search_artifacts: true
+          if_no_artifact_found: warn
+        continue-on-error: true
+
+      - name: Run NFR Review
+        uses: JimAKennedy/nfr-review@v1
+        with:
+          baseline: ${{ steps.baseline.outcome == 'success' && 'nfr-review-output.jsonl' || '' }}
+          fail-on: "red"
