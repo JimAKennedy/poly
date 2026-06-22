@@ -44,6 +44,7 @@ static constexpr LaneParamDef kLaneParamDefs[] = {
     {ParamIDs::kPhraseOffset, "Phrase Ofs", "bars", 0, 0.0},
     {ParamIDs::kMutationRate, "Mutation", "%", 0, 0.0},
     {ParamIDs::kDriftRate, "Drift Rate", "st/bar", 0, 0.5},
+    {ParamIDs::kTimingOffset, "Timing Offset", "ms", 0, 0.5},
 };
 
 } // namespace
