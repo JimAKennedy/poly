@@ -67,6 +67,11 @@ CRect PhraseEditView::knobRect(int knob) const {
     return CRect(x, bounds.top + 16, x + 32, bounds.top + 48);
 }
 
+CRect PhraseEditView::schematicRect() const {
+    auto bounds = getViewSize();
+    return CRect(bounds.left + 10, bounds.top + 26, bounds.left + 296, bounds.top + 38);
+}
+
 int PhraseEditView::hitTestTab(const CPoint& where) const {
     for (int i = 0; i < kMaxLanes; ++i) {
         if (laneTabRect(i).pointInside(where))
@@ -140,8 +145,6 @@ void PhraseEditView::drawKnob(CDrawContext* ctx, const CRect& rect, double value
         std::snprintf(valStr, sizeof(valStr), "--");
     } else if (beats < 0.05) {
         std::snprintf(valStr, sizeof(valStr), "off");
-    } else if (beats >= 10.0) {
-        std::snprintf(valStr, sizeof(valStr), "%.0f bt", beats);
     } else {
         std::snprintf(valStr, sizeof(valStr), "%.1f bt", beats);
     }
@@ -151,6 +154,119 @@ void PhraseEditView::drawKnob(CDrawContext* ctx, const CRect& rect, double value
     ctx->setFontColor(CColor(0x66, 0x66, valAlpha, 0xFF));
     CRect valRect(rect.left - 8, rect.top - 11, rect.right + 8, rect.top - 1);
     ctx->drawString(valStr, valRect, kCenterText);
+}
+
+void PhraseEditView::drawPhraseSchematic(CDrawContext* ctx, const CColor& color, double lenBeats, double gapBeats,
+                                         double ofsBeats) {
+    auto bar = schematicRect();
+    double barWidth = bar.getWidth();
+
+    ctx->setFillColor(CColor(0x14, 0x14, 0x1C, 0xFF));
+    ctx->drawRect(bar, kDrawFilled);
+
+    if (lenBeats < 0.05) {
+        ctx->setFillColor(CColor(color.red, color.green, color.blue, 0x30));
+        ctx->drawRect(bar, kDrawFilled);
+        auto font = makeOwned<CFontDesc>("Arial", 8.0);
+        ctx->setFont(font);
+        ctx->setFontColor(CColor(0x50, 0x50, 0x60, 0xFF));
+        ctx->drawString("continuous", bar, kCenterText);
+        return;
+    }
+
+    double cycleBeats = lenBeats + gapBeats;
+    if (cycleBeats < 0.01)
+        return;
+
+    double pxPerBeat = barWidth / cycleBeats;
+
+    double ofsWrapped = std::fmod(ofsBeats, cycleBeats);
+    if (ofsWrapped < 0)
+        ofsWrapped += cycleBeats;
+
+    double playStart = ofsWrapped;
+    double playEnd = ofsWrapped + lenBeats;
+
+    ctx->setFillColor(CColor(color.red, color.green, color.blue, 0x70));
+    if (playEnd <= cycleBeats) {
+        CRect playRect(bar.left + playStart * pxPerBeat, bar.top, bar.left + playEnd * pxPerBeat, bar.bottom);
+        ctx->drawRect(playRect, kDrawFilled);
+    } else {
+        CRect r1(bar.left + playStart * pxPerBeat, bar.top, bar.right, bar.bottom);
+        ctx->drawRect(r1, kDrawFilled);
+        CRect r2(bar.left, bar.top, bar.left + (playEnd - cycleBeats) * pxPerBeat, bar.bottom);
+        ctx->drawRect(r2, kDrawFilled);
+    }
+
+    ctx->setLineWidth(0.5);
+    double tickBase = bar.bottom + 1;
+    for (double beat = 0; beat <= cycleBeats + 0.01; beat += 1.0) {
+        double px = bar.left + beat * pxPerBeat;
+        if (px > bar.right + 0.5)
+            break;
+        if (pxPerBeat < 3.0 && std::fmod(beat, 4.0) > 0.01)
+            continue;
+        bool major = (std::fmod(beat, 4.0) < 0.01);
+        double tickH = major ? 3.0 : 2.0;
+        ctx->setFrameColor(CColor(0x50, 0x50, 0x60, major ? (uint8_t)0x80 : (uint8_t)0x40));
+        ctx->drawLine(CPoint(px, tickBase), CPoint(px, tickBase + tickH));
+    }
+
+    ctx->setFrameColor(CColor(0x30, 0x30, 0x40, 0x60));
+    ctx->setLineWidth(0.5);
+    ctx->drawRect(bar, kDrawStroked);
+
+    auto formatBeat = [](char* buf, size_t sz, double b) {
+        if (std::fabs(b - std::round(b)) < 0.05)
+            std::snprintf(buf, sz, "%.0f", b);
+        else
+            std::snprintf(buf, sz, "%.1f", b);
+    };
+
+    struct BeatLabel {
+        double px;
+        double beat;
+    };
+    BeatLabel labels[3];
+    int labelCount = 0;
+
+    labels[labelCount++] = {bar.left, 0.0};
+    if (gapBeats >= 0.05) {
+        double gapStartPx = bar.left + (lenBeats / cycleBeats) * barWidth;
+        labels[labelCount++] = {gapStartPx, lenBeats};
+    }
+    if (labelCount == 0 || std::fabs(cycleBeats - labels[labelCount - 1].beat) >= 0.05)
+        labels[labelCount++] = {bar.right, cycleBeats};
+
+    constexpr double kMinLabelSpacing = 24.0;
+    if (labelCount == 3 &&
+        (labels[1].px - labels[0].px < kMinLabelSpacing || labels[2].px - labels[1].px < kMinLabelSpacing)) {
+        labels[1] = labels[2];
+        labelCount = 2;
+    }
+
+    double labelY = bar.bottom + 4;
+    auto labelFont = makeOwned<CFontDesc>("Arial", 8.0);
+    ctx->setFont(labelFont);
+    ctx->setFontColor(CColor(0x88, 0x88, 0xA0, 0xFF));
+
+    for (int i = 0; i < labelCount; ++i) {
+        char text[16];
+        formatBeat(text, sizeof(text), labels[i].beat);
+        CRect lr;
+        CHoriTxtAlign align;
+        if (i == 0) {
+            lr = CRect(labels[i].px, labelY, labels[i].px + 30, labelY + 10);
+            align = kLeftText;
+        } else if (i == labelCount - 1) {
+            lr = CRect(labels[i].px - 30, labelY, labels[i].px, labelY + 10);
+            align = kRightText;
+        } else {
+            lr = CRect(labels[i].px - 15, labelY, labels[i].px + 15, labelY + 10);
+            align = kCenterText;
+        }
+        ctx->drawString(text, lr, align);
+    }
 }
 
 void PhraseEditView::draw(CDrawContext* context) {
@@ -202,6 +318,11 @@ void PhraseEditView::draw(CDrawContext* context) {
         bool enabled = (k == 0) || lenActive;
         drawKnob(context, r, value, laneColor, kKnobs[k].label, kKnobs[k].maxBeats, enabled);
     }
+
+    double gapValue = controller_->getParamNormalized(ParamIDs::laneParam(selectedLane_, kKnobs[1].paramOffset));
+    double ofsValue = controller_->getParamNormalized(ParamIDs::laneParam(selectedLane_, kKnobs[2].paramOffset));
+    drawPhraseSchematic(context, laneColor, lenValue * kKnobs[0].maxBeats, gapValue * kKnobs[1].maxBeats,
+                        ofsValue * kKnobs[2].maxBeats);
 
     setDirty(false);
 }
