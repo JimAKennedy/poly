@@ -132,6 +132,7 @@ struct LaneConfig {
     float mutationRate = 0.0f;   // 0.0-1.0; per-step mutation probability each cycle
     float driftRate = 0.0f;      // steps per bar; pattern rotation rate from absolute PPQ
     float timingOffsetMs = 0.0f; // ms; positive = late, negative = early; range [-20, +20]
+    int kotekanSourceLane = -1;  // -1=independent, 0-7=complement of source lane's pattern
     bool active = true;
     std::array<EnvelopeAssign, kMaxEnvelopesPerLane> envelopes{};
     int envelopeCount = 0;

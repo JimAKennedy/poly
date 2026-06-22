@@ -91,12 +91,20 @@ void LaneGridView::draw(VSTGUI::CDrawContext* context) {
         context->setFontColor(active ? CColor(0xE8, 0xE8, 0xEC, 0xFF) : CColor(0x68, 0x68, 0x78, 0xFF));
         context->drawString(kLaneNames[lane], textRect, kLeftText);
 
-        char laneNum[8];
-        snprintf(laneNum, sizeof(laneNum), "L%d", lane + 1);
+        auto kotekanId = ParamIDs::laneParam(lane, ParamIDs::kKotekanSource);
+        int kotekanSrc = static_cast<int>(std::round(controller_->getParamNormalized(kotekanId) * 8.0)) - 1;
+
+        char laneNum[16];
+        if (kotekanSrc >= 0 && kotekanSrc < kMaxLanes) {
+            snprintf(laneNum, sizeof(laneNum), "L%d \xe2\x86\x90 L%d", lane + 1, kotekanSrc + 1);
+        } else {
+            snprintf(laneNum, sizeof(laneNum), "L%d", lane + 1);
+        }
         CRect numRect = laneRect;
         numRect.right -= 8;
-        numRect.left = numRect.right - 30;
-        context->setFontColor(CColor(0x50, 0x50, 0x5C, 0xFF));
+        numRect.left = numRect.right - 60;
+        CColor numColor = (kotekanSrc >= 0) ? CColor(0x9B, 0x59, 0xB6, 0xC0) : CColor(0x50, 0x50, 0x5C, 0xFF);
+        context->setFontColor(numColor);
         context->drawString(laneNum, numRect, kRightText);
 
         auto probId = ParamIDs::laneParam(lane, ParamIDs::kProbability);

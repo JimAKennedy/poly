@@ -383,6 +383,9 @@ void PolyProcessor::applyParameter(Steinberg::Vst::ParamID id, double normalized
         case kTimingOffset:
             cfg.timingOffsetMs = static_cast<float>(normalized * 40.0 - 20.0);
             break;
+        case kKotekanSource:
+            cfg.kotekanSourceLane = static_cast<int>(std::round(normalized * 8.0)) - 1;
+            break;
         default:
             break;
         }

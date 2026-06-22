@@ -982,6 +982,153 @@ TEST(GoldenTimingOffset, InteractsWithSwing) {
     }
 }
 
+// --- Test 36: kotekanSourceLane=-1 produces identical output to baseline ---
+TEST(GoldenKotekan, NoSourceMatchesBaseline) {
+    poly::Engine engine;
+    auto state = makeTestState();
+    auto baseline = renderSorted(engine, state, 0.0, 16.0, 0.5);
+
+    for (int i = 0; i < state.activeLaneCount; ++i)
+        state.lanes[i].kotekanSourceLane = -1;
+
+    auto withNoKotekan = renderSorted(engine, state, 0.0, 16.0, 0.5);
+    EXPECT_EQ(serialize(baseline), serialize(withNoKotekan))
+        << "kotekanSourceLane=-1 should produce identical output to default";
+}
+
+// --- Test 37: Kotekan pair produces exact complement ---
+TEST(GoldenKotekan, PairProducesComplement) {
+    poly::Engine engine;
+    poly::GrooveState state{};
+    state.activeLaneCount = 2;
+    state.seed = 42;
+
+    auto& laneA = state.lanes[0];
+    laneA.id = 0;
+    laneA.midiNote = 36;
+    laneA.cycle = {.steps = 8, .subdivision = 8};
+    laneA.hitCount = 3;
+    laneA.baseVelocity = 100;
+    laneA.probability = 1.0f;
+
+    auto& laneB = state.lanes[1];
+    laneB.id = 1;
+    laneB.midiNote = 38;
+    laneB.cycle = {.steps = 8, .subdivision = 8};
+    laneB.hitCount = 3;
+    laneB.baseVelocity = 80;
+    laneB.probability = 1.0f;
+    laneB.kotekanSourceLane = 0;
+
+    auto events = renderSorted(engine, state, 0.0, 4.0, 0.5);
+
+    // In one bar (4 PPQ = 8 eighth-note steps), source has 3 hits,
+    // complement should have 5 hits. Together they fill all 8 positions.
+    int countA = 0, countB = 0;
+    for (const auto& e : events) {
+        if (e.pitch == 36)
+            countA++;
+        if (e.pitch == 38)
+            countB++;
+    }
+
+    EXPECT_EQ(countA, 3) << "Source lane should have 3 hits per cycle";
+    EXPECT_EQ(countB, 5) << "Complement lane should have 5 hits (8 - 3)";
+    EXPECT_EQ(countA + countB, 8) << "Source + complement should fill all 8 step positions";
+}
+
+// --- Test 38: Kotekan complement with different velocities ---
+TEST(GoldenKotekan, DifferentVelocities) {
+    poly::Engine engine;
+    poly::GrooveState state{};
+    state.activeLaneCount = 2;
+    state.seed = 42;
+
+    auto& laneA = state.lanes[0];
+    laneA.id = 0;
+    laneA.midiNote = 36;
+    laneA.cycle = {.steps = 8, .subdivision = 8};
+    laneA.hitCount = 3;
+    laneA.baseVelocity = 127;
+    laneA.probability = 1.0f;
+
+    auto& laneB = state.lanes[1];
+    laneB.id = 1;
+    laneB.midiNote = 38;
+    laneB.cycle = {.steps = 8, .subdivision = 8};
+    laneB.hitCount = 3;
+    laneB.baseVelocity = 50;
+    laneB.probability = 1.0f;
+    laneB.kotekanSourceLane = 0;
+
+    auto events = renderSorted(engine, state, 0.0, 4.0, 0.5);
+
+    for (const auto& e : events) {
+        if (e.pitch == 36)
+            EXPECT_NEAR(e.velocity, 1.0f, 0.15f) << "Source lane should use its own high velocity";
+        if (e.pitch == 38)
+            EXPECT_NEAR(e.velocity, 50.0f / 127.0f, 0.15f) << "Complement lane should use its own low velocity";
+    }
+}
+
+// --- Test 39: Circular kotekan reference degrades to independent ---
+TEST(GoldenKotekan, CircularReferenceFallback) {
+    poly::Engine engine;
+    poly::GrooveState state{};
+    state.activeLaneCount = 2;
+    state.seed = 42;
+
+    for (int i = 0; i < 2; ++i) {
+        state.lanes[i].id = i;
+        state.lanes[i].midiNote = static_cast<int16_t>(36 + i * 2);
+        state.lanes[i].cycle = {.steps = 8, .subdivision = 8};
+        state.lanes[i].hitCount = 3;
+        state.lanes[i].baseVelocity = 100;
+        state.lanes[i].probability = 1.0f;
+    }
+
+    state.lanes[0].kotekanSourceLane = 1;
+    state.lanes[1].kotekanSourceLane = 0;
+
+    auto events = renderSorted(engine, state, 0.0, 4.0, 0.5);
+
+    int countA = 0, countB = 0;
+    for (const auto& e : events) {
+        if (e.pitch == 36)
+            countA++;
+        if (e.pitch == 38)
+            countB++;
+    }
+
+    EXPECT_EQ(countA, 3) << "Circular ref lane A should fall back to own Euclidean pattern (3 hits)";
+    EXPECT_EQ(countB, 3) << "Circular ref lane B should fall back to own Euclidean pattern (3 hits)";
+}
+
+// --- Test 40: Kotekan deterministic across block sizes ---
+TEST(GoldenKotekan, BlockSizeIndependence) {
+    poly::Engine engine;
+    poly::GrooveState state{};
+    state.activeLaneCount = 2;
+    state.seed = 42;
+
+    for (int i = 0; i < 2; ++i) {
+        state.lanes[i].id = i;
+        state.lanes[i].midiNote = static_cast<int16_t>(36 + i * 2);
+        state.lanes[i].cycle = {.steps = 8, .subdivision = 8};
+        state.lanes[i].hitCount = 3;
+        state.lanes[i].baseVelocity = 100;
+        state.lanes[i].probability = 1.0f;
+    }
+    state.lanes[1].kotekanSourceLane = 0;
+
+    auto small = renderSorted(engine, state, 0.0, 16.0, 0.05);
+    auto medium = renderSorted(engine, state, 0.0, 16.0, 0.5);
+    auto large = renderSorted(engine, state, 0.0, 16.0, 2.0);
+
+    EXPECT_EQ(serialize(small), serialize(medium)) << "Kotekan: 0.05 vs 0.5 PPQ blocks differ";
+    EXPECT_EQ(serialize(small), serialize(large)) << "Kotekan: 0.05 vs 2.0 PPQ blocks differ";
+}
+
 // --- Test 35: Timing offset deterministic across block sizes ---
 TEST(GoldenTimingOffset, BlockSizeIndependence) {
     poly::Engine engine;
