@@ -706,6 +706,154 @@ TEST(GoldenMutation, BlockSizeIndependence) {
     EXPECT_EQ(serialize(small), serialize(large)) << "Mutation: 0.05 vs 2.0 PPQ blocks differ";
 }
 
+// --- Test 26: driftRate=0 produces identical output to baseline ---
+TEST(GoldenDrift, ZeroRateMatchesBaseline) {
+    poly::Engine engine;
+    auto state = makeTestState();
+    auto baseline = renderSorted(engine, state, 0.0, 16.0, 0.5);
+
+    for (int i = 0; i < state.activeLaneCount; ++i)
+        state.lanes[i].driftRate = 0.0f;
+
+    auto withZeroDrift = renderSorted(engine, state, 0.0, 16.0, 0.5);
+    EXPECT_EQ(serialize(baseline), serialize(withZeroDrift))
+        << "driftRate=0 should produce identical output to default";
+}
+
+// --- Test 27: driftRate=1.0 rotates pattern by 1 step per bar ---
+TEST(GoldenDrift, OneStepPerBar) {
+    poly::Engine engine;
+    poly::GrooveState state{};
+    state.activeLaneCount = 1;
+    state.seed = 42;
+
+    auto& kick = state.lanes[0];
+    kick.id = 0;
+    kick.midiNote = 36;
+    kick.cycle = {.steps = 8, .subdivision = 8};
+    kick.hitCount = 3;
+    kick.baseVelocity = 100;
+    kick.probability = 1.0f;
+
+    // Render without drift
+    auto noDrift = renderSorted(engine, state, 0.0, 16.0, 0.5);
+
+    // Render with drift=1.0 (1 step per bar)
+    kick.driftRate = 1.0f;
+    auto withDrift = renderSorted(engine, state, 0.0, 16.0, 0.5);
+
+    EXPECT_NE(serialize(noDrift), serialize(withDrift))
+        << "driftRate=1.0 should produce different pattern than no drift";
+
+    // Verify determinism
+    auto withDrift2 = renderSorted(engine, state, 0.0, 16.0, 0.5);
+    EXPECT_EQ(serialize(withDrift), serialize(withDrift2)) << "Drift must be deterministic across runs";
+}
+
+// --- Test 28: Two lanes with different driftRates produce phasing ---
+TEST(GoldenDrift, PhasingBetweenLanes) {
+    poly::Engine engine;
+    poly::GrooveState state{};
+    state.activeLaneCount = 2;
+    state.seed = 42;
+
+    // Two identical lanes except for drift
+    for (int i = 0; i < 2; ++i) {
+        state.lanes[i].id = i;
+        state.lanes[i].midiNote = static_cast<int16_t>(36 + i * 2);
+        state.lanes[i].cycle = {.steps = 4, .subdivision = 4};
+        state.lanes[i].hitCount = 3;
+        state.lanes[i].baseVelocity = 100;
+        state.lanes[i].probability = 1.0f;
+    }
+
+    // Lane 0: no drift, Lane 1: drift=1 step/bar
+    state.lanes[0].driftRate = 0.0f;
+    state.lanes[1].driftRate = 1.0f;
+
+    auto events = renderSorted(engine, state, 0.0, 32.0, 0.5);
+
+    // Collect per-bar relative positions for each lane
+    bool phaseDiffers = false;
+    for (int bar = 0; bar < 7; ++bar) {
+        double barStart = bar * 4.0;
+        double barEnd = barStart + 4.0;
+        double nextBarStart = (bar + 1) * 4.0;
+        double nextBarEnd = nextBarStart + 4.0;
+
+        std::vector<double> l1Bar, l1Next;
+        for (const auto& e : events) {
+            if (e.pitch == 38 && e.ppq >= barStart && e.ppq < barEnd)
+                l1Bar.push_back(e.ppq - barStart);
+            if (e.pitch == 38 && e.ppq >= nextBarStart && e.ppq < nextBarEnd)
+                l1Next.push_back(e.ppq - nextBarStart);
+        }
+
+        if (l1Bar.size() == l1Next.size() && !l1Bar.empty()) {
+            for (size_t i = 0; i < l1Bar.size(); ++i) {
+                if (std::abs(l1Bar[i] - l1Next[i]) > 0.001) {
+                    phaseDiffers = true;
+                    break;
+                }
+            }
+        } else if (l1Bar.size() != l1Next.size()) {
+            phaseDiffers = true;
+        }
+        if (phaseDiffers)
+            break;
+    }
+
+    EXPECT_TRUE(phaseDiffers) << "Lane with driftRate=1.0 should show different bar-relative positions across bars";
+}
+
+// --- Test 29: Transport jump with drift produces correct rotation ---
+TEST(GoldenDrift, TransportJumpCorrectRotation) {
+    poly::Engine engine;
+    poly::GrooveState state{};
+    state.activeLaneCount = 1;
+    state.seed = 42;
+
+    auto& kick = state.lanes[0];
+    kick.id = 0;
+    kick.midiNote = 36;
+    kick.cycle = {.steps = 8, .subdivision = 8};
+    kick.hitCount = 3;
+    kick.baseVelocity = 100;
+    kick.probability = 1.0f;
+    kick.driftRate = 0.5f;
+
+    // Render straight through bars 0-8 (32 PPQ)
+    auto straight = renderSorted(engine, state, 0.0, 32.0, 0.5);
+
+    // Extract bars 4-8
+    std::vector<EventRecord> straightTail;
+    for (const auto& e : straight) {
+        if (e.ppq >= 16.0)
+            straightTail.push_back(e);
+    }
+
+    // Jump directly to bar 4 and render bars 4-8
+    auto jumped = renderSorted(engine, state, 16.0, 32.0, 0.5);
+
+    EXPECT_EQ(serialize(straightTail), serialize(jumped))
+        << "Transport jump with drift must produce same output as straight-through";
+}
+
+// --- Test 30: Drift deterministic across block sizes ---
+TEST(GoldenDrift, BlockSizeIndependence) {
+    poly::Engine engine;
+    auto state = makeTestState();
+    for (int i = 0; i < state.activeLaneCount; ++i)
+        state.lanes[i].driftRate = 0.75f;
+
+    auto small = renderSorted(engine, state, 0.0, 32.0, 0.05);
+    auto medium = renderSorted(engine, state, 0.0, 32.0, 0.5);
+    auto large = renderSorted(engine, state, 0.0, 32.0, 2.0);
+
+    EXPECT_EQ(serialize(small), serialize(medium)) << "Drift: 0.05 vs 0.5 PPQ blocks differ";
+    EXPECT_EQ(serialize(small), serialize(large)) << "Drift: 0.05 vs 2.0 PPQ blocks differ";
+}
+
 // --- Test 21: Phrase with phraseOffset shifts the gap position ---
 TEST(GoldenPhrase, OffsetShiftsGap) {
     poly::Engine engine;
