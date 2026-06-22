@@ -17,6 +17,29 @@ PhaseAlignmentView::PhaseAlignmentView(const VSTGUI::CRect& size, Steinberg::Vst
     setWantsFocus(false);
 }
 
+PhaseAlignmentView::~PhaseAlignmentView() {
+    if (refreshTimer_) {
+        refreshTimer_->stop();
+        refreshTimer_ = nullptr;
+    }
+}
+
+bool PhaseAlignmentView::attached(CView* parent) {
+    if (CView::attached(parent)) {
+        refreshTimer_ = VSTGUI::makeOwned<VSTGUI::CVSTGUITimer>([this](VSTGUI::CVSTGUITimer*) { invalid(); }, 33);
+        return true;
+    }
+    return false;
+}
+
+bool PhaseAlignmentView::removed(CView* parent) {
+    if (refreshTimer_) {
+        refreshTimer_->stop();
+        refreshTimer_ = nullptr;
+    }
+    return CView::removed(parent);
+}
+
 void PhaseAlignmentView::draw(VSTGUI::CDrawContext* context) {
     using namespace VSTGUI;
 
