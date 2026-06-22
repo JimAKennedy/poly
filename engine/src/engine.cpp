@@ -40,12 +40,26 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
         int64_t firstStep = static_cast<int64_t>(std::ceil(tc.ppqStart / sPpq));
         int64_t lastStep = static_cast<int64_t>(std::ceil(tc.ppqEnd / sPpq));
 
+        const bool hasPhraseGating = cfg.phraseLength > 0.0f;
+        const double phraseLenPpq = static_cast<double>(cfg.phraseLength);
+        const double phraseGapPpq = static_cast<double>(cfg.phraseGap);
+        const double phraseCyclePpq = phraseLenPpq + phraseGapPpq;
+        const double phraseOffPpq = static_cast<double>(cfg.phraseOffset);
+
         for (int64_t absStep = firstStep; absStep < lastStep; ++absStep) {
             double ppq = absStep * sPpq;
 
             // Floating point guard: must be within [ppqStart, ppqEnd)
             if (ppq < tc.ppqStart || ppq >= tc.ppqEnd)
                 continue;
+
+            if (hasPhraseGating && phraseCyclePpq > 0.0) {
+                double phrasePos = std::fmod(ppq - phraseOffPpq, phraseCyclePpq);
+                if (phrasePos < 0.0)
+                    phrasePos += phraseCyclePpq;
+                if (phrasePos >= phraseLenPpq)
+                    continue;
+            }
 
             // Map to position within the cycle
             int stepsInCycle = cfg.cycle.steps;

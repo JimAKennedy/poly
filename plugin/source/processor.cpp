@@ -281,6 +281,26 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
                 Steinberg::int32 ptIdx;
                 envQueue->addPoint(0, envValue, ptIdx);
             }
+
+            double phrasePhase = 0.0;
+            if (resolved.lanes[lane].phraseLength > 0.0f) {
+                double phraseLenPpq = static_cast<double>(resolved.lanes[lane].phraseLength);
+                double phraseGapPpq = static_cast<double>(resolved.lanes[lane].phraseGap);
+                double phraseCyclePpq = phraseLenPpq + phraseGapPpq;
+                if (phraseCyclePpq > 0.0) {
+                    double offPpq = static_cast<double>(resolved.lanes[lane].phraseOffset);
+                    double pos = std::fmod(tc_.ppqStart - offPpq, phraseCyclePpq);
+                    if (pos < 0.0)
+                        pos += phraseCyclePpq;
+                    phrasePhase = pos / phraseCyclePpq;
+                }
+            }
+
+            auto* phraseQueue = outParams->addParameterData(ParamIDs::phrasePhaseOutput(lane), idx);
+            if (phraseQueue) {
+                Steinberg::int32 ptIdx;
+                phraseQueue->addPoint(0, phrasePhase, ptIdx);
+            }
         }
     }
 
@@ -334,6 +354,15 @@ void PolyProcessor::applyParameter(Steinberg::Vst::ParamID id, double normalized
             break;
         case kActive:
             cfg.active = (normalized > 0.5);
+            break;
+        case kPhraseLength:
+            cfg.phraseLength = static_cast<float>(normalized * 64.0);
+            break;
+        case kPhraseGap:
+            cfg.phraseGap = static_cast<float>(normalized * 64.0);
+            break;
+        case kPhraseOffset:
+            cfg.phraseOffset = static_cast<float>(normalized * 64.0);
             break;
         default:
             break;

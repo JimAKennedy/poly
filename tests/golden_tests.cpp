@@ -461,3 +461,187 @@ TEST(GoldenDeterminism, ExtendedEnvelopeTargetsBlockIndependence) {
     EXPECT_EQ(serialize(small), serialize(medium)) << "Extended envelope: 0.05 vs 0.5 PPQ blocks differ";
     EXPECT_EQ(serialize(small), serialize(large)) << "Extended envelope: 0.05 vs 2.0 PPQ blocks differ";
 }
+
+// --- Test 16: phraseLength=0 (continuous) produces identical output to default ---
+TEST(GoldenPhrase, ContinuousMatchesDefault) {
+    poly::Engine engine;
+    auto state = makeTestState();
+
+    auto baseline = renderSorted(engine, state, 0.0, 16.0, 0.5);
+
+    for (int i = 0; i < state.activeLaneCount; ++i) {
+        state.lanes[i].phraseLength = 0.0f;
+        state.lanes[i].phraseGap = 0.0f;
+        state.lanes[i].phraseOffset = 0.0f;
+    }
+
+    auto withPhrase = renderSorted(engine, state, 0.0, 16.0, 0.5);
+    EXPECT_EQ(serialize(baseline), serialize(withPhrase))
+        << "phraseLength=0 should produce identical output to default";
+}
+
+// --- Test 17: Single lane with phraseLength=2, phraseGap=1 produces silence during gap ---
+TEST(GoldenPhrase, SingleLaneGapSilence) {
+    poly::Engine engine;
+    poly::GrooveState state{};
+    state.activeLaneCount = 1;
+    state.seed = 42;
+
+    auto& kick = state.lanes[0];
+    kick.id = 0;
+    kick.midiNote = 36;
+    kick.cycle = {.steps = 4, .subdivision = 4};
+    kick.hitCount = 4;
+    kick.baseVelocity = 100;
+    kick.probability = 1.0f;
+    kick.phraseLength = 8.0f;
+    kick.phraseGap = 4.0f;
+
+    // Phrase cycle = 12 beats = 12 PPQ. Play 0-8 PPQ, gap 8-12, play 12-20, gap 20-24
+    auto events = renderSorted(engine, state, 0.0, 24.0, 0.5);
+
+    for (const auto& e : events) {
+        double posInCycle = std::fmod(e.ppq, 12.0);
+        EXPECT_LT(posInCycle, 8.0) << "Note at PPQ " << e.ppq << " falls in gap region (phrasePos=" << posInCycle
+                                   << ")";
+    }
+    EXPECT_FALSE(events.empty()) << "Should produce some notes during play regions";
+}
+
+// --- Test 18: Two lanes with different phraseLength create offset phrase behavior ---
+TEST(GoldenPhrase, OffsetPhraseBehavior) {
+    poly::Engine engine;
+    poly::GrooveState state{};
+    state.activeLaneCount = 2;
+    state.seed = 42;
+
+    auto& lane0 = state.lanes[0];
+    lane0.id = 0;
+    lane0.midiNote = 36;
+    lane0.cycle = {.steps = 4, .subdivision = 4};
+    lane0.hitCount = 4;
+    lane0.baseVelocity = 100;
+    lane0.probability = 1.0f;
+    lane0.phraseLength = 8.0f;
+    lane0.phraseGap = 4.0f;
+
+    auto& lane1 = state.lanes[1];
+    lane1.id = 1;
+    lane1.midiNote = 38;
+    lane1.cycle = {.steps = 4, .subdivision = 4};
+    lane1.hitCount = 4;
+    lane1.baseVelocity = 100;
+    lane1.probability = 1.0f;
+    lane1.phraseLength = 12.0f;
+    lane1.phraseGap = 4.0f;
+
+    // Lane 0: 12-beat cycle (8+4), Lane 1: 16-beat cycle (12+4)
+    // Over 24 PPQ (6 bars), their gaps should not always overlap
+    auto events = renderSorted(engine, state, 0.0, 24.0, 0.5);
+
+    bool hasLane0 = false, hasLane1 = false;
+    bool bothSilentSomewhere = false;
+    bool oneSilentOtherPlaying = false;
+
+    // Check bar by bar
+    for (int bar = 0; bar < 6; ++bar) {
+        double barStart = bar * 4.0;
+        double barEnd = barStart + 4.0;
+        bool l0Active = false, l1Active = false;
+        for (const auto& e : events) {
+            if (e.ppq >= barStart && e.ppq < barEnd) {
+                if (e.pitch == 36)
+                    l0Active = true;
+                if (e.pitch == 38)
+                    l1Active = true;
+            }
+        }
+        if (l0Active)
+            hasLane0 = true;
+        if (l1Active)
+            hasLane1 = true;
+        if (!l0Active && !l1Active)
+            bothSilentSomewhere = true;
+        if (l0Active != l1Active)
+            oneSilentOtherPlaying = true;
+    }
+
+    EXPECT_TRUE(hasLane0) << "Lane 0 should produce notes";
+    EXPECT_TRUE(hasLane1) << "Lane 1 should produce notes";
+    EXPECT_TRUE(oneSilentOtherPlaying)
+        << "Different phrase lengths should create bars where one lane rests while the other plays";
+}
+
+// --- Test 19: Phrase with transport jump into gap region ---
+TEST(GoldenPhrase, TransportJumpIntoGap) {
+    poly::Engine engine;
+    poly::GrooveState state{};
+    state.activeLaneCount = 1;
+    state.seed = 42;
+
+    auto& kick = state.lanes[0];
+    kick.id = 0;
+    kick.midiNote = 36;
+    kick.cycle = {.steps = 4, .subdivision = 4};
+    kick.hitCount = 4;
+    kick.baseVelocity = 100;
+    kick.probability = 1.0f;
+    kick.phraseLength = 8.0f;
+    kick.phraseGap = 4.0f;
+
+    // Gap is at PPQ 8-12. Jump directly into that range.
+    auto events = renderSorted(engine, state, 8.0, 12.0, 0.5);
+    EXPECT_EQ(events.size(), 0u) << "Jumping into gap region should produce no notes";
+
+    // But jumping to PPQ 12 (start of next play region) should produce notes
+    auto events2 = renderSorted(engine, state, 12.0, 16.0, 0.5);
+    EXPECT_GT(events2.size(), 0u) << "Jumping to play region after gap should produce notes";
+}
+
+// --- Test 20: Phrase deterministic across block sizes ---
+TEST(GoldenPhrase, BlockSizeIndependence) {
+    poly::Engine engine;
+    auto state = makeTestState();
+
+    for (int i = 0; i < state.activeLaneCount; ++i) {
+        state.lanes[i].phraseLength = 8.0f;
+        state.lanes[i].phraseGap = 2.0f;
+        state.lanes[i].phraseOffset = static_cast<float>(i) * 1.0f;
+    }
+
+    auto small = renderSorted(engine, state, 0.0, 32.0, 0.05);
+    auto medium = renderSorted(engine, state, 0.0, 32.0, 0.5);
+    auto large = renderSorted(engine, state, 0.0, 32.0, 2.0);
+
+    EXPECT_EQ(serialize(small), serialize(medium)) << "Phrase: 0.05 vs 0.5 PPQ blocks differ";
+    EXPECT_EQ(serialize(small), serialize(large)) << "Phrase: 0.05 vs 2.0 PPQ blocks differ";
+}
+
+// --- Test 21: Phrase with phraseOffset shifts the gap position ---
+TEST(GoldenPhrase, OffsetShiftsGap) {
+    poly::Engine engine;
+    poly::GrooveState state{};
+    state.activeLaneCount = 1;
+    state.seed = 42;
+
+    auto& kick = state.lanes[0];
+    kick.id = 0;
+    kick.midiNote = 36;
+    kick.cycle = {.steps = 4, .subdivision = 4};
+    kick.hitCount = 4;
+    kick.baseVelocity = 100;
+    kick.probability = 1.0f;
+    kick.phraseLength = 8.0f;
+    kick.phraseGap = 4.0f;
+    kick.phraseOffset = 4.0f;
+
+    // With offset=4 beats (4 PPQ), the phrase cycle shifts: play starts at PPQ 4
+    // Gap originally at PPQ 8-12 now shifted to PPQ 12-16
+    auto events = renderSorted(engine, state, 0.0, 24.0, 0.5);
+
+    auto noOffset = state;
+    noOffset.lanes[0].phraseOffset = 0.0f;
+    auto eventsNoOffset = renderSorted(engine, noOffset, 0.0, 24.0, 0.5);
+
+    EXPECT_NE(serialize(events), serialize(eventsNoOffset)) << "phraseOffset should shift the gap position";
+}

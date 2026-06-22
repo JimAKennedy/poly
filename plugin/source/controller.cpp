@@ -14,6 +14,7 @@
 #include "ui/header_view.h"
 #include "ui/lane_grid_view.h"
 #include "ui/phase_alignment_view.h"
+#include "ui/phrase_edit_view.h"
 #include "ui/velocity_view.h"
 
 namespace poly {
@@ -38,6 +39,9 @@ static constexpr LaneParamDef kLaneParamDefs[] = {
     {ParamIDs::kHumanizeMs, "Humanize", "ms", 0, 0.0},
     {ParamIDs::kNoteDuration, "Duration", "beats", 0, 0.0},
     {ParamIDs::kActive, "Active", "", 1, 1.0},
+    {ParamIDs::kPhraseLength, "Phrase Len", "bars", 0, 0.0},
+    {ParamIDs::kPhraseGap, "Phrase Gap", "bars", 0, 0.0},
+    {ParamIDs::kPhraseOffset, "Phrase Ofs", "bars", 0, 0.0},
 };
 
 } // namespace
@@ -119,6 +123,12 @@ Steinberg::tresult PLUGIN_API PolyController::initialize(Steinberg::FUnknown* co
         addParam(ParamIDs::envelopeValueOutput(lane), title, "", 0, 0.0, UnitIDs::kOutput, ParameterInfo::kIsReadOnly);
     }
 
+    for (int lane = 0; lane < kMaxLanes; ++lane) {
+        char title[32];
+        std::snprintf(title, sizeof(title), "L%d Phrase", lane + 1);
+        addParam(ParamIDs::phrasePhaseOutput(lane), title, "", 0, 0.0, UnitIDs::kOutput, ParameterInfo::kIsReadOnly);
+    }
+
     addParam(ParamIDs::kSceneSelect, "Select", "", 2, 0.0, UnitIDs::kScene);
     addParam(ParamIDs::kSceneMorph, "Morph", "%", 0, 0.0, UnitIDs::kScene);
 
@@ -157,6 +167,9 @@ VSTGUI::CView* PolyController::createCustomView(VSTGUI::UTF8StringPtr name, cons
     if (std::strcmp(name, "PhaseAlignmentView") == 0) {
         return new PhaseAlignmentView(VSTGUI::CRect(0, 0, 190, 146), this);
     }
+    if (std::strcmp(name, "PhraseEditView") == 0) {
+        return new PhraseEditView(VSTGUI::CRect(0, 0, 580, 60), this);
+    }
     return nullptr;
 }
 
@@ -185,6 +198,9 @@ Steinberg::tresult PLUGIN_API PolyController::setComponentState(Steinberg::IBStr
         setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kHumanizeMs), cfg.humanizeMs / 50.0);
         setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kNoteDuration), cfg.noteDuration / 4.0);
         setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kActive), cfg.active ? 1.0 : 0.0);
+        setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kPhraseLength), cfg.phraseLength / 16.0);
+        setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kPhraseGap), cfg.phraseGap / 16.0);
+        setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kPhraseOffset), cfg.phraseOffset / 16.0);
     }
 
     setParamNormalized(ParamIDs::kMacroComplexity, gs.macros.complexity);
