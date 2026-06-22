@@ -210,6 +210,13 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
                 ppq += jitterPpq * (jitterRand * 2.0f - 1.0f);
             }
 
+            if (cfg.timingOffsetMs != 0.0f && tc.tempo > 0.0) {
+                double offsetPpq = static_cast<double>(cfg.timingOffsetMs) * tc.tempo / 60000.0;
+                ppq += offsetPpq;
+                if (ppq < 0.0)
+                    ppq = 0.0;
+            }
+
             NoteEvent ev{};
             ev.ppqPosition = ppq;
             ev.pitch = cfg.midiNote;
