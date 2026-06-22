@@ -119,6 +119,25 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
             bool isPatternStep = pattern[static_cast<size_t>(cycleStep)];
             bool isAnchor = cfg.constraints.anchorSteps.steps[static_cast<size_t>(cycleStep)];
 
+            bool mutatedToGhost = false;
+            if (cfg.mutationRate > 0.0f && !isAnchor) {
+                int64_t cycleIndex = absStep / stepsInCycle;
+                float mutRoll = deterministicRand(state.seed, cfg.id, cycleIndex * kMaxSteps + cycleStep, 8);
+                if (mutRoll < cfg.mutationRate) {
+                    float typeRoll = deterministicRand(state.seed, cfg.id, cycleIndex * kMaxSteps + cycleStep, 9);
+                    if (typeRoll < 0.4f) {
+                        if (isPatternStep)
+                            isPatternStep = false;
+                    } else if (typeRoll < 0.7f) {
+                        if (isPatternStep)
+                            mutatedToGhost = true;
+                    } else {
+                        if (!isPatternStep)
+                            isPatternStep = true;
+                    }
+                }
+            }
+
             if (!isAnchor) {
                 if (!isPatternStep) {
                     if (fillMod <= 0.0f)
@@ -166,6 +185,9 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
             vel *= velMod;
 
             vel = std::clamp(vel, 0.0f, 1.0f);
+
+            if (mutatedToGhost)
+                vel = ghostFloor;
 
             // Swing: shift odd cycle-steps (1, 3, 5...) forward
             if (cfg.swingAmount > 0.0f && (cycleStep % 2) == 1) {
