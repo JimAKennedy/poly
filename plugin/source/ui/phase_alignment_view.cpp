@@ -127,6 +127,30 @@ void PhaseAlignmentView::draw(VSTGUI::CDrawContext* context) {
         double dotX = cx + radius * std::cos(angle);
         double dotY = cy + radius * std::sin(angle);
 
+        // Drift trajectory: draw an arc showing drift direction and rate
+        double driftNorm = controller_->getParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kDriftRate));
+        double driftRate = driftNorm * 8.0 - 4.0;
+        if (std::abs(driftRate) > 0.01) {
+            double trailArc = std::clamp(driftRate * 15.0, -90.0, 90.0);
+            CColor trailColor = kLaneColors[lane];
+            trailColor.alpha = 0x30;
+            context->setFrameColor(trailColor);
+            context->setLineWidth(2.5);
+            double startDeg = phase * 360.0 - 90.0;
+            CRect arcRect(cx - radius, cy - radius, cx + radius, cy + radius);
+            context->drawArc(arcRect, startDeg, startDeg + trailArc, kDrawStroked);
+
+            // Arrowhead at trail end
+            double arrowAngle = kTwoPi * (phase + trailArc / 360.0) - kTwoPi * 0.25;
+            double arrowX = cx + radius * std::cos(arrowAngle);
+            double arrowY = cy + radius * std::sin(arrowAngle);
+            constexpr double kArrowR = 2.5;
+            CRect arrow(arrowX - kArrowR, arrowY - kArrowR, arrowX + kArrowR, arrowY + kArrowR);
+            trailColor.alpha = 0x60;
+            context->setFillColor(trailColor);
+            context->drawEllipse(arrow, kDrawFilled);
+        }
+
         constexpr double kDotR = 4.0;
         CRect dot(dotX - kDotR, dotY - kDotR, dotX + kDotR, dotY + kDotR);
         context->setFillColor(CColor(kLaneColors[lane].red, kLaneColors[lane].green, kLaneColors[lane].blue, 0xFF));

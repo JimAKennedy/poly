@@ -130,6 +130,7 @@ struct LaneConfig {
     float phraseGap = 0.0f;    // beats; silence between phrases
     float phraseOffset = 0.0f; // beats; phase offset for this lane's phrase cycle
     float mutationRate = 0.0f; // 0.0-1.0; per-step mutation probability each cycle
+    float driftRate = 0.0f;    // steps per bar; pattern rotation rate from absolute PPQ
     bool active = true;
     std::array<EnvelopeAssign, kMaxEnvelopesPerLane> envelopes{};
     int envelopeCount = 0;

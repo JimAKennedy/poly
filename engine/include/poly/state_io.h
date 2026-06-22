@@ -8,7 +8,7 @@
 
 namespace poly {
 
-static constexpr int32_t kCurrentStateVersion = 6;
+static constexpr int32_t kCurrentStateVersion = 7;
 
 // --- Internal body-only write (no version header, always writes latest body format) ---
 
@@ -124,6 +124,11 @@ bool writeGrooveStateBody(WriteFn&& write, const GrooveState& state, int32_t bod
 
         if (bodyVersion >= 6) {
             if (!write(&lane.mutationRate, sizeof(lane.mutationRate)))
+                return false;
+        }
+
+        if (bodyVersion >= 7) {
+            if (!write(&lane.driftRate, sizeof(lane.driftRate)))
                 return false;
         }
     }
@@ -281,6 +286,11 @@ template <typename ReadFn> bool readGrooveStateBody(ReadFn&& read, GrooveState& 
 
         if (version >= 6) {
             if (!read(&lane.mutationRate, sizeof(lane.mutationRate)))
+                return false;
+        }
+
+        if (version >= 7) {
+            if (!read(&lane.driftRate, sizeof(lane.driftRate)))
                 return false;
         }
     }
