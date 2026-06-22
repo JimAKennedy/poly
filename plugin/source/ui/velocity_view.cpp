@@ -57,11 +57,14 @@ void VelocityView::draw(VSTGUI::CDrawContext* context) {
 
     auto font = makeOwned<CFontDesc>("Arial", 9.0);
 
+    int selectedLane = static_cast<int>(std::round(controller_->getParamNormalized(ParamIDs::kSelectedLane) * 7.0));
+
     for (int lane = 0; lane < kMaxLanes; ++lane) {
         double x = bounds.left + kPad + lane * (barW + kPad);
 
         auto activeId = ParamIDs::laneParam(lane, ParamIDs::kActive);
         bool active = controller_->getParamNormalized(activeId) > 0.5;
+        bool selected = (lane == selectedLane);
 
         double vel = 0.0;
         if (active) {
@@ -83,11 +86,21 @@ void VelocityView::draw(VSTGUI::CDrawContext* context) {
             context->drawRect(barRect, kDrawFilled);
         }
 
+        if (selected) {
+            context->setFrameColor(
+                CColor(kLaneColors[lane].red, kLaneColors[lane].green, kLaneColors[lane].blue, 0xA0));
+            context->setLineWidth(1.5);
+            context->drawRect(bgRect, kDrawStroked);
+        }
+
         char label[4];
         snprintf(label, sizeof(label), "L%d", lane + 1);
         CRect labelRect(x, bgRect.bottom + 1, x + barW, bounds.bottom - 1);
         context->setFont(font);
-        context->setFontColor(active ? CColor(0xC0, 0xC0, 0xC8, 0xFF) : CColor(0x50, 0x50, 0x5C, 0xFF));
+        CColor labelColor = selected
+                                ? CColor(kLaneColors[lane].red, kLaneColors[lane].green, kLaneColors[lane].blue, 0xFF)
+                                : (active ? CColor(0xC0, 0xC0, 0xC8, 0xFF) : CColor(0x50, 0x50, 0x5C, 0xFF));
+        context->setFontColor(labelColor);
         context->drawString(label, labelRect, kCenterText);
     }
 

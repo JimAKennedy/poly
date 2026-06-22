@@ -58,6 +58,8 @@ void LaneGridView::draw(VSTGUI::CDrawContext* context) {
 
     auto font = makeOwned<CFontDesc>("Arial", 11.0);
 
+    int selectedLane = static_cast<int>(std::round(controller_->getParamNormalized(ParamIDs::kSelectedLane) * 7.0));
+
     for (int lane = 0; lane < kMaxLanes; ++lane) {
         double y = bounds.top + kPad + lane * (laneH + kPad);
         CRect laneRect(bounds.left + kPad, y, bounds.left + kPad + laneW, y + laneH);
@@ -65,17 +67,21 @@ void LaneGridView::draw(VSTGUI::CDrawContext* context) {
         auto activeId = ParamIDs::laneParam(lane, ParamIDs::kActive);
         double activeNorm = controller_->getParamNormalized(activeId);
         bool active = activeNorm > 0.5;
+        bool selected = (lane == selectedLane);
 
         auto laneColor = kLaneColors[lane];
+        uint8_t bgAlpha = selected ? 0x30 : 0x18;
         CColor bg =
-            active ? CColor(laneColor.red, laneColor.green, laneColor.blue, 0x18) : CColor(0x2A, 0x2A, 0x36, 0xFF);
+            active ? CColor(laneColor.red, laneColor.green, laneColor.blue, bgAlpha) : CColor(0x2A, 0x2A, 0x36, 0xFF);
         context->setFillColor(bg);
         context->drawRect(laneRect, kDrawFilled);
 
-        CColor border =
-            active ? CColor(laneColor.red, laneColor.green, laneColor.blue, 0x60) : CColor(0x3A, 0x3A, 0x48, 0xFF);
+        uint8_t borderAlpha = selected ? 0xC0 : 0x60;
+        double borderWidth = selected ? 1.5 : 1.0;
+        CColor border = active ? CColor(laneColor.red, laneColor.green, laneColor.blue, borderAlpha)
+                               : CColor(0x3A, 0x3A, 0x48, 0xFF);
         context->setFrameColor(border);
-        context->setLineWidth(1.0);
+        context->setLineWidth(borderWidth);
         context->drawRect(laneRect, kDrawStroked);
 
         CRect textRect = laneRect;
@@ -165,6 +171,12 @@ VSTGUI::CMouseEventResult LaneGridView::onMouseDown(VSTGUI::CPoint& where, const
     int lane = hitTestLane(where);
     if (lane < 0)
         return VSTGUI::kMouseEventNotHandled;
+
+    double selNorm = lane / 7.0;
+    controller_->beginEdit(ParamIDs::kSelectedLane);
+    controller_->setParamNormalized(ParamIDs::kSelectedLane, selNorm);
+    controller_->performEdit(ParamIDs::kSelectedLane, selNorm);
+    controller_->endEdit(ParamIDs::kSelectedLane);
 
     auto lr = laneRect(lane);
     double clickX = where.x - lr.left;

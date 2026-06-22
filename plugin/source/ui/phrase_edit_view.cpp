@@ -288,6 +288,8 @@ void PhraseEditView::drawPhraseSchematic(CDrawContext* ctx, const CColor& color,
 void PhraseEditView::draw(CDrawContext* context) {
     auto bounds = getViewSize();
 
+    selectedLane_ = static_cast<int>(std::round(controller_->getParamNormalized(ParamIDs::kSelectedLane) * 7.0));
+
     context->setFillColor(CColor(0x1E, 0x1E, 0x26, 0xFF));
     context->drawRect(bounds, kDrawFilled);
 
@@ -350,6 +352,11 @@ CMouseEventResult PhraseEditView::onMouseDown(CPoint& where, const CButtonState&
     int tab = hitTestTab(where);
     if (tab >= 0) {
         selectedLane_ = tab;
+        double norm = tab / 7.0;
+        controller_->beginEdit(ParamIDs::kSelectedLane);
+        controller_->setParamNormalized(ParamIDs::kSelectedLane, norm);
+        controller_->performEdit(ParamIDs::kSelectedLane, norm);
+        controller_->endEdit(ParamIDs::kSelectedLane);
         invalid();
         return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
     }

@@ -79,11 +79,14 @@ void EnvelopeCurveView::draw(VSTGUI::CDrawContext* context) {
         CColor(0xE6, 0x7E, 0x22, 0xB0), CColor(0x34, 0x98, 0xDB, 0xB0),
     };
 
+    int selectedLane = static_cast<int>(std::round(controller_->getParamNormalized(ParamIDs::kSelectedLane) * 7.0));
+
     for (int lane = 0; lane < kMaxLanes; ++lane) {
         auto activeId = ParamIDs::laneParam(lane, ParamIDs::kActive);
         if (controller_->getParamNormalized(activeId) <= 0.5)
             continue;
 
+        bool selected = (lane == selectedLane);
         double envVal = controller_->getParamNormalized(ParamIDs::envelopeValueOutput(lane));
         double phase = controller_->getParamNormalized(ParamIDs::lanePhaseOutput(lane));
 
@@ -103,8 +106,11 @@ void EnvelopeCurveView::draw(VSTGUI::CDrawContext* context) {
                 path->addLine(CPoint(x, y));
         }
 
-        context->setFrameColor(kLaneColors[lane]);
-        context->setLineWidth(1.5);
+        uint8_t curveAlpha = selected ? 0xE0 : 0x50;
+        double curveWidth = selected ? 2.0 : 1.0;
+        CColor curveColor(kLaneColors[lane].red, kLaneColors[lane].green, kLaneColors[lane].blue, curveAlpha);
+        context->setFrameColor(curveColor);
+        context->setLineWidth(curveWidth);
         context->drawGraphicsPath(path, CDrawContext::kPathStroked);
         path->forget();
 
@@ -112,18 +118,23 @@ void EnvelopeCurveView::draw(VSTGUI::CDrawContext* context) {
             double markerX = plotLeft + phase * plotW;
             double markerY = plotBottom - envVal * plotH;
 
+            uint8_t lineAlpha = selected ? 0xB0 : 0x40;
             auto* linePath = context->createGraphicsPath();
             if (linePath) {
                 linePath->beginSubpath(CPoint(markerX, plotTop));
                 linePath->addLine(CPoint(markerX, plotBottom));
-                context->setFrameColor(kLaneColors[lane]);
+                context->setFrameColor(
+                    CColor(kLaneColors[lane].red, kLaneColors[lane].green, kLaneColors[lane].blue, lineAlpha));
                 context->setLineWidth(1.0);
                 context->drawGraphicsPath(linePath, CDrawContext::kPathStroked);
                 linePath->forget();
             }
 
-            CRect dot(markerX - 4, markerY - 4, markerX + 4, markerY + 4);
-            context->setFillColor(CColor(kLaneColors[lane].red, kLaneColors[lane].green, kLaneColors[lane].blue, 0xFF));
+            double dotR = selected ? 5.0 : 3.5;
+            uint8_t dotAlpha = selected ? 0xFF : 0x90;
+            CRect dot(markerX - dotR, markerY - dotR, markerX + dotR, markerY + dotR);
+            context->setFillColor(
+                CColor(kLaneColors[lane].red, kLaneColors[lane].green, kLaneColors[lane].blue, dotAlpha));
             context->drawEllipse(dot, kDrawFilled);
         }
     }
