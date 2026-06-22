@@ -85,9 +85,12 @@ void PhaseAlignmentView::draw(VSTGUI::CDrawContext* context) {
     double minRadius = maxRadius * 0.3;
     double ringSpacing = activeCount > 1 ? (maxRadius - minRadius) / (activeCount - 1) : 0.0;
 
+    int selectedLane = static_cast<int>(std::round(controller_->getParamNormalized(ParamIDs::kSelectedLane) * 7.0));
+
     for (int i = 0; i < activeCount; ++i) {
         int lane = activeLanes[i];
         double radius = minRadius + i * ringSpacing;
+        bool selected = (lane == selectedLane);
 
         double phraseLenNorm = controller_->getParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kPhraseLength));
         double phraseGapNorm = controller_->getParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kPhraseGap));
@@ -103,21 +106,21 @@ void PhaseAlignmentView::draw(VSTGUI::CDrawContext* context) {
             double gapArc = 360.0 - playArc;
 
             CColor playColor = kLaneColors[lane];
-            playColor.alpha = 0x40;
+            playColor.alpha = selected ? 0x70 : 0x30;
             context->setFrameColor(playColor);
-            context->setLineWidth(3.0);
+            context->setLineWidth(selected ? 4.0 : 3.0);
             CRect arcRect(cx - radius, cy - radius, cx + radius, cy + radius);
             context->drawArc(arcRect, startAngleDeg, startAngleDeg + playArc, kDrawStroked);
 
-            CColor gapColor(0x40, 0x40, 0x4C, 0x30);
+            CColor gapColor(0x40, 0x40, 0x4C, selected ? 0x40 : 0x20);
             context->setFrameColor(gapColor);
-            context->setLineWidth(3.0);
+            context->setLineWidth(selected ? 4.0 : 3.0);
             context->drawArc(arcRect, startAngleDeg + playArc, startAngleDeg + playArc + gapArc, kDrawStroked);
         } else {
             CColor ringColor = kLaneColors[lane];
-            ringColor.alpha = 0x50;
+            ringColor.alpha = selected ? 0x80 : 0x35;
             context->setFrameColor(ringColor);
-            context->setLineWidth(1.0);
+            context->setLineWidth(selected ? 1.5 : 1.0);
             CRect ringRect(cx - radius, cy - radius, cx + radius, cy + radius);
             context->drawEllipse(ringRect, kDrawStroked);
         }
@@ -127,33 +130,32 @@ void PhaseAlignmentView::draw(VSTGUI::CDrawContext* context) {
         double dotX = cx + radius * std::cos(angle);
         double dotY = cy + radius * std::sin(angle);
 
-        // Drift trajectory: draw an arc showing drift direction and rate
         double driftNorm = controller_->getParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kDriftRate));
         double driftRate = driftNorm * 8.0 - 4.0;
         if (std::abs(driftRate) > 0.01) {
             double trailArc = std::clamp(driftRate * 15.0, -90.0, 90.0);
             CColor trailColor = kLaneColors[lane];
-            trailColor.alpha = 0x30;
+            trailColor.alpha = selected ? 0x50 : 0x20;
             context->setFrameColor(trailColor);
-            context->setLineWidth(2.5);
+            context->setLineWidth(selected ? 3.0 : 2.0);
             double startDeg = phase * 360.0 - 90.0;
             CRect arcRect(cx - radius, cy - radius, cx + radius, cy + radius);
             context->drawArc(arcRect, startDeg, startDeg + trailArc, kDrawStroked);
 
-            // Arrowhead at trail end
             double arrowAngle = kTwoPi * (phase + trailArc / 360.0) - kTwoPi * 0.25;
             double arrowX = cx + radius * std::cos(arrowAngle);
             double arrowY = cy + radius * std::sin(arrowAngle);
-            constexpr double kArrowR = 2.5;
-            CRect arrow(arrowX - kArrowR, arrowY - kArrowR, arrowX + kArrowR, arrowY + kArrowR);
-            trailColor.alpha = 0x60;
+            double arrowR = selected ? 3.0 : 2.0;
+            CRect arrow(arrowX - arrowR, arrowY - arrowR, arrowX + arrowR, arrowY + arrowR);
+            trailColor.alpha = selected ? 0x80 : 0x50;
             context->setFillColor(trailColor);
             context->drawEllipse(arrow, kDrawFilled);
         }
 
-        constexpr double kDotR = 4.0;
-        CRect dot(dotX - kDotR, dotY - kDotR, dotX + kDotR, dotY + kDotR);
-        context->setFillColor(CColor(kLaneColors[lane].red, kLaneColors[lane].green, kLaneColors[lane].blue, 0xFF));
+        double dotR = selected ? 5.0 : 3.5;
+        uint8_t dotAlpha = selected ? 0xFF : 0x90;
+        CRect dot(dotX - dotR, dotY - dotR, dotX + dotR, dotY + dotR);
+        context->setFillColor(CColor(kLaneColors[lane].red, kLaneColors[lane].green, kLaneColors[lane].blue, dotAlpha));
         context->drawEllipse(dot, kDrawFilled);
 
         char label[4];
@@ -162,7 +164,9 @@ void PhaseAlignmentView::draw(VSTGUI::CDrawContext* context) {
         double labelY = cy + (radius + 8) * std::sin(angle);
         CRect labelRect(labelX - 10, labelY - 6, labelX + 10, labelY + 6);
         context->setFont(font);
-        context->setFontColor(CColor(kLaneColors[lane].red, kLaneColors[lane].green, kLaneColors[lane].blue, 0xCC));
+        uint8_t labelAlpha = selected ? 0xFF : 0x80;
+        context->setFontColor(
+            CColor(kLaneColors[lane].red, kLaneColors[lane].green, kLaneColors[lane].blue, labelAlpha));
         context->drawString(label, labelRect, kCenterText);
     }
 
