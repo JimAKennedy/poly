@@ -262,6 +262,16 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
             if (lanePhase < 0.0)
                 lanePhase += 1.0;
 
+            if (resolved.lanes[lane].driftRate != 0.0f) {
+                double barPos = tc_.ppqStart / 4.0;
+                int stepsInCycle = resolved.lanes[lane].cycle.steps;
+                auto driftSteps =
+                    static_cast<int64_t>(std::floor(barPos * static_cast<double>(resolved.lanes[lane].driftRate)));
+                double driftFrac =
+                    static_cast<double>(((driftSteps % stepsInCycle) + stepsInCycle) % stepsInCycle) / stepsInCycle;
+                lanePhase = std::fmod(lanePhase + driftFrac + 1.0, 1.0);
+            }
+
             Steinberg::int32 idx;
             auto* phaseQueue = outParams->addParameterData(ParamIDs::lanePhaseOutput(lane), idx);
             if (phaseQueue) {

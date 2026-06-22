@@ -66,6 +66,8 @@ inline Steinberg::Vst::ParamID phrasePhaseOutput(int lane) {
     return kPhrasePhaseOutputBase + static_cast<Steinberg::Vst::ParamID>(lane);
 }
 
+static constexpr Steinberg::Vst::ParamID kSelectedLane = 700;
+
 static constexpr Steinberg::Vst::ParamID kSceneSelect = 500;
 static constexpr Steinberg::Vst::ParamID kSceneMorph = 501;
 
