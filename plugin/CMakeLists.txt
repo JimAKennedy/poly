@@ -13,6 +13,8 @@ smtg_add_vst3plugin(poly_plugin
     source/ui/lane_grid_view.cpp
     source/ui/phase_alignment_view.h
     source/ui/phase_alignment_view.cpp
+    source/ui/phrase_edit_view.h
+    source/ui/phrase_edit_view.cpp
     source/ui/velocity_view.h
     source/ui/velocity_view.cpp
 )

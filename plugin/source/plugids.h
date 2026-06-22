@@ -25,7 +25,10 @@ static constexpr int kSwingAmount = 5;
 static constexpr int kHumanizeMs = 6;
 static constexpr int kNoteDuration = 7;
 static constexpr int kActive = 8;
-static constexpr int kLaneParamCount = 9;
+static constexpr int kPhraseLength = 9;
+static constexpr int kPhraseGap = 10;
+static constexpr int kPhraseOffset = 11;
+static constexpr int kLaneParamCount = 12;
 
 inline Steinberg::Vst::ParamID laneParam(int lane, int offset) {
     return static_cast<Steinberg::Vst::ParamID>(lane * kParamsPerLane + offset);
@@ -54,6 +57,11 @@ inline Steinberg::Vst::ParamID lanePhaseOutput(int lane) {
 static constexpr Steinberg::Vst::ParamID kEnvelopeValueOutputBase = 430;
 inline Steinberg::Vst::ParamID envelopeValueOutput(int lane) {
     return kEnvelopeValueOutputBase + static_cast<Steinberg::Vst::ParamID>(lane);
+}
+
+static constexpr Steinberg::Vst::ParamID kPhrasePhaseOutputBase = 440;
+inline Steinberg::Vst::ParamID phrasePhaseOutput(int lane) {
+    return kPhrasePhaseOutputBase + static_cast<Steinberg::Vst::ParamID>(lane);
 }
 
 static constexpr Steinberg::Vst::ParamID kSceneSelect = 500;

@@ -89,12 +89,38 @@ void PhaseAlignmentView::draw(VSTGUI::CDrawContext* context) {
         int lane = activeLanes[i];
         double radius = minRadius + i * ringSpacing;
 
-        CColor ringColor = kLaneColors[lane];
-        ringColor.alpha = 0x50;
-        context->setFrameColor(ringColor);
-        context->setLineWidth(1.0);
-        CRect ringRect(cx - radius, cy - radius, cx + radius, cy + radius);
-        context->drawEllipse(ringRect, kDrawStroked);
+        double phraseLenNorm = controller_->getParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kPhraseLength));
+        double phraseGapNorm = controller_->getParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kPhraseGap));
+        bool hasPhrasing = phraseLenNorm > 0.001;
+
+        if (hasPhrasing && (phraseLenNorm + phraseGapNorm) > 0.001) {
+            double playFrac = phraseLenNorm / (phraseLenNorm + phraseGapNorm);
+
+            double phrasePhase = controller_->getParamNormalized(ParamIDs::phrasePhaseOutput(lane));
+            double startAngleDeg = 360.0 * phrasePhase - 90.0;
+
+            double playArc = 360.0 * playFrac;
+            double gapArc = 360.0 - playArc;
+
+            CColor playColor = kLaneColors[lane];
+            playColor.alpha = 0x40;
+            context->setFrameColor(playColor);
+            context->setLineWidth(3.0);
+            CRect arcRect(cx - radius, cy - radius, cx + radius, cy + radius);
+            context->drawArc(arcRect, startAngleDeg, startAngleDeg + playArc, kDrawStroked);
+
+            CColor gapColor(0x40, 0x40, 0x4C, 0x30);
+            context->setFrameColor(gapColor);
+            context->setLineWidth(3.0);
+            context->drawArc(arcRect, startAngleDeg + playArc, startAngleDeg + playArc + gapArc, kDrawStroked);
+        } else {
+            CColor ringColor = kLaneColors[lane];
+            ringColor.alpha = 0x50;
+            context->setFrameColor(ringColor);
+            context->setLineWidth(1.0);
+            CRect ringRect(cx - radius, cy - radius, cx + radius, cy + radius);
+            context->drawEllipse(ringRect, kDrawStroked);
+        }
 
         double phase = controller_->getParamNormalized(ParamIDs::lanePhaseOutput(lane));
         double angle = kTwoPi * phase - kTwoPi * 0.25;
