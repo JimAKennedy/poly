@@ -364,6 +364,9 @@ void PolyProcessor::applyParameter(Steinberg::Vst::ParamID id, double normalized
         case kPhraseOffset:
             cfg.phraseOffset = static_cast<float>(normalized * 64.0);
             break;
+        case kMutationRate:
+            cfg.mutationRate = static_cast<float>(normalized);
+            break;
         default:
             break;
         }

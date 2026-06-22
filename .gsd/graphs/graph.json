@@ -1,16 +1,16 @@
 {
   "nodes": [
     {
-      "id": "milestone:M003",
-      "label": "M003: Musical Refinement and Cubase Polish",
+      "id": "milestone:M007",
+      "label": "M007: Phrase Architecture and Pattern Evolution",
       "type": "milestone",
-      "description": "Active milestone: M003",
+      "description": "Active milestone: M007",
       "confidence": "EXTRACTED",
       "sourceFile": "STATE.md"
     },
     {
-      "id": "concept:phase:validating-milestone",
-      "label": "Phase: validating-milestone",
+      "id": "concept:phase:evaluating-gates",
+      "label": "Phase: evaluating-gates",
       "type": "concept",
       "confidence": "EXTRACTED",
       "sourceFile": "STATE.md"
@@ -20,6 +20,22 @@
       "label": "L1",
       "type": "lesson",
       "description": "clang-format CI failure in 3/5 runs (actions 7, 9, 10)",
+      "confidence": "EXTRACTED",
+      "sourceFile": "KNOWLEDGE.md"
+    },
+    {
+      "id": "lesson:L2",
+      "label": "L2",
+      "type": "lesson",
+      "description": "RT safety check flagged `allocateMessage()`/`sendMessage()` in `notify()`",
+      "confidence": "EXTRACTED",
+      "sourceFile": "KNOWLEDGE.md"
+    },
+    {
+      "id": "lesson:L3",
+      "label": "L3",
+      "type": "lesson",
+      "description": "7 visual regression tests failed with 77% pixel diff",
       "confidence": "EXTRACTED",
       "sourceFile": "KNOWLEDGE.md"
     },
@@ -385,6 +401,13 @@
       "confidence": "EXTRACTED"
     },
     {
+      "id": "milestone:M003",
+      "label": "M003: Musical Refinement and Cubase Polish",
+      "type": "milestone",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M003/M003-ROADMAP.md"
+    },
+    {
       "id": "slice:M003:S01",
       "label": "S01: Extended Envelope System",
       "type": "slice",
@@ -664,6 +687,236 @@
       "label": "T01: Add UI test flags and visual diff upload to ci.yml",
       "type": "task",
       "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M007:S01",
+      "label": "S01: Phrase System",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M007/slices/S01/S01-PLAN.md"
+    },
+    {
+      "id": "task:M007:S01:T01",
+      "label": "T01: Add phrase fields to LaneConfig and types",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M007:S01:T02",
+      "label": "T02: Implement phrase gating in renderRange",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M007:S01:T03",
+      "label": "T03: State serialization for phrase params",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M007:S01:T04",
+      "label": "T04: Golden tests for phrase system",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M007:S01:T05",
+      "label": "T05: Phase alignment view shows phrase boundaries",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M007:S02",
+      "label": "S02: Pattern Mutation",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M007/slices/S02/S02-PLAN.md"
+    },
+    {
+      "id": "task:M007:S02:T01",
+      "label": "T01: Add mutationRate to LaneConfig",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M007:S02:T02",
+      "label": "T02: Implement deterministic pattern mutation in renderRange",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M007:S02:T03",
+      "label": "T03: State serialization for mutation params",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M007:S02:T04",
+      "label": "T04: Golden tests for mutation",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M007:S03",
+      "label": "S03: Phase Drift",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M007/slices/S03/S03-PLAN.md"
+    },
+    {
+      "id": "task:M007:S03:T01",
+      "label": "T01: Add driftRate to LaneConfig",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M007:S03:T02",
+      "label": "T02: Implement drift in renderRange",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M007:S03:T03",
+      "label": "T03: State serialization for drift params",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M007:S03:T04",
+      "label": "T04: Golden tests for drift including transport jump",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M007:S03:T05",
+      "label": "T05: Phase alignment view shows drift trajectories",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M007:S04",
+      "label": "S04: Lane Timing Offset",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M007/slices/S04/S04-PLAN.md"
+    },
+    {
+      "id": "task:M007:S04:T01",
+      "label": "T01: Add timingOffsetMs to LaneConfig",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M007:S04:T02",
+      "label": "T02: Apply timing offset in renderRange",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M007:S04:T03",
+      "label": "T03: State serialization and golden tests for timing offset",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M007:S05",
+      "label": "S05: Kotekan Pairs",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M007/slices/S05/S05-PLAN.md"
+    },
+    {
+      "id": "task:M007:S05:T01",
+      "label": "T01: Add kotekan linking fields to LaneConfig",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M007:S05:T02",
+      "label": "T02: Implement kotekan complement generation in renderRange",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M007:S05:T03",
+      "label": "T03: State serialization and golden tests for kotekan",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M007:S05:T04",
+      "label": "T04: Lane grid view shows kotekan pairs",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M007:S06",
+      "label": "S06: Updated Factory Presets",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M007/slices/S06/S06-PLAN.md"
+    },
+    {
+      "id": "task:M007:S06:T01",
+      "label": "T01: Design and implement Afro-House Phrases preset",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M007:S06:T02",
+      "label": "T02: Design and implement Reich Phasing preset",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M007:S06:T03",
+      "label": "T03: Design and implement Kotekan Interlock preset",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M007:S06:T04",
+      "label": "T04: Design and implement Pocket Groove preset",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M007:S06:T05",
+      "label": "T05: Update preset infrastructure and tests",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "slice:M007:S07",
+      "label": "S07: Phrase UI Controls",
+      "type": "slice",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M007/slices/S07/S07-PLAN.md"
+    },
+    {
+      "id": "task:M007:S07:T01",
+      "label": "T01: Create PhraseEditView with knobs and lane tabs",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M007:S07:T02",
+      "label": "T02: Wire into UI layout and deploy",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M007:S07:T03",
+      "label": "T03: Phrase schematic, beat labels, dimming, decimal display",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "milestone:M008",
+      "label": "M008: Rhythmic Grammar Extensions",
+      "type": "milestone",
+      "confidence": "EXTRACTED",
+      "sourceFile": "milestones/M008/M008-ROADMAP.md"
     }
   ],
   "edges": [
@@ -1266,7 +1519,223 @@
       "to": "task:M006:S04:T01",
       "type": "contains",
       "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M007",
+      "to": "slice:M007:S01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M007:S01",
+      "to": "task:M007:S01:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M007:S01",
+      "to": "task:M007:S01:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M007:S01",
+      "to": "task:M007:S01:T03",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M007:S01",
+      "to": "task:M007:S01:T04",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M007:S01",
+      "to": "task:M007:S01:T05",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M007",
+      "to": "slice:M007:S02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M007:S02",
+      "to": "task:M007:S02:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M007:S02",
+      "to": "task:M007:S02:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M007:S02",
+      "to": "task:M007:S02:T03",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M007:S02",
+      "to": "task:M007:S02:T04",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M007",
+      "to": "slice:M007:S03",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M007:S03",
+      "to": "task:M007:S03:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M007:S03",
+      "to": "task:M007:S03:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M007:S03",
+      "to": "task:M007:S03:T03",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M007:S03",
+      "to": "task:M007:S03:T04",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M007:S03",
+      "to": "task:M007:S03:T05",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M007",
+      "to": "slice:M007:S04",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M007:S04",
+      "to": "task:M007:S04:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M007:S04",
+      "to": "task:M007:S04:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M007:S04",
+      "to": "task:M007:S04:T03",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M007",
+      "to": "slice:M007:S05",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M007:S05",
+      "to": "task:M007:S05:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M007:S05",
+      "to": "task:M007:S05:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M007:S05",
+      "to": "task:M007:S05:T03",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M007:S05",
+      "to": "task:M007:S05:T04",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M007",
+      "to": "slice:M007:S06",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M007:S06",
+      "to": "task:M007:S06:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M007:S06",
+      "to": "task:M007:S06:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M007:S06",
+      "to": "task:M007:S06:T03",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M007:S06",
+      "to": "task:M007:S06:T04",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M007:S06",
+      "to": "task:M007:S06:T05",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "milestone:M007",
+      "to": "slice:M007:S07",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M007:S07",
+      "to": "task:M007:S07:T01",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M007:S07",
+      "to": "task:M007:S07:T02",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M007:S07",
+      "to": "task:M007:S07:T03",
+      "type": "contains",
+      "confidence": "EXTRACTED"
     }
   ],
-  "builtAt": "2026-06-21T13:14:19.276Z"
+  "builtAt": "2026-06-22T19:48:56.187Z"
 }
