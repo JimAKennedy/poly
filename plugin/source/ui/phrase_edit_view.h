@@ -32,10 +32,13 @@ private:
 
     VSTGUI::CRect laneTabRect(int lane) const;
     VSTGUI::CRect knobRect(int knob) const;
+    VSTGUI::CRect schematicRect() const;
     int hitTestTab(const VSTGUI::CPoint& where) const;
     int hitTestKnob(const VSTGUI::CPoint& where) const;
     void drawKnob(VSTGUI::CDrawContext* ctx, const VSTGUI::CRect& rect, double value, const VSTGUI::CColor& color,
                   const char* label, double maxBeats, bool enabled);
+    void drawPhraseSchematic(VSTGUI::CDrawContext* ctx, const VSTGUI::CColor& color, double lenBeats, double gapBeats,
+                             double ofsBeats);
 
     Steinberg::Vst::EditController* controller_;
     VSTGUI::SharedPointer<VSTGUI::CVSTGUITimer> refreshTimer_;
