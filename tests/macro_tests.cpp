@@ -247,4 +247,95 @@ TEST(Macro, Deterministic) {
     }
 }
 
+// --- MacroSmoother ---
+
+TEST(MacroSmoother, SnapToTargetOnFirstAdvance) {
+    poly::MacroSmoother s;
+    poly::MacroValues target{};
+    target.complexity = 0.8f;
+    target.density = 0.3f;
+    s.setTarget(target);
+    s.advance(44100.0, 512);
+
+    EXPECT_FLOAT_EQ(s.current.complexity, 0.8f);
+    EXPECT_FLOAT_EQ(s.current.density, 0.3f);
+}
+
+TEST(MacroSmoother, GradualTransition) {
+    poly::MacroSmoother s;
+    poly::MacroValues initial{};
+    initial.complexity = 0.0f;
+    s.setTarget(initial);
+    s.advance(44100.0, 512);
+
+    poly::MacroValues target{};
+    target.complexity = 1.0f;
+    s.setTarget(target);
+
+    s.advance(44100.0, 512);
+    EXPECT_GT(s.current.complexity, 0.0f);
+    EXPECT_LT(s.current.complexity, 1.0f);
+
+    for (int i = 0; i < 500; ++i)
+        s.advance(44100.0, 512);
+    EXPECT_NEAR(s.current.complexity, 1.0f, 0.001f);
+}
+
+TEST(MacroSmoother, SnapToTargetBypasses) {
+    poly::MacroSmoother s;
+    poly::MacroValues initial{};
+    initial.complexity = 0.0f;
+    s.setTarget(initial);
+    s.advance(44100.0, 512);
+
+    poly::MacroValues target{};
+    target.complexity = 1.0f;
+    target.density = 0.7f;
+    s.setTarget(target);
+    s.snapToTarget();
+
+    EXPECT_FLOAT_EQ(s.current.complexity, 1.0f);
+    EXPECT_FLOAT_EQ(s.current.density, 0.7f);
+}
+
+TEST(MacroSmoother, ReinitAfterReset) {
+    poly::MacroSmoother s;
+    poly::MacroValues v{};
+    v.complexity = 0.5f;
+    s.setTarget(v);
+    s.advance(44100.0, 512);
+
+    s.initialized = false;
+    v.complexity = 0.9f;
+    s.setTarget(v);
+    s.advance(44100.0, 512);
+
+    EXPECT_FLOAT_EQ(s.current.complexity, 0.9f);
+}
+
+TEST(MacroSmoother, AllFieldsSmooth) {
+    poly::MacroSmoother s;
+    poly::MacroValues initial{};
+    s.setTarget(initial);
+    s.advance(44100.0, 512);
+
+    poly::MacroValues target{};
+    target.complexity = 1.0f;
+    target.density = 1.0f;
+    target.syncopation = 1.0f;
+    target.swing = 1.0f;
+    target.tension = 1.0f;
+    target.humanize = 1.0f;
+    s.setTarget(target);
+    s.advance(44100.0, 512);
+
+    EXPECT_GT(s.current.complexity, 0.0f);
+    EXPECT_GT(s.current.density, 0.0f);
+    EXPECT_GT(s.current.syncopation, 0.0f);
+    EXPECT_GT(s.current.swing, 0.0f);
+    EXPECT_GT(s.current.tension, 0.0f);
+    EXPECT_GT(s.current.humanize, 0.0f);
+    EXPECT_LT(s.current.complexity, 1.0f);
+}
+
 } // namespace

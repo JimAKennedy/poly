@@ -50,7 +50,7 @@
 						"attributes": {
 							"class": "CView",
 							"custom-view-name": "HeaderView",
-							"mouse-enabled": "false",
+							"mouse-enabled": "true",
 							"opacity": "1",
 							"origin": "0, 0",
 							"size": "600, 32",

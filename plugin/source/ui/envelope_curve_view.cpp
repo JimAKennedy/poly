@@ -19,6 +19,29 @@ EnvelopeCurveView::EnvelopeCurveView(const VSTGUI::CRect& size, Steinberg::Vst::
     setWantsFocus(false);
 }
 
+EnvelopeCurveView::~EnvelopeCurveView() {
+    if (refreshTimer_) {
+        refreshTimer_->stop();
+        refreshTimer_ = nullptr;
+    }
+}
+
+bool EnvelopeCurveView::attached(CView* parent) {
+    if (CView::attached(parent)) {
+        refreshTimer_ = VSTGUI::makeOwned<VSTGUI::CVSTGUITimer>([this](VSTGUI::CVSTGUITimer*) { invalid(); }, 33);
+        return true;
+    }
+    return false;
+}
+
+bool EnvelopeCurveView::removed(CView* parent) {
+    if (refreshTimer_) {
+        refreshTimer_->stop();
+        refreshTimer_ = nullptr;
+    }
+    return CView::removed(parent);
+}
+
 void EnvelopeCurveView::draw(VSTGUI::CDrawContext* context) {
     using namespace VSTGUI;
 

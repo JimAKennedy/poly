@@ -143,7 +143,7 @@ VSTGUI::CView* PolyController::createCustomView(VSTGUI::UTF8StringPtr name, cons
                                                 const VSTGUI::IUIDescription* /*description*/,
                                                 VSTGUI::VST3Editor* /*editor*/) {
     if (std::strcmp(name, "HeaderView") == 0) {
-        return new HeaderView(VSTGUI::CRect(0, 0, 600, 32));
+        return new HeaderView(VSTGUI::CRect(0, 0, 600, 32), this);
     }
     if (std::strcmp(name, "LaneGridView") == 0) {
         return new LaneGridView(VSTGUI::CRect(0, 0, 580, 156), this);
