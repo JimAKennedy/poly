@@ -9,7 +9,7 @@ struct PresetInfo {
     const char* description;
 };
 
-static constexpr int kFactoryPresetCount = 5;
+static constexpr int kFactoryPresetCount = 9;
 
 inline GrooveState makeFourOnTheFloor() {
     GrooveState s{};
@@ -259,6 +259,230 @@ inline GrooveState makeLatinFeel() {
     return s;
 }
 
+inline GrooveState makeAfroHousePhrases() {
+    GrooveState s{};
+    s.activeLaneCount = 5;
+    s.seed = 31;
+
+    auto& kick = s.lanes[0];
+    kick.id = 0;
+    kick.role = Role::AnchorPulse;
+    kick.midiNote = 36;
+    kick.cycle = {4, 4};
+    kick.hitCount = 3;
+    kick.baseVelocity = 110;
+    kick.probability = 1.0f;
+    kick.noteDuration = 0.25f;
+    kick.phraseLength = 16.0f;
+    kick.phraseGap = 0.0f;
+
+    auto& shaker = s.lanes[1];
+    shaker.id = 1;
+    shaker.role = Role::Shimmer;
+    shaker.midiNote = 70;
+    shaker.cycle = {16, 16};
+    shaker.hitCount = 12;
+    shaker.baseVelocity = 60;
+    shaker.probability = 0.9f;
+    shaker.velocitySpread = 0.12f;
+
+    auto& conga = s.lanes[2];
+    conga.id = 2;
+    conga.role = Role::Accent;
+    conga.midiNote = 63;
+    conga.cycle = {7, 8};
+    conga.hitCount = 4;
+    conga.baseVelocity = 85;
+    conga.probability = 0.9f;
+    conga.phraseLength = 8.0f;
+    conga.phraseGap = 2.0f;
+    conga.phraseOffset = 0.0f;
+    conga.humanizeMs = 2.0f;
+
+    auto& djembe = s.lanes[3];
+    djembe.id = 3;
+    djembe.role = Role::Ghost;
+    djembe.midiNote = 43;
+    djembe.cycle = {5, 8};
+    djembe.hitCount = 3;
+    djembe.baseVelocity = 70;
+    djembe.probability = 0.85f;
+    djembe.phraseLength = 12.0f;
+    djembe.phraseGap = 4.0f;
+    djembe.phraseOffset = 4.0f;
+    djembe.ghostFloor = 25;
+    djembe.velocitySpread = 0.1f;
+
+    auto& perc = s.lanes[4];
+    perc.id = 4;
+    perc.role = Role::Ornament;
+    perc.midiNote = 56;
+    perc.cycle = {3, 4};
+    perc.hitCount = 2;
+    perc.baseVelocity = 65;
+    perc.probability = 0.75f;
+    perc.phraseLength = 4.0f;
+    perc.phraseGap = 4.0f;
+    perc.phraseOffset = 8.0f;
+
+    s.macros.swing = 0.15f;
+    s.macros.humanize = 0.15f;
+    s.macros.density = 0.45f;
+    return s;
+}
+
+inline GrooveState makeReichPhasing() {
+    GrooveState s{};
+    s.activeLaneCount = 3;
+    s.seed = 47;
+
+    auto& fixed = s.lanes[0];
+    fixed.id = 0;
+    fixed.role = Role::AnchorPulse;
+    fixed.midiNote = 76;
+    fixed.cycle = {5, 12};
+    fixed.hitCount = 3;
+    fixed.baseVelocity = 90;
+    fixed.probability = 1.0f;
+    fixed.noteDuration = 0.15f;
+
+    auto& drifting = s.lanes[1];
+    drifting.id = 1;
+    drifting.role = Role::AnchorPulse;
+    drifting.midiNote = 76;
+    drifting.cycle = {5, 12};
+    drifting.hitCount = 3;
+    drifting.baseVelocity = 90;
+    drifting.probability = 1.0f;
+    drifting.noteDuration = 0.15f;
+    drifting.driftRate = 0.25f;
+
+    auto& pulse = s.lanes[2];
+    pulse.id = 2;
+    pulse.role = Role::Shimmer;
+    pulse.midiNote = 42;
+    pulse.cycle = {4, 4};
+    pulse.hitCount = 4;
+    pulse.baseVelocity = 45;
+    pulse.probability = 0.8f;
+    pulse.velocitySpread = 0.05f;
+
+    s.macros.complexity = 0.2f;
+    s.macros.density = 0.3f;
+    return s;
+}
+
+inline GrooveState makeKotekanInterlock() {
+    GrooveState s{};
+    s.activeLaneCount = 4;
+    s.seed = 55;
+
+    auto& polos = s.lanes[0];
+    polos.id = 0;
+    polos.role = Role::AnchorPulse;
+    polos.midiNote = 76;
+    polos.cycle = {3, 8};
+    polos.hitCount = 3;
+    polos.baseVelocity = 95;
+    polos.probability = 1.0f;
+    polos.noteDuration = 0.12f;
+
+    auto& sangsih = s.lanes[1];
+    sangsih.id = 1;
+    sangsih.role = Role::Accent;
+    sangsih.midiNote = 77;
+    sangsih.cycle = {3, 8};
+    sangsih.hitCount = 3;
+    sangsih.baseVelocity = 85;
+    sangsih.probability = 0.95f;
+    sangsih.noteDuration = 0.12f;
+    sangsih.kotekanSourceLane = 0;
+
+    auto& gong = s.lanes[2];
+    gong.id = 2;
+    gong.role = Role::Backbeat;
+    gong.midiNote = 36;
+    gong.cycle = {4, 4};
+    gong.hitCount = 1;
+    gong.baseVelocity = 100;
+    gong.probability = 1.0f;
+    gong.noteDuration = 0.5f;
+
+    auto& shimmer = s.lanes[3];
+    shimmer.id = 3;
+    shimmer.role = Role::Ghost;
+    shimmer.midiNote = 42;
+    shimmer.cycle = {7, 16};
+    shimmer.hitCount = 4;
+    shimmer.baseVelocity = 50;
+    shimmer.probability = 0.7f;
+    shimmer.ghostFloor = 20;
+    shimmer.velocitySpread = 0.15f;
+
+    s.macros.complexity = 0.3f;
+    s.macros.density = 0.4f;
+    return s;
+}
+
+inline GrooveState makePocketGroove() {
+    GrooveState s{};
+    s.activeLaneCount = 4;
+    s.seed = 71;
+
+    auto& kick = s.lanes[0];
+    kick.id = 0;
+    kick.role = Role::AnchorPulse;
+    kick.midiNote = 36;
+    kick.cycle = {4, 16};
+    kick.hitCount = 3;
+    kick.baseVelocity = 110;
+    kick.probability = 1.0f;
+    kick.noteDuration = 0.3f;
+    kick.timingOffsetMs = 3.0f;
+
+    auto& snare = s.lanes[1];
+    snare.id = 1;
+    snare.role = Role::Backbeat;
+    snare.midiNote = 38;
+    snare.cycle = {4, 4};
+    snare.hitCount = 2;
+    snare.baseVelocity = 100;
+    snare.probability = 1.0f;
+    snare.timingOffsetMs = -2.0f;
+    snare.mutationRate = 0.1f;
+
+    auto& hh = s.lanes[2];
+    hh.id = 2;
+    hh.role = Role::Shimmer;
+    hh.midiNote = 42;
+    hh.cycle = {8, 8};
+    hh.hitCount = 6;
+    hh.baseVelocity = 70;
+    hh.probability = 0.9f;
+    hh.velocitySpread = 0.15f;
+    hh.timingOffsetMs = 1.0f;
+    hh.mutationRate = 0.15f;
+    hh.swingAmount = 0.1f;
+
+    auto& ghost = s.lanes[3];
+    ghost.id = 3;
+    ghost.role = Role::Ghost;
+    ghost.midiNote = 39;
+    ghost.cycle = {5, 16};
+    ghost.hitCount = 3;
+    ghost.baseVelocity = 45;
+    ghost.probability = 0.65f;
+    ghost.ghostFloor = 20;
+    ghost.velocitySpread = 0.2f;
+    ghost.timingOffsetMs = -1.5f;
+    ghost.mutationRate = 0.2f;
+
+    s.macros.humanize = 0.25f;
+    s.macros.syncopation = 0.3f;
+    s.macros.density = 0.4f;
+    return s;
+}
+
 inline GrooveState makeFactoryPreset(int index) {
     switch (index) {
     case 0:
@@ -271,6 +495,14 @@ inline GrooveState makeFactoryPreset(int index) {
         return makeBreakbeat();
     case 4:
         return makeLatinFeel();
+    case 5:
+        return makeAfroHousePhrases();
+    case 6:
+        return makeReichPhasing();
+    case 7:
+        return makeKotekanInterlock();
+    case 8:
+        return makePocketGroove();
     default:
         return GrooveState{};
     }
@@ -283,6 +515,10 @@ inline PresetInfo getFactoryPresetInfo(int index) {
         {"Sparse Pulse", "Minimal, spacious groove with wide spacing and gentle ghost notes"},
         {"Breakbeat", "Syncopated kick with punchy snare, fast hats and ghost toms"},
         {"Latin Feel", "Clave-inspired pattern with conga, shaker and cowbell ornaments"},
+        {"Afro-House Phrases", "Offset phrase loops — shaker continuous, conga and djembe breathe on staggered cycles"},
+        {"Reich Phasing", "Two identical patterns gradually phase apart creating emergent resultant rhythms"},
+        {"Kotekan Interlock", "Balinese interlocking pair — polos and sangsih fill each other's gaps"},
+        {"Pocket Groove", "J Dilla-style micro-timing — kick pushes late, snare pulls early, gentle mutation"},
     };
     if (index >= 0 && index < kFactoryPresetCount)
         return kInfos[index];
