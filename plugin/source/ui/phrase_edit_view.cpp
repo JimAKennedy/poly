@@ -26,6 +26,7 @@ const PhraseEditView::KnobDef PhraseEditView::kKnobs[kKnobCount] = {
     {ParamIDs::kPhraseOffset, "Ofs", 64.0, ValueFormat::Beats},
     {ParamIDs::kMutationRate, "Mut", 100.0, ValueFormat::Percent},
     {ParamIDs::kDriftRate, "Drift", 4.0, ValueFormat::BipolarSteps},
+    {ParamIDs::kTimingOffset, "Time", 20.0, ValueFormat::BipolarMs},
 };
 
 PhraseEditView::PhraseEditView(const CRect& size, Steinberg::Vst::EditController* controller)
@@ -63,7 +64,7 @@ CRect PhraseEditView::laneTabRect(int lane) const {
 }
 
 CRect PhraseEditView::knobRect(int knob) const {
-    static constexpr double kKnobX[] = {308, 364, 420, 490, 546};
+    static constexpr double kKnobX[] = {294, 340, 386, 450, 496, 542};
     auto bounds = getViewSize();
     double x = bounds.left + kKnobX[knob];
     return CRect(x, bounds.top + 16, x + 32, bounds.top + 48);
@@ -157,12 +158,18 @@ void PhraseEditView::drawKnob(CDrawContext* ctx, const CRect& rect, double value
             std::snprintf(valStr, sizeof(valStr), "off");
         else
             std::snprintf(valStr, sizeof(valStr), "%.0f%%", pct);
-    } else {
+    } else if (def.format == ValueFormat::BipolarSteps) {
         double steps = (value - 0.5) * 2.0 * def.maxValue;
         if (std::fabs(steps) < 0.05)
             std::snprintf(valStr, sizeof(valStr), "off");
         else
             std::snprintf(valStr, sizeof(valStr), "%+.1f st", steps);
+    } else {
+        double ms = (value - 0.5) * 2.0 * def.maxValue;
+        if (std::fabs(ms) < 0.5)
+            std::snprintf(valStr, sizeof(valStr), "off");
+        else
+            std::snprintf(valStr, sizeof(valStr), "%+.0f ms", ms);
     }
     auto smallFont = makeOwned<CFontDesc>("Arial", 8.0);
     ctx->setFont(smallFont);
@@ -333,7 +340,7 @@ void PhraseEditView::draw(CDrawContext* context) {
         auto r = knobRect(k);
         auto paramId = ParamIDs::laneParam(selectedLane_, kKnobs[k].paramOffset);
         double value = controller_->getParamNormalized(paramId);
-        bool enabled = (k == 0) || (k <= 2 && lenActive) || (k >= 3);
+        bool enabled = (k == 0) || (k >= 1 && k <= 2 && lenActive) || (k >= 3);
         drawKnob(context, r, value, laneColor, kKnobs[k], enabled);
     }
 
