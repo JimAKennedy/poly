@@ -1,0 +1,32 @@
+name: NFR Review (Nightly)
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write
+  issues: write
+
+jobs:
+  nfr-review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run NFR Review
+        id: nfr
+        uses: JimAKennedy/nfr-review@v1
+        with:
+          fail-on: "never"
+          sarif-upload: "true"
+          create-issues: "true"
+
+      - name: Upload baseline
+        uses: actions/upload-artifact@v4
+        with:
+          name: nfr-review-baseline
+          path: ${{ steps.nfr.outputs.jsonl-path }}
+          retention-days: 90
