@@ -31,7 +31,7 @@
 - [x] **S05: S05** `risk:medium` `depends:[]`
   > After this: Mark two lanes as a kotekan pair — one gets the Euclidean hits, the other fills the gaps, creating interlocking Balinese-style patterns on two MIDI notes
 
-- [ ] **S06: Updated Factory Presets** `risk:low` `depends:[S01,S02,S03,S04,S05]`
+- [x] **S06: S06** `risk:low` `depends:[]`
   > After this: New preset bank demonstrating phrase breathing, mutation, drift, kotekan, and groove pocket across genres
 
 - [x] **S07: S07** `risk:low` `depends:[]`
