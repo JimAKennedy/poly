@@ -29,7 +29,8 @@ static constexpr int kPhraseLength = 9;
 static constexpr int kPhraseGap = 10;
 static constexpr int kPhraseOffset = 11;
 static constexpr int kMutationRate = 12;
-static constexpr int kLaneParamCount = 13;
+static constexpr int kDriftRate = 13;
+static constexpr int kLaneParamCount = 14;
 
 inline Steinberg::Vst::ParamID laneParam(int lane, int offset) {
     return static_cast<Steinberg::Vst::ParamID>(lane * kParamsPerLane + offset);

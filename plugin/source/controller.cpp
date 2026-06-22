@@ -43,6 +43,7 @@ static constexpr LaneParamDef kLaneParamDefs[] = {
     {ParamIDs::kPhraseGap, "Phrase Gap", "bars", 0, 0.0},
     {ParamIDs::kPhraseOffset, "Phrase Ofs", "bars", 0, 0.0},
     {ParamIDs::kMutationRate, "Mutation", "%", 0, 0.0},
+    {ParamIDs::kDriftRate, "Drift Rate", "st/bar", 0, 0.5},
 };
 
 } // namespace
@@ -203,6 +204,8 @@ Steinberg::tresult PLUGIN_API PolyController::setComponentState(Steinberg::IBStr
         setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kPhraseGap), cfg.phraseGap / 16.0);
         setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kPhraseOffset), cfg.phraseOffset / 16.0);
         setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kMutationRate), cfg.mutationRate);
+        setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kDriftRate),
+                           static_cast<double>((cfg.driftRate + 4.0f) / 8.0f));
     }
 
     setParamNormalized(ParamIDs::kMacroComplexity, gs.macros.complexity);

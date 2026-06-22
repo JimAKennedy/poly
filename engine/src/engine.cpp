@@ -65,6 +65,13 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
             int stepsInCycle = cfg.cycle.steps;
             int64_t cycleStep = ((absStep % stepsInCycle) + stepsInCycle) % stepsInCycle;
 
+            // Phase drift: rotate pattern lookup by driftRate steps per bar
+            if (cfg.driftRate != 0.0f) {
+                double barPos = ppq / 4.0;
+                auto driftSteps = static_cast<int64_t>(std::floor(barPos * static_cast<double>(cfg.driftRate)));
+                cycleStep = ((cycleStep + driftSteps) % stepsInCycle + stepsInCycle) % stepsInCycle;
+            }
+
             // Envelope modulation: evaluate before pattern check (FillLikelihood needs it)
             float velMod = 1.0f;
             float probMod = 0.0f;

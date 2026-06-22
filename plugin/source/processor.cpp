@@ -367,6 +367,9 @@ void PolyProcessor::applyParameter(Steinberg::Vst::ParamID id, double normalized
         case kMutationRate:
             cfg.mutationRate = static_cast<float>(normalized);
             break;
+        case kDriftRate:
+            cfg.driftRate = static_cast<float>(normalized * 8.0 - 4.0);
+            break;
         default:
             break;
         }
