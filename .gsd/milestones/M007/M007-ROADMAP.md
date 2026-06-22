@@ -22,7 +22,7 @@
 - [x] **S02: S02** `risk:medium` `depends:[]`
   > After this: With mutation rate > 0, each cycle of a pattern has subtle variations — displaced hits, ghost notes, occasional substitutions
 
-- [ ] **S03: Phase Drift** `risk:high` `depends:[S01]`
+- [x] **S03: S03** `risk:high` `depends:[]`
   > After this: Two lanes with identical patterns gradually phase against each other over bars, creating Reich-style emergent rhythms
 
 - [ ] **S04: Lane Timing Offset** `risk:low` `depends:[]`
