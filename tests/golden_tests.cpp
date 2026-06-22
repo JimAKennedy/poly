@@ -882,3 +882,118 @@ TEST(GoldenPhrase, OffsetShiftsGap) {
 
     EXPECT_NE(serialize(events), serialize(eventsNoOffset)) << "phraseOffset should shift the gap position";
 }
+
+// --- Test 31: timingOffsetMs=0 produces identical output to baseline ---
+TEST(GoldenTimingOffset, ZeroMatchesBaseline) {
+    poly::Engine engine;
+    auto state = makeTestState();
+    auto baseline = renderSorted(engine, state, 0.0, 16.0, 0.5);
+
+    for (int i = 0; i < state.activeLaneCount; ++i)
+        state.lanes[i].timingOffsetMs = 0.0f;
+
+    auto withZeroOffset = renderSorted(engine, state, 0.0, 16.0, 0.5);
+    EXPECT_EQ(serialize(baseline), serialize(withZeroOffset))
+        << "timingOffsetMs=0 should produce identical output to default";
+}
+
+// --- Test 32: Positive offset shifts events later ---
+TEST(GoldenTimingOffset, PositiveShiftsLater) {
+    poly::Engine engine;
+    poly::GrooveState state{};
+    state.activeLaneCount = 1;
+    state.seed = 42;
+
+    auto& kick = state.lanes[0];
+    kick.id = 0;
+    kick.midiNote = 36;
+    kick.cycle = {.steps = 4, .subdivision = 4};
+    kick.hitCount = 4;
+    kick.baseVelocity = 100;
+    kick.probability = 1.0f;
+
+    auto baseline = renderSorted(engine, state, 0.0, 16.0, 0.5);
+
+    kick.timingOffsetMs = 5.0f;
+    auto shifted = renderSorted(engine, state, 0.0, 16.0, 0.5);
+
+    ASSERT_EQ(baseline.size(), shifted.size()) << "Same number of events with positive offset";
+    for (size_t i = 0; i < baseline.size(); ++i) {
+        EXPECT_GT(shifted[i].ppq, baseline[i].ppq) << "Event " << i << " should be shifted later with positive offset";
+    }
+}
+
+// --- Test 33: Negative offset shifts events earlier ---
+TEST(GoldenTimingOffset, NegativeShiftsEarlier) {
+    poly::Engine engine;
+    poly::GrooveState state{};
+    state.activeLaneCount = 1;
+    state.seed = 42;
+
+    auto& kick = state.lanes[0];
+    kick.id = 0;
+    kick.midiNote = 36;
+    kick.cycle = {.steps = 4, .subdivision = 4};
+    kick.hitCount = 4;
+    kick.baseVelocity = 100;
+    kick.probability = 1.0f;
+
+    auto baseline = renderSorted(engine, state, 0.0, 16.0, 0.5);
+
+    kick.timingOffsetMs = -5.0f;
+    auto shifted = renderSorted(engine, state, 0.0, 16.0, 0.5);
+
+    ASSERT_EQ(baseline.size(), shifted.size()) << "Same number of events with negative offset";
+    // Skip event 0 (PPQ 0.0) since negative offset clamps to 0.0
+    for (size_t i = 1; i < baseline.size(); ++i) {
+        EXPECT_LT(shifted[i].ppq, baseline[i].ppq)
+            << "Event " << i << " should be shifted earlier with negative offset";
+    }
+}
+
+// --- Test 34: Timing offset interacts correctly with swing ---
+TEST(GoldenTimingOffset, InteractsWithSwing) {
+    poly::Engine engine;
+    poly::GrooveState state{};
+    state.activeLaneCount = 1;
+    state.seed = 42;
+
+    auto& hh = state.lanes[0];
+    hh.id = 0;
+    hh.midiNote = 42;
+    hh.cycle = {.steps = 8, .subdivision = 8};
+    hh.hitCount = 8;
+    hh.baseVelocity = 80;
+    hh.probability = 1.0f;
+    hh.swingAmount = 0.5f;
+
+    auto swingOnly = renderSorted(engine, state, 0.0, 16.0, 0.5);
+
+    hh.timingOffsetMs = 3.0f;
+    auto swingPlusOffset = renderSorted(engine, state, 0.0, 16.0, 0.5);
+
+    ASSERT_EQ(swingOnly.size(), swingPlusOffset.size());
+    EXPECT_NE(serialize(swingOnly), serialize(swingPlusOffset))
+        << "Adding timing offset to swung pattern should change positions";
+
+    for (size_t i = 0; i < swingOnly.size(); ++i) {
+        EXPECT_GT(swingPlusOffset[i].ppq, swingOnly[i].ppq)
+            << "Event " << i << " should be shifted later with positive offset on top of swing";
+    }
+}
+
+// --- Test 35: Timing offset deterministic across block sizes ---
+TEST(GoldenTimingOffset, BlockSizeIndependence) {
+    poly::Engine engine;
+    auto state = makeTestState();
+    state.lanes[0].timingOffsetMs = 5.0f;
+    state.lanes[1].timingOffsetMs = -3.0f;
+    state.lanes[2].timingOffsetMs = 2.0f;
+
+    auto small = renderSorted(engine, state, 0.0, 16.0, 0.05);
+    auto medium = renderSorted(engine, state, 0.0, 16.0, 0.5);
+    auto large = renderSorted(engine, state, 0.0, 16.0, 2.0);
+
+    EXPECT_EQ(serialize(small), serialize(medium)) << "Timing offset: 0.05 vs 0.5 PPQ blocks differ";
+    EXPECT_EQ(serialize(small), serialize(large)) << "Timing offset: 0.05 vs 2.0 PPQ blocks differ";
+}

@@ -380,6 +380,9 @@ void PolyProcessor::applyParameter(Steinberg::Vst::ParamID id, double normalized
         case kDriftRate:
             cfg.driftRate = static_cast<float>(normalized * 8.0 - 4.0);
             break;
+        case kTimingOffset:
+            cfg.timingOffsetMs = static_cast<float>(normalized * 40.0 - 20.0);
+            break;
         default:
             break;
         }
