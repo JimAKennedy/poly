@@ -80,20 +80,20 @@ CRect LaneEditView::laneKnobRect(int knob) const {
     static constexpr double kKnobX[] = {232, 265, 298, 331, 364, 406, 439, 472, 505, 538};
     auto bounds = getViewSize();
     double x = bounds.left + kKnobX[knob];
-    return CRect(x, bounds.top + 16, x + 26, bounds.top + 42);
+    return CRect(x, bounds.top + 28, x + 26, bounds.top + 54);
 }
 
 CRect LaneEditView::phraseKnobRect(int knob) const {
     static constexpr double kKnobX[] = {294, 340, 386, 450, 496, 542};
     auto bounds = getViewSize();
     double x = bounds.left + kKnobX[knob];
-    return CRect(x, bounds.top + 74, x + 26, bounds.top + 100);
+    return CRect(x, bounds.top + 86, x + 26, bounds.top + 112);
 }
 
 CRect LaneEditView::schematicRect() const {
     auto bounds = getViewSize();
     auto lastTab = laneTabRect(kMaxLanes - 1);
-    return CRect(bounds.left + 10, bounds.top + 68, lastTab.right, bounds.top + 80);
+    return CRect(bounds.left + 10, bounds.top + 80, lastTab.right, bounds.top + 92);
 }
 
 int LaneEditView::hitTestTab(const CPoint& where) const {
@@ -393,7 +393,7 @@ void LaneEditView::draw(CDrawContext* context) {
     context->setLineWidth(0.5);
     context->setFrameColor(CColor(0x30, 0x30, 0x40, 0x60));
     double divX = bounds.left + 398;
-    context->drawLine(CPoint(divX, bounds.top + 14), CPoint(divX, bounds.top + 53));
+    context->drawLine(CPoint(divX, bounds.top + 14), CPoint(divX, bounds.top + 65));
 
     for (int k = 0; k < kLaneKnobCount; ++k) {
         auto r = laneKnobRect(k);
@@ -405,8 +405,8 @@ void LaneEditView::draw(CDrawContext* context) {
     auto phraseFont = makeOwned<CFontDesc>("Arial", 8.0);
     context->setFont(phraseFont);
     context->setFontColor(CColor(0x58, 0x58, 0x70, 0xFF));
-    CRect phraseLabel(bounds.left + 10, bounds.top + 57, bounds.left + 90, bounds.top + 67);
-    context->drawString("Phrase", phraseLabel, kLeftText);
+    CRect phraseLabel(bounds.left + 10, bounds.top + 69, bounds.left + 90, bounds.top + 79);
+    context->drawString("PHRASE", phraseLabel, kLeftText);
 
     auto lenParamId = paramIdForKnob(kPhraseKnobs[0], selectedLane_);
     double lenValue = controller_->getParamNormalized(lenParamId);
