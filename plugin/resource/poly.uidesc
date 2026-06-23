@@ -38,11 +38,11 @@
 					"background-color": "bg",
 					"background-color-draw-style": "filled",
 					"class": "CViewContainer",
-					"minSize": "600, 550",
+					"minSize": "600, 659",
 					"mouse-enabled": "true",
 					"opacity": "1",
 					"origin": "0, 0",
-					"size": "600, 550",
+					"size": "600, 659",
 					"transparent": "false"
 				},
 				"children": {
@@ -50,7 +50,7 @@
 						"attributes": {
 							"class": "CView",
 							"custom-view-name": "HeaderView",
-							"mouse-enabled": "false",
+							"mouse-enabled": "true",
 							"opacity": "1",
 							"origin": "0, 0",
 							"size": "600, 32",
@@ -82,7 +82,7 @@
 							"transparent": "false"
 						}
 					},
-					"CTextLabel#macrosLabel": {
+					"CTextLabel#laneEditLabel": {
 						"attributes": {
 							"class": "CTextLabel",
 							"font": "~ NormalFontVerySmall",
@@ -90,6 +90,31 @@
 							"mouse-enabled": "false",
 							"opacity": "1",
 							"origin": "14, 208",
+							"size": "80, 12",
+							"text-alignment": "left",
+							"title": "LANE",
+							"transparent": "true"
+						}
+					},
+					"CView#laneEditView": {
+						"attributes": {
+							"class": "CView",
+							"custom-view-name": "LaneEditView",
+							"mouse-enabled": "true",
+							"opacity": "1",
+							"origin": "10, 221",
+							"size": "580, 126",
+							"transparent": "false"
+						}
+					},
+					"CTextLabel#macrosLabel": {
+						"attributes": {
+							"class": "CTextLabel",
+							"font": "~ NormalFontVerySmall",
+							"font-color": "text.section",
+							"mouse-enabled": "false",
+							"opacity": "1",
+							"origin": "14, 351",
 							"size": "80, 12",
 							"text-alignment": "left",
 							"title": "MACROS",
@@ -103,7 +128,7 @@
 							"class": "CViewContainer",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "10, 221",
+							"origin": "10, 364",
 							"size": "580, 80",
 							"transparent": "false"
 						},
@@ -327,7 +352,7 @@
 							"font-color": "text.section",
 							"mouse-enabled": "false",
 							"opacity": "1",
-							"origin": "14, 305",
+							"origin": "14, 448",
 							"size": "80, 12",
 							"text-alignment": "left",
 							"title": "VELOCITY",
@@ -340,8 +365,8 @@
 							"custom-view-name": "VelocityView",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "10, 318",
-							"size": "580, 76",
+							"origin": "10, 461",
+							"size": "580, 40",
 							"transparent": "false"
 						}
 					},
@@ -352,7 +377,7 @@
 							"font-color": "text.section",
 							"mouse-enabled": "false",
 							"opacity": "1",
-							"origin": "14, 398",
+							"origin": "14, 505",
 							"size": "100, 12",
 							"text-alignment": "left",
 							"title": "VISUALIZATION",
@@ -365,7 +390,7 @@
 							"custom-view-name": "EnvelopeCurveView",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "10, 411",
+							"origin": "10, 518",
 							"size": "380, 130",
 							"transparent": "false"
 						}
@@ -376,7 +401,7 @@
 							"custom-view-name": "PhaseAlignmentView",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "400, 411",
+							"origin": "400, 518",
 							"size": "190, 130",
 							"transparent": "false"
 						}

@@ -8,7 +8,7 @@
 
 namespace poly {
 
-static constexpr int32_t kCurrentStateVersion = 4;
+static constexpr int32_t kCurrentStateVersion = 9;
 
 // --- Internal body-only write (no version header, always writes latest body format) ---
 
@@ -110,6 +110,35 @@ bool writeGrooveStateBody(WriteFn&& write, const GrooveState& state, int32_t bod
             if (!write(&lane.constraints.densityMin, sizeof(lane.constraints.densityMin)))
                 return false;
             if (!write(&lane.constraints.densityMax, sizeof(lane.constraints.densityMax)))
+                return false;
+        }
+
+        if (bodyVersion >= 5) {
+            if (!write(&lane.phraseLength, sizeof(lane.phraseLength)))
+                return false;
+            if (!write(&lane.phraseGap, sizeof(lane.phraseGap)))
+                return false;
+            if (!write(&lane.phraseOffset, sizeof(lane.phraseOffset)))
+                return false;
+        }
+
+        if (bodyVersion >= 6) {
+            if (!write(&lane.mutationRate, sizeof(lane.mutationRate)))
+                return false;
+        }
+
+        if (bodyVersion >= 7) {
+            if (!write(&lane.driftRate, sizeof(lane.driftRate)))
+                return false;
+        }
+
+        if (bodyVersion >= 8) {
+            if (!write(&lane.timingOffsetMs, sizeof(lane.timingOffsetMs)))
+                return false;
+        }
+
+        if (bodyVersion >= 9) {
+            if (!write(&lane.kotekanSourceLane, sizeof(lane.kotekanSourceLane)))
                 return false;
         }
     }
@@ -253,6 +282,35 @@ template <typename ReadFn> bool readGrooveStateBody(ReadFn&& read, GrooveState& 
             if (!read(&lane.constraints.densityMin, sizeof(lane.constraints.densityMin)))
                 return false;
             if (!read(&lane.constraints.densityMax, sizeof(lane.constraints.densityMax)))
+                return false;
+        }
+
+        if (version >= 5) {
+            if (!read(&lane.phraseLength, sizeof(lane.phraseLength)))
+                return false;
+            if (!read(&lane.phraseGap, sizeof(lane.phraseGap)))
+                return false;
+            if (!read(&lane.phraseOffset, sizeof(lane.phraseOffset)))
+                return false;
+        }
+
+        if (version >= 6) {
+            if (!read(&lane.mutationRate, sizeof(lane.mutationRate)))
+                return false;
+        }
+
+        if (version >= 7) {
+            if (!read(&lane.driftRate, sizeof(lane.driftRate)))
+                return false;
+        }
+
+        if (version >= 8) {
+            if (!read(&lane.timingOffsetMs, sizeof(lane.timingOffsetMs)))
+                return false;
+        }
+
+        if (version >= 9) {
+            if (!read(&lane.kotekanSourceLane, sizeof(lane.kotekanSourceLane)))
                 return false;
         }
     }

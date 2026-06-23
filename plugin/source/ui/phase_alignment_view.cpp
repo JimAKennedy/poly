@@ -17,6 +17,29 @@ PhaseAlignmentView::PhaseAlignmentView(const VSTGUI::CRect& size, Steinberg::Vst
     setWantsFocus(false);
 }
 
+PhaseAlignmentView::~PhaseAlignmentView() {
+    if (refreshTimer_) {
+        refreshTimer_->stop();
+        refreshTimer_ = nullptr;
+    }
+}
+
+bool PhaseAlignmentView::attached(CView* parent) {
+    if (CView::attached(parent)) {
+        refreshTimer_ = VSTGUI::makeOwned<VSTGUI::CVSTGUITimer>([this](VSTGUI::CVSTGUITimer*) { invalid(); }, 33);
+        return true;
+    }
+    return false;
+}
+
+bool PhaseAlignmentView::removed(CView* parent) {
+    if (refreshTimer_) {
+        refreshTimer_->stop();
+        refreshTimer_ = nullptr;
+    }
+    return CView::removed(parent);
+}
+
 void PhaseAlignmentView::draw(VSTGUI::CDrawContext* context) {
     using namespace VSTGUI;
 
@@ -62,25 +85,77 @@ void PhaseAlignmentView::draw(VSTGUI::CDrawContext* context) {
     double minRadius = maxRadius * 0.3;
     double ringSpacing = activeCount > 1 ? (maxRadius - minRadius) / (activeCount - 1) : 0.0;
 
+    int selectedLane = static_cast<int>(std::round(controller_->getParamNormalized(ParamIDs::kSelectedLane) * 7.0));
+
     for (int i = 0; i < activeCount; ++i) {
         int lane = activeLanes[i];
         double radius = minRadius + i * ringSpacing;
+        bool selected = (lane == selectedLane);
 
-        CColor ringColor = kLaneColors[lane];
-        ringColor.alpha = 0x50;
-        context->setFrameColor(ringColor);
-        context->setLineWidth(1.0);
-        CRect ringRect(cx - radius, cy - radius, cx + radius, cy + radius);
-        context->drawEllipse(ringRect, kDrawStroked);
+        double phraseLenNorm = controller_->getParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kPhraseLength));
+        double phraseGapNorm = controller_->getParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kPhraseGap));
+        bool hasPhrasing = phraseLenNorm > 0.001;
+
+        if (hasPhrasing && (phraseLenNorm + phraseGapNorm) > 0.001) {
+            double playFrac = phraseLenNorm / (phraseLenNorm + phraseGapNorm);
+
+            double phrasePhase = controller_->getParamNormalized(ParamIDs::phrasePhaseOutput(lane));
+            double startAngleDeg = 360.0 * phrasePhase - 90.0;
+
+            double playArc = 360.0 * playFrac;
+            double gapArc = 360.0 - playArc;
+
+            CColor playColor = kLaneColors[lane];
+            playColor.alpha = selected ? 0x70 : 0x30;
+            context->setFrameColor(playColor);
+            context->setLineWidth(selected ? 4.0 : 3.0);
+            CRect arcRect(cx - radius, cy - radius, cx + radius, cy + radius);
+            context->drawArc(arcRect, startAngleDeg, startAngleDeg + playArc, kDrawStroked);
+
+            CColor gapColor(0x40, 0x40, 0x4C, selected ? 0x40 : 0x20);
+            context->setFrameColor(gapColor);
+            context->setLineWidth(selected ? 4.0 : 3.0);
+            context->drawArc(arcRect, startAngleDeg + playArc, startAngleDeg + playArc + gapArc, kDrawStroked);
+        } else {
+            CColor ringColor = kLaneColors[lane];
+            ringColor.alpha = selected ? 0x80 : 0x35;
+            context->setFrameColor(ringColor);
+            context->setLineWidth(selected ? 1.5 : 1.0);
+            CRect ringRect(cx - radius, cy - radius, cx + radius, cy + radius);
+            context->drawEllipse(ringRect, kDrawStroked);
+        }
 
         double phase = controller_->getParamNormalized(ParamIDs::lanePhaseOutput(lane));
         double angle = kTwoPi * phase - kTwoPi * 0.25;
         double dotX = cx + radius * std::cos(angle);
         double dotY = cy + radius * std::sin(angle);
 
-        constexpr double kDotR = 4.0;
-        CRect dot(dotX - kDotR, dotY - kDotR, dotX + kDotR, dotY + kDotR);
-        context->setFillColor(CColor(kLaneColors[lane].red, kLaneColors[lane].green, kLaneColors[lane].blue, 0xFF));
+        double driftNorm = controller_->getParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kDriftRate));
+        double driftRate = driftNorm * 8.0 - 4.0;
+        if (std::abs(driftRate) > 0.01) {
+            double trailArc = std::clamp(driftRate * 15.0, -90.0, 90.0);
+            CColor trailColor = kLaneColors[lane];
+            trailColor.alpha = selected ? 0x50 : 0x20;
+            context->setFrameColor(trailColor);
+            context->setLineWidth(selected ? 3.0 : 2.0);
+            double startDeg = phase * 360.0 - 90.0;
+            CRect arcRect(cx - radius, cy - radius, cx + radius, cy + radius);
+            context->drawArc(arcRect, startDeg, startDeg + trailArc, kDrawStroked);
+
+            double arrowAngle = kTwoPi * (phase + trailArc / 360.0) - kTwoPi * 0.25;
+            double arrowX = cx + radius * std::cos(arrowAngle);
+            double arrowY = cy + radius * std::sin(arrowAngle);
+            double arrowR = selected ? 3.0 : 2.0;
+            CRect arrow(arrowX - arrowR, arrowY - arrowR, arrowX + arrowR, arrowY + arrowR);
+            trailColor.alpha = selected ? 0x80 : 0x50;
+            context->setFillColor(trailColor);
+            context->drawEllipse(arrow, kDrawFilled);
+        }
+
+        double dotR = selected ? 5.0 : 3.5;
+        uint8_t dotAlpha = selected ? 0xFF : 0x90;
+        CRect dot(dotX - dotR, dotY - dotR, dotX + dotR, dotY + dotR);
+        context->setFillColor(CColor(kLaneColors[lane].red, kLaneColors[lane].green, kLaneColors[lane].blue, dotAlpha));
         context->drawEllipse(dot, kDrawFilled);
 
         char label[4];
@@ -89,7 +164,9 @@ void PhaseAlignmentView::draw(VSTGUI::CDrawContext* context) {
         double labelY = cy + (radius + 8) * std::sin(angle);
         CRect labelRect(labelX - 10, labelY - 6, labelX + 10, labelY + 6);
         context->setFont(font);
-        context->setFontColor(CColor(kLaneColors[lane].red, kLaneColors[lane].green, kLaneColors[lane].blue, 0xCC));
+        uint8_t labelAlpha = selected ? 0xFF : 0x80;
+        context->setFontColor(
+            CColor(kLaneColors[lane].red, kLaneColors[lane].green, kLaneColors[lane].blue, labelAlpha));
         context->drawString(label, labelRect, kCenterText);
     }
 

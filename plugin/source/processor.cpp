@@ -66,6 +66,7 @@ Steinberg::tresult PLUGIN_API PolyProcessor::setActive(Steinberg::TBool state) {
         captureBuffer_.clear();
         exportTriggered_ = false;
         expectedNextPpq_ = -1.0;
+        macroSmoother_.initialized = false;
     }
     return AudioEffect::setActive(state);
 }
@@ -155,15 +156,23 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
         pendingNoteOffs_.clear();
     }
 
-    // --- Resolve scene and render ---
-    GrooveState resolved;
+    // --- Resolve scene with smoothed macros and render ---
+    GrooveState base;
     if (sceneState_.select == SceneSelect::Morph) {
-        GrooveState base = interpolateGrooveState(sceneState_.sceneA, sceneState_.sceneB, sceneState_.morphAmount);
-        resolved = resolveConstraints(base, resolveMacros(base));
+        base = interpolateGrooveState(sceneState_.sceneA, sceneState_.sceneB, sceneState_.morphAmount);
+    } else if (sceneState_.select == SceneSelect::B) {
+        base = sceneState_.sceneB;
     } else {
-        const auto& base = (sceneState_.select == SceneSelect::B) ? sceneState_.sceneB : sceneState_.sceneA;
-        resolved = resolveConstraints(base, resolveMacros(base));
+        base = sceneState_.sceneA;
     }
+
+    macroSmoother_.setTarget(base.macros);
+    if (tc_.jumped)
+        macroSmoother_.snapToTarget();
+    macroSmoother_.advance(tc_.sampleRate, tc_.blockSize);
+    base.macros = macroSmoother_.current;
+
+    GrooveState resolved = resolveConstraints(base, resolveMacros(base));
     engine_.renderRange(tc_, resolved, noteBuffer_);
 
     // --- Emit MIDI events ---
@@ -253,6 +262,16 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
             if (lanePhase < 0.0)
                 lanePhase += 1.0;
 
+            if (resolved.lanes[lane].driftRate != 0.0f) {
+                double barPos = tc_.ppqStart / 4.0;
+                int stepsInCycle = resolved.lanes[lane].cycle.steps;
+                auto driftSteps =
+                    static_cast<int64_t>(std::floor(barPos * static_cast<double>(resolved.lanes[lane].driftRate)));
+                double driftFrac =
+                    static_cast<double>(((driftSteps % stepsInCycle) + stepsInCycle) % stepsInCycle) / stepsInCycle;
+                lanePhase = std::fmod(lanePhase + driftFrac + 1.0, 1.0);
+            }
+
             Steinberg::int32 idx;
             auto* phaseQueue = outParams->addParameterData(ParamIDs::lanePhaseOutput(lane), idx);
             if (phaseQueue) {
@@ -271,6 +290,26 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
             if (envQueue) {
                 Steinberg::int32 ptIdx;
                 envQueue->addPoint(0, envValue, ptIdx);
+            }
+
+            double phrasePhase = 0.0;
+            if (resolved.lanes[lane].phraseLength > 0.0f) {
+                double phraseLenPpq = static_cast<double>(resolved.lanes[lane].phraseLength);
+                double phraseGapPpq = static_cast<double>(resolved.lanes[lane].phraseGap);
+                double phraseCyclePpq = phraseLenPpq + phraseGapPpq;
+                if (phraseCyclePpq > 0.0) {
+                    double offPpq = static_cast<double>(resolved.lanes[lane].phraseOffset);
+                    double pos = std::fmod(tc_.ppqStart - offPpq, phraseCyclePpq);
+                    if (pos < 0.0)
+                        pos += phraseCyclePpq;
+                    phrasePhase = pos / phraseCyclePpq;
+                }
+            }
+
+            auto* phraseQueue = outParams->addParameterData(ParamIDs::phrasePhaseOutput(lane), idx);
+            if (phraseQueue) {
+                Steinberg::int32 ptIdx;
+                phraseQueue->addPoint(0, phrasePhase, ptIdx);
             }
         }
     }
@@ -292,6 +331,37 @@ void PolyProcessor::applyParameter(Steinberg::Vst::ParamID id, double normalized
     }
 
     auto& gs = (sceneState_.select == SceneSelect::B) ? sceneState_.sceneB : sceneState_.sceneA;
+
+    if (id >= kLaneCoreBase &&
+        id < kLaneCoreBase + static_cast<Steinberg::Vst::ParamID>(kMaxLanes * kCoreParamsPerLane)) {
+        auto rel = static_cast<int>(id - kLaneCoreBase);
+        int lane = rel / kCoreParamsPerLane;
+        int offset = rel % kCoreParamsPerLane;
+        auto& cfg = gs.lanes[lane];
+        switch (offset) {
+        case kCoreSteps:
+            cfg.cycle.steps = 1 + static_cast<int>(std::round(normalized * 63.0));
+            break;
+        case kCoreSubdivision: {
+            static constexpr int subdivs[] = {1, 2, 4, 8, 16};
+            int idx = static_cast<int>(std::round(normalized * 4.0));
+            cfg.cycle.subdivision = subdivs[std::clamp(idx, 0, 4)];
+            break;
+        }
+        case kCoreHits:
+            cfg.hitCount = static_cast<int>(std::round(normalized * 64.0));
+            break;
+        case kCoreRotation:
+            cfg.rotation = static_cast<int>(std::round(normalized * 63.0));
+            break;
+        case kCoreMidiNote:
+            cfg.midiNote = static_cast<int16_t>(std::round(normalized * 127.0));
+            break;
+        default:
+            break;
+        }
+        return;
+    }
 
     if (id < static_cast<Steinberg::Vst::ParamID>(kMaxLanes * kParamsPerLane)) {
         int lane = static_cast<int>(id) / kParamsPerLane;
@@ -325,6 +395,27 @@ void PolyProcessor::applyParameter(Steinberg::Vst::ParamID id, double normalized
             break;
         case kActive:
             cfg.active = (normalized > 0.5);
+            break;
+        case kPhraseLength:
+            cfg.phraseLength = static_cast<float>(normalized * 64.0);
+            break;
+        case kPhraseGap:
+            cfg.phraseGap = static_cast<float>(normalized * 64.0);
+            break;
+        case kPhraseOffset:
+            cfg.phraseOffset = static_cast<float>(normalized * 64.0);
+            break;
+        case kMutationRate:
+            cfg.mutationRate = static_cast<float>(normalized);
+            break;
+        case kDriftRate:
+            cfg.driftRate = static_cast<float>(normalized * 8.0 - 4.0);
+            break;
+        case kTimingOffset:
+            cfg.timingOffsetMs = static_cast<float>(normalized * 40.0 - 20.0);
+            break;
+        case kKotekanSource:
+            cfg.kotekanSourceLane = static_cast<int>(std::round(normalized * 8.0)) - 1;
             break;
         default:
             break;

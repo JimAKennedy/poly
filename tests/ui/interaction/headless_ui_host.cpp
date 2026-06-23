@@ -141,11 +141,11 @@ static void* createHiddenNSView(int width, int height) {
 
     CGRect rect = {{0, 0}, {static_cast<double>(width), static_cast<double>(height)}};
 
-    id allocated = ((id(*)(Class, SEL))objc_msgSend)(nsViewClass, allocSel);
+    id allocated = ((id (*)(Class, SEL))objc_msgSend)(nsViewClass, allocSel);
     if (!allocated)
         return nullptr;
 
-    id view = ((id(*)(id, SEL, CGRect))objc_msgSend)(allocated, initFrameSel, rect);
+    id view = ((id (*)(id, SEL, CGRect))objc_msgSend)(allocated, initFrameSel, rect);
     return reinterpret_cast<void*>(view);
 }
 
@@ -173,7 +173,8 @@ struct HeadlessUIHost::Impl {
 };
 
 //------------------------------------------------------------------------
-HeadlessUIHost::HeadlessUIHost(ControllerFactory factory, std::string resourceDir) : pImpl(new Impl) {
+HeadlessUIHost::HeadlessUIHost(ControllerFactory factory, std::string resourceDir)
+    : pImpl(new Impl) { // ownership-transfer
     pImpl->factory = std::move(factory);
     pImpl->resourceDir = std::move(resourceDir);
 }
