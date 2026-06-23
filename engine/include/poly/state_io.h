@@ -161,6 +161,10 @@ bool writeGrooveStateBody(WriteFn&& write, const GrooveState& state, int32_t bod
             }
             if (!write(&fpBits, sizeof(fpBits)))
                 return false;
+            for (int s = 0; s < kMaxSteps; ++s) {
+                if (!write(&lane.microTimingMs[static_cast<size_t>(s)], sizeof(float)))
+                    return false;
+            }
         }
     }
 
@@ -353,6 +357,10 @@ template <typename ReadFn> bool readGrooveStateBody(ReadFn&& read, GrooveState& 
                 return false;
             for (int s = 0; s < kMaxSteps; ++s) {
                 lane.fixedPattern[static_cast<size_t>(s)] = (fpBits & (uint64_t{1} << s)) != 0;
+            }
+            for (int s = 0; s < kMaxSteps; ++s) {
+                if (!read(&lane.microTimingMs[static_cast<size_t>(s)], sizeof(float)))
+                    return false;
             }
         }
     }
