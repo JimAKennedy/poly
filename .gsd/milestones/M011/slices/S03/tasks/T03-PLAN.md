@@ -1,30 +1,22 @@
 ---
-estimated_steps: 5
+estimated_steps: 1
 estimated_files: 1
 skills_used: []
 ---
 
-# T03: Skip or fix cmake-build-config amber findings
+# T03: Skip cmake-build-config, structure-weak-boundary, and informational rules
 
-8 amber/low cmake-build-config findings for subdirectory CMakeLists missing project() VERSION and target_compile_features. These subdirectories (engine, plugin, tools/harness) inherit from the root CMakeLists.txt which sets the C++ standard via CMAKE_CXX_STANDARD 20.
-
-Options:
-1. Add the rule to nfr-review.yaml skip list with rationale (subdirectories inherit from root)
-2. Add target_compile_features to each subdirectory
-
-Recommendation: Skip in nfr-review.yaml since subdirectory CMakeLists inheriting standards from root is standard CMake practice, and adding project(VERSION) to subdirectories can conflict with the root project version.
+Add justified skips to nfr-review.yaml for: (1) cmake-build-config (8 amber) — subdirectory CMakeLists inherit from root; (2) structure-weak-boundary (6 amber) — engine/plugin boundary is intentional and tested by engine-isolation CI job; (3) sample-readme-exists (1 amber) — not applicable to VST3 plugin project; (4) otel-test-observability (1 amber) — not applicable to C++ GTest suite. Each skip gets a comment explaining the rationale.
 
 ## Inputs
 
 - `nfr-review.yaml`
-- `engine/CMakeLists.txt`
-- `plugin/CMakeLists.txt`
-- `tools/harness/CMakeLists.txt`
+- `current amber finding list`
 
 ## Expected Output
 
-- `nfr-review.yaml with cmake-build-config in skip list, or subdirectory CMakeLists with compile features`
+- `nfr-review.yaml with all amber rules skipped with rationale`
 
 ## Verification
 
-Read nfr-review.yaml to confirm rule is in skip list with comment
+yamllint nfr-review.yaml or manual inspection of skip list

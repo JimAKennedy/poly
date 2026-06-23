@@ -12,16 +12,16 @@
 
 ## Slices
 
-- [ ] **S01: Fix clang-format CI gate** `risk:low` `depends:[]`
+- [x] **S01: S01** `risk:low` `depends:[]`
   > After this: pre-commit run --all-files passes locally and in CI with identical formatting
 
-- [ ] **S02: Annotate remaining raw-memory allocations** `risk:low` `depends:[]`
+- [x] **S02: S02** `risk:low` `depends:[]`
   > After this: NFR review shows zero red cpp-raw-memory findings
 
-- [ ] **S03: Resolve remaining NFR red and amber findings** `risk:medium` `depends:[S02]`
+- [x] **S03: S03** `risk:medium` `depends:[]`
   > After this: NFR review shows zero red and zero amber findings
 
-- [ ] **S04: Documentation and recurrence prevention** `risk:low` `depends:[S01,S02,S03]`
+- [ ] **S04: S04** `risk:low` `depends:[]`
   > After this: KNOWLEDGE.md and CLAUDE.md contain actionable rules for ownership-transfer, NFR review, and clang-format
 
 ## Boundary Map

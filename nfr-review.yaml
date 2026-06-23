@@ -14,3 +14,13 @@ rules:
     - structure-god-node
     # Subdirectory CMakeLists.txt files inherit cmake_minimum_required from root CMakeLists.txt.
     - cmake-minimum-version
+    # Subdirectory CMakeLists inherit build-type/compile-flags from root; no per-directory overrides needed.
+    - cmake-build-config
+    # Engine/plugin boundary is intentional and enforced by the engine-isolation CI job.
+    - structure-weak-boundary
+    # Not applicable to a VST3 plugin project distributed as a binary.
+    - sample-readme-exists
+    # Not applicable to a C++ GTest suite; observability is via golden tests and CI coverage.
+    - otel-test-observability
+    # Decisions documented in IMPLEMENTATION_PLAN.md, CLAUDE.md, and .gsd/DECISIONS.md.
+    - adr-gap

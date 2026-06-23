@@ -4,18 +4,18 @@ estimated_files: 1
 skills_used: []
 ---
 
-# T01: Fix clang-format disagreement in headless_ui_host.cpp
+# T01: Pin clang-format to mirrors-clang-format with explicit version
 
-CI clang-format formats `id (*)(Class, SEL)` as `id(*)(Class, SEL)` (no space before `(`). Our local LLVM 22.1.7 preserves the space. Fix by running CI-compatible formatting on the file. Lines 144 and 148 need `id (*)` changed to `id(*)` to match CI clang-format output.
+Replace pocc/pre-commit-hooks clang-format hook with pre-commit/mirrors-clang-format which allows pinning to a specific LLVM release. Pin to a version available on both CI Ubuntu runners and local macOS. Remove the ci:skip for clang-format since the version mismatch will be resolved. Also remove pocc/pre-commit-hooks entirely if clang-format was its only hook.
 
 ## Inputs
 
-- `CI code-quality log showing exact diff`
+- `.pre-commit-config.yaml`
 
 ## Expected Output
 
-- `headless_ui_host.cpp with corrected function pointer cast spacing`
+- `.pre-commit-config.yaml with mirrors-clang-format pinned version`
 
 ## Verification
 
-/opt/homebrew/opt/llvm/bin/clang-format --dry-run --Werror tests/ui/interaction/headless_ui_host.cpp
+pre-commit run clang-format --all-files exits 0 locally

@@ -1,5 +1,6 @@
 #include "lane_edit_view.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 

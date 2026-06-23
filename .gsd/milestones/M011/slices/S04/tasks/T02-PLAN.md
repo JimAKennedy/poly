@@ -1,24 +1,21 @@
 ---
-estimated_steps: 4
+estimated_steps: 1
 estimated_files: 1
 skills_used: []
 ---
 
-# T02: Update CLAUDE.md with NFR and ownership-transfer conventions
+# T02: Add KNOWLEDGE.md rules for all discovered issues
 
-Update CLAUDE.md Key Conventions section to add:
-- A subsection on NFR Review: all `new` expressions need ownership-transfer annotation, nfr-review.yaml skip rules need rationale comments
-- Update Pre-Push Checklist to mention checking for unannotated `new` expressions when modifying plugin/source/ files
-- Note about clang-format version: CI is authoritative when local and CI disagree
+Add rules to KNOWLEDGE.md: R6: All new expressions in plugin/source/ must have // ownership-transfer when ownership transfers to VST3/VSTGUI. R7: Always include <algorithm> and other standard headers explicitly; MSVC does not provide them transitively. R8: clang-format version is pinned in .pre-commit-config.yaml; do not change without verifying CI compatibility. R9: nfr-review.yaml skip rules must have rationale comments.
 
 ## Inputs
 
-- `CLAUDE.md`
+- `.gsd/KNOWLEDGE.md`
 
 ## Expected Output
 
-- `CLAUDE.md with NFR Review conventions and updated pre-push checklist`
+- `KNOWLEDGE.md with R6-R9 rules`
 
 ## Verification
 
-Read CLAUDE.md to confirm new conventions are present
+grep -c 'R[6-9]' .gsd/KNOWLEDGE.md shows 4 new rules

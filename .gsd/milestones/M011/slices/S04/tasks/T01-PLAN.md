@@ -1,24 +1,23 @@
 ---
-estimated_steps: 4
-estimated_files: 1
+estimated_steps: 1
+estimated_files: 2
 skills_used: []
 ---
 
-# T01: Add KNOWLEDGE.md rules for ownership-transfer and NFR review
+# T01: Add pre-push Git hook via pre-commit framework
 
-Add new rules to KNOWLEDGE.md:
-- R6: All `new` expressions in plugin/source/ must have `// ownership-transfer` comment when ownership is transferred to VST3/VSTGUI framework (createInstance factories, createView, createCustomView, addUnit). The NFR review cpp-raw-memory scanner treats unannotated `new` as red/high.
-- R7: When adding nfr-review.yaml skip rules, always include a comment explaining WHY the rule is skipped.
-- R8: When clang-format version produces different output locally vs CI, CI is authoritative. Fix locally to match.
+Add a pre-push stage to .pre-commit-config.yaml that runs: (1) clang-format on modified C++ files, (2) check-realtime-safety.sh, (3) cmake build + ctest. This enforces the pre-push checklist automatically. Since GitHub branch protection requires Pro for private repos, this is our local enforcement mechanism. Document the limitation and suggest upgrading to Pro or making the repo public when branch protection becomes needed.
 
 ## Inputs
 
-- `.gsd/KNOWLEDGE.md`
+- `.pre-commit-config.yaml`
+- `scripts/check-realtime-safety.sh`
 
 ## Expected Output
 
-- `.gsd/KNOWLEDGE.md with R6, R7, R8 rules`
+- `.pre-commit-config.yaml with pre-push hooks`
+- `scripts/pre-push-check.sh if needed`
 
 ## Verification
 
-Read .gsd/KNOWLEDGE.md to confirm new rules are present and well-worded
+git push to a test branch triggers the pre-push hook and blocks on failure

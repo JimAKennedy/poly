@@ -19,7 +19,7 @@ public:
 
     static Steinberg::FUnknown* createInstance(void*) {
         return static_cast<Steinberg::Vst::IAudioProcessor*>(
-            new PolyProcessor()); // RT-SAFE-OK: host factory, not audio thread
+            new PolyProcessor()); // ownership-transfer — RT-SAFE-OK: host factory, not audio thread
     }
 
     Steinberg::tresult PLUGIN_API initialize(Steinberg::FUnknown* context) override;

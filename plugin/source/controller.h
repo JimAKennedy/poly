@@ -10,7 +10,7 @@ namespace poly {
 class PolyController : public Steinberg::Vst::EditControllerEx1, public VSTGUI::VST3EditorDelegate {
 public:
     static Steinberg::FUnknown* createInstance(void*) {
-        return static_cast<Steinberg::Vst::IEditController*>(new PolyController());
+        return static_cast<Steinberg::Vst::IEditController*>(new PolyController()); // ownership-transfer
     }
 
     Steinberg::tresult PLUGIN_API initialize(Steinberg::FUnknown* context) override;
