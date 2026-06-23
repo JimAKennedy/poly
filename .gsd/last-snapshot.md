@@ -1,4 +1,4 @@
-# GSD context snapshot (2026-06-22T21:20:49.856Z)
+# GSD context snapshot (2026-06-23T01:28:45.104Z)
 
 ## Top project memories
 - [MEM001] (convention) poly_engine::renderRange() and the VST3 process() call must never allocate heap memory, acquire locks, throw exceptions, or perform I/O. Pre-allocate all buffers in initialize(). This is a portfolio-wide convention — violations found in M004 audit across DrumGenerator, DrumPostProcessor, MorphForge, and TremoloGlitch.

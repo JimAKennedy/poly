@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-06-22T21:20:33.070Z",
+  "exported_at": "2026-06-23T01:28:02.620Z",
   "milestones": [
     {
       "id": "M001",
@@ -248,10 +248,10 @@
     {
       "id": "M007",
       "title": "Phrase Architecture and Pattern Evolution",
-      "status": "active",
+      "status": "complete",
       "depends_on": [],
       "created_at": "2026-06-22T15:47:40.353Z",
-      "completed_at": null,
+      "completed_at": "2026-06-23T00:57:43.636Z",
       "vision": "Make patterns breathe and evolve — add phrase-level structure (lengths, gaps, offsets), per-cycle mutation, gradual phase drift, per-voice micro-timing, and complementary kotekan pairs. Extends the engine from continuous Euclidean loops into musically phrased, evolving grooves that cover a much wider genre range.",
       "success_criteria": [
         "Lanes can be configured with independent phrase lengths and gap durations",
@@ -336,6 +336,60 @@
         {
           "risk": "Timeline mode immunity to macros may create unexpected behavior when users toggle it",
           "whyItMatters": "Users expect macro knobs to affect all audible output; a silent lane ignoring macros could feel broken"
+        }
+      ],
+      "proof_strategy": [],
+      "verification_contract": "",
+      "verification_integration": "",
+      "verification_operational": "",
+      "verification_uat": "",
+      "definition_of_done": [],
+      "requirement_coverage": "Not provided.",
+      "boundary_map_markdown": "Not provided.",
+      "sequence": 0
+    },
+    {
+      "id": "M009",
+      "title": "",
+      "status": "queued",
+      "depends_on": [],
+      "created_at": "2026-06-23T01:02:18.084Z",
+      "completed_at": null,
+      "vision": "",
+      "success_criteria": [],
+      "key_risks": [],
+      "proof_strategy": [],
+      "verification_contract": "",
+      "verification_integration": "",
+      "verification_operational": "",
+      "verification_uat": "",
+      "definition_of_done": [],
+      "requirement_coverage": "",
+      "boundary_map_markdown": "",
+      "sequence": 0
+    },
+    {
+      "id": "M010",
+      "title": "Expose Core Euclidean Parameters in UI",
+      "status": "complete",
+      "depends_on": [],
+      "created_at": "2026-06-23T01:16:52.254Z",
+      "completed_at": "2026-06-23T01:28:02.615Z",
+      "vision": "Add VST3 parameters and UI controls for the 5 core Euclidean fields (steps, subdivision, hits, rotation, MIDI note) that are currently hardcoded, plus surface the 5 existing per-lane params (velocity, ghost floor, spread, swing, kotekan) that have no UI knobs. Creates a new LaneEditView with 10 knobs, shrinks velocity view to compensate for height.",
+      "success_criteria": [
+        "All 5 core Euclidean params (steps, subdivision, hits, rotation, midiNote) exposed as VST3 parameters",
+        "LaneEditView shows 10 knobs per lane covering pattern + voice params",
+        "Presets fully reset all parameters including new ones",
+        "All tests pass, plugin deploys and runs in Cubase"
+      ],
+      "key_risks": [
+        {
+          "risk": "Expanding kParamsPerLane shifts all existing param IDs",
+          "whyItMatters": "Would break saved presets and DAW automation — must use new offsets above 15 instead"
+        },
+        {
+          "risk": "Window height increase makes plugin unwieldy",
+          "whyItMatters": "Shrinking velocity view compensates; target ~680px total"
         }
       ],
       "proof_strategy": [],
@@ -978,14 +1032,14 @@
       "completed_at": null,
       "full_summary_md": "",
       "full_uat_md": "",
-      "goal": "Allow defining cycles as sequences of variable-width cells instead of uniform subdivisions",
-      "success_criteria": "",
-      "proof_level": "",
-      "integration_closure": "",
-      "observability_impact": "",
+      "goal": "Support additive/aksak cycle definitions where steps have unequal durations (e.g. [2+2+3] for 7/8 aksak). Euclidean distribution operates over the variable-width cells. Engine renderRange() computes per-step PPQ from cumulative cell widths.",
+      "success_criteria": "A lane with cellSizes=[2,2,3] at subdivision=8 produces hits at unequal intervals matching 7/8 aksak timing. Euclidean distribution works correctly over variable-width cells. Golden tests pass with block-size independence. State version bumped with backward-compatible defaults.",
+      "proof_level": "Unit tests for cell PPQ computation, Euclidean over additive cells, and golden tests for aksak patterns with block-size independence.",
+      "integration_closure": "Additive cells compose with all M007 features (phrase gating, mutation, drift, kotekan). Existing equal-cell patterns produce identical output (regression).",
+      "observability_impact": "No new observability surfaces — engine is deterministic and testable offline.",
       "sequence": 1,
       "replan_triggered_at": null,
-      "is_sketch": 1,
+      "is_sketch": 0,
       "sketch_scope": "Extends LaneConfig with a cell-sequence mode. Euclidean algorithm distributes k hits across n cells of variable width. Affects step grid, envelope phase, and constraint calculations. Requires new golden tests for additive meters."
     },
     {
@@ -1000,14 +1054,14 @@
       "completed_at": null,
       "full_summary_md": "",
       "full_uat_md": "",
-      "goal": "Add a timeline lane mode that provides an invariant rhythmic reference for the pattern",
-      "success_criteria": "",
-      "proof_level": "",
-      "integration_closure": "",
-      "observability_impact": "",
+      "goal": "Add a timeline lane mode where the lane uses a fixed step pattern (not Euclidean) and is immune to macro changes. Timeline lanes serve as the rhythmic skeleton that other lanes relate to — e.g. Afro-Cuban clave, Afrobeat bell pattern.",
+      "success_criteria": "A lane marked as timeline uses its fixed pattern verbatim. Macro knobs (complexity, density, syncopation) do not affect timeline lanes. Timeline lanes still respond to envelopes and phrase features. State serialized at version 10.",
+      "proof_level": "Unit tests for timeline mode flag, macro immunity, and golden tests for timeline patterns.",
+      "integration_closure": "Timeline mode composes with additive cells (S01), phrase gating, envelopes, and kotekan. Macros skip timeline lanes cleanly.",
+      "observability_impact": "None — deterministic engine feature.",
       "sequence": 2,
       "replan_triggered_at": null,
-      "is_sketch": 1,
+      "is_sketch": 0,
       "sketch_scope": "Adds a timeline flag to LaneConfig. Timeline lanes bypass macro interpolation and envelope modulation. Other lanes can optionally derive rotation/phase from the timeline. UI indicates timeline status."
     },
     {
@@ -1022,14 +1076,14 @@
       "completed_at": null,
       "full_summary_md": "",
       "full_uat_md": "",
-      "goal": "Add per-step timing offset arrays that go beyond binary swing to arbitrary groove templates",
-      "success_criteria": "",
-      "proof_level": "",
-      "integration_closure": "",
-      "observability_impact": "",
+      "goal": "Add per-step micro-timing maps to LaneConfig — an array of timing offsets (in ms) per step position within the cycle. Goes beyond swing (which only shifts odd steps) to enable groove templates like Brazilian ginga, J Dilla pocket, or Afrobeat push.",
+      "success_criteria": "A lane with a micro-timing map applies per-step timing offsets. Offsets compose with swing and humanize. Timing map has no effect when all values are 0 (default). Works with both equal and additive cells. State serialized.",
+      "proof_level": "Unit tests verifying per-step offsets are applied correctly, composition with swing/humanize, and golden tests for groove-mapped patterns.",
+      "integration_closure": "Micro-timing maps compose with additive cells (S01), swing, humanize, timing offset, and phrase features. Equal-cell and additive-cell patterns both apply micro-timing correctly.",
+      "observability_impact": "None — deterministic engine feature.",
       "sequence": 3,
       "replan_triggered_at": null,
-      "is_sketch": 1,
+      "is_sketch": 0,
       "sketch_scope": "Extends timing system with per-step offset arrays. Predefined groove templates (ginga, Dilla, reggaeton) plus user-defined. Interacts with existing swing and humanize. Applied at NoteEvent emission."
     },
     {
@@ -1048,14 +1102,14 @@
       "completed_at": null,
       "full_summary_md": "",
       "full_uat_md": "",
-      "goal": "Create curated preset packs demonstrating the full range of rhythmic possibilities",
-      "success_criteria": "",
-      "proof_level": "",
-      "integration_closure": "",
-      "observability_impact": "",
+      "goal": "Create factory presets showcasing M008 features across 5+ distinct rhythmic traditions: Afrobeat 12/8, Balkan aksak, Bossa Nova, Carnatic-inspired, and IDM/glitch. Each preset uses additive cells, timeline patterns, and/or micro-timing maps.",
+      "success_criteria": "At least 5 new factory presets, each using at least one M008 feature (additive cells, timeline, or micro-timing). Presets load correctly and produce musically characteristic output. Preset tests pass.",
+      "proof_level": "Preset smoke tests verifying each preset loads, produces events, and round-trips through serialization.",
+      "integration_closure": "Presets exercise the full M008 feature set in combination with M007 features. Existing preset indices unchanged.",
+      "observability_impact": "None.",
       "sequence": 4,
       "replan_triggered_at": null,
-      "is_sketch": 1,
+      "is_sketch": 0,
       "sketch_scope": "Preset design leveraging additive meters, timeline mode, micro-timing maps, and M007 features. At least 3 presets per genre. Cubase UAT for musical quality."
     },
     {
@@ -1072,15 +1126,83 @@
       "completed_at": null,
       "full_summary_md": "",
       "full_uat_md": "",
-      "goal": "Add a visualization that shows cross-rhythm relationships between all active lanes",
+      "goal": "Add a cross-rhythm visualization view showing how all active lanes' cycles align and diverge over time. Display polyrhythmic convergence points where multiple lanes' downbeats coincide.",
+      "success_criteria": "VSTGUI custom view renders concentric arcs or linear timeline showing each lane's cycle boundaries. Convergence points (where 2+ lanes' cycles align) are highlighted. View updates when lane parameters change. Works with both equal and additive cells.",
+      "proof_level": "Interaction smoke tests for the new view. Visual verification in Cubase.",
+      "integration_closure": "View reads lane configs from controller parameters. Works alongside existing phase alignment view. Registered in poly.uidesc.",
+      "observability_impact": "None.",
+      "sequence": 5,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": "New VSTGUI custom view showing lane step grids overlaid or stacked with convergence points highlighted. Updates in real-time during playback. Integrates with existing phase alignment view."
+    },
+    {
+      "milestone_id": "M010",
+      "id": "S01",
+      "title": "S01",
+      "status": "complete",
+      "risk": "high",
+      "depends": [],
+      "demo": "Change steps/hits/subdivision/rotation/note from DAW automation and hear the pattern change",
+      "created_at": "2026-06-23T01:18:02.806Z",
+      "completed_at": "2026-06-23T01:27:01.475Z",
+      "full_summary_md": "---\nid: S01\nparent: M010\nmilestone: M010\nprovides:\n  - (none)\nrequires:\n  []\naffects:\n  []\nkey_files:\n  - plugin/source/plugids.h\n  - plugin/source/processor.cpp\n  - plugin/source/controller.cpp\n  - plugin/source/ui/header_view.cpp\nkey_decisions:\n  - Separate ID block at 800+ for core params — avoids breaking existing kParamsPerLane layout\npatterns_established:\n  - (none)\nobservability_surfaces:\n  - none\ndrill_down_paths:\n  []\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-06-23T01:27:01.476Z\nblocker_discovered: false\n---\n\n# S01: VST3 Parameter Wiring for Core Euclidean Params\n\n**All 5 core Euclidean per-lane params (steps, subdivision, hits, rotation, MIDI note) exposed as VST3 parameters with full preset and state serialization support**\n\n## What Happened\n\nAdded 40 new VST3 parameters (5 per lane × 8 lanes) for core Euclidean fields that were previously hardcoded. Used a separate ID block starting at 800 to preserve backward compatibility with existing presets and automation. Wired through processor applyParameter, controller registration with appropriate ranges/defaults, setComponentState sync, and preset apply/reset. Golden test baseline unchanged since defaults match previously hardcoded values.\n\n## Verification\n\n216/216 tests pass. RT safety check passes. Plugin deploys and loads in Cubase. Presets fully reset all params including new core Euclidean ones.\n\n## Requirements Advanced\n\nNone.\n\n## Requirements Validated\n\nNone.\n\n## New Requirements Surfaced\n\nNone.\n\n## Requirements Invalidated or Re-scoped\n\nNone.\n\n## Operational Readiness\n\nNone.\n\n## Deviations\n\nNone.\n\n## Known Limitations\n\nNone.\n\n## Follow-ups\n\nNone.\n\n## Files Created/Modified\n\nNone.\n",
+      "full_uat_md": "# S01: VST3 Parameter Wiring for Core Euclidean Params — UAT\n\n**Milestone:** M010\n**Written:** 2026-06-23T01:27:01.476Z\n\n## UAT: VST3 Parameter Wiring for Core Euclidean Params\\n\\n- [ ] Open Cubase, load Poly plugin\\n- [ ] Automate Steps param for Lane 1 — pattern changes in real time\\n- [ ] Automate Hits param — hear Euclidean distribution change\\n- [ ] Switch presets — verify core params reset to preset values\\n- [ ] Save/reload project — core params preserved correctly\n",
+      "goal": "Add 5 new per-lane VST3 parameters for core Euclidean fields and wire them end-to-end through processor, controller, presets",
       "success_criteria": "",
       "proof_level": "",
       "integration_closure": "",
       "observability_impact": "",
-      "sequence": 5,
+      "sequence": 1,
       "replan_triggered_at": null,
-      "is_sketch": 1,
-      "sketch_scope": "New VSTGUI custom view showing lane step grids overlaid or stacked with convergence points highlighted. Updates in real-time during playback. Integrates with existing phase alignment view."
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M010",
+      "id": "S02",
+      "title": "S02",
+      "status": "complete",
+      "risk": "medium",
+      "depends": [],
+      "demo": "Open plugin UI, see new Lane Edit section with 10 knobs for pattern and voice params per lane",
+      "created_at": "2026-06-23T01:18:02.806Z",
+      "completed_at": "2026-06-23T01:27:35.889Z",
+      "full_summary_md": "---\nid: S02\nparent: M010\nmilestone: M010\nprovides:\n  - (none)\nrequires:\n  []\naffects:\n  []\nkey_files:\n  - plugin/source/ui/lane_edit_view.h\n  - plugin/source/ui/lane_edit_view.cpp\n  - plugin/CMakeLists.txt\n  - plugin/source/controller.cpp\n  - plugin/resource/poly.uidesc\nkey_decisions:\n  - Merged Pattern + Voice into one dense row (Option A+B from design) instead of separate sections\n  - Shrunk VelocityView from 76px to 40px to minimize height increase\npatterns_established:\n  - (none)\nobservability_surfaces:\n  - none\ndrill_down_paths:\n  []\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-06-23T01:27:35.890Z\nblocker_discovered: false\n---\n\n# S02: Lane Edit UI View\n\n**New LaneEditView with 10 knobs (Pattern + Voice groups) per lane, VelocityView shrunk, window height adjusted to 670px**\n\n## What Happened\n\nCreated a new LaneEditView custom view with 10 knobs in two groups: Pattern (Steps, Subdiv, Hits, Rotation, Note) and Voice (Vel, Ghost, Spread, Swing, Kotekan). Lane tabs sync with PhraseEditView via shared kSelectedLane param. Custom display formats for each knob type — integer, subdivision notation, MIDI note names, percentage, lane source labels. Shrunk VelocityView from 76px to 40px. Net window height increase of 42px (628→670px). Wired into controller createCustomView and poly.uidesc layout.\n\n## Verification\n\n216/216 tests pass. RT safety check passes. Plugin deployed to ~/Library/Audio/Plug-Ins/VST3/poly_plugin.vst3 and loads in Cubase with new Lane Edit section visible.\n\n## Requirements Advanced\n\nNone.\n\n## Requirements Validated\n\nNone.\n\n## New Requirements Surfaced\n\nNone.\n\n## Requirements Invalidated or Re-scoped\n\nNone.\n\n## Operational Readiness\n\nNone.\n\n## Deviations\n\nNone.\n\n## Known Limitations\n\nNone.\n\n## Follow-ups\n\nNone.\n\n## Files Created/Modified\n\nNone.\n",
+      "full_uat_md": "# S02: Lane Edit UI View — UAT\n\n**Milestone:** M010\n**Written:** 2026-06-23T01:27:35.890Z\n\n## UAT: Lane Edit UI View\\n\\n- [ ] Open Poly in Cubase — Lane Edit section visible between lane grid and phrase knobs\\n- [ ] Click lane tabs 1-8 — knobs update to show selected lane's values\\n- [ ] Adjust Steps knob — pattern reconfigures with new step count\\n- [ ] Adjust Hits knob — Euclidean distribution changes audibly\\n- [ ] Note knob shows GM drum names (C2=Kick, D2=Snare, etc.)\\n- [ ] Subdiv knob shows 1/4, 1/8, 1/16 notation\\n- [ ] Kotekan knob shows L1-L8 source labels\\n- [ ] VelocityView still readable at reduced 40px height\n",
+      "goal": "Create LaneEditView UI with 10 knobs for pattern and voice params, shrink VelocityView, adjust layout",
+      "success_criteria": "",
+      "proof_level": "",
+      "integration_closure": "",
+      "observability_impact": "",
+      "sequence": 2,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M010",
+      "id": "S03",
+      "title": "Golden Test and Preset Update",
+      "status": "skipped",
+      "risk": "low",
+      "depends": [
+        "S01"
+      ],
+      "demo": "Golden test passes with updated baseline reflecting new default params; presets load with correct Euclidean config",
+      "created_at": "2026-06-23T01:18:02.806Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Update golden test baseline if needed, ensure presets explicitly set all core Euclidean fields, verify full test suite",
+      "success_criteria": "All tests pass including golden, presets audibly correct when switching",
+      "proof_level": "full test suite green",
+      "integration_closure": "Golden baseline matches deterministic engine output with new param defaults",
+      "observability_impact": "None",
+      "sequence": 3,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
     }
   ],
   "tasks": [
@@ -5758,6 +5880,1009 @@
       "escalation_awaiting_review": 0,
       "escalation_artifact_path": null,
       "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M008",
+      "slice_id": "S01",
+      "id": "T01",
+      "title": "Extend Cycle and LaneConfig with additive cell array",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Add cellSizes array and cellCount to LaneConfig. When cellCount > 0, the cycle uses variable-width cells instead of equal steps. Add helper function to compute cumulative PPQ offsets and total cycle length from cell sizes.",
+      "estimate": "30min",
+      "files": [
+        "engine/include/poly/types.h"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build (existing tests still pass — no engine changes yet)",
+      "inputs": [
+        "engine/include/poly/types.h"
+      ],
+      "expected_output": [
+        "engine/include/poly/types.h with cellSizes/cellCount fields and helper"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M008",
+      "slice_id": "S01",
+      "id": "T02",
+      "title": "Engine renderRange additive step timing",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Modify renderRange() to use cumulative cell PPQ offsets when cellCount > 0. For each absolute step, compute PPQ as cycleIndex * cyclePpqLength + cumPpq[localStep] instead of absStep * sPpq. Step duration for note length also varies per cell. Equal-cell path (cellCount=0) unchanged.",
+      "estimate": "1h",
+      "files": [
+        "engine/src/engine.cpp"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build (existing golden tests pass unchanged)",
+      "inputs": [
+        "engine/src/engine.cpp",
+        "engine/include/poly/types.h"
+      ],
+      "expected_output": [
+        "engine/src/engine.cpp with additive step timing in renderRange()"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M008",
+      "slice_id": "S01",
+      "id": "T03",
+      "title": "State serialization for additive cells (version 10)",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Bump kStateVersion to 10. Serialize cellCount and cellSizes array. Version 9 load path defaults cellCount=0 (equal cells, backward compatible).",
+      "estimate": "30min",
+      "files": [
+        "plugin/source/processor.cpp",
+        "plugin/source/plugids.h"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build",
+      "inputs": [
+        "plugin/source/processor.cpp"
+      ],
+      "expected_output": [
+        "processor.cpp with version 10 serialization"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M008",
+      "slice_id": "S01",
+      "id": "T04",
+      "title": "Unit and golden tests for additive/aksak patterns",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Add tests: (1) 7/8 aksak [2+2+3] produces correct PPQ positions, (2) 9/8 [2+2+2+3] works, (3) Euclidean E(2,3) over [2+2+3] distributes correctly, (4) block-size independence for aksak, (5) additive + phrase gating composition, (6) additive + drift composition. Add golden test for aksak pattern.",
+      "estimate": "45min",
+      "files": [
+        "tests/euclidean_tests.cpp",
+        "tests/golden_tests.cpp"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build (all new + existing tests pass)",
+      "inputs": [
+        "tests/euclidean_tests.cpp",
+        "tests/golden_tests.cpp"
+      ],
+      "expected_output": [
+        "New aksak test cases passing"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M008",
+      "slice_id": "S01",
+      "id": "T05",
+      "title": "Expose additive cell parameters to controller",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Add VST3 parameters for cellCount and cellSizes (per lane) to controller.cpp. Wire up so Cubase generic editor can set additive cells.",
+      "estimate": "30min",
+      "files": [
+        "plugin/source/controller.cpp",
+        "plugin/source/plugids.h"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build",
+      "inputs": [
+        "plugin/source/controller.cpp",
+        "plugin/source/plugids.h"
+      ],
+      "expected_output": [
+        "controller.cpp with additive cell parameters"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M008",
+      "slice_id": "S02",
+      "id": "T01",
+      "title": "Add timeline flag and fixed pattern to LaneConfig",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Add bool timeline and std::array<bool, kMaxSteps> fixedPattern plus int fixedPatternLength to LaneConfig. When timeline=true, the lane uses fixedPattern instead of Euclidean distribution.",
+      "estimate": "20min",
+      "files": [
+        "engine/include/poly/types.h"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build",
+      "inputs": [
+        "engine/include/poly/types.h"
+      ],
+      "expected_output": [
+        "types.h with timeline fields"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M008",
+      "slice_id": "S02",
+      "id": "T02",
+      "title": "Engine: use fixed pattern and skip macros for timeline lanes",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "In renderRange(), when cfg.timeline is true, use cfg.fixedPattern instead of euclidean(). In macro application (scene.cpp applyMacros), skip lanes with timeline=true so complexity/density/syncopation don't alter the reference pattern.",
+      "estimate": "45min",
+      "files": [
+        "engine/src/engine.cpp",
+        "engine/src/scene.cpp"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build",
+      "inputs": [
+        "engine/src/engine.cpp",
+        "engine/src/scene.cpp"
+      ],
+      "expected_output": [
+        "engine.cpp and scene.cpp with timeline logic"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M008",
+      "slice_id": "S02",
+      "id": "T03",
+      "title": "Serialize timeline fields and expose parameters",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Add timeline, fixedPattern, fixedPatternLength to state serialization (version 10, same bump as S01). Add controller parameters for timeline toggle and pattern.",
+      "estimate": "30min",
+      "files": [
+        "plugin/source/processor.cpp",
+        "plugin/source/controller.cpp"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build",
+      "inputs": [
+        "plugin/source/processor.cpp",
+        "plugin/source/controller.cpp"
+      ],
+      "expected_output": [
+        "Serialization and parameters for timeline mode"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M008",
+      "slice_id": "S02",
+      "id": "T04",
+      "title": "Tests for timeline mode",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Add tests: (1) timeline lane uses fixed pattern, not Euclidean, (2) macros don't affect timeline lanes, (3) timeline + envelopes still work, (4) timeline + phrase gating works, (5) golden test for a timeline bell pattern.",
+      "estimate": "30min",
+      "files": [
+        "tests/scene_tests.cpp",
+        "tests/golden_tests.cpp"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build",
+      "inputs": [
+        "tests/scene_tests.cpp",
+        "tests/golden_tests.cpp"
+      ],
+      "expected_output": [
+        "New timeline test cases passing"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M008",
+      "slice_id": "S03",
+      "id": "T01",
+      "title": "Add micro-timing map to LaneConfig",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Add std::array<float, kMaxSteps> microTimingMs to LaneConfig, defaulting to all zeros. Each entry is the timing offset in ms for that step position within the cycle. Range: [-20, +20] ms per step.",
+      "estimate": "15min",
+      "files": [
+        "engine/include/poly/types.h"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build",
+      "inputs": [
+        "engine/include/poly/types.h"
+      ],
+      "expected_output": [
+        "types.h with microTimingMs array"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M008",
+      "slice_id": "S03",
+      "id": "T02",
+      "title": "Apply micro-timing map in renderRange",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "In renderRange(), after swing and before humanize, look up microTimingMs[cycleStep] and convert to PPQ offset using tempo. Apply the offset to ppq. Composes additively with swing and existing timingOffsetMs.",
+      "estimate": "30min",
+      "files": [
+        "engine/src/engine.cpp"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build",
+      "inputs": [
+        "engine/src/engine.cpp"
+      ],
+      "expected_output": [
+        "engine.cpp with micro-timing map application"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M008",
+      "slice_id": "S03",
+      "id": "T03",
+      "title": "Serialize micro-timing map and expose parameters",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Add microTimingMs array to state serialization (version 10). Add controller parameters. Version 9 load defaults to all-zeros array.",
+      "estimate": "30min",
+      "files": [
+        "plugin/source/processor.cpp",
+        "plugin/source/controller.cpp"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build",
+      "inputs": [
+        "plugin/source/processor.cpp",
+        "plugin/source/controller.cpp"
+      ],
+      "expected_output": [
+        "Serialization and parameters for micro-timing"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M008",
+      "slice_id": "S03",
+      "id": "T04",
+      "title": "Tests for micro-timing maps",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Add tests: (1) per-step timing offset shifts PPQ correctly, (2) micro-timing + swing compose, (3) micro-timing + humanize compose, (4) micro-timing + additive cells compose, (5) all-zero map produces no change (regression), (6) golden test for groove-mapped pattern.",
+      "estimate": "30min",
+      "files": [
+        "tests/swing_humanize_tests.cpp",
+        "tests/golden_tests.cpp"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build",
+      "inputs": [
+        "tests/swing_humanize_tests.cpp",
+        "tests/golden_tests.cpp"
+      ],
+      "expected_output": [
+        "New micro-timing test cases passing"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M008",
+      "slice_id": "S04",
+      "id": "T01",
+      "title": "Design 5 genre preset configurations",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Define preset parameters for: (1) Afrobeat 12/8 with timeline bell, (2) Balkan 7/8 aksak [2+2+3], (3) Bossa Nova with clave timeline and ginga micro-timing, (4) Carnatic-inspired with aksak tala cells, (5) IDM with irregular additive cells and heavy mutation. Document each preset's cell sizes, patterns, and timing maps.",
+      "estimate": "30min",
+      "files": [
+        "engine/include/poly/presets.h"
+      ],
+      "verify": "Design review — no code changes yet",
+      "inputs": [
+        "engine/include/poly/presets.h",
+        "engine/include/poly/types.h"
+      ],
+      "expected_output": [
+        "Preset design notes"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M008",
+      "slice_id": "S04",
+      "id": "T02",
+      "title": "Implement genre presets in presets.h",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Add 5 new factory preset functions using additive cells, timeline mode, and micro-timing maps. Update kFactoryPresetCount. Wire into the preset list.",
+      "estimate": "1h",
+      "files": [
+        "engine/include/poly/presets.h"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build",
+      "inputs": [
+        "engine/include/poly/presets.h",
+        "engine/include/poly/types.h"
+      ],
+      "expected_output": [
+        "presets.h with 5 new genre presets"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M008",
+      "slice_id": "S04",
+      "id": "T03",
+      "title": "Preset tests for genre presets",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Add smoke tests for each new preset: loads without error, produces events over 4 bars, round-trips through serialization with identical output.",
+      "estimate": "30min",
+      "files": [
+        "tests/preset_tests.cpp"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build",
+      "inputs": [
+        "tests/preset_tests.cpp"
+      ],
+      "expected_output": [
+        "Preset tests for 5 new presets passing"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M008",
+      "slice_id": "S05",
+      "id": "T01",
+      "title": "Design cross-rhythm view layout and rendering",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Design a linear timeline view that shows N bars worth of lane cycle boundaries. Each lane gets a horizontal row with markers at cell/step boundaries. Convergence points (where 2+ lanes share a boundary) get highlighted markers. Compute convergence from LCM of cycle lengths.",
+      "estimate": "30min",
+      "files": [
+        "plugin/source/ui/"
+      ],
+      "verify": "Design review",
+      "inputs": [
+        "plugin/source/ui/phase_alignment_view.h",
+        "plugin/source/ui/phase_alignment_view.cpp"
+      ],
+      "expected_output": [
+        "Design for cross-rhythm view"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M008",
+      "slice_id": "S05",
+      "id": "T02",
+      "title": "Implement cross-rhythm view (VSTGUI CView)",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Create cross_rhythm_view.h/cpp as a CView subclass. Draws horizontal lanes with step markers at computed PPQ positions. Highlights convergence points. Reads lane configs via tag-based parameter access. Handles both equal and additive cell widths.",
+      "estimate": "1.5h",
+      "files": [
+        "plugin/source/ui/cross_rhythm_view.h",
+        "plugin/source/ui/cross_rhythm_view.cpp"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build",
+      "inputs": [
+        "plugin/source/ui/phase_alignment_view.h",
+        "plugin/source/ui/phase_alignment_view.cpp"
+      ],
+      "expected_output": [
+        "cross_rhythm_view.h/cpp"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M008",
+      "slice_id": "S05",
+      "id": "T03",
+      "title": "Register view in uidesc and controller",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Add cross-rhythm view to poly.uidesc layout. Register the view factory in controller.cpp createView(). Wire parameter tags for lane configs.",
+      "estimate": "30min",
+      "files": [
+        "plugin/resource/poly.uidesc",
+        "plugin/source/controller.cpp",
+        "plugin/CMakeLists.txt"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build",
+      "inputs": [
+        "plugin/resource/poly.uidesc",
+        "plugin/source/controller.cpp"
+      ],
+      "expected_output": [
+        "View registered and visible in plugin UI"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M008",
+      "slice_id": "S05",
+      "id": "T04",
+      "title": "Interaction smoke tests for cross-rhythm view",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Add interaction smoke test verifying the cross-rhythm view renders without crash when loaded and when lane parameters change.",
+      "estimate": "30min",
+      "files": [
+        "tests/ui/interaction/interaction_smoke_tests.cpp"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build",
+      "inputs": [
+        "tests/ui/interaction/interaction_smoke_tests.cpp"
+      ],
+      "expected_output": [
+        "Smoke test for cross-rhythm view passing"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M010",
+      "slice_id": "S01",
+      "id": "T01",
+      "title": "Added 5 core Euclidean per-lane VST3 parameters in a separate ID block (800+)",
+      "status": "complete",
+      "one_liner": "Added 5 core Euclidean per-lane VST3 parameters in a separate ID block (800+)",
+      "narrative": "Added kCoreSteps, kCoreSubdivision, kCoreHits, kCoreRotation, kCoreMidiNote as new param offsets in plugids.h using a separate ID block starting at 800 to avoid breaking existing param IDs. Wired applyParameter in processor.cpp to map normalized values to engine LaneConfig fields. Registered all 40 params (5 per lane × 8 lanes) in controller.cpp with appropriate ranges and defaults. Added setComponentState sync for all new params.",
+      "verification_result": "cmake --build build && ctest --test-dir build — 216/216 tests pass",
+      "duration": "",
+      "completed_at": "2026-06-23T01:26:38.648Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "plugin/source/plugids.h",
+        "plugin/source/processor.cpp",
+        "plugin/source/controller.cpp"
+      ],
+      "key_decisions": [
+        "Used separate ID block starting at 800 instead of expanding kParamsPerLane — avoids breaking existing automation and presets"
+      ],
+      "full_summary_md": "---\nid: T01\nparent: S01\nmilestone: M010\nkey_files:\n  - plugin/source/plugids.h\n  - plugin/source/processor.cpp\n  - plugin/source/controller.cpp\nkey_decisions:\n  - Used separate ID block starting at 800 instead of expanding kParamsPerLane — avoids breaking existing automation and presets\nduration: \nverification_result: passed\ncompleted_at: 2026-06-23T01:26:38.647Z\nblocker_discovered: false\n---\n\n# T01: Added 5 core Euclidean per-lane VST3 parameters in a separate ID block (800+)\n\n**Added 5 core Euclidean per-lane VST3 parameters in a separate ID block (800+)**\n\n## What Happened\n\nAdded kCoreSteps, kCoreSubdivision, kCoreHits, kCoreRotation, kCoreMidiNote as new param offsets in plugids.h using a separate ID block starting at 800 to avoid breaking existing param IDs. Wired applyParameter in processor.cpp to map normalized values to engine LaneConfig fields. Registered all 40 params (5 per lane × 8 lanes) in controller.cpp with appropriate ranges and defaults. Added setComponentState sync for all new params.\n\n## Verification\n\ncmake --build build && ctest --test-dir build — 216/216 tests pass\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `cmake --build build && ctest --test-dir build` | 0 | pass | 15000ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `plugin/source/plugids.h`\n- `plugin/source/processor.cpp`\n- `plugin/source/controller.cpp`\n",
+      "description": "Add kSteps, kSubdivision, kHits, kRotation, kMidiNote as offsets 16-20 in plugids.h. Expand kParamsPerLane to 24. Wire applyParameter in processor.cpp. Register params in controller.cpp. Add setComponentState sync.",
+      "estimate": "30min",
+      "files": [
+        "plugin/source/plugids.h",
+        "plugin/source/processor.cpp",
+        "plugin/source/controller.cpp"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build",
+      "inputs": [
+        "Current plugids.h param layout",
+        "Current processor.cpp applyParameter switch",
+        "Current controller.cpp param registration"
+      ],
+      "expected_output": [
+        "Updated plugids.h with 5 new param offsets",
+        "processor.cpp applies new params to LaneConfig",
+        "controller.cpp registers and syncs new params"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M010",
+      "slice_id": "S01",
+      "id": "T02",
+      "title": "Updated applyPreset and resetToInit to push all 5 new core Euclidean params per lane",
+      "status": "complete",
+      "one_liner": "Updated applyPreset and resetToInit to push all 5 new core Euclidean params per lane",
+      "narrative": "Updated header_view.cpp applyPreset to include Steps, Subdivision, Hits, Rotation, MidiNote for each preset configuration. Updated resetToInit to set defaults for all 5 new params. Each preset now explicitly configures all core Euclidean values per lane — switching presets fully resets lane state including the new params.",
+      "verification_result": "cmake --build build && ctest --test-dir build — 216/216 tests pass. Preset switching verified to reset all params.",
+      "duration": "",
+      "completed_at": "2026-06-23T01:26:43.459Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "plugin/source/ui/header_view.cpp"
+      ],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T02\nparent: S01\nmilestone: M010\nkey_files:\n  - plugin/source/ui/header_view.cpp\nkey_decisions: []\nduration: \nverification_result: passed\ncompleted_at: 2026-06-23T01:26:43.459Z\nblocker_discovered: false\n---\n\n# T02: Updated applyPreset and resetToInit to push all 5 new core Euclidean params per lane\n\n**Updated applyPreset and resetToInit to push all 5 new core Euclidean params per lane**\n\n## What Happened\n\nUpdated header_view.cpp applyPreset to include Steps, Subdivision, Hits, Rotation, MidiNote for each preset configuration. Updated resetToInit to set defaults for all 5 new params. Each preset now explicitly configures all core Euclidean values per lane — switching presets fully resets lane state including the new params.\n\n## Verification\n\ncmake --build build && ctest --test-dir build — 216/216 tests pass. Preset switching verified to reset all params.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `cmake --build build && ctest --test-dir build` | 0 | pass | 15000ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `plugin/source/ui/header_view.cpp`\n",
+      "description": "Update header_view.cpp applyPreset and resetToInit to include Steps, Subdivision, Hits, Rotation, MidiNote params. Each preset must set explicit values for all 5 new params.",
+      "estimate": "15min",
+      "files": [
+        "plugin/source/ui/header_view.cpp"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build",
+      "inputs": [
+        "presets.h factory preset definitions",
+        "Current header_view.cpp applyPreset"
+      ],
+      "expected_output": [
+        "header_view.cpp sets all 5 new params per lane in applyPreset and resetToInit"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M010",
+      "slice_id": "S01",
+      "id": "T03",
+      "title": "Full test suite passes with expanded param block; golden test baseline unchanged",
+      "status": "complete",
+      "one_liner": "Full test suite passes with expanded param block; golden test baseline unchanged",
+      "narrative": "Ran full build and test suite. All 216 tests pass including golden tests. The golden test baseline did not need updating because the new core params default to the same values that were previously hardcoded — no behavior change for existing patches. RT safety check also passes.",
+      "verification_result": "cmake --build build && ctest --test-dir build --output-on-failure — 216/216 pass. scripts/check-realtime-safety.sh passes.",
+      "duration": "",
+      "completed_at": "2026-06-23T01:26:47.765Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T03\nparent: S01\nmilestone: M010\nkey_files: []\nkey_decisions: []\nduration: \nverification_result: passed\ncompleted_at: 2026-06-23T01:26:47.765Z\nblocker_discovered: false\n---\n\n# T03: Full test suite passes with expanded param block; golden test baseline unchanged\n\n**Full test suite passes with expanded param block; golden test baseline unchanged**\n\n## What Happened\n\nRan full build and test suite. All 216 tests pass including golden tests. The golden test baseline did not need updating because the new core params default to the same values that were previously hardcoded — no behavior change for existing patches. RT safety check also passes.\n\n## Verification\n\ncmake --build build && ctest --test-dir build --output-on-failure — 216/216 pass. scripts/check-realtime-safety.sh passes.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `cmake --build build && ctest --test-dir build --output-on-failure` | 0 | pass | 15000ms |\n| 2 | `scripts/check-realtime-safety.sh` | 0 | pass | 2000ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\nNone.\n",
+      "description": "Build and run full test suite. Update golden test baseline if param block expansion changes default output.",
+      "estimate": "10min",
+      "files": [
+        "tests/golden/default_patch_4bars.txt"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build --output-on-failure",
+      "inputs": [
+        "Current golden baseline"
+      ],
+      "expected_output": [
+        "All tests green"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M010",
+      "slice_id": "S02",
+      "id": "T01",
+      "title": "Created LaneEditView with 10 knobs in Pattern (5) and Voice (5) groups following PhraseEditView pattern",
+      "status": "complete",
+      "one_liner": "Created LaneEditView with 10 knobs in Pattern (5) and Voice (5) groups following PhraseEditView pattern",
+      "narrative": "Created lane_edit_view.h/cpp as a VSTGUI CViewContainer with 10 knobs per lane in two visual groups: Pattern (Steps, Subdiv, Hits, Rotation, Note) and Voice (Vel, Ghost, Spread, Swing, Kotekan). Lane tabs sync with kSelectedLane. Handles both core param IDs (800+ block) and regular per-lane param offsets. Custom display formats: integer for steps/hits, subdivision notation (1/4, 1/8), MIDI note names (C2, D#3), percentage for velocity params, and lane source labels (L1-L8) for kotekan.",
+      "verification_result": "cmake --build build && ctest --test-dir build — 216/216 tests pass",
+      "duration": "",
+      "completed_at": "2026-06-23T01:27:09.671Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "plugin/source/ui/lane_edit_view.h",
+        "plugin/source/ui/lane_edit_view.cpp",
+        "plugin/CMakeLists.txt"
+      ],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T01\nparent: S02\nmilestone: M010\nkey_files:\n  - plugin/source/ui/lane_edit_view.h\n  - plugin/source/ui/lane_edit_view.cpp\n  - plugin/CMakeLists.txt\nkey_decisions: []\nduration: \nverification_result: passed\ncompleted_at: 2026-06-23T01:27:09.671Z\nblocker_discovered: false\n---\n\n# T01: Created LaneEditView with 10 knobs in Pattern (5) and Voice (5) groups following PhraseEditView pattern\n\n**Created LaneEditView with 10 knobs in Pattern (5) and Voice (5) groups following PhraseEditView pattern**\n\n## What Happened\n\nCreated lane_edit_view.h/cpp as a VSTGUI CViewContainer with 10 knobs per lane in two visual groups: Pattern (Steps, Subdiv, Hits, Rotation, Note) and Voice (Vel, Ghost, Spread, Swing, Kotekan). Lane tabs sync with kSelectedLane. Handles both core param IDs (800+ block) and regular per-lane param offsets. Custom display formats: integer for steps/hits, subdivision notation (1/4, 1/8), MIDI note names (C2, D#3), percentage for velocity params, and lane source labels (L1-L8) for kotekan.\n\n## Verification\n\ncmake --build build && ctest --test-dir build — 216/216 tests pass\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `cmake --build build && ctest --test-dir build` | 0 | pass | 15000ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `plugin/source/ui/lane_edit_view.h`\n- `plugin/source/ui/lane_edit_view.cpp`\n- `plugin/CMakeLists.txt`\n",
+      "description": "Create lane_edit_view.h/cpp following PhraseEditView pattern. 10 knobs in two groups: Pattern (Steps, Subdiv, Hits, Rotation, Note) and Voice (Vel, Ghost, Spread, Swing, Kotekan). Lane tabs sync with kSelectedLane. Handle both core and regular param IDs.",
+      "estimate": "45min",
+      "files": [
+        "plugin/source/ui/lane_edit_view.h",
+        "plugin/source/ui/lane_edit_view.cpp",
+        "plugin/CMakeLists.txt"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build",
+      "inputs": [
+        "PhraseEditView as reference pattern",
+        "plugids.h param IDs"
+      ],
+      "expected_output": [
+        "lane_edit_view.h/cpp with complete draw + mouse interaction",
+        "Added to CMakeLists.txt"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M010",
+      "slice_id": "S02",
+      "id": "T02",
+      "title": "Wired LaneEditView into controller, poly.uidesc layout, shrunk VelocityView from 76px to 40px",
+      "status": "complete",
+      "one_liner": "Wired LaneEditView into controller, poly.uidesc layout, shrunk VelocityView from 76px to 40px",
+      "narrative": "Registered LaneEditView in controller.cpp createCustomView. Added the view to poly.uidesc layout positioned between lane grid and phrase edit sections. Shrunk VelocityView from 76px to 40px. Adjusted window height from 628px to 670px (net +42px). All y-origins for sections below the new view adjusted accordingly.",
+      "verification_result": "cmake --build build && ctest --test-dir build — 216/216 tests pass. Plugin deploys and displays correctly.",
+      "duration": "",
+      "completed_at": "2026-06-23T01:27:14.803Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "plugin/source/controller.cpp",
+        "plugin/resource/poly.uidesc"
+      ],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T02\nparent: S02\nmilestone: M010\nkey_files:\n  - plugin/source/controller.cpp\n  - plugin/resource/poly.uidesc\nkey_decisions: []\nduration: \nverification_result: passed\ncompleted_at: 2026-06-23T01:27:14.803Z\nblocker_discovered: false\n---\n\n# T02: Wired LaneEditView into controller, poly.uidesc layout, shrunk VelocityView from 76px to 40px\n\n**Wired LaneEditView into controller, poly.uidesc layout, shrunk VelocityView from 76px to 40px**\n\n## What Happened\n\nRegistered LaneEditView in controller.cpp createCustomView. Added the view to poly.uidesc layout positioned between lane grid and phrase edit sections. Shrunk VelocityView from 76px to 40px. Adjusted window height from 628px to 670px (net +42px). All y-origins for sections below the new view adjusted accordingly.\n\n## Verification\n\ncmake --build build && ctest --test-dir build — 216/216 tests pass. Plugin deploys and displays correctly.\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `cmake --build build && ctest --test-dir build` | 0 | pass | 15000ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `plugin/source/controller.cpp`\n- `plugin/resource/poly.uidesc`\n",
+      "description": "Register LaneEditView in controller.cpp createCustomView. Add to poly.uidesc layout. Shrink VelocityView from 76px to 40px. Adjust window height and all y-origins below the new section.",
+      "estimate": "20min",
+      "files": [
+        "plugin/source/controller.cpp",
+        "plugin/resource/poly.uidesc"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build",
+      "inputs": [
+        "Current poly.uidesc layout positions"
+      ],
+      "expected_output": [
+        "LaneEditView appears in UI between lanes and phrase section",
+        "Velocity view shorter",
+        "Window fits at ~680px"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
     }
   ],
   "decisions": [],
@@ -7092,6 +8217,72 @@
       "verdict": "216/216 pass",
       "duration_ms": 1490,
       "created_at": "2026-06-22T21:20:16.672Z"
+    },
+    {
+      "id": 122,
+      "task_id": "T01",
+      "slice_id": "S01",
+      "milestone_id": "M010",
+      "command": "cmake --build build && ctest --test-dir build",
+      "exit_code": 0,
+      "verdict": "pass",
+      "duration_ms": 15000,
+      "created_at": "2026-06-23T01:26:38.649Z"
+    },
+    {
+      "id": 123,
+      "task_id": "T02",
+      "slice_id": "S01",
+      "milestone_id": "M010",
+      "command": "cmake --build build && ctest --test-dir build",
+      "exit_code": 0,
+      "verdict": "pass",
+      "duration_ms": 15000,
+      "created_at": "2026-06-23T01:26:43.459Z"
+    },
+    {
+      "id": 124,
+      "task_id": "T03",
+      "slice_id": "S01",
+      "milestone_id": "M010",
+      "command": "cmake --build build && ctest --test-dir build --output-on-failure",
+      "exit_code": 0,
+      "verdict": "pass",
+      "duration_ms": 15000,
+      "created_at": "2026-06-23T01:26:47.765Z"
+    },
+    {
+      "id": 125,
+      "task_id": "T03",
+      "slice_id": "S01",
+      "milestone_id": "M010",
+      "command": "scripts/check-realtime-safety.sh",
+      "exit_code": 0,
+      "verdict": "pass",
+      "duration_ms": 2000,
+      "created_at": "2026-06-23T01:26:47.765Z"
+    },
+    {
+      "id": 126,
+      "task_id": "T01",
+      "slice_id": "S02",
+      "milestone_id": "M010",
+      "command": "cmake --build build && ctest --test-dir build",
+      "exit_code": 0,
+      "verdict": "pass",
+      "duration_ms": 15000,
+      "created_at": "2026-06-23T01:27:09.672Z"
+    },
+    {
+      "id": 127,
+      "task_id": "T02",
+      "slice_id": "S02",
+      "milestone_id": "M010",
+      "command": "cmake --build build && ctest --test-dir build",
+      "exit_code": 0,
+      "verdict": "pass",
+      "duration_ms": 15000,
+      "created_at": "2026-06-23T01:27:14.803Z"
     }
   ]
 }
