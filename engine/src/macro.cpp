@@ -16,6 +16,8 @@ GrooveState resolveMacros(const GrooveState& input) {
     for (int i = 0; i < out.activeLaneCount; ++i) {
         auto& lane = out.lanes[i];
         const auto& base = input.lanes[i];
+        if (base.timeline)
+            continue;
         int maxSteps = base.cycle.steps;
         if (maxSteps <= 0)
             continue;

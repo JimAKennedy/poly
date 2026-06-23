@@ -258,3 +258,99 @@ TEST(AdditiveCells, ZeroCellCountFallsBack) {
     EXPECT_EQ(info.count, 0);
     EXPECT_NEAR(info.totalPpq, 0.0, 1e-9);
 }
+
+// --- Timeline mode tests ---
+
+static poly::LaneConfig makeTimelineConfig(std::initializer_list<bool> steps, int subdivision = 4) {
+    poly::LaneConfig cfg{};
+    cfg.id = 0;
+    cfg.active = true;
+    cfg.timeline = true;
+    cfg.cycle.steps = static_cast<int>(steps.size());
+    cfg.cycle.subdivision = subdivision;
+    cfg.fixedPatternLength = static_cast<int>(steps.size());
+    cfg.probability = 1.0f;
+    cfg.baseVelocity = 100;
+    int i = 0;
+    for (bool s : steps)
+        cfg.fixedPattern[i++] = s;
+    return cfg;
+}
+
+TEST(Timeline, UsesFixedPatternNotEuclidean) {
+    auto cfg = makeTimelineConfig({true, false, false, true, false, false, true, false});
+    cfg.hitCount = 8;
+    cfg.rotation = 0;
+    auto pos = renderPpqPositions(cfg, 0.0, 8.0);
+    EXPECT_EQ(pos.size(), 3u);
+    EXPECT_NEAR(pos[0], 0.0, 1e-9);
+    EXPECT_NEAR(pos[1], 3.0, 1e-9);
+    EXPECT_NEAR(pos[2], 6.0, 1e-9);
+}
+
+TEST(Timeline, IgnoresHitCountAndRotation) {
+    auto cfg = makeTimelineConfig({true, true, false, false});
+    cfg.hitCount = 4;
+    cfg.rotation = 2;
+    auto pos = renderPpqPositions(cfg, 0.0, 4.0);
+    EXPECT_EQ(pos.size(), 2u);
+    EXPECT_NEAR(pos[0], 0.0, 1e-9);
+    EXPECT_NEAR(pos[1], 1.0, 1e-9);
+}
+
+TEST(Timeline, EnvelopesStillApply) {
+    auto cfg = makeTimelineConfig({true, true, true, true});
+    cfg.envelopeCount = 1;
+    cfg.envelopes[0].active = true;
+    cfg.envelopes[0].envelope.target = poly::EnvTarget::Velocity;
+    cfg.envelopes[0].envelope.periodBars = 1.0f;
+    cfg.envelopes[0].envelope.shape = poly::Shape::Ramp;
+    cfg.envelopes[0].envelope.depth = 1.0f;
+
+    poly::GrooveState state{};
+    state.activeLaneCount = 1;
+    state.lanes[0] = cfg;
+    state.seed = 42;
+
+    poly::TransportContext tc{};
+    tc.playing = true;
+    tc.ppqStart = 0.0;
+    tc.ppqEnd = 4.0;
+    tc.tempo = 120.0;
+    tc.sampleRate = 44100.0;
+
+    poly::NoteEventBuffer buf;
+    poly::Engine engine;
+    engine.renderRange(tc, state, buf);
+
+    EXPECT_EQ(buf.count, 4u);
+    EXPECT_NE(buf.events[0].velocity, buf.events[3].velocity);
+}
+
+TEST(Timeline, PhraseGatingStillWorks) {
+    auto cfg = makeTimelineConfig({true, true, true, true, true, true, true, true});
+    cfg.phraseLength = 2.0f;
+    cfg.phraseGap = 2.0f;
+    auto pos = renderPpqPositions(cfg, 0.0, 8.0);
+    for (double p : pos) {
+        double phrasePos = std::fmod(p, 4.0);
+        EXPECT_LT(phrasePos, 2.0 + 1e-9) << "ppq=" << p;
+    }
+}
+
+TEST(Timeline, BellPatternGolden) {
+    auto cfg = makeTimelineConfig({true, false, true, true, false, true, false, true, true, false, true, false});
+    cfg.cycle.steps = 12;
+    cfg.cycle.subdivision = 8;
+    cfg.fixedPatternLength = 12;
+    auto pos = renderPpqPositions(cfg, 0.0, 6.0);
+    EXPECT_EQ(pos.size(), 7u);
+    double sPpq = 0.5;
+    EXPECT_NEAR(pos[0], 0.0 * sPpq, 1e-9);
+    EXPECT_NEAR(pos[1], 2.0 * sPpq, 1e-9);
+    EXPECT_NEAR(pos[2], 3.0 * sPpq, 1e-9);
+    EXPECT_NEAR(pos[3], 5.0 * sPpq, 1e-9);
+    EXPECT_NEAR(pos[4], 7.0 * sPpq, 1e-9);
+    EXPECT_NEAR(pos[5], 8.0 * sPpq, 1e-9);
+    EXPECT_NEAR(pos[6], 10.0 * sPpq, 1e-9);
+}

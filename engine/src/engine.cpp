@@ -31,24 +31,30 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
 
         std::array<bool, kMaxSteps> pattern{};
 
-        bool useKotekan = cfg.kotekanSourceLane >= 0 && cfg.kotekanSourceLane < state.activeLaneCount &&
-                          cfg.kotekanSourceLane != lane;
-        if (useKotekan) {
-            const auto& src = state.lanes[cfg.kotekanSourceLane];
-            if (src.kotekanSourceLane == lane)
-                useKotekan = false;
-        }
-
-        if (useKotekan) {
-            const auto& src = state.lanes[cfg.kotekanSourceLane];
-            std::array<bool, kMaxSteps> srcPattern{};
-            euclidean(src.hitCount, src.cycle.steps, src.rotation, srcPattern);
-            for (int s = 0; s < cfg.cycle.steps && s < src.cycle.steps; ++s)
-                pattern[s] = !srcPattern[s];
-            for (int s = src.cycle.steps; s < cfg.cycle.steps; ++s)
-                pattern[s] = true;
+        if (cfg.timeline) {
+            int patLen = cfg.fixedPatternLength > 0 ? cfg.fixedPatternLength : cfg.cycle.steps;
+            for (int s = 0; s < patLen && s < kMaxSteps; ++s)
+                pattern[s] = cfg.fixedPattern[s];
         } else {
-            euclidean(cfg.hitCount, cfg.cycle.steps, cfg.rotation, pattern);
+            bool useKotekan = cfg.kotekanSourceLane >= 0 && cfg.kotekanSourceLane < state.activeLaneCount &&
+                              cfg.kotekanSourceLane != lane;
+            if (useKotekan) {
+                const auto& src = state.lanes[cfg.kotekanSourceLane];
+                if (src.kotekanSourceLane == lane)
+                    useKotekan = false;
+            }
+
+            if (useKotekan) {
+                const auto& src = state.lanes[cfg.kotekanSourceLane];
+                std::array<bool, kMaxSteps> srcPattern{};
+                euclidean(src.hitCount, src.cycle.steps, src.rotation, srcPattern);
+                for (int s = 0; s < cfg.cycle.steps && s < src.cycle.steps; ++s)
+                    pattern[s] = !srcPattern[s];
+                for (int s = src.cycle.steps; s < cfg.cycle.steps; ++s)
+                    pattern[s] = true;
+            } else {
+                euclidean(cfg.hitCount, cfg.cycle.steps, cfg.rotation, pattern);
+            }
         }
 
         const double sPpq = stepPpq(cfg.cycle);
