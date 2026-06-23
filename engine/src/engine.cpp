@@ -30,7 +30,26 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
             continue;
 
         std::array<bool, kMaxSteps> pattern{};
-        euclidean(cfg.hitCount, cfg.cycle.steps, cfg.rotation, pattern);
+
+        bool useKotekan = cfg.kotekanSourceLane >= 0 && cfg.kotekanSourceLane < state.activeLaneCount &&
+                          cfg.kotekanSourceLane != lane;
+        if (useKotekan) {
+            const auto& src = state.lanes[cfg.kotekanSourceLane];
+            if (src.kotekanSourceLane == lane)
+                useKotekan = false;
+        }
+
+        if (useKotekan) {
+            const auto& src = state.lanes[cfg.kotekanSourceLane];
+            std::array<bool, kMaxSteps> srcPattern{};
+            euclidean(src.hitCount, src.cycle.steps, src.rotation, srcPattern);
+            for (int s = 0; s < cfg.cycle.steps && s < src.cycle.steps; ++s)
+                pattern[s] = !srcPattern[s];
+            for (int s = src.cycle.steps; s < cfg.cycle.steps; ++s)
+                pattern[s] = true;
+        } else {
+            euclidean(cfg.hitCount, cfg.cycle.steps, cfg.rotation, pattern);
+        }
 
         const double sPpq = stepPpq(cfg.cycle);
 
@@ -40,6 +59,12 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
         int64_t firstStep = static_cast<int64_t>(std::ceil(tc.ppqStart / sPpq));
         int64_t lastStep = static_cast<int64_t>(std::ceil(tc.ppqEnd / sPpq));
 
+        const bool hasPhraseGating = cfg.phraseLength > 0.0f;
+        const double phraseLenPpq = static_cast<double>(cfg.phraseLength);
+        const double phraseGapPpq = static_cast<double>(cfg.phraseGap);
+        const double phraseCyclePpq = phraseLenPpq + phraseGapPpq;
+        const double phraseOffPpq = static_cast<double>(cfg.phraseOffset);
+
         for (int64_t absStep = firstStep; absStep < lastStep; ++absStep) {
             double ppq = absStep * sPpq;
 
@@ -47,9 +72,24 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
             if (ppq < tc.ppqStart || ppq >= tc.ppqEnd)
                 continue;
 
+            if (hasPhraseGating && phraseCyclePpq > 0.0) {
+                double phrasePos = std::fmod(ppq - phraseOffPpq, phraseCyclePpq);
+                if (phrasePos < 0.0)
+                    phrasePos += phraseCyclePpq;
+                if (phrasePos >= phraseLenPpq)
+                    continue;
+            }
+
             // Map to position within the cycle
             int stepsInCycle = cfg.cycle.steps;
             int64_t cycleStep = ((absStep % stepsInCycle) + stepsInCycle) % stepsInCycle;
+
+            // Phase drift: rotate pattern lookup by driftRate steps per bar
+            if (cfg.driftRate != 0.0f) {
+                double barPos = ppq / 4.0;
+                auto driftSteps = static_cast<int64_t>(std::floor(barPos * static_cast<double>(cfg.driftRate)));
+                cycleStep = ((cycleStep + driftSteps) % stepsInCycle + stepsInCycle) % stepsInCycle;
+            }
 
             // Envelope modulation: evaluate before pattern check (FillLikelihood needs it)
             float velMod = 1.0f;
@@ -105,6 +145,25 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
             bool isPatternStep = pattern[static_cast<size_t>(cycleStep)];
             bool isAnchor = cfg.constraints.anchorSteps.steps[static_cast<size_t>(cycleStep)];
 
+            bool mutatedToGhost = false;
+            if (cfg.mutationRate > 0.0f && !isAnchor) {
+                int64_t cycleIndex = absStep / stepsInCycle;
+                float mutRoll = deterministicRand(state.seed, cfg.id, cycleIndex * kMaxSteps + cycleStep, 8);
+                if (mutRoll < cfg.mutationRate) {
+                    float typeRoll = deterministicRand(state.seed, cfg.id, cycleIndex * kMaxSteps + cycleStep, 9);
+                    if (typeRoll < 0.4f) {
+                        if (isPatternStep)
+                            isPatternStep = false;
+                    } else if (typeRoll < 0.7f) {
+                        if (isPatternStep)
+                            mutatedToGhost = true;
+                    } else {
+                        if (!isPatternStep)
+                            isPatternStep = true;
+                    }
+                }
+            }
+
             if (!isAnchor) {
                 if (!isPatternStep) {
                     if (fillMod <= 0.0f)
@@ -153,6 +212,9 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
 
             vel = std::clamp(vel, 0.0f, 1.0f);
 
+            if (mutatedToGhost)
+                vel = ghostFloor;
+
             // Swing: shift odd cycle-steps (1, 3, 5...) forward
             if (cfg.swingAmount > 0.0f && (cycleStep % 2) == 1) {
                 ppq += cfg.swingAmount * sPpq * (1.0 / 3.0);
@@ -165,6 +227,13 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
                 double jitterPpq = static_cast<double>(effectiveHumanize) * tc.tempo / 60000.0;
                 float jitterRand = deterministicRand(state.seed, cfg.id, absStep, 3);
                 ppq += jitterPpq * (jitterRand * 2.0f - 1.0f);
+            }
+
+            if (cfg.timingOffsetMs != 0.0f && tc.tempo > 0.0) {
+                double offsetPpq = static_cast<double>(cfg.timingOffsetMs) * tc.tempo / 60000.0;
+                ppq += offsetPpq;
+                if (ppq < 0.0)
+                    ppq = 0.0;
             }
 
             NoteEvent ev{};

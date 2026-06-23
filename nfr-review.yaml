@@ -1,0 +1,16 @@
+exclude_paths:
+  - "build*/**"
+  - "build-release*/**"
+  - "graphify-out/**"
+
+exclude_test_paths: false
+
+rules:
+  skip:
+    # VST3/VSTGUI factory methods require raw new with ownership transfer to the framework.
+    # The scanner already auto-suppresses addUnit() calls but misses createView()/createCustomView().
+    - cpp-dormant-classes
+    # Google Test TEST()/TEST_F() macros register as coupling hotspots — not actionable.
+    - structure-god-node
+    # Subdirectory CMakeLists.txt files inherit cmake_minimum_required from root CMakeLists.txt.
+    - cmake-minimum-version

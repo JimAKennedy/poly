@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-06-21T13:04:37Z | Files: 80 | Described: 0/80
-<!-- gsd:codebase-meta {"generatedAt":"2026-06-21T13:04:37Z","fingerprint":"847b75319ca65f755a1bf7de1b532d0a3e652465","fileCount":80,"truncated":false} -->
+Generated: 2026-06-23T01:30:00Z | Files: 101 | Described: 0/101
+<!-- gsd:codebase-meta {"generatedAt":"2026-06-23T01:30:00Z","fingerprint":"9d693e4c891f6b5b743ae441a4fe87ac0fe3a796","fileCount":101,"truncated":false} -->
 
 ### (root)/
 - `.clang-format`
@@ -13,6 +13,7 @@ Generated: 2026-06-21T13:04:37Z | Files: 80 | Described: 0/80
 - `CLAUDE.md`
 - `CMakeLists.txt`
 - `IMPLEMENTATION_PLAN.md`
+- `nfr-review.yaml`
 
 ### .github/
 - `.github/lsan.supp`
@@ -21,6 +22,8 @@ Generated: 2026-06-21T13:04:37Z | Files: 80 | Described: 0/80
 
 ### .github/workflows/
 - `.github/workflows/ci.yml`
+- `.github/workflows/nfr-review-nightly.yml`
+- `.github/workflows/nfr-review.yml`
 - `.github/workflows/sanitizers.yml`
 
 ### cmake/
@@ -34,6 +37,8 @@ Generated: 2026-06-21T13:04:37Z | Files: 80 | Described: 0/80
 - `docs/M002-UAT-SCRIPT.md`
 - `docs/PRD.md`
 - `docs/roadmap.md`
+- `docs/UAT-SCRIPT.md`
+- `docs/ui-guide.md`
 - `docs/wireframes.md`
 
 ### docs/review/
@@ -52,8 +57,11 @@ Generated: 2026-06-21T13:04:37Z | Files: 80 | Described: 0/80
 - `engine/include/poly/envelope.h`
 - `engine/include/poly/euclidean.h`
 - `engine/include/poly/macro.h`
+- `engine/include/poly/midi_capture.h`
+- `engine/include/poly/presets.h`
 - `engine/include/poly/rng.h`
 - `engine/include/poly/scene.h`
+- `engine/include/poly/smf_writer.h`
 - `engine/include/poly/state_io.h`
 - `engine/include/poly/types.h`
 
@@ -64,7 +72,9 @@ Generated: 2026-06-21T13:04:37Z | Files: 80 | Described: 0/80
 - `engine/src/envelope.cpp`
 - `engine/src/euclidean.cpp`
 - `engine/src/macro.cpp`
+- `engine/src/midi_capture.cpp`
 - `engine/src/scene.cpp`
+- `engine/src/smf_writer.cpp`
 
 ### plugin/
 - `plugin/CMakeLists.txt`
@@ -81,8 +91,16 @@ Generated: 2026-06-21T13:04:37Z | Files: 80 | Described: 0/80
 - `plugin/source/processor.h`
 
 ### plugin/source/ui/
+- `plugin/source/ui/envelope_curve_view.cpp`
+- `plugin/source/ui/envelope_curve_view.h`
+- `plugin/source/ui/header_view.cpp`
+- `plugin/source/ui/header_view.h`
 - `plugin/source/ui/lane_grid_view.cpp`
 - `plugin/source/ui/lane_grid_view.h`
+- `plugin/source/ui/phase_alignment_view.cpp`
+- `plugin/source/ui/phase_alignment_view.h`
+- `plugin/source/ui/phrase_edit_view.cpp`
+- `plugin/source/ui/phrase_edit_view.h`
 - `plugin/source/ui/velocity_view.cpp`
 - `plugin/source/ui/velocity_view.h`
 
@@ -98,8 +116,11 @@ Generated: 2026-06-21T13:04:37Z | Files: 80 | Described: 0/80
 - `tests/euclidean_tests.cpp`
 - `tests/golden_tests.cpp`
 - `tests/macro_tests.cpp`
+- `tests/midi_capture_tests.cpp`
 - `tests/plugin_tests.cpp`
+- `tests/preset_tests.cpp`
 - `tests/scene_tests.cpp`
+- `tests/smf_writer_tests.cpp`
 - `tests/swing_humanize_tests.cpp`
 
 ### tests/golden/

@@ -6,6 +6,7 @@
 
 #include "poly/bridge.h"
 #include "poly/engine.h"
+#include "poly/macro.h"
 #include "poly/midi_capture.h"
 #include "poly/scene.h"
 
@@ -44,6 +45,7 @@ private:
     bool exportTriggered_ = false;
     int captureLengthBars_ = MidiCaptureBuffer::kDefaultCaptureBars;
     double expectedNextPpq_ = -1.0;
+    MacroSmoother macroSmoother_{};
 };
 
 } // namespace poly
