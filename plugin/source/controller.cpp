@@ -11,6 +11,7 @@
 #include "poly/state_io.h"
 #include "poly/types.h"
 #include "ui/cell_editor_view.h"
+#include "ui/cross_rhythm_view.h"
 #include "ui/envelope_curve_view.h"
 #include "ui/header_view.h"
 #include "ui/lane_edit_view.h"
@@ -220,6 +221,9 @@ VSTGUI::CView* PolyController::createCustomView(VSTGUI::UTF8StringPtr name, cons
     }
     if (std::strcmp(name, "MicroTimingEditorView") == 0) {
         return new MicroTimingEditorView(VSTGUI::CRect(0, 0, 580, 60), this); // ownership-transfer
+    }
+    if (std::strcmp(name, "CrossRhythmView") == 0) {
+        return new CrossRhythmView(VSTGUI::CRect(0, 0, 580, 146), this); // ownership-transfer
     }
     return nullptr;
 }
