@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-06-23T02:23:39Z | Files: 106 | Described: 0/106
-<!-- gsd:codebase-meta {"generatedAt":"2026-06-23T02:23:39Z","fingerprint":"e71115345f3abeda79ff3e1eb88f1e6132fe8266","fileCount":106,"truncated":false} -->
+Generated: 2026-06-23T11:34:13Z | Files: 110 | Described: 0/110
+<!-- gsd:codebase-meta {"generatedAt":"2026-06-23T11:34:13Z","fingerprint":"6aedb7794f189a3a2a487dfdb7b70f426d2aa7b6","fileCount":110,"truncated":false} -->
 
 ### (root)/
 - `.clang-format`
@@ -102,10 +102,14 @@ Generated: 2026-06-23T02:23:39Z | Files: 106 | Described: 0/106
 - `plugin/source/ui/lane_edit_view.h`
 - `plugin/source/ui/lane_grid_view.cpp`
 - `plugin/source/ui/lane_grid_view.h`
+- `plugin/source/ui/micro_timing_editor_view.cpp`
+- `plugin/source/ui/micro_timing_editor_view.h`
 - `plugin/source/ui/phase_alignment_view.cpp`
 - `plugin/source/ui/phase_alignment_view.h`
 - `plugin/source/ui/phrase_edit_view.cpp`
 - `plugin/source/ui/phrase_edit_view.h`
+- `plugin/source/ui/timeline_step_editor_view.cpp`
+- `plugin/source/ui/timeline_step_editor_view.h`
 - `plugin/source/ui/velocity_view.cpp`
 - `plugin/source/ui/velocity_view.h`
 
