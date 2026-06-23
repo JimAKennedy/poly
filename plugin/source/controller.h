@@ -21,6 +21,7 @@ public:
                                     const VSTGUI::IUIDescription* description, VSTGUI::VST3Editor* editor) override;
 
     const SceneState& cachedState() const { return cachedState_; }
+    SceneState& mutableCachedState() { return cachedState_; }
 
 private:
     SceneState cachedState_{};
