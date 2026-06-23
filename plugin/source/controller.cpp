@@ -15,7 +15,6 @@
 #include "ui/lane_edit_view.h"
 #include "ui/lane_grid_view.h"
 #include "ui/phase_alignment_view.h"
-#include "ui/phrase_edit_view.h"
 #include "ui/velocity_view.h"
 
 namespace poly {
@@ -193,7 +192,7 @@ VSTGUI::CView* PolyController::createCustomView(VSTGUI::UTF8StringPtr name, cons
         return new HeaderView(VSTGUI::CRect(0, 0, 600, 32), this); // ownership-transfer
     }
     if (std::strcmp(name, "LaneEditView") == 0) {
-        return new LaneEditView(VSTGUI::CRect(0, 0, 580, 60), this);
+        return new LaneEditView(VSTGUI::CRect(0, 0, 580, 114), this);
     }
     if (std::strcmp(name, "LaneGridView") == 0) {
         return new LaneGridView(VSTGUI::CRect(0, 0, 580, 156), this); // ownership-transfer
@@ -206,9 +205,6 @@ VSTGUI::CView* PolyController::createCustomView(VSTGUI::UTF8StringPtr name, cons
     }
     if (std::strcmp(name, "PhaseAlignmentView") == 0) {
         return new PhaseAlignmentView(VSTGUI::CRect(0, 0, 190, 146), this); // ownership-transfer
-    }
-    if (std::strcmp(name, "PhraseEditView") == 0) {
-        return new PhraseEditView(VSTGUI::CRect(0, 0, 580, 60), this); // ownership-transfer
     }
     return nullptr;
 }

@@ -20,10 +20,11 @@ public:
 
 private:
     static constexpr int kMaxLanes = 8;
-    static constexpr int kKnobCount = 10;
+    static constexpr int kLaneKnobCount = 10;
+    static constexpr int kPhraseKnobCount = 6;
     static constexpr double kDragSensitivity = 200.0;
 
-    enum class ValueFormat { Integer, Subdivision, MidiNote, Percent, KotekanSrc };
+    enum class ValueFormat { Integer, Subdivision, MidiNote, Percent, KotekanSrc, Beats, BipolarSteps, BipolarMs };
 
     struct KnobDef {
         int paramOffset;
@@ -32,19 +33,28 @@ private:
         double displayMax;
         ValueFormat format;
     };
-    static const KnobDef kKnobs[kKnobCount];
+    static const KnobDef kLaneKnobs[kLaneKnobCount];
+    static const KnobDef kPhraseKnobs[kPhraseKnobCount];
 
     VSTGUI::CRect laneTabRect(int lane) const;
-    VSTGUI::CRect knobRect(int knob) const;
+    VSTGUI::CRect laneKnobRect(int knob) const;
+    VSTGUI::CRect phraseKnobRect(int knob) const;
+    VSTGUI::CRect schematicRect() const;
     int hitTestTab(const VSTGUI::CPoint& where) const;
-    int hitTestKnob(const VSTGUI::CPoint& where) const;
-    Steinberg::Vst::ParamID paramIdForKnob(int knob, int lane) const;
+    int hitTestLaneKnob(const VSTGUI::CPoint& where) const;
+    int hitTestPhraseKnob(const VSTGUI::CPoint& where) const;
+    Steinberg::Vst::ParamID paramIdForKnob(const KnobDef& def, int lane) const;
     void drawKnob(VSTGUI::CDrawContext* ctx, const VSTGUI::CRect& rect, double value, const VSTGUI::CColor& color,
-                  const KnobDef& def);
+                  const KnobDef& def, bool enabled = true);
+    void drawPhraseSchematic(VSTGUI::CDrawContext* ctx, const VSTGUI::CColor& color, double lenBeats, double gapBeats,
+                             double ofsBeats);
 
     Steinberg::Vst::EditController* controller_;
     VSTGUI::SharedPointer<VSTGUI::CVSTGUITimer> refreshTimer_;
     int selectedLane_ = 0;
+
+    enum class DragTarget { None, LaneKnob, PhraseKnob };
+    DragTarget dragTarget_ = DragTarget::None;
     int dragKnob_ = -1;
     double dragStartY_ = 0;
     double dragStartValue_ = 0;
