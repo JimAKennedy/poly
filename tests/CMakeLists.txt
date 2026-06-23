@@ -50,8 +50,6 @@ if(NOT POLY_ENGINE_ONLY)
         ${CMAKE_SOURCE_DIR}/plugin/source/ui/lane_grid_view.cpp
         ${CMAKE_SOURCE_DIR}/plugin/source/ui/phase_alignment_view.h
         ${CMAKE_SOURCE_DIR}/plugin/source/ui/phase_alignment_view.cpp
-        ${CMAKE_SOURCE_DIR}/plugin/source/ui/phrase_edit_view.h
-        ${CMAKE_SOURCE_DIR}/plugin/source/ui/phrase_edit_view.cpp
         ${CMAKE_SOURCE_DIR}/plugin/source/ui/velocity_view.h
         ${CMAKE_SOURCE_DIR}/plugin/source/ui/velocity_view.cpp
     )
