@@ -148,7 +148,7 @@ Steinberg::tresult PLUGIN_API PolyController::initialize(Steinberg::FUnknown* co
 
 Steinberg::IPlugView* PLUGIN_API PolyController::createView(Steinberg::FIDString name) {
     if (Steinberg::FIDStringsEqual(name, Steinberg::Vst::ViewType::kEditor)) {
-        auto* view = new VSTGUI::VST3Editor(this, "view", "poly.uidesc");
+        auto* view = new VSTGUI::VST3Editor(this, "view", "poly.uidesc"); // ownership-transfer
         view->setDelegate(this);
         return view;
     }
@@ -159,22 +159,22 @@ VSTGUI::CView* PolyController::createCustomView(VSTGUI::UTF8StringPtr name, cons
                                                 const VSTGUI::IUIDescription* /*description*/,
                                                 VSTGUI::VST3Editor* /*editor*/) {
     if (std::strcmp(name, "HeaderView") == 0) {
-        return new HeaderView(VSTGUI::CRect(0, 0, 600, 32), this);
+        return new HeaderView(VSTGUI::CRect(0, 0, 600, 32), this); // ownership-transfer
     }
     if (std::strcmp(name, "LaneGridView") == 0) {
-        return new LaneGridView(VSTGUI::CRect(0, 0, 580, 156), this);
+        return new LaneGridView(VSTGUI::CRect(0, 0, 580, 156), this); // ownership-transfer
     }
     if (std::strcmp(name, "VelocityView") == 0) {
-        return new VelocityView(VSTGUI::CRect(0, 0, 580, 76), this);
+        return new VelocityView(VSTGUI::CRect(0, 0, 580, 76), this); // ownership-transfer
     }
     if (std::strcmp(name, "EnvelopeCurveView") == 0) {
-        return new EnvelopeCurveView(VSTGUI::CRect(0, 0, 380, 146), this);
+        return new EnvelopeCurveView(VSTGUI::CRect(0, 0, 380, 146), this); // ownership-transfer
     }
     if (std::strcmp(name, "PhaseAlignmentView") == 0) {
-        return new PhaseAlignmentView(VSTGUI::CRect(0, 0, 190, 146), this);
+        return new PhaseAlignmentView(VSTGUI::CRect(0, 0, 190, 146), this); // ownership-transfer
     }
     if (std::strcmp(name, "PhraseEditView") == 0) {
-        return new PhraseEditView(VSTGUI::CRect(0, 0, 580, 60), this);
+        return new PhraseEditView(VSTGUI::CRect(0, 0, 580, 60), this); // ownership-transfer
     }
     return nullptr;
 }
@@ -204,9 +204,9 @@ Steinberg::tresult PLUGIN_API PolyController::setComponentState(Steinberg::IBStr
         setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kHumanizeMs), cfg.humanizeMs / 50.0);
         setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kNoteDuration), cfg.noteDuration / 4.0);
         setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kActive), cfg.active ? 1.0 : 0.0);
-        setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kPhraseLength), cfg.phraseLength / 16.0);
-        setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kPhraseGap), cfg.phraseGap / 16.0);
-        setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kPhraseOffset), cfg.phraseOffset / 16.0);
+        setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kPhraseLength), cfg.phraseLength / 64.0);
+        setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kPhraseGap), cfg.phraseGap / 64.0);
+        setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kPhraseOffset), cfg.phraseOffset / 64.0);
         setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kMutationRate), cfg.mutationRate);
         setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kDriftRate),
                            static_cast<double>((cfg.driftRate + 4.0f) / 8.0f));
