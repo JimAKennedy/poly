@@ -7,6 +7,8 @@ smtg_add_vst3plugin(poly_plugin
     source/plugids.h
     source/ui/cell_editor_view.h
     source/ui/cell_editor_view.cpp
+    source/ui/cross_rhythm_view.h
+    source/ui/cross_rhythm_view.cpp
     source/ui/envelope_curve_view.h
     source/ui/envelope_curve_view.cpp
     source/ui/header_view.h
