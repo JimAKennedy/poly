@@ -247,6 +247,42 @@ TEST(Macro, Deterministic) {
     }
 }
 
+// --- Timeline immunity ---
+
+TEST(Macro, TimelineLaneImmuneToMacros) {
+    auto state = makeBaseState();
+    state.lanes[0].timeline = true;
+    state.macros.complexity = 1.0f;
+    state.macros.density = 1.0f;
+    state.macros.syncopation = 1.0f;
+    state.macros.swing = 0.5f;
+    state.macros.tension = 1.0f;
+    state.macros.humanize = 1.0f;
+
+    auto resolved = poly::resolveMacros(state);
+
+    EXPECT_EQ(resolved.lanes[0].hitCount, state.lanes[0].hitCount);
+    EXPECT_FLOAT_EQ(resolved.lanes[0].probability, state.lanes[0].probability);
+    EXPECT_EQ(resolved.lanes[0].rotation, state.lanes[0].rotation);
+    EXPECT_FLOAT_EQ(resolved.lanes[0].swingAmount, state.lanes[0].swingAmount);
+    EXPECT_FLOAT_EQ(resolved.lanes[0].humanizeMs, state.lanes[0].humanizeMs);
+    EXPECT_FLOAT_EQ(resolved.lanes[0].velocitySpread, state.lanes[0].velocitySpread);
+    EXPECT_FLOAT_EQ(resolved.lanes[0].emphasisProb, state.lanes[0].emphasisProb);
+
+    EXPECT_NE(resolved.lanes[1].hitCount, state.lanes[1].hitCount);
+}
+
+TEST(Macro, NonTimelineLaneStillAffected) {
+    auto state = makeBaseState();
+    state.lanes[0].timeline = true;
+    state.macros.complexity = 0.0f;
+
+    auto resolved = poly::resolveMacros(state);
+
+    EXPECT_EQ(resolved.lanes[0].hitCount, state.lanes[0].hitCount);
+    EXPECT_NE(resolved.lanes[1].hitCount, state.lanes[1].hitCount);
+}
+
 // --- MacroSmoother ---
 
 TEST(MacroSmoother, SnapToTargetOnFirstAdvance) {

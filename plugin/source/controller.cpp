@@ -16,6 +16,7 @@
 #include "ui/lane_edit_view.h"
 #include "ui/lane_grid_view.h"
 #include "ui/phase_alignment_view.h"
+#include "ui/timeline_step_editor_view.h"
 #include "ui/velocity_view.h"
 
 namespace poly {
@@ -64,6 +65,8 @@ static constexpr CoreParamDef kCoreParamDefs[] = {
     {ParamIDs::kCoreRotation, "Rotation", "", 63, 0.0},
     {ParamIDs::kCoreMidiNote, "MIDI Note", "", 127, 36.0 / 127.0},
     {ParamIDs::kCoreCellCount, "Cell Count", "", 64, 0.0},
+    {ParamIDs::kCoreTimeline, "Timeline", "", 1, 0.0},
+    {ParamIDs::kCoreFixedPatternLen, "Pattern Length", "", 64, 0.0},
 };
 
 } // namespace
@@ -211,6 +214,9 @@ VSTGUI::CView* PolyController::createCustomView(VSTGUI::UTF8StringPtr name, cons
     if (std::strcmp(name, "CellEditorView") == 0) {
         return new CellEditorView(VSTGUI::CRect(0, 0, 580, 60), this); // ownership-transfer
     }
+    if (std::strcmp(name, "TimelineStepEditorView") == 0) {
+        return new TimelineStepEditorView(VSTGUI::CRect(0, 0, 580, 60), this); // ownership-transfer
+    }
     return nullptr;
 }
 
@@ -276,6 +282,9 @@ Steinberg::tresult PLUGIN_API PolyController::setComponentState(Steinberg::IBStr
         setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreRotation), cfg.rotation / 63.0);
         setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreMidiNote), cfg.midiNote / 127.0);
         setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreCellCount), cfg.cellCount / 64.0);
+        setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreTimeline), cfg.timeline ? 1.0 : 0.0);
+        setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreFixedPatternLen),
+                           cfg.fixedPatternLength / 64.0);
     }
 
     setParamNormalized(ParamIDs::kMacroComplexity, gs.macros.complexity);

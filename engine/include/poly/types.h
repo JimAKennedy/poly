@@ -126,15 +126,18 @@ struct LaneConfig {
     float humanizeMs = 0.0f;
     float swingAmount = 0.0f;
     float noteDuration = 0.0f;
-    float phraseLength = 0.0f;              // beats; 0 = continuous (no phrase gating)
-    float phraseGap = 0.0f;                 // beats; silence between phrases
-    float phraseOffset = 0.0f;              // beats; phase offset for this lane's phrase cycle
-    float mutationRate = 0.0f;              // 0.0-1.0; per-step mutation probability each cycle
-    float driftRate = 0.0f;                 // steps per bar; pattern rotation rate from absolute PPQ
-    float timingOffsetMs = 0.0f;            // ms; positive = late, negative = early; range [-20, +20]
-    int kotekanSourceLane = -1;             // -1=independent, 0-7=complement of source lane's pattern
-    int cellCount = 0;                      // 0 = equal cells (standard Euclidean); >0 = additive/aksak
-    std::array<int, kMaxSteps> cellSizes{}; // subdivision units per cell; sum = total cycle length
+    float phraseLength = 0.0f;                  // beats; 0 = continuous (no phrase gating)
+    float phraseGap = 0.0f;                     // beats; silence between phrases
+    float phraseOffset = 0.0f;                  // beats; phase offset for this lane's phrase cycle
+    float mutationRate = 0.0f;                  // 0.0-1.0; per-step mutation probability each cycle
+    float driftRate = 0.0f;                     // steps per bar; pattern rotation rate from absolute PPQ
+    float timingOffsetMs = 0.0f;                // ms; positive = late, negative = early; range [-20, +20]
+    int kotekanSourceLane = -1;                 // -1=independent, 0-7=complement of source lane's pattern
+    int cellCount = 0;                          // 0 = equal cells (standard Euclidean); >0 = additive/aksak
+    std::array<int, kMaxSteps> cellSizes{};     // subdivision units per cell; sum = total cycle length
+    bool timeline = false;                      // timeline mode: use fixedPattern, immune to macros
+    std::array<bool, kMaxSteps> fixedPattern{}; // per-step on/off for timeline mode
+    int fixedPatternLength = 0;                 // 0 = use cycle.steps; >0 = explicit length
     bool active = true;
     std::array<EnvelopeAssign, kMaxEnvelopesPerLane> envelopes{};
     int envelopeCount = 0;

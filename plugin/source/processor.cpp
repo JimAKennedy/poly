@@ -360,6 +360,12 @@ void PolyProcessor::applyParameter(Steinberg::Vst::ParamID id, double normalized
         case kCoreCellCount:
             cfg.cellCount = static_cast<int>(std::round(normalized * 64.0));
             break;
+        case kCoreTimeline:
+            cfg.timeline = normalized > 0.5;
+            break;
+        case kCoreFixedPatternLen:
+            cfg.fixedPatternLength = static_cast<int>(std::round(normalized * 64.0));
+            break;
         default:
             break;
         }

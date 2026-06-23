@@ -149,6 +149,18 @@ bool writeGrooveStateBody(WriteFn&& write, const GrooveState& state, int32_t bod
                 if (!write(&lane.cellSizes[static_cast<size_t>(s)], sizeof(int)))
                     return false;
             }
+            uint8_t tl = lane.timeline ? 1 : 0;
+            if (!write(&tl, sizeof(tl)))
+                return false;
+            if (!write(&lane.fixedPatternLength, sizeof(lane.fixedPatternLength)))
+                return false;
+            uint64_t fpBits = 0;
+            for (int s = 0; s < kMaxSteps; ++s) {
+                if (lane.fixedPattern[static_cast<size_t>(s)])
+                    fpBits |= (uint64_t{1} << s);
+            }
+            if (!write(&fpBits, sizeof(fpBits)))
+                return false;
         }
     }
 
@@ -329,6 +341,18 @@ template <typename ReadFn> bool readGrooveStateBody(ReadFn&& read, GrooveState& 
             for (int s = 0; s < kMaxSteps; ++s) {
                 if (!read(&lane.cellSizes[static_cast<size_t>(s)], sizeof(int)))
                     return false;
+            }
+            uint8_t tl = 0;
+            if (!read(&tl, sizeof(tl)))
+                return false;
+            lane.timeline = (tl != 0);
+            if (!read(&lane.fixedPatternLength, sizeof(lane.fixedPatternLength)))
+                return false;
+            uint64_t fpBits = 0;
+            if (!read(&fpBits, sizeof(fpBits)))
+                return false;
+            for (int s = 0; s < kMaxSteps; ++s) {
+                lane.fixedPattern[static_cast<size_t>(s)] = (fpBits & (uint64_t{1} << s)) != 0;
             }
         }
     }
