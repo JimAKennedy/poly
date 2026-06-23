@@ -138,6 +138,33 @@ void HeaderView::applyPreset(int index) {
                   static_cast<double>((cfg.timingOffsetMs + 20.0f) / 40.0f));
         pushParam(ParamIDs::laneParam(lane, ParamIDs::kKotekanSource),
                   static_cast<double>(cfg.kotekanSourceLane + 1) / 8.0);
+
+        pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreSteps), (cfg.cycle.steps - 1) / 63.0);
+        int subIdx = 0;
+        switch (cfg.cycle.subdivision) {
+        case 1:
+            subIdx = 0;
+            break;
+        case 2:
+            subIdx = 1;
+            break;
+        case 4:
+            subIdx = 2;
+            break;
+        case 8:
+            subIdx = 3;
+            break;
+        case 16:
+            subIdx = 4;
+            break;
+        default:
+            subIdx = 2;
+            break;
+        }
+        pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreSubdivision), subIdx / 4.0);
+        pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreHits), cfg.hitCount / 64.0);
+        pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreRotation), cfg.rotation / 63.0);
+        pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreMidiNote), cfg.midiNote / 127.0);
     }
 
     pushParam(ParamIDs::kMacroComplexity, state.macros.complexity);
@@ -186,6 +213,38 @@ void HeaderView::resetToInit() {
         pushParam(ParamIDs::laneParam(lane, ParamIDs::kDriftRate), 0.5);
         pushParam(ParamIDs::laneParam(lane, ParamIDs::kTimingOffset), 0.5);
         pushParam(ParamIDs::laneParam(lane, ParamIDs::kKotekanSource), 0.0);
+
+        static constexpr int kInitSteps[] = {4, 4, 8, 5, 7, 3, 6, 9};
+        static constexpr int kInitSubs[] = {4, 4, 8, 16, 8, 16, 16, 16};
+        static constexpr int kInitHits[] = {4, 2, 8, 3, 4, 2, 4, 5};
+        static constexpr int kInitNotes[] = {36, 38, 42, 45, 46, 39, 43, 50};
+
+        pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreSteps), (kInitSteps[lane] - 1) / 63.0);
+        int subIdx = 0;
+        switch (kInitSubs[lane]) {
+        case 1:
+            subIdx = 0;
+            break;
+        case 2:
+            subIdx = 1;
+            break;
+        case 4:
+            subIdx = 2;
+            break;
+        case 8:
+            subIdx = 3;
+            break;
+        case 16:
+            subIdx = 4;
+            break;
+        default:
+            subIdx = 2;
+            break;
+        }
+        pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreSubdivision), subIdx / 4.0);
+        pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreHits), kInitHits[lane] / 64.0);
+        pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreRotation), 0.0);
+        pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreMidiNote), kInitNotes[lane] / 127.0);
     }
 
     pushParam(ParamIDs::kMacroComplexity, 0.5);

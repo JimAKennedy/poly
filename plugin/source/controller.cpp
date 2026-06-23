@@ -12,6 +12,7 @@
 #include "poly/types.h"
 #include "ui/envelope_curve_view.h"
 #include "ui/header_view.h"
+#include "ui/lane_edit_view.h"
 #include "ui/lane_grid_view.h"
 #include "ui/phase_alignment_view.h"
 #include "ui/phrase_edit_view.h"
@@ -48,6 +49,22 @@ static constexpr LaneParamDef kLaneParamDefs[] = {
     {ParamIDs::kKotekanSource, "Kotekan Source", "", 8, 0.0},
 };
 
+struct CoreParamDef {
+    int offset;
+    const char* name;
+    const char* units;
+    Steinberg::int32 steps;
+    double defaultNorm;
+};
+
+static constexpr CoreParamDef kCoreParamDefs[] = {
+    {ParamIDs::kCoreSteps, "Steps", "", 63, 3.0 / 63.0},
+    {ParamIDs::kCoreSubdivision, "Subdivision", "", 4, 0.5},
+    {ParamIDs::kCoreHits, "Hits", "", 64, 4.0 / 64.0},
+    {ParamIDs::kCoreRotation, "Rotation", "", 63, 0.0},
+    {ParamIDs::kCoreMidiNote, "MIDI Note", "", 127, 36.0 / 127.0},
+};
+
 } // namespace
 
 Steinberg::tresult PLUGIN_API PolyController::initialize(Steinberg::FUnknown* context) {
@@ -75,6 +92,20 @@ Steinberg::tresult PLUGIN_API PolyController::initialize(Steinberg::FUnknown* co
         for (const auto& def : kLaneParamDefs) {
             ParameterInfo info = {};
             info.id = ParamIDs::laneParam(lane, def.offset);
+            Steinberg::UString(info.title, 128).fromAscii(def.name);
+            Steinberg::UString(info.units, 128).fromAscii(def.units);
+            info.stepCount = def.steps;
+            info.defaultNormalizedValue = def.defaultNorm;
+            info.flags = ParameterInfo::kCanAutomate;
+            info.unitId = UnitIDs::lane(lane);
+            parameters.addParameter(info);
+        }
+    }
+
+    for (int lane = 0; lane < kMaxLanes; ++lane) {
+        for (const auto& def : kCoreParamDefs) {
+            ParameterInfo info = {};
+            info.id = ParamIDs::laneCoreParam(lane, def.offset);
             Steinberg::UString(info.title, 128).fromAscii(def.name);
             Steinberg::UString(info.units, 128).fromAscii(def.units);
             info.stepCount = def.steps;
@@ -161,11 +192,14 @@ VSTGUI::CView* PolyController::createCustomView(VSTGUI::UTF8StringPtr name, cons
     if (std::strcmp(name, "HeaderView") == 0) {
         return new HeaderView(VSTGUI::CRect(0, 0, 600, 32), this); // ownership-transfer
     }
+    if (std::strcmp(name, "LaneEditView") == 0) {
+        return new LaneEditView(VSTGUI::CRect(0, 0, 580, 60), this);
+    }
     if (std::strcmp(name, "LaneGridView") == 0) {
         return new LaneGridView(VSTGUI::CRect(0, 0, 580, 156), this); // ownership-transfer
     }
     if (std::strcmp(name, "VelocityView") == 0) {
-        return new VelocityView(VSTGUI::CRect(0, 0, 580, 76), this); // ownership-transfer
+        return new VelocityView(VSTGUI::CRect(0, 0, 580, 40), this); // ownership-transfer
     }
     if (std::strcmp(name, "EnvelopeCurveView") == 0) {
         return new EnvelopeCurveView(VSTGUI::CRect(0, 0, 380, 146), this); // ownership-transfer
@@ -214,6 +248,33 @@ Steinberg::tresult PLUGIN_API PolyController::setComponentState(Steinberg::IBStr
                            static_cast<double>((cfg.timingOffsetMs + 20.0f) / 40.0f));
         setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kKotekanSource),
                            static_cast<double>(cfg.kotekanSourceLane + 1) / 8.0);
+
+        setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreSteps), (cfg.cycle.steps - 1) / 63.0);
+        int subIdx = 0;
+        switch (cfg.cycle.subdivision) {
+        case 1:
+            subIdx = 0;
+            break;
+        case 2:
+            subIdx = 1;
+            break;
+        case 4:
+            subIdx = 2;
+            break;
+        case 8:
+            subIdx = 3;
+            break;
+        case 16:
+            subIdx = 4;
+            break;
+        default:
+            subIdx = 2;
+            break;
+        }
+        setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreSubdivision), subIdx / 4.0);
+        setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreHits), cfg.hitCount / 64.0);
+        setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreRotation), cfg.rotation / 63.0);
+        setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreMidiNote), cfg.midiNote / 127.0);
     }
 
     setParamNormalized(ParamIDs::kMacroComplexity, gs.macros.complexity);
