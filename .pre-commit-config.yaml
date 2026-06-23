@@ -42,3 +42,6 @@ repos:
         entry: scripts/check-realtime-safety.sh
         language: script
         pass_filenames: false
+
+ci:
+  skip: [clang-format, check-pragma-once, check-realtime-safety]

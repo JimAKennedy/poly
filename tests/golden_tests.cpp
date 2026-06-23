@@ -461,3 +461,686 @@ TEST(GoldenDeterminism, ExtendedEnvelopeTargetsBlockIndependence) {
     EXPECT_EQ(serialize(small), serialize(medium)) << "Extended envelope: 0.05 vs 0.5 PPQ blocks differ";
     EXPECT_EQ(serialize(small), serialize(large)) << "Extended envelope: 0.05 vs 2.0 PPQ blocks differ";
 }
+
+// --- Test 16: phraseLength=0 (continuous) produces identical output to default ---
+TEST(GoldenPhrase, ContinuousMatchesDefault) {
+    poly::Engine engine;
+    auto state = makeTestState();
+
+    auto baseline = renderSorted(engine, state, 0.0, 16.0, 0.5);
+
+    for (int i = 0; i < state.activeLaneCount; ++i) {
+        state.lanes[i].phraseLength = 0.0f;
+        state.lanes[i].phraseGap = 0.0f;
+        state.lanes[i].phraseOffset = 0.0f;
+    }
+
+    auto withPhrase = renderSorted(engine, state, 0.0, 16.0, 0.5);
+    EXPECT_EQ(serialize(baseline), serialize(withPhrase))
+        << "phraseLength=0 should produce identical output to default";
+}
+
+// --- Test 17: Single lane with phraseLength=2, phraseGap=1 produces silence during gap ---
+TEST(GoldenPhrase, SingleLaneGapSilence) {
+    poly::Engine engine;
+    poly::GrooveState state{};
+    state.activeLaneCount = 1;
+    state.seed = 42;
+
+    auto& kick = state.lanes[0];
+    kick.id = 0;
+    kick.midiNote = 36;
+    kick.cycle = {.steps = 4, .subdivision = 4};
+    kick.hitCount = 4;
+    kick.baseVelocity = 100;
+    kick.probability = 1.0f;
+    kick.phraseLength = 8.0f;
+    kick.phraseGap = 4.0f;
+
+    // Phrase cycle = 12 beats = 12 PPQ. Play 0-8 PPQ, gap 8-12, play 12-20, gap 20-24
+    auto events = renderSorted(engine, state, 0.0, 24.0, 0.5);
+
+    for (const auto& e : events) {
+        double posInCycle = std::fmod(e.ppq, 12.0);
+        EXPECT_LT(posInCycle, 8.0) << "Note at PPQ " << e.ppq << " falls in gap region (phrasePos=" << posInCycle
+                                   << ")";
+    }
+    EXPECT_FALSE(events.empty()) << "Should produce some notes during play regions";
+}
+
+// --- Test 18: Two lanes with different phraseLength create offset phrase behavior ---
+TEST(GoldenPhrase, OffsetPhraseBehavior) {
+    poly::Engine engine;
+    poly::GrooveState state{};
+    state.activeLaneCount = 2;
+    state.seed = 42;
+
+    auto& lane0 = state.lanes[0];
+    lane0.id = 0;
+    lane0.midiNote = 36;
+    lane0.cycle = {.steps = 4, .subdivision = 4};
+    lane0.hitCount = 4;
+    lane0.baseVelocity = 100;
+    lane0.probability = 1.0f;
+    lane0.phraseLength = 8.0f;
+    lane0.phraseGap = 4.0f;
+
+    auto& lane1 = state.lanes[1];
+    lane1.id = 1;
+    lane1.midiNote = 38;
+    lane1.cycle = {.steps = 4, .subdivision = 4};
+    lane1.hitCount = 4;
+    lane1.baseVelocity = 100;
+    lane1.probability = 1.0f;
+    lane1.phraseLength = 12.0f;
+    lane1.phraseGap = 4.0f;
+
+    // Lane 0: 12-beat cycle (8+4), Lane 1: 16-beat cycle (12+4)
+    // Over 24 PPQ (6 bars), their gaps should not always overlap
+    auto events = renderSorted(engine, state, 0.0, 24.0, 0.5);
+
+    bool hasLane0 = false, hasLane1 = false;
+    bool bothSilentSomewhere = false;
+    bool oneSilentOtherPlaying = false;
+
+    // Check bar by bar
+    for (int bar = 0; bar < 6; ++bar) {
+        double barStart = bar * 4.0;
+        double barEnd = barStart + 4.0;
+        bool l0Active = false, l1Active = false;
+        for (const auto& e : events) {
+            if (e.ppq >= barStart && e.ppq < barEnd) {
+                if (e.pitch == 36)
+                    l0Active = true;
+                if (e.pitch == 38)
+                    l1Active = true;
+            }
+        }
+        if (l0Active)
+            hasLane0 = true;
+        if (l1Active)
+            hasLane1 = true;
+        if (!l0Active && !l1Active)
+            bothSilentSomewhere = true;
+        if (l0Active != l1Active)
+            oneSilentOtherPlaying = true;
+    }
+
+    EXPECT_TRUE(hasLane0) << "Lane 0 should produce notes";
+    EXPECT_TRUE(hasLane1) << "Lane 1 should produce notes";
+    EXPECT_TRUE(oneSilentOtherPlaying)
+        << "Different phrase lengths should create bars where one lane rests while the other plays";
+}
+
+// --- Test 19: Phrase with transport jump into gap region ---
+TEST(GoldenPhrase, TransportJumpIntoGap) {
+    poly::Engine engine;
+    poly::GrooveState state{};
+    state.activeLaneCount = 1;
+    state.seed = 42;
+
+    auto& kick = state.lanes[0];
+    kick.id = 0;
+    kick.midiNote = 36;
+    kick.cycle = {.steps = 4, .subdivision = 4};
+    kick.hitCount = 4;
+    kick.baseVelocity = 100;
+    kick.probability = 1.0f;
+    kick.phraseLength = 8.0f;
+    kick.phraseGap = 4.0f;
+
+    // Gap is at PPQ 8-12. Jump directly into that range.
+    auto events = renderSorted(engine, state, 8.0, 12.0, 0.5);
+    EXPECT_EQ(events.size(), 0u) << "Jumping into gap region should produce no notes";
+
+    // But jumping to PPQ 12 (start of next play region) should produce notes
+    auto events2 = renderSorted(engine, state, 12.0, 16.0, 0.5);
+    EXPECT_GT(events2.size(), 0u) << "Jumping to play region after gap should produce notes";
+}
+
+// --- Test 20: Phrase deterministic across block sizes ---
+TEST(GoldenPhrase, BlockSizeIndependence) {
+    poly::Engine engine;
+    auto state = makeTestState();
+
+    for (int i = 0; i < state.activeLaneCount; ++i) {
+        state.lanes[i].phraseLength = 8.0f;
+        state.lanes[i].phraseGap = 2.0f;
+        state.lanes[i].phraseOffset = static_cast<float>(i) * 1.0f;
+    }
+
+    auto small = renderSorted(engine, state, 0.0, 32.0, 0.05);
+    auto medium = renderSorted(engine, state, 0.0, 32.0, 0.5);
+    auto large = renderSorted(engine, state, 0.0, 32.0, 2.0);
+
+    EXPECT_EQ(serialize(small), serialize(medium)) << "Phrase: 0.05 vs 0.5 PPQ blocks differ";
+    EXPECT_EQ(serialize(small), serialize(large)) << "Phrase: 0.05 vs 2.0 PPQ blocks differ";
+}
+
+// --- Test 22: mutationRate=0 produces identical output to baseline ---
+TEST(GoldenMutation, ZeroRateMatchesBaseline) {
+    poly::Engine engine;
+    auto state = makeTestState();
+    auto baseline = renderSorted(engine, state, 0.0, 16.0, 0.5);
+
+    for (int i = 0; i < state.activeLaneCount; ++i)
+        state.lanes[i].mutationRate = 0.0f;
+
+    auto withZeroMutation = renderSorted(engine, state, 0.0, 16.0, 0.5);
+    EXPECT_EQ(serialize(baseline), serialize(withZeroMutation))
+        << "mutationRate=0 should produce identical output to default";
+}
+
+// --- Test 23: mutationRate>0 produces deterministic variations ---
+TEST(GoldenMutation, DeterministicVariations) {
+    poly::Engine engine;
+    auto state = makeTestState();
+    state.lanes[2].mutationRate = 0.3f;
+
+    auto run1 = renderSorted(engine, state, 0.0, 32.0, 0.5);
+    auto run2 = renderSorted(engine, state, 0.0, 32.0, 0.5);
+
+    ASSERT_EQ(run1.size(), run2.size());
+    EXPECT_EQ(serialize(run1), serialize(run2)) << "Mutation must be deterministic across runs";
+
+    auto noMutation = makeTestState();
+    auto baseline = renderSorted(engine, noMutation, 0.0, 32.0, 0.5);
+    EXPECT_NE(serialize(run1), serialize(baseline)) << "mutationRate=0.3 should differ from no mutation";
+}
+
+// --- Test 24: Mutation respects anchor steps ---
+TEST(GoldenMutation, RespectsAnchors) {
+    poly::Engine engine;
+    poly::GrooveState state{};
+    state.activeLaneCount = 1;
+    state.seed = 42;
+
+    auto& kick = state.lanes[0];
+    kick.id = 0;
+    kick.midiNote = 36;
+    kick.cycle = {.steps = 4, .subdivision = 4};
+    kick.hitCount = 4;
+    kick.baseVelocity = 100;
+    kick.probability = 1.0f;
+
+    kick.constraints.anchorSteps.steps[0] = true;
+    kick.constraints.anchorSteps.steps[2] = true;
+
+    auto baseline = renderSorted(engine, state, 0.0, 16.0, 0.5);
+
+    kick.mutationRate = 1.0f;
+    auto mutated = renderSorted(engine, state, 0.0, 16.0, 0.5);
+
+    auto anchorEvents = [](const std::vector<EventRecord>& events, int steps, int sub) {
+        std::vector<EventRecord> anchors;
+        double sPpq = 4.0 / sub;
+        for (const auto& e : events) {
+            int64_t absStep = static_cast<int64_t>(std::round(e.ppq / sPpq));
+            int cycleStep = static_cast<int>(((absStep % steps) + steps) % steps);
+            if (cycleStep == 0 || cycleStep == 2)
+                anchors.push_back(e);
+        }
+        return anchors;
+    };
+
+    auto baselineAnchors = anchorEvents(baseline, kick.cycle.steps, kick.cycle.subdivision);
+    auto mutatedAnchors = anchorEvents(mutated, kick.cycle.steps, kick.cycle.subdivision);
+
+    EXPECT_EQ(serialize(baselineAnchors), serialize(mutatedAnchors))
+        << "Anchor steps must be identical with and without mutation";
+    EXPECT_FALSE(baselineAnchors.empty()) << "Should have anchor step events";
+}
+
+// --- Test 25: Mutation deterministic across block sizes ---
+TEST(GoldenMutation, BlockSizeIndependence) {
+    poly::Engine engine;
+    auto state = makeTestState();
+    for (int i = 0; i < state.activeLaneCount; ++i)
+        state.lanes[i].mutationRate = 0.4f;
+
+    auto small = renderSorted(engine, state, 0.0, 32.0, 0.05);
+    auto medium = renderSorted(engine, state, 0.0, 32.0, 0.5);
+    auto large = renderSorted(engine, state, 0.0, 32.0, 2.0);
+
+    EXPECT_EQ(serialize(small), serialize(medium)) << "Mutation: 0.05 vs 0.5 PPQ blocks differ";
+    EXPECT_EQ(serialize(small), serialize(large)) << "Mutation: 0.05 vs 2.0 PPQ blocks differ";
+}
+
+// --- Test 26: driftRate=0 produces identical output to baseline ---
+TEST(GoldenDrift, ZeroRateMatchesBaseline) {
+    poly::Engine engine;
+    auto state = makeTestState();
+    auto baseline = renderSorted(engine, state, 0.0, 16.0, 0.5);
+
+    for (int i = 0; i < state.activeLaneCount; ++i)
+        state.lanes[i].driftRate = 0.0f;
+
+    auto withZeroDrift = renderSorted(engine, state, 0.0, 16.0, 0.5);
+    EXPECT_EQ(serialize(baseline), serialize(withZeroDrift))
+        << "driftRate=0 should produce identical output to default";
+}
+
+// --- Test 27: driftRate=1.0 rotates pattern by 1 step per bar ---
+TEST(GoldenDrift, OneStepPerBar) {
+    poly::Engine engine;
+    poly::GrooveState state{};
+    state.activeLaneCount = 1;
+    state.seed = 42;
+
+    auto& kick = state.lanes[0];
+    kick.id = 0;
+    kick.midiNote = 36;
+    kick.cycle = {.steps = 8, .subdivision = 8};
+    kick.hitCount = 3;
+    kick.baseVelocity = 100;
+    kick.probability = 1.0f;
+
+    // Render without drift
+    auto noDrift = renderSorted(engine, state, 0.0, 16.0, 0.5);
+
+    // Render with drift=1.0 (1 step per bar)
+    kick.driftRate = 1.0f;
+    auto withDrift = renderSorted(engine, state, 0.0, 16.0, 0.5);
+
+    EXPECT_NE(serialize(noDrift), serialize(withDrift))
+        << "driftRate=1.0 should produce different pattern than no drift";
+
+    // Verify determinism
+    auto withDrift2 = renderSorted(engine, state, 0.0, 16.0, 0.5);
+    EXPECT_EQ(serialize(withDrift), serialize(withDrift2)) << "Drift must be deterministic across runs";
+}
+
+// --- Test 28: Two lanes with different driftRates produce phasing ---
+TEST(GoldenDrift, PhasingBetweenLanes) {
+    poly::Engine engine;
+    poly::GrooveState state{};
+    state.activeLaneCount = 2;
+    state.seed = 42;
+
+    // Two identical lanes except for drift
+    for (int i = 0; i < 2; ++i) {
+        state.lanes[i].id = i;
+        state.lanes[i].midiNote = static_cast<int16_t>(36 + i * 2);
+        state.lanes[i].cycle = {.steps = 4, .subdivision = 4};
+        state.lanes[i].hitCount = 3;
+        state.lanes[i].baseVelocity = 100;
+        state.lanes[i].probability = 1.0f;
+    }
+
+    // Lane 0: no drift, Lane 1: drift=1 step/bar
+    state.lanes[0].driftRate = 0.0f;
+    state.lanes[1].driftRate = 1.0f;
+
+    auto events = renderSorted(engine, state, 0.0, 32.0, 0.5);
+
+    // Collect per-bar relative positions for each lane
+    bool phaseDiffers = false;
+    for (int bar = 0; bar < 7; ++bar) {
+        double barStart = bar * 4.0;
+        double barEnd = barStart + 4.0;
+        double nextBarStart = (bar + 1) * 4.0;
+        double nextBarEnd = nextBarStart + 4.0;
+
+        std::vector<double> l1Bar, l1Next;
+        for (const auto& e : events) {
+            if (e.pitch == 38 && e.ppq >= barStart && e.ppq < barEnd)
+                l1Bar.push_back(e.ppq - barStart);
+            if (e.pitch == 38 && e.ppq >= nextBarStart && e.ppq < nextBarEnd)
+                l1Next.push_back(e.ppq - nextBarStart);
+        }
+
+        if (l1Bar.size() == l1Next.size() && !l1Bar.empty()) {
+            for (size_t i = 0; i < l1Bar.size(); ++i) {
+                if (std::abs(l1Bar[i] - l1Next[i]) > 0.001) {
+                    phaseDiffers = true;
+                    break;
+                }
+            }
+        } else if (l1Bar.size() != l1Next.size()) {
+            phaseDiffers = true;
+        }
+        if (phaseDiffers)
+            break;
+    }
+
+    EXPECT_TRUE(phaseDiffers) << "Lane with driftRate=1.0 should show different bar-relative positions across bars";
+}
+
+// --- Test 29: Transport jump with drift produces correct rotation ---
+TEST(GoldenDrift, TransportJumpCorrectRotation) {
+    poly::Engine engine;
+    poly::GrooveState state{};
+    state.activeLaneCount = 1;
+    state.seed = 42;
+
+    auto& kick = state.lanes[0];
+    kick.id = 0;
+    kick.midiNote = 36;
+    kick.cycle = {.steps = 8, .subdivision = 8};
+    kick.hitCount = 3;
+    kick.baseVelocity = 100;
+    kick.probability = 1.0f;
+    kick.driftRate = 0.5f;
+
+    // Render straight through bars 0-8 (32 PPQ)
+    auto straight = renderSorted(engine, state, 0.0, 32.0, 0.5);
+
+    // Extract bars 4-8
+    std::vector<EventRecord> straightTail;
+    for (const auto& e : straight) {
+        if (e.ppq >= 16.0)
+            straightTail.push_back(e);
+    }
+
+    // Jump directly to bar 4 and render bars 4-8
+    auto jumped = renderSorted(engine, state, 16.0, 32.0, 0.5);
+
+    EXPECT_EQ(serialize(straightTail), serialize(jumped))
+        << "Transport jump with drift must produce same output as straight-through";
+}
+
+// --- Test 30: Drift deterministic across block sizes ---
+TEST(GoldenDrift, BlockSizeIndependence) {
+    poly::Engine engine;
+    auto state = makeTestState();
+    for (int i = 0; i < state.activeLaneCount; ++i)
+        state.lanes[i].driftRate = 0.75f;
+
+    auto small = renderSorted(engine, state, 0.0, 32.0, 0.05);
+    auto medium = renderSorted(engine, state, 0.0, 32.0, 0.5);
+    auto large = renderSorted(engine, state, 0.0, 32.0, 2.0);
+
+    EXPECT_EQ(serialize(small), serialize(medium)) << "Drift: 0.05 vs 0.5 PPQ blocks differ";
+    EXPECT_EQ(serialize(small), serialize(large)) << "Drift: 0.05 vs 2.0 PPQ blocks differ";
+}
+
+// --- Test 21: Phrase with phraseOffset shifts the gap position ---
+TEST(GoldenPhrase, OffsetShiftsGap) {
+    poly::Engine engine;
+    poly::GrooveState state{};
+    state.activeLaneCount = 1;
+    state.seed = 42;
+
+    auto& kick = state.lanes[0];
+    kick.id = 0;
+    kick.midiNote = 36;
+    kick.cycle = {.steps = 4, .subdivision = 4};
+    kick.hitCount = 4;
+    kick.baseVelocity = 100;
+    kick.probability = 1.0f;
+    kick.phraseLength = 8.0f;
+    kick.phraseGap = 4.0f;
+    kick.phraseOffset = 4.0f;
+
+    // With offset=4 beats (4 PPQ), the phrase cycle shifts: play starts at PPQ 4
+    // Gap originally at PPQ 8-12 now shifted to PPQ 12-16
+    auto events = renderSorted(engine, state, 0.0, 24.0, 0.5);
+
+    auto noOffset = state;
+    noOffset.lanes[0].phraseOffset = 0.0f;
+    auto eventsNoOffset = renderSorted(engine, noOffset, 0.0, 24.0, 0.5);
+
+    EXPECT_NE(serialize(events), serialize(eventsNoOffset)) << "phraseOffset should shift the gap position";
+}
+
+// --- Test 31: timingOffsetMs=0 produces identical output to baseline ---
+TEST(GoldenTimingOffset, ZeroMatchesBaseline) {
+    poly::Engine engine;
+    auto state = makeTestState();
+    auto baseline = renderSorted(engine, state, 0.0, 16.0, 0.5);
+
+    for (int i = 0; i < state.activeLaneCount; ++i)
+        state.lanes[i].timingOffsetMs = 0.0f;
+
+    auto withZeroOffset = renderSorted(engine, state, 0.0, 16.0, 0.5);
+    EXPECT_EQ(serialize(baseline), serialize(withZeroOffset))
+        << "timingOffsetMs=0 should produce identical output to default";
+}
+
+// --- Test 32: Positive offset shifts events later ---
+TEST(GoldenTimingOffset, PositiveShiftsLater) {
+    poly::Engine engine;
+    poly::GrooveState state{};
+    state.activeLaneCount = 1;
+    state.seed = 42;
+
+    auto& kick = state.lanes[0];
+    kick.id = 0;
+    kick.midiNote = 36;
+    kick.cycle = {.steps = 4, .subdivision = 4};
+    kick.hitCount = 4;
+    kick.baseVelocity = 100;
+    kick.probability = 1.0f;
+
+    auto baseline = renderSorted(engine, state, 0.0, 16.0, 0.5);
+
+    kick.timingOffsetMs = 5.0f;
+    auto shifted = renderSorted(engine, state, 0.0, 16.0, 0.5);
+
+    ASSERT_EQ(baseline.size(), shifted.size()) << "Same number of events with positive offset";
+    for (size_t i = 0; i < baseline.size(); ++i) {
+        EXPECT_GT(shifted[i].ppq, baseline[i].ppq) << "Event " << i << " should be shifted later with positive offset";
+    }
+}
+
+// --- Test 33: Negative offset shifts events earlier ---
+TEST(GoldenTimingOffset, NegativeShiftsEarlier) {
+    poly::Engine engine;
+    poly::GrooveState state{};
+    state.activeLaneCount = 1;
+    state.seed = 42;
+
+    auto& kick = state.lanes[0];
+    kick.id = 0;
+    kick.midiNote = 36;
+    kick.cycle = {.steps = 4, .subdivision = 4};
+    kick.hitCount = 4;
+    kick.baseVelocity = 100;
+    kick.probability = 1.0f;
+
+    auto baseline = renderSorted(engine, state, 0.0, 16.0, 0.5);
+
+    kick.timingOffsetMs = -5.0f;
+    auto shifted = renderSorted(engine, state, 0.0, 16.0, 0.5);
+
+    ASSERT_EQ(baseline.size(), shifted.size()) << "Same number of events with negative offset";
+    // Skip event 0 (PPQ 0.0) since negative offset clamps to 0.0
+    for (size_t i = 1; i < baseline.size(); ++i) {
+        EXPECT_LT(shifted[i].ppq, baseline[i].ppq)
+            << "Event " << i << " should be shifted earlier with negative offset";
+    }
+}
+
+// --- Test 34: Timing offset interacts correctly with swing ---
+TEST(GoldenTimingOffset, InteractsWithSwing) {
+    poly::Engine engine;
+    poly::GrooveState state{};
+    state.activeLaneCount = 1;
+    state.seed = 42;
+
+    auto& hh = state.lanes[0];
+    hh.id = 0;
+    hh.midiNote = 42;
+    hh.cycle = {.steps = 8, .subdivision = 8};
+    hh.hitCount = 8;
+    hh.baseVelocity = 80;
+    hh.probability = 1.0f;
+    hh.swingAmount = 0.5f;
+
+    auto swingOnly = renderSorted(engine, state, 0.0, 16.0, 0.5);
+
+    hh.timingOffsetMs = 3.0f;
+    auto swingPlusOffset = renderSorted(engine, state, 0.0, 16.0, 0.5);
+
+    ASSERT_EQ(swingOnly.size(), swingPlusOffset.size());
+    EXPECT_NE(serialize(swingOnly), serialize(swingPlusOffset))
+        << "Adding timing offset to swung pattern should change positions";
+
+    for (size_t i = 0; i < swingOnly.size(); ++i) {
+        EXPECT_GT(swingPlusOffset[i].ppq, swingOnly[i].ppq)
+            << "Event " << i << " should be shifted later with positive offset on top of swing";
+    }
+}
+
+// --- Test 36: kotekanSourceLane=-1 produces identical output to baseline ---
+TEST(GoldenKotekan, NoSourceMatchesBaseline) {
+    poly::Engine engine;
+    auto state = makeTestState();
+    auto baseline = renderSorted(engine, state, 0.0, 16.0, 0.5);
+
+    for (int i = 0; i < state.activeLaneCount; ++i)
+        state.lanes[i].kotekanSourceLane = -1;
+
+    auto withNoKotekan = renderSorted(engine, state, 0.0, 16.0, 0.5);
+    EXPECT_EQ(serialize(baseline), serialize(withNoKotekan))
+        << "kotekanSourceLane=-1 should produce identical output to default";
+}
+
+// --- Test 37: Kotekan pair produces exact complement ---
+TEST(GoldenKotekan, PairProducesComplement) {
+    poly::Engine engine;
+    poly::GrooveState state{};
+    state.activeLaneCount = 2;
+    state.seed = 42;
+
+    auto& laneA = state.lanes[0];
+    laneA.id = 0;
+    laneA.midiNote = 36;
+    laneA.cycle = {.steps = 8, .subdivision = 8};
+    laneA.hitCount = 3;
+    laneA.baseVelocity = 100;
+    laneA.probability = 1.0f;
+
+    auto& laneB = state.lanes[1];
+    laneB.id = 1;
+    laneB.midiNote = 38;
+    laneB.cycle = {.steps = 8, .subdivision = 8};
+    laneB.hitCount = 3;
+    laneB.baseVelocity = 80;
+    laneB.probability = 1.0f;
+    laneB.kotekanSourceLane = 0;
+
+    auto events = renderSorted(engine, state, 0.0, 4.0, 0.5);
+
+    // In one bar (4 PPQ = 8 eighth-note steps), source has 3 hits,
+    // complement should have 5 hits. Together they fill all 8 positions.
+    int countA = 0, countB = 0;
+    for (const auto& e : events) {
+        if (e.pitch == 36)
+            countA++;
+        if (e.pitch == 38)
+            countB++;
+    }
+
+    EXPECT_EQ(countA, 3) << "Source lane should have 3 hits per cycle";
+    EXPECT_EQ(countB, 5) << "Complement lane should have 5 hits (8 - 3)";
+    EXPECT_EQ(countA + countB, 8) << "Source + complement should fill all 8 step positions";
+}
+
+// --- Test 38: Kotekan complement with different velocities ---
+TEST(GoldenKotekan, DifferentVelocities) {
+    poly::Engine engine;
+    poly::GrooveState state{};
+    state.activeLaneCount = 2;
+    state.seed = 42;
+
+    auto& laneA = state.lanes[0];
+    laneA.id = 0;
+    laneA.midiNote = 36;
+    laneA.cycle = {.steps = 8, .subdivision = 8};
+    laneA.hitCount = 3;
+    laneA.baseVelocity = 127;
+    laneA.probability = 1.0f;
+
+    auto& laneB = state.lanes[1];
+    laneB.id = 1;
+    laneB.midiNote = 38;
+    laneB.cycle = {.steps = 8, .subdivision = 8};
+    laneB.hitCount = 3;
+    laneB.baseVelocity = 50;
+    laneB.probability = 1.0f;
+    laneB.kotekanSourceLane = 0;
+
+    auto events = renderSorted(engine, state, 0.0, 4.0, 0.5);
+
+    for (const auto& e : events) {
+        if (e.pitch == 36)
+            EXPECT_NEAR(e.velocity, 1.0f, 0.15f) << "Source lane should use its own high velocity";
+        if (e.pitch == 38)
+            EXPECT_NEAR(e.velocity, 50.0f / 127.0f, 0.15f) << "Complement lane should use its own low velocity";
+    }
+}
+
+// --- Test 39: Circular kotekan reference degrades to independent ---
+TEST(GoldenKotekan, CircularReferenceFallback) {
+    poly::Engine engine;
+    poly::GrooveState state{};
+    state.activeLaneCount = 2;
+    state.seed = 42;
+
+    for (int i = 0; i < 2; ++i) {
+        state.lanes[i].id = i;
+        state.lanes[i].midiNote = static_cast<int16_t>(36 + i * 2);
+        state.lanes[i].cycle = {.steps = 8, .subdivision = 8};
+        state.lanes[i].hitCount = 3;
+        state.lanes[i].baseVelocity = 100;
+        state.lanes[i].probability = 1.0f;
+    }
+
+    state.lanes[0].kotekanSourceLane = 1;
+    state.lanes[1].kotekanSourceLane = 0;
+
+    auto events = renderSorted(engine, state, 0.0, 4.0, 0.5);
+
+    int countA = 0, countB = 0;
+    for (const auto& e : events) {
+        if (e.pitch == 36)
+            countA++;
+        if (e.pitch == 38)
+            countB++;
+    }
+
+    EXPECT_EQ(countA, 3) << "Circular ref lane A should fall back to own Euclidean pattern (3 hits)";
+    EXPECT_EQ(countB, 3) << "Circular ref lane B should fall back to own Euclidean pattern (3 hits)";
+}
+
+// --- Test 40: Kotekan deterministic across block sizes ---
+TEST(GoldenKotekan, BlockSizeIndependence) {
+    poly::Engine engine;
+    poly::GrooveState state{};
+    state.activeLaneCount = 2;
+    state.seed = 42;
+
+    for (int i = 0; i < 2; ++i) {
+        state.lanes[i].id = i;
+        state.lanes[i].midiNote = static_cast<int16_t>(36 + i * 2);
+        state.lanes[i].cycle = {.steps = 8, .subdivision = 8};
+        state.lanes[i].hitCount = 3;
+        state.lanes[i].baseVelocity = 100;
+        state.lanes[i].probability = 1.0f;
+    }
+    state.lanes[1].kotekanSourceLane = 0;
+
+    auto small = renderSorted(engine, state, 0.0, 16.0, 0.05);
+    auto medium = renderSorted(engine, state, 0.0, 16.0, 0.5);
+    auto large = renderSorted(engine, state, 0.0, 16.0, 2.0);
+
+    EXPECT_EQ(serialize(small), serialize(medium)) << "Kotekan: 0.05 vs 0.5 PPQ blocks differ";
+    EXPECT_EQ(serialize(small), serialize(large)) << "Kotekan: 0.05 vs 2.0 PPQ blocks differ";
+}
+
+// --- Test 35: Timing offset deterministic across block sizes ---
+TEST(GoldenTimingOffset, BlockSizeIndependence) {
+    poly::Engine engine;
+    auto state = makeTestState();
+    state.lanes[0].timingOffsetMs = 5.0f;
+    state.lanes[1].timingOffsetMs = -3.0f;
+    state.lanes[2].timingOffsetMs = 2.0f;
+
+    auto small = renderSorted(engine, state, 0.0, 16.0, 0.05);
+    auto medium = renderSorted(engine, state, 0.0, 16.0, 0.5);
+    auto large = renderSorted(engine, state, 0.0, 16.0, 2.0);
+
+    EXPECT_EQ(serialize(small), serialize(medium)) << "Timing offset: 0.05 vs 0.5 PPQ blocks differ";
+    EXPECT_EQ(serialize(small), serialize(large)) << "Timing offset: 0.05 vs 2.0 PPQ blocks differ";
+}

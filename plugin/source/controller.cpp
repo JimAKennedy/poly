@@ -12,6 +12,7 @@
 #include "poly/types.h"
 #include "ui/envelope_curve_view.h"
 #include "ui/header_view.h"
+#include "ui/lane_edit_view.h"
 #include "ui/lane_grid_view.h"
 #include "ui/phase_alignment_view.h"
 #include "ui/velocity_view.h"
@@ -38,6 +39,29 @@ static constexpr LaneParamDef kLaneParamDefs[] = {
     {ParamIDs::kHumanizeMs, "Humanize", "ms", 0, 0.0},
     {ParamIDs::kNoteDuration, "Duration", "beats", 0, 0.0},
     {ParamIDs::kActive, "Active", "", 1, 1.0},
+    {ParamIDs::kPhraseLength, "Phrase Len", "bars", 0, 0.0},
+    {ParamIDs::kPhraseGap, "Phrase Gap", "bars", 0, 0.0},
+    {ParamIDs::kPhraseOffset, "Phrase Ofs", "bars", 0, 0.0},
+    {ParamIDs::kMutationRate, "Mutation", "%", 0, 0.0},
+    {ParamIDs::kDriftRate, "Drift Rate", "st/bar", 0, 0.5},
+    {ParamIDs::kTimingOffset, "Timing Offset", "ms", 0, 0.5},
+    {ParamIDs::kKotekanSource, "Kotekan Source", "", 8, 0.0},
+};
+
+struct CoreParamDef {
+    int offset;
+    const char* name;
+    const char* units;
+    Steinberg::int32 steps;
+    double defaultNorm;
+};
+
+static constexpr CoreParamDef kCoreParamDefs[] = {
+    {ParamIDs::kCoreSteps, "Steps", "", 63, 3.0 / 63.0},
+    {ParamIDs::kCoreSubdivision, "Subdivision", "", 4, 0.5},
+    {ParamIDs::kCoreHits, "Hits", "", 64, 4.0 / 64.0},
+    {ParamIDs::kCoreRotation, "Rotation", "", 63, 0.0},
+    {ParamIDs::kCoreMidiNote, "MIDI Note", "", 127, 36.0 / 127.0},
 };
 
 } // namespace
@@ -67,6 +91,20 @@ Steinberg::tresult PLUGIN_API PolyController::initialize(Steinberg::FUnknown* co
         for (const auto& def : kLaneParamDefs) {
             ParameterInfo info = {};
             info.id = ParamIDs::laneParam(lane, def.offset);
+            Steinberg::UString(info.title, 128).fromAscii(def.name);
+            Steinberg::UString(info.units, 128).fromAscii(def.units);
+            info.stepCount = def.steps;
+            info.defaultNormalizedValue = def.defaultNorm;
+            info.flags = ParameterInfo::kCanAutomate;
+            info.unitId = UnitIDs::lane(lane);
+            parameters.addParameter(info);
+        }
+    }
+
+    for (int lane = 0; lane < kMaxLanes; ++lane) {
+        for (const auto& def : kCoreParamDefs) {
+            ParameterInfo info = {};
+            info.id = ParamIDs::laneCoreParam(lane, def.offset);
             Steinberg::UString(info.title, 128).fromAscii(def.name);
             Steinberg::UString(info.units, 128).fromAscii(def.units);
             info.stepCount = def.steps;
@@ -119,6 +157,14 @@ Steinberg::tresult PLUGIN_API PolyController::initialize(Steinberg::FUnknown* co
         addParam(ParamIDs::envelopeValueOutput(lane), title, "", 0, 0.0, UnitIDs::kOutput, ParameterInfo::kIsReadOnly);
     }
 
+    for (int lane = 0; lane < kMaxLanes; ++lane) {
+        char title[32];
+        std::snprintf(title, sizeof(title), "L%d Phrase", lane + 1);
+        addParam(ParamIDs::phrasePhaseOutput(lane), title, "", 0, 0.0, UnitIDs::kOutput, ParameterInfo::kIsReadOnly);
+    }
+
+    addParam(ParamIDs::kSelectedLane, "Selected Lane", "", 7, 0.0, UnitIDs::kGlobal, ParameterInfo::kNoFlags);
+
     addParam(ParamIDs::kSceneSelect, "Select", "", 2, 0.0, UnitIDs::kScene);
     addParam(ParamIDs::kSceneMorph, "Morph", "%", 0, 0.0, UnitIDs::kScene);
 
@@ -132,7 +178,7 @@ Steinberg::tresult PLUGIN_API PolyController::initialize(Steinberg::FUnknown* co
 
 Steinberg::IPlugView* PLUGIN_API PolyController::createView(Steinberg::FIDString name) {
     if (Steinberg::FIDStringsEqual(name, Steinberg::Vst::ViewType::kEditor)) {
-        auto* view = new VSTGUI::VST3Editor(this, "view", "poly.uidesc");
+        auto* view = new VSTGUI::VST3Editor(this, "view", "poly.uidesc"); // ownership-transfer
         view->setDelegate(this);
         return view;
     }
@@ -143,19 +189,22 @@ VSTGUI::CView* PolyController::createCustomView(VSTGUI::UTF8StringPtr name, cons
                                                 const VSTGUI::IUIDescription* /*description*/,
                                                 VSTGUI::VST3Editor* /*editor*/) {
     if (std::strcmp(name, "HeaderView") == 0) {
-        return new HeaderView(VSTGUI::CRect(0, 0, 600, 32));
+        return new HeaderView(VSTGUI::CRect(0, 0, 600, 32), this); // ownership-transfer
+    }
+    if (std::strcmp(name, "LaneEditView") == 0) {
+        return new LaneEditView(VSTGUI::CRect(0, 0, 580, 126), this);
     }
     if (std::strcmp(name, "LaneGridView") == 0) {
-        return new LaneGridView(VSTGUI::CRect(0, 0, 580, 156), this);
+        return new LaneGridView(VSTGUI::CRect(0, 0, 580, 156), this); // ownership-transfer
     }
     if (std::strcmp(name, "VelocityView") == 0) {
-        return new VelocityView(VSTGUI::CRect(0, 0, 580, 76), this);
+        return new VelocityView(VSTGUI::CRect(0, 0, 580, 40), this); // ownership-transfer
     }
     if (std::strcmp(name, "EnvelopeCurveView") == 0) {
-        return new EnvelopeCurveView(VSTGUI::CRect(0, 0, 380, 146), this);
+        return new EnvelopeCurveView(VSTGUI::CRect(0, 0, 380, 146), this); // ownership-transfer
     }
     if (std::strcmp(name, "PhaseAlignmentView") == 0) {
-        return new PhaseAlignmentView(VSTGUI::CRect(0, 0, 190, 146), this);
+        return new PhaseAlignmentView(VSTGUI::CRect(0, 0, 190, 146), this); // ownership-transfer
     }
     return nullptr;
 }
@@ -185,6 +234,43 @@ Steinberg::tresult PLUGIN_API PolyController::setComponentState(Steinberg::IBStr
         setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kHumanizeMs), cfg.humanizeMs / 50.0);
         setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kNoteDuration), cfg.noteDuration / 4.0);
         setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kActive), cfg.active ? 1.0 : 0.0);
+        setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kPhraseLength), cfg.phraseLength / 64.0);
+        setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kPhraseGap), cfg.phraseGap / 64.0);
+        setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kPhraseOffset), cfg.phraseOffset / 64.0);
+        setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kMutationRate), cfg.mutationRate);
+        setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kDriftRate),
+                           static_cast<double>((cfg.driftRate + 4.0f) / 8.0f));
+        setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kTimingOffset),
+                           static_cast<double>((cfg.timingOffsetMs + 20.0f) / 40.0f));
+        setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kKotekanSource),
+                           static_cast<double>(cfg.kotekanSourceLane + 1) / 8.0);
+
+        setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreSteps), (cfg.cycle.steps - 1) / 63.0);
+        int subIdx = 0;
+        switch (cfg.cycle.subdivision) {
+        case 1:
+            subIdx = 0;
+            break;
+        case 2:
+            subIdx = 1;
+            break;
+        case 4:
+            subIdx = 2;
+            break;
+        case 8:
+            subIdx = 3;
+            break;
+        case 16:
+            subIdx = 4;
+            break;
+        default:
+            subIdx = 2;
+            break;
+        }
+        setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreSubdivision), subIdx / 4.0);
+        setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreHits), cfg.hitCount / 64.0);
+        setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreRotation), cfg.rotation / 63.0);
+        setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreMidiNote), cfg.midiNote / 127.0);
     }
 
     setParamNormalized(ParamIDs::kMacroComplexity, gs.macros.complexity);
