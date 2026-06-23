@@ -1,8 +1,12 @@
+#include <cmath>
 #include <string>
+#include <vector>
 
 #include <gtest/gtest.h>
 
+#include "poly/engine.h"
 #include "poly/euclidean.h"
+#include "poly/types.h"
 
 namespace {
 
@@ -121,4 +125,136 @@ TEST(Euclidean, MaximallyEvenSpacing) {
     int minGap = *std::min_element(gaps.begin(), gaps.end());
     int maxGap = *std::max_element(gaps.begin(), gaps.end());
     EXPECT_LE(maxGap - minGap, 1);
+}
+
+// --- Additive / Aksak cell tests ---
+
+namespace {
+
+poly::LaneConfig makeAdditiveConfig(std::initializer_list<int> cells, int subdivision, int hits) {
+    poly::LaneConfig cfg{};
+    cfg.id = 0;
+    cfg.midiNote = 36;
+    cfg.cycle.subdivision = subdivision;
+    cfg.hitCount = hits;
+    cfg.baseVelocity = 100;
+    cfg.probability = 1.0f;
+    cfg.active = true;
+    cfg.cellCount = static_cast<int>(cells.size());
+    cfg.cycle.steps = cfg.cellCount;
+    int i = 0;
+    for (int c : cells)
+        cfg.cellSizes[i++] = c;
+    return cfg;
+}
+
+std::vector<double> renderPpqPositions(const poly::LaneConfig& cfg, double ppqStart, double ppqEnd,
+                                       double blockPpq = 0.25) {
+    poly::GrooveState state{};
+    state.activeLaneCount = 1;
+    state.lanes[0] = cfg;
+    state.seed = 42;
+
+    poly::Engine engine;
+    poly::NoteEventBuffer buf;
+    std::vector<double> positions;
+    double ppq = ppqStart;
+
+    while (ppq < ppqEnd) {
+        double end = std::min(ppq + blockPpq, ppqEnd);
+        poly::TransportContext tc{};
+        tc.ppqStart = ppq;
+        tc.ppqEnd = end;
+        tc.tempo = 120.0;
+        tc.playing = true;
+        engine.renderRange(tc, state, buf);
+        for (size_t j = 0; j < buf.count; ++j)
+            positions.push_back(buf.events[j].ppqPosition);
+        ppq = end;
+    }
+    std::sort(positions.begin(), positions.end());
+    return positions;
+}
+
+} // namespace
+
+TEST(AdditiveCells, SevenEightAksakPpqPositions) {
+    auto cfg = makeAdditiveConfig({2, 2, 3}, 8, 3);
+    auto pos = renderPpqPositions(cfg, 0.0, 3.5);
+    double basePpq = 4.0 / 8.0;
+    double cyclePpq = (2 + 2 + 3) * basePpq;
+    ASSERT_GE(pos.size(), 3u);
+    EXPECT_NEAR(pos[0], 0.0, 1e-9);
+    EXPECT_NEAR(pos[1], 2.0 * basePpq, 1e-9);
+    EXPECT_NEAR(pos[2], 4.0 * basePpq, 1e-9);
+    if (pos.size() >= 6) {
+        EXPECT_NEAR(pos[3], cyclePpq, 1e-9);
+        EXPECT_NEAR(pos[4], cyclePpq + 2.0 * basePpq, 1e-9);
+        EXPECT_NEAR(pos[5], cyclePpq + 4.0 * basePpq, 1e-9);
+    }
+}
+
+TEST(AdditiveCells, NineEightAksakWorks) {
+    auto cfg = makeAdditiveConfig({2, 2, 2, 3}, 8, 4);
+    auto pos = renderPpqPositions(cfg, 0.0, 4.5);
+    double basePpq = 0.5;
+    ASSERT_GE(pos.size(), 4u);
+    EXPECT_NEAR(pos[0], 0.0, 1e-9);
+    EXPECT_NEAR(pos[1], 2.0 * basePpq, 1e-9);
+    EXPECT_NEAR(pos[2], 4.0 * basePpq, 1e-9);
+    EXPECT_NEAR(pos[3], 6.0 * basePpq, 1e-9);
+}
+
+TEST(AdditiveCells, EuclideanOverAdditiveCells) {
+    auto cfg = makeAdditiveConfig({2, 2, 3}, 8, 2);
+    auto pos = renderPpqPositions(cfg, 0.0, 7.0);
+    EXPECT_EQ(pos.size(), 4u);
+}
+
+TEST(AdditiveCells, BlockSizeIndependence) {
+    auto cfg = makeAdditiveConfig({2, 2, 3}, 8, 3);
+    auto posSmall = renderPpqPositions(cfg, 0.0, 7.0, 0.125);
+    auto posLarge = renderPpqPositions(cfg, 0.0, 7.0, 2.0);
+    ASSERT_EQ(posSmall.size(), posLarge.size());
+    for (size_t i = 0; i < posSmall.size(); ++i) {
+        EXPECT_NEAR(posSmall[i], posLarge[i], 1e-9) << "i=" << i;
+    }
+}
+
+TEST(AdditiveCells, AdditiveWithPhraseGating) {
+    auto cfg = makeAdditiveConfig({2, 2, 3}, 8, 3);
+    cfg.phraseLength = 3.0f;
+    cfg.phraseGap = 1.0f;
+    auto pos = renderPpqPositions(cfg, 0.0, 8.0);
+    for (double p : pos) {
+        double phrasePos = std::fmod(p, 4.0);
+        EXPECT_LT(phrasePos, 3.0 + 1e-9) << "ppq=" << p << " should be within phrase window";
+    }
+}
+
+TEST(AdditiveCells, AdditiveWithDrift) {
+    auto cfg = makeAdditiveConfig({2, 2, 3}, 8, 3);
+    cfg.driftRate = 1.0f;
+    auto posNoDrift = renderPpqPositions(makeAdditiveConfig({2, 2, 3}, 8, 3), 0.0, 7.0);
+    auto posDrift = renderPpqPositions(cfg, 0.0, 7.0);
+    EXPECT_EQ(posNoDrift.size(), posDrift.size());
+}
+
+TEST(AdditiveCells, ComputeAdditiveCellsHelper) {
+    auto cfg = makeAdditiveConfig({2, 2, 3}, 8, 3);
+    auto info = poly::computeAdditiveCells(cfg);
+    EXPECT_EQ(info.count, 3);
+    double basePpq = 0.5;
+    EXPECT_NEAR(info.cumPpq[0], 0.0, 1e-9);
+    EXPECT_NEAR(info.cumPpq[1], 2.0 * basePpq, 1e-9);
+    EXPECT_NEAR(info.cumPpq[2], 4.0 * basePpq, 1e-9);
+    EXPECT_NEAR(info.totalPpq, 7.0 * basePpq, 1e-9);
+}
+
+TEST(AdditiveCells, ZeroCellCountFallsBack) {
+    poly::LaneConfig cfg{};
+    cfg.cellCount = 0;
+    auto info = poly::computeAdditiveCells(cfg);
+    EXPECT_EQ(info.count, 0);
+    EXPECT_NEAR(info.totalPpq, 0.0, 1e-9);
 }

@@ -52,12 +52,20 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
         }
 
         const double sPpq = stepPpq(cfg.cycle);
+        const auto additive = computeAdditiveCells(cfg);
+        const bool isAdditive = additive.count > 0;
+        const double cyclePpqLen = isAdditive ? additive.totalPpq : (cfg.cycle.steps * sPpq);
 
-        // Find the range of absolute step indices that could fall in [ppqStart, ppqEnd).
-        // Step i occurs at PPQ = i * sPpq. We need i such that i*sPpq >= ppqStart
-        // and i*sPpq < ppqEnd.
-        int64_t firstStep = static_cast<int64_t>(std::ceil(tc.ppqStart / sPpq));
-        int64_t lastStep = static_cast<int64_t>(std::ceil(tc.ppqEnd / sPpq));
+        int64_t firstStep, lastStep;
+        if (isAdditive) {
+            int64_t firstCycle = static_cast<int64_t>(std::floor(tc.ppqStart / cyclePpqLen));
+            int64_t lastCycle = static_cast<int64_t>(std::floor(tc.ppqEnd / cyclePpqLen)) + 1;
+            firstStep = firstCycle * additive.count;
+            lastStep = lastCycle * additive.count;
+        } else {
+            firstStep = static_cast<int64_t>(std::ceil(tc.ppqStart / sPpq));
+            lastStep = static_cast<int64_t>(std::ceil(tc.ppqEnd / sPpq));
+        }
 
         const bool hasPhraseGating = cfg.phraseLength > 0.0f;
         const double phraseLenPpq = static_cast<double>(cfg.phraseLength);
@@ -66,7 +74,19 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
         const double phraseOffPpq = static_cast<double>(cfg.phraseOffset);
 
         for (int64_t absStep = firstStep; absStep < lastStep; ++absStep) {
-            double ppq = absStep * sPpq;
+            double ppq;
+            double stepDurPpq;
+            if (isAdditive) {
+                int localCell = static_cast<int>(((absStep % additive.count) + additive.count) % additive.count);
+                int64_t cycleIdx =
+                    (absStep >= 0) ? absStep / additive.count : (absStep - additive.count + 1) / additive.count;
+                ppq = cycleIdx * cyclePpqLen + additive.cumPpq[localCell];
+                double basePpq = 4.0 / cfg.cycle.subdivision;
+                stepDurPpq = cfg.cellSizes[localCell] * basePpq;
+            } else {
+                ppq = absStep * sPpq;
+                stepDurPpq = sPpq;
+            }
 
             // Floating point guard: must be within [ppqStart, ppqEnd)
             if (ppq < tc.ppqStart || ppq >= tc.ppqEnd)
@@ -80,8 +100,7 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
                     continue;
             }
 
-            // Map to position within the cycle
-            int stepsInCycle = cfg.cycle.steps;
+            int stepsInCycle = isAdditive ? additive.count : cfg.cycle.steps;
             int64_t cycleStep = ((absStep % stepsInCycle) + stepsInCycle) % stepsInCycle;
 
             // Phase drift: rotate pattern lookup by driftRate steps per bar
@@ -217,7 +236,7 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
 
             // Swing: shift odd cycle-steps (1, 3, 5...) forward
             if (cfg.swingAmount > 0.0f && (cycleStep % 2) == 1) {
-                ppq += cfg.swingAmount * sPpq * (1.0 / 3.0);
+                ppq += cfg.swingAmount * stepDurPpq * (1.0 / 3.0);
             }
 
             // Humanize: bounded PPQ jitter from deterministic RNG
@@ -240,7 +259,7 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
             ev.ppqPosition = ppq;
             ev.pitch = cfg.midiNote;
             ev.velocity = vel;
-            double baseDuration = cfg.noteDuration > 0.0f ? static_cast<double>(cfg.noteDuration) : sPpq * 0.5;
+            double baseDuration = cfg.noteDuration > 0.0f ? static_cast<double>(cfg.noteDuration) : stepDurPpq * 0.5;
             ev.duration = baseDuration * static_cast<double>(std::clamp(durationMod, 0.01f, 4.0f));
             ev.channel = static_cast<int16_t>(lane);
 

@@ -357,6 +357,9 @@ void PolyProcessor::applyParameter(Steinberg::Vst::ParamID id, double normalized
         case kCoreMidiNote:
             cfg.midiNote = static_cast<int16_t>(std::round(normalized * 127.0));
             break;
+        case kCoreCellCount:
+            cfg.cellCount = static_cast<int>(std::round(normalized * 64.0));
+            break;
         default:
             break;
         }
