@@ -75,6 +75,7 @@ static constexpr int kCoreSubdivision = 1;
 static constexpr int kCoreHits = 2;
 static constexpr int kCoreRotation = 3;
 static constexpr int kCoreMidiNote = 4;
+static constexpr int kCoreCellCount = 5;
 
 inline Steinberg::Vst::ParamID laneCoreParam(int lane, int offset) {
     return kLaneCoreBase + static_cast<Steinberg::Vst::ParamID>(lane * kCoreParamsPerLane + offset);

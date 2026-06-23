@@ -3,6 +3,8 @@
 #include "public.sdk/source/vst/vsteditcontroller.h"
 #include "vstgui/plugin-bindings/vst3editor.h"
 
+#include "poly/scene.h"
+
 namespace poly {
 
 class PolyController : public Steinberg::Vst::EditControllerEx1, public VSTGUI::VST3EditorDelegate {
@@ -17,6 +19,11 @@ public:
 
     VSTGUI::CView* createCustomView(VSTGUI::UTF8StringPtr name, const VSTGUI::UIAttributes& attributes,
                                     const VSTGUI::IUIDescription* description, VSTGUI::VST3Editor* editor) override;
+
+    const SceneState& cachedState() const { return cachedState_; }
+
+private:
+    SceneState cachedState_{};
 };
 
 } // namespace poly

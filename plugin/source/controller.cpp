@@ -10,6 +10,7 @@
 #include "poly/scene.h"
 #include "poly/state_io.h"
 #include "poly/types.h"
+#include "ui/cell_editor_view.h"
 #include "ui/envelope_curve_view.h"
 #include "ui/header_view.h"
 #include "ui/lane_edit_view.h"
@@ -62,6 +63,7 @@ static constexpr CoreParamDef kCoreParamDefs[] = {
     {ParamIDs::kCoreHits, "Hits", "", 64, 4.0 / 64.0},
     {ParamIDs::kCoreRotation, "Rotation", "", 63, 0.0},
     {ParamIDs::kCoreMidiNote, "MIDI Note", "", 127, 36.0 / 127.0},
+    {ParamIDs::kCoreCellCount, "Cell Count", "", 64, 0.0},
 };
 
 } // namespace
@@ -206,6 +208,9 @@ VSTGUI::CView* PolyController::createCustomView(VSTGUI::UTF8StringPtr name, cons
     if (std::strcmp(name, "PhaseAlignmentView") == 0) {
         return new PhaseAlignmentView(VSTGUI::CRect(0, 0, 190, 146), this); // ownership-transfer
     }
+    if (std::strcmp(name, "CellEditorView") == 0) {
+        return new CellEditorView(VSTGUI::CRect(0, 0, 580, 60), this); // ownership-transfer
+    }
     return nullptr;
 }
 
@@ -213,16 +218,15 @@ Steinberg::tresult PLUGIN_API PolyController::setComponentState(Steinberg::IBStr
     if (!state)
         return Steinberg::kInvalidArgument;
 
-    SceneState scene{};
     auto read = [state](void* data, size_t size) -> bool {
         Steinberg::int32 bytesRead;
         return state->read(data, static_cast<Steinberg::int32>(size), &bytesRead) == Steinberg::kResultOk;
     };
 
-    if (!readSceneState(read, scene))
+    if (!readSceneState(read, cachedState_))
         return Steinberg::kResultFalse;
 
-    const auto& gs = scene.sceneA;
+    const auto& gs = cachedState_.sceneA;
     for (int lane = 0; lane < kMaxLanes; ++lane) {
         const auto& cfg = gs.lanes[lane];
         setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kProbability), cfg.probability);
@@ -271,6 +275,7 @@ Steinberg::tresult PLUGIN_API PolyController::setComponentState(Steinberg::IBStr
         setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreHits), cfg.hitCount / 64.0);
         setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreRotation), cfg.rotation / 63.0);
         setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreMidiNote), cfg.midiNote / 127.0);
+        setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreCellCount), cfg.cellCount / 64.0);
     }
 
     setParamNormalized(ParamIDs::kMacroComplexity, gs.macros.complexity);
@@ -281,8 +286,8 @@ Steinberg::tresult PLUGIN_API PolyController::setComponentState(Steinberg::IBStr
     setParamNormalized(ParamIDs::kMacroHumanize, gs.macros.humanize);
     setParamNormalized(ParamIDs::kActiveLaneCount, (gs.activeLaneCount - 1) / 7.0);
     setParamNormalized(ParamIDs::kSeed, gs.seed / 999999.0);
-    setParamNormalized(ParamIDs::kSceneSelect, static_cast<double>(static_cast<uint8_t>(scene.select)) / 2.0);
-    setParamNormalized(ParamIDs::kSceneMorph, static_cast<double>(scene.morphAmount));
+    setParamNormalized(ParamIDs::kSceneSelect, static_cast<double>(static_cast<uint8_t>(cachedState_.select)) / 2.0);
+    setParamNormalized(ParamIDs::kSceneMorph, static_cast<double>(cachedState_.morphAmount));
 
     return Steinberg::kResultOk;
 }
