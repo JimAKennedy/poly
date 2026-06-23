@@ -126,18 +126,43 @@ struct LaneConfig {
     float humanizeMs = 0.0f;
     float swingAmount = 0.0f;
     float noteDuration = 0.0f;
-    float phraseLength = 0.0f;   // beats; 0 = continuous (no phrase gating)
-    float phraseGap = 0.0f;      // beats; silence between phrases
-    float phraseOffset = 0.0f;   // beats; phase offset for this lane's phrase cycle
-    float mutationRate = 0.0f;   // 0.0-1.0; per-step mutation probability each cycle
-    float driftRate = 0.0f;      // steps per bar; pattern rotation rate from absolute PPQ
-    float timingOffsetMs = 0.0f; // ms; positive = late, negative = early; range [-20, +20]
-    int kotekanSourceLane = -1;  // -1=independent, 0-7=complement of source lane's pattern
+    float phraseLength = 0.0f;              // beats; 0 = continuous (no phrase gating)
+    float phraseGap = 0.0f;                 // beats; silence between phrases
+    float phraseOffset = 0.0f;              // beats; phase offset for this lane's phrase cycle
+    float mutationRate = 0.0f;              // 0.0-1.0; per-step mutation probability each cycle
+    float driftRate = 0.0f;                 // steps per bar; pattern rotation rate from absolute PPQ
+    float timingOffsetMs = 0.0f;            // ms; positive = late, negative = early; range [-20, +20]
+    int kotekanSourceLane = -1;             // -1=independent, 0-7=complement of source lane's pattern
+    int cellCount = 0;                      // 0 = equal cells (standard Euclidean); >0 = additive/aksak
+    std::array<int, kMaxSteps> cellSizes{}; // subdivision units per cell; sum = total cycle length
     bool active = true;
     std::array<EnvelopeAssign, kMaxEnvelopesPerLane> envelopes{};
     int envelopeCount = 0;
     ConstraintConfig constraints{};
 };
+
+// --- Additive cell helpers ---
+
+struct AdditiveCellInfo {
+    std::array<double, kMaxSteps> cumPpq{};
+    double totalPpq = 0.0;
+    int count = 0;
+};
+
+inline AdditiveCellInfo computeAdditiveCells(const LaneConfig& cfg) {
+    AdditiveCellInfo info{};
+    if (cfg.cellCount <= 0)
+        return info;
+    info.count = cfg.cellCount;
+    double basePpq = 4.0 / cfg.cycle.subdivision;
+    double accum = 0.0;
+    for (int i = 0; i < cfg.cellCount && i < kMaxSteps; ++i) {
+        info.cumPpq[i] = accum;
+        accum += static_cast<double>(cfg.cellSizes[i]) * basePpq;
+    }
+    info.totalPpq = accum;
+    return info;
+}
 
 // --- Macros ---
 

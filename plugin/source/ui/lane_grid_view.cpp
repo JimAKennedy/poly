@@ -94,16 +94,23 @@ void LaneGridView::draw(VSTGUI::CDrawContext* context) {
         auto kotekanId = ParamIDs::laneParam(lane, ParamIDs::kKotekanSource);
         int kotekanSrc = static_cast<int>(std::round(controller_->getParamNormalized(kotekanId) * 8.0)) - 1;
 
-        char laneNum[16];
+        auto cellCountId = ParamIDs::laneCoreParam(lane, ParamIDs::kCoreCellCount);
+        int cellCount = static_cast<int>(std::round(controller_->getParamNormalized(cellCountId) * 64.0));
+
+        char laneNum[32];
         if (kotekanSrc >= 0 && kotekanSrc < kMaxLanes) {
             snprintf(laneNum, sizeof(laneNum), "L%d \xe2\x86\x90 L%d", lane + 1, kotekanSrc + 1);
+        } else if (cellCount > 0) {
+            snprintf(laneNum, sizeof(laneNum), "L%d \xe2\x99\xaa%d", lane + 1, cellCount);
         } else {
             snprintf(laneNum, sizeof(laneNum), "L%d", lane + 1);
         }
         CRect numRect = laneRect;
         numRect.right -= 8;
         numRect.left = numRect.right - 60;
-        CColor numColor = (kotekanSrc >= 0) ? CColor(0x9B, 0x59, 0xB6, 0xC0) : CColor(0x50, 0x50, 0x5C, 0xFF);
+        CColor numColor = (kotekanSrc >= 0) ? CColor(0x9B, 0x59, 0xB6, 0xC0)
+                          : (cellCount > 0) ? CColor(0xE6, 0x7E, 0x22, 0xC0)
+                                            : CColor(0x50, 0x50, 0x5C, 0xFF);
         context->setFontColor(numColor);
         context->drawString(laneNum, numRect, kRightText);
 
