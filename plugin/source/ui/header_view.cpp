@@ -129,6 +129,15 @@ void HeaderView::applyPreset(int index) {
         pushParam(ParamIDs::laneParam(lane, ParamIDs::kHumanizeMs), cfg.humanizeMs / 50.0);
         pushParam(ParamIDs::laneParam(lane, ParamIDs::kNoteDuration), cfg.noteDuration / 4.0);
         pushParam(ParamIDs::laneParam(lane, ParamIDs::kActive), (lane < state.activeLaneCount) ? 1.0 : 0.0);
+        pushParam(ParamIDs::laneParam(lane, ParamIDs::kPhraseLength), cfg.phraseLength / 64.0);
+        pushParam(ParamIDs::laneParam(lane, ParamIDs::kPhraseGap), cfg.phraseGap / 64.0);
+        pushParam(ParamIDs::laneParam(lane, ParamIDs::kPhraseOffset), cfg.phraseOffset / 64.0);
+        pushParam(ParamIDs::laneParam(lane, ParamIDs::kMutationRate), cfg.mutationRate);
+        pushParam(ParamIDs::laneParam(lane, ParamIDs::kDriftRate), static_cast<double>((cfg.driftRate + 4.0f) / 8.0f));
+        pushParam(ParamIDs::laneParam(lane, ParamIDs::kTimingOffset),
+                  static_cast<double>((cfg.timingOffsetMs + 20.0f) / 40.0f));
+        pushParam(ParamIDs::laneParam(lane, ParamIDs::kKotekanSource),
+                  static_cast<double>(cfg.kotekanSourceLane + 1) / 8.0);
     }
 
     pushParam(ParamIDs::kMacroComplexity, state.macros.complexity);
@@ -170,6 +179,13 @@ void HeaderView::resetToInit() {
         pushParam(ParamIDs::laneParam(lane, ParamIDs::kHumanizeMs), 0.0);
         pushParam(ParamIDs::laneParam(lane, ParamIDs::kNoteDuration), 0.0);
         pushParam(ParamIDs::laneParam(lane, ParamIDs::kActive), 1.0);
+        pushParam(ParamIDs::laneParam(lane, ParamIDs::kPhraseLength), 0.0);
+        pushParam(ParamIDs::laneParam(lane, ParamIDs::kPhraseGap), 0.0);
+        pushParam(ParamIDs::laneParam(lane, ParamIDs::kPhraseOffset), 0.0);
+        pushParam(ParamIDs::laneParam(lane, ParamIDs::kMutationRate), 0.0);
+        pushParam(ParamIDs::laneParam(lane, ParamIDs::kDriftRate), 0.5);
+        pushParam(ParamIDs::laneParam(lane, ParamIDs::kTimingOffset), 0.5);
+        pushParam(ParamIDs::laneParam(lane, ParamIDs::kKotekanSource), 0.0);
     }
 
     pushParam(ParamIDs::kMacroComplexity, 0.5);
