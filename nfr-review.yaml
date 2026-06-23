@@ -24,3 +24,5 @@ rules:
     - otel-test-observability
     # Decisions documented in IMPLEMENTATION_PLAN.md, CLAUDE.md, and .gsd/DECISIONS.md.
     - adr-gap
+    # C++ SAST covered by clang-tidy + sanitizer CI jobs (ASAN/TSAN/UBSAN). Secrets scanning via gitleaks. DAST not applicable to a VST3 plugin binary.
+    - ci-security-scan-missing
