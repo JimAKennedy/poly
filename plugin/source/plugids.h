@@ -68,6 +68,18 @@ inline Steinberg::Vst::ParamID phrasePhaseOutput(int lane) {
     return kPhrasePhaseOutputBase + static_cast<Steinberg::Vst::ParamID>(lane);
 }
 
+static constexpr Steinberg::Vst::ParamID kLaneCoreBase = 800;
+static constexpr int kCoreParamsPerLane = 8;
+static constexpr int kCoreSteps = 0;
+static constexpr int kCoreSubdivision = 1;
+static constexpr int kCoreHits = 2;
+static constexpr int kCoreRotation = 3;
+static constexpr int kCoreMidiNote = 4;
+
+inline Steinberg::Vst::ParamID laneCoreParam(int lane, int offset) {
+    return kLaneCoreBase + static_cast<Steinberg::Vst::ParamID>(lane * kCoreParamsPerLane + offset);
+}
+
 static constexpr Steinberg::Vst::ParamID kSelectedLane = 700;
 
 static constexpr Steinberg::Vst::ParamID kSceneSelect = 500;

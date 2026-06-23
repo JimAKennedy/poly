@@ -332,6 +332,37 @@ void PolyProcessor::applyParameter(Steinberg::Vst::ParamID id, double normalized
 
     auto& gs = (sceneState_.select == SceneSelect::B) ? sceneState_.sceneB : sceneState_.sceneA;
 
+    if (id >= kLaneCoreBase &&
+        id < kLaneCoreBase + static_cast<Steinberg::Vst::ParamID>(kMaxLanes * kCoreParamsPerLane)) {
+        auto rel = static_cast<int>(id - kLaneCoreBase);
+        int lane = rel / kCoreParamsPerLane;
+        int offset = rel % kCoreParamsPerLane;
+        auto& cfg = gs.lanes[lane];
+        switch (offset) {
+        case kCoreSteps:
+            cfg.cycle.steps = 1 + static_cast<int>(std::round(normalized * 63.0));
+            break;
+        case kCoreSubdivision: {
+            static constexpr int subdivs[] = {1, 2, 4, 8, 16};
+            int idx = static_cast<int>(std::round(normalized * 4.0));
+            cfg.cycle.subdivision = subdivs[std::clamp(idx, 0, 4)];
+            break;
+        }
+        case kCoreHits:
+            cfg.hitCount = static_cast<int>(std::round(normalized * 64.0));
+            break;
+        case kCoreRotation:
+            cfg.rotation = static_cast<int>(std::round(normalized * 63.0));
+            break;
+        case kCoreMidiNote:
+            cfg.midiNote = static_cast<int16_t>(std::round(normalized * 127.0));
+            break;
+        default:
+            break;
+        }
+        return;
+    }
+
     if (id < static_cast<Steinberg::Vst::ParamID>(kMaxLanes * kParamsPerLane)) {
         int lane = static_cast<int>(id) / kParamsPerLane;
         int offset = static_cast<int>(id) % kParamsPerLane;
