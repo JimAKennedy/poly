@@ -15,6 +15,7 @@
 #include "ui/header_view.h"
 #include "ui/lane_edit_view.h"
 #include "ui/lane_grid_view.h"
+#include "ui/micro_timing_editor_view.h"
 #include "ui/phase_alignment_view.h"
 #include "ui/timeline_step_editor_view.h"
 #include "ui/velocity_view.h"
@@ -216,6 +217,9 @@ VSTGUI::CView* PolyController::createCustomView(VSTGUI::UTF8StringPtr name, cons
     }
     if (std::strcmp(name, "TimelineStepEditorView") == 0) {
         return new TimelineStepEditorView(VSTGUI::CRect(0, 0, 580, 60), this); // ownership-transfer
+    }
+    if (std::strcmp(name, "MicroTimingEditorView") == 0) {
+        return new MicroTimingEditorView(VSTGUI::CRect(0, 0, 580, 60), this); // ownership-transfer
     }
     return nullptr;
 }

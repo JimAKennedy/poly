@@ -245,6 +245,12 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
                 ppq += cfg.swingAmount * stepDurPpq * (1.0 / 3.0);
             }
 
+            // Per-step micro-timing map
+            float stepTimingMs = cfg.microTimingMs[static_cast<size_t>(cycleStep)];
+            if (stepTimingMs != 0.0f && tc.tempo > 0.0) {
+                ppq += static_cast<double>(stepTimingMs) * tc.tempo / 60000.0;
+            }
+
             // Humanize: bounded PPQ jitter from deterministic RNG
             // TimingLooseness envelope adds additional jitter range
             float effectiveHumanize = cfg.humanizeMs + humanizeMod * 10.0f;

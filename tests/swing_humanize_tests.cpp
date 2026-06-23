@@ -255,3 +255,123 @@ TEST(SwingHumanize, ShortStaccatoDuration) {
         EXPECT_NEAR(e.duration, 0.1, 1e-6);
     }
 }
+
+// --- Micro-timing Map Tests ---
+
+TEST(MicroTiming, PerStepOffsetShiftsPpq) {
+    auto cfg = makeBasicLane();
+    cfg.microTimingMs[1] = 10.0f;
+    cfg.microTimingMs[3] = -5.0f;
+    double tempo = 120.0;
+    auto events = renderLane(cfg, 4.0, 42, tempo);
+
+    ASSERT_EQ(events.size(), 8u);
+    const double sPpq = 0.5;
+    double offset1 = 10.0 * tempo / 60000.0;
+    double offset3 = -5.0 * tempo / 60000.0;
+
+    EXPECT_DOUBLE_EQ(events[0].ppqPosition, 0.0);
+    EXPECT_NEAR(events[1].ppqPosition, 1 * sPpq + offset1, 1e-9);
+    EXPECT_DOUBLE_EQ(events[2].ppqPosition, 2 * sPpq);
+    EXPECT_NEAR(events[3].ppqPosition, 3 * sPpq + offset3, 1e-9);
+}
+
+TEST(MicroTiming, ComposeWithSwing) {
+    auto cfg = makeBasicLane();
+    cfg.swingAmount = 0.5f;
+    cfg.microTimingMs[1] = 5.0f;
+    double tempo = 120.0;
+    auto events = renderLane(cfg, 4.0, 42, tempo);
+
+    ASSERT_EQ(events.size(), 8u);
+    const double sPpq = 0.5;
+    double swingOff = 0.5f * sPpq * (1.0 / 3.0);
+    double microOff = 5.0 * tempo / 60000.0;
+
+    EXPECT_NEAR(events[1].ppqPosition, 1 * sPpq + swingOff + microOff, 1e-9);
+    EXPECT_DOUBLE_EQ(events[0].ppqPosition, 0.0);
+}
+
+TEST(MicroTiming, ComposeWithHumanize) {
+    auto cfg = makeBasicLane();
+    cfg.humanizeMs = 5.0f;
+    cfg.microTimingMs[0] = 10.0f;
+    double tempo = 120.0;
+    auto events = renderLane(cfg, 4.0, 42, tempo);
+
+    double microOff = 10.0 * tempo / 60000.0;
+    double jitterMax = 5.0 * tempo / 60000.0;
+    EXPECT_NEAR(events[0].ppqPosition, microOff, jitterMax + 1e-9);
+}
+
+TEST(MicroTiming, ComposeWithAdditiveCells) {
+    poly::LaneConfig cfg{};
+    cfg.id = 0;
+    cfg.active = true;
+    cfg.midiNote = 36;
+    cfg.cycle = {.steps = 3, .subdivision = 8};
+    cfg.hitCount = 3;
+    cfg.probability = 1.0f;
+    cfg.baseVelocity = 100;
+    cfg.cellCount = 3;
+    cfg.cellSizes[0] = 2;
+    cfg.cellSizes[1] = 2;
+    cfg.cellSizes[2] = 3;
+    cfg.microTimingMs[0] = 5.0f;
+    cfg.microTimingMs[1] = -5.0f;
+
+    double tempo = 120.0;
+    poly::Engine engine;
+    poly::GrooveState state{};
+    state.activeLaneCount = 1;
+    state.seed = 42;
+    state.lanes[0] = cfg;
+
+    poly::NoteEventBuffer buf;
+    poly::TransportContext tc{};
+    tc.ppqStart = 0.0;
+    tc.ppqEnd = 3.5;
+    tc.tempo = tempo;
+    tc.playing = true;
+    engine.renderRange(tc, state, buf);
+
+    ASSERT_EQ(buf.count, 3u);
+    double basePpq = 0.5;
+    double microOff0 = 5.0 * tempo / 60000.0;
+    double microOff1 = -5.0 * tempo / 60000.0;
+    EXPECT_NEAR(buf.events[0].ppqPosition, 0.0 + microOff0, 1e-9);
+    EXPECT_NEAR(buf.events[1].ppqPosition, 2.0 * basePpq + microOff1, 1e-9);
+}
+
+TEST(MicroTiming, AllZeroNoChange) {
+    auto cfg = makeBasicLane();
+    auto eventsClean = renderLane(cfg);
+
+    auto cfgWithMap = makeBasicLane();
+    auto eventsWithMap = renderLane(cfgWithMap);
+
+    ASSERT_EQ(eventsClean.size(), eventsWithMap.size());
+    for (size_t i = 0; i < eventsClean.size(); ++i) {
+        EXPECT_DOUBLE_EQ(eventsClean[i].ppqPosition, eventsWithMap[i].ppqPosition);
+    }
+}
+
+TEST(MicroTiming, GingaGrooveGolden) {
+    auto cfg = makeBasicLane();
+    cfg.cycle = {.steps = 4, .subdivision = 4};
+    cfg.hitCount = 4;
+    cfg.microTimingMs[0] = 0.0f;
+    cfg.microTimingMs[1] = 8.0f;
+    cfg.microTimingMs[2] = 0.0f;
+    cfg.microTimingMs[3] = -4.0f;
+    double tempo = 120.0;
+    auto events = renderLane(cfg, 4.0, 42, tempo);
+
+    ASSERT_EQ(events.size(), 4u);
+    double microOff1 = 8.0 * tempo / 60000.0;
+    double microOff3 = -4.0 * tempo / 60000.0;
+    EXPECT_DOUBLE_EQ(events[0].ppqPosition, 0.0);
+    EXPECT_NEAR(events[1].ppqPosition, 1.0 + microOff1, 1e-9);
+    EXPECT_DOUBLE_EQ(events[2].ppqPosition, 2.0);
+    EXPECT_NEAR(events[3].ppqPosition, 3.0 + microOff3, 1e-9);
+}
