@@ -38,11 +38,11 @@
 					"background-color": "bg",
 					"background-color-draw-style": "filled",
 					"class": "CViewContainer",
-					"minSize": "600, 670",
+					"minSize": "600, 647",
 					"mouse-enabled": "true",
 					"opacity": "1",
 					"origin": "0, 0",
-					"size": "600, 670",
+					"size": "600, 647",
 					"transparent": "false"
 				},
 				"children": {
@@ -92,7 +92,7 @@
 							"origin": "14, 208",
 							"size": "80, 12",
 							"text-alignment": "left",
-							"title": "LANE EDIT",
+							"title": "LANE",
 							"transparent": "true"
 						}
 					},
@@ -103,32 +103,7 @@
 							"mouse-enabled": "true",
 							"opacity": "1",
 							"origin": "10, 221",
-							"size": "580, 60",
-							"transparent": "false"
-						}
-					},
-					"CTextLabel#phraseLabel": {
-						"attributes": {
-							"class": "CTextLabel",
-							"font": "~ NormalFontVerySmall",
-							"font-color": "text.section",
-							"mouse-enabled": "false",
-							"opacity": "1",
-							"origin": "14, 285",
-							"size": "80, 12",
-							"text-alignment": "left",
-							"title": "PHRASE",
-							"transparent": "true"
-						}
-					},
-					"CView#phraseEditView": {
-						"attributes": {
-							"class": "CView",
-							"custom-view-name": "PhraseEditView",
-							"mouse-enabled": "true",
-							"opacity": "1",
-							"origin": "10, 298",
-							"size": "580, 60",
+							"size": "580, 114",
 							"transparent": "false"
 						}
 					},
@@ -139,7 +114,7 @@
 							"font-color": "text.section",
 							"mouse-enabled": "false",
 							"opacity": "1",
-							"origin": "14, 362",
+							"origin": "14, 339",
 							"size": "80, 12",
 							"text-alignment": "left",
 							"title": "MACROS",
@@ -153,7 +128,7 @@
 							"class": "CViewContainer",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "10, 375",
+							"origin": "10, 352",
 							"size": "580, 80",
 							"transparent": "false"
 						},
@@ -377,7 +352,7 @@
 							"font-color": "text.section",
 							"mouse-enabled": "false",
 							"opacity": "1",
-							"origin": "14, 459",
+							"origin": "14, 436",
 							"size": "80, 12",
 							"text-alignment": "left",
 							"title": "VELOCITY",
@@ -390,7 +365,7 @@
 							"custom-view-name": "VelocityView",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "10, 472",
+							"origin": "10, 449",
 							"size": "580, 40",
 							"transparent": "false"
 						}
@@ -402,7 +377,7 @@
 							"font-color": "text.section",
 							"mouse-enabled": "false",
 							"opacity": "1",
-							"origin": "14, 516",
+							"origin": "14, 493",
 							"size": "100, 12",
 							"text-alignment": "left",
 							"title": "VISUALIZATION",
@@ -415,7 +390,7 @@
 							"custom-view-name": "EnvelopeCurveView",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "10, 529",
+							"origin": "10, 506",
 							"size": "380, 130",
 							"transparent": "false"
 						}
@@ -426,7 +401,7 @@
 							"custom-view-name": "PhaseAlignmentView",
 							"mouse-enabled": "true",
 							"opacity": "1",
-							"origin": "400, 529",
+							"origin": "400, 506",
 							"size": "190, 130",
 							"transparent": "false"
 						}

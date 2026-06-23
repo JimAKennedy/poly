@@ -19,26 +19,32 @@ A hands-on guide to every rhythmic feature in Poly, with UI references, paramete
 │ │  Ride       ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  ◎  │ │
 │ │  Crash      ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░  ◎  │ │
 │ └──────────────────────────────────────────────────────────────────┘ │
+│ LANE EDIT                                                           │
+│ ┌──────────────────────────────────────────────────────────────────┐ │
+│ │ [1][2][3][4][5][6][7][8]   PATTERN             │ VOICE          │ │  ← C: Lane Edit
+│ │  Lane tabs             (Steps)(Sub)(Hits)(Rot)(Note)│(Vel)(Gho)  │ │     Tabs select lane
+│ │                                                │(Spr)(Swg)(Kot) │ │     10 rotary knobs
+│ └──────────────────────────────────────────────────────────────────┘ │
 │ PHRASE                                                              │
 │ ┌──────────────────────────────────────────────────────────────────┐ │
-│ │ [1][2][3][4][5][6][7][8]  ┌─arc─┐    (Len)(Gap)(Ofs)           │ │  ← C: Phrase Editor
-│ │  Lane tabs    Schematic   └─────┘    (Mut)(Drift)(Time)        │ │     Tabs select lane
-│ └──────────────────────────────────────────────────────────────────┘ │     6 rotary knobs
+│ │ [1][2][3][4][5][6][7][8]  ┌─arc─┐    (Len)(Gap)(Ofs)           │ │  ← D: Phrase Editor
+│ │  Lane tabs    Schematic   └─────┘    (Mut)(Drift)(Time)        │ │     6 rotary knobs
+│ └──────────────────────────────────────────────────────────────────┘ │
 │ MACROS                                                              │
 │ ┌──────────────────────────────────────────────────────────────────┐ │
-│ │  (Complexity)  (Density)  (Syncopation)  (Swing)  (Tension)     │ │  ← D: Macro Knobs
+│ │  (Complexity)  (Density)  (Syncopation)  (Swing)  (Tension)     │ │  ← E: Macro Knobs
 │ │                                                       (Humanize)│ │     6 global knobs
 │ └──────────────────────────────────────────────────────────────────┘ │
 │ VELOCITY                                                            │
 │ ┌──────────────────────────────────────────────────────────────────┐ │
-│ │  █   █   █   █   ░   ░   ░   ░                                 │ │  ← E: Velocity Monitor
-│ │  L1  L2  L3  L4  L5  L6  L7  L8                                │ │     Real-time per-lane bars
+│ │  █  █  █  █  ░  ░  ░  ░                                        │ │  ← F: Velocity Monitor
+│ │  L1 L2 L3 L4 L5 L6 L7 L8                                      │ │     Real-time per-lane bars
 │ └──────────────────────────────────────────────────────────────────┘ │
 │ VISUALIZATION                                                       │
 │ ┌────────────────────────────────────────┐ ┌──────────────────────┐ │
 │ │                                        │ │    ╭───╮             │ │
-│ │   Envelope curves (all active lanes)   │ │  ╭─╯   ╰─╮   Phase  │ │  ← F: Envelope Curves
-│ │   X: phase (0→1)  Y: value (0→1)      │ │  │  · ·   │  Rings  │ │  ← G: Phase Alignment
+│ │   Envelope curves (all active lanes)   │ │  ╭─╯   ╰─╮   Phase  │ │  ← G: Envelope Curves
+│ │   X: phase (0→1)  Y: value (0→1)      │ │  │  · ·   │  Rings  │ │  ← H: Phase Alignment
 │ │                                        │ │  ╰─╮   ╭─╯         │ │     Concentric circles
 │ │              Envelope                  │ │    ╰───╯             │ │     with phase dots
 │ └────────────────────────────────────────┘ └──────────────────────┘ │
@@ -51,19 +57,30 @@ A hands-on guide to every rhythmic feature in Poly, with UI references, paramete
 |------|---------|------|-------------|
 | **A** | Preset dropdown | Selector | Load factory or Init preset; resets all parameters |
 | **B** | Lane rows | Click + drag | Click to select lane; drag the bar to set probability |
-| **C** | Lane tabs [1]-[8] | Click | Select which lane the 6 phrase knobs edit |
-| **C** | Len / Gap / Ofs | Rotary knobs | Phrase length, gap, and offset (0–64 beats) |
-| **C** | Mut / Drift / Time | Rotary knobs | Mutation rate (0–100%), drift (±4 st/bar), timing offset (±20ms) |
-| **C** | Schematic | Display | Visual arc showing phrase on/off timing for selected lane |
-| **D** | Complexity | Rotary knob | Scales hit count and rotation (0 = simple, 1 = complex) |
-| **D** | Density | Rotary knob | Scales probability and hit count (0 = sparse, 1 = full) |
-| **D** | Syncopation | Rotary knob | Rotates pattern, inverts emphasis (0 = on-beat, 1 = off-beat) |
-| **D** | Swing | Rotary knob | Shifts odd steps forward for shuffle feel (0 = straight, 1 = max) |
-| **D** | Tension | Rotary knob | Widens velocity spread, scales accent + envelope depth |
-| **D** | Humanize | Rotary knob | Adds timing jitter (up to 10ms) and velocity randomness |
-| **E** | Velocity bars | Display | Real-time velocity output per lane (read-only) |
-| **F** | Envelope curves | Display | Sinusoidal envelope phase per lane over time |
-| **G** | Phase rings | Display | Concentric polar view — dots show each lane's cycle position |
+| **C** | Lane tabs [1]-[8] | Click | Select which lane the 10 Lane Edit knobs edit |
+| **C** | Steps | Rotary knob | Euclidean cycle length (1–64 steps) |
+| **C** | Subdiv | Rotary knob | Grid resolution (1/1, 1/2, 1/4, 1/8, 1/16) |
+| **C** | Hits | Rotary knob | Number of evenly-distributed hits (0–64) |
+| **C** | Rot | Rotary knob | Cyclic rotation of the pattern (0–63) |
+| **C** | Note | Rotary knob | MIDI note number (0–127, displayed as pitch e.g. "C2") |
+| **C** | Vel | Rotary knob | Base velocity (0–127) |
+| **C** | Ghost | Rotary knob | Minimum ghost note velocity (0–127) |
+| **C** | Spread | Rotary knob | Random velocity range (0–100%) |
+| **C** | Swing | Rotary knob | Per-lane swing amount (0–100%) |
+| **C** | Kotek | Rotary knob | Kotekan source lane (off, L1–L8) |
+| **D** | Lane tabs [1]-[8] | Click | Select which lane the 6 phrase knobs edit |
+| **D** | Len / Gap / Ofs | Rotary knobs | Phrase length, gap, and offset (0–64 beats) |
+| **D** | Mut / Drift / Time | Rotary knobs | Mutation rate (0–100%), drift (±4 st/bar), timing offset (±20ms) |
+| **D** | Schematic | Display | Visual arc showing phrase on/off timing for selected lane |
+| **E** | Complexity | Rotary knob | Scales hit count and rotation (0 = simple, 1 = complex) |
+| **E** | Density | Rotary knob | Scales probability and hit count (0 = sparse, 1 = full) |
+| **E** | Syncopation | Rotary knob | Rotates pattern, inverts emphasis (0 = on-beat, 1 = off-beat) |
+| **E** | Swing | Rotary knob | Shifts odd steps forward for shuffle feel (0 = straight, 1 = max) |
+| **E** | Tension | Rotary knob | Widens velocity spread, scales accent + envelope depth |
+| **E** | Humanize | Rotary knob | Adds timing jitter (up to 10ms) and velocity randomness |
+| **F** | Velocity bars | Display | Real-time velocity output per lane (read-only) |
+| **G** | Envelope curves | Display | Sinusoidal envelope phase per lane over time |
+| **H** | Phase rings | Display | Concentric polar view — dots show each lane's cycle position |
 
 ---
 
@@ -73,21 +90,23 @@ Poly distributes **k** hits across **n** steps using the Bjorklund/Euclidean alg
 
 **How it works:** Step *i* is a hit when `(i × k) mod n < k`. The **rotation** parameter shifts the entire pattern cyclically.
 
-### Key Parameters (set per-lane in the engine)
+### Key Parameters (Lane Edit → PATTERN group, zone C)
 
-| Parameter | Range | Description |
-|-----------|-------|-------------|
-| `cycle.steps` | 1–64 | Total steps in the pattern (n) |
-| `cycle.subdivision` | 1/2/4/8/16 | Grid resolution: whole/half/quarter/8th/16th notes |
-| `hitCount` | 0–steps | Number of active hits distributed evenly (k) |
-| `rotation` | 0–(steps-1) | Cyclic shift of the generated pattern |
+| Knob | Range | Description |
+|------|-------|-------------|
+| **Steps** | 1–64 | Total steps in the pattern (n) |
+| **Subdiv** | 1/1 – 1/16 | Grid resolution: whole/half/quarter/8th/16th notes |
+| **Hits** | 0–steps | Number of active hits distributed evenly (k) |
+| **Rot** | 0–63 | Cyclic shift of the generated pattern |
 
 ### Try It: Basic Euclidean Patterns
 
 Start from **Init** (preset dropdown → Init) so all parameters are at defaults.
 
-| Pattern Name | Steps | Hits | Rotation | Musical Effect |
-|-------------|-------|------|----------|---------------|
+Select a lane tab in zone C, then dial the PATTERN knobs:
+
+| Pattern Name | Steps | Hits | Rot | Musical Effect |
+|-------------|-------|------|-----|---------------|
 | Tresillo | 8 | 3 | 0 | Classic Afro-Cuban cell: `x..x..x.` |
 | Cinquillo | 8 | 5 | 0 | Dense Cuban rhythm: `x.xx.xx.` |
 | Son clave 3-side | 8 | 3 | 3 | Rotated tresillo: `..x..x.x` |
@@ -95,7 +114,7 @@ Start from **Init** (preset dropdown → Init) so all parameters are at defaults
 | 5 in 16 | 16 | 5 | 0 | Bossa nova feel: `x..x..x..x..x..` |
 | 4 in 4 | 4 | 4 | 0 | Four-on-the-floor |
 
-*These are the underlying engine values. Use the **Complexity** and **Density** macros (zone D) to reshape hit counts and rotations in real time. At Complexity = 0.5 and Density = 0.5, the base values pass through unchanged.*
+*Use the **Complexity** and **Density** macros (zone E) to reshape hit counts and rotations in real time. At Complexity = 0.5 and Density = 0.5, the base values pass through unchanged.*
 
 ---
 
@@ -105,18 +124,18 @@ Poly's power comes from running up to 8 independent Euclidean lanes at different
 
 ### Try It: Prime-Number Polymetry
 
-Load **Polymetric Drift** preset, or build from Init:
+Load **Polymetric Drift** preset, or build from Init by selecting each lane tab (zone C) and setting:
 
-| Lane | Instrument | Steps | Subdivision | Hits | Character |
-|------|-----------|-------|-------------|------|-----------|
-| 1 | Kick | 3 | Quarter | 2 | Anchor on 3-beat cycle |
-| 2 | Rim | 5 | 16th | 3 | Off-grid accent layer |
-| 3 | Tom | 7 | 16th | 4 | Ghost-note texture |
-| 4 | HH Closed | 11 | 16th | 7 | Shimmering wash |
+| Lane | Instrument | Steps | Subdiv | Hits | Character |
+|------|-----------|-------|--------|------|-----------|
+| 1 | Kick | 3 | 1/4 | 2 | Anchor on 3-beat cycle |
+| 2 | Rim | 5 | 1/16 | 3 | Off-grid accent layer |
+| 3 | Tom | 7 | 1/16 | 4 | Ghost-note texture |
+| 4 | HH Closed | 11 | 1/16 | 7 | Shimmering wash |
 
-**Macro settings:** Complexity = 0.7, Density = 0.4, Tension = 0.3
+**Macro settings (zone E):** Complexity = 0.7, Density = 0.4, Tension = 0.3
 
-**What to listen for:** The four cycles (3, 5, 7, 11) are coprime. The combined pattern has a period of 3×5×7×11 = 1,155 steps before it repeats exactly. Watch the **Phase Alignment rings** (zone G) — the dots orbit at different speeds and rarely align.
+**What to listen for:** The four cycles (3, 5, 7, 11) are coprime. The combined pattern has a period of 3×5×7×11 = 1,155 steps before it repeats exactly. Watch the **Phase Alignment rings** (zone H) — the dots orbit at different speeds and rarely align.
 
 **Experiment:** Slowly raise **Density** from 0.4 → 0.8. The sparse interplay fills in. Lower it to 0.2 and the pattern becomes skeletal.
 
@@ -131,28 +150,29 @@ Each lane has a **probability** (0–100%) that gates whether a step actually fi
 | Control | Zone | Range | Effect |
 |---------|------|-------|--------|
 | Probability bar | B (drag) | 0–100% | Chance each Euclidean hit actually plays |
-| Ghost Floor | (engine) | 0–127 | Minimum velocity for quiet "ghost" hits |
-| Velocity Spread | (engine) | 0–0.5 | Random ± range around base velocity |
-| Base Velocity | (engine) | 0–127 | Center velocity before spread/accents |
+| Vel | C (knob) | 0–127 | Base note velocity before spread/accents |
+| Ghost | C (knob) | 0–127 | Minimum velocity for quiet "ghost" hits |
+| Spread | C (knob) | 0–100% | Random ± range around base velocity |
+| Emphasis Prob | (DAW automation) | 0–100% | Accent likelihood (no on-screen knob) |
 
 ### Try It: Ghost Note Texture
 
-Load **Sparse Pulse** preset. Focus on Lane 3 (ghost layer):
+Load **Sparse Pulse** preset. Select Lane 3 tab in zone C (ghost layer):
 
-- **Probability:** 60% — many hits are skipped, creating gaps
-- **Ghost Floor:** 20 — surviving quiet hits are barely audible
-- **Velocity Spread:** 0.2 — wide dynamic range
-- **Base Velocity:** 45 — quiet to begin with
+- **Probability (zone B):** 60% — many hits are skipped, creating gaps
+- **Ghost (zone C):** 20 — surviving quiet hits are barely audible
+- **Spread (zone C):** 20% — wide dynamic range
+- **Vel (zone C):** 45 — quiet to begin with
 
-**Macro settings:** Density = 0.25, Humanize = 0.3
+**Macro settings (zone E):** Density = 0.25, Humanize = 0.3
 
-**What to listen for:** The ghost layer appears and disappears unpredictably, with widely varying velocities. The **Velocity bars** (zone E) for Lane 3 flicker between near-zero and mid-range. Raise **Density** macro to bring more ghost hits in; raise **Tension** to widen the velocity spread further.
+**What to listen for:** The ghost layer appears and disappears unpredictably, with widely varying velocities. The **Velocity bars** (zone F) for Lane 3 flicker between near-zero and mid-range. Raise **Density** macro to bring more ghost hits in; raise **Tension** to widen the velocity spread further.
 
 ---
 
 ## 4. Syncopation & Rotation
 
-The **Syncopation** macro (zone D) shifts all patterns away from their natural downbeat positions and inverts the emphasis probability — accents fall on weak beats instead of strong ones.
+The **Syncopation** macro (zone E) shifts all patterns away from their natural downbeat positions and inverts the emphasis probability — accents fall on weak beats instead of strong ones. For per-lane control, use the **Rot** knob in zone C to set a static rotation offset.
 
 ### How It Works
 
@@ -166,7 +186,8 @@ The **Syncopation** macro (zone D) shifts all patterns away from their natural d
 
 Load **Breakbeat** preset:
 
-- **Starting macros:** Syncopation = 0.5, Tension = 0.4, Complexity = 0.6
+- **Starting macros (zone E):** Syncopation = 0.5, Tension = 0.4, Complexity = 0.6
+- Select Lane 1 (zone C) and check Rot to see the kick's rotation
 - The kick (5 in 16, 3 hits) sits in unusual positions
 - Snare accents on steps 1 and 3 (emphasisProb = 0.8)
 
@@ -174,39 +195,42 @@ Load **Breakbeat** preset:
 1. Set Syncopation = 0.0 — the pattern snaps to predictable downbeats
 2. Sweep Syncopation slowly from 0.0 → 1.0 — hear the groove shift off-center
 3. At Syncopation = 1.0 with Tension = 0.4, accents now favor weak beats while velocity spread is wide — the groove sounds "inside out"
+4. Select a lane tab and try increasing its **Rot** knob independently — per-lane rotation stacks with the global Syncopation macro
 
 ---
 
 ## 5. Swing
 
-**Swing** (zone D) shifts every other 16th-note step later in time, creating a shuffle or triplet feel. It's additive across all lanes.
+**Swing** (zone E) shifts every other 16th-note step later in time, creating a shuffle or triplet feel. The global macro adds to each lane's individual swing amount.
 
 ### Parameters
 
 | Control | Zone | Range | Effect |
 |---------|------|-------|--------|
-| Per-lane swing | (engine) | 0–1.0 | Lane-specific swing amount |
-| Swing macro | D | 0–1.0 | Added to all lanes (clamped at 1.0) |
+| Swing (per-lane) | C (knob) | 0–100% | Lane-specific swing amount |
+| Swing macro | E | 0–1.0 | Added to all lanes (clamped at 1.0) |
 
 ### Try It: Shuffle Feels
 
 Load **Latin Feel** preset:
 
-- **Swing macro:** 0.3 (adds to all lanes)
-- HH Closed (lane 3): base swing 0, effective swing 0.3
+- **Swing macro (zone E):** 0.3 (adds to all lanes)
+- Select Lane 3 tab (zone C) — check the per-lane Swing knob to see its base value
+- HH Closed (lane 3): base swing 0%, effective swing 30% (0% + macro 30%)
 - Conga (lane 2): humanize 2ms + swing creates a loose, lilting feel
 
 **Experiment:**
-1. Set Swing = 0.0 — hear the straight, grid-locked pattern
-2. Set Swing = 0.3 — gentle shuffle, especially audible on the shaker's 16th notes
-3. Set Swing = 0.7 — heavy swing approaching a 12/8 triplet feel
-4. Combine with Humanize = 0.3 — swing + jitter creates an organic, "played" quality
+1. Set Swing macro = 0.0 — hear the straight, grid-locked pattern
+2. Set Swing macro = 0.3 — gentle shuffle, especially audible on the shaker's 16th notes
+3. Set Swing macro = 0.7 — heavy swing approaching a 12/8 triplet feel
+4. Select a lane tab (zone C) and raise its per-lane **Swing** knob independently — give one layer a different shuffle amount from the rest
+5. Combine with Humanize = 0.3 — swing + jitter creates an organic, "played" quality
 
 ---
 
 ## 6. Tension & Dynamic Range
 
-**Tension** (zone D) controls how wide the dynamic range is. At 0 it compresses everything; at 1 it exaggerates velocity differences, boosts accents, and deepens envelope modulation.
+**Tension** (zone E) controls how wide the dynamic range is. At 0 it compresses everything; at 1 it exaggerates velocity differences, boosts accents, and deepens envelope modulation.
 
 ### How It Works
 
@@ -223,20 +247,20 @@ Load **Four on the Floor** preset:
 1. Set Tension = 0.0 — the groove sounds flat and mechanical; all notes are similar velocity
 2. Set Tension = 0.5 — natural dynamics return
 3. Set Tension = 1.0 — accents punch hard, ghost notes are very quiet, envelope modulation is exaggerated
-4. Watch the **Velocity bars** (zone E) — at Tension = 0 they're uniform height; at Tension = 1 they jump between extremes
+4. Watch the **Velocity bars** (zone F) — at Tension = 0 they're uniform height; at Tension = 1 they jump between extremes
 
 ---
 
 ## 7. Humanize & Micro-Timing
 
-**Humanize** (zone D) adds timing jitter and a small velocity spread bump to all lanes, simulating an imperfect human player.
+**Humanize** (zone E) adds timing jitter and a small velocity spread bump to all lanes, simulating an imperfect human player. Per-lane humanize is available via DAW automation for fine-grained control.
 
 ### Parameters
 
 | Control | Zone | Range | Effect |
 |---------|------|-------|--------|
-| Per-lane humanize | C (knob) | 0–20ms | Lane-specific timing randomness |
-| Humanize macro | D | 0–1.0 | Adds up to 10ms jitter + velocity spread |
+| Per-lane humanize | (DAW automation) | 0–20ms | Lane-specific timing randomness |
+| Humanize macro | E | 0–1.0 | Adds up to 10ms jitter + velocity spread to all lanes |
 
 ### Try It: Machine vs. Human
 
@@ -255,7 +279,7 @@ Load **Four on the Floor** preset. Set all macros to 0 first.
 
 Phrases create breathing patterns — a lane plays for a set duration, then goes silent for a gap, then repeats. Each lane can have its own phrase length, gap, and offset, so lanes fade in and out at different rates.
 
-### Parameters (Zone C Knobs)
+### Parameters (Zone D Knobs)
 
 | Knob | Label | Range | Effect |
 |------|-------|-------|--------|
@@ -267,6 +291,8 @@ Phrases create breathing patterns — a lane plays for a set duration, then goes
 
 Load **Afro-House Phrases** preset (5 lanes active):
 
+Set phrase parameters per lane using the lane tabs in zone D:
+
 | Lane | Instrument | Phrase Len | Gap | Offset | Behavior |
 |------|-----------|-----------|-----|--------|----------|
 | 1 | Kick | 16 beats | 0 | 0 | Always playing (16-beat cycle, no gap) |
@@ -275,10 +301,10 @@ Load **Afro-House Phrases** preset (5 lanes active):
 | 4 | Djembe | 12 beats | 4 beats | 4 beats | Offset start — enters 4 beats after conga |
 | 5 | Perc | 4 beats | 4 beats | 8 beats | Short bursts, enters 8 beats late |
 
-**What to listen for:** The kick and shaker provide a constant foundation while conga, djembe, and percussion weave in and out on staggered cycles. Watch the **Phase Alignment rings** (zone G) — phrase arcs show the play/gap windows rotating at different speeds.
+**What to listen for:** The kick and shaker provide a constant foundation while conga, djembe, and percussion weave in and out on staggered cycles. Watch the **Phase Alignment rings** (zone H) — phrase arcs show the play/gap windows rotating at different speeds.
 
 **Experiment:**
-1. Select Lane 3 (tab [3] in zone C), increase Gap from 2 → 8 — the conga becomes more sparse
+1. Select Lane 3 tab (zone D), increase Gap from 2 → 8 — the conga becomes more sparse
 2. Select Lane 5, change Offset from 8 → 0 — the percussion now aligns with the conga instead of offsetting
 3. Set all lanes to Len = 4, Gap = 4, Offset = 0 — they all breathe in unison (a very different feel)
 
@@ -296,7 +322,7 @@ Load **Afro-House Phrases** preset (5 lanes active):
 | Ghost | An existing hit becomes a quiet ghost note |
 | Add | A gap gains a new hit for that cycle |
 
-### Parameters (Zone C)
+### Parameters (Zone D)
 
 | Knob | Label | Range | Effect |
 |------|-------|-------|--------|
@@ -326,7 +352,7 @@ Load **Pocket Groove** preset:
 
 **Drift** gradually rotates a lane's Euclidean pattern over time, derived from absolute PPQ position. This creates phasing effects where two similar patterns slowly separate and reconverge.
 
-### Parameters (Zone C)
+### Parameters (Zone D)
 
 | Knob | Label | Range | Effect |
 |------|-------|-------|--------|
@@ -336,20 +362,20 @@ Positive drift rotates the pattern forward; negative drift rotates backward. The
 
 ### Try It: Steve Reich Phasing
 
-Load **Reich Phasing** preset (3 lanes):
+Load **Reich Phasing** preset (3 lanes). Select each lane tab (zone C) to see the Euclidean parameters:
 
-| Lane | Instrument | Steps | Hits | Drift | Role |
-|------|-----------|-------|------|-------|------|
-| 1 | Fixed (note 76) | 5 in 12 | 3 | 0.0 | Reference pattern |
-| 2 | Drifting (note 76) | 5 in 12 | 3 | +0.25 st/bar | Slowly phasing copy |
-| 3 | Pulse (HH) | 4 in 4 | 4 | 0.0 | Steady timekeeping |
+| Lane | Instrument | Steps | Hits | Drift (zone D) | Role |
+|------|-----------|-------|------|------|------|
+| 1 | Fixed (Note: E4) | 12 | 5 | 0.0 | Reference pattern |
+| 2 | Drifting (Note: E4) | 12 | 5 | +0.25 st/bar | Slowly phasing copy |
+| 3 | Pulse (HH, Note: F#2) | 4 | 4 | 0.0 | Steady timekeeping |
 
 **What to listen for:** Lanes 1 and 2 start in unison but lane 2 gradually shifts ahead. After several bars, hits that were simultaneous become offset, creating new resultant rhythms. Eventually (after many bars) they realign.
 
-**Watch the Phase Alignment rings** (zone G) — the two inner dots orbit at slightly different speeds. The drift trail arc on lane 2 shows the direction of rotation.
+**Watch the Phase Alignment rings** (zone H) — the two inner dots orbit at slightly different speeds. The drift trail arc on lane 2 shows the direction of rotation.
 
 **Experiment:**
-1. Set Lane 2 Drift = +1.0 — faster phasing, audible separation within 2–3 bars
+1. Select Lane 2 tab (zone D), set Drift = +1.0 — faster phasing, audible separation within 2–3 bars
 2. Set Lane 2 Drift = -0.25 — reverse direction; the pattern rotates the other way
 3. Add Drift = +0.5 to Lane 3 (HH) — even the timekeeping layer drifts, dissolving all reference points
 
@@ -357,31 +383,31 @@ Load **Reich Phasing** preset (3 lanes):
 
 ## 11. Kotekan Pairs (Interlocking)
 
-Kotekan is a Balinese gamelan technique where two players create a single composite melody by filling each other's gaps. In Poly, setting a lane's **Kotekan Source** makes it play the *complement* of the source lane's pattern — it hits exactly where the source doesn't.
+Kotekan is a Balinese gamelan technique where two players create a single composite melody by filling each other's gaps. In Poly, setting a lane's **Kotek** knob (zone C, VOICE group) makes it play the *complement* of the source lane's pattern — it hits exactly where the source doesn't.
 
-### Parameters (Zone C)
+### Parameters (Zone C → VOICE group)
 
 | Knob | Label | Range | Effect |
 |------|-------|-------|--------|
-| 6 (via engine) | Kotekan Src | -1 to 7 | -1 = independent; 0–7 = complement of that lane |
+| 10 | Kotek | off / L1–L8 | off = independent; L1–L8 = complement of that lane |
 
 ### Try It: Interlocking Pair
 
-Load **Kotekan Interlock** preset (4 lanes):
+Load **Kotekan Interlock** preset (4 lanes). Select each lane tab (zone C) to view:
 
-| Lane | Name | Steps | Hits | Kotekan Source | Result |
-|------|------|-------|------|----------------|--------|
-| 1 | Polos | 3 in 8 | 3 | Independent (-1) | Plays its own pattern |
-| 2 | Sangsih | 3 in 8 | 3 | Lane 1 (0) | Plays the *inverse* of Lane 1 |
-| 3 | Gong | 4 in 4 | 1 | Independent | Single anchor beat |
-| 4 | Shimmer | 7 in 16 | 4 | Independent | Ghost texture |
+| Lane | Name | Steps/Hits | Kotek | Result |
+|------|------|-----------|-------|--------|
+| 1 | Polos | 8 steps, 3 hits | off | Plays its own pattern |
+| 2 | Sangsih | 8 steps, 3 hits | L1 | Plays the *inverse* of Lane 1 |
+| 3 | Gong | 4 steps, 1 hit | off | Single anchor beat |
+| 4 | Shimmer | 16 steps, 4 hits | off | Ghost texture |
 
-**What to listen for:** Polos and Sangsih together fill every step in their 8-step cycle. Where Polos plays, Sangsih rests; where Polos rests, Sangsih plays. The gong marks the downbeat. Together they create a continuous stream of interlocking notes at two different pitches (MIDI 76 and 77).
+**What to listen for:** Polos and Sangsih together fill every step in their 8-step cycle. Where Polos plays, Sangsih rests; where Polos rests, Sangsih plays. The gong marks the downbeat. Together they create a continuous stream of interlocking notes at two different pitches — check the **Note** knobs in zone C to see each lane's MIDI assignment.
 
 **Experiment:**
-1. Mute Lane 1 (click its probability bar down to 0) — Sangsih now plays the complement of silence, which is *every* step
-2. Restore Lane 1. Change Lane 1's hit count (via Complexity macro) — Sangsih's pattern changes accordingly to maintain the complement
-3. Raise Complexity to 0.8 — more hits on Polos means fewer on Sangsih; the balance shifts
+1. Mute Lane 1 (click its probability bar in zone B down to 0) — Sangsih now plays the complement of silence, which is *every* step
+2. Restore Lane 1. Select Lane 1 tab (zone C) and change its **Hits** knob — Sangsih's pattern changes accordingly to maintain the complement
+3. Raise Complexity macro (zone E) to 0.8 — more hits on Polos means fewer on Sangsih; the balance shifts
 
 ---
 
@@ -389,7 +415,7 @@ Load **Kotekan Interlock** preset (4 lanes):
 
 **Timing Offset** shifts a lane's notes slightly early or late relative to the grid, measured in milliseconds. This is distinct from Humanize (which is random) — offset is a fixed, consistent shift.
 
-### Parameters (Zone C)
+### Parameters (Zone D)
 
 | Knob | Label | Range | Effect |
 |------|-------|-------|--------|
@@ -397,7 +423,7 @@ Load **Kotekan Interlock** preset (4 lanes):
 
 ### Try It: Pocket Feel
 
-Load **Pocket Groove** preset:
+Load **Pocket Groove** preset. Select each lane tab (zone D) to see timing offsets:
 
 | Lane | Instrument | Timing Offset | Feel |
 |------|-----------|--------------|------|
@@ -417,7 +443,7 @@ Load **Pocket Groove** preset:
 
 ## 13. Complexity & Density Macros
 
-**Complexity** and **Density** (zone D) are the primary groove-shaping macros. They scale the underlying Euclidean parameters across all lanes simultaneously.
+**Complexity** and **Density** (zone E) are the primary groove-shaping macros. They scale the underlying Euclidean parameters across all lanes simultaneously.
 
 ### Complexity (default: 0.5)
 
@@ -472,7 +498,7 @@ Global envelopes modulate lane parameters over time using shapes that cycle at c
 | ActivationWeight | Lane activation |
 | FillLikelihood | Fill insertion rate |
 
-**Watch zone F** (Envelope Curves) to see the current envelope phase and value for each active lane. The marker dots show where each lane sits in its cycle.
+**Watch zone G** (Envelope Curves) to see the current envelope phase and value for each active lane. The marker dots show where each lane sits in its cycle.
 
 **Experiment with Tension:** Tension = 0 compresses envelope depth to half; Tension = 1 doubles it. With envelopes targeting Velocity, high Tension creates dramatic swells and drops.
 
@@ -495,45 +521,45 @@ Float parameters (probability, velocity, swing, timing) crossfade smoothly. Disc
 
 ## 16. Combining Features — Recipe Card
 
-Here are starting-point combinations that showcase Poly's features working together:
+Here are starting-point combinations that showcase Poly's features working together. For each recipe, select lane tabs in zone C to set up the PATTERN and VOICE parameters, zone D for phrase parameters, and zone E for the macros.
 
 ### Minimal Techno
 
 | Parameter | Value | Why |
 |-----------|-------|-----|
 | Lanes active | 3 | Kick, HH, Ghost |
-| Kick: 4/4, 4 hits | Standard | Anchor |
-| HH: 16/16, 8 hits | Half density | Space |
-| Ghost: 7/16, 3 hits | Polymetric | Movement |
-| Density | 0.3 | Sparse |
-| Tension | 0.2 | Tight dynamics |
-| Humanize | 0.1 | Barely loose |
+| Kick (zone C): Steps 4, Subdiv 1/4, Hits 4 | Standard four-on-the-floor | Anchor |
+| HH (zone C): Steps 16, Subdiv 1/16, Hits 8 | Half density | Space |
+| Ghost (zone C): Steps 7, Subdiv 1/16, Hits 3 | Polymetric | Movement |
+| Density (zone E) | 0.3 | Sparse |
+| Tension (zone E) | 0.2 | Tight dynamics |
+| Humanize (zone E) | 0.1 | Barely loose |
 
 ### Afro-Cuban Fusion
 
 | Parameter | Value | Why |
 |-----------|-------|-----|
 | Lanes active | 5 | Clave, Conga, Shaker, Bell, Ghost |
-| Lane 1: 5/16, 3 hits | Tresillo base | |
-| Lane 2: 7/8, 4 hits | Off-grid | Polymetric tension |
-| Lane 3: 16/16, 12 hits | Continuous | Textural wash |
-| Swing | 0.3 | Shuffle |
-| Humanize | 0.2 | Organic |
-| Complexity | 0.4 | Moderate rotation |
-| Lane 3 Mutation | 15% | Evolving texture |
+| Lane 1 (zone C): Steps 16, Subdiv 1/16, Hits 3 | Tresillo base | |
+| Lane 2 (zone C): Steps 8, Subdiv 1/8, Hits 4 | Off-grid | Polymetric tension |
+| Lane 3 (zone C): Steps 16, Subdiv 1/16, Hits 12 | Continuous | Textural wash |
+| Swing (zone E) | 0.3 | Shuffle |
+| Humanize (zone E) | 0.2 | Organic |
+| Complexity (zone E) | 0.4 | Moderate rotation |
+| Lane 3 Mutation (zone D) | 15% | Evolving texture |
 
 ### Generative Ambient Percussion
 
 | Parameter | Value | Why |
 |-----------|-------|-----|
 | Lanes active | 6 | All different cycle lengths |
-| All lanes: prime steps | 3, 5, 7, 11, 13, 17 | Never repeats |
-| All lanes: probability | 50–70% | Sparse, unpredictable |
-| Mutation | 20–40% per lane | Constant evolution |
-| Drift | +0.1 to +0.5 per lane | Slow phasing |
-| Humanize | 0.5 | Very loose |
-| Tension | 0.7 | Wide dynamics |
-| Phrase: staggered offsets | Varying | Breathing in/out |
+| Steps (zone C, per lane) | 3, 5, 7, 11, 13, 17 | Coprime — never repeats |
+| Probability (zone B, per lane) | 50–70% | Sparse, unpredictable |
+| Mutation (zone D) | 20–40% per lane | Constant evolution |
+| Drift (zone D) | +0.1 to +0.5 per lane | Slow phasing |
+| Humanize (zone E) | 0.5 | Very loose |
+| Tension (zone E) | 0.7 | Wide dynamics |
+| Phrase (zone D): staggered offsets | Varying | Breathing in/out |
 
 ---
 
@@ -543,26 +569,31 @@ Here are starting-point combinations that showcase Poly's features working toget
 
 | Parameter | Range | Default | UI Control |
 |-----------|-------|---------|-----------|
+| Steps | 1–64 | varies | Steps knob (zone C, PATTERN) |
+| Subdivision | 1/1–1/16 | varies | Subdiv knob (zone C, PATTERN) |
+| Hits | 0–steps | varies | Hits knob (zone C, PATTERN) |
+| Rotation | 0–63 | 0 | Rot knob (zone C, PATTERN) |
+| MIDI Note | 0–127 | varies | Note knob (zone C, PATTERN) |
 | Probability | 0–100% | 100% | Lane bar (zone B) |
-| Base Velocity | 0–127 | 100 | (engine) |
-| Emphasis Prob | 0–100% | 50% | (engine) |
-| Ghost Floor | 0–127 | 30 | (engine) |
-| Velocity Spread | 0–0.5 | 0.05 | (engine) |
-| Swing | 0–1.0 | 0.0 | (engine, additive with macro) |
-| Humanize | 0–20ms | 0ms | (engine, additive with macro) |
-| Note Duration | 0–4 beats | 0 | (engine) |
-| Active | on/off | on | (engine) |
-| Phrase Length | 0–64 beats | 0 | Len knob (zone C) |
-| Phrase Gap | 0–64 beats | 0 | Gap knob (zone C) |
-| Phrase Offset | 0–64 beats | 0 | Ofs knob (zone C) |
-| Mutation Rate | 0–100% | 0% | Mut knob (zone C) |
-| Drift Rate | ±4 st/bar | 0 | Drift knob (zone C) |
-| Timing Offset | ±20ms | 0ms | Time knob (zone C) |
-| Kotekan Source | -1 to 7 | -1 | (engine) |
+| Base Velocity | 0–127 | 100 | Vel knob (zone C, VOICE) |
+| Ghost Floor | 0–127 | 30 | Ghost knob (zone C, VOICE) |
+| Velocity Spread | 0–100% | 5% | Spread knob (zone C, VOICE) |
+| Per-lane Swing | 0–100% | 0% | Swing knob (zone C, VOICE) |
+| Kotekan Source | off / L1–L8 | off | Kotek knob (zone C, VOICE) |
+| Emphasis Prob | 0–100% | 50% | DAW automation only |
+| Per-lane Humanize | 0–20ms | 0ms | DAW automation only |
+| Note Duration | 0–4 beats | 0 | DAW automation only |
+| Active | on/off | on | DAW automation only |
+| Phrase Length | 0–64 beats | 0 | Len knob (zone D) |
+| Phrase Gap | 0–64 beats | 0 | Gap knob (zone D) |
+| Phrase Offset | 0–64 beats | 0 | Ofs knob (zone D) |
+| Mutation Rate | 0–100% | 0% | Mut knob (zone D) |
+| Drift Rate | ±4 st/bar | 0 | Drift knob (zone D) |
+| Timing Offset | ±20ms | 0ms | Time knob (zone D) |
 
 ### Global Macro Parameters
 
-| Macro | Range | Default | Zone D Position |
+| Macro | Range | Default | Zone E Position |
 |-------|-------|---------|----------------|
 | Complexity | 0–1.0 | 0.5 | 1st knob (left) |
 | Density | 0–1.0 | 0.5 | 2nd knob |
