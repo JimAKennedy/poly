@@ -192,7 +192,7 @@ VSTGUI::CView* PolyController::createCustomView(VSTGUI::UTF8StringPtr name, cons
         return new HeaderView(VSTGUI::CRect(0, 0, 600, 32), this); // ownership-transfer
     }
     if (std::strcmp(name, "LaneEditView") == 0) {
-        return new LaneEditView(VSTGUI::CRect(0, 0, 580, 114), this);
+        return new LaneEditView(VSTGUI::CRect(0, 0, 580, 126), this);
     }
     if (std::strcmp(name, "LaneGridView") == 0) {
         return new LaneGridView(VSTGUI::CRect(0, 0, 580, 156), this); // ownership-transfer
