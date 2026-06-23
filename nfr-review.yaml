@@ -12,3 +12,5 @@ rules:
     - cpp-dormant-classes
     # Google Test TEST()/TEST_F() macros register as coupling hotspots — not actionable.
     - structure-god-node
+    # Subdirectory CMakeLists.txt files inherit cmake_minimum_required from root CMakeLists.txt.
+    - cmake-minimum-version

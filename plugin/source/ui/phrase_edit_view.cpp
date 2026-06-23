@@ -72,7 +72,8 @@ CRect PhraseEditView::knobRect(int knob) const {
 
 CRect PhraseEditView::schematicRect() const {
     auto bounds = getViewSize();
-    return CRect(bounds.left + 10, bounds.top + 26, bounds.left + 296, bounds.top + 38);
+    auto lastTab = laneTabRect(kMaxLanes - 1);
+    return CRect(bounds.left + 10, bounds.top + 26, lastTab.right, bounds.top + 38);
 }
 
 int PhraseEditView::hitTestTab(const CPoint& where) const {
