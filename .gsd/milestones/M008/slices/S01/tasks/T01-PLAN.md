@@ -14,8 +14,8 @@ Add cellSizes array and cellCount to LaneConfig. When cellCount > 0, the cycle u
 
 ## Expected Output
 
-- `engine/include/poly/types.h with cellSizes/cellCount fields and helper`
+- `LaneConfig has cellSizes and cellCount fields`
 
 ## Verification
 
-cmake --build build && ctest --test-dir build (existing tests still pass — no engine changes yet)
+cmake --build build && ctest --test-dir build (existing tests still pass)

@@ -10,12 +10,14 @@ Add tests: (1) timeline lane uses fixed pattern, not Euclidean, (2) macros don't
 
 ## Inputs
 
-- `tests/scene_tests.cpp`
-- `tests/golden_tests.cpp`
+- `engine/include/poly/types.h`
+- `engine/src/engine.cpp`
+- `engine/src/scene.cpp`
 
 ## Expected Output
 
-- `New timeline test cases passing`
+- `Timeline test cases pass`
+- `Golden test for timeline pattern`
 
 ## Verification
 

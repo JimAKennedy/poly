@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-06-23T01:28:02.620Z",
+  "exported_at": "2026-06-23T02:29:07.794Z",
   "milestones": [
     {
       "id": "M001",
@@ -390,6 +390,41 @@
         {
           "risk": "Window height increase makes plugin unwieldy",
           "whyItMatters": "Shrinking velocity view compensates; target ~680px total"
+        }
+      ],
+      "proof_strategy": [],
+      "verification_contract": "",
+      "verification_integration": "",
+      "verification_operational": "",
+      "verification_uat": "",
+      "definition_of_done": [],
+      "requirement_coverage": "Not provided.",
+      "boundary_map_markdown": "Not provided.",
+      "sequence": 0
+    },
+    {
+      "id": "M011",
+      "title": "CI and Code Quality Green Baseline",
+      "status": "active",
+      "depends_on": [],
+      "created_at": "2026-06-23T02:26:51.058Z",
+      "completed_at": null,
+      "vision": "Eliminate all red and amber CI findings so PRs pass code-quality and nfr-review gates cleanly. Update project documentation to prevent recurrences of ownership-transfer annotation gaps, clang-format version mismatches, and NFR false positives.",
+      "success_criteria": [
+        "All CI checks pass on a test PR (code-quality, nfr-review, builds, engine-isolation, secrets-scan, coverage)",
+        "Zero red NFR findings on main branch",
+        "Zero amber NFR findings on main branch (via fix or justified skip)",
+        "KNOWLEDGE.md and CLAUDE.md updated with ownership-transfer and NFR conventions",
+        "clang-format version pinned to prevent future CI/local mismatches"
+      ],
+      "key_risks": [
+        {
+          "risk": "CodeQL adds CI time and may produce its own false positives on VST3 SDK patterns",
+          "whyItMatters": "Could create a new source of spurious CI failures if not configured with proper exclusions"
+        },
+        {
+          "risk": "Pinning clang-format version may require updating the pre-commit hook repo or using a different hook",
+          "whyItMatters": "The pocc/pre-commit-hooks clang-format hook uses whatever version it finds; pinning requires either a different hook or specifying the version explicitly"
         }
       ],
       "proof_strategy": [],
@@ -1023,20 +1058,20 @@
     {
       "milestone_id": "M008",
       "id": "S01",
-      "title": "Additive and Aksak Cycle Mode",
-      "status": "pending",
+      "title": "S01",
+      "status": "complete",
       "risk": "high",
       "depends": [],
       "demo": "Define a lane cycle as [2,2,3] for 7/8 aksak — Euclidean distribution operates over the unequal cells",
       "created_at": "2026-06-22T15:49:36.180Z",
-      "completed_at": null,
-      "full_summary_md": "",
-      "full_uat_md": "",
-      "goal": "Support additive/aksak cycle definitions where steps have unequal durations (e.g. [2+2+3] for 7/8 aksak). Euclidean distribution operates over the variable-width cells. Engine renderRange() computes per-step PPQ from cumulative cell widths.",
-      "success_criteria": "A lane with cellSizes=[2,2,3] at subdivision=8 produces hits at unequal intervals matching 7/8 aksak timing. Euclidean distribution works correctly over variable-width cells. Golden tests pass with block-size independence. State version bumped with backward-compatible defaults.",
-      "proof_level": "Unit tests for cell PPQ computation, Euclidean over additive cells, and golden tests for aksak patterns with block-size independence.",
-      "integration_closure": "Additive cells compose with all M007 features (phrase gating, mutation, drift, kotekan). Existing equal-cell patterns produce identical output (regression).",
-      "observability_impact": "No new observability surfaces — engine is deterministic and testable offline.",
+      "completed_at": "2026-06-23T02:18:21.692Z",
+      "full_summary_md": "---\nid: S01\nparent: M008\nmilestone: M008\nprovides:\n  - (none)\nrequires:\n  []\naffects:\n  []\nkey_files:\n  - engine/include/poly/types.h\n  - engine/include/poly/state_io.h\n  - engine/src/engine.cpp\n  - plugin/source/ui/cell_editor_view.h\n  - plugin/source/ui/cell_editor_view.cpp\n  - plugin/source/controller.h\n  - plugin/source/controller.cpp\n  - plugin/source/ui/lane_grid_view.cpp\n  - tests/euclidean_tests.cpp\nkey_decisions:\n  - Scalar cellCount as VST3 param, array cellSizes as state-serialized only\n  - State version 10 for all M008 slices (single bump)\n  - SceneState cached in controller for UI access to non-param data\n  - Additive step iteration uses cycle-based PPQ, not accumulated steps\npatterns_established:\n  - (none)\nobservability_surfaces:\n  - none\ndrill_down_paths:\n  []\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-06-23T02:18:21.693Z\nblocker_discovered: false\n---\n\n# S01: Additive / Aksak Cycles\n\n**Variable-width Euclidean cells with engine rendering, serialization, UI editor, and 8 new tests**\n\n## What Happened\n\nImplemented full additive/aksak cycle support: LaneConfig gains cellCount + cellSizes[] fields, engine renders Euclidean patterns over unequal-width cells using cycle-based PPQ computation, state version bumped to 10 with backward-compatible serialization, cellCount exposed as VST3 parameter, Cell Editor custom view for visual editing, and lane grid additive indicator. All 224 tests pass including 8 new additive-specific tests.\n\n## Verification\n\n224/224 tests pass, build clean on all targets, clang-format verified, RT safety check passes\n\n## Requirements Advanced\n\nNone.\n\n## Requirements Validated\n\nNone.\n\n## New Requirements Surfaced\n\nNone.\n\n## Requirements Invalidated or Re-scoped\n\nNone.\n\n## Operational Readiness\n\nNone.\n\n## Deviations\n\nNone.\n\n## Known Limitations\n\nNone.\n\n## Follow-ups\n\nNone.\n\n## Files Created/Modified\n\nNone.\n",
+      "full_uat_md": "# S01: Additive / Aksak Cycles — UAT\n\n**Milestone:** M008\n**Written:** 2026-06-23T02:18:21.693Z\n\n## Additive / Aksak Cycles UAT\\n\\n- [ ] Load plugin in Cubase, select a lane\\n- [ ] Cell Editor view shows \\\"Equal cells (standard Euclidean)\\\" by default\\n- [ ] Click + button to add cells — cell count increases, proportional rectangles appear\\n- [ ] Set cells to [2,2,3] pattern — verify 7/8 aksak feel in playback\\n- [ ] Lane grid shows orange cell count indicator (e.g. \\\"L1 ♪3\\\")\\n- [ ] Save and reload preset — cellCount and cellSizes survive round-trip\\n- [ ] Load a version 9 preset — defaults to cellCount=0 (equal cells)\\n- [ ] Verify Euclidean hit distribution works correctly over unequal cells\n",
+      "goal": "Support additive/aksak cycle definitions where steps have unequal durations (e.g. [2+2+3] for 7/8 aksak). Euclidean distribution operates over the variable-width cells. Engine renderRange() computes per-step PPQ from cumulative cell widths. Custom Cell Editor view for editing cell sequences, with lane grid indicator for additive mode.",
+      "success_criteria": "A lane with cellSizes=[2,2,3] at subdivision=8 produces hits at unequal intervals matching 7/8 aksak timing. Euclidean distribution works correctly over variable-width cells. Golden tests pass with block-size independence. State version bumped with backward-compatible defaults. Cell Editor custom view allows visual editing of cell sequences. Lane grid shows additive indicator.",
+      "proof_level": "Unit tests for cell PPQ computation, Euclidean over additive cells, golden tests for aksak patterns with block-size independence. UI builds and renders.",
+      "integration_closure": "Additive cells compose with all M007 features (phrase gating, mutation, drift, kotekan). Existing equal-cell patterns produce identical output (regression). Cell Editor view integrates with existing lane edit panel.",
+      "observability_impact": "",
       "sequence": 1,
       "replan_triggered_at": null,
       "is_sketch": 0,
@@ -1045,20 +1080,20 @@
     {
       "milestone_id": "M008",
       "id": "S02",
-      "title": "Timeline Mode",
-      "status": "pending",
+      "title": "S02",
+      "status": "complete",
       "risk": "medium",
       "depends": [],
       "demo": "Mark a lane as timeline — it becomes immune to macro changes and serves as the rhythmic skeleton",
       "created_at": "2026-06-22T15:49:36.180Z",
-      "completed_at": null,
-      "full_summary_md": "",
-      "full_uat_md": "",
-      "goal": "Add a timeline lane mode where the lane uses a fixed step pattern (not Euclidean) and is immune to macro changes. Timeline lanes serve as the rhythmic skeleton that other lanes relate to — e.g. Afro-Cuban clave, Afrobeat bell pattern.",
-      "success_criteria": "A lane marked as timeline uses its fixed pattern verbatim. Macro knobs (complexity, density, syncopation) do not affect timeline lanes. Timeline lanes still respond to envelopes and phrase features. State serialized at version 10.",
-      "proof_level": "Unit tests for timeline mode flag, macro immunity, and golden tests for timeline patterns.",
-      "integration_closure": "Timeline mode composes with additive cells (S01), phrase gating, envelopes, and kotekan. Macros skip timeline lanes cleanly.",
-      "observability_impact": "None — deterministic engine feature.",
+      "completed_at": "2026-06-23T02:24:53.373Z",
+      "full_summary_md": "---\nid: S02\nparent: M008\nmilestone: M008\nprovides:\n  - (none)\nrequires:\n  []\naffects:\n  []\nkey_files:\n  - engine/include/poly/types.h\n  - engine/src/engine.cpp\n  - engine/src/macro.cpp\n  - engine/include/poly/state_io.h\n  - plugin/source/ui/timeline_step_editor_view.h\n  - plugin/source/ui/timeline_step_editor_view.cpp\n  - plugin/source/ui/lane_grid_view.cpp\nkey_decisions: []\npatterns_established:\n  - (none)\nobservability_surfaces:\n  - none\ndrill_down_paths:\n  []\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-06-23T02:24:53.374Z\nblocker_discovered: false\n---\n\n# S02: Timeline Mode\n\n**Fixed-pattern timeline lanes immune to macros, with step editor and lane grid indicator**\n\n## What Happened\n\nImplemented full timeline mode: lanes marked timeline use fixedPattern instead of Euclidean distribution and are skipped by macro resolution. Envelopes and phrase gating still apply. Timeline Step Editor view enables visual step toggling. Lane grid shows teal TL badge. State serialization in version 10 block. 7 new tests added (231 total).\n\n## Verification\n\n231/231 tests pass, build clean, clang-format verified, RT safety check passes\n\n## Requirements Advanced\n\nNone.\n\n## Requirements Validated\n\nNone.\n\n## New Requirements Surfaced\n\nNone.\n\n## Requirements Invalidated or Re-scoped\n\nNone.\n\n## Operational Readiness\n\nNone.\n\n## Deviations\n\nNone.\n\n## Known Limitations\n\nNone.\n\n## Follow-ups\n\nNone.\n\n## Files Created/Modified\n\nNone.\n",
+      "full_uat_md": "# S02: Timeline Mode — UAT\n\n**Milestone:** M008\n**Written:** 2026-06-23T02:24:53.374Z\n\n## Timeline Mode UAT\\n\\n- [ ] Enable timeline on a lane — verify it shows TL badge in lane grid (teal color)\\n- [ ] Set a fixed pattern in Timeline Step Editor — click steps to toggle on/off\\n- [ ] Play — verify timeline lane uses the fixed pattern exactly\\n- [ ] Move macro knobs (complexity, density, syncopation) — verify timeline lane is unchanged\\n- [ ] Verify non-timeline lanes still respond to macros\\n- [ ] Add envelope to timeline lane — verify velocity modulation still works\\n- [ ] Enable phrase gating on timeline lane — verify gaps appear correctly\\n- [ ] Save/load preset — verify timeline state survives round-trip\\n- [ ] Load version 9 preset — verify timeline defaults to off\n",
+      "goal": "Add a timeline lane mode where the lane uses a fixed step pattern (not Euclidean) and is immune to macro changes. Timeline lanes serve as the rhythmic skeleton. Custom Timeline Step Editor view for editing the fixed pattern, with lane grid indicator for timeline mode.",
+      "success_criteria": "A lane marked as timeline uses its fixed pattern verbatim. Macro knobs do not affect timeline lanes. Timeline lanes still respond to envelopes and phrase features. State serialized at version 10. Timeline Step Editor allows visual step toggling. Lane grid shows timeline indicator.",
+      "proof_level": "Unit tests for timeline mode flag, macro immunity, golden tests for timeline patterns. UI builds and renders.",
+      "integration_closure": "Timeline mode composes with additive cells (S01), phrase gating, envelopes, and kotekan. Macros skip timeline lanes cleanly. Step Editor integrates with existing lane edit panel.",
+      "observability_impact": "",
       "sequence": 2,
       "replan_triggered_at": null,
       "is_sketch": 0,
@@ -1067,20 +1102,20 @@
     {
       "milestone_id": "M008",
       "id": "S03",
-      "title": "Extended Micro-timing Maps",
-      "status": "pending",
+      "title": "S03",
+      "status": "complete",
       "risk": "medium",
       "depends": [],
       "demo": "Apply a per-step timing map (not just swing) — e.g. Brazilian ginga feel or J Dilla pocket",
       "created_at": "2026-06-22T15:49:36.180Z",
-      "completed_at": null,
-      "full_summary_md": "",
-      "full_uat_md": "",
-      "goal": "Add per-step micro-timing maps to LaneConfig — an array of timing offsets (in ms) per step position within the cycle. Goes beyond swing (which only shifts odd steps) to enable groove templates like Brazilian ginga, J Dilla pocket, or Afrobeat push.",
-      "success_criteria": "A lane with a micro-timing map applies per-step timing offsets. Offsets compose with swing and humanize. Timing map has no effect when all values are 0 (default). Works with both equal and additive cells. State serialized.",
-      "proof_level": "Unit tests verifying per-step offsets are applied correctly, composition with swing/humanize, and golden tests for groove-mapped patterns.",
-      "integration_closure": "Micro-timing maps compose with additive cells (S01), swing, humanize, timing offset, and phrase features. Equal-cell and additive-cell patterns both apply micro-timing correctly.",
-      "observability_impact": "None — deterministic engine feature.",
+      "completed_at": "2026-06-23T02:29:07.782Z",
+      "full_summary_md": "---\nid: S03\nparent: M008\nmilestone: M008\nprovides:\n  - (none)\nrequires:\n  []\naffects:\n  []\nkey_files:\n  - engine/include/poly/types.h\n  - engine/src/engine.cpp\n  - engine/include/poly/state_io.h\n  - plugin/source/ui/micro_timing_editor_view.h\n  - plugin/source/ui/micro_timing_editor_view.cpp\nkey_decisions: []\npatterns_established:\n  - (none)\nobservability_surfaces:\n  - none\ndrill_down_paths:\n  []\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-06-23T02:29:07.783Z\nblocker_discovered: false\n---\n\n# S03: Extended Micro-timing Maps\n\n**Per-step micro-timing offsets for groove templates with drag-to-adjust editor**\n\n## What Happened\n\nImplemented per-step micro-timing maps: each step position within a cycle can have an independent timing offset (-20 to +20ms). Offsets compose additively with swing and humanize. Works with both equal and additive cells. Micro-timing Editor view provides drag-to-adjust bar chart with double-click reset. State serialized in version 10. 6 new tests (237 total).\n\n## Verification\n\n237/237 tests pass, build clean, clang-format verified, RT safety check passes\n\n## Requirements Advanced\n\nNone.\n\n## Requirements Validated\n\nNone.\n\n## New Requirements Surfaced\n\nNone.\n\n## Requirements Invalidated or Re-scoped\n\nNone.\n\n## Operational Readiness\n\nNone.\n\n## Deviations\n\nNone.\n\n## Known Limitations\n\nNone.\n\n## Follow-ups\n\nNone.\n\n## Files Created/Modified\n\nNone.\n",
+      "full_uat_md": "# S03: Extended Micro-timing Maps — UAT\n\n**Milestone:** M008\n**Written:** 2026-06-23T02:29:07.783Z\n\n## Extended Micro-timing Maps UAT\\n\\n- [ ] Open Micro-timing Editor for a lane — shows flat bars at center line\\n- [ ] Drag a bar up (positive ms) — hear that step play slightly late\\n- [ ] Drag a bar down (negative ms) — hear that step play slightly early\\n- [ ] Double-click a bar — resets to 0ms\\n- [ ] Tooltip shows numeric ms value during drag\\n- [ ] Set a ginga pattern ([0, +8, 0, -4]) on quarter notes — verify push/pull feel\\n- [ ] Combine with swing — verify both offsets compose\\n- [ ] Combine with humanize — verify jitter adds on top of map\\n- [ ] Use with additive cells — verify micro-timing applies per cell step\\n- [ ] Save/load preset — verify micro-timing values survive round-trip\\n- [ ] Load version 9 preset — all micro-timing defaults to 0\n",
+      "goal": "Add per-step micro-timing maps to LaneConfig — an array of timing offsets (in ms) per step position within the cycle. Goes beyond swing to enable groove templates like Brazilian ginga, J Dilla pocket, or Afrobeat push. Custom Micro-timing Editor view for visual offset editing.",
+      "success_criteria": "A lane with a micro-timing map applies per-step timing offsets. Offsets compose with swing and humanize. Timing map has no effect when all values are 0 (default). Works with both equal and additive cells. State serialized. Micro-timing Editor allows drag-to-adjust per-step offsets visually.",
+      "proof_level": "Unit tests verifying per-step offsets are applied correctly, composition with swing/humanize, golden tests for groove-mapped patterns. UI builds and renders.",
+      "integration_closure": "Micro-timing maps compose with additive cells (S01), swing, humanize, timing offset, and phrase features. Equal-cell and additive-cell patterns both apply micro-timing correctly. Editor integrates with existing lane edit panel.",
+      "observability_impact": "",
       "sequence": 3,
       "replan_triggered_at": null,
       "is_sketch": 0,
@@ -1200,6 +1235,100 @@
       "integration_closure": "Golden baseline matches deterministic engine output with new param defaults",
       "observability_impact": "None",
       "sequence": 3,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M011",
+      "id": "S01",
+      "title": "Fix clang-format CI gate",
+      "status": "pending",
+      "risk": "low",
+      "depends": [],
+      "demo": "pre-commit run --all-files passes locally and in CI with identical formatting",
+      "created_at": "2026-06-23T02:27:16.011Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Resolve the clang-format version mismatch between local and CI so headless_ui_host.cpp passes code-quality",
+      "success_criteria": "",
+      "proof_level": "",
+      "integration_closure": "",
+      "observability_impact": "",
+      "sequence": 1,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M011",
+      "id": "S02",
+      "title": "Annotate remaining raw-memory allocations",
+      "status": "pending",
+      "risk": "low",
+      "depends": [],
+      "demo": "NFR review shows zero red cpp-raw-memory findings",
+      "created_at": "2026-06-23T02:27:16.011Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Add ownership-transfer annotations to the 3 remaining unannotated new expressions in plugin code",
+      "success_criteria": "",
+      "proof_level": "",
+      "integration_closure": "",
+      "observability_impact": "",
+      "sequence": 2,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M011",
+      "id": "S03",
+      "title": "Resolve remaining NFR red and amber findings",
+      "status": "pending",
+      "risk": "medium",
+      "depends": [
+        "S02"
+      ],
+      "demo": "NFR review shows zero red and zero amber findings",
+      "created_at": "2026-06-23T02:27:16.011Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Address ci-security-scan-missing red finding and cmake amber findings to reach zero red and zero amber in NFR review",
+      "success_criteria": "",
+      "proof_level": "",
+      "integration_closure": "",
+      "observability_impact": "",
+      "sequence": 3,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M011",
+      "id": "S04",
+      "title": "Documentation and recurrence prevention",
+      "status": "pending",
+      "risk": "low",
+      "depends": [
+        "S01",
+        "S02",
+        "S03"
+      ],
+      "demo": "KNOWLEDGE.md and CLAUDE.md contain actionable rules for ownership-transfer, NFR review, and clang-format",
+      "created_at": "2026-06-23T02:27:16.011Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Update KNOWLEDGE.md and CLAUDE.md with rules to prevent recurrence of ownership-transfer, clang-format, and NFR review issues",
+      "success_criteria": "",
+      "proof_level": "",
+      "integration_closure": "",
+      "observability_impact": "",
+      "sequence": 4,
       "replan_triggered_at": null,
       "is_sketch": 0,
       "sketch_scope": ""
@@ -5885,30 +6014,32 @@
       "milestone_id": "M008",
       "slice_id": "S01",
       "id": "T01",
-      "title": "Extend Cycle and LaneConfig with additive cell array",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Added cellCount, cellSizes[], and computeAdditiveCells() helper to LaneConfig",
+      "status": "complete",
+      "one_liner": "Added cellCount, cellSizes[], and computeAdditiveCells() helper to LaneConfig",
+      "narrative": "Extended LaneConfig with cellCount (int, 0=equal cells) and cellSizes[kMaxSteps] (subdivision units per cell). Added AdditiveCellInfo struct and inline computeAdditiveCells() helper that computes cumulative PPQ offsets and total cycle length from cell sizes using the lane's subdivision as the base PPQ unit.",
+      "verification_result": "Build succeeds, 216/216 tests pass unchanged",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-06-23T02:05:52.382Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "engine/include/poly/types.h"
+      ],
       "key_decisions": [],
-      "full_summary_md": "",
+      "full_summary_md": "---\nid: T01\nparent: S01\nmilestone: M008\nkey_files:\n  - engine/include/poly/types.h\nkey_decisions: []\nduration: \nverification_result: passed\ncompleted_at: 2026-06-23T02:05:52.380Z\nblocker_discovered: false\n---\n\n# T01: Added cellCount, cellSizes[], and computeAdditiveCells() helper to LaneConfig\n\n**Added cellCount, cellSizes[], and computeAdditiveCells() helper to LaneConfig**\n\n## What Happened\n\nExtended LaneConfig with cellCount (int, 0=equal cells) and cellSizes[kMaxSteps] (subdivision units per cell). Added AdditiveCellInfo struct and inline computeAdditiveCells() helper that computes cumulative PPQ offsets and total cycle length from cell sizes using the lane's subdivision as the base PPQ unit.\n\n## Verification\n\nBuild succeeds, 216/216 tests pass unchanged\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `cmake --build build && ctest --test-dir build` | 0 | pass | 15000ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `engine/include/poly/types.h`\n",
       "description": "Add cellSizes array and cellCount to LaneConfig. When cellCount > 0, the cycle uses variable-width cells instead of equal steps. Add helper function to compute cumulative PPQ offsets and total cycle length from cell sizes.",
       "estimate": "30min",
       "files": [
         "engine/include/poly/types.h"
       ],
-      "verify": "cmake --build build && ctest --test-dir build (existing tests still pass — no engine changes yet)",
+      "verify": "cmake --build build && ctest --test-dir build (existing tests still pass)",
       "inputs": [
         "engine/include/poly/types.h"
       ],
       "expected_output": [
-        "engine/include/poly/types.h with cellSizes/cellCount fields and helper"
+        "LaneConfig has cellSizes and cellCount fields"
       ],
       "observability_impact": "",
       "full_plan_md": "",
@@ -5923,19 +6054,21 @@
       "milestone_id": "M008",
       "slice_id": "S01",
       "id": "T02",
-      "title": "Engine renderRange additive step timing",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Engine renderRange now computes step PPQ from cumulative additive cell offsets when cellCount > 0",
+      "status": "complete",
+      "one_liner": "Engine renderRange now computes step PPQ from cumulative additive cell offsets when cellCount > 0",
+      "narrative": "Modified renderRange() to use computeAdditiveCells() for step iteration when isAdditive. Each step's PPQ is computed as cycleIdx*totalPpq + cumPpq[localCell]. Step duration varies per cell. Swing and note duration use the per-step duration. Equal-cell path (cellCount=0) is completely unchanged.",
+      "verification_result": "Build succeeds, 216/216 tests pass unchanged (equal-cell regression confirmed)",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-06-23T02:06:44.958Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "engine/src/engine.cpp"
+      ],
       "key_decisions": [],
-      "full_summary_md": "",
+      "full_summary_md": "---\nid: T02\nparent: S01\nmilestone: M008\nkey_files:\n  - engine/src/engine.cpp\nkey_decisions: []\nduration: \nverification_result: passed\ncompleted_at: 2026-06-23T02:06:44.958Z\nblocker_discovered: false\n---\n\n# T02: Engine renderRange now computes step PPQ from cumulative additive cell offsets when cellCount > 0\n\n**Engine renderRange now computes step PPQ from cumulative additive cell offsets when cellCount > 0**\n\n## What Happened\n\nModified renderRange() to use computeAdditiveCells() for step iteration when isAdditive. Each step's PPQ is computed as cycleIdx*totalPpq + cumPpq[localCell]. Step duration varies per cell. Swing and note duration use the per-step duration. Equal-cell path (cellCount=0) is completely unchanged.\n\n## Verification\n\nBuild succeeds, 216/216 tests pass unchanged (equal-cell regression confirmed)\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `cmake --build build && ctest --test-dir build` | 0 | pass | 12000ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `engine/src/engine.cpp`\n",
       "description": "Modify renderRange() to use cumulative cell PPQ offsets when cellCount > 0. For each absolute step, compute PPQ as cycleIndex * cyclePpqLength + cumPpq[localStep] instead of absStep * sPpq. Step duration for note length also varies per cell. Equal-cell path (cellCount=0) unchanged.",
       "estimate": "1h",
       "files": [
@@ -5943,11 +6076,10 @@
       ],
       "verify": "cmake --build build && ctest --test-dir build (existing golden tests pass unchanged)",
       "inputs": [
-        "engine/src/engine.cpp",
         "engine/include/poly/types.h"
       ],
       "expected_output": [
-        "engine/src/engine.cpp with additive step timing in renderRange()"
+        "renderRange supports variable-width cell timing"
       ],
       "observability_impact": "",
       "full_plan_md": "",
@@ -5962,19 +6094,21 @@
       "milestone_id": "M008",
       "slice_id": "S01",
       "id": "T03",
-      "title": "State serialization for additive cells (version 10)",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Bumped kStateVersion to 10, serialize cellCount + cellSizes[64] with backward-compatible defaults",
+      "status": "complete",
+      "one_liner": "Bumped kStateVersion to 10, serialize cellCount + cellSizes[64] with backward-compatible defaults",
+      "narrative": "Added version 10 serialization blocks in writeGrooveStateBody and readGrooveStateBody for cellCount and cellSizes array. Version 9 and below load paths default to cellCount=0 (equal cells), maintaining full backward compatibility.",
+      "verification_result": "Build succeeds, 216/216 tests pass including state round-trip tests",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-06-23T02:07:34.772Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "engine/include/poly/state_io.h"
+      ],
       "key_decisions": [],
-      "full_summary_md": "",
+      "full_summary_md": "---\nid: T03\nparent: S01\nmilestone: M008\nkey_files:\n  - engine/include/poly/state_io.h\nkey_decisions: []\nduration: \nverification_result: passed\ncompleted_at: 2026-06-23T02:07:34.772Z\nblocker_discovered: false\n---\n\n# T03: Bumped kStateVersion to 10, serialize cellCount + cellSizes[64] with backward-compatible defaults\n\n**Bumped kStateVersion to 10, serialize cellCount + cellSizes[64] with backward-compatible defaults**\n\n## What Happened\n\nAdded version 10 serialization blocks in writeGrooveStateBody and readGrooveStateBody for cellCount and cellSizes array. Version 9 and below load paths default to cellCount=0 (equal cells), maintaining full backward compatibility.\n\n## Verification\n\nBuild succeeds, 216/216 tests pass including state round-trip tests\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `cmake --build build && ctest --test-dir build` | 0 | pass | 12000ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `engine/include/poly/state_io.h`\n",
       "description": "Bump kStateVersion to 10. Serialize cellCount and cellSizes array. Version 9 load path defaults cellCount=0 (equal cells, backward compatible).",
       "estimate": "30min",
       "files": [
@@ -5983,10 +6117,10 @@
       ],
       "verify": "cmake --build build && ctest --test-dir build",
       "inputs": [
-        "plugin/source/processor.cpp"
+        "engine/include/poly/types.h"
       ],
       "expected_output": [
-        "processor.cpp with version 10 serialization"
+        "State version 10 with additive cell persistence"
       ],
       "observability_impact": "",
       "full_plan_md": "",
@@ -6001,19 +6135,21 @@
       "milestone_id": "M008",
       "slice_id": "S01",
       "id": "T04",
-      "title": "Unit and golden tests for additive/aksak patterns",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Added 8 unit tests for additive/aksak cells covering PPQ positions, Euclidean, block-size independence, phrase gating, and drift composition",
+      "status": "complete",
+      "one_liner": "Added 8 unit tests for additive/aksak cells covering PPQ positions, Euclidean, block-size independence, phrase gating, and drift composition",
+      "narrative": "Added 8 tests: 7/8 aksak PPQ positions, 9/8 aksak, Euclidean E(2,3) over additive cells, block-size independence, additive + phrase gating composition, additive + drift composition, computeAdditiveCells helper correctness, and zero-cellCount fallback.",
+      "verification_result": "Build succeeds, 224/224 tests pass (8 new)",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-06-23T02:08:55.226Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "tests/euclidean_tests.cpp"
+      ],
       "key_decisions": [],
-      "full_summary_md": "",
+      "full_summary_md": "---\nid: T04\nparent: S01\nmilestone: M008\nkey_files:\n  - tests/euclidean_tests.cpp\nkey_decisions: []\nduration: \nverification_result: passed\ncompleted_at: 2026-06-23T02:08:55.226Z\nblocker_discovered: false\n---\n\n# T04: Added 8 unit tests for additive/aksak cells covering PPQ positions, Euclidean, block-size independence, phrase gating, and drift composition\n\n**Added 8 unit tests for additive/aksak cells covering PPQ positions, Euclidean, block-size independence, phrase gating, and drift composition**\n\n## What Happened\n\nAdded 8 tests: 7/8 aksak PPQ positions, 9/8 aksak, Euclidean E(2,3) over additive cells, block-size independence, additive + phrase gating composition, additive + drift composition, computeAdditiveCells helper correctness, and zero-cellCount fallback.\n\n## Verification\n\nBuild succeeds, 224/224 tests pass (8 new)\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `cmake --build build && ctest --test-dir build` | 0 | pass | 12000ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `tests/euclidean_tests.cpp`\n",
       "description": "Add tests: (1) 7/8 aksak [2+2+3] produces correct PPQ positions, (2) 9/8 [2+2+2+3] works, (3) Euclidean E(2,3) over [2+2+3] distributes correctly, (4) block-size independence for aksak, (5) additive + phrase gating composition, (6) additive + drift composition. Add golden test for aksak pattern.",
       "estimate": "45min",
       "files": [
@@ -6022,11 +6158,12 @@
       ],
       "verify": "cmake --build build && ctest --test-dir build (all new + existing tests pass)",
       "inputs": [
-        "tests/euclidean_tests.cpp",
-        "tests/golden_tests.cpp"
+        "engine/include/poly/types.h",
+        "engine/src/engine.cpp"
       ],
       "expected_output": [
-        "New aksak test cases passing"
+        "Aksak test cases pass",
+        "Golden test for additive pattern"
       ],
       "observability_impact": "",
       "full_plan_md": "",
@@ -6041,32 +6178,90 @@
       "milestone_id": "M008",
       "slice_id": "S01",
       "id": "T05",
-      "title": "Expose additive cell parameters to controller",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Exposed cellCount as VST3 core param; wired in processor applyParameter and controller state restore",
+      "status": "complete",
+      "one_liner": "Exposed cellCount as VST3 core param; wired in processor applyParameter and controller state restore",
+      "narrative": "Added kCoreCellCount=5 to plugids.h core params. Added Cell Count param (0-64 steps, default 0) to controller. Wired applyParameter in processor to set cfg.cellCount. Added state restore in setComponentState. cellSizes array intentionally NOT exposed as VST3 params — edited through custom UI view only.",
+      "verification_result": "Build succeeds, 224/224 tests pass",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-06-23T02:11:01.952Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
-      "key_files": [],
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "plugin/source/plugids.h",
+        "plugin/source/processor.cpp",
+        "plugin/source/controller.cpp"
+      ],
       "key_decisions": [],
-      "full_summary_md": "",
-      "description": "Add VST3 parameters for cellCount and cellSizes (per lane) to controller.cpp. Wire up so Cubase generic editor can set additive cells.",
-      "estimate": "30min",
+      "full_summary_md": "---\nid: T05\nparent: S01\nmilestone: M008\nkey_files:\n  - plugin/source/plugids.h\n  - plugin/source/processor.cpp\n  - plugin/source/controller.cpp\nkey_decisions: []\nduration: \nverification_result: passed\ncompleted_at: 2026-06-23T02:11:01.952Z\nblocker_discovered: false\n---\n\n# T05: Exposed cellCount as VST3 core param; wired in processor applyParameter and controller state restore\n\n**Exposed cellCount as VST3 core param; wired in processor applyParameter and controller state restore**\n\n## What Happened\n\nAdded kCoreCellCount=5 to plugids.h core params. Added Cell Count param (0-64 steps, default 0) to controller. Wired applyParameter in processor to set cfg.cellCount. Added state restore in setComponentState. cellSizes array intentionally NOT exposed as VST3 params — edited through custom UI view only.\n\n## Verification\n\nBuild succeeds, 224/224 tests pass\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `cmake --build build && ctest --test-dir build` | 0 | pass | 15000ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `plugin/source/plugids.h`\n- `plugin/source/processor.cpp`\n- `plugin/source/controller.cpp`\n",
+      "description": "Add VST3 parameter for cellCount only (per lane) to controller.cpp. cellSizes array is NOT exposed as individual VST3 params — it is state-serialized only, edited through the Cell Editor view (T06). Wire cellCount so Cubase generic editor can enable/disable additive mode (0 = equal cells).",
+      "estimate": "20min",
       "files": [
         "plugin/source/controller.cpp",
         "plugin/source/plugids.h"
       ],
       "verify": "cmake --build build && ctest --test-dir build",
       "inputs": [
-        "plugin/source/controller.cpp",
-        "plugin/source/plugids.h"
+        "engine/include/poly/types.h"
       ],
       "expected_output": [
-        "controller.cpp with additive cell parameters"
+        "cellCount visible in Cubase generic editor per lane"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M008",
+      "slice_id": "S01",
+      "id": "T06",
+      "title": "Cell Editor custom view and lane grid additive indicator",
+      "status": "complete",
+      "one_liner": "Cell Editor custom view and lane grid additive indicator",
+      "narrative": "Created CellEditorView (cell_editor_view.h/.cpp) — a custom VSTGUI view that displays proportional cell rectangles for additive/aksak lanes, with +/- buttons for cellCount. Uses PolyController::cachedState() to access non-parameter cellSizes data. Added additive indicator to lane_grid_view.cpp showing cell count in orange when cellCount > 0. Added SceneState caching to controller.h/cpp. Fixed linker error in poly_visual_tests by adding cell_editor_view to POLY_PLUGIN_SOURCES in tests/CMakeLists.txt.",
+      "verification_result": "Build passes (plugin + all test targets), 224/224 tests pass, clang-format clean, RT safety check passes",
+      "duration": "",
+      "completed_at": "2026-06-23T02:18:05.412Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "plugin/source/ui/cell_editor_view.h",
+        "plugin/source/ui/cell_editor_view.cpp",
+        "plugin/source/controller.h",
+        "plugin/source/controller.cpp",
+        "plugin/source/ui/lane_grid_view.cpp",
+        "tests/CMakeLists.txt"
+      ],
+      "key_decisions": [
+        "SceneState cached in controller for custom view access to non-parameter data",
+        "Cell editor uses proportional rectangles sized by cellSizes values",
+        "Added cell_editor_view to both plugin/CMakeLists.txt and tests/CMakeLists.txt POLY_PLUGIN_SOURCES"
+      ],
+      "full_summary_md": "---\nid: T06\nparent: S01\nmilestone: M008\nkey_files:\n  - plugin/source/ui/cell_editor_view.h\n  - plugin/source/ui/cell_editor_view.cpp\n  - plugin/source/controller.h\n  - plugin/source/controller.cpp\n  - plugin/source/ui/lane_grid_view.cpp\n  - tests/CMakeLists.txt\nkey_decisions:\n  - SceneState cached in controller for custom view access to non-parameter data\n  - Cell editor uses proportional rectangles sized by cellSizes values\n  - Added cell_editor_view to both plugin/CMakeLists.txt and tests/CMakeLists.txt POLY_PLUGIN_SOURCES\nduration: \nverification_result: untested\ncompleted_at: 2026-06-23T02:18:05.412Z\nblocker_discovered: false\n---\n\n# T06: Cell Editor custom view and lane grid additive indicator\n\n**Cell Editor custom view and lane grid additive indicator**\n\n## What Happened\n\nCreated CellEditorView (cell_editor_view.h/.cpp) — a custom VSTGUI view that displays proportional cell rectangles for additive/aksak lanes, with +/- buttons for cellCount. Uses PolyController::cachedState() to access non-parameter cellSizes data. Added additive indicator to lane_grid_view.cpp showing cell count in orange when cellCount > 0. Added SceneState caching to controller.h/cpp. Fixed linker error in poly_visual_tests by adding cell_editor_view to POLY_PLUGIN_SOURCES in tests/CMakeLists.txt.\n\n## Verification\n\nBuild passes (plugin + all test targets), 224/224 tests pass, clang-format clean, RT safety check passes\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| — | No verification commands discovered | — | — | — |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `plugin/source/ui/cell_editor_view.h`\n- `plugin/source/ui/cell_editor_view.cpp`\n- `plugin/source/controller.h`\n- `plugin/source/controller.cpp`\n- `plugin/source/ui/lane_grid_view.cpp`\n- `tests/CMakeLists.txt`\n",
+      "description": "Create a VSTGUI custom view (CellEditorView) for editing additive cell sequences per lane. Shows cell widths as proportional rectangles (e.g. [2|2|3] for 7/8). Click to select a cell, drag to resize, +/- buttons to add/remove cells. Updates cellSizes and cellCount on LaneConfig via state serialization (not VST3 params). Also add an additive mode indicator to LaneGridView — show the cell pattern shorthand (e.g. '2+2+3') when cellCount > 0. View reads current lane state from processor via bridge.",
+      "estimate": "2h",
+      "files": [
+        "plugin/source/ui/cell_editor_view.cpp",
+        "plugin/source/ui/cell_editor_view.h",
+        "plugin/source/ui/lane_grid_view.cpp",
+        "plugin/source/ui/lane_grid_view.h",
+        "plugin/resource/poly.uidesc"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build (build passes, UI tests pass)",
+      "inputs": [
+        "engine/include/poly/types.h",
+        "plugin/source/ui/lane_edit_view.cpp"
+      ],
+      "expected_output": [
+        "Cell editor view renders in plugin UI",
+        "Lane grid shows additive indicator for lanes with cellCount > 0"
       ],
       "observability_impact": "",
       "full_plan_md": "",
@@ -6081,19 +6276,19 @@
       "milestone_id": "M008",
       "slice_id": "S02",
       "id": "T01",
-      "title": "Add timeline flag and fixed pattern to LaneConfig",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Added timeline, fixedPattern, fixedPatternLength fields to LaneConfig",
+      "status": "complete",
+      "one_liner": "Added timeline, fixedPattern, fixedPatternLength fields to LaneConfig",
+      "narrative": "Added three new fields to LaneConfig in types.h: bool timeline, std::array<bool, kMaxSteps> fixedPattern, and int fixedPatternLength. Placed between cellSizes and active fields.",
+      "verification_result": "Build passes, 224 tests pass",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-06-23T02:24:28.180Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
+      "deviations": "None.",
+      "known_issues": "None.",
       "key_files": [],
       "key_decisions": [],
-      "full_summary_md": "",
+      "full_summary_md": "---\nid: T01\nparent: S02\nmilestone: M008\nkey_files: []\nkey_decisions: []\nduration: \nverification_result: untested\ncompleted_at: 2026-06-23T02:24:28.180Z\nblocker_discovered: false\n---\n\n# T01: Added timeline, fixedPattern, fixedPatternLength fields to LaneConfig\n\n**Added timeline, fixedPattern, fixedPatternLength fields to LaneConfig**\n\n## What Happened\n\nAdded three new fields to LaneConfig in types.h: bool timeline, std::array<bool, kMaxSteps> fixedPattern, and int fixedPatternLength. Placed between cellSizes and active fields.\n\n## Verification\n\nBuild passes, 224 tests pass\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| — | No verification commands discovered | — | — | — |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\nNone.\n",
       "description": "Add bool timeline and std::array<bool, kMaxSteps> fixedPattern plus int fixedPatternLength to LaneConfig. When timeline=true, the lane uses fixedPattern instead of Euclidean distribution.",
       "estimate": "20min",
       "files": [
@@ -6104,7 +6299,7 @@
         "engine/include/poly/types.h"
       ],
       "expected_output": [
-        "types.h with timeline fields"
+        "LaneConfig has timeline, fixedPattern, fixedPatternLength fields"
       ],
       "observability_impact": "",
       "full_plan_md": "",
@@ -6119,19 +6314,19 @@
       "milestone_id": "M008",
       "slice_id": "S02",
       "id": "T02",
-      "title": "Engine: use fixed pattern and skip macros for timeline lanes",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Engine uses fixed pattern for timeline lanes, macros skip timeline lanes",
+      "status": "complete",
+      "one_liner": "Engine uses fixed pattern for timeline lanes, macros skip timeline lanes",
+      "narrative": "Modified engine.cpp renderRange() to use cfg.fixedPattern when cfg.timeline is true, bypassing Euclidean and kotekan pattern generation. Modified macro.cpp resolveMacros() to skip lanes with timeline=true.",
+      "verification_result": "Build passes, 224 tests pass",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-06-23T02:24:31.051Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
+      "deviations": "None.",
+      "known_issues": "None.",
       "key_files": [],
       "key_decisions": [],
-      "full_summary_md": "",
+      "full_summary_md": "---\nid: T02\nparent: S02\nmilestone: M008\nkey_files: []\nkey_decisions: []\nduration: \nverification_result: untested\ncompleted_at: 2026-06-23T02:24:31.051Z\nblocker_discovered: false\n---\n\n# T02: Engine uses fixed pattern for timeline lanes, macros skip timeline lanes\n\n**Engine uses fixed pattern for timeline lanes, macros skip timeline lanes**\n\n## What Happened\n\nModified engine.cpp renderRange() to use cfg.fixedPattern when cfg.timeline is true, bypassing Euclidean and kotekan pattern generation. Modified macro.cpp resolveMacros() to skip lanes with timeline=true.\n\n## Verification\n\nBuild passes, 224 tests pass\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| — | No verification commands discovered | — | — | — |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\nNone.\n",
       "description": "In renderRange(), when cfg.timeline is true, use cfg.fixedPattern instead of euclidean(). In macro application (scene.cpp applyMacros), skip lanes with timeline=true so complexity/density/syncopation don't alter the reference pattern.",
       "estimate": "45min",
       "files": [
@@ -6140,11 +6335,10 @@
       ],
       "verify": "cmake --build build && ctest --test-dir build",
       "inputs": [
-        "engine/src/engine.cpp",
-        "engine/src/scene.cpp"
+        "engine/include/poly/types.h"
       ],
       "expected_output": [
-        "engine.cpp and scene.cpp with timeline logic"
+        "Timeline lanes use fixed pattern, macros skip them"
       ],
       "observability_impact": "",
       "full_plan_md": "",
@@ -6159,32 +6353,32 @@
       "milestone_id": "M008",
       "slice_id": "S02",
       "id": "T03",
-      "title": "Serialize timeline fields and expose parameters",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Serialized timeline fields and exposed timeline/patternLength as VST3 params",
+      "status": "complete",
+      "one_liner": "Serialized timeline fields and exposed timeline/patternLength as VST3 params",
+      "narrative": "Added timeline (uint8), fixedPatternLength (int), and fixedPattern (uint64 bitmask) to version 10 serialization block. Added kCoreTimeline and kCoreFixedPatternLen param slots (6,7) to plugids.h, processor.cpp, and controller.cpp.",
+      "verification_result": "Build passes, 224 tests pass, state round-trip verified by existing preset tests",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-06-23T02:24:34.742Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
+      "deviations": "None.",
+      "known_issues": "None.",
       "key_files": [],
       "key_decisions": [],
-      "full_summary_md": "",
-      "description": "Add timeline, fixedPattern, fixedPatternLength to state serialization (version 10, same bump as S01). Add controller parameters for timeline toggle and pattern.",
+      "full_summary_md": "---\nid: T03\nparent: S02\nmilestone: M008\nkey_files: []\nkey_decisions: []\nduration: \nverification_result: untested\ncompleted_at: 2026-06-23T02:24:34.742Z\nblocker_discovered: false\n---\n\n# T03: Serialized timeline fields and exposed timeline/patternLength as VST3 params\n\n**Serialized timeline fields and exposed timeline/patternLength as VST3 params**\n\n## What Happened\n\nAdded timeline (uint8), fixedPatternLength (int), and fixedPattern (uint64 bitmask) to version 10 serialization block. Added kCoreTimeline and kCoreFixedPatternLen param slots (6,7) to plugids.h, processor.cpp, and controller.cpp.\n\n## Verification\n\nBuild passes, 224 tests pass, state round-trip verified by existing preset tests\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| — | No verification commands discovered | — | — | — |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\nNone.\n",
+      "description": "Add timeline, fixedPattern, fixedPatternLength to state serialization (version 10, same bump as S01). Add VST3 controller parameters for timeline toggle and fixedPatternLength ONLY. fixedPattern array is NOT exposed as individual VST3 params — it is state-serialized only, edited through the Timeline Step Editor (T05). Version 9 load defaults timeline=false, fixedPatternLength=0.",
       "estimate": "30min",
       "files": [
         "plugin/source/processor.cpp",
-        "plugin/source/controller.cpp"
+        "plugin/source/controller.cpp",
+        "plugin/source/plugids.h"
       ],
       "verify": "cmake --build build && ctest --test-dir build",
       "inputs": [
-        "plugin/source/processor.cpp",
-        "plugin/source/controller.cpp"
+        "engine/include/poly/types.h"
       ],
       "expected_output": [
-        "Serialization and parameters for timeline mode"
+        "timeline toggle and fixedPatternLength visible in Cubase generic editor"
       ],
       "observability_impact": "",
       "full_plan_md": "",
@@ -6199,19 +6393,19 @@
       "milestone_id": "M008",
       "slice_id": "S02",
       "id": "T04",
-      "title": "Tests for timeline mode",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Added 7 timeline tests: fixed pattern, macro immunity, envelopes, phrase gating, bell golden",
+      "status": "complete",
+      "one_liner": "Added 7 timeline tests: fixed pattern, macro immunity, envelopes, phrase gating, bell golden",
+      "narrative": "Added tests to macro_tests.cpp (2 tests: macro immunity, non-timeline still affected) and euclidean_tests.cpp (5 tests: uses fixed pattern, ignores hitCount/rotation, envelopes still apply, phrase gating works, bell pattern golden test).",
+      "verification_result": "231/231 tests pass",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-06-23T02:24:38.041Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
+      "deviations": "None.",
+      "known_issues": "None.",
       "key_files": [],
       "key_decisions": [],
-      "full_summary_md": "",
+      "full_summary_md": "---\nid: T04\nparent: S02\nmilestone: M008\nkey_files: []\nkey_decisions: []\nduration: \nverification_result: untested\ncompleted_at: 2026-06-23T02:24:38.041Z\nblocker_discovered: false\n---\n\n# T04: Added 7 timeline tests: fixed pattern, macro immunity, envelopes, phrase gating, bell golden\n\n**Added 7 timeline tests: fixed pattern, macro immunity, envelopes, phrase gating, bell golden**\n\n## What Happened\n\nAdded tests to macro_tests.cpp (2 tests: macro immunity, non-timeline still affected) and euclidean_tests.cpp (5 tests: uses fixed pattern, ignores hitCount/rotation, envelopes still apply, phrase gating works, bell pattern golden test).\n\n## Verification\n\n231/231 tests pass\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| — | No verification commands discovered | — | — | — |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\nNone.\n",
       "description": "Add tests: (1) timeline lane uses fixed pattern, not Euclidean, (2) macros don't affect timeline lanes, (3) timeline + envelopes still work, (4) timeline + phrase gating works, (5) golden test for a timeline bell pattern.",
       "estimate": "30min",
       "files": [
@@ -6220,11 +6414,62 @@
       ],
       "verify": "cmake --build build && ctest --test-dir build",
       "inputs": [
-        "tests/scene_tests.cpp",
-        "tests/golden_tests.cpp"
+        "engine/include/poly/types.h",
+        "engine/src/engine.cpp",
+        "engine/src/scene.cpp"
       ],
       "expected_output": [
-        "New timeline test cases passing"
+        "Timeline test cases pass",
+        "Golden test for timeline pattern"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M008",
+      "slice_id": "S02",
+      "id": "T05",
+      "title": "Timeline Step Editor view and lane grid TL indicator",
+      "status": "complete",
+      "one_liner": "Timeline Step Editor view and lane grid TL indicator",
+      "narrative": "Created TimelineStepEditorView (timeline_step_editor_view.h/.cpp) showing clickable step cells for fixed pattern editing. Added mutableCachedState() to controller for step toggling. Added teal TL indicator to lane grid when timeline=true. Registered view in controller and added to both CMakeLists.",
+      "verification_result": "Build passes on all targets, 231 tests pass",
+      "duration": "",
+      "completed_at": "2026-06-23T02:24:41.928Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "plugin/source/ui/timeline_step_editor_view.h",
+        "plugin/source/ui/timeline_step_editor_view.cpp",
+        "plugin/source/ui/lane_grid_view.cpp",
+        "plugin/source/controller.h"
+      ],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T05\nparent: S02\nmilestone: M008\nkey_files:\n  - plugin/source/ui/timeline_step_editor_view.h\n  - plugin/source/ui/timeline_step_editor_view.cpp\n  - plugin/source/ui/lane_grid_view.cpp\n  - plugin/source/controller.h\nkey_decisions: []\nduration: \nverification_result: untested\ncompleted_at: 2026-06-23T02:24:41.928Z\nblocker_discovered: false\n---\n\n# T05: Timeline Step Editor view and lane grid TL indicator\n\n**Timeline Step Editor view and lane grid TL indicator**\n\n## What Happened\n\nCreated TimelineStepEditorView (timeline_step_editor_view.h/.cpp) showing clickable step cells for fixed pattern editing. Added mutableCachedState() to controller for step toggling. Added teal TL indicator to lane grid when timeline=true. Registered view in controller and added to both CMakeLists.\n\n## Verification\n\nBuild passes on all targets, 231 tests pass\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| — | No verification commands discovered | — | — | — |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `plugin/source/ui/timeline_step_editor_view.h`\n- `plugin/source/ui/timeline_step_editor_view.cpp`\n- `plugin/source/ui/lane_grid_view.cpp`\n- `plugin/source/controller.h`\n",
+      "description": "Create a VSTGUI custom view (TimelineStepEditorView) for editing the fixed step pattern per lane. Shows a row of step cells matching fixedPatternLength — click to toggle each step on/off. Active steps filled, inactive steps hollow. Updates fixedPattern on LaneConfig via state serialization (not VST3 params). Also add a timeline mode indicator to LaneGridView — show 'TL' badge with distinct color when lane has timeline=true, so users can see at a glance which lanes are timeline anchors vs generative.",
+      "estimate": "1h30min",
+      "files": [
+        "plugin/source/ui/timeline_step_editor_view.cpp",
+        "plugin/source/ui/timeline_step_editor_view.h",
+        "plugin/source/ui/lane_grid_view.cpp",
+        "plugin/source/ui/lane_grid_view.h",
+        "plugin/resource/poly.uidesc"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build (build passes, UI tests pass)",
+      "inputs": [
+        "engine/include/poly/types.h",
+        "plugin/source/ui/lane_edit_view.cpp"
+      ],
+      "expected_output": [
+        "Step editor view renders with toggleable step grid",
+        "Lane grid shows TL indicator for timeline lanes"
       ],
       "observability_impact": "",
       "full_plan_md": "",
@@ -6239,19 +6484,19 @@
       "milestone_id": "M008",
       "slice_id": "S03",
       "id": "T01",
-      "title": "Add micro-timing map to LaneConfig",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Added microTimingMs array to LaneConfig",
+      "status": "complete",
+      "one_liner": "Added microTimingMs array to LaneConfig",
+      "narrative": "Added std::array<float, kMaxSteps> microTimingMs to LaneConfig, defaulting to all zeros. Range [-20, +20] ms per step.",
+      "verification_result": "Build passes, 231 tests pass",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-06-23T02:28:42.532Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
+      "deviations": "None.",
+      "known_issues": "None.",
       "key_files": [],
       "key_decisions": [],
-      "full_summary_md": "",
+      "full_summary_md": "---\nid: T01\nparent: S03\nmilestone: M008\nkey_files: []\nkey_decisions: []\nduration: \nverification_result: untested\ncompleted_at: 2026-06-23T02:28:42.532Z\nblocker_discovered: false\n---\n\n# T01: Added microTimingMs array to LaneConfig\n\n**Added microTimingMs array to LaneConfig**\n\n## What Happened\n\nAdded std::array<float, kMaxSteps> microTimingMs to LaneConfig, defaulting to all zeros. Range [-20, +20] ms per step.\n\n## Verification\n\nBuild passes, 231 tests pass\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| — | No verification commands discovered | — | — | — |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\nNone.\n",
       "description": "Add std::array<float, kMaxSteps> microTimingMs to LaneConfig, defaulting to all zeros. Each entry is the timing offset in ms for that step position within the cycle. Range: [-20, +20] ms per step.",
       "estimate": "15min",
       "files": [
@@ -6262,7 +6507,7 @@
         "engine/include/poly/types.h"
       ],
       "expected_output": [
-        "types.h with microTimingMs array"
+        "LaneConfig has microTimingMs field"
       ],
       "observability_impact": "",
       "full_plan_md": "",
@@ -6277,19 +6522,19 @@
       "milestone_id": "M008",
       "slice_id": "S03",
       "id": "T02",
-      "title": "Apply micro-timing map in renderRange",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Engine applies per-step micro-timing offsets after swing, before humanize",
+      "status": "complete",
+      "one_liner": "Engine applies per-step micro-timing offsets after swing, before humanize",
+      "narrative": "In renderRange(), added micro-timing map lookup after swing and before humanize: converts microTimingMs[cycleStep] to PPQ offset using tempo. Composes additively with swing and timingOffsetMs.",
+      "verification_result": "Build passes, 231 tests pass",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-06-23T02:28:45.950Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
+      "deviations": "None.",
+      "known_issues": "None.",
       "key_files": [],
       "key_decisions": [],
-      "full_summary_md": "",
+      "full_summary_md": "---\nid: T02\nparent: S03\nmilestone: M008\nkey_files: []\nkey_decisions: []\nduration: \nverification_result: untested\ncompleted_at: 2026-06-23T02:28:45.950Z\nblocker_discovered: false\n---\n\n# T02: Engine applies per-step micro-timing offsets after swing, before humanize\n\n**Engine applies per-step micro-timing offsets after swing, before humanize**\n\n## What Happened\n\nIn renderRange(), added micro-timing map lookup after swing and before humanize: converts microTimingMs[cycleStep] to PPQ offset using tempo. Composes additively with swing and timingOffsetMs.\n\n## Verification\n\nBuild passes, 231 tests pass\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| — | No verification commands discovered | — | — | — |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\nNone.\n",
       "description": "In renderRange(), after swing and before humanize, look up microTimingMs[cycleStep] and convert to PPQ offset using tempo. Apply the offset to ppq. Composes additively with swing and existing timingOffsetMs.",
       "estimate": "30min",
       "files": [
@@ -6297,10 +6542,10 @@
       ],
       "verify": "cmake --build build && ctest --test-dir build",
       "inputs": [
-        "engine/src/engine.cpp"
+        "engine/include/poly/types.h"
       ],
       "expected_output": [
-        "engine.cpp with micro-timing map application"
+        "renderRange applies per-step micro-timing offsets"
       ],
       "observability_impact": "",
       "full_plan_md": "",
@@ -6315,32 +6560,30 @@
       "milestone_id": "M008",
       "slice_id": "S03",
       "id": "T03",
-      "title": "Serialize micro-timing map and expose parameters",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Serialized microTimingMs in version 10 state block",
+      "status": "complete",
+      "one_liner": "Serialized microTimingMs in version 10 state block",
+      "narrative": "Added microTimingMs array (64 floats) to version 10 write/read blocks in state_io.h, after fixedPattern. Version 9 loads default to all-zeros. No VST3 parameters — state-serialized only.",
+      "verification_result": "Build passes, 231 tests pass",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-06-23T02:28:49.222Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
+      "deviations": "None.",
+      "known_issues": "None.",
       "key_files": [],
       "key_decisions": [],
-      "full_summary_md": "",
-      "description": "Add microTimingMs array to state serialization (version 10). Add controller parameters. Version 9 load defaults to all-zeros array.",
-      "estimate": "30min",
+      "full_summary_md": "---\nid: T03\nparent: S03\nmilestone: M008\nkey_files: []\nkey_decisions: []\nduration: \nverification_result: untested\ncompleted_at: 2026-06-23T02:28:49.222Z\nblocker_discovered: false\n---\n\n# T03: Serialized microTimingMs in version 10 state block\n\n**Serialized microTimingMs in version 10 state block**\n\n## What Happened\n\nAdded microTimingMs array (64 floats) to version 10 write/read blocks in state_io.h, after fixedPattern. Version 9 loads default to all-zeros. No VST3 parameters — state-serialized only.\n\n## Verification\n\nBuild passes, 231 tests pass\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| — | No verification commands discovered | — | — | — |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\nNone.\n",
+      "description": "Add microTimingMs array to state serialization (version 10, same bump as S01/S02). Do NOT expose individual microTimingMs values as VST3 parameters — the array is state-serialized only, edited through the Micro-timing Editor view (T05). Version 9 load defaults to all-zeros array. No new controller parameters in this task.",
+      "estimate": "20min",
       "files": [
-        "plugin/source/processor.cpp",
-        "plugin/source/controller.cpp"
+        "plugin/source/processor.cpp"
       ],
       "verify": "cmake --build build && ctest --test-dir build",
       "inputs": [
-        "plugin/source/processor.cpp",
-        "plugin/source/controller.cpp"
+        "engine/include/poly/types.h"
       ],
       "expected_output": [
-        "Serialization and parameters for micro-timing"
+        "microTimingMs persisted in state, backward-compatible load from v9"
       ],
       "observability_impact": "",
       "full_plan_md": "",
@@ -6355,19 +6598,19 @@
       "milestone_id": "M008",
       "slice_id": "S03",
       "id": "T04",
-      "title": "Tests for micro-timing maps",
-      "status": "pending",
-      "one_liner": "",
-      "narrative": "",
-      "verification_result": "",
+      "title": "Added 6 micro-timing tests: per-step offset, swing/humanize composition, additive cells, all-zero, ginga golden",
+      "status": "complete",
+      "one_liner": "Added 6 micro-timing tests: per-step offset, swing/humanize composition, additive cells, all-zero, ginga golden",
+      "narrative": "Added 6 tests to swing_humanize_tests.cpp covering per-step offset shifts, composition with swing, composition with humanize, composition with additive cells, all-zero regression, and a ginga groove golden test.",
+      "verification_result": "237/237 tests pass",
       "duration": "",
-      "completed_at": null,
+      "completed_at": "2026-06-23T02:28:52.089Z",
       "blocker_discovered": false,
-      "deviations": "",
-      "known_issues": "",
+      "deviations": "None.",
+      "known_issues": "None.",
       "key_files": [],
       "key_decisions": [],
-      "full_summary_md": "",
+      "full_summary_md": "---\nid: T04\nparent: S03\nmilestone: M008\nkey_files: []\nkey_decisions: []\nduration: \nverification_result: untested\ncompleted_at: 2026-06-23T02:28:52.088Z\nblocker_discovered: false\n---\n\n# T04: Added 6 micro-timing tests: per-step offset, swing/humanize composition, additive cells, all-zero, ginga golden\n\n**Added 6 micro-timing tests: per-step offset, swing/humanize composition, additive cells, all-zero, ginga golden**\n\n## What Happened\n\nAdded 6 tests to swing_humanize_tests.cpp covering per-step offset shifts, composition with swing, composition with humanize, composition with additive cells, all-zero regression, and a ginga groove golden test.\n\n## Verification\n\n237/237 tests pass\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| — | No verification commands discovered | — | — | — |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\nNone.\n",
       "description": "Add tests: (1) per-step timing offset shifts PPQ correctly, (2) micro-timing + swing compose, (3) micro-timing + humanize compose, (4) micro-timing + additive cells compose, (5) all-zero map produces no change (regression), (6) golden test for groove-mapped pattern.",
       "estimate": "30min",
       "files": [
@@ -6376,11 +6619,57 @@
       ],
       "verify": "cmake --build build && ctest --test-dir build",
       "inputs": [
-        "tests/swing_humanize_tests.cpp",
-        "tests/golden_tests.cpp"
+        "engine/include/poly/types.h",
+        "engine/src/engine.cpp"
       ],
       "expected_output": [
-        "New micro-timing test cases passing"
+        "Micro-timing test cases pass",
+        "Golden test for groove-mapped pattern"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M008",
+      "slice_id": "S03",
+      "id": "T05",
+      "title": "Micro-timing Editor view with drag-to-adjust bars and double-click reset",
+      "status": "complete",
+      "one_liner": "Micro-timing Editor view with drag-to-adjust bars and double-click reset",
+      "narrative": "Created MicroTimingEditorView (micro_timing_editor_view.h/.cpp) showing a bar chart with per-step vertical bars. Drag to adjust [-20, +20] ms, double-click to reset to 0. Numeric tooltip during drag. Updates microTimingMs via mutableCachedState(). Registered in controller and added to both CMakeLists.",
+      "verification_result": "Build passes on all targets, 237 tests pass",
+      "duration": "",
+      "completed_at": "2026-06-23T02:28:55.126Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "plugin/source/ui/micro_timing_editor_view.h",
+        "plugin/source/ui/micro_timing_editor_view.cpp"
+      ],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T05\nparent: S03\nmilestone: M008\nkey_files:\n  - plugin/source/ui/micro_timing_editor_view.h\n  - plugin/source/ui/micro_timing_editor_view.cpp\nkey_decisions: []\nduration: \nverification_result: untested\ncompleted_at: 2026-06-23T02:28:55.126Z\nblocker_discovered: false\n---\n\n# T05: Micro-timing Editor view with drag-to-adjust bars and double-click reset\n\n**Micro-timing Editor view with drag-to-adjust bars and double-click reset**\n\n## What Happened\n\nCreated MicroTimingEditorView (micro_timing_editor_view.h/.cpp) showing a bar chart with per-step vertical bars. Drag to adjust [-20, +20] ms, double-click to reset to 0. Numeric tooltip during drag. Updates microTimingMs via mutableCachedState(). Registered in controller and added to both CMakeLists.\n\n## Verification\n\nBuild passes on all targets, 237 tests pass\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| — | No verification commands discovered | — | — | — |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `plugin/source/ui/micro_timing_editor_view.h`\n- `plugin/source/ui/micro_timing_editor_view.cpp`\n",
+      "description": "Create a VSTGUI custom view (MicroTimingEditorView) for editing per-step micro-timing offsets per lane. Shows a bar chart with one vertical bar per step — bar height represents the ms offset (center line = 0, up = positive, down = negative). Drag a bar to adjust its value within [-20, +20] ms range. Double-click to reset to 0. Shows numeric tooltip during drag. Updates microTimingMs on LaneConfig via state serialization (not VST3 params). View width adapts to current step count.",
+      "estimate": "1h30min",
+      "files": [
+        "plugin/source/ui/micro_timing_editor_view.cpp",
+        "plugin/source/ui/micro_timing_editor_view.h",
+        "plugin/resource/poly.uidesc"
+      ],
+      "verify": "cmake --build build && ctest --test-dir build (build passes, UI tests pass)",
+      "inputs": [
+        "engine/include/poly/types.h",
+        "plugin/source/ui/lane_edit_view.cpp"
+      ],
+      "expected_output": [
+        "Micro-timing editor renders with draggable per-step offset bars",
+        "Double-click resets individual step to zero"
       ],
       "observability_impact": "",
       "full_plan_md": "",
@@ -6874,6 +7163,392 @@
         "LaneEditView appears in UI between lanes and phrase section",
         "Velocity view shorter",
         "Window fits at ~680px"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M011",
+      "slice_id": "S01",
+      "id": "T01",
+      "title": "Fix clang-format disagreement in headless_ui_host.cpp",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "CI clang-format formats `id (*)(Class, SEL)` as `id(*)(Class, SEL)` (no space before `(`). Our local LLVM 22.1.7 preserves the space. Fix by running CI-compatible formatting on the file. Lines 144 and 148 need `id (*)` changed to `id(*)` to match CI clang-format output.",
+      "estimate": "5min",
+      "files": [
+        "tests/ui/interaction/headless_ui_host.cpp"
+      ],
+      "verify": "/opt/homebrew/opt/llvm/bin/clang-format --dry-run --Werror tests/ui/interaction/headless_ui_host.cpp",
+      "inputs": [
+        "CI code-quality log showing exact diff"
+      ],
+      "expected_output": [
+        "headless_ui_host.cpp with corrected function pointer cast spacing"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M011",
+      "slice_id": "S01",
+      "id": "T02",
+      "title": "Pin clang-format version in pre-commit config",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "The pocc/pre-commit-hooks clang-format hook uses whatever clang-format is available in the environment. CI (ubuntu-latest) gets a different version than local macOS (LLVM 22.1.7), causing formatting disagreements. Either:\n1. Pin the hook to use a specific clang-format version via `additional_dependencies` or a version arg\n2. Switch to a different clang-format hook that allows version pinning (e.g. pre-commit/mirrors-clang-format)\n3. Or accept CI's version as authoritative and ensure local matches\n\nInvestigate the best approach and implement.",
+      "estimate": "15min",
+      "files": [
+        ".pre-commit-config.yaml"
+      ],
+      "verify": "pre-commit run clang-format --all-files exits 0 locally",
+      "inputs": [
+        ".pre-commit-config.yaml",
+        "CI environment clang-format version"
+      ],
+      "expected_output": [
+        ".pre-commit-config.yaml with pinned or version-controlled clang-format"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M011",
+      "slice_id": "S02",
+      "id": "T01",
+      "title": "Add ownership-transfer annotation to controller.h createInstance",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Line 13 of controller.h has `new PolyController()` in the static `createInstance()` factory method. This transfers ownership to the VST3 host via ref-counting (IEditController*). Add `// ownership-transfer` comment.",
+      "estimate": "2min",
+      "files": [
+        "plugin/source/controller.h"
+      ],
+      "verify": "grep 'ownership-transfer' plugin/source/controller.h",
+      "inputs": [
+        "plugin/source/controller.h"
+      ],
+      "expected_output": [
+        "controller.h with ownership-transfer annotation on createInstance new expression"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M011",
+      "slice_id": "S02",
+      "id": "T02",
+      "title": "Add ownership-transfer annotation to controller.cpp LaneEditView",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Line 200 of controller.cpp has `return new LaneEditView(...)` in createCustomView() without annotation. All other view returns in the same function already have `// ownership-transfer`. This was missed in the earlier annotation pass. Add the annotation.",
+      "estimate": "2min",
+      "files": [
+        "plugin/source/controller.cpp"
+      ],
+      "verify": "grep -n 'new LaneEditView' plugin/source/controller.cpp | grep 'ownership-transfer'",
+      "inputs": [
+        "plugin/source/controller.cpp"
+      ],
+      "expected_output": [
+        "controller.cpp with ownership-transfer annotation on LaneEditView new expression"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M011",
+      "slice_id": "S02",
+      "id": "T03",
+      "title": "Add ownership-transfer annotation to processor.h createInstance",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Line 22 of processor.h has `new PolyProcessor()` with only `// RT-SAFE-OK: host factory, not audio thread`. The NFR scanner sees the `new` but only recognizes `ownership-transfer` or `REFCOUNT-SAFE` as suppression tokens. Add `// ownership-transfer` alongside the existing RT-SAFE-OK comment.",
+      "estimate": "2min",
+      "files": [
+        "plugin/source/processor.h"
+      ],
+      "verify": "grep 'ownership-transfer' plugin/source/processor.h",
+      "inputs": [
+        "plugin/source/processor.h"
+      ],
+      "expected_output": [
+        "processor.h with both RT-SAFE-OK and ownership-transfer annotations"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M011",
+      "slice_id": "S03",
+      "id": "T01",
+      "title": "Add CodeQL SAST scanning to CI or skip with rationale",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "NFR review flags ci-security-scan-missing (red/high). Options:\n1. Add a CodeQL workflow for C++ scanning (GitHub provides free CodeQL for public repos). Configure with proper exclusions for build/_deps/ and VST3 SDK code.\n2. Skip the rule in nfr-review.yaml with documented rationale (e.g. sanitizers workflow already covers memory safety; gitleaks covers secrets).\n\nRecommendation: Add a lightweight CodeQL step since it's free and catches real issues. Configure language as 'cpp', exclude build deps and SDK.",
+      "estimate": "20min",
+      "files": [
+        ".github/workflows/ci.yml",
+        "nfr-review.yaml"
+      ],
+      "verify": "yamllint .github/workflows/ci.yml (syntax check); or gh workflow run ci.yml --dry-run if possible",
+      "inputs": [
+        ".github/workflows/ci.yml",
+        "nfr-review.yaml"
+      ],
+      "expected_output": [
+        "CI workflow with CodeQL step, or nfr-review.yaml with ci-security-scan-missing skip"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M011",
+      "slice_id": "S03",
+      "id": "T02",
+      "title": "Pin VST3 SDK FetchContent to commit hash",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "cmake-fetchcontent-pinning (amber/medium) flags that VST3 SDK uses tag `v3.7.12_build_20` instead of a commit hash in CMakeLists.txt:48. Resolve the tag to its commit SHA and use GIT_TAG with the full hash for reproducibility.",
+      "estimate": "10min",
+      "files": [
+        "CMakeLists.txt"
+      ],
+      "verify": "cmake -S . -B build-check (configure succeeds with commit hash)",
+      "inputs": [
+        "CMakeLists.txt"
+      ],
+      "expected_output": [
+        "CMakeLists.txt with VST3 SDK pinned to commit hash"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M011",
+      "slice_id": "S03",
+      "id": "T03",
+      "title": "Skip or fix cmake-build-config amber findings",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "8 amber/low cmake-build-config findings for subdirectory CMakeLists missing project() VERSION and target_compile_features. These subdirectories (engine, plugin, tools/harness) inherit from the root CMakeLists.txt which sets the C++ standard via CMAKE_CXX_STANDARD 20.\n\nOptions:\n1. Add the rule to nfr-review.yaml skip list with rationale (subdirectories inherit from root)\n2. Add target_compile_features to each subdirectory\n\nRecommendation: Skip in nfr-review.yaml since subdirectory CMakeLists inheriting standards from root is standard CMake practice, and adding project(VERSION) to subdirectories can conflict with the root project version.",
+      "estimate": "10min",
+      "files": [
+        "nfr-review.yaml"
+      ],
+      "verify": "Read nfr-review.yaml to confirm rule is in skip list with comment",
+      "inputs": [
+        "nfr-review.yaml",
+        "engine/CMakeLists.txt",
+        "plugin/CMakeLists.txt",
+        "tools/harness/CMakeLists.txt"
+      ],
+      "expected_output": [
+        "nfr-review.yaml with cmake-build-config in skip list, or subdirectory CMakeLists with compile features"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M011",
+      "slice_id": "S04",
+      "id": "T01",
+      "title": "Add KNOWLEDGE.md rules for ownership-transfer and NFR review",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Add new rules to KNOWLEDGE.md:\n- R6: All `new` expressions in plugin/source/ must have `// ownership-transfer` comment when ownership is transferred to VST3/VSTGUI framework (createInstance factories, createView, createCustomView, addUnit). The NFR review cpp-raw-memory scanner treats unannotated `new` as red/high.\n- R7: When adding nfr-review.yaml skip rules, always include a comment explaining WHY the rule is skipped.\n- R8: When clang-format version produces different output locally vs CI, CI is authoritative. Fix locally to match.",
+      "estimate": "10min",
+      "files": [
+        ".gsd/KNOWLEDGE.md"
+      ],
+      "verify": "Read .gsd/KNOWLEDGE.md to confirm new rules are present and well-worded",
+      "inputs": [
+        ".gsd/KNOWLEDGE.md"
+      ],
+      "expected_output": [
+        ".gsd/KNOWLEDGE.md with R6, R7, R8 rules"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M011",
+      "slice_id": "S04",
+      "id": "T02",
+      "title": "Update CLAUDE.md with NFR and ownership-transfer conventions",
+      "status": "pending",
+      "one_liner": "",
+      "narrative": "",
+      "verification_result": "",
+      "duration": "",
+      "completed_at": null,
+      "blocker_discovered": false,
+      "deviations": "",
+      "known_issues": "",
+      "key_files": [],
+      "key_decisions": [],
+      "full_summary_md": "",
+      "description": "Update CLAUDE.md Key Conventions section to add:\n- A subsection on NFR Review: all `new` expressions need ownership-transfer annotation, nfr-review.yaml skip rules need rationale comments\n- Update Pre-Push Checklist to mention checking for unannotated `new` expressions when modifying plugin/source/ files\n- Note about clang-format version: CI is authoritative when local and CI disagree",
+      "estimate": "10min",
+      "files": [
+        "CLAUDE.md"
+      ],
+      "verify": "Read CLAUDE.md to confirm new conventions are present",
+      "inputs": [
+        "CLAUDE.md"
+      ],
+      "expected_output": [
+        "CLAUDE.md with NFR Review conventions and updated pre-push checklist"
       ],
       "observability_impact": "",
       "full_plan_md": "",
@@ -8283,6 +8958,61 @@
       "verdict": "pass",
       "duration_ms": 15000,
       "created_at": "2026-06-23T01:27:14.803Z"
+    },
+    {
+      "id": 128,
+      "task_id": "T01",
+      "slice_id": "S01",
+      "milestone_id": "M008",
+      "command": "cmake --build build && ctest --test-dir build",
+      "exit_code": 0,
+      "verdict": "pass",
+      "duration_ms": 15000,
+      "created_at": "2026-06-23T02:05:52.382Z"
+    },
+    {
+      "id": 129,
+      "task_id": "T02",
+      "slice_id": "S01",
+      "milestone_id": "M008",
+      "command": "cmake --build build && ctest --test-dir build",
+      "exit_code": 0,
+      "verdict": "pass",
+      "duration_ms": 12000,
+      "created_at": "2026-06-23T02:06:44.958Z"
+    },
+    {
+      "id": 130,
+      "task_id": "T03",
+      "slice_id": "S01",
+      "milestone_id": "M008",
+      "command": "cmake --build build && ctest --test-dir build",
+      "exit_code": 0,
+      "verdict": "pass",
+      "duration_ms": 12000,
+      "created_at": "2026-06-23T02:07:34.772Z"
+    },
+    {
+      "id": 131,
+      "task_id": "T04",
+      "slice_id": "S01",
+      "milestone_id": "M008",
+      "command": "cmake --build build && ctest --test-dir build",
+      "exit_code": 0,
+      "verdict": "pass",
+      "duration_ms": 12000,
+      "created_at": "2026-06-23T02:08:55.226Z"
+    },
+    {
+      "id": 132,
+      "task_id": "T05",
+      "slice_id": "S01",
+      "milestone_id": "M008",
+      "command": "cmake --build build && ctest --test-dir build",
+      "exit_code": 0,
+      "verdict": "pass",
+      "duration_ms": 15000,
+      "created_at": "2026-06-23T02:11:01.952Z"
     }
   ]
 }

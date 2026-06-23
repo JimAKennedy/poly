@@ -10,12 +10,11 @@ Modify renderRange() to use cumulative cell PPQ offsets when cellCount > 0. For 
 
 ## Inputs
 
-- `engine/src/engine.cpp`
 - `engine/include/poly/types.h`
 
 ## Expected Output
 
-- `engine/src/engine.cpp with additive step timing in renderRange()`
+- `renderRange supports variable-width cell timing`
 
 ## Verification
 

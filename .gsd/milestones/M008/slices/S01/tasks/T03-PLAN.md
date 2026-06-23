@@ -10,11 +10,11 @@ Bump kStateVersion to 10. Serialize cellCount and cellSizes array. Version 9 loa
 
 ## Inputs
 
-- `plugin/source/processor.cpp`
+- `engine/include/poly/types.h`
 
 ## Expected Output
 
-- `processor.cpp with version 10 serialization`
+- `State version 10 with additive cell persistence`
 
 ## Verification
 

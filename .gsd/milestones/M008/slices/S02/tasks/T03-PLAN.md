@@ -1,21 +1,20 @@
 ---
 estimated_steps: 1
-estimated_files: 2
+estimated_files: 3
 skills_used: []
 ---
 
-# T03: Serialize timeline fields and expose parameters
+# T03: Serialize timeline fields and expose scalar parameters
 
-Add timeline, fixedPattern, fixedPatternLength to state serialization (version 10, same bump as S01). Add controller parameters for timeline toggle and pattern.
+Add timeline, fixedPattern, fixedPatternLength to state serialization (version 10, same bump as S01). Add VST3 controller parameters for timeline toggle and fixedPatternLength ONLY. fixedPattern array is NOT exposed as individual VST3 params — it is state-serialized only, edited through the Timeline Step Editor (T05). Version 9 load defaults timeline=false, fixedPatternLength=0.
 
 ## Inputs
 
-- `plugin/source/processor.cpp`
-- `plugin/source/controller.cpp`
+- `engine/include/poly/types.h`
 
 ## Expected Output
 
-- `Serialization and parameters for timeline mode`
+- `timeline toggle and fixedPatternLength visible in Cubase generic editor`
 
 ## Verification
 

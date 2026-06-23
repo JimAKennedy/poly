@@ -14,7 +14,7 @@ Add bool timeline and std::array<bool, kMaxSteps> fixedPattern plus int fixedPat
 
 ## Expected Output
 
-- `types.h with timeline fields`
+- `LaneConfig has timeline, fixedPattern, fixedPatternLength fields`
 
 ## Verification
 

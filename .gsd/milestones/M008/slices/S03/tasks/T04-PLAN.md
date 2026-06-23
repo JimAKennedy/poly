@@ -10,12 +10,13 @@ Add tests: (1) per-step timing offset shifts PPQ correctly, (2) micro-timing + s
 
 ## Inputs
 
-- `tests/swing_humanize_tests.cpp`
-- `tests/golden_tests.cpp`
+- `engine/include/poly/types.h`
+- `engine/src/engine.cpp`
 
 ## Expected Output
 
-- `New micro-timing test cases passing`
+- `Micro-timing test cases pass`
+- `Golden test for groove-mapped pattern`
 
 ## Verification
 

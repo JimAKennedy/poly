@@ -10,11 +10,11 @@ In renderRange(), after swing and before humanize, look up microTimingMs[cycleSt
 
 ## Inputs
 
-- `engine/src/engine.cpp`
+- `engine/include/poly/types.h`
 
 ## Expected Output
 
-- `engine.cpp with micro-timing map application`
+- `renderRange applies per-step micro-timing offsets`
 
 ## Verification
 

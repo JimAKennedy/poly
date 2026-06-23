@@ -14,7 +14,7 @@ Add std::array<float, kMaxSteps> microTimingMs to LaneConfig, defaulting to all 
 
 ## Expected Output
 
-- `types.h with microTimingMs array`
+- `LaneConfig has microTimingMs field`
 
 ## Verification
 

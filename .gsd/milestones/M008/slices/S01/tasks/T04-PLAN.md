@@ -10,12 +10,13 @@ Add tests: (1) 7/8 aksak [2+2+3] produces correct PPQ positions, (2) 9/8 [2+2+2+
 
 ## Inputs
 
-- `tests/euclidean_tests.cpp`
-- `tests/golden_tests.cpp`
+- `engine/include/poly/types.h`
+- `engine/src/engine.cpp`
 
 ## Expected Output
 
-- `New aksak test cases passing`
+- `Aksak test cases pass`
+- `Golden test for additive pattern`
 
 ## Verification
 

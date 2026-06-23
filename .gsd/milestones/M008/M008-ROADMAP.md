@@ -12,13 +12,13 @@
 
 ## Slices
 
-- [ ] **S01: Additive and Aksak Cycle Mode** `risk:high` `depends:[]`
+- [x] **S01: S01** `risk:high` `depends:[]`
   > After this: Define a lane cycle as [2,2,3] for 7/8 aksak — Euclidean distribution operates over the unequal cells
 
-- [ ] **S02: Timeline Mode** `risk:medium` `depends:[]`
+- [x] **S02: S02** `risk:medium` `depends:[]`
   > After this: Mark a lane as timeline — it becomes immune to macro changes and serves as the rhythmic skeleton
 
-- [ ] **S03: Extended Micro-timing Maps** `risk:medium` `depends:[]`
+- [x] **S03: S03** `risk:medium` `depends:[]`
   > After this: Apply a per-step timing map (not just swing) — e.g. Brazilian ginga feel or J Dilla pocket
 
 - [ ] **S04: Genre Preset Packs** `risk:low` `depends:[S01,S02,S03]`

@@ -10,12 +10,11 @@ In renderRange(), when cfg.timeline is true, use cfg.fixedPattern instead of euc
 
 ## Inputs
 
-- `engine/src/engine.cpp`
-- `engine/src/scene.cpp`
+- `engine/include/poly/types.h`
 
 ## Expected Output
 
-- `engine.cpp and scene.cpp with timeline logic`
+- `Timeline lanes use fixed pattern, macros skip them`
 
 ## Verification
 

@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-06-23T01:30:00Z | Files: 101 | Described: 0/101
-<!-- gsd:codebase-meta {"generatedAt":"2026-06-23T01:30:00Z","fingerprint":"9d693e4c891f6b5b743ae441a4fe87ac0fe3a796","fileCount":101,"truncated":false} -->
+Generated: 2026-06-23T02:23:39Z | Files: 106 | Described: 0/106
+<!-- gsd:codebase-meta {"generatedAt":"2026-06-23T02:23:39Z","fingerprint":"e71115345f3abeda79ff3e1eb88f1e6132fe8266","fileCount":106,"truncated":false} -->
 
 ### (root)/
 - `.clang-format`
@@ -34,6 +34,7 @@ Generated: 2026-06-23T01:30:00Z | Files: 101 | Described: 0/101
 - `docs/automation-mapping.md`
 - `docs/cubase-workflow.md`
 - `docs/engine-spec.md`
+- `docs/euclidean-rhythm-guide.md`
 - `docs/M002-UAT-SCRIPT.md`
 - `docs/PRD.md`
 - `docs/roadmap.md`
@@ -91,10 +92,14 @@ Generated: 2026-06-23T01:30:00Z | Files: 101 | Described: 0/101
 - `plugin/source/processor.h`
 
 ### plugin/source/ui/
+- `plugin/source/ui/cell_editor_view.cpp`
+- `plugin/source/ui/cell_editor_view.h`
 - `plugin/source/ui/envelope_curve_view.cpp`
 - `plugin/source/ui/envelope_curve_view.h`
 - `plugin/source/ui/header_view.cpp`
 - `plugin/source/ui/header_view.h`
+- `plugin/source/ui/lane_edit_view.cpp`
+- `plugin/source/ui/lane_edit_view.h`
 - `plugin/source/ui/lane_grid_view.cpp`
 - `plugin/source/ui/lane_grid_view.h`
 - `plugin/source/ui/phase_alignment_view.cpp`
