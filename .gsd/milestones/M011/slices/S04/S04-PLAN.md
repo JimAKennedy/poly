@@ -28,7 +28,7 @@
   - Files: `CLAUDE.md`
   - Verify: Read CLAUDE.md to confirm new conventions present
 
-- [ ] **T04: Final end-to-end verification push** `est:15min`
+- [x] **T04: Final end-to-end verification push** `est:15min`
   Push all changes to main, verify CI passes all checks (code-quality, all platform builds, engine-isolation, secrets-scan, coverage). If any check fails, fix and re-push. This is the acceptance test for the entire milestone.
   - Verify: gh run list --limit 1 shows CI passing on main
 

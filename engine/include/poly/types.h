@@ -179,6 +179,28 @@ struct MacroValues {
     float humanize = 0.0f;
 };
 
+// --- Note Map (global output pitch remapping) ---
+
+struct NoteMap {
+    std::array<int16_t, 128> map{};
+
+    NoteMap() {
+        for (int i = 0; i < 128; ++i)
+            map[static_cast<size_t>(i)] = static_cast<int16_t>(i);
+    }
+
+    int16_t apply(int16_t note) const {
+        if (note >= 0 && note < 128)
+            return map[static_cast<size_t>(note)];
+        return note;
+    }
+
+    void reset() {
+        for (int i = 0; i < 128; ++i)
+            map[static_cast<size_t>(i)] = static_cast<int16_t>(i);
+    }
+};
+
 // --- Groove State (full serializable patch) ---
 
 struct GrooveState {

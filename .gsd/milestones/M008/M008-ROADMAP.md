@@ -21,10 +21,10 @@
 - [x] **S03: S03** `risk:medium` `depends:[]`
   > After this: Apply a per-step timing map (not just swing) — e.g. Brazilian ginga feel or J Dilla pocket
 
-- [ ] **S04: Genre Preset Packs** `risk:low` `depends:[S01,S02,S03]`
+- [x] **S04: S04** `risk:low` `depends:[]`
   > After this: Load genre-specific presets — Afro-House, Balkan, Carnatic-inspired, IDM, Afrobeat patterns using M007+M008 features
 
-- [ ] **S05: Cross-rhythm Visualization** `risk:medium` `depends:[S01]`
+- [x] **S05: S05** `risk:medium` `depends:[]`
   > After this: UI view showing how all lanes align and cross over time — polyrhythmic convergence points visible
 
 ## Boundary Map

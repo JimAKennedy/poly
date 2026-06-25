@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-06-23T17:24:54Z | Files: 110 | Described: 0/110
-<!-- gsd:codebase-meta {"generatedAt":"2026-06-23T17:24:54Z","fingerprint":"6aedb7794f189a3a2a487dfdb7b70f426d2aa7b6","fileCount":110,"truncated":false} -->
+Generated: 2026-06-24T23:55:51Z | Files: 113 | Described: 0/113
+<!-- gsd:codebase-meta {"generatedAt":"2026-06-24T23:55:51Z","fingerprint":"9a4887503f90aa1f51d241095b61ca142f964774","fileCount":113,"truncated":false} -->
 
 ### (root)/
 - `.clang-format`
@@ -92,30 +92,12 @@ Generated: 2026-06-23T17:24:54Z | Files: 110 | Described: 0/110
 - `plugin/source/processor.h`
 
 ### plugin/source/ui/
-- `plugin/source/ui/cell_editor_view.cpp`
-- `plugin/source/ui/cell_editor_view.h`
-- `plugin/source/ui/envelope_curve_view.cpp`
-- `plugin/source/ui/envelope_curve_view.h`
-- `plugin/source/ui/header_view.cpp`
-- `plugin/source/ui/header_view.h`
-- `plugin/source/ui/lane_edit_view.cpp`
-- `plugin/source/ui/lane_edit_view.h`
-- `plugin/source/ui/lane_grid_view.cpp`
-- `plugin/source/ui/lane_grid_view.h`
-- `plugin/source/ui/micro_timing_editor_view.cpp`
-- `plugin/source/ui/micro_timing_editor_view.h`
-- `plugin/source/ui/phase_alignment_view.cpp`
-- `plugin/source/ui/phase_alignment_view.h`
-- `plugin/source/ui/phrase_edit_view.cpp`
-- `plugin/source/ui/phrase_edit_view.h`
-- `plugin/source/ui/timeline_step_editor_view.cpp`
-- `plugin/source/ui/timeline_step_editor_view.h`
-- `plugin/source/ui/velocity_view.cpp`
-- `plugin/source/ui/velocity_view.h`
+- *(22 files: 11 .cpp, 11 .h)*
 
 ### scripts/
 - `scripts/check-pragma-once.sh`
 - `scripts/check-realtime-safety.sh`
+- `scripts/pre-push-check.sh`
 
 ### tests/
 - `tests/CMakeLists.txt`

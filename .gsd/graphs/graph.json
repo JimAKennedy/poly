@@ -9,8 +9,8 @@
       "sourceFile": "STATE.md"
     },
     {
-      "id": "concept:phase:evaluating-gates",
-      "label": "Phase: evaluating-gates",
+      "id": "concept:phase:validating-milestone",
+      "label": "Phase: validating-milestone",
       "type": "concept",
       "confidence": "EXTRACTED",
       "sourceFile": "STATE.md"
@@ -1158,13 +1158,25 @@
     },
     {
       "id": "task:M011:S01:T01",
-      "label": "T01: Fix clang-format disagreement in headless_ui_host.cpp",
+      "label": "T01: Pin clang-format to mirrors-clang-format with explicit version",
       "type": "task",
       "confidence": "EXTRACTED"
     },
     {
       "id": "task:M011:S01:T02",
-      "label": "T02: Pin clang-format version in pre-commit config",
+      "label": "T02: Reformat all C++ files with pinned clang-format version",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M011:S01:T03",
+      "label": "T03: Fix missing includes for MSVC cross-platform build",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M011:S01:T04",
+      "label": "T04: Run full local verification (pre-commit + build + test)",
       "type": "task",
       "confidence": "EXTRACTED"
     },
@@ -1202,7 +1214,7 @@
     },
     {
       "id": "task:M011:S03:T01",
-      "label": "T01: Add CodeQL SAST scanning to CI or skip with rationale",
+      "label": "T01: Skip cmake-minimum-version for subdirectory CMakeLists (already in skip list, verify)",
       "type": "task",
       "confidence": "EXTRACTED"
     },
@@ -1214,7 +1226,19 @@
     },
     {
       "id": "task:M011:S03:T03",
-      "label": "T03: Skip or fix cmake-build-config amber findings",
+      "label": "T03: Skip cmake-build-config, structure-weak-boundary, and informational rules",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M011:S03:T04",
+      "label": "T04: Address adr-gap amber findings with GSD decisions",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M011:S03:T05",
+      "label": "T05: Run NFR review locally and verify zero red findings",
       "type": "task",
       "confidence": "EXTRACTED"
     },
@@ -1227,13 +1251,25 @@
     },
     {
       "id": "task:M011:S04:T01",
-      "label": "T01: Add KNOWLEDGE.md rules for ownership-transfer and NFR review",
+      "label": "T01: Add pre-push Git hook via pre-commit framework",
       "type": "task",
       "confidence": "EXTRACTED"
     },
     {
       "id": "task:M011:S04:T02",
-      "label": "T02: Update CLAUDE.md with NFR and ownership-transfer conventions",
+      "label": "T02: Add KNOWLEDGE.md rules for all discovered issues",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M011:S04:T03",
+      "label": "T03: Update CLAUDE.md with NFR, ownership-transfer, and MSVC conventions",
+      "type": "task",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "id": "task:M011:S04:T04",
+      "label": "T04: Final end-to-end verification push",
       "type": "task",
       "confidence": "EXTRACTED"
     }
@@ -2284,6 +2320,18 @@
       "confidence": "EXTRACTED"
     },
     {
+      "from": "slice:M011:S01",
+      "to": "task:M011:S01:T03",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M011:S01",
+      "to": "task:M011:S01:T04",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
       "from": "milestone:M011",
       "to": "slice:M011:S02",
       "type": "contains",
@@ -2332,6 +2380,18 @@
       "confidence": "EXTRACTED"
     },
     {
+      "from": "slice:M011:S03",
+      "to": "task:M011:S03:T04",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M011:S03",
+      "to": "task:M011:S03:T05",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
       "from": "milestone:M011",
       "to": "slice:M011:S04",
       "type": "contains",
@@ -2348,7 +2408,19 @@
       "to": "task:M011:S04:T02",
       "type": "contains",
       "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M011:S04",
+      "to": "task:M011:S04:T03",
+      "type": "contains",
+      "confidence": "EXTRACTED"
+    },
+    {
+      "from": "slice:M011:S04",
+      "to": "task:M011:S04:T04",
+      "type": "contains",
+      "confidence": "EXTRACTED"
     }
   ],
-  "builtAt": "2026-06-23T02:29:07.798Z"
+  "builtAt": "2026-06-23T18:33:22.249Z"
 }

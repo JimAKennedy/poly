@@ -22,6 +22,7 @@ public:
 
     const SceneState& cachedState() const { return cachedState_; }
     SceneState& mutableCachedState() { return cachedState_; }
+    void sendNoteMap();
 
 private:
     SceneState cachedState_{};
