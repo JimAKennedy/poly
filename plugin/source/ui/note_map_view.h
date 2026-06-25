@@ -1,5 +1,7 @@
 #pragma once
 
+#include <array>
+
 #include "vstgui/lib/cview.h"
 
 namespace Steinberg {
