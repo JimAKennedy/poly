@@ -1,0 +1,82 @@
+---
+interface Props {
+  title: string;
+  preset?: string;
+}
+
+const { title, preset } = Astro.props;
+---
+
+<div class="poly-patch">
+  <div class="poly-patch-header">
+    <span class="poly-patch-title">{title}</span>
+    {preset && <span class="poly-patch-preset">{preset}</span>}
+  </div>
+  <div class="poly-patch-body">
+    <slot />
+  </div>
+</div>
+
+<style>
+  .poly-patch {
+    border: 2px solid var(--poly-primary);
+    border-radius: 8px;
+    background: var(--poly-patch-bg);
+    margin: 1.5rem 0;
+    overflow: hidden;
+  }
+
+  .poly-patch-header {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    padding: 0.6rem 1rem;
+    background: var(--poly-primary);
+    color: #fff;
+    font-family: var(--poly-font-sans);
+  }
+
+  .poly-patch-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+
+  .poly-patch-preset {
+    font-size: 0.8rem;
+    opacity: 0.85;
+    font-style: italic;
+  }
+
+  .poly-patch-body {
+    padding: 0.75rem 1rem;
+    font-family: var(--poly-font-sans);
+    font-size: var(--sl-text-sm);
+  }
+
+  .poly-patch-body :global(table) {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+    font-family: var(--poly-font-sans);
+    font-size: var(--sl-text-sm);
+  }
+
+  .poly-patch-body :global(th) {
+    text-align: left;
+    padding: 0.35rem 0.5rem;
+    border-bottom: 2px solid var(--poly-primary);
+    font-weight: 600;
+    color: var(--poly-primary-dark);
+    white-space: nowrap;
+  }
+
+  .poly-patch-body :global(td) {
+    padding: 0.3rem 0.5rem;
+    border-bottom: 1px solid #d0e8e8;
+    white-space: nowrap;
+  }
+
+  .poly-patch-body :global(tr:last-child td) {
+    border-bottom: none;
+  }
+</style>

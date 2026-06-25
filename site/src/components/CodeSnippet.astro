@@ -1,0 +1,74 @@
+---
+interface Props {
+  file: string;
+  region: string;
+  caption?: string;
+}
+
+const { file, region, caption } = Astro.props;
+---
+
+<div class="code-snippet">
+  <div class="code-snippet-header">
+    <span class="code-snippet-file">{file}</span>
+    <span class="code-snippet-region">{region}</span>
+  </div>
+  <div class="code-snippet-body">
+    <p class="code-snippet-placeholder">
+      Code extracted at build time from <code>{file}</code> region <code>{region}</code>
+    </p>
+  </div>
+  {caption && <div class="code-snippet-caption">{caption}</div>}
+</div>
+
+<style>
+  .code-snippet {
+    background: var(--poly-code-bg);
+    border-radius: 6px;
+    margin: 1.5rem 0;
+    overflow: hidden;
+  }
+
+  .code-snippet-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.4rem 0.75rem;
+    background: rgba(255, 255, 255, 0.08);
+    font-family: var(--sl-font-system-mono);
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .code-snippet-file {
+    font-weight: 500;
+  }
+
+  .code-snippet-region {
+    opacity: 0.5;
+  }
+
+  .code-snippet-body {
+    padding: 1rem 0.75rem;
+  }
+
+  .code-snippet-placeholder {
+    color: rgba(255, 255, 255, 0.4);
+    font-family: var(--sl-font-system-mono);
+    font-size: var(--sl-text-code);
+    font-style: italic;
+    margin: 0;
+  }
+
+  .code-snippet-placeholder code {
+    color: rgba(255, 255, 255, 0.6);
+  }
+
+  .code-snippet-caption {
+    padding: 0.3rem 0.75rem 0.5rem;
+    font-family: var(--poly-font-sans);
+    font-size: var(--sl-text-xs);
+    color: rgba(255, 255, 255, 0.45);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+  }
+</style>

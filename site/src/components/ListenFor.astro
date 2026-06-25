@@ -1,0 +1,44 @@
+---
+---
+
+<aside class="listen-for">
+  <div class="listen-for-header">What to Listen For</div>
+  <div class="listen-for-body">
+    <slot />
+  </div>
+</aside>
+
+<style>
+  .listen-for {
+    border-left: 4px solid var(--poly-note-border);
+    background: var(--poly-note-bg);
+    border-radius: 0 6px 6px 0;
+    margin: 1.5rem 0;
+    padding: 0.75rem 1rem;
+  }
+
+  .listen-for-header {
+    font-family: var(--poly-font-sans);
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--poly-note-border);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.4rem;
+  }
+
+  .listen-for-body {
+    font-family: var(--sl-font);
+    font-size: var(--sl-text-body);
+    line-height: 1.6;
+    color: var(--poly-text);
+  }
+
+  .listen-for-body :global(p) {
+    margin: 0;
+  }
+
+  .listen-for-body :global(p + p) {
+    margin-top: 0.5rem;
+  }
+</style>
