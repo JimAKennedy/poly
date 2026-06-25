@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-06-25T01:37:09.762Z",
+  "exported_at": "2026-06-25T01:56:25.003Z",
   "milestones": [
     {
       "id": "M001",
@@ -499,6 +499,46 @@
         "All 5 custom components render correctly: PolyPatch, ListenFor, CodeSnippet, EuclideanDiagram, PolyScreenshot",
         "Typography uses Source Serif 4 for prose, Inter for UI elements, JetBrains Mono for code",
         "Mobile layout collapses margin column below prose with patch boxes remaining full-width"
+      ],
+      "requirement_coverage": "Not provided.",
+      "boundary_map_markdown": "Not provided.",
+      "sequence": 0
+    },
+    {
+      "id": "M013",
+      "title": "Open-Source Readiness",
+      "status": "active",
+      "depends_on": [],
+      "created_at": "2026-06-25T01:55:54.762Z",
+      "completed_at": null,
+      "vision": "Remediate NFR review findings so the repo can be safely made public: add community health files (LICENSE, README, SECURITY, etc.), scrub tracked operational files with PII risk, harden CI supply chain by SHA-pinning actions, and tune the NFR scanner config to exclude build artifacts and inapplicable rules.",
+      "success_criteria": [
+        "LICENSE, README.md, SECURITY.md, CODE_OF_CONDUCT.md, CONTRIBUTING.md present at repo root",
+        "No operational files with PII risk (event-log, audit logs) tracked in git",
+        "All GitHub Actions pinned to full SHA commits",
+        "NFR review re-run shows zero high-severity findings on first-party code",
+        "reports/ and site/dist/ excluded from git tracking and NFR scan"
+      ],
+      "key_risks": [
+        {
+          "risk": "License choice affects downstream usage",
+          "whyItMatters": "Wrong license could conflict with VST3 SDK GPL exception or limit adoption"
+        },
+        {
+          "risk": "Git history contains PII even after untracking files",
+          "whyItMatters": "git log still exposes email addresses in event-log.jsonl commits"
+        }
+      ],
+      "proof_strategy": [],
+      "verification_contract": "",
+      "verification_integration": "",
+      "verification_operational": "",
+      "verification_uat": "",
+      "definition_of_done": [
+        "All community health files present and substantive",
+        "NFR re-scan shows no high-severity first-party findings",
+        "git ls-files shows no operational/PII files tracked",
+        "CI passes with SHA-pinned actions"
       ],
       "requirement_coverage": "Not provided.",
       "boundary_map_markdown": "Not provided.",
@@ -1519,6 +1559,98 @@
       "replan_triggered_at": null,
       "is_sketch": 0,
       "sketch_scope": "Manual screenshot capture workflow for 26 patches across LaneEditView, CrossRhythmView, and MicroTimingEditorView. Add PolyScreenshot src props as images are captured. Final visual polish pass on typography, spacing, and responsive behaviour."
+    },
+    {
+      "milestone_id": "M013",
+      "id": "S01",
+      "title": "Community Health Files",
+      "status": "pending",
+      "risk": "low",
+      "depends": [],
+      "demo": "README renders on GitHub with build badges, license link, and project overview",
+      "created_at": "2026-06-25T01:56:24.997Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Add LICENSE, README.md, SECURITY.md, CODE_OF_CONDUCT.md, CONTRIBUTING.md, and CHANGELOG.md to make the repo presentable as an open-source project",
+      "success_criteria": "All 6 files present at repo root with substantive content; LICENSE is a recognized OSI-approved license",
+      "proof_level": "File existence check + content review",
+      "integration_closure": "No integration needed; these are standalone docs",
+      "observability_impact": "None",
+      "sequence": 1,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M013",
+      "id": "S02",
+      "title": "Privacy and Git Hygiene",
+      "status": "pending",
+      "risk": "medium",
+      "depends": [],
+      "demo": "git ls-files shows no event-log, audit, or reports files tracked; .gitignore covers all operational paths",
+      "created_at": "2026-06-25T01:56:24.997Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Untrack .gsd/event-log.jsonl, .gsd/audit/, .gsd/graphs/, .gsd/last-snapshot.md; gitignore reports/ and site/dist/; add CODEOWNERS",
+      "success_criteria": "Zero tracked files matching operational/PII patterns; .gitignore updated; CODEOWNERS present",
+      "proof_level": "git ls-files verification + .gitignore audit",
+      "integration_closure": "Existing CI must still find .gsd/ milestone artifacts it needs",
+      "observability_impact": "None",
+      "sequence": 2,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M013",
+      "id": "S03",
+      "title": "CI Supply-Chain Hardening",
+      "status": "pending",
+      "risk": "low",
+      "depends": [],
+      "demo": "CI run passes with all actions SHA-pinned; pre-commit lint step visible in CI output",
+      "created_at": "2026-06-25T01:56:24.997Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Pin all GitHub Actions references to full SHA commits and add a dedicated lint/format CI step",
+      "success_criteria": "All action refs use SHA pins with version comment; CI includes a pre-commit or clang-format step",
+      "proof_level": "grep for @v tag refs returns zero; CI green",
+      "integration_closure": "Dependabot or Renovate can update SHA pins going forward",
+      "observability_impact": "None",
+      "sequence": 3,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M013",
+      "id": "S04",
+      "title": "NFR Config Tuning",
+      "status": "pending",
+      "risk": "low",
+      "depends": [
+        "S01",
+        "S02",
+        "S03"
+      ],
+      "demo": "NFR re-scan shows zero high-severity findings and reduced false-positive count",
+      "created_at": "2026-06-25T01:56:24.997Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Update nfr-review.yaml to exclude site/dist/ and skip inapplicable rules; re-run scan to verify",
+      "success_criteria": "NFR scan excludes build artifacts; inapplicable rules (rollback, pyproject, package manifest) skipped with rationale; zero RED findings on first-party code",
+      "proof_level": "NFR re-scan output comparison",
+      "integration_closure": "nfr-review.yaml changes apply to both PR and nightly workflows",
+      "observability_impact": "None",
+      "sequence": 4,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
     }
   ],
   "tasks": [

@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-06-25T01:25:57Z | Files: 152 | Described: 0/152
-<!-- gsd:codebase-meta {"generatedAt":"2026-06-25T01:25:57Z","fingerprint":"df9a32e1cf244dac187a7c2a33f44eec48d19bd0","fileCount":152,"truncated":false} -->
+Generated: 2026-06-25T02:25:16Z | Files: 160 | Described: 0/160
+<!-- gsd:codebase-meta {"generatedAt":"2026-06-25T02:25:16Z","fingerprint":"430bf6d2b60e9d00dd9e824d26bbd302e2d51dd7","fileCount":160,"truncated":false} -->
 
 ### (root)/
 - `.clang-format`
@@ -10,10 +10,17 @@ Generated: 2026-06-25T01:25:57Z | Files: 152 | Described: 0/152
 - `.gitignore`
 - `.gitleaks.toml`
 - `.pre-commit-config.yaml`
+- `CHANGELOG.md`
 - `CLAUDE.md`
 - `CMakeLists.txt`
+- `CODE_OF_CONDUCT.md`
+- `CODEOWNERS`
+- `CONTRIBUTING.md`
 - `IMPLEMENTATION_PLAN.md`
+- `LICENSE`
 - `nfr-review.yaml`
+- `README.md`
+- `SECURITY.md`
 
 ### .github/
 - `.github/lsan.supp`
@@ -110,6 +117,9 @@ Generated: 2026-06-25T01:25:57Z | Files: 152 | Described: 0/152
 - `site/package.json`
 - `site/README.md`
 - `site/tsconfig.json`
+
+### site/public/screenshots/
+- `site/public/screenshots/README.md`
 
 ### site/src/
 - `site/src/content.config.ts`
