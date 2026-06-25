@@ -252,6 +252,11 @@ void HeaderView::resetToInit() {
         controller_->endEdit(id);
     };
 
+    static constexpr int kInitSteps[] = {4, 4, 8, 5, 7, 3, 6, 9};
+    static constexpr int kInitSubs[] = {4, 4, 8, 16, 8, 16, 16, 16};
+    static constexpr int kInitHits[] = {4, 2, 8, 3, 4, 2, 4, 5};
+    static constexpr int kInitNotes[] = {36, 38, 42, 45, 46, 39, 43, 50};
+
     for (int lane = 0; lane < kMaxLanes; ++lane) {
         pushParam(ParamIDs::laneParam(lane, ParamIDs::kProbability), 1.0);
         pushParam(ParamIDs::laneParam(lane, ParamIDs::kBaseVelocity), 100.0 / 127.0);
@@ -269,11 +274,6 @@ void HeaderView::resetToInit() {
         pushParam(ParamIDs::laneParam(lane, ParamIDs::kDriftRate), 0.5);
         pushParam(ParamIDs::laneParam(lane, ParamIDs::kTimingOffset), 0.5);
         pushParam(ParamIDs::laneParam(lane, ParamIDs::kKotekanSource), 0.0);
-
-        static constexpr int kInitSteps[] = {4, 4, 8, 5, 7, 3, 6, 9};
-        static constexpr int kInitSubs[] = {4, 4, 8, 16, 8, 16, 16, 16};
-        static constexpr int kInitHits[] = {4, 2, 8, 3, 4, 2, 4, 5};
-        static constexpr int kInitNotes[] = {36, 38, 42, 45, 46, 39, 43, 50};
 
         pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreSteps), (kInitSteps[lane] - 1) / 63.0);
         int subIdx = 0;
@@ -306,7 +306,16 @@ void HeaderView::resetToInit() {
         pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreFixedPatternLen), 0.0);
     }
 
-    static_cast<PolyController*>(controller_)->mutableCachedState().sceneA = GrooveState{};
+    GrooveState initState{};
+    for (int lane = 0; lane < kMaxLanes; ++lane) {
+        initState.lanes[static_cast<size_t>(lane)].midiNote = static_cast<int16_t>(kInitNotes[lane]);
+        initState.lanes[static_cast<size_t>(lane)].cycle.steps = kInitSteps[lane];
+        initState.lanes[static_cast<size_t>(lane)].cycle.subdivision = kInitSubs[lane];
+        initState.lanes[static_cast<size_t>(lane)].hitCount = kInitHits[lane];
+        initState.lanes[static_cast<size_t>(lane)].active = true;
+    }
+    initState.activeLaneCount = kMaxLanes;
+    static_cast<PolyController*>(controller_)->mutableCachedState().sceneA = initState;
 
     pushParam(ParamIDs::kMacroComplexity, 0.5);
     pushParam(ParamIDs::kMacroDensity, 0.5);
