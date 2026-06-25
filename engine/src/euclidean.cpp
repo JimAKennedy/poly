@@ -2,6 +2,7 @@
 
 namespace poly {
 
+// region:bjorklund
 void euclidean(int k, int n, int rotation, std::array<bool, kMaxSteps>& out) {
     out.fill(false);
 
@@ -22,5 +23,6 @@ void euclidean(int k, int n, int rotation, std::array<bool, kMaxSteps>& out) {
         out[i] = (src * k % n) < k;
     }
 }
+// endregion:bjorklund
 
 } // namespace poly

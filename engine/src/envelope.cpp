@@ -6,6 +6,7 @@ namespace poly {
 
 static constexpr double kTwoPi = 6.283185307179586;
 
+// region:apply
 float evaluateShape(Shape shape, float phase) {
     switch (shape) {
     case Shape::Sine:
@@ -54,5 +55,6 @@ double computeEnvelopePhase(double ppqPosition, float periodBars, float phaseOff
         raw += 1.0;
     return raw;
 }
+// endregion:apply
 
 } // namespace poly
