@@ -17,9 +17,8 @@ export default defineConfig({
 					href: 'https://github.com/JimAKennedy/poly',
 				},
 			],
-			banner: {
-				content:
-					'🚧 Under active construction — content being developed and verified.',
+			components: {
+				Banner: './src/components/Banner.astro',
 			},
 			customCss: ['./src/styles/custom.css'],
 			sidebar: [
