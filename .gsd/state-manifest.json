@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "exported_at": "2026-06-23T18:34:00.397Z",
+  "exported_at": "2026-06-25T00:45:55.189Z",
   "milestones": [
     {
       "id": "M001",
@@ -433,6 +433,73 @@
       "verification_operational": "",
       "verification_uat": "",
       "definition_of_done": [],
+      "requirement_coverage": "Not provided.",
+      "boundary_map_markdown": "Not provided.",
+      "sequence": 0
+    },
+    {
+      "id": "M012",
+      "title": "Poly Guide Publication Website",
+      "status": "active",
+      "depends_on": [],
+      "created_at": "2026-06-25T00:09:00.164Z",
+      "completed_at": null,
+      "vision": "A Crafting Interpreters-style static site for the Poly rhythmic guide, integrating ethnomusicological prose, live-extracted C++ engine code, and Poly patch reference panels in a single publication-quality web document. Built with Astro + Starlight, deployed to GitHub Pages, with code snippets pulled from the repo at build time so documentation never goes stale.",
+      "success_criteria": [
+        "All 17 chapters from poly_rhythmic_guide.md render as MDX pages with PolyPatch, ListenFor, and EuclideanDiagram components",
+        "Live code extraction pulls C++ snippets from engine source via region tags at build time",
+        "Design system implements the three-zone visual language: serif prose, sans-serif patch boxes, dark code panels",
+        "Site deploys automatically to GitHub Pages on push to main",
+        "EuclideanDiagram SVG component renders circle diagrams from steps/hits/rotation props",
+        "PolyScreenshot component handles missing images gracefully with placeholder fallback"
+      ],
+      "key_risks": [
+        {
+          "risk": "Vite plugin for code extraction may conflict with Starlight's build pipeline",
+          "whyItMatters": "The entire live-code-from-repo value prop depends on this working at build time"
+        },
+        {
+          "risk": "Content migration of 2,170 lines across 17 chapters is error-prone",
+          "whyItMatters": "Incorrect component usage or broken MDX syntax would produce silent rendering bugs"
+        },
+        {
+          "risk": "Region tag paths in the plan assume src/engine/ but actual repo uses engine/src/ and engine/include/poly/",
+          "whyItMatters": "Code extraction will fail silently if paths don't match the real repo structure"
+        },
+        {
+          "risk": "Margin column layout may conflict with Starlight's built-in responsive design",
+          "whyItMatters": "The two-column prose+code layout is central to the reading experience"
+        }
+      ],
+      "proof_strategy": [
+        {
+          "riskOrUnknown": "Vite plugin + Starlight compatibility",
+          "retireIn": "S04",
+          "whatWillBeProven": "A custom Vite plugin can resolve region-tag directives during Astro build without breaking Starlight's pipeline"
+        },
+        {
+          "riskOrUnknown": "Content migration accuracy",
+          "retireIn": "S03",
+          "whatWillBeProven": "All 17 chapters build without errors and component usage matches the guide's structure"
+        },
+        {
+          "riskOrUnknown": "Two-column layout within Starlight",
+          "retireIn": "S01",
+          "whatWillBeProven": "Custom CSS can override Starlight's content width to support a main+margin layout"
+        }
+      ],
+      "verification_contract": "",
+      "verification_integration": "",
+      "verification_operational": "",
+      "verification_uat": "",
+      "definition_of_done": [
+        "astro build produces a complete static site with all 17 chapters",
+        "Code snippets in at least 3 chapters pull live from engine source via region tags",
+        "GitHub Actions workflow deploys successfully on push to main",
+        "All 5 custom components render correctly: PolyPatch, ListenFor, CodeSnippet, EuclideanDiagram, PolyScreenshot",
+        "Typography uses Source Serif 4 for prose, Inter for UI elements, JetBrains Mono for code",
+        "Mobile layout collapses margin column below prose with patch boxes remaining full-width"
+      ],
       "requirement_coverage": "Not provided.",
       "boundary_map_markdown": "Not provided.",
       "sequence": 0
@@ -1320,6 +1387,146 @@
       "replan_triggered_at": null,
       "is_sketch": 0,
       "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M012",
+      "id": "S01",
+      "title": "S01",
+      "status": "complete",
+      "risk": "low",
+      "depends": [],
+      "demo": "astro dev serves a working site at localhost:4321 with one sample chapter, correct fonts, colour palette, and two-column layout",
+      "created_at": "2026-06-25T00:10:13.775Z",
+      "completed_at": "2026-06-25T00:37:13.050Z",
+      "full_summary_md": "---\nid: S01\nparent: M012\nmilestone: M012\nprovides:\n  - (none)\nrequires:\n  []\naffects:\n  []\nkey_files:\n  - site/package.json\n  - site/astro.config.mjs\n  - site/src/styles/custom.css\n  - site/src/content/docs/index.mdx\n  - site/src/content/docs/introduction.mdx\n  - site/src/content/docs/01-foundations.mdx\nkey_decisions:\n  - Placed Astro project in site/ (not docs/) to avoid conflict with existing internal documentation\n  - Used @fontsource-variable packages for variable font weight support\n  - Set base path to /poly for GitHub Pages deployment under jimakennedy.github.io/poly\npatterns_established:\n  - (none)\nobservability_surfaces:\n  - none\ndrill_down_paths:\n  []\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-06-25T00:37:13.050Z\nblocker_discovered: false\n---\n\n# S01: Astro Starlight Scaffold and Design System\n\n**Scaffolded Astro Starlight site in site/ with Poly design system, all 20 content pages, and verified fonts/colours/layout in browser**\n\n## What Happened\n\nCreated a complete Astro Starlight project in site/ with: Fontsource variable fonts (Source Serif 4, Inter, JetBrains Mono), CSS custom properties for the full Poly colour palette and typography scale, Starlight theme overrides mapping teal accent colours, sidebar navigation with Introduction + 15 chapters + 2 appendices, a landing page with hero and card grid, an introduction page, a foundations chapter with real prose content, and placeholder stubs for remaining chapters. Build produces 20 static pages in under 600ms. Browser verification confirmed Source Serif 4 Variable loads correctly, teal accent #01696f is applied, and the complete sidebar renders.\n\n## Verification\n\nnpm run build exits 0 producing 20 pages; Playwright browser verification confirmed computed fonts (Source Serif 4 Variable), accent colours (#01696f), complete sidebar navigation, and heading hierarchy\n\n## Requirements Advanced\n\nNone.\n\n## Requirements Validated\n\nNone.\n\n## New Requirements Surfaced\n\nNone.\n\n## Requirements Invalidated or Re-scoped\n\nNone.\n\n## Operational Readiness\n\nNone.\n\n## Deviations\n\nNone.\n\n## Known Limitations\n\nNone.\n\n## Follow-ups\n\nNone.\n\n## Files Created/Modified\n\nNone.\n",
+      "full_uat_md": "# S01: Astro Starlight Scaffold and Design System — UAT\n\n**Milestone:** M012\n**Written:** 2026-06-25T00:37:13.050Z\n\n## UAT: S01 Astro Starlight Scaffold and Design System\n\n### Prerequisites\n- Node.js 20+ installed\n- Run `cd site && npm install`\n\n### Test Steps\n\n1. **Build succeeds**\n   - Run `npm run build` in `site/`\n   - Expected: 20 pages built, exit code 0\n\n2. **Dev server serves**\n   - Run `npm run dev` in `site/`\n   - Navigate to `http://localhost:4321/poly/`\n   - Expected: Landing page with hero section and card grid\n\n3. **Fonts load correctly**\n   - Open browser dev tools, inspect body text\n   - Expected: Computed font is `Source Serif 4 Variable`, not system serif\n\n4. **Colour palette applied**\n   - Inspect CSS variable `--sl-color-accent`\n   - Expected: `#01696f` (teal)\n\n5. **Sidebar navigation complete**\n   - Check left sidebar on any chapter page\n   - Expected: Introduction, 15 numbered chapters, 2 appendices\n\n6. **Chapter page renders**\n   - Navigate to `/poly/01-foundations/`\n   - Expected: H1 chapter title, H2 section headings, prose paragraphs with serif font\n",
+      "goal": "Scaffold an Astro Starlight site in site/ with the Poly design system: fonts (Source Serif 4, Inter, JetBrains Mono), colour palette, two-column layout, and one sample chapter rendering correctly at localhost:4321.",
+      "success_criteria": "astro dev serves at localhost:4321 with correct fonts, colour palette, sidebar navigation stub, and a sample chapter page demonstrating the two-column layout",
+      "proof_level": "",
+      "integration_closure": "",
+      "observability_impact": "",
+      "sequence": 1,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M012",
+      "id": "S02",
+      "title": "S02",
+      "status": "complete",
+      "risk": "medium",
+      "depends": [],
+      "demo": "A test page renders all 5 components: PolyPatch with lane table, ListenFor amber callout, CodeSnippet with static placeholder, EuclideanDiagram SVG circle, and PolyScreenshot with missing-image placeholder",
+      "created_at": "2026-06-25T00:10:13.775Z",
+      "completed_at": "2026-06-25T00:45:55.179Z",
+      "full_summary_md": "---\nid: S02\nparent: M012\nmilestone: M012\nprovides:\n  - (none)\nrequires:\n  []\naffects:\n  []\nkey_files:\n  - site/src/components/PolyPatch.astro\n  - site/src/components/ListenFor.astro\n  - site/src/components/CodeSnippet.astro\n  - site/src/components/EuclideanDiagram.astro\n  - site/src/components/PolyScreenshot.astro\n  - site/src/content/docs/component-demo.mdx\nkey_decisions: []\npatterns_established:\n  - (none)\nobservability_surfaces:\n  - none\ndrill_down_paths:\n  []\nduration: \"\"\nverification_result: passed\ncompleted_at: 2026-06-25T00:45:55.179Z\nblocker_discovered: false\n---\n\n# S02: Custom MDX Components\n\n**Built 5 custom Astro components (PolyPatch, ListenFor, CodeSnippet, EuclideanDiagram, PolyScreenshot) with a demo page exercising all of them**\n\n## What Happened\n\nCreated all 5 components specified in the plan: PolyPatch renders teal-bordered callout boxes with lane parameter tables; ListenFor renders amber-bordered listening guidance callouts; CodeSnippet is a static placeholder shell ready for S04's Vite extractor; EuclideanDiagram implements the Bjorklund algorithm in frontmatter and renders SVG circle diagrams matching Toussaint's notation; PolyScreenshot shows images with graceful placeholder fallback on missing files. A hidden component-demo.mdx page exercises all components with representative data. Build completes in under 600ms with zero errors.\n\n## Verification\n\nastro build passes (599ms, 21 pages); all 5 component class families present in rendered HTML; EuclideanDiagram SVG fill count verified correct (15 filled circles = E(7,12)+E(3,8)+E(5,12) = 7+3+5); dev server responds 200 on demo page\n\n## Requirements Advanced\n\nNone.\n\n## Requirements Validated\n\nNone.\n\n## New Requirements Surfaced\n\nNone.\n\n## Requirements Invalidated or Re-scoped\n\nNone.\n\n## Operational Readiness\n\nNone.\n\n## Deviations\n\nNone.\n\n## Known Limitations\n\nNone.\n\n## Follow-ups\n\nNone.\n\n## Files Created/Modified\n\nNone.\n",
+      "full_uat_md": "# S02: Custom MDX Components — UAT\n\n**Milestone:** M012\n**Written:** 2026-06-25T00:45:55.179Z\n\n## S02 UAT: Custom MDX Components\n\n### Prerequisites\n- `cd site && npm run dev` serves at localhost:4321\n\n### Tests\n\n1. **PolyPatch rendering**\n   - Navigate to `/poly/component-demo/`\n   - Verify teal header bar with \"Ewe Bell Ensemble (Agbekor Framework)\" title and italic preset name\n   - Verify 4-row lane parameter table renders with teal column headers and proper alignment\n\n2. **ListenFor rendering**\n   - On same page, verify amber/gold left-bordered callout with \"WHAT TO LISTEN FOR\" header\n   - Verify prose content renders in serif font inside the box\n\n3. **CodeSnippet shell**\n   - Verify dark panel with `engine/src/euclidean.cpp` file header and `bjorklund` region label\n   - Verify placeholder text mentions the file and region\n   - Verify caption appears below the panel\n\n4. **EuclideanDiagram SVG**\n   - Verify E(7,12) renders 12 positions on a circle with 7 filled (teal) and 5 open (white)\n   - Verify E(3,8) renders correctly with 3 filled, 5 open\n   - Verify E(5,12) r3 shows rotation label\n   - Verify connecting lines appear between adjacent filled positions\n\n5. **PolyScreenshot fallback**\n   - Verify placeholder appears (camera icon + \"Screenshot pending\") for the nonexistent image\n   - Verify caption text appears below the placeholder frame\n",
+      "goal": "Build 5 custom Astro components (PolyPatch, ListenFor, CodeSnippet, EuclideanDiagram, PolyScreenshot) and verify them on a test page",
+      "success_criteria": "All 5 components render correctly on a test page; PolyPatch shows lane tables with teal styling; ListenFor shows amber callout; CodeSnippet renders static placeholder; EuclideanDiagram draws SVG circle from steps/hits; PolyScreenshot shows placeholder for missing images; dev server builds without errors",
+      "proof_level": "",
+      "integration_closure": "",
+      "observability_impact": "",
+      "sequence": 2,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M012",
+      "id": "S03",
+      "title": "Content Migration from Guide to MDX",
+      "status": "pending",
+      "risk": "medium",
+      "depends": [
+        "S02"
+      ],
+      "demo": "All 17 sections plus 2 appendices render as navigable chapters with PolyPatch callouts replacing parameter tables, ListenFor boxes for listening guidance, and EuclideanDiagram calls for every E(k,n) reference",
+      "created_at": "2026-06-25T00:10:13.775Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Split poly_rhythmic_guide.md into per-chapter .mdx files, replace callout boxes and parameter tables with component usage, add CodeSnippet placeholder calls at algorithmic explanation points",
+      "success_criteria": "astro build succeeds with zero errors; all 17 sections + 2 appendices are navigable via sidebar; 26 patch recipes render as PolyPatch components",
+      "proof_level": "Build + spot-check 5 representative chapters in browser",
+      "integration_closure": "MDX files reference components via relative imports; sidebar config in astro.config.mjs lists all chapters",
+      "observability_impact": "Build failure on any malformed MDX surfaces in astro build output",
+      "sequence": 3,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M012",
+      "id": "S04",
+      "title": "Live Code Extraction Pipeline",
+      "status": "pending",
+      "risk": "high",
+      "depends": [
+        "S03"
+      ],
+      "demo": "CodeSnippet components in at least 3 chapters render syntax-highlighted C++ pulled from engine source files via region tags, with filename headers and GitHub line links",
+      "created_at": "2026-06-25T00:10:13.775Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Add #region/#endregion tags to euclidean.cpp, types.h, and engine.cpp; write the Vite code-extractor plugin; wire it into astro.config.mjs; update CodeSnippet to consume extracted content",
+      "success_criteria": "astro build resolves all CodeSnippet directives from engine source; region tags in 3 engine files compile without affecting tests; Shiki highlights C++ correctly in dark panels",
+      "proof_level": "Build + verify extracted snippets match source; run cmake build + ctest to confirm region tags don't break compilation",
+      "integration_closure": "Vite plugin reads from repo root paths (engine/src/, engine/include/poly/); region tags are non-functional C++ comments",
+      "observability_impact": "Vite plugin logs warnings for missing regions or unresolved file paths during build",
+      "sequence": 4,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M012",
+      "id": "S05",
+      "title": "GitHub Pages Deployment",
+      "status": "pending",
+      "risk": "low",
+      "depends": [
+        "S01"
+      ],
+      "demo": "Push to main triggers GitHub Actions build and deploys the site to GitHub Pages",
+      "created_at": "2026-06-25T00:10:13.775Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Create .github/workflows/deploy.yml using withastro/action, configure GitHub Pages, verify end-to-end deployment",
+      "success_criteria": "Push to main triggers successful Actions run; site is accessible at the GitHub Pages URL; subsequent pushes update the site",
+      "proof_level": "Successful GitHub Actions run + live site loads in browser",
+      "integration_closure": "Workflow installs docs/ dependencies and builds from docs/ working directory; does not interfere with existing CI workflows",
+      "observability_impact": "GitHub Actions run logs; deployment status visible in repo settings",
+      "sequence": 5,
+      "replan_triggered_at": null,
+      "is_sketch": 0,
+      "sketch_scope": ""
+    },
+    {
+      "milestone_id": "M012",
+      "id": "S06",
+      "title": "Screenshots and Visual Polish",
+      "status": "pending",
+      "risk": "low",
+      "depends": [
+        "S03"
+      ],
+      "demo": "At least 5 representative chapters have screenshots showing the Poly UI with patch values loaded",
+      "created_at": "2026-06-25T00:10:13.775Z",
+      "completed_at": null,
+      "full_summary_md": "",
+      "full_uat_md": "",
+      "goal": "Capture screenshots per the plan's Section 8 workflow and integrate them into MDX pages; perform final visual polish",
+      "success_criteria": "",
+      "proof_level": "",
+      "integration_closure": "",
+      "observability_impact": "",
+      "sequence": 6,
+      "replan_triggered_at": null,
+      "is_sketch": 1,
+      "sketch_scope": "Manual screenshot capture workflow for 26 patches across LaneEditView, CrossRhythmView, and MicroTimingEditorView. Add PolyScreenshot src props as images are captured. Final visual polish pass on typography, spacing, and responsive behaviour."
     }
   ],
   "tasks": [
@@ -7823,6 +8030,422 @@
       "escalation_awaiting_review": 0,
       "escalation_artifact_path": null,
       "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M012",
+      "slice_id": "S01",
+      "id": "T01",
+      "title": "Initialized Astro Starlight project in site/ with default template, verified build succeeds",
+      "status": "complete",
+      "one_liner": "Initialized Astro Starlight project in site/ with default template, verified build succeeds",
+      "narrative": "Created the Astro Starlight project using `npm create astro@latest -- site --template starlight`. Default template installed successfully with all dependencies. Ran `npm run build` to verify the scaffold builds cleanly — 4 pages built in 1.6s.",
+      "verification_result": "npm run build exited 0, producing 4 static pages",
+      "duration": "",
+      "completed_at": "2026-06-25T00:36:34.235Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "site/package.json",
+        "site/astro.config.mjs",
+        "site/tsconfig.json"
+      ],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T01\nparent: S01\nmilestone: M012\nkey_files:\n  - site/package.json\n  - site/astro.config.mjs\n  - site/tsconfig.json\nkey_decisions: []\nduration: \nverification_result: passed\ncompleted_at: 2026-06-25T00:36:34.235Z\nblocker_discovered: false\n---\n\n# T01: Initialized Astro Starlight project in site/ with default template, verified build succeeds\n\n**Initialized Astro Starlight project in site/ with default template, verified build succeeds**\n\n## What Happened\n\nCreated the Astro Starlight project using `npm create astro@latest -- site --template starlight`. Default template installed successfully with all dependencies. Ran `npm run build` to verify the scaffold builds cleanly — 4 pages built in 1.6s.\n\n## Verification\n\nnpm run build exited 0, producing 4 static pages\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `cd site && npm run build` | 0 | pass | 1600ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `site/package.json`\n- `site/astro.config.mjs`\n- `site/tsconfig.json`\n",
+      "description": "Create the Astro Starlight project in site/ using npm create astro with the starlight template. Install dependencies. Verify the default site builds and serves.",
+      "estimate": "10min",
+      "files": [
+        "site/package.json",
+        "site/astro.config.mjs",
+        "site/tsconfig.json"
+      ],
+      "verify": "cd site && npm run build succeeds with exit code 0",
+      "inputs": [
+        "Plan file design system spec"
+      ],
+      "expected_output": [
+        "site/package.json",
+        "site/astro.config.mjs",
+        "site/src/content/docs/index.mdx"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M012",
+      "slice_id": "S01",
+      "id": "T02",
+      "title": "Installed Fontsource variable fonts and created design system CSS with full colour palette and typography scale",
+      "status": "complete",
+      "one_liner": "Installed Fontsource variable fonts and created design system CSS with full colour palette and typography scale",
+      "narrative": "Installed @fontsource-variable/source-serif-4, @fontsource-variable/inter, @fontsource-variable/jetbrains-mono. Created site/src/styles/custom.css with all Poly colour palette CSS variables, Starlight theme overrides (--sl-color-accent etc), typography scale matching the plan spec (serif for prose, sans for UI, mono for code), and a max-width constraint for two-column readability at wider viewports.",
+      "verification_result": "Build succeeds with custom CSS loaded; browser verification confirms Source Serif 4 Variable is the computed font and --sl-color-accent is #01696f",
+      "duration": "",
+      "completed_at": "2026-06-25T00:36:39.872Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "site/src/styles/custom.css",
+        "site/package.json"
+      ],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T02\nparent: S01\nmilestone: M012\nkey_files:\n  - site/src/styles/custom.css\n  - site/package.json\nkey_decisions: []\nduration: \nverification_result: passed\ncompleted_at: 2026-06-25T00:36:39.871Z\nblocker_discovered: false\n---\n\n# T02: Installed Fontsource variable fonts and created design system CSS with full colour palette and typography scale\n\n**Installed Fontsource variable fonts and created design system CSS with full colour palette and typography scale**\n\n## What Happened\n\nInstalled @fontsource-variable/source-serif-4, @fontsource-variable/inter, @fontsource-variable/jetbrains-mono. Created site/src/styles/custom.css with all Poly colour palette CSS variables, Starlight theme overrides (--sl-color-accent etc), typography scale matching the plan spec (serif for prose, sans for UI, mono for code), and a max-width constraint for two-column readability at wider viewports.\n\n## Verification\n\nBuild succeeds with custom CSS loaded; browser verification confirms Source Serif 4 Variable is the computed font and --sl-color-accent is #01696f\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `cd site && npm run build` | 0 | pass | 568ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `site/src/styles/custom.css`\n- `site/package.json`\n",
+      "description": "Install @fontsource/source-serif-4, @fontsource/inter, @fontsource/jetbrains-mono. Create site/src/styles/custom.css with CSS custom properties for the full colour palette and typography scale from the plan spec.",
+      "estimate": "15min",
+      "files": [
+        "site/package.json",
+        "site/src/styles/custom.css"
+      ],
+      "verify": "Build succeeds and custom.css contains all colour variables and font-face declarations",
+      "inputs": [
+        "Plan file section 5 (Design System)"
+      ],
+      "expected_output": [
+        "site/src/styles/custom.css"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M012",
+      "slice_id": "S01",
+      "id": "T03",
+      "title": "Configured Astro Starlight with site metadata, full sidebar navigation (17 chapters + 2 appendices), and custom CSS",
+      "status": "complete",
+      "one_liner": "Configured Astro Starlight with site metadata, full sidebar navigation (17 chapters + 2 appendices), and custom CSS",
+      "narrative": "Updated astro.config.mjs with site URL (jimakennedy.github.io), base path (/poly), title, description, GitHub social link, customCss import for the design system, and complete sidebar configuration with Introduction, 15 numbered chapters in a Chapters group, and 2 appendices in an Appendices group. Created placeholder MDX files for all entries to satisfy Starlight's slug validation.",
+      "verification_result": "Build succeeds with all 20 pages (17 chapters + 2 appendices + landing); sidebar navigation verified in browser showing complete chapter list",
+      "duration": "",
+      "completed_at": "2026-06-25T00:36:46.120Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "site/astro.config.mjs"
+      ],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T03\nparent: S01\nmilestone: M012\nkey_files:\n  - site/astro.config.mjs\nkey_decisions: []\nduration: \nverification_result: passed\ncompleted_at: 2026-06-25T00:36:46.120Z\nblocker_discovered: false\n---\n\n# T03: Configured Astro Starlight with site metadata, full sidebar navigation (17 chapters + 2 appendices), and custom CSS\n\n**Configured Astro Starlight with site metadata, full sidebar navigation (17 chapters + 2 appendices), and custom CSS**\n\n## What Happened\n\nUpdated astro.config.mjs with site URL (jimakennedy.github.io), base path (/poly), title, description, GitHub social link, customCss import for the design system, and complete sidebar configuration with Introduction, 15 numbered chapters in a Chapters group, and 2 appendices in an Appendices group. Created placeholder MDX files for all entries to satisfy Starlight's slug validation.\n\n## Verification\n\nBuild succeeds with all 20 pages (17 chapters + 2 appendices + landing); sidebar navigation verified in browser showing complete chapter list\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `cd site && npm run build` | 0 | pass | 568ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `site/astro.config.mjs`\n",
+      "description": "Update astro.config.mjs with site title, sidebar navigation entries for all 17 chapters + 2 appendices, custom CSS import, and Starlight theme overrides for the Poly colour palette.",
+      "estimate": "15min",
+      "files": [
+        "site/astro.config.mjs"
+      ],
+      "verify": "astro build succeeds and sidebar entries appear in the built HTML",
+      "inputs": [
+        "Plan file section 4.1 (File Structure)"
+      ],
+      "expected_output": [
+        "site/astro.config.mjs"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M012",
+      "slice_id": "S01",
+      "id": "T04",
+      "title": "Created landing page, introduction, and sample foundations chapter; verified fonts, colours, and layout in browser",
+      "status": "complete",
+      "one_liner": "Created landing page, introduction, and sample foundations chapter; verified fonts, colours, and layout in browser",
+      "narrative": "Replaced default Starlight template content with Poly Guide landing page (hero + card grid), introduction page, and a foundations chapter with real prose content, heading hierarchy, and commented-out component placeholders for S02. Removed default template assets (houston.webp, example guides). Ran dev server and verified in browser via Playwright: Source Serif 4 Variable loads as computed font, teal accent #01696f applied correctly, all sidebar entries present, heading hierarchy renders cleanly.",
+      "verification_result": "Dev server at localhost:4321 renders correctly; Playwright verified computed fonts (Source Serif 4 Variable), accent colours (#01696f), complete sidebar nav, and heading hierarchy",
+      "duration": "",
+      "completed_at": "2026-06-25T00:36:54.108Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "site/src/content/docs/index.mdx",
+        "site/src/content/docs/introduction.mdx",
+        "site/src/content/docs/01-foundations.mdx"
+      ],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T04\nparent: S01\nmilestone: M012\nkey_files:\n  - site/src/content/docs/index.mdx\n  - site/src/content/docs/introduction.mdx\n  - site/src/content/docs/01-foundations.mdx\nkey_decisions: []\nduration: \nverification_result: passed\ncompleted_at: 2026-06-25T00:36:54.108Z\nblocker_discovered: false\n---\n\n# T04: Created landing page, introduction, and sample foundations chapter; verified fonts, colours, and layout in browser\n\n**Created landing page, introduction, and sample foundations chapter; verified fonts, colours, and layout in browser**\n\n## What Happened\n\nReplaced default Starlight template content with Poly Guide landing page (hero + card grid), introduction page, and a foundations chapter with real prose content, heading hierarchy, and commented-out component placeholders for S02. Removed default template assets (houston.webp, example guides). Ran dev server and verified in browser via Playwright: Source Serif 4 Variable loads as computed font, teal accent #01696f applied correctly, all sidebar entries present, heading hierarchy renders cleanly.\n\n## Verification\n\nDev server at localhost:4321 renders correctly; Playwright verified computed fonts (Source Serif 4 Variable), accent colours (#01696f), complete sidebar nav, and heading hierarchy\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `cd site && npm run build` | 0 | pass | 568ms |\n| 2 | `playwright browser verification (fonts, colours, sidebar, content)` | 0 | pass | 130000ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `site/src/content/docs/index.mdx`\n- `site/src/content/docs/introduction.mdx`\n- `site/src/content/docs/01-foundations.mdx`\n",
+      "description": "Create a sample chapter MDX page (01-foundations.mdx) with placeholder prose, heading hierarchy, and a two-column layout test. Verify it renders correctly via astro dev at localhost:4321.",
+      "estimate": "10min",
+      "files": [
+        "site/src/content/docs/01-foundations.mdx"
+      ],
+      "verify": "astro dev serves at localhost:4321 and the sample chapter renders with correct fonts and layout",
+      "inputs": [
+        "site/src/styles/custom.css",
+        "site/astro.config.mjs"
+      ],
+      "expected_output": [
+        "site/src/content/docs/01-foundations.mdx"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M012",
+      "slice_id": "S02",
+      "id": "T01",
+      "title": "Built PolyPatch.astro — teal-bordered callout with header bar and lane parameter table",
+      "status": "complete",
+      "one_liner": "Built PolyPatch.astro — teal-bordered callout with header bar and lane parameter table",
+      "narrative": "Created PolyPatch component with title/preset props, teal header bar, and scoped table styles that integrate with Starlight's markdown rendering. Child slot renders markdown tables with proper column alignment and teal-themed borders.",
+      "verification_result": "Build passes; component renders in demo page with correct class names",
+      "duration": "",
+      "completed_at": "2026-06-25T00:45:05.585Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "site/src/components/PolyPatch.astro"
+      ],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T01\nparent: S02\nmilestone: M012\nkey_files:\n  - site/src/components/PolyPatch.astro\nkey_decisions: []\nduration: \nverification_result: passed\ncompleted_at: 2026-06-25T00:45:05.585Z\nblocker_discovered: false\n---\n\n# T01: Built PolyPatch.astro — teal-bordered callout with header bar and lane parameter table\n\n**Built PolyPatch.astro — teal-bordered callout with header bar and lane parameter table**\n\n## What Happened\n\nCreated PolyPatch component with title/preset props, teal header bar, and scoped table styles that integrate with Starlight's markdown rendering. Child slot renders markdown tables with proper column alignment and teal-themed borders.\n\n## Verification\n\nBuild passes; component renders in demo page with correct class names\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `astro build` | 0 | pass | 599ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `site/src/components/PolyPatch.astro`\n",
+      "description": "Teal-bordered callout box displaying patch title, optional preset name, and a lane parameter table rendered from child markdown table content. Uses Inter font, poly-patch-bg colour.",
+      "estimate": "20min",
+      "files": [
+        "site/src/components/PolyPatch.astro",
+        "site/src/styles/custom.css"
+      ],
+      "verify": "Component renders with teal border, title, and table on dev server",
+      "inputs": [
+        "Design spec from plan: teal border, EBF4F4 bg, Inter font, lane table"
+      ],
+      "expected_output": [
+        "site/src/components/PolyPatch.astro with props: title, preset"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M012",
+      "slice_id": "S02",
+      "id": "T02",
+      "title": "Built ListenFor.astro — amber-bordered callout for listening guidance",
+      "status": "complete",
+      "one_liner": "Built ListenFor.astro — amber-bordered callout for listening guidance",
+      "narrative": "Created ListenFor component with gold left border, warm background, uppercase header label, and prose body slot. No props needed — content comes via slot.",
+      "verification_result": "Build passes; component renders with listen-for-header class in demo page",
+      "duration": "",
+      "completed_at": "2026-06-25T00:45:08.890Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "site/src/components/ListenFor.astro"
+      ],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T02\nparent: S02\nmilestone: M012\nkey_files:\n  - site/src/components/ListenFor.astro\nkey_decisions: []\nduration: \nverification_result: passed\ncompleted_at: 2026-06-25T00:45:08.890Z\nblocker_discovered: false\n---\n\n# T02: Built ListenFor.astro — amber-bordered callout for listening guidance\n\n**Built ListenFor.astro — amber-bordered callout for listening guidance**\n\n## What Happened\n\nCreated ListenFor component with gold left border, warm background, uppercase header label, and prose body slot. No props needed — content comes via slot.\n\n## Verification\n\nBuild passes; component renders with listen-for-header class in demo page\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `astro build` | 0 | pass | 599ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `site/src/components/ListenFor.astro`\n",
+      "description": "Amber-bordered callout box for listening guidance. Left border accent in gold/amber, warm background, child content as prose. Ear emoji prefix.",
+      "estimate": "10min",
+      "files": [
+        "site/src/components/ListenFor.astro",
+        "site/src/styles/custom.css"
+      ],
+      "verify": "Component renders with amber border and warm background on dev server",
+      "inputs": [
+        "Design spec: FFF8E6 bg, D19900 left border, child prose content"
+      ],
+      "expected_output": [
+        "site/src/components/ListenFor.astro"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M012",
+      "slice_id": "S02",
+      "id": "T03",
+      "title": "Built CodeSnippet.astro — dark code panel shell with file/region header",
+      "status": "complete",
+      "one_liner": "Built CodeSnippet.astro — dark code panel shell with file/region header",
+      "narrative": "Created CodeSnippet as a static placeholder component with file path header, region label, and placeholder message. Props: file, region, caption. Will be wired to the Vite region-tag extractor in S04.",
+      "verification_result": "Build passes; component renders dark panel with code-snippet classes in demo page",
+      "duration": "",
+      "completed_at": "2026-06-25T00:45:13.311Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "site/src/components/CodeSnippet.astro"
+      ],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T03\nparent: S02\nmilestone: M012\nkey_files:\n  - site/src/components/CodeSnippet.astro\nkey_decisions: []\nduration: \nverification_result: passed\ncompleted_at: 2026-06-25T00:45:13.311Z\nblocker_discovered: false\n---\n\n# T03: Built CodeSnippet.astro — dark code panel shell with file/region header\n\n**Built CodeSnippet.astro — dark code panel shell with file/region header**\n\n## What Happened\n\nCreated CodeSnippet as a static placeholder component with file path header, region label, and placeholder message. Props: file, region, caption. Will be wired to the Vite region-tag extractor in S04.\n\n## Verification\n\nBuild passes; component renders dark panel with code-snippet classes in demo page\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `astro build` | 0 | pass | 599ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `site/src/components/CodeSnippet.astro`\n",
+      "description": "Static placeholder component for S02. Shows file path header and a placeholder message. Will be wired to the Vite region-tag extractor in S04.",
+      "estimate": "15min",
+      "files": [
+        "site/src/components/CodeSnippet.astro",
+        "site/src/styles/custom.css"
+      ],
+      "verify": "Component renders dark panel with file header and placeholder text",
+      "inputs": [
+        "Design spec: 1C1B19 bg, filename header, region prop for S04"
+      ],
+      "expected_output": [
+        "site/src/components/CodeSnippet.astro with props: file, region, caption"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M012",
+      "slice_id": "S02",
+      "id": "T04",
+      "title": "Built EuclideanDiagram.astro — SVG circle diagram with Bjorklund algorithm",
+      "status": "complete",
+      "one_liner": "Built EuclideanDiagram.astro — SVG circle diagram with Bjorklund algorithm",
+      "narrative": "Created EuclideanDiagram with a frontmatter Bjorklund implementation that computes onset positions. Renders SVG with filled circles for hits, open circles for rests, connecting lines between adjacent hits, and E(k,n) label. Props: steps, hits, rotation, radius. Verified: E(7,12)+E(3,8)+E(5,12) = 15 filled circles total, correct.",
+      "verification_result": "Build passes; 15 filled SVG circles across 3 test diagrams matches expected 7+3+5",
+      "duration": "",
+      "completed_at": "2026-06-25T00:45:19.878Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "site/src/components/EuclideanDiagram.astro"
+      ],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T04\nparent: S02\nmilestone: M012\nkey_files:\n  - site/src/components/EuclideanDiagram.astro\nkey_decisions: []\nduration: \nverification_result: passed\ncompleted_at: 2026-06-25T00:45:19.878Z\nblocker_discovered: false\n---\n\n# T04: Built EuclideanDiagram.astro — SVG circle diagram with Bjorklund algorithm\n\n**Built EuclideanDiagram.astro — SVG circle diagram with Bjorklund algorithm**\n\n## What Happened\n\nCreated EuclideanDiagram with a frontmatter Bjorklund implementation that computes onset positions. Renders SVG with filled circles for hits, open circles for rests, connecting lines between adjacent hits, and E(k,n) label. Props: steps, hits, rotation, radius. Verified: E(7,12)+E(3,8)+E(5,12) = 15 filled circles total, correct.\n\n## Verification\n\nBuild passes; 15 filled SVG circles across 3 test diagrams matches expected 7+3+5\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `astro build` | 0 | pass | 599ms |\n| 2 | `curl ... | grep -c 'fill=\"var(--poly-primary)\"'` | 0 | 15 filled circles = 7+3+5 correct | 200ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `site/src/components/EuclideanDiagram.astro`\n",
+      "description": "SVG circle diagram rendering Euclidean rhythm onset distribution from steps/hits/rotation props. Filled circles for hits, open circles for rests, arranged on a circle. Implements Bjorklund algorithm in the component to compute onset positions.",
+      "estimate": "30min",
+      "files": [
+        "site/src/components/EuclideanDiagram.astro",
+        "site/src/styles/custom.css"
+      ],
+      "verify": "E(7,12) renders 12 positions with 7 filled and 5 open; E(3,8) renders correctly",
+      "inputs": [
+        "Toussaint circle notation style, Bjorklund distribution algorithm"
+      ],
+      "expected_output": [
+        "site/src/components/EuclideanDiagram.astro with props: steps, hits, rotation, radius"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M012",
+      "slice_id": "S02",
+      "id": "T05",
+      "title": "Built PolyScreenshot.astro — figure with image fallback placeholder",
+      "status": "complete",
+      "one_liner": "Built PolyScreenshot.astro — figure with image fallback placeholder",
+      "narrative": "Created PolyScreenshot with img element and a hidden placeholder div. On image load error, JavaScript hides the img and shows the placeholder (camera icon SVG + \"Screenshot pending\" text). Uses figure/figcaption for semantics.",
+      "verification_result": "Build passes; component renders with poly-screenshot classes in demo page",
+      "duration": "",
+      "completed_at": "2026-06-25T00:45:23.668Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "site/src/components/PolyScreenshot.astro"
+      ],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T05\nparent: S02\nmilestone: M012\nkey_files:\n  - site/src/components/PolyScreenshot.astro\nkey_decisions: []\nduration: \nverification_result: passed\ncompleted_at: 2026-06-25T00:45:23.668Z\nblocker_discovered: false\n---\n\n# T05: Built PolyScreenshot.astro — figure with image fallback placeholder\n\n**Built PolyScreenshot.astro — figure with image fallback placeholder**\n\n## What Happened\n\nCreated PolyScreenshot with img element and a hidden placeholder div. On image load error, JavaScript hides the img and shows the placeholder (camera icon SVG + \"Screenshot pending\" text). Uses figure/figcaption for semantics.\n\n## Verification\n\nBuild passes; component renders with poly-screenshot classes in demo page\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `astro build` | 0 | pass | 599ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `site/src/components/PolyScreenshot.astro`\n",
+      "description": "Figure element with image and caption. When src image is missing or not yet provided, renders a styled placeholder with camera icon instead of a broken image. Uses figure/figcaption HTML.",
+      "estimate": "15min",
+      "files": [
+        "site/src/components/PolyScreenshot.astro",
+        "site/src/styles/custom.css"
+      ],
+      "verify": "Component shows placeholder when src is missing; shows image when present",
+      "inputs": [
+        "Design spec: figure with caption, graceful fallback"
+      ],
+      "expected_output": [
+        "site/src/components/PolyScreenshot.astro with props: src, caption"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
+    },
+    {
+      "milestone_id": "M012",
+      "slice_id": "S02",
+      "id": "T06",
+      "title": "Created component-demo.mdx exercising all 5 components with representative data",
+      "status": "complete",
+      "one_liner": "Created component-demo.mdx exercising all 5 components with representative data",
+      "narrative": "Created hidden demo page importing all 5 components with realistic test data: PolyPatch with Ewe Bell Ensemble 4-lane table, ListenFor with prose guidance, CodeSnippet pointing at euclidean.cpp bjorklund region, three EuclideanDiagram variants (E(7,12), E(3,8), E(5,12) r3), and PolyScreenshot with nonexistent image to test placeholder.",
+      "verification_result": "Build passes; all 5 component class families present in rendered HTML; dev server responds 200",
+      "duration": "",
+      "completed_at": "2026-06-25T00:45:29.483Z",
+      "blocker_discovered": false,
+      "deviations": "None.",
+      "known_issues": "None.",
+      "key_files": [
+        "site/src/content/docs/component-demo.mdx"
+      ],
+      "key_decisions": [],
+      "full_summary_md": "---\nid: T06\nparent: S02\nmilestone: M012\nkey_files:\n  - site/src/content/docs/component-demo.mdx\nkey_decisions: []\nduration: \nverification_result: passed\ncompleted_at: 2026-06-25T00:45:29.483Z\nblocker_discovered: false\n---\n\n# T06: Created component-demo.mdx exercising all 5 components with representative data\n\n**Created component-demo.mdx exercising all 5 components with representative data**\n\n## What Happened\n\nCreated hidden demo page importing all 5 components with realistic test data: PolyPatch with Ewe Bell Ensemble 4-lane table, ListenFor with prose guidance, CodeSnippet pointing at euclidean.cpp bjorklund region, three EuclideanDiagram variants (E(7,12), E(3,8), E(5,12) r3), and PolyScreenshot with nonexistent image to test placeholder.\n\n## Verification\n\nBuild passes; all 5 component class families present in rendered HTML; dev server responds 200\n\n## Verification Evidence\n\n| # | Command | Exit Code | Verdict | Duration |\n|---|---------|-----------|---------|----------|\n| 1 | `astro build` | 0 | pass | 599ms |\n| 2 | `curl -sI http://localhost:4321/poly/component-demo/` | 0 | HTTP 200 | 100ms |\n\n## Deviations\n\nNone.\n\n## Known Issues\n\nNone.\n\n## Files Created/Modified\n\n- `site/src/content/docs/component-demo.mdx`\n",
+      "description": "Add a test/demo page (component-demo.mdx) that imports and exercises all 5 components with representative data. Verify the dev server builds and renders correctly.",
+      "estimate": "15min",
+      "files": [
+        "site/src/content/docs/component-demo.mdx"
+      ],
+      "verify": "astro dev serves the page; all 5 components render; no build errors",
+      "inputs": [
+        "All 5 components from T01-T05"
+      ],
+      "expected_output": [
+        "site/src/content/docs/component-demo.mdx with all components exercised"
+      ],
+      "observability_impact": "",
+      "full_plan_md": "",
+      "sequence": 0,
+      "blocker_source": "",
+      "escalation_pending": 0,
+      "escalation_awaiting_review": 0,
+      "escalation_artifact_path": null,
+      "escalation_override_applied_at": null
     }
   ],
   "decisions": [],
@@ -9608,6 +10231,149 @@
       "verdict": "pass",
       "duration_ms": 1520,
       "created_at": "2026-06-23T18:33:05.853Z"
+    },
+    {
+      "id": 163,
+      "task_id": "T01",
+      "slice_id": "S01",
+      "milestone_id": "M012",
+      "command": "cd site && npm run build",
+      "exit_code": 0,
+      "verdict": "pass",
+      "duration_ms": 1600,
+      "created_at": "2026-06-25T00:36:34.235Z"
+    },
+    {
+      "id": 164,
+      "task_id": "T02",
+      "slice_id": "S01",
+      "milestone_id": "M012",
+      "command": "cd site && npm run build",
+      "exit_code": 0,
+      "verdict": "pass",
+      "duration_ms": 568,
+      "created_at": "2026-06-25T00:36:39.872Z"
+    },
+    {
+      "id": 165,
+      "task_id": "T03",
+      "slice_id": "S01",
+      "milestone_id": "M012",
+      "command": "cd site && npm run build",
+      "exit_code": 0,
+      "verdict": "pass",
+      "duration_ms": 568,
+      "created_at": "2026-06-25T00:36:46.120Z"
+    },
+    {
+      "id": 166,
+      "task_id": "T04",
+      "slice_id": "S01",
+      "milestone_id": "M012",
+      "command": "cd site && npm run build",
+      "exit_code": 0,
+      "verdict": "pass",
+      "duration_ms": 568,
+      "created_at": "2026-06-25T00:36:54.108Z"
+    },
+    {
+      "id": 167,
+      "task_id": "T04",
+      "slice_id": "S01",
+      "milestone_id": "M012",
+      "command": "playwright browser verification (fonts, colours, sidebar, content)",
+      "exit_code": 0,
+      "verdict": "pass",
+      "duration_ms": 130000,
+      "created_at": "2026-06-25T00:36:54.109Z"
+    },
+    {
+      "id": 168,
+      "task_id": "T01",
+      "slice_id": "S02",
+      "milestone_id": "M012",
+      "command": "astro build",
+      "exit_code": 0,
+      "verdict": "pass",
+      "duration_ms": 599,
+      "created_at": "2026-06-25T00:45:05.585Z"
+    },
+    {
+      "id": 169,
+      "task_id": "T02",
+      "slice_id": "S02",
+      "milestone_id": "M012",
+      "command": "astro build",
+      "exit_code": 0,
+      "verdict": "pass",
+      "duration_ms": 599,
+      "created_at": "2026-06-25T00:45:08.890Z"
+    },
+    {
+      "id": 170,
+      "task_id": "T03",
+      "slice_id": "S02",
+      "milestone_id": "M012",
+      "command": "astro build",
+      "exit_code": 0,
+      "verdict": "pass",
+      "duration_ms": 599,
+      "created_at": "2026-06-25T00:45:13.311Z"
+    },
+    {
+      "id": 171,
+      "task_id": "T04",
+      "slice_id": "S02",
+      "milestone_id": "M012",
+      "command": "astro build",
+      "exit_code": 0,
+      "verdict": "pass",
+      "duration_ms": 599,
+      "created_at": "2026-06-25T00:45:19.878Z"
+    },
+    {
+      "id": 172,
+      "task_id": "T04",
+      "slice_id": "S02",
+      "milestone_id": "M012",
+      "command": "curl ... | grep -c 'fill=\"var(--poly-primary)\"'",
+      "exit_code": 0,
+      "verdict": "15 filled circles = 7+3+5 correct",
+      "duration_ms": 200,
+      "created_at": "2026-06-25T00:45:19.878Z"
+    },
+    {
+      "id": 173,
+      "task_id": "T05",
+      "slice_id": "S02",
+      "milestone_id": "M012",
+      "command": "astro build",
+      "exit_code": 0,
+      "verdict": "pass",
+      "duration_ms": 599,
+      "created_at": "2026-06-25T00:45:23.668Z"
+    },
+    {
+      "id": 174,
+      "task_id": "T06",
+      "slice_id": "S02",
+      "milestone_id": "M012",
+      "command": "astro build",
+      "exit_code": 0,
+      "verdict": "pass",
+      "duration_ms": 599,
+      "created_at": "2026-06-25T00:45:29.483Z"
+    },
+    {
+      "id": 175,
+      "task_id": "T06",
+      "slice_id": "S02",
+      "milestone_id": "M012",
+      "command": "curl -sI http://localhost:4321/poly/component-demo/",
+      "exit_code": 0,
+      "verdict": "HTTP 200",
+      "duration_ms": 100,
+      "created_at": "2026-06-25T00:45:29.483Z"
     }
   ]
 }

@@ -1,0 +1,108 @@
+---
+interface Props {
+  steps: number;
+  hits: number;
+  rotation?: number;
+  radius?: number;
+}
+
+const { steps, hits, rotation = 0, radius = 80 } = Astro.props;
+
+function bjorklund(steps: number, hits: number): boolean[] {
+  if (hits >= steps) return Array(steps).fill(true);
+  if (hits <= 0) return Array(steps).fill(false);
+
+  let pattern: number[][] = [];
+  for (let i = 0; i < hits; i++) pattern.push([1]);
+  let remainder: number[][] = [];
+  for (let i = 0; i < steps - hits; i++) remainder.push([0]);
+
+  while (remainder.length > 1) {
+    const newPattern: number[][] = [];
+    const minLen = Math.min(pattern.length, remainder.length);
+    for (let i = 0; i < minLen; i++) {
+      newPattern.push([...pattern[i], ...remainder[i]]);
+    }
+    const leftover = pattern.length > remainder.length
+      ? pattern.slice(minLen)
+      : remainder.slice(minLen);
+    pattern = newPattern;
+    remainder = leftover;
+  }
+
+  const flat = [...pattern, ...remainder].flat();
+  return flat.map(v => v === 1);
+}
+
+const onsets = bjorklund(steps, hits);
+const rotated = [...onsets.slice(onsets.length - rotation), ...onsets.slice(0, onsets.length - rotation)];
+
+const size = radius * 2 + 40;
+const cx = size / 2;
+const cy = size / 2;
+
+const positions = Array.from({ length: steps }, (_, i) => {
+  const angle = (2 * Math.PI * i) / steps - Math.PI / 2;
+  return {
+    x: cx + radius * Math.cos(angle),
+    y: cy + radius * Math.sin(angle),
+    isHit: rotated[i],
+  };
+});
+
+const label = `E(${hits},${steps})${rotation ? ` r${rotation}` : ''}`;
+---
+
+<figure class="euclidean-diagram">
+  <svg
+    width={size}
+    height={size}
+    viewBox={`0 0 ${size} ${size}`}
+    xmlns="http://www.w3.org/2000/svg"
+    role="img"
+    aria-label={`Euclidean rhythm diagram: ${label}`}
+  >
+    <circle cx={cx} cy={cy} r={radius} fill="none" stroke="#d0e8e8" stroke-width="1.5" />
+
+    {positions.map((pos, i) => {
+      const next = positions[(i + 1) % steps];
+      if (pos.isHit && next.isHit) {
+        return <line x1={pos.x} y1={pos.y} x2={next.x} y2={next.y} stroke="var(--poly-primary)" stroke-width="1.5" opacity="0.4" />;
+      }
+      return null;
+    })}
+
+    {positions.map((pos) => (
+      <circle
+        cx={pos.x}
+        cy={pos.y}
+        r={pos.isHit ? 7 : 5}
+        fill={pos.isHit ? 'var(--poly-primary)' : '#fff'}
+        stroke={pos.isHit ? 'var(--poly-primary-dark)' : '#b0aeac'}
+        stroke-width={pos.isHit ? 2 : 1.5}
+      />
+    ))}
+  </svg>
+  <figcaption class="euclidean-label">{label}</figcaption>
+</figure>
+
+<style>
+  .euclidean-diagram {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 1rem 0;
+  }
+
+  .euclidean-diagram svg {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .euclidean-label {
+    font-family: var(--sl-font-system-mono);
+    font-size: var(--sl-text-xs);
+    color: var(--poly-text-muted);
+    margin-top: 0.3rem;
+  }
+</style>

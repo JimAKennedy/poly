@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-06-24T23:55:51Z | Files: 113 | Described: 0/113
-<!-- gsd:codebase-meta {"generatedAt":"2026-06-24T23:55:51Z","fingerprint":"9a4887503f90aa1f51d241095b61ca142f964774","fileCount":113,"truncated":false} -->
+Generated: 2026-06-25T01:09:32Z | Files: 115 | Described: 0/115
+<!-- gsd:codebase-meta {"generatedAt":"2026-06-25T01:09:32Z","fingerprint":"2d3b0659a0cef5f9b51dd88c9aec5c131c15c86d","fileCount":115,"truncated":false} -->
 
 ### (root)/
 - `.clang-format`
@@ -92,7 +92,7 @@ Generated: 2026-06-24T23:55:51Z | Files: 113 | Described: 0/113
 - `plugin/source/processor.h`
 
 ### plugin/source/ui/
-- *(22 files: 11 .cpp, 11 .h)*
+- *(24 files: 12 .cpp, 12 .h)*
 
 ### scripts/
 - `scripts/check-pragma-once.sh`
