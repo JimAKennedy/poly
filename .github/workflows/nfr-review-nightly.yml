@@ -14,18 +14,18 @@ jobs:
   nfr-review:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
 
       - name: Run NFR Review
         id: nfr
-        uses: JimAKennedy/nfr-review@v1
+        uses: JimAKennedy/nfr-review@f1b1fedc96c944547abe6dda995c1883a4e60707 # v1
         with:
           fail-on: "never"
           sarif-upload: "true"
           create-issues: "true"
 
       - name: Upload baseline
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: nfr-review-baseline
           path: ${{ steps.nfr.outputs.jsonl-path }}
