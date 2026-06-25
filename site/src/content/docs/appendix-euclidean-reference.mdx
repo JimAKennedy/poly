@@ -1,0 +1,127 @@
+---
+title: "Appendix: Euclidean Rhythm Reference"
+description: "A comprehensive table of Euclidean distributions E(k,n) for common step counts, with traditional rhythm associations."
+---
+
+import PolyPatch from '../../components/PolyPatch.astro';
+import ListenFor from '../../components/ListenFor.astro';
+import CodeSnippet from '../../components/CodeSnippet.astro';
+import EuclideanDiagram from '../../components/EuclideanDiagram.astro';
+import PolyScreenshot from '../../components/PolyScreenshot.astro';
+
+This appendix catalogues the Euclidean distributions most relevant to Poly's rhythmic vocabulary, organised by step count. For each pattern, the table lists the onset distribution, traditional associations, and the chapter where it is discussed in detail. Use this as a lookup reference when designing patches — if you know the tradition you are drawing from, find its Euclidean signature here and dial it in directly.
+
+## 4 Steps
+
+| E(k,n) | Pattern | Grouping | Traditional Association | Chapter |
+|--------|---------|----------|------------------------|---------|
+| E(1,4) | `x . . .` | 4 | Whole-note pulse | 1 |
+| E(2,4) | `x . x .` | 2+2 | Backbeat, half-time snare | 11 |
+| E(3,4) | `x . x x` | 2+1+1 | Afrobeat support | 4 |
+| E(4,4) | `x x x x` | 1+1+1+1 | Four-on-the-floor kick | 9 |
+
+<EuclideanDiagram steps={4} hits={4} />
+
+E(4,4) is the most ubiquitous pattern in Western popular music — every hit occupied, every beat marked. It is the foundation of house, techno, disco, and most rock drumming.
+
+## 5 Steps
+
+| E(k,n) | Pattern | Grouping | Traditional Association | Chapter |
+|--------|---------|----------|------------------------|---------|
+| E(2,5) | `x . x . .` | 2+3 | Khafif-e-ramal (Persian) | 1 |
+| E(3,5) | `x . x . x` | 2+2+1 | Gamelan pelog accent | 5 |
+
+<EuclideanDiagram steps={5} hits={2} />
+
+E(2,5) produces a 2+3 grouping found in classical Persian rhythm. In Poly, a 5-step lane at 1/8 subdivision creates a cycle that drifts against 4-based patterns, generating polymetric interaction every 20 steps.
+
+## 7 Steps
+
+| E(k,n) | Pattern | Grouping | Traditional Association | Chapter |
+|--------|---------|----------|------------------------|---------|
+| E(2,7) | `x . . x . . .` | 3+4 | Bendir accent (North Africa) | 2 |
+| E(3,7) | `x . x . x . .` | 2+2+3 | Rachenitsa (Bulgaria, 7/8) | 7 |
+| E(4,7) | `x . x x . x .` | 2+1+2+2 | Longa variant | 7 |
+| E(5,7) | `x . x x . x x` | 2+1+2+1+1 | Dense aksak fill | 7 |
+
+<EuclideanDiagram steps={7} hits={3} />
+
+E(3,7) is the Balkan rachenitsa — three accents across seven pulses, grouping as 2+2+3. Rotation selects the variant: rotation 0 gives 2+2+3, rotation 1 gives 2+3+2, rotation 2 gives 3+2+2.
+
+## 8 Steps
+
+| E(k,n) | Pattern | Grouping | Traditional Association | Chapter |
+|--------|---------|----------|------------------------|---------|
+| E(3,8) | `x . . x . . x .` | 3+3+2 | Tresillo (Cuba, West Africa) | 3 |
+| E(4,8) | `x . x . x . x .` | 2+2+2+2 | Straight eighth-note pulse | 9 |
+| E(5,8) | `x . x x . x x .` | 2+1+2+1+2 | Cinquillo (Cuba) | 3 |
+| E(7,8) | `x . x x x x x x` | 2+1+1+1+1+1+1 | Near-saturated fill | 1 |
+
+<EuclideanDiagram steps={8} hits={3} />
+
+The tresillo E(3,8) is arguably the most widely distributed rhythmic cell on earth. Its 3+3+2 grouping appears in Cuban son, New Orleans second line, reggaeton, Afrobeat, and electronic music. It is the irreducible atom of Afro-Atlantic rhythm.
+
+<EuclideanDiagram steps={8} hits={5} />
+
+The cinquillo E(5,8) is the tresillo's dense complement. Together, they cover nearly every pulse position in an 8-step cycle.
+
+## 9 Steps
+
+| E(k,n) | Pattern | Grouping | Traditional Association | Chapter |
+|--------|---------|----------|------------------------|---------|
+| E(2,9) | `x . . . x . . . .` | 4+5 | Sparse aksak pulse | 7 |
+| E(4,9) | `x . x . x . x . .` | 2+2+2+3 | Daichovo horo (Bulgaria, 9/8) | 7 |
+| E(5,9) | `x . x x . x . x .` | 2+1+2+2+2 | Dense 9/8 variant | 7 |
+
+<EuclideanDiagram steps={9} hits={4} />
+
+E(4,9) produces the 2+2+2+3 grouping characteristic of the daichovo horo. Four accents across nine pulses create a lopsided cycle that resolves on the fourth beat's extended duration.
+
+## 11 Steps
+
+| E(k,n) | Pattern | Grouping | Traditional Association | Chapter |
+|--------|---------|----------|------------------------|---------|
+| E(4,11) | `x . . x . . x . . x .` | 3+3+3+2 | Kopanitsa (Bulgaria, 11/8) | 7 |
+| E(5,11) | `x . x . x . x . x . .` | 2+2+2+2+3 | Dense kopanitsa variant | 7 |
+
+<EuclideanDiagram steps={11} hits={4} />
+
+E(4,11) is the kopanitsa pattern — four accents in eleven pulses. At the fast tempos typical of Bulgarian wedding music, this pattern becomes a blur of asymmetric drive. Rotation shifts through the various kopanitsa variants, each with a subtly different character.
+
+## 12 Steps
+
+| E(k,n) | Pattern | Grouping | Traditional Association | Chapter |
+|--------|---------|----------|------------------------|---------|
+| E(3,12) | `x . . . x . . . x . . .` | 4+4+4 | Structural pulse (even ternary) | 2 |
+| E(4,12) | `x . . x . . x . . x . .` | 3+3+3+3 | Triplet feel, shuffle accent | 12 |
+| E(5,12) | `x . x . x . . x . x . .` | 2+2+2+3+2+1 | Reich phasing seed | 8 |
+| E(7,12) | `x . x . x x . x . x x .` | 2+2+1+2+2+1+2 | Ewe gankogui bell (West Africa) | 2 |
+| E(9,12) | `x . x x x . x x . x x x` | 2+1+1+2+1+2+1+1+1 | Dense 12/8 fill | 4 |
+
+<EuclideanDiagram steps={12} hits={7} />
+
+E(7,12) is the single most important timeline pattern in sub-Saharan African music, as identified by Toussaint. Its seven onsets across twelve pulses create the asymmetric grouping 2+2+1+2+2+1+2 that drives Ewe, Yoruba, and Afrobeat ensemble music.
+
+<EuclideanDiagram steps={12} hits={5} />
+
+E(5,12) distributes five onsets sparsely across twelve positions. It is the seed pattern for Steve Reich-style phasing — two lanes running the same E(5,12) with one gradually drifting in rotation create an evolving canon.
+
+## 16 Steps
+
+| E(k,n) | Pattern | Grouping | Traditional Association | Chapter |
+|--------|---------|----------|------------------------|---------|
+| E(3,16) | `x . . . . x . . . . . x . . . . .` | 5+6+5 | Syncopated breakbeat kick | 13 |
+| E(4,16) | `x . . . x . . . x . . . x . . .` | 4+4+4+4 | Straight quarter-note pulse | 9 |
+| E(5,16) | `x . . x . . x . . . x . . x . .` | 3+3+2+4+3+1 | Bossa nova bass / son clave | 10 |
+| E(7,16) | `x . x . x . x . . x . x . x . .` | 2+2+2+2+3+2+2+1 | Polymetric ghost layer | 1 |
+| E(9,16) | `x . x x . x . x x . x . x x . .` | 2+1+2+2+1+2+1+2+3 | Dense hi-hat fill | 9 |
+
+<EuclideanDiagram steps={16} hits={5} />
+
+E(5,16) is the bossa nova bass pattern and the son clave. Its identity depends on rotation — at rotation 0 it is the 3-2 clave, at rotation 3 the 2-3 clave. This pattern connects Afro-Cuban and Brazilian traditions through shared Euclidean structure.
+
+## Using This Reference
+
+When designing a Poly patch, start by identifying the tradition or groove type you are targeting. Find its Euclidean signature in the tables above. Set your anchor lane's Steps and Hits accordingly. Then choose complementary patterns for additional lanes — patterns whose step counts create interesting polymetric ratios (prime or coprime values produce longer combined cycles) and whose hit counts provide contrasting density levels.
+
+Remember that Rotation selects the variant within each E(k,n) family. The same steps and hits at different rotations produce patterns with different metric feels. Experiment with all available rotations before settling on a groove — the right rotation can transform a pattern from awkward to compelling.

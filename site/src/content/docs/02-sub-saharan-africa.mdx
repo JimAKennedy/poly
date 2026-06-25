@@ -1,0 +1,87 @@
+---
+title: "2. Sub-Saharan Africa: Bell Patterns and Polymetric Layering"
+description: "The rhythmic foundations of West and Central African drumming — timeline patterns, interlocking parts, and the polymetric stacking that Poly was built to model."
+---
+
+import PolyPatch from '../../components/PolyPatch.astro';
+import ListenFor from '../../components/ListenFor.astro';
+import CodeSnippet from '../../components/CodeSnippet.astro';
+import EuclideanDiagram from '../../components/EuclideanDiagram.astro';
+import PolyScreenshot from '../../components/PolyScreenshot.astro';
+
+If there is a single tradition that Poly was designed to model, it is the polymetric drumming of West and Central Africa. The principle of layering independent rhythmic cycles — each with its own length, density, and social function — did not arrive in Western music theory until the twentieth century. In the Ewe communities of southern Ghana, it has been the organising logic of ensemble music for centuries.
+
+## The Gankogui Bell: E(7,12)
+
+Every Ewe drum ensemble begins with the gankogui, the double iron bell. The bell player establishes a fixed timeline pattern that does not vary. Other drummers orient their parts relative to it, entering at different points, filling different rhythmic spaces. The bell does not lead in a melodic sense — it defines the temporal grid against which everything else is measured.
+
+The standard gankogui pattern distributes seven strokes across twelve pulses. It is Euclidean rhythm E(7,12), and by Toussaint's analysis it is the single most important timeline pattern in sub-Saharan music.
+
+<EuclideanDiagram steps={12} hits={7} />
+
+Notice the asymmetry. The seven hits do not divide twelve evenly — they create an uneven grouping of long and short intervals (2-2-1-2-2-1-2). This asymmetry is not an accident. It is what gives the pattern its characteristic tension, the sense that it is always pulling forward toward the next downbeat without ever quite resolving.
+
+## Role Separation: Timeline, Support, Lead
+
+West African ensembles organise their parts into functional layers. Understanding these roles is the key to building convincing polymetric patches in Poly.
+
+The **timeline** (bell) is fixed and metronomic. It never changes. In Poly, this is your anchor lane — high velocity, no mutation, no phrase gating.
+
+The **support** drums play shorter, sparser patterns that interlock with the bell. In Ewe drumming, the kidi and sogo fill the spaces the bell leaves open. These parts respond to the timeline but remain relatively stable. In Poly, these lanes use fewer hits and lower velocity, with modest mutation values if you want subtle variation.
+
+The **lead** drum (atsimevu in Ewe tradition) improvises. It plays across and against the other parts, creating rhythmic tension and release. In Poly, you model this with higher mutation percentages, phrase gating, and probability — the lead lane should breathe and vary while the timeline holds steady beneath it.
+
+## Polymetric Stacking
+
+The power of the Ewe approach is that support drums often run at different cycle lengths from the bell. A 12-step bell layered with a 7-step support pattern creates a composite rhythm that does not repeat for 84 pulses. Add a 5-step third voice and the full cycle extends to 420 pulses — over thirty bars at 1/8 subdivision. The groove is always familiar but never quite the same.
+
+<EuclideanDiagram steps={12} hits={5} />
+
+E(5,12) distributes five hits across twelve steps — a sparser, more open pattern that leaves room for the bell's density.
+
+<EuclideanDiagram steps={12} hits={3} />
+
+E(3,12) is the sparsest of the three, striking only on beats 1, 5, and 9. It provides a deep structural pulse beneath the busier patterns above.
+
+<PolyPatch title="Ewe-Inspired Polymetric Ensemble" preset="Sub-Saharan: Agbekor">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Note | Velocity | Ghost | Kotekan |
+|------|------|-------|------|----------|-------------|------|----------|-------|---------|
+| 1 | Bell timeline | 12 | 7 | 0 | 1/8 | 56 | 110 | 0 | off |
+| 2 | Support drum | 12 | 3 | 0 | 1/8 | 43 | 90 | 40 | off |
+| 3 | Responding drum | 5 | 3 | 0 | 1/8 | 45 | 85 | 50 | off |
+| 4 | Lead complement | 7 | 5 | 2 | 1/8 | 47 | 75 | 60 | L1 |
+
+</PolyPatch>
+
+<PolyScreenshot src="/screenshots/02-sub-saharan-africa.png" caption="Ewe-inspired polymetric ensemble — bell timeline with interlocking support drums" />
+
+Lane 4 uses the Kotekan setting `L1`, which generates a complementary pattern interlocking with Lane 1's bell. This mirrors the way a support drummer listens to the bell and fills its gaps. Set mutation to 15-25% on Lane 4 to give it the slight variability of a responding part.
+
+<ListenFor>
+
+The 5-step and 7-step lanes create shifting accents against the steady 12-step bell. Pay attention to the moments of convergence — when all three cycle lengths align on the same pulse. These rare unison points feel like structural downbeats, and the tension between them is what drives the groove forward.
+
+</ListenFor>
+
+## Manding Traditions: Djembe Ensembles
+
+West of the Ewe heartland, the Manding traditions of Mali, Guinea, and Senegal build their ensembles around the djembe. Where Ewe drumming stacks many independent cycles, Manding patterns typically lock to a shared cycle length but vary in density and timbre. The dunun bass drums provide a sparse timeline, the sangban plays a mid-density response, and the djembe soloist improvises over both.
+
+You can model this in Poly by keeping all lanes at the same step count but varying hits and velocity. The effect is closer to hocketing — rhythmic interlocking within a single metric frame.
+
+<PolyPatch title="Manding Djembe Ensemble">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Note | Velocity | Ghost |
+|------|------|-------|------|----------|-------------|------|----------|-------|
+| 1 | Dunun bass | 8 | 3 | 0 | 1/8 | 36 | 100 | 0 |
+| 2 | Sangban mid | 8 | 5 | 1 | 1/8 | 43 | 85 | 45 |
+| 3 | Djembe lead | 8 | 7 | 0 | 1/8 | 50 | 95 | 55 |
+
+</PolyPatch>
+
+## Building Improvisatory Feel
+
+Traditional lead drumming is never fully random — it follows shared vocabulary and responds to dancers and other musicians. In Poly, you approximate this not by cranking mutation to 100%, but by combining moderate mutation (15-30%) with phrase gating. Set a phrase length of 4-8 beats with a gap of 2-4 beats on the lead lane, and the pattern will breathe — playing for a phrase, resting, then re-entering with variation. The timeline and support lanes, ungated, continue without interruption.
+
+This call-and-response structure is fundamental to West African music. The bell calls. The support responds. The lead converses with both. In Poly, that conversation emerges from the interaction of independent Euclidean cycles, and no two bars are quite the same.

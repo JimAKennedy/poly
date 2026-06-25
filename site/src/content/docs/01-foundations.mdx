@@ -1,0 +1,67 @@
+---
+title: "1. Foundations: Euclidean Rhythms and Cycle Independence"
+description: The mathematical basis of polymetric pattern generation — Bjorklund's algorithm, cycle ratios, and why even distribution matters.
+---
+
+import PolyPatch from '../../components/PolyPatch.astro';
+import ListenFor from '../../components/ListenFor.astro';
+import CodeSnippet from '../../components/CodeSnippet.astro';
+import EuclideanDiagram from '../../components/EuclideanDiagram.astro';
+import PolyScreenshot from '../../components/PolyScreenshot.astro';
+
+Every pattern Poly generates starts from a single principle: distribute *k* onsets as evenly as possible across *n* time steps. This is the Euclidean rhythm, and it connects a 1960s nuclear physics algorithm to the oldest drumming traditions on earth.
+
+## The Bjorklund Algorithm
+
+In 2004, Godfried Toussaint demonstrated that Bjorklund's algorithm for distributing neutron beam pulses produces the same onset patterns found in traditional West African, Afro-Cuban, and Middle Eastern percussion. The connection is not metaphorical — the algorithm is mathematically identical.
+
+Given `steps = 12` and `hits = 7`, the algorithm produces the pattern `[x . x . x x . x . x x .]` — seven onsets distributed as evenly as possible across twelve positions. This is the standard West African bell timeline, found identically in Ewe, Yoruba, and Afrobeat contexts.
+
+<EuclideanDiagram steps={12} hits={7} rotation={0} />
+
+<CodeSnippet file="engine/src/euclidean.cpp" region="bjorklund" caption="The Bjorklund algorithm — O(n) iterative implementation" />
+
+## Common Euclidean Patterns
+
+Many of the world's most fundamental rhythmic cells are Euclidean distributions. Here are the patterns you will encounter throughout this guide:
+
+<EuclideanDiagram steps={8} hits={3} />
+
+The tresillo — E(3,8) — is the rhythmic atom of Afro-Cuban music and appears in almost every chapter that follows.
+
+<EuclideanDiagram steps={8} hits={5} />
+
+The cinquillo — E(5,8) — is the tresillo's denser complement, central to Cuban contradanza and New Orleans second line.
+
+<EuclideanDiagram steps={16} hits={5} />
+
+E(5,16) is the bossa nova bass pattern, explored in the Brazilian chapter.
+
+## Cycle Independence
+
+The second foundation is *cycle independence*: each lane in Poly has its own step count, its own hit count, and its own subdivision. When Lane 1 runs a 7-step cycle and Lane 2 runs a 12-step cycle, the combined pattern does not repeat until `lcm(7, 12) = 84` steps have elapsed.
+
+This is not a bug or a special mode — it is the default behaviour. Polymetric interaction emerges automatically from independent cycle lengths, exactly as it does in the interlocking percussion ensembles of West Africa and Southeast Asia.
+
+## Rotation and Phase
+
+The `rotation` parameter shifts the onset pattern around the cycle without changing which steps are hits. `E(7, 12, 0)` and `E(7, 12, 3)` have the same rhythmic *content* but different *phase relationships* with the other lanes.
+
+This matters because many traditional rhythms are defined not just by their onset count but by their rotational position relative to a timeline. The Ewe bell at rotation 0 is the standard; at rotation 5, it becomes the Cuban cinquillo variant.
+
+<PolyPatch title="Foundations: Two-Lane Polymetric Demonstration">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision |
+|------|------|-------|------|----------|-------------|
+| 1 | Bell timeline | 12 | 7 | 0 | 1/8 |
+| 2 | Counter pattern | 7 | 5 | 0 | 1/8 |
+
+</PolyPatch>
+
+<PolyScreenshot src="/screenshots/01-foundations.png" caption="Two-lane polymetric demonstration — 12-step bell against 7-step counter pattern" />
+
+<ListenFor>
+
+The two cycles converge every 84 steps (7 bars of 12). Listen for the moment they briefly align — that convergence point is the structural downbeat of the polymetric phrase.
+
+</ListenFor>

@@ -47,7 +47,7 @@ if(NOT POLY_ENGINE_ONLY)
     include(FetchContent)
     FetchContent_Declare(vst3sdk
         GIT_REPOSITORY https://github.com/steinbergmedia/vst3sdk.git
-        GIT_TAG        v3.7.12_build_20
+        GIT_TAG        cc2adc90382dded9e347caf74e4532f1458715db # v3.7.12_build_20
     )
 
     set(SMTG_ENABLE_VST3_HOSTING_EXAMPLES OFF CACHE BOOL "" FORCE)

@@ -1,0 +1,86 @@
+---
+title: "7. Balkan: Aksak and Asymmetric Groove"
+description: The additive rhythms of Southeastern Europe — how 7/8, 9/8, and 11/8 dance meters arise naturally from Euclidean distribution.
+---
+
+import PolyPatch from '../../components/PolyPatch.astro';
+import ListenFor from '../../components/ListenFor.astro';
+import CodeSnippet from '../../components/CodeSnippet.astro';
+import EuclideanDiagram from '../../components/EuclideanDiagram.astro';
+import PolyScreenshot from '../../components/PolyScreenshot.astro';
+
+In the villages of Bulgaria, North Macedonia, and Serbia, people dance in metres that Western music theory calls irregular. 7/8, 9/8, 11/8, 13/8 — time signatures that look uncomfortable on paper but feel entirely natural when your feet are moving. The secret is that these are not subdivisions of a regular pulse. They are *additive* rhythms: groups of twos and threes assembled into cycles that are asymmetric by design.
+
+## Aksak: The Limping Rhythm
+
+The Turkish word *aksak* means "limping" — an apt description for rhythms that alternate between short (2) and long (3) groupings. A rachenitsa in 7/8 might be felt as 2+2+3, or equivalently as "short-short-long." Daichovo horo is 9/8 as 2+2+2+3. Kopanitsa is 11/8, typically 2+2+3+2+2.
+
+These are literally Euclidean rhythms. E(3,7) distributes three onsets across seven positions, producing the inter-onset pattern `2+2+3` — exactly the rachenitsa.
+
+<EuclideanDiagram steps={7} hits={3} />
+
+This is not a coincidence or an approximation. Bjorklund's algorithm and Balkan folk musicians independently arrived at the same solution to the same problem: how to distribute a small number of accents as evenly as possible across an odd number of positions.
+
+## Rotation Selects the Variant
+
+The rachenitsa exists in multiple rotational forms: 2+2+3, 2+3+2, and 3+2+2. Each variant has a different character. The first pushes forward, the second sways, the third plants the long group on the downbeat and rushes through the short groups.
+
+In Poly, these three variants are the same pattern at different rotations. E(3,7) at rotation 0 gives `2+2+3`. At rotation 1, you get `2+3+2`. At rotation 2, `3+2+2`. The rotation parameter is not an abstract offset — it is the selector for which aksak variant you are playing.
+
+<EuclideanDiagram steps={7} hits={3} rotation={1} />
+
+E(3,7) at rotation 1 shifts the long group to the middle of the cycle, producing the swaying 2+3+2 variant. Try all three rotations to feel how the same three accents in seven positions create distinctly different dance grooves.
+
+## Daichovo and Kopanitsa
+
+The same principle extends to longer cycles. Daichovo horo in 9/8 uses four accents across nine positions:
+
+<EuclideanDiagram steps={9} hits={4} />
+
+E(4,9) produces `2+2+3+2` — close to the standard daichovo grouping. Kopanitsa in 11/8 distributes four accents across eleven:
+
+<EuclideanDiagram steps={11} hits={4} />
+
+E(4,11) gives `3+3+3+2`, which is one of several kopanitsa variants. Rotation lets you move through the others. The point is that Euclidean distribution naturally generates the additive groupings that define Balkan dance music.
+
+<PolyPatch title="Rachenitsa Groove" preset="7/8 Aksak">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Velocity | Swing |
+|------|------|-------|------|----------|-------------|----------|-------|
+| 1 | Tupan bass | 7 | 3 | 0 | 1/8 | 110 | 0 |
+| 2 | Tupan rim | 7 | 4 | 2 | 1/8 | 85 | 0 |
+| 3 | Kaval accent | 7 | 2 | 1 | 1/8 | 75 | 0 |
+| 4 | Gadulka pulse | 7 | 5 | 0 | 1/16 | 65 | 0 |
+
+</PolyPatch>
+
+Notice that Swing is set to 0 on every lane. Aksak rhythms are not swung — their asymmetry comes from the additive grouping structure, not from micro-timing displacement. Applying swing to a 7/8 pattern would fight the natural limping quality rather than enhance it.
+
+## Bulgarian Wedding Music: Dense and Fast
+
+The Bulgarian wedding music tradition (*svatbarska muzika*) pushes aksak metres to extraordinary tempos. Kopanitsa at 200+ BPM becomes a blur of interlocking accents where individual onsets merge into a continuous textured flow.
+
+<PolyPatch title="Kopanitsa Groove" preset="11/8 Aksak">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Velocity | Humanize |
+|------|------|-------|------|----------|-------------|----------|----------|
+| 1 | Kick accent | 11 | 4 | 0 | 1/8 | 115 | 0.1 |
+| 2 | Snare pattern | 11 | 5 | 3 | 1/8 | 90 | 0.15 |
+| 3 | Hi-hat pulse | 11 | 7 | 0 | 1/16 | 70 | 0.1 |
+| 4 | Bell accent | 11 | 3 | 2 | 1/8 | 80 | 0.1 |
+
+</PolyPatch>
+
+Humanize is kept low — 0.1 to 0.15 — because Balkan folk ensembles play with remarkable tightness. The rhythmic interest comes from the additive structure, not from loose timing. Even at extreme tempos, the players lock together with mechanical precision that would impress a drum machine.
+
+## Asymmetry as Natural Order
+
+Western music theory treats these metres as exotic exceptions. But in Southeastern Europe, they are the default. Children learn to dance in 7, 9, and 11 before they encounter 4/4. The asymmetry is not heard as irregular — it is simply how music moves.
+
+Poly's engine is indifferent to whether a step count is even or odd, divisible or prime. A 7-step cycle is no more complex for the algorithm than a 16-step cycle. This neutrality means that aksak rhythms are not a special mode or an advanced feature — they are just another set of valid parameters.
+
+<ListenFor>
+
+Play the rachenitsa patch at a moderate tempo and try counting along. At first, the 7/8 feel will seem to stutter against your internal 4/4 expectation. After a few cycles, the asymmetric pulse becomes natural — you stop trying to fit it into even groups and start feeling the 2+2+3 lilt as its own kind of groove. That shift in perception is the point: aksak rhythms are not broken symmetries, they are complete asymmetries.
+
+</ListenFor>

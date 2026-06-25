@@ -11,11 +11,13 @@
 #include "poly/state_io.h"
 #include "poly/types.h"
 #include "ui/cell_editor_view.h"
+#include "ui/cross_rhythm_view.h"
 #include "ui/envelope_curve_view.h"
 #include "ui/header_view.h"
 #include "ui/lane_edit_view.h"
 #include "ui/lane_grid_view.h"
 #include "ui/micro_timing_editor_view.h"
+#include "ui/note_map_view.h"
 #include "ui/phase_alignment_view.h"
 #include "ui/timeline_step_editor_view.h"
 #include "ui/velocity_view.h"
@@ -171,6 +173,8 @@ Steinberg::tresult PLUGIN_API PolyController::initialize(Steinberg::FUnknown* co
 
     addParam(ParamIDs::kSelectedLane, "Selected Lane", "", 7, 0.0, UnitIDs::kGlobal, ParameterInfo::kNoFlags);
 
+    addParam(ParamIDs::kTransportPpqOutput, "Transport PPQ", "", 0, 0.0, UnitIDs::kOutput, ParameterInfo::kIsReadOnly);
+
     addParam(ParamIDs::kSceneSelect, "Select", "", 2, 0.0, UnitIDs::kScene);
     addParam(ParamIDs::kSceneMorph, "Morph", "%", 0, 0.0, UnitIDs::kScene);
 
@@ -198,7 +202,7 @@ VSTGUI::CView* PolyController::createCustomView(VSTGUI::UTF8StringPtr name, cons
         return new HeaderView(VSTGUI::CRect(0, 0, 600, 32), this); // ownership-transfer
     }
     if (std::strcmp(name, "LaneEditView") == 0) {
-        return new LaneEditView(VSTGUI::CRect(0, 0, 580, 126), this);
+        return new LaneEditView(VSTGUI::CRect(0, 0, 580, 126), this); // ownership-transfer
     }
     if (std::strcmp(name, "LaneGridView") == 0) {
         return new LaneGridView(VSTGUI::CRect(0, 0, 580, 156), this); // ownership-transfer
@@ -220,6 +224,12 @@ VSTGUI::CView* PolyController::createCustomView(VSTGUI::UTF8StringPtr name, cons
     }
     if (std::strcmp(name, "MicroTimingEditorView") == 0) {
         return new MicroTimingEditorView(VSTGUI::CRect(0, 0, 580, 60), this); // ownership-transfer
+    }
+    if (std::strcmp(name, "CrossRhythmView") == 0) {
+        return new CrossRhythmView(VSTGUI::CRect(0, 0, 580, 146), this); // ownership-transfer
+    }
+    if (std::strcmp(name, "NoteMapView") == 0) {
+        return new NoteMapView(VSTGUI::CRect(0, 0, 600, 778), this); // ownership-transfer
     }
     return nullptr;
 }
@@ -303,6 +313,18 @@ Steinberg::tresult PLUGIN_API PolyController::setComponentState(Steinberg::IBStr
     setParamNormalized(ParamIDs::kSceneMorph, static_cast<double>(cachedState_.morphAmount));
 
     return Steinberg::kResultOk;
+}
+
+void PolyController::sendNoteMap() {
+    if (auto* msg = allocateMessage()) {
+        msg->setMessageID("NoteMapUpdate");
+        if (auto* attrs = msg->getAttributes()) {
+            attrs->setBinary("map", cachedState_.noteMap.map.data(),
+                             static_cast<Steinberg::uint32>(sizeof(cachedState_.noteMap.map)));
+        }
+        sendMessage(msg);
+        msg->release();
+    }
 }
 
 } // namespace poly

@@ -1,0 +1,86 @@
+---
+title: "9. Electronic: Grid, Probability, and Machine Rhythm"
+description: "Four-on-the-floor and beyond — how techno, house, and electro use density, probability, and tension to sculpt groove from mechanical repetition."
+---
+
+import PolyPatch from '../../components/PolyPatch.astro';
+import ListenFor from '../../components/ListenFor.astro';
+import CodeSnippet from '../../components/CodeSnippet.astro';
+import EuclideanDiagram from '../../components/EuclideanDiagram.astro';
+import PolyScreenshot from '../../components/PolyScreenshot.astro';
+
+Electronic dance music begins where this guide's other traditions end: with the machine. A drum machine does not swing unless you tell it to, does not drift unless you program it to, does not vary unless you give it rules for variation. The grid is absolute. And from that absolute grid, techno and house producers have built some of the most physically compelling rhythmic music ever made — not in spite of the machine's rigidity but because of it.
+
+## Four-on-the-Floor: The Simplest Euclidean
+
+The foundational kick pattern of house, techno, and disco is E(4,4) — four hits in four positions. Every step is an onset. It is the only Euclidean pattern where `k = n`, the trivial case, and yet it drives an entire global culture of movement.
+
+<EuclideanDiagram steps={4} hits={4} />
+
+At subdivision 1/4, this produces a kick on every quarter note. The pattern carries no syncopation, no asymmetry, no ambiguity. Its power comes from its absolute predictability — the body trusts it completely and is free to respond to everything layered on top.
+
+## Layering Density Over the Grid
+
+The interest in electronic rhythm comes not from the kick but from what sits around it. A standard techno hi-hat pattern is E(8,16) — eight onsets across sixteen sixteenth-note positions, producing straight eighth notes. A more syncopated hat might use E(7,16) or E(9,16), introducing gaps or clusters that push against the kick's regularity.
+
+The critical technique is combining a kick cycle with layers that have *different* step counts. Set the kick to 4 steps at 1/4 subdivision, then add a ghost percussion layer at 7 steps. The 7-step layer never aligns with the 4-step kick in the same way twice until `lcm(4, 7) = 28` beats have elapsed. Over that span, the composite pattern evolves continuously while the kick remains constant — the definition of a groove that "breathes."
+
+<PolyPatch title="Minimal Techno" preset="Electronic">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Velocity | Note |
+|------|------|-------|------|----------|-------------|----------|------|
+| 1 | Kick | 4 | 4 | 0 | 1/4 | 120 | 36 |
+| 2 | Hi-hat | 16 | 8 | 0 | 1/16 | 75 | 42 |
+| 3 | Ghost perc | 7 | 5 | 2 | 1/8 | 55 | 39 |
+| 4 | Clap | 16 | 2 | 4 | 1/16 | 100 | 38 |
+
+</PolyPatch>
+
+<PolyScreenshot src="/screenshots/09-electronic.png" caption="Minimal techno — four-on-the-floor kick with polymetric ghost percussion" />
+
+Lane 1 is the immovable grid. Lane 2 fills the space with eighth-note hats. Lane 3 introduces the polymetric element — its 7-step cycle against the 4-step kick ensures the groove never literally repeats within a single 4-bar phrase. Lane 4 places two claps in the 16-step space, typically on beats 2 and 4 (rotation 4 shifts them into position).
+
+## Swing and the House Divide
+
+The fundamental difference between techno and house is often reducible to one parameter: swing. Techno grooves are typically straight — quantised to the grid with no micro-timing offset. House music inherits its shuffle from disco and funk, displacing off-beat notes slightly late to create a looser, more human feel.
+
+In Poly, the Swing macro controls this globally. At 0.0, all subdivisions are even — pure techno grid. At 0.3 to 0.5, off-beat onsets shift late, producing the characteristic house shuffle. The same patch can cross the techno-house divide with a single macro sweep.
+
+<PolyPatch title="Deep House Groove" preset="Swing House">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Velocity | Swing | Humanize |
+|------|------|-------|------|----------|-------------|----------|-------|----------|
+| 1 | Kick | 4 | 4 | 0 | 1/4 | 115 | 0 | 0.05 |
+| 2 | Open hat | 16 | 6 | 3 | 1/16 | 70 | 40 | 0.1 |
+| 3 | Shaker | 16 | 10 | 0 | 1/16 | 50 | 45 | 0.15 |
+| 4 | Rim shot | 8 | 3 | 1 | 1/8 | 90 | 35 | 0.1 |
+
+</PolyPatch>
+
+The kick stays unswung — swing on the downbeat destabilises the foundation. The hat, shaker, and rim all carry moderate swing values (35-45%), pushing their off-beat onsets late. Humanize adds a small random timing variation on top, preventing the swing from feeling too mechanical. The result is a groove that sits between the precision of a machine and the looseness of a live drummer.
+
+## Density, Tension, and the Macro Sweep
+
+Electronic music production is fundamentally about arrangement — building energy over 8, 16, or 32 bars by adding and removing elements. Poly's macros map directly to this workflow.
+
+The **Density** macro scales effective hit counts across all lanes. At Density = 0.0, each lane plays only its most essential onsets. At 1.0, every lane fires at maximum hit count. Sweeping Density from 0.2 to 0.9 over a 32-bar buildup replicates the arrangement arc of a techno track without touching individual lane parameters.
+
+The **Tension** macro controls dynamic range. At 0.0, velocity differences between lanes are compressed — every element sits at roughly the same level, producing the flat, hypnotic dynamic of minimal techno. At 1.0, velocity contrasts are exaggerated — kicks hit hard, ghosts are barely audible, and the groove acquires the dynamic shape of classic house.
+
+Together, these macros let you sculpt a performance arc from a static patch. The pattern itself does not change; the *presentation* of the pattern changes, which is exactly how a DJ or live electronic performer thinks about building a set.
+
+## Probability and Generative Variation
+
+Strict repetition is the foundation of electronic rhythm, but strict repetition for eight minutes produces fatigue. The Mutation parameter introduces controlled variation: at low values (5-15%), occasional hits are added or dropped, creating the subtle imperfections that keep a loop interesting over long durations.
+
+This is not randomness for its own sake. Mutation is deterministic at any given transport position — the same bar produces the same variation every time. You get the *perception* of generative variation while maintaining the repeatability that arrangement and mixing demand.
+
+<ListenFor>
+
+In the minimal techno patch, focus on Lane 3 — the 7-step ghost percussion against the 4-step kick. Over four bars, the ghost accents appear at different positions relative to each kick hit. The kick is relentless and predictable; the ghost layer introduces a subtle, constantly shifting syncopation that your body hears as "groove" even though no swing is applied. This is polymetric texture in its purest electronic form — the complexity arises from cycle-length ratios, not from timing offsets.
+
+</ListenFor>
+
+## Machine Rhythm as Tradition
+
+It is worth noting that electronic dance music is now old enough to constitute its own tradition. The TR-808 and TR-909 are as canonical as the djembe or the conga. The four-on-the-floor kick is as structurally fundamental as the clave. When you program a kick at E(4,4) and a hat at E(8,16), you are not abstracting a machine pattern into Euclidean terms — you are recognising that the machine pattern *was always Euclidean*. Roland's engineers in 1980 and Bjorklund in 2003 and Balkan folk musicians centuries before them all converged on the same distributions, because even spacing is not a mathematical curiosity. It is how rhythm works.

@@ -35,15 +35,30 @@ See `IMPLEMENTATION_PLAN.md` for the full architecture, domain model, and phase 
 - Golden tests enforce determinism in CI
 
 ### Code Formatting
-- **Before every commit**, run `clang-format -i --style=file` on all new/modified `.cpp`/`.h` files
-- On macOS the binary is at `/opt/homebrew/opt/llvm/bin/clang-format` (not in PATH by default)
+- clang-format is pinned via `pre-commit/mirrors-clang-format` in `.pre-commit-config.yaml` — do not change version without verifying CI compatibility
+- On macOS the local binary is at `/opt/homebrew/opt/llvm/bin/clang-format` (not in PATH by default)
 - CI runs `pre-commit run --all-files` which includes clang-format — unformatted files fail the build
 
-### Pre-Push Checklist
-Run all three checks before every push — CI has failed on each of these:
-1. **clang-format** — `/opt/homebrew/opt/llvm/bin/clang-format -i --style=file` on all modified `.cpp`/`.h` files
-2. **RT safety** — `scripts/check-realtime-safety.sh` (required when `processor.cpp` or engine files changed; annotate non-RT uses with `// RT-SAFE-OK: <reason>`)
-3. **Build + tests** — `cmake --build build && ctest --test-dir build`
+### MSVC Portability
+- Always `#include <algorithm>`, `<utility>`, and other standard headers explicitly
+- GCC/Clang provide `std::sort`, `std::min`, `std::max` transitively from `<cmath>` or `<vector>` — MSVC does not
+- The Windows CI build (`windows-2022`, MSVC) will reject missing includes that compile on macOS/Linux
+
+### Ownership Transfer Annotations
+- All `new` expressions in `plugin/source/` that transfer ownership to VST3/VSTGUI must have `// ownership-transfer`
+- The NFR review scanner flags unannotated raw `new` — this comment suppresses the finding
+
+### Pre-Push Quality Gate
+The pre-push hook (`scripts/pre-push-check.sh`) enforces quality checks automatically:
+1. **Blocks direct pushes to main** — use a feature branch and PR instead
+2. **clang-format** on all C++ files
+3. **RT safety** — `scripts/check-realtime-safety.sh`
+4. **Build + tests** — `cmake --build build && ctest --test-dir build`
+
+Install via: `pre-commit install -t pre-push`
+Bypass for emergencies: `git push --no-verify`
+
+Note: GitHub branch protection requires Pro for private repos. The pre-push hook is the local enforcement mechanism until then.
 
 ### Compiler Warnings
 Uses `jk_warnings.cmake` from `cmake/` — `-Wall -Wextra` (GCC/Clang), `/W4` (MSVC) from day one.

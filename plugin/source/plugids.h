@@ -68,6 +68,8 @@ inline Steinberg::Vst::ParamID phrasePhaseOutput(int lane) {
     return kPhrasePhaseOutputBase + static_cast<Steinberg::Vst::ParamID>(lane);
 }
 
+static constexpr Steinberg::Vst::ParamID kTransportPpqOutput = 450;
+
 static constexpr Steinberg::Vst::ParamID kLaneCoreBase = 800;
 static constexpr int kCoreParamsPerLane = 8;
 static constexpr int kCoreSteps = 0;

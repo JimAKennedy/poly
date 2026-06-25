@@ -1,0 +1,74 @@
+---
+title: "11. Funk and Soul: Ghost Notes, Pocket, and the Push-Pull"
+description: "The micro-timing art of James Brown's rhythm section — ghost notes, timing offsets, and the controlled looseness that makes a groove feel alive."
+---
+
+import PolyPatch from '../../components/PolyPatch.astro';
+import ListenFor from '../../components/ListenFor.astro';
+import CodeSnippet from '../../components/CodeSnippet.astro';
+import EuclideanDiagram from '../../components/EuclideanDiagram.astro';
+import PolyScreenshot from '../../components/PolyScreenshot.astro';
+
+In 1965, James Brown recorded "Papa's Got a Brand New Bag" and changed the function of rhythm in American music. Before Brown, the rhythm section supported the melody. After Brown, the rhythm section *was* the music. Every instrument became a drum, every note locked to a groove, and the downbeat — "The One" — became the gravitational centre around which everything else orbited.
+
+What makes funk rhythmically distinct is not complexity but *texture*. The patterns are often simple. What makes them feel alive is the space between the notes — ghost strokes so quiet they register as sensation rather than sound, timing displacements measured in milliseconds, velocity gradations that give every hit a different weight. Poly's per-lane Timing, Velocity, Ghost, and Spread parameters were designed for exactly this kind of work.
+
+## Ghost Notes: The Hidden Texture
+
+Listen to Clyde Stubblefield's "Funky Drummer" break — the most sampled drum loop in history — and you will hear more ghost notes than accented ones. The snare does not simply hit on 2 and 4. Between those accents, the stick stays on the head, producing a continuous stream of barely audible taps that fill every sixteenth-note subdivision. The ghosts are not decoration; they are the groove.
+
+In Poly, you create ghost-note texture through the interplay of Velocity, Ghost floor, and Spread. Set the primary velocity high (100-110) for the accented hits, then set the Ghost floor to 30-50 — this means any hit that the algorithm designates as a ghost will sound at that lower velocity. Spread (40-70%) introduces random variation around both values, so no two ghost notes are exactly the same volume. The result is a lane that breathes between its accents, alive with the micro-dynamics that distinguish a drummer from a grid.
+
+<EuclideanDiagram steps={16} hits={3} />
+
+E(3,16) produces a sparse kick pattern — three hits distributed across sixteen steps. In funk, the kick is not dense. It marks structural points and leaves space for the bass guitar to weave around it. The sparseness is the point: fewer kicks means more room for ghost notes on other voices to be heard.
+
+## The Pocket: Timing Offset as Feel
+
+Funk drummers do not play on the grid. They play *around* the grid, and the direction of that displacement defines the feel. A kick drum that sits 2-3 milliseconds behind the beat feels heavy, planted, pulling the listener backward into the groove. A snare that pushes 1-2 milliseconds ahead of the beat feels urgent, propulsive. The tension between these two displacements — one dragging, one pushing — is what musicians call "the pocket."
+
+Poly's per-lane Timing Offset parameter (plus or minus 20 milliseconds) lets you sculpt this push-pull precisely. The offsets are small, but their effect is enormous. A patch where every lane sits at 0ms sounds mechanical. Move the kick to +3ms (behind) and the snare to -2ms (ahead), and the same pattern suddenly has weight and momentum.
+
+<PolyPatch title="Classic Funk Groove" preset="Funk: JB Pocket">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Note | Velocity | Ghost | Spread | Timing |
+|------|------|-------|------|----------|-------------|------|----------|-------|--------|--------|
+| 1 | Kick | 16 | 3 | 0 | 1/16 | 36 | 110 | 0 | 20% | +3ms |
+| 2 | Snare accent | 8 | 2 | 4 | 1/8 | 38 | 105 | 0 | 15% | -2ms |
+| 3 | Snare ghost | 16 | 11 | 0 | 1/16 | 38 | 40 | 30 | 65% | +1ms |
+| 4 | Hi-hat | 16 | 14 | 0 | 1/16 | 42 | 75 | 45 | 40% | 0ms |
+
+</PolyPatch>
+
+Notice that the snare accent and snare ghost are separate lanes mapped to the same MIDI note (38). This is how you model a real drummer's two dynamics on one drum — the accent lane hits hard on 2 and 4 (E(2,8) rotated to land on the backbeat), while the ghost lane fills almost every remaining sixteenth with quiet taps. The ghost lane's high Spread (65%) ensures no two bars sound identical.
+
+<ListenFor>
+
+Play this patch at 95-105 BPM and focus on the timing offset between kick and snare. The kick drags; the snare pushes. Between them, the ghost notes shimmer. This push-pull tension is the pocket — it makes the groove feel like it is simultaneously leaning back and driving forward. Remove the timing offsets and the same notes sound flat and lifeless.
+
+</ListenFor>
+
+## Neo-Soul: Heavy Humanise
+
+Questlove, the Roots' drummer, took the funk vocabulary and softened it. Where Stubblefield's ghosts are crisp and precisely placed, Questlove's playing is looser, warmer, more willing to drift. The hi-hat opens and closes unpredictably. The kick lands in approximate zones rather than on exact subdivisions. The snare might arrive a full 5-10 milliseconds late and it sounds intentional.
+
+In Poly, you model this by pushing Humanize higher than you would for classic funk — up to 0.4-0.5. At these values, every hit in every lane gets a random timing displacement, and the combined effect is a groove that sounds like a human being behind a kit at 2 AM, locked in but not trying too hard.
+
+<PolyPatch title="Neo-Soul Groove">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Note | Velocity | Ghost | Spread | Timing |
+|------|------|-------|------|----------|-------------|------|----------|-------|--------|--------|
+| 1 | Kick | 16 | 4 | 0 | 1/16 | 36 | 95 | 0 | 30% | +4ms |
+| 2 | Snare | 8 | 2 | 4 | 1/8 | 38 | 90 | 35 | 45% | -3ms |
+| 3 | Hi-hat | 16 | 10 | 0 | 1/16 | 42 | 60 | 40 | 55% | +1ms |
+| 4 | Rim click | 12 | 5 | 2 | 1/8 | 37 | 55 | 30 | 50% | -1ms |
+
+</PolyPatch>
+
+Lane 4 introduces a 12-step rim click against the 16-step and 8-step grid. This polymetric element — a technique more common in jazz than in soul — creates the unpredictable accent pattern that neo-soul borrows from jazz harmony. The rim click's five hits wander across the bar, never landing in the same place twice relative to the kick and snare, generating the conversational quality that defines the genre.
+
+## Tension and Dynamic Range
+
+The Tension macro in Poly controls the spread between the quietest and loudest notes in the patch. In funk, this spread is wide — the difference between a Stubblefield ghost note and a full accent is 40-50 dB. Set Tension to 0.5-0.7 for classic funk, which gives the ghosts room to whisper while the accents cut through.
+
+For neo-soul, bring Tension down to 0.3-0.4. The dynamic range narrows, everything sits closer together, and the groove feels more intimate than aggressive. This is the difference between a stadium funk band and a late-night session — same vocabulary, different dynamics.

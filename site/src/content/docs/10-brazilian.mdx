@@ -1,0 +1,78 @@
+---
+title: "10. Brazilian: Samba, Bossa Nova, and Syncopated Flow"
+description: "The rhythmic engine of Brazilian music — how samba's layered surdo-tamborim-agogô patterns and bossa nova's displaced bass line map to Euclidean distribution and swing."
+---
+
+import PolyPatch from '../../components/PolyPatch.astro';
+import ListenFor from '../../components/ListenFor.astro';
+import CodeSnippet from '../../components/CodeSnippet.astro';
+import EuclideanDiagram from '../../components/EuclideanDiagram.astro';
+import PolyScreenshot from '../../components/PolyScreenshot.astro';
+
+Brazilian popular music rests on one of the most sophisticated percussion traditions in the Americas. The batucada ensembles of Rio's samba schools layer dozens of independent rhythmic parts into a single surging organism, each section following its own pattern while responding to the mestre's calls. At the other extreme, bossa nova distills that complexity into a whisper — a displaced bass line against a quiet guitar, the syncopation so subtle it feels like breathing.
+
+Both traditions map cleanly to Euclidean distribution, and both reward Poly's ability to stack independent cycles with per-lane swing and humanisation.
+
+## Samba Batucada: The Ensemble Machine
+
+A full batucada ensemble contains hundreds of musicians, but the rhythmic architecture reduces to a handful of interlocking roles. The **surdo** bass drums define the low pulse — the surdo de primeira marks beat 2, the surdo de segunda marks beat 1, and together they create the heavy, loping two-beat foundation. The **tamborim** plays a syncopated pattern above, typically a dense figure with accents that shift across the bar. The **agogô** (double bell) provides a timeline not unlike the West African gankogui, and the **repinique** cuts through with sharp accents and calls. The **caixa** (snare) fills the remaining space with a steady, buzzing stream.
+
+In Poly, you model this by assigning each role to a lane with a distinct step count and density. The surdo lanes stay sparse and heavy; the tamborim and agogô carry the syncopation; the caixa fills.
+
+<EuclideanDiagram steps={16} hits={7} rotation={2} />
+
+E(7,16) with rotation 2 produces a tamborim-style pattern — dense enough to drive forward but irregular enough to pull against the surdo's steady pulse. The rotation shifts the accent away from beat 1, which is characteristic of Brazilian syncopation: the emphasis falls around the beat, not on it.
+
+<PolyPatch title="Samba Batucada Ensemble" preset="Brazilian: Batucada">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Note | Velocity | Ghost | Swing |
+|------|------|-------|------|----------|-------------|------|----------|-------|-------|
+| 1 | Surdo (low) | 4 | 2 | 1 | 1/4 | 36 | 110 | 0 | 0.2 |
+| 2 | Tamborim | 16 | 7 | 2 | 1/16 | 50 | 90 | 50 | 0.25 |
+| 3 | Agogô | 16 | 5 | 0 | 1/16 | 56 | 85 | 40 | 0.2 |
+| 4 | Repinique | 8 | 3 | 1 | 1/8 | 47 | 100 | 30 | 0.15 |
+| 5 | Caixa | 16 | 13 | 0 | 1/16 | 38 | 70 | 55 | 0.25 |
+
+</PolyPatch>
+
+Set Humanize to 0.2-0.3 across the patch. Samba's swing is lighter than American shuffle — it is a gentle lilt, not a heavy triplet feel. The looseness comes from micro-timing variation between the sections, each player slightly ahead or behind the grid, rather than from a pronounced swing ratio.
+
+## Bossa Nova: The Displaced Cell
+
+The bossa nova revolution of the late 1950s took samba's rhythmic vocabulary and made it intimate. Joao Gilberto's guitar reduced the entire batucada to a single syncopated fingerpicking pattern, and the bass line that emerged beneath it turned out to be one of the most elegant Euclidean rhythms in popular music.
+
+<EuclideanDiagram steps={16} hits={5} />
+
+E(5,16) is the bossa nova bass cell. Toussaint identified it as a paradigmatic example of Euclidean rhythm — five onsets distributed as evenly as possible across sixteen pulses, producing the pattern `[x . . x . . x . . . x . . x . .]`. This pattern sits against a straight 4/4 pulse and creates a perpetual sense of displacement. The bass never quite lands where you expect, yet it never feels wrong.
+
+In Poly, you set one lane to E(5,16) at a low note for the bass, add a ride cymbal holding steady quarter or eighth notes, and introduce a ghost brush layer to provide the wash of texture that bossa recordings carry. The result is spare and spacious, the opposite of batucada's density, but built from the same Euclidean logic.
+
+<PolyPatch title="Bossa Nova Trio">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Note | Velocity | Ghost | Swing |
+|------|------|-------|------|----------|-------------|------|----------|-------|-------|
+| 1 | Bass | 16 | 5 | 0 | 1/16 | 36 | 95 | 0 | 0.15 |
+| 2 | Ride cymbal | 8 | 4 | 0 | 1/8 | 51 | 65 | 30 | 0.1 |
+| 3 | Ghost brush | 16 | 9 | 3 | 1/16 | 38 | 40 | 25 | 0.2 |
+
+</PolyPatch>
+
+<ListenFor>
+
+Play the bossa patch at 130-140 BPM and focus on the bass lane. The five hits of E(5,16) create a pattern that constantly crosses the barline — it groups into intervals of 3-3-4-3-3, which means the accents shift relative to the quarter-note pulse on every beat. This perpetual displacement is the bossa feel. Against the steady ride, it sounds effortless. Against a straight kick, it sounds radical.
+
+</ListenFor>
+
+## Maracatu: Weight and Repetition
+
+Maracatu is older and heavier than samba. Originating in the Afro-Brazilian traditions of Pernambuco, it builds density through sheer accumulation — each section of the ensemble repeats a short, fixed pattern while the alfaia bass drums drive a relentless pulse. Where samba swings and breathes, maracatu pounds and builds.
+
+In Poly, you model maracatu by keeping step counts short (4-8) and subdivision coarse (1/4 or 1/8), then using high velocity and low mutation. Set the Density macro high and the Humanize low — this music is not loose, it is a wall. Gradually increase Complexity over the course of a composition to introduce additional hits, mimicking the way a maracatu performance builds intensity as more sections join the procession.
+
+## Swing and Humanise Settings
+
+Brazilian grooves sit in a narrow swing band. Heavy swing sounds like American shuffle, which is wrong for samba. No swing sounds mechanical, which is wrong for everything.
+
+Set the global Swing macro to 0.2-0.3. This introduces just enough lilt to lift the sixteenths without tipping into triplet territory. Per-lane Swing can vary by a few points — the caixa player and the tamborim player are not locked to the same micro-grid, and that slight divergence is what gives batucada its shimmer.
+
+Humanize at 0.2-0.3 adds the carnival looseness that distinguishes a samba school from a sequencer. Higher values (0.4+) risk sounding sloppy rather than human. Lower values risk sounding like a drum machine trying to play samba, which is the uncanny valley of rhythm programming.

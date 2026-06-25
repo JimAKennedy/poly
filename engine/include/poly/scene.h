@@ -11,6 +11,7 @@ struct SceneState {
     GrooveState sceneB{};
     SceneSelect select = SceneSelect::A;
     float morphAmount = 0.0f;
+    NoteMap noteMap{};
 };
 
 GrooveState interpolateGrooveState(const GrooveState& a, const GrooveState& b, float t);

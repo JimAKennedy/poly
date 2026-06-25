@@ -1,0 +1,101 @@
+---
+title: "15. Compositional Grammar: Structure, Density, and the Arc"
+description: "How to think about a Poly patch as a composition — density curves, tension arcs, section transitions, and the role of silence."
+---
+
+import PolyPatch from '../../components/PolyPatch.astro';
+import ListenFor from '../../components/ListenFor.astro';
+import CodeSnippet from '../../components/CodeSnippet.astro';
+import EuclideanDiagram from '../../components/EuclideanDiagram.astro';
+import PolyScreenshot from '../../components/PolyScreenshot.astro';
+
+A Poly patch is not a loop. It can behave like one — a fixed Euclidean distribution repeating at constant velocity will cycle indefinitely. But the moment you engage the macro system, the envelope modulators, the phrase gating, and the mutation engine, you are no longer building a pattern. You are composing a density curve. The patch becomes a structure with an arc: sparse openings, accumulating momentum, climactic density, and deliberate release. This is the grammar of composition applied to polymetric generation.
+
+## The Density Curve
+
+Every piece of music, in every tradition, follows some version of a density curve. A West African drum ensemble begins with the bell alone. One by one, support drums enter, the lead drum builds intensity, the ensemble reaches a peak, and eventually the texture thins to signal the next section. A techno DJ builds a set the same way — filtering in layers, stacking loops, peaking, then stripping back to a kick and a hi-hat.
+
+In Poly, the Density macro is your primary shape tool. It controls how many hits in each lane actually sound. At Density 0.2, most Euclidean onsets are suppressed — only the strongest positions fire, producing a skeletal outline of the pattern. At Density 0.8, nearly everything plays, and the texture becomes thick and busy. The full range from 0 to 1.0 traces the path from silence to saturation.
+
+The compositional insight is that you do not set Density to a single value and leave it. You automate it. A sweep from 0.2 to 0.8 over 16 bars is a crescendo. A sweep from 0.8 to 0.3 is a breakdown. The Density macro is the master volume knob of rhythmic texture — not loudness, but *presence*.
+
+<CodeSnippet file="engine/src/macro.cpp" region="apply" caption="Macro parameter scaling — how Density maps to per-lane hit probability" />
+
+## Complexity: The Ornamental Axis
+
+Where Density controls how many hits sound, Complexity controls which *kinds* of hits are available. At low Complexity, each lane plays its primary Euclidean pattern with minimal embellishment — no fills, no ghost-note flourishes, no secondary accents. As Complexity increases, the engine introduces ornamental detail: ghost notes become more frequent, fill events are more likely, accent patterns become more varied.
+
+Think of Complexity as the difference between a drummer playing a groove straight and the same drummer adding flams, drags, and ghosted strokes. The underlying pattern is the same — the difference is surface detail. In a composition, low Complexity is appropriate for verses and introductions, where the rhythmic skeleton should be clear and uncluttered. High Complexity suits choruses and peaks, where the ear can absorb more information because the surrounding arrangement is full.
+
+The interaction between Density and Complexity is multiplicative. Low Density with low Complexity is sparse and plain — a single kick and a skeletal hat pattern. Low Density with high Complexity is sparse but ornate — few hits, but each one decorated with ghost notes and micro-timing variation. High Density with low Complexity is thick but uniform — a wall of hits with no variation in articulation. High Density with high Complexity is the full orchestral peak — every lane firing, every hit embellished, every subdivision populated.
+
+## Tension and Dynamic Range
+
+The Tension macro compresses or expands the dynamic range of the patch. At low Tension, velocity differences between hits are small — everything plays at roughly the same level. The groove sits in a narrow dynamic band, steady and controlled. At high Tension, the spread between accented and unaccented hits widens dramatically — strong beats hit hard, ghost notes are barely audible, and the pattern acquires a volatile, explosive quality.
+
+Use low Tension for verses and passages that need to sit beneath a vocal or a melodic line. The groove supports without competing. Push Tension upward for climactic moments where the drums should dominate — the widened dynamic range creates visceral impact, the kind of snare crack that punches through a full mix.
+
+## Section Transitions: The Macro Sweep
+
+The simplest section transition in Poly is a Density sweep. Over 4 to 8 bars, automate Density from one value to another. A sweep from 0.3 to 0.7 is a build — the classic pre-chorus intensification that every listener recognises instinctively. A sweep from 0.7 to 0.2 is a breakdown — the moment of release after a peak.
+
+These sweeps work because Density acts on every lane simultaneously through the macro system. You do not need to automate eight individual parameters — one macro controls the collective density of the entire ensemble. The per-lane Euclidean patterns remain unchanged; what varies is how much of each pattern the listener actually hears.
+
+For more dramatic transitions, combine Density sweeps with Complexity and Tension changes. Build Density from 0.2 to 0.8 over 8 bars while simultaneously sweeping Complexity from 0.1 to 0.6 and Tension from 0.3 to 0.7. The result is a crescendo that adds not just more hits but more detail and more dynamic variation — the ensemble does not just get louder, it gets *bigger*.
+
+## The Role of Silence
+
+Phrase gating is Poly's mechanism for introducing silence. Each lane can have a Phrase Length, a Gap, and an Offset. A lane with Length 8 and Gap 4 plays for 8 beats, rests for 4, then repeats. The pattern does not disappear during the gap — it simply does not sound. When it re-enters, it picks up where it left off in the Euclidean cycle.
+
+Silence is compositional material. A 4-beat gap in a lead lane creates a call-and-response structure — the ensemble plays, the lead rests, then the lead re-enters with renewed energy. Staggered gaps across multiple lanes create a texture that breathes — different voices dropping out and re-entering at different times, so the ensemble is always full but never static.
+
+The Offset parameter determines when each lane's phrase cycle begins. With identical Length and Gap values but different Offsets, two lanes will alternate — one playing while the other rests, then swapping. This is the rhythmic equivalent of antiphonal singing, where two choirs alternate phrases.
+
+## Layered Composition: Building From the Anchor
+
+The most reliable approach to building a composition in Poly is additive layering. Start with the anchor — typically a kick drum on Lane 1 — and build outward.
+
+**Step 1: The anchor.** A single lane with a sparse, unambiguous Euclidean pattern. E(4,4) for straight four-on-the-floor, E(3,8) for a tresillo-based groove, E(3,7) for aksak. No ghost notes, no mutation, no phrase gating. This lane is the foundation.
+
+**Step 2: The timeline.** Add a second lane that establishes the metric framework — a bell pattern, a rimshot, a hi-hat. Its step count can differ from the kick, introducing the first polymetric tension. Keep velocity moderate and mutation low.
+
+**Step 3: The texture.** A third lane fills subdivision space — a ghost-heavy hi-hat pattern, a shaker, a busy conga line. This lane provides continuous rhythmic motion. Higher ghost values, moderate spread.
+
+**Step 4: The ornament.** Additional lanes add colour — accents, fills, kotekan interlocking, lead-drum improvisation. These lanes use phrase gating, mutation, and higher Complexity sensitivity. They should appear and disappear, adding interest without cluttering the core groove.
+
+<PolyPatch title="Composition Arc: Sparse to Full" preset="Custom: Layered Build">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Note | Velocity | Ghost | Spread | Phrase Len | Gap |
+|------|------|-------|------|----------|-------------|------|----------|-------|--------|------------|-----|
+| 1 | Kick anchor | 4 | 4 | 0 | 1/4 | 36 | 110 | 0 | 0 | 0 | 0 |
+| 2 | Bell timeline | 12 | 7 | 0 | 1/8 | 56 | 90 | 0 | 0 | 0 | 0 |
+| 3 | Ghost hat | 16 | 11 | 2 | 1/16 | 42 | 55 | 50 | 25 | 0 | 0 |
+| 4 | Conga texture | 8 | 5 | 1 | 1/8 | 63 | 75 | 40 | 15 | 12 | 4 |
+| 5 | Rim accent | 7 | 3 | 0 | 1/8 | 37 | 85 | 0 | 0 | 8 | 8 |
+| 6 | Lead ornament | 5 | 3 | 2 | 1/8 | 47 | 80 | 55 | 30 | 6 | 6 |
+
+</PolyPatch>
+
+Lanes 1 through 3 are ungated — they play continuously, forming the permanent rhythmic bed. Lanes 4 through 6 use phrase gating with varying Length and Gap values, so they enter and exit the texture at different times. At Density 0.2, only the kick and fragments of the bell are audible. At Density 0.8, all six lanes are active and the full polymetric ensemble is sounding.
+
+<ListenFor>
+
+Automate Density from 0.2 to 0.8 over 16 bars. Listen for how the ensemble blooms — the kick sits alone at first, then the bell fades in, then the ghost hat starts to shimmer beneath the surface, and finally the gated lanes begin to appear and disappear in the texture. The crescendo is not a volume increase — it is a population increase. More voices, more interactions, more polymetric convergence points.
+
+</ListenFor>
+
+## The Eight-Lane Maximum
+
+Poly supports a maximum of eight simultaneous lanes. This is not a limitation — it is a creative constraint that enforces economy. Eight lanes of independent Euclidean patterns, each with its own step count, density, mutation, and phrase gating, already produces a rhythmic texture of enormous complexity. Adding more would not increase interest — it would decrease clarity.
+
+The eight-lane ceiling forces you to make choices. Every lane must earn its place in the ensemble. If a lane is not contributing something that no other lane provides — a unique rhythmic role, a distinct timbral voice, a specific polymetric relationship — it should be removed. The strongest patches in Poly use four to six lanes, with each lane occupying a clearly defined function in the density hierarchy.
+
+Think of it like an acoustic ensemble. A West African drum group has three to five voices. A Cuban son ensemble has five to seven. A jazz combo has four. Each member has a defined role. Nobody doubles another part. The constraint produces clarity.
+
+## Composition as Density Management
+
+The final principle is that composition in Poly is, fundamentally, density management. You are not writing melodies or chord progressions. You are shaping the density curve — deciding where the texture should be sparse and where it should be full, where the rhythmic interactions should be simple and where they should be complex, where silence should breathe and where every subdivision should be populated.
+
+The macros — Density, Complexity, Syncopation, Tension, Humanize — are your compositional tools. The Euclidean patterns are your raw material. The envelopes and scene morphing are your temporal structure. And the phrase gating is your silence.
+
+Every great drummer knows that what you do not play is as important as what you do. In Poly, that principle operates at every level: which hits sound (Density), which lanes play (phrase gating), which beats are emphasised (Tension), and how the whole ensemble evolves over time (scene morphing). The grammar of composition is the grammar of controlled density — and the silence between the hits is where the groove lives.

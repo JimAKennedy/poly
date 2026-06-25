@@ -1,0 +1,84 @@
+---
+title: "12. Jazz: Swing, Independence, and Conversational Drumming"
+description: "From Max Roach's melodic independence to Elvin Jones's polyrhythmic cascades — how jazz drumming's conversational approach maps to mutation, swing, and probability."
+---
+
+import PolyPatch from '../../components/PolyPatch.astro';
+import ListenFor from '../../components/ListenFor.astro';
+import CodeSnippet from '../../components/CodeSnippet.astro';
+import EuclideanDiagram from '../../components/EuclideanDiagram.astro';
+import PolyScreenshot from '../../components/PolyScreenshot.astro';
+
+Jazz drumming is a conversation. Unlike the fixed, interlocking roles of a West African ensemble or the groove-locked repetition of funk, a jazz drummer listens and responds in real time — to the soloist, to the bass player, to the shape of the harmonic form. The ride cymbal keeps time, but everything else is fluid. Max Roach proved that a drum kit could be melodic. Art Blakey proved it could drive. Elvin Jones proved it could be polyrhythmic in a way that Western music had never heard before.
+
+Modelling this in a pattern generator is a paradox: the essence of jazz drumming is spontaneity, and Poly is a machine. But the paradox dissolves when you understand that jazz improvisation is not random — it draws from a deep vocabulary of rhythmic cells, applied with controlled variation. Poly's Mutation parameter, per-lane Swing, and probability controls give you exactly that: a vocabulary of Euclidean patterns that shift, vary, and breathe over time.
+
+## Swing: Not a Fixed Ratio
+
+The first misconception to discard is that swing is a single, fixed shuffle amount. Jazz swing varies continuously with tempo, intensity, and style. At slow tempos (60-90 BPM), the swing ratio is wide — close to a dotted-eighth/sixteenth feel. At fast tempos (200+ BPM), the ratio narrows until the eighth notes are nearly straight. At medium tempos, the ratio sits somewhere in between and drifts throughout a performance.
+
+Poly's Swing macro applies a global shuffle, but the key to convincing jazz feel is *per-lane independence*. Set the ride cymbal's swing to 0.4-0.5 for a medium-tempo feel. Set the hi-hat slightly different — 0.35 perhaps — because a real drummer's left foot and right hand do not swing at identical ratios. Set the snare comping lane to 0.3, slightly straighter, because comping accents are more rhythmically assertive and tend to pull toward the grid.
+
+This layered approach to swing, where each voice has its own ratio, produces the shimmer that distinguishes a jazz trio recording from a sequenced approximation.
+
+<EuclideanDiagram steps={4} hits={4} />
+
+E(4,4) is every step filled — the ride cymbal playing steady quarter notes. In isolation it is the simplest possible pattern. With swing applied, it becomes the jazz ride, and the swing ratio *is* the content.
+
+<EuclideanDiagram steps={4} hits={2} />
+
+E(2,4) places hits on beats 1 and 3 — but with rotation 1, it shifts to beats 2 and 4, giving you the classic hi-hat foot pattern that anchors jazz timekeeping.
+
+## Max Roach and Melodic Independence
+
+Max Roach's revolution was treating each limb as an independent melodic voice. Rather than the entire kit serving a single groove function, Roach's snare might play a phrase of its own while the bass drum accented the melody and the ride kept time above. Each limb had its own rhythmic logic.
+
+In Poly, this maps directly to lane independence. Give each lane its own step count, and the limbs stop moving in lockstep. The ride holds steady at 4 steps per cycle. The snare comps in 5-step or 7-step patterns. The kick places sparse accents in a 3-step cycle. The result is four independent voices, each with its own periodicity, converging and diverging in exactly the way Roach's four limbs did.
+
+<PolyPatch title="Classic Jazz Timekeeping" preset="Jazz: Bop Ride">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Note | Velocity | Ghost | Swing | Mutation |
+|------|------|-------|------|----------|-------------|------|----------|-------|-------|----------|
+| 1 | Ride cymbal | 4 | 4 | 0 | 1/4 | 51 | 85 | 0 | 0.45 | 0% |
+| 2 | Hi-hat foot | 4 | 2 | 1 | 1/4 | 44 | 70 | 0 | 0.4 | 0% |
+| 3 | Kick accents | 8 | 3 | 0 | 1/8 | 36 | 80 | 30 | 0.35 | 15% |
+| 4 | Snare comp | 16 | 5 | 2 | 1/16 | 38 | 65 | 40 | 0.3 | 25% |
+
+</PolyPatch>
+
+The ride and hi-hat are fixed — no mutation. They are the timekeeping foundation, as stable as the Ewe bell in a West African ensemble. The kick carries 15% mutation, introducing occasional displaced accents. The snare comp at 25% mutation changes its pattern subtly every few bars, creating the illusion of a drummer deciding, in the moment, where to place the next accent.
+
+## Elvin Jones: Polyrhythmic Cascades
+
+Elvin Jones, on John Coltrane's classic quartet recordings, took Roach's independence to its polyrhythmic extreme. Jones superimposed 3-over-4, 5-over-4, and 6-over-4 groupings simultaneously, creating a rhythmic surface so dense that the barline seemed to dissolve. The pulse was always there — Jones never lost the time — but the accent patterns layered across it shifted constantly.
+
+This is where Poly's cycle independence becomes essential. Set four lanes to step counts of 3, 4, 5, and 7. The combined pattern does not repeat for `lcm(3, 4, 5, 7) = 420` steps — a phrase so long that the ear hears constant variation rather than repetition. The effect is cascading rhythm, waves of accent that build, converge, and scatter.
+
+<PolyPatch title="Elvin Jones Polyrhythmic Cascade">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Note | Velocity | Ghost | Swing | Mutation |
+|------|------|-------|------|----------|-------------|------|----------|-------|-------|----------|
+| 1 | Ride (steady) | 4 | 3 | 0 | 1/4 | 51 | 90 | 0 | 0.4 | 10% |
+| 2 | Snare cross | 3 | 2 | 0 | 1/4 | 38 | 75 | 45 | 0.35 | 20% |
+| 3 | Tom cascade | 5 | 3 | 1 | 1/4 | 45 | 70 | 40 | 0.3 | 20% |
+| 4 | Bass drum | 7 | 4 | 2 | 1/4 | 36 | 85 | 30 | 0.35 | 15% |
+
+</PolyPatch>
+
+<ListenFor>
+
+Run this patch and listen for the moments when the 3, 4, 5, and 7-step cycles briefly align. These convergence points arrive at long, irregular intervals, and when they hit, they feel like a structural downbeat erupting out of chaos. Between them, the mutation on each lane ensures that even the individual patterns are shifting. The result is a rhythmic texture that sounds improvised — not random, but alive with the controlled unpredictability that defines Elvin Jones's playing.
+
+</ListenFor>
+
+## Mutation as Conversation
+
+In jazz, comping is conversation. The pianist drops a chord in the space the soloist leaves open. The drummer places a snare accent that echoes the rhythm of the melody. Nothing is fixed, but nothing is arbitrary.
+
+Poly's Mutation parameter approximates this. At 10-15%, a lane varies one hit in ten — a ghost note appears where there was silence, or a hit drops out to create an unexpected gap. At 20-30%, the variation is more pronounced, closer to active comping. Above 30%, the pattern begins to lose its identity, which can be useful for free jazz textures but will undermine swing-based playing.
+
+The key is to layer mutation values across roles. The timekeeping lanes (ride, hi-hat) should have zero or very low mutation. The comping lanes (snare, kick accents) carry the conversational variation. This mirrors the actual hierarchy of a jazz drum kit — the time is sacred, and the commentary floats above it.
+
+## Brush Texture
+
+For ballad and trio settings, reduce velocity across all lanes and increase Ghost values. A brush player produces a continuous wash of sound punctuated by occasional accents, more texture than rhythm. In Poly, set Ghost to 50-70 and Velocity to 50-60 on the snare lane, with Spread at 50-60%. The hits blur into each other, producing the soft, continuous quality of brushes on a coated head. Add a rim click lane at very low velocity (40-50) with a 7 or 11-step cycle for the cross-rhythmic accents that brush players introduce to keep the time interesting.

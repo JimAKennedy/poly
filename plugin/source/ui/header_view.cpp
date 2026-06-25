@@ -6,7 +6,9 @@
 #include "vstgui/lib/cframe.h"
 #include "vstgui/lib/controls/coptionmenu.h"
 
+#include "../controller.h"
 #include "../plugids.h"
+#include "note_map_view.h"
 #include "poly/presets.h"
 #include "poly/types.h"
 
@@ -59,10 +61,29 @@ void HeaderView::draw(VSTGUI::CDrawContext* context) {
     arrowRect.left = arrowRect.right - 22;
     context->drawString("\xe2\x96\xbe", arrowRect, kCenterText);
 
+    auto nmRect = noteMapButtonRect();
+    bool noteMapOpen = false;
+    if (auto* frame = getFrame()) {
+        for (uint32_t i = 0; i < frame->getNbViews(); ++i) {
+            if (dynamic_cast<NoteMapView*>(frame->getView(i))) {
+                noteMapOpen = true;
+                break;
+            }
+        }
+    }
+    context->setFillColor(noteMapOpen ? CColor(0x2A, 0x3A, 0x4A, 0xFF) : CColor(0x22, 0x22, 0x30, 0xFF));
+    context->setFrameColor(noteMapOpen ? CColor(0x4A, 0x9E, 0xFF, 0x80) : CColor(0x3A, 0x3A, 0x48, 0xFF));
+    context->setLineWidth(1.0);
+    context->drawRect(nmRect, kDrawFilledAndStroked);
+    auto nmFont = makeOwned<CFontDesc>("Arial", 9.0, kBoldFace);
+    context->setFont(nmFont);
+    context->setFontColor(noteMapOpen ? CColor(0x4A, 0x9E, 0xFF, 0xFF) : CColor(0x99, 0x99, 0xAA, 0xFF));
+    context->drawString("MAP", nmRect, kCenterText);
+
     auto versionFont = makeOwned<CFontDesc>("Arial", 9.0);
     context->setFont(versionFont);
     context->setFontColor(CColor(0x60, 0x60, 0x6A, 0xFF));
-    CRect versionRect(bounds.right - 80, bounds.top, bounds.right - 10, bounds.bottom);
+    CRect versionRect(bounds.right - 50, bounds.top, bounds.right - 10, bounds.bottom);
     context->drawString(kPolyVersionString, versionRect, kRightText);
 
     CRect accentLine(bounds.left, bounds.bottom - 2, bounds.right, bounds.bottom);
@@ -72,12 +93,22 @@ void HeaderView::draw(VSTGUI::CDrawContext* context) {
     setDirty(false);
 }
 
+VSTGUI::CRect HeaderView::noteMapButtonRect() const {
+    auto bounds = getViewSize();
+    return {bounds.right - 90, bounds.top + 7, bounds.right - 54, bounds.bottom - 7};
+}
+
 VSTGUI::CMouseEventResult HeaderView::onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) {
     if (!(buttons & VSTGUI::kLButton))
         return VSTGUI::kMouseEventNotHandled;
 
+    if (noteMapButtonRect().pointInside(where)) {
+        toggleNoteMap();
+        return VSTGUI::kMouseEventHandled;
+    }
+
     auto bounds = getViewSize();
-    VSTGUI::CRect presetRect(bounds.left + 180, bounds.top + 5, bounds.right - 90, bounds.bottom - 5);
+    VSTGUI::CRect presetRect(bounds.left + 180, bounds.top + 5, bounds.right - 100, bounds.bottom - 5);
 
     if (!presetRect.pointInside(where))
         return VSTGUI::kMouseEventNotHandled;
@@ -165,7 +196,12 @@ void HeaderView::applyPreset(int index) {
         pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreHits), cfg.hitCount / 64.0);
         pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreRotation), cfg.rotation / 63.0);
         pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreMidiNote), cfg.midiNote / 127.0);
+        pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreCellCount), cfg.cellCount / 64.0);
+        pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreTimeline), cfg.timeline ? 1.0 : 0.0);
+        pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreFixedPatternLen), cfg.fixedPatternLength / 64.0);
     }
+
+    static_cast<PolyController*>(controller_)->mutableCachedState().sceneA = state;
 
     pushParam(ParamIDs::kMacroComplexity, state.macros.complexity);
     pushParam(ParamIDs::kMacroDensity, state.macros.density);
@@ -183,6 +219,26 @@ void HeaderView::applyPreset(int index) {
         invalid();
 }
 
+void HeaderView::toggleNoteMap() {
+    auto* frame = getFrame();
+    if (!frame)
+        return;
+
+    for (uint32_t i = 0; i < frame->getNbViews(); ++i) {
+        if (auto* nmv = dynamic_cast<NoteMapView*>(frame->getView(i))) {
+            frame->removeView(nmv, true);
+            invalid();
+            return;
+        }
+    }
+
+    auto frameBounds = frame->getViewSize();
+    auto* nmv = new NoteMapView( // ownership-transfer
+        VSTGUI::CRect(0, 32, frameBounds.right, frameBounds.bottom), controller_);
+    frame->addView(nmv);
+    invalid();
+}
+
 void HeaderView::resetToInit() {
     if (!controller_)
         return;
@@ -195,6 +251,11 @@ void HeaderView::resetToInit() {
         controller_->performEdit(id, value);
         controller_->endEdit(id);
     };
+
+    static constexpr int kInitSteps[] = {4, 4, 8, 5, 7, 3, 6, 9};
+    static constexpr int kInitSubs[] = {4, 4, 8, 16, 8, 16, 16, 16};
+    static constexpr int kInitHits[] = {4, 2, 8, 3, 4, 2, 4, 5};
+    static constexpr int kInitNotes[] = {36, 38, 42, 45, 46, 39, 43, 50};
 
     for (int lane = 0; lane < kMaxLanes; ++lane) {
         pushParam(ParamIDs::laneParam(lane, ParamIDs::kProbability), 1.0);
@@ -213,11 +274,6 @@ void HeaderView::resetToInit() {
         pushParam(ParamIDs::laneParam(lane, ParamIDs::kDriftRate), 0.5);
         pushParam(ParamIDs::laneParam(lane, ParamIDs::kTimingOffset), 0.5);
         pushParam(ParamIDs::laneParam(lane, ParamIDs::kKotekanSource), 0.0);
-
-        static constexpr int kInitSteps[] = {4, 4, 8, 5, 7, 3, 6, 9};
-        static constexpr int kInitSubs[] = {4, 4, 8, 16, 8, 16, 16, 16};
-        static constexpr int kInitHits[] = {4, 2, 8, 3, 4, 2, 4, 5};
-        static constexpr int kInitNotes[] = {36, 38, 42, 45, 46, 39, 43, 50};
 
         pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreSteps), (kInitSteps[lane] - 1) / 63.0);
         int subIdx = 0;
@@ -245,7 +301,21 @@ void HeaderView::resetToInit() {
         pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreHits), kInitHits[lane] / 64.0);
         pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreRotation), 0.0);
         pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreMidiNote), kInitNotes[lane] / 127.0);
+        pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreCellCount), 0.0);
+        pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreTimeline), 0.0);
+        pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreFixedPatternLen), 0.0);
     }
+
+    GrooveState initState{};
+    for (int lane = 0; lane < kMaxLanes; ++lane) {
+        initState.lanes[static_cast<size_t>(lane)].midiNote = static_cast<int16_t>(kInitNotes[lane]);
+        initState.lanes[static_cast<size_t>(lane)].cycle.steps = kInitSteps[lane];
+        initState.lanes[static_cast<size_t>(lane)].cycle.subdivision = kInitSubs[lane];
+        initState.lanes[static_cast<size_t>(lane)].hitCount = kInitHits[lane];
+        initState.lanes[static_cast<size_t>(lane)].active = true;
+    }
+    initState.activeLaneCount = kMaxLanes;
+    static_cast<PolyController*>(controller_)->mutableCachedState().sceneA = initState;
 
     pushParam(ParamIDs::kMacroComplexity, 0.5);
     pushParam(ParamIDs::kMacroDensity, 0.5);
