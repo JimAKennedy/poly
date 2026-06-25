@@ -38,11 +38,11 @@
 					"background-color": "bg",
 					"background-color-draw-style": "filled",
 					"class": "CViewContainer",
-					"minSize": "600, 659",
+					"minSize": "600, 810",
 					"mouse-enabled": "true",
 					"opacity": "1",
 					"origin": "0, 0",
-					"size": "600, 659",
+					"size": "600, 810",
 					"transparent": "false"
 				},
 				"children": {
@@ -403,6 +403,17 @@
 							"opacity": "1",
 							"origin": "400, 518",
 							"size": "190, 130",
+							"transparent": "false"
+						}
+					},
+					"CView#crossRhythmView": {
+						"attributes": {
+							"class": "CView",
+							"custom-view-name": "CrossRhythmView",
+							"mouse-enabled": "true",
+							"opacity": "1",
+							"origin": "10, 656",
+							"size": "580, 146",
 							"transparent": "false"
 						}
 					}

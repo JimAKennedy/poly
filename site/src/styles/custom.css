@@ -1,0 +1,120 @@
+@import '@fontsource-variable/source-serif-4';
+@import '@fontsource-variable/inter';
+@import '@fontsource-variable/jetbrains-mono';
+
+:root {
+  /* Poly colour palette */
+  --poly-bg: #f7f6f2;
+  --poly-surface: #f0edea;
+  --poly-text: #28251d;
+  --poly-text-muted: #5a5957;
+  --poly-primary: #01696f;
+  --poly-primary-dark: #0c4e54;
+  --poly-patch-bg: #ebf4f4;
+  --poly-code-bg: #1c1b19;
+  --poly-note-bg: #fff8e6;
+  --poly-note-border: #d19900;
+
+  /* Starlight theme overrides */
+  --sl-color-accent-low: #ebf4f4;
+  --sl-color-accent: #01696f;
+  --sl-color-accent-high: #0c4e54;
+  --sl-color-white: #28251d;
+  --sl-color-gray-1: #5a5957;
+  --sl-color-gray-2: #8a8886;
+  --sl-color-gray-3: #b0aeac;
+  --sl-color-gray-4: #d8d6d3;
+  --sl-color-gray-5: #f0edea;
+  --sl-color-gray-6: #f7f6f2;
+  --sl-color-black: #f7f6f2;
+
+  /* Typography */
+  --sl-font: 'Source Serif 4 Variable', 'Source Serif 4', Georgia, serif;
+  --sl-font-system-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace,
+    monospace;
+  --poly-font-sans: 'Inter Variable', 'Inter', system-ui, sans-serif;
+
+  /* Font sizes */
+  --sl-text-h1: 2.4rem;
+  --sl-text-h2: 1.6rem;
+  --sl-text-h3: 1.1rem;
+  --sl-text-body: 1.05rem;
+  --sl-text-sm: 0.9rem;
+  --sl-text-xs: 0.8rem;
+  --sl-text-code: 0.875rem;
+}
+
+/* Dark mode */
+:root[data-theme='dark'] {
+  --sl-color-accent-low: #0c4e54;
+  --sl-color-accent: #2aa8af;
+  --sl-color-accent-high: #ebf4f4;
+  --poly-patch-bg: #1a2e2e;
+  --poly-note-bg: #2a2510;
+  --poly-note-border: #c48f00;
+  --poly-text: #e0ddd8;
+  --poly-text-muted: #9a9896;
+}
+
+/* Headings */
+h1 {
+  font-family: var(--sl-font);
+  font-weight: 700;
+  color: var(--poly-primary-dark);
+}
+
+h2 {
+  font-family: var(--sl-font);
+  font-weight: 600;
+  color: var(--poly-primary);
+}
+
+h3,
+h4 {
+  font-family: var(--poly-font-sans);
+  font-weight: 600;
+}
+
+/* Body prose */
+.sl-markdown-content {
+  font-family: var(--sl-font);
+  font-size: var(--sl-text-body);
+  line-height: 1.7;
+  color: var(--poly-text);
+}
+
+/* Captions and secondary text */
+.sl-markdown-content figcaption,
+.sl-markdown-content .caption {
+  font-family: var(--poly-font-sans);
+  font-size: var(--sl-text-xs);
+  color: var(--poly-text-muted);
+}
+
+/* Tables use sans-serif for clarity */
+.sl-markdown-content table {
+  font-family: var(--poly-font-sans);
+  font-size: var(--sl-text-sm);
+}
+
+.sl-markdown-content th {
+  font-weight: 600;
+}
+
+/* Code blocks */
+.sl-markdown-content pre {
+  background: var(--poly-code-bg) !important;
+  border-radius: 6px;
+}
+
+.sl-markdown-content code {
+  font-family: var(--sl-font-system-mono);
+  font-size: var(--sl-text-code);
+}
+
+/* Two-column layout for wider screens */
+@media (min-width: 72rem) {
+  .sl-markdown-content {
+    max-width: 65ch;
+  }
+}

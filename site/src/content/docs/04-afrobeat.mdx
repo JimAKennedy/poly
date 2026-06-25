@@ -1,0 +1,83 @@
+---
+title: "4. Afrobeat: Extended Grooves and Phrase Architecture"
+description: "Fela Kuti and Tony Allen's revolution — how West African polymetry merged with jazz and funk to create grooves that breathe over dozens of bars."
+---
+
+import PolyPatch from '../../components/PolyPatch.astro';
+import ListenFor from '../../components/ListenFor.astro';
+import CodeSnippet from '../../components/CodeSnippet.astro';
+import EuclideanDiagram from '../../components/EuclideanDiagram.astro';
+import PolyScreenshot from '../../components/PolyScreenshot.astro';
+
+Afrobeat is what happens when West African polymetric stacking meets the extended duration of funk and the harmonic sophistication of jazz. Fela Kuti built the genre in 1960s and 70s Lagos, but it was his drummer Tony Allen who created its rhythmic vocabulary — a way of playing that distributes energy across many bars, with parts fading in and out, each instrument breathing on its own schedule.
+
+A typical Afrobeat track runs ten to twenty minutes. The groove is not static for that duration. It evolves. Lanes of percussion enter staggered, creating a gradually thickening texture. Some parts drop out for four bars and return with subtle variation. The effect is hypnotic — the listener loses track of where the "one" is, precisely because multiple independent cycles are defining their own "one" simultaneously.
+
+This is exactly what Poly's phrase gating was designed to model.
+
+## The Bell Again: E(7,12) in 4/4
+
+The rhythmic backbone of Afrobeat is the same E(7,12) bell pattern explored in the Sub-Saharan Africa chapter. In the Ewe context, it operates within a 12/8 metric framework. Fela and Tony Allen transplanted it into a straight 4/4 feel drawn from James Brown's funk, creating a distinctive tension between the ternary bell and the binary groove.
+
+<EuclideanDiagram steps={12} hits={7} />
+
+In Poly, you achieve this by setting the bell lane to 12 steps at 1/8 subdivision while other lanes run at 16 steps at 1/16, or 8 steps at 1/8. The cross-metric friction between the bell's 12 and the rhythm section's 8 or 16 is fundamental to the Afrobeat feel.
+
+## Tony Allen's Drum Philosophy
+
+Tony Allen described his approach as "playing around the beat rather than on it." Where a funk drummer drives straight through the pulse, Allen placed his kick drum sparsely and asymmetrically, leaving vast spaces that other instruments could occupy. His hi-hat work was continuous but dynamically varied — a steady stream of eighth notes with shifting accents that created their own polymetric layer.
+
+In Poly terms, this translates to:
+- **Kick**: Low hit count (3-4 hits across 16 steps), high velocity, no mutation — the kick is deliberate and fixed.
+- **Hi-hat**: High hit count (12-14 hits across 16 steps), moderate velocity with heavy ghost notes — the hat is continuous but dynamically textured.
+- **Snare/cross-stick**: Sparse and syncopated, often gated with phrase settings to appear and disappear.
+
+## Phrase Architecture: Breathing Grooves
+
+The defining characteristic of Afrobeat drumming is that it breathes. Parts enter and exit over multi-bar cycles, creating an arrangement that thickens and thins without any deliberate compositional decision — each voice simply follows its own phrase schedule.
+
+In Poly, each lane's phrase parameters control this breathing:
+- **Length** sets how many beats the lane plays before resting.
+- **Gap** sets how many beats of silence follow.
+- **Offset** staggers the start point so lanes do not all breathe at once.
+
+When you set five or six lanes with different phrase lengths and offsets, the result is an ensemble that self-arranges — some combination of lanes is always active, but the specific combination is always changing.
+
+<PolyPatch title="Afrobeat Extended Groove" preset="Afrobeat: Lagos '72">
+
+| Lane | Role | Steps | Hits | Rot | Sub | Note | Vel | Ghost | Phrase Len | Gap | Offset | Mutation |
+|------|------|-------|------|-----|-----|------|-----|-------|------------|-----|--------|----------|
+| 1 | Bell timeline | 12 | 7 | 0 | 1/8 | 56 | 105 | 0 | 0 | 0 | 0 | 0% |
+| 2 | Hi-hat | 16 | 13 | 0 | 1/16 | 42 | 70 | 50 | 0 | 0 | 0 | 5% |
+| 3 | Kick | 16 | 3 | 0 | 1/16 | 36 | 110 | 0 | 0 | 0 | 0 | 0% |
+| 4 | Snare/stick | 16 | 5 | 3 | 1/16 | 38 | 90 | 40 | 8 | 4 | 0 | 20% |
+| 5 | Shaker | 12 | 9 | 2 | 1/8 | 70 | 55 | 35 | 12 | 4 | 4 | 10% |
+| 6 | Conga accent | 8 | 3 | 1 | 1/8 | 63 | 80 | 50 | 6 | 6 | 8 | 25% |
+
+</PolyPatch>
+
+Lanes 1-3 have no phrase gating — they are the stable foundation that never drops out. The bell, hi-hat, and kick define the groove's identity. Lanes 4-6 have staggered phrase settings: the snare plays for 8 beats then rests for 4, the shaker plays for 12 and rests for 4 starting 4 beats late, and the conga plays for 6, rests for 6, entering 8 beats after the groove begins.
+
+The offset staggering is critical. If all gated lanes entered and exited simultaneously, the effect would be a crude verse/chorus alternation. With offsets, you get a continuously shifting ensemble texture — sometimes four lanes, sometimes six, sometimes five, always evolving.
+
+<ListenFor>
+
+Start the patch and listen for at least sixteen bars. The first four bars establish the core trio (bell, hat, kick). Around bar 5, the snare enters. The shaker follows a beat later. The conga waits until bar 9. By bar 12, all six lanes are active — but then the snare drops out for its 4-beat gap, thinning the texture just as the conga is at full density. This breathing creates the long-arc drama of an Afrobeat groove without any manual arrangement.
+
+</ListenFor>
+
+## Macros for Live Variation
+
+Afrobeat in a live context is about gradual intensification — the groove starts sparse and builds over many minutes. Poly's macros model this trajectory:
+
+- **Density** at 0.3-0.4 for the opening establishes a spacious feel. Push it toward 0.7-0.8 as the track develops, and the gated lanes will trigger more frequently, filling the groove.
+- **Complexity** controls the internal variation within each lane. Keep it low (0.2) during the opening, increase it as the arrangement thickens.
+- **Humanize** at 0.3-0.5 adds the micro-timing deviations that separate a living groove from a sequenced one. Tony Allen's timing was precise but not quantised — there was always a human push and pull against the grid.
+
+The combination of phrase gating for structural breathing and macro automation for gradual intensification gives you a single Poly patch that can sustain a ten-minute Afrobeat jam without repeating itself. The bell holds steady. Everything else breathes around it.
+
+## Connection to Tradition
+
+Afrobeat's genius was recognising that the polymetric stacking of Ewe and Yoruba drumming did not need to stay within traditional ensemble formats. Fela and Allen proved that the same rhythmic principles could organise a funk band, a horn section, and a chorus — all locked to the bell, all breathing independently, all generating complexity through the simplest possible means: independent cycles, evenly distributed.
+
+In Poly, you are working with the same raw material. The bell pattern has not changed since Chapter 2. What has changed is the context — more lanes, longer phrases, staggered entries. The mathematics is identical. The musical result is a different world.

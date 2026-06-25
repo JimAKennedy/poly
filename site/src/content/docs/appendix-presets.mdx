@@ -1,0 +1,223 @@
+---
+title: "Appendix: Factory Preset Reference"
+description: "Complete parameter tables for all nine factory presets — lane configurations, macro settings, and suggested experiments."
+---
+
+import PolyPatch from '../../components/PolyPatch.astro';
+import ListenFor from '../../components/ListenFor.astro';
+import CodeSnippet from '../../components/CodeSnippet.astro';
+import EuclideanDiagram from '../../components/EuclideanDiagram.astro';
+import PolyScreenshot from '../../components/PolyScreenshot.astro';
+
+This appendix documents every factory preset shipped with Poly. Each preset is a starting point, not a destination — the parameter tables and experiment suggestions below are designed to help you understand what each preset does and where you might take it.
+
+## 1. Four on the Floor
+
+A straight four-on-the-floor kick anchored by a backbeat snare and steady hi-hats, with a polymetric ghost layer at E(7,16) that introduces subtle asymmetric motion beneath the grid.
+
+<PolyPatch title="Four on the Floor" preset="Factory: Four on the Floor">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Note | Velocity | Ghost | Swing |
+|------|------|-------|------|----------|-------------|------|----------|-------|-------|
+| 1 | Kick | 4 | 4 | 0 | 1/4 | 36 | 110 | 0 | 0 |
+| 2 | Snare | 4 | 2 | 1 | 1/4 | 38 | 95 | 0 | 0 |
+| 3 | Hi-hat | 16 | 8 | 0 | 1/16 | 42 | 70 | 35 | 0.15 |
+| 4 | Ghost | 16 | 7 | 3 | 1/16 | 42 | 45 | 50 | 0.15 |
+
+</PolyPatch>
+
+**Macros:** Density 0.6, Complexity 0.3, Syncopation 0.2, Swing 0.3, Tension 0.4, Humanize 0.15
+
+**Experiments:**
+- Push the Swing macro to 0.5 for a house feel, or drop it to 0 for rigid techno.
+- Increase Lane 4's hits from 7 to 9 and listen for how the ghost layer thickens.
+- Set Lane 4's steps to 15 instead of 16 to create a true polymetric ghost pattern that drifts against the kick grid.
+
+## 2. Polymetric Drift
+
+Four lanes at prime-number cycle lengths — 3, 5, 7, and 11 steps. Because no two primes share a common factor, the combined pattern does not repeat for `lcm(3, 5, 7, 11) = 1155` steps. The groove is always recognisable but never literally repeating.
+
+<PolyPatch title="Polymetric Drift" preset="Factory: Polymetric Drift">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Note | Velocity | Ghost | Swing |
+|------|------|-------|------|----------|-------------|------|----------|-------|-------|
+| 1 | Kick pulse | 3 | 2 | 0 | 1/4 | 36 | 105 | 0 | 0 |
+| 2 | Rim pattern | 5 | 3 | 1 | 1/8 | 37 | 80 | 30 | 0 |
+| 3 | Tom accent | 7 | 4 | 0 | 1/8 | 47 | 85 | 40 | 0 |
+| 4 | Hat shimmer | 11 | 7 | 2 | 1/8 | 42 | 60 | 45 | 0.10 |
+
+</PolyPatch>
+
+**Macros:** Density 0.5, Complexity 0.4, Syncopation 0.3, Swing 0.1, Tension 0.5, Humanize 0.20
+
+**Experiments:**
+- Automate the Density macro from 0.2 to 0.7 over 16 bars to hear the prime-ratio interactions emerge gradually.
+- Try replacing Lane 1's steps with 4 (non-prime) and notice how the groove becomes more predictable.
+- Increase Humanize to 0.4 for a loose, organic feel that makes the polymetric shifts less mechanical.
+
+## 3. Sparse Pulse
+
+A minimal patch — three lanes, low density, ghost-heavy. Designed to sit beneath melodic content without competing. The groove is more felt than heard, a skeletal pulse with whispered ghost notes providing subliminal rhythmic texture.
+
+<PolyPatch title="Sparse Pulse" preset="Factory: Sparse Pulse">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Note | Velocity | Ghost | Swing |
+|------|------|-------|------|----------|-------------|------|----------|-------|-------|
+| 1 | Kick | 8 | 2 | 0 | 1/8 | 36 | 95 | 0 | 0 |
+| 2 | Hat | 8 | 3 | 2 | 1/8 | 42 | 50 | 55 | 0.20 |
+| 3 | Ghost | 16 | 5 | 1 | 1/16 | 70 | 35 | 60 | 0.15 |
+
+</PolyPatch>
+
+**Macros:** Density 0.3, Complexity 0.2, Syncopation 0.1, Swing 0.2, Tension 0.3, Humanize 0.25
+
+**Experiments:**
+- Use as a foundation and add one lane at a time to build a custom groove from the skeleton up.
+- Increase Lane 3's velocity to 65 and ghost to 30 to make the ghost layer more audible — it becomes a textural shaker.
+- Try scene morphing from this preset (Scene A) to a dense patch (Scene B) for a verse-to-chorus transition.
+
+## 4. Breakbeat
+
+A syncopated kick at E(3,16) displaces the downbeat emphasis, creating the broken feel that defines breakbeat and drum-and-bass drumming. The snare pattern provides the backbeat while hat and ghost lanes fill the grid with rhythmic detail.
+
+<EuclideanDiagram steps={16} hits={3} />
+
+<PolyPatch title="Breakbeat" preset="Factory: Breakbeat">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Note | Velocity | Ghost | Swing |
+|------|------|-------|------|----------|-------------|------|----------|-------|-------|
+| 1 | Kick | 16 | 3 | 0 | 1/16 | 36 | 110 | 0 | 0 |
+| 2 | Snare | 8 | 2 | 1 | 1/8 | 38 | 100 | 0 | 0 |
+| 3 | Hat | 16 | 9 | 2 | 1/16 | 42 | 65 | 40 | 0 |
+| 4 | Ghost | 16 | 5 | 4 | 1/16 | 47 | 45 | 55 | 0 |
+
+</PolyPatch>
+
+**Macros:** Density 0.6, Complexity 0.5, Syncopation 0.6, Swing 0, Tension 0.6, Humanize 0.10
+
+**Experiments:**
+- Rotate Lane 1 through positions 0-5 to find different kick displacement patterns. Each rotation is a different breakbeat variant.
+- Push Syncopation to 0.8 to shift emphasis further off the grid.
+- Add a 5th lane with E(5,7) at 1/8 for a polymetric ride pattern that drifts against the 16-step grid.
+
+## 5. Latin Feel
+
+The son clave at E(3,8) organises an ensemble of conga, shaker, and cowbell. Each lane has a defined relationship to the clave matrix — the conga fills the gaps, the shaker provides continuous subdivision, and the cowbell marks structural accents.
+
+<EuclideanDiagram steps={8} hits={3} />
+
+<PolyPatch title="Latin Feel" preset="Factory: Latin Feel">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Note | Velocity | Ghost | Swing |
+|------|------|-------|------|----------|-------------|------|----------|-------|-------|
+| 1 | Clave | 8 | 3 | 0 | 1/8 | 75 | 100 | 0 | 0.25 |
+| 2 | Conga | 16 | 7 | 2 | 1/16 | 63 | 80 | 50 | 0.25 |
+| 3 | Shaker | 16 | 11 | 0 | 1/16 | 70 | 50 | 35 | 0.20 |
+| 4 | Cowbell | 8 | 4 | 1 | 1/8 | 56 | 75 | 0 | 0.25 |
+
+</PolyPatch>
+
+**Macros:** Density 0.6, Complexity 0.4, Syncopation 0.5, Swing 0.5, Tension 0.4, Humanize 0.20
+
+**Experiments:**
+- Increase Lane 2's mutation for an improvisatory conga feel reminiscent of a live conguero.
+- Change Lane 1 to E(5,16) for the full son clave pattern instead of the tresillo shorthand.
+- Push Swing to 0.7 for a deeper Cuban lilt.
+
+## 6. Afro-House Phrases
+
+Five lanes with staggered phrase gating create a texture that breathes — parts enter and exit at different times, so the ensemble is always shifting. The phrase offsets ensure that at least two lanes are always active, preventing complete silence while maintaining the feeling of structural variation.
+
+<PolyPatch title="Afro-House Phrases" preset="Factory: Afro-House Phrases">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Note | Velocity | Ghost | Phrase Len | Gap | Offset |
+|------|------|-------|------|----------|-------------|------|----------|-------|------------|-----|--------|
+| 1 | Kick | 4 | 4 | 0 | 1/4 | 36 | 110 | 0 | 0 | 0 | 0 |
+| 2 | Perc A | 12 | 5 | 0 | 1/8 | 63 | 80 | 40 | 8 | 4 | 0 |
+| 3 | Perc B | 8 | 3 | 1 | 1/8 | 56 | 75 | 45 | 8 | 4 | 4 |
+| 4 | Shaker | 16 | 9 | 2 | 1/16 | 70 | 50 | 30 | 12 | 4 | 2 |
+| 5 | Ghost | 12 | 7 | 3 | 1/8 | 42 | 45 | 55 | 8 | 8 | 6 |
+
+</PolyPatch>
+
+**Macros:** Density 0.5, Complexity 0.4, Syncopation 0.3, Swing 0.2, Tension 0.4, Humanize 0.20
+
+**Experiments:**
+- Reduce all Gap values to 2 for a denser texture where parts overlap more.
+- Change Lane 5's Offset to 0 so it enters simultaneously with Lane 2 — hear how staggered vs aligned entry changes the feel.
+- Automate Density from 0.3 to 0.7 to create an Afro-house build.
+
+## 7. Reich Phasing
+
+Two lanes run the identical pattern E(5,12), but Lane 2 applies drift, causing it to gradually shift phase relative to Lane 1. The third lane provides a sparse structural anchor. Over many bars, the two primary voices move from unison through various phase relationships and eventually (if drift is slow enough) back to unison — the essence of Steve Reich's phasing technique.
+
+<EuclideanDiagram steps={12} hits={5} />
+
+<PolyPatch title="Reich Phasing" preset="Factory: Reich Phasing">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Note | Velocity | Ghost | Drift |
+|------|------|-------|------|----------|-------------|------|----------|-------|-------|
+| 1 | Pattern A | 12 | 5 | 0 | 1/8 | 56 | 85 | 0 | 0 |
+| 2 | Pattern B (drift) | 12 | 5 | 0 | 1/8 | 58 | 80 | 0 | +1 |
+| 3 | Anchor pulse | 4 | 2 | 0 | 1/4 | 36 | 95 | 0 | 0 |
+
+</PolyPatch>
+
+**Macros:** Density 0.7, Complexity 0.2, Syncopation 0.1, Swing 0, Tension 0.3, Humanize 0.05
+
+**Experiments:**
+- Increase Lane 2's drift to +2 for faster phasing — the patterns separate and reconverge more quickly.
+- Change the note assignments so Lanes 1 and 2 play different pitched percussion — the phasing becomes a melodic canon.
+- Set Humanize to 0 for maximum precision, or push it to 0.3 to hear how looseness interacts with the phasing process.
+
+## 8. Kotekan Interlock
+
+A Balinese-inspired interlocking pair (polos and sangsih) with a structural gong cycle and a high-register shimmer. Lane 2 uses Kotekan L1, which generates a complementary pattern that fills the gaps left by Lane 1, recreating the interlocking technique of gamelan percussion.
+
+<PolyPatch title="Kotekan Interlock" preset="Factory: Kotekan Interlock">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Note | Velocity | Ghost | Kotekan |
+|------|------|-------|------|----------|-------------|------|----------|-------|---------|
+| 1 | Polos | 8 | 5 | 0 | 1/8 | 62 | 85 | 30 | off |
+| 2 | Sangsih | 8 | 3 | 0 | 1/8 | 64 | 80 | 25 | L1 |
+| 3 | Gong cycle | 16 | 3 | 0 | 1/4 | 36 | 100 | 0 | off |
+| 4 | Shimmer | 16 | 9 | 2 | 1/16 | 70 | 50 | 40 | off |
+
+</PolyPatch>
+
+**Macros:** Density 0.6, Complexity 0.3, Syncopation 0.2, Swing 0, Tension 0.3, Humanize 0.10
+
+**Experiments:**
+- Change Kotekan from L1 to L3 or L5 for different interlocking densities.
+- Increase Lane 4's hits to 13 for a denser metallic shimmer that approximates a gamelan section in full flow.
+- Add a 5th lane with E(7,12) as a West African bell pattern — the kotekan pair and the bell create a genuinely cross-cultural polymetric texture.
+
+## 9. Pocket Groove
+
+A tight four-lane groove emphasising micro-timing offsets and subtle mutation. The kick and snare lock together with precise pocket placement, while the hat and ghost lanes apply controlled looseness. This preset demonstrates that polymetric interest can come from timing variation rather than cycle-length differences.
+
+<PolyPatch title="Pocket Groove" preset="Factory: Pocket Groove">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Note | Velocity | Ghost | Timing | Mutation |
+|------|------|-------|------|----------|-------------|------|----------|-------|--------|----------|
+| 1 | Kick | 8 | 3 | 0 | 1/8 | 36 | 105 | 0 | -3 | 5 |
+| 2 | Snare | 8 | 2 | 1 | 1/8 | 38 | 95 | 0 | +2 | 5 |
+| 3 | Hat | 16 | 9 | 0 | 1/16 | 42 | 60 | 45 | -5 | 10 |
+| 4 | Ghost | 16 | 7 | 3 | 1/16 | 47 | 40 | 55 | +4 | 15 |
+
+</PolyPatch>
+
+**Macros:** Density 0.6, Complexity 0.4, Syncopation 0.3, Swing 0.4, Tension 0.5, Humanize 0.30
+
+**Experiments:**
+- Push Humanize to 0.5 for an extremely loose, almost drunk feel.
+- Zero out all Timing offsets to hear how the pocket tightens — the same pattern with precise timing sounds robotic by comparison.
+- Increase Lane 4's mutation to 30 and add phrase gating (Length 6, Gap 2) for a ghost layer that breathes and varies.
+
+---
+
+<ListenFor>
+
+Factory presets are starting points. Every parameter in every table above is a variable you can change. The presets demonstrate specific techniques — polymetric drift, phrase gating, kotekan interlocking, micro-timing pocketing — but their real purpose is to give you a working patch you can modify rather than a blank slate you have to build from scratch. Load a preset, listen to it for a few bars, then change one parameter at a time and listen to what shifts. That iterative process — load, listen, modify, listen — is how you develop an intuition for Poly's parameter space.
+
+</ListenFor>

@@ -1,0 +1,85 @@
+---
+title: "6. Indian Classical: Tala Cycles and Rhythmic Arithmetic"
+description: The tala system of Hindustani and Carnatic music — how cycle lengths of 7, 10, and 16 beats create rhythmic architecture through subdivision and recombination.
+---
+
+import PolyPatch from '../../components/PolyPatch.astro';
+import ListenFor from '../../components/ListenFor.astro';
+import CodeSnippet from '../../components/CodeSnippet.astro';
+import EuclideanDiagram from '../../components/EuclideanDiagram.astro';
+import PolyScreenshot from '../../components/PolyScreenshot.astro';
+
+Indian classical music thinks about rhythm differently from almost every other tradition in this guide. Where West African drumming layers multiple independent cycles and Cuban music anchors everything to a clave, the tala system treats the rhythmic cycle itself as an architectural space — a canvas with named landmarks, internal subdivisions, and a gravitational centre that every performer feels pulling them home.
+
+## Tala as Rhythmic Architecture
+
+A tala is not simply a time signature. It is a cyclic structure divided into sections (*vibhag*), each with a characteristic emphasis. Tintal, the most common Hindustani tala, spans 16 beats grouped as 4+4+4+4. Jhaptal uses 10 beats grouped 2+3+2+3. Rupak tal occupies 7 beats as 3+2+2.
+
+These are not arbitrary numbers. The grouping patterns create internal asymmetries that a Western time signature cannot express. Rupak's 3+2+2 means the first section is longer than the others — the cycle has a built-in weight distribution.
+
+<EuclideanDiagram steps={7} hits={4} />
+
+E(4,7) distributes four accents across seven positions, producing the grouping `2+2+2+1` — close to rupak's internal pulse. With rotation, you can shift the long group to match the traditional 3+2+2 structure.
+
+<EuclideanDiagram steps={16} hits={7} />
+
+E(7,16) across tintal's sixteen beats creates a sparse, syncopated skeleton — the kind of structure a tabla player might outline during a slow *theka* (basic pattern) before elaborating with faster subdivisions.
+
+## Sam and Khali: Gravity and Weightlessness
+
+Every tala has a *sam* — beat one, the point of convergence. In performance, sam is where all musicians meet after passages of independent elaboration. It functions like a polymetric convergence point: no matter how far the improvisations diverge, they must arrive together on sam.
+
+The *khali* (empty beat) is sam's opposite — a beat deliberately de-emphasised, often the midpoint of the cycle. In tintal, sam falls on beat 1 and khali on beat 9, creating a binary tension across the 16-beat span.
+
+In Poly, you can model this sam-khali architecture by setting stronger velocity on the lane that marks sam and using ghost notes or lower velocity for the khali region. The structural weight is not in which notes you play but in how loudly you play them.
+
+## Layakari: Speed Through Subdivision
+
+The concept of *layakari* — rhythmic augmentation and diminution — maps directly to Poly's subdivision parameter. A tabla player performing in *dugun* (double speed) plays two notes for every beat; in *tigun* (triple speed), three; in *chaugun* (quadruple speed), four.
+
+Set Lane 1 to subdivision 1/4 for the basic pulse. Set Lane 2 to 1/8 for dugun. Set Lane 3 to 1/16 for chaugun. All three share the same step count and hit pattern, but the subdivision change compresses the same rhythmic shape into progressively smaller time spans. The result is a layered acceleration that Indian classical musicians spend years learning to control.
+
+<PolyPatch title="Tintal-Inspired Groove" preset="Indian Classical">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Velocity | Note |
+|------|------|-------|------|----------|-------------|----------|------|
+| 1 | Sam accent | 16 | 4 | 0 | 1/4 | 110 | 36 |
+| 2 | Theka outline | 16 | 7 | 0 | 1/8 | 90 | 38 |
+| 3 | Dugun fill | 16 | 9 | 2 | 1/8 | 70 | 42 |
+| 4 | Tigun ornament | 16 | 5 | 4 | 1/16 | 55 | 46 |
+
+</PolyPatch>
+
+Lane 1 marks the four strong beats of tintal's 4+4+4+4 structure. Lane 2 provides the mid-density theka skeleton. Lanes 3 and 4 add layakari-style density at higher subdivisions, creating the effect of rhythmic acceleration without changing the tempo.
+
+## Tihai: Landing on Sam
+
+A *tihai* is a rhythmic phrase repeated three times such that it ends precisely on sam. It is both a cadential formula and a demonstration of rhythmic arithmetic — the player calculates phrase length and gap so that three repetitions consume exactly the remaining beats in the cycle.
+
+Poly's phrase gating parameters model this directly. Set a lane's phrase Length to the number of beats in your tihai phrase, and configure the Gap so that three consecutive phrases (Length + Gap, repeated) land the final onset on beat 1. The Offset parameter positions the tihai's entry point within the cycle.
+
+<PolyPatch title="Rupak Tal Configuration" preset="7-Beat Cycle">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Velocity | Ghost |
+|------|------|-------|------|----------|-------------|----------|-------|
+| 1 | Sam marker | 7 | 3 | 0 | 1/4 | 120 | 50 |
+| 2 | Theka pattern | 7 | 4 | 1 | 1/8 | 85 | 40 |
+| 3 | Counter rhythm | 7 | 5 | 3 | 1/8 | 70 | 35 |
+
+</PolyPatch>
+
+<EuclideanDiagram steps={7} hits={3} />
+
+E(3,7) with rotation 0 produces `x . x . x . .` — three accents across seven beats, capturing rupak's sparse, lilting quality. This odd-meter cycle never settles into the bilateral symmetry of tintal; it always leans forward.
+
+## Polymetric Convergence as Sam
+
+The deepest connection between tala and Poly's engine is the concept of convergence. When you run a 7-step lane against a 16-step lane, they share a downbeat every `lcm(7, 16) = 112` steps. That shared downbeat *is* sam — the moment all cycles agree.
+
+Indian classical musicians spend an entire performance building toward, departing from, and returning to sam. In Poly, that same gravitational pull emerges automatically from cycle-length ratios. You do not program sam; it arises from the arithmetic.
+
+<ListenFor>
+
+Set one lane to 7 steps and another to 16. The two patterns diverge immediately, creating tension that builds across dozens of bars. When they finally converge — both landing on beat one simultaneously — you hear sam. That arrival is the emotional core of tala-based rhythm, and Poly produces it from pure mathematics.
+
+</ListenFor>

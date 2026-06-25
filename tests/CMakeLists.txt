@@ -42,6 +42,8 @@ if(NOT POLY_ENGINE_ONLY)
         ${CMAKE_SOURCE_DIR}/plugin/source/plugids.h
         ${CMAKE_SOURCE_DIR}/plugin/source/ui/cell_editor_view.h
         ${CMAKE_SOURCE_DIR}/plugin/source/ui/cell_editor_view.cpp
+        ${CMAKE_SOURCE_DIR}/plugin/source/ui/cross_rhythm_view.h
+        ${CMAKE_SOURCE_DIR}/plugin/source/ui/cross_rhythm_view.cpp
         ${CMAKE_SOURCE_DIR}/plugin/source/ui/envelope_curve_view.h
         ${CMAKE_SOURCE_DIR}/plugin/source/ui/envelope_curve_view.cpp
         ${CMAKE_SOURCE_DIR}/plugin/source/ui/header_view.h
@@ -54,6 +56,8 @@ if(NOT POLY_ENGINE_ONLY)
         ${CMAKE_SOURCE_DIR}/plugin/source/ui/phase_alignment_view.cpp
         ${CMAKE_SOURCE_DIR}/plugin/source/ui/micro_timing_editor_view.h
         ${CMAKE_SOURCE_DIR}/plugin/source/ui/micro_timing_editor_view.cpp
+        ${CMAKE_SOURCE_DIR}/plugin/source/ui/note_map_view.h
+        ${CMAKE_SOURCE_DIR}/plugin/source/ui/note_map_view.cpp
         ${CMAKE_SOURCE_DIR}/plugin/source/ui/timeline_step_editor_view.h
         ${CMAKE_SOURCE_DIR}/plugin/source/ui/timeline_step_editor_view.cpp
         ${CMAKE_SOURCE_DIR}/plugin/source/ui/velocity_view.h

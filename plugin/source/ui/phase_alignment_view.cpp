@@ -1,5 +1,6 @@
 #include "phase_alignment_view.h"
 
+#include <algorithm>
 #include <cmath>
 
 #include "vstgui/lib/cdrawcontext.h"

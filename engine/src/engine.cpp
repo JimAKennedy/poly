@@ -36,6 +36,7 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
             for (int s = 0; s < patLen && s < kMaxSteps; ++s)
                 pattern[s] = cfg.fixedPattern[s];
         } else {
+            // region:kotekan
             bool useKotekan = cfg.kotekanSourceLane >= 0 && cfg.kotekanSourceLane < state.activeLaneCount &&
                               cfg.kotekanSourceLane != lane;
             if (useKotekan) {
@@ -52,6 +53,7 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
                     pattern[s] = !srcPattern[s];
                 for (int s = src.cycle.steps; s < cfg.cycle.steps; ++s)
                     pattern[s] = true;
+                // endregion:kotekan
             } else {
                 euclidean(cfg.hitCount, cfg.cycle.steps, cfg.rotation, pattern);
             }
@@ -109,12 +111,14 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
             int stepsInCycle = isAdditive ? additive.count : cfg.cycle.steps;
             int64_t cycleStep = ((absStep % stepsInCycle) + stepsInCycle) % stepsInCycle;
 
+            // region:drift-accumulator
             // Phase drift: rotate pattern lookup by driftRate steps per bar
             if (cfg.driftRate != 0.0f) {
                 double barPos = ppq / 4.0;
                 auto driftSteps = static_cast<int64_t>(std::floor(barPos * static_cast<double>(cfg.driftRate)));
                 cycleStep = ((cycleStep + driftSteps) % stepsInCycle + stepsInCycle) % stepsInCycle;
             }
+            // endregion:drift-accumulator
 
             // Envelope modulation: evaluate before pattern check (FillLikelihood needs it)
             float velMod = 1.0f;

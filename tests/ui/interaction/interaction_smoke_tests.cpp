@@ -10,6 +10,7 @@
 #include "controller.h"
 #include "headless_ui_host.h"
 #include "plugids.h"
+#include "ui/cross_rhythm_view.h"
 #include "ui/lane_grid_view.h"
 #include "ui/velocity_view.h"
 
@@ -263,6 +264,7 @@ TEST_F(ViewTreeTest, CustomViewsInTree) {
 
     bool foundLaneGrid = false;
     bool foundVelocity = false;
+    bool foundCrossRhythm = false;
 
     std::function<void(VSTGUI::CViewContainer*)> walk = [&](VSTGUI::CViewContainer* container) {
         for (uint32_t i = 0; i < container->getNbViews(); ++i) {
@@ -273,6 +275,8 @@ TEST_F(ViewTreeTest, CustomViewsInTree) {
                 foundLaneGrid = true;
             if (dynamic_cast<poly::VelocityView*>(child))
                 foundVelocity = true;
+            if (dynamic_cast<poly::CrossRhythmView*>(child))
+                foundCrossRhythm = true;
             auto* sub = dynamic_cast<VSTGUI::CViewContainer*>(child);
             if (sub)
                 walk(sub);
@@ -283,4 +287,5 @@ TEST_F(ViewTreeTest, CustomViewsInTree) {
 
     EXPECT_TRUE(foundLaneGrid) << "LaneGridView should be in the view tree";
     EXPECT_TRUE(foundVelocity) << "VelocityView should be in the view tree";
+    EXPECT_TRUE(foundCrossRhythm) << "CrossRhythmView should be in the view tree";
 }

@@ -209,15 +209,16 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
         ev.sampleOffset = ppqToSampleOffset(note.ppqPosition, tc_.ppqStart, tc_.tempo, tc_.sampleRate, data.numSamples);
         ev.ppqPosition = note.ppqPosition;
         ev.type = Steinberg::Vst::Event::kNoteOnEvent;
+        auto mappedPitch = sceneState_.noteMap.apply(note.pitch);
         ev.noteOn.channel = note.channel;
-        ev.noteOn.pitch = note.pitch;
+        ev.noteOn.pitch = mappedPitch;
         ev.noteOn.velocity = note.velocity;
         ev.noteOn.noteId = -1;
         outputEvents->addEvent(ev);
 
         pendingNoteOffs_.push({
             .ppqOff = note.ppqPosition + note.duration,
-            .pitch = note.pitch,
+            .pitch = mappedPitch,
             .channel = note.channel,
         });
 
@@ -240,6 +241,18 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
     }
 
     if (auto* outParams = data.outputParameterChanges) {
+        {
+            Steinberg::int32 idx;
+            auto* ppqQueue = outParams->addParameterData(ParamIDs::kTransportPpqOutput, idx);
+            if (ppqQueue) {
+                Steinberg::int32 ptIdx;
+                double ppqNorm = std::fmod(tc_.ppqStart, 128.0) / 128.0;
+                if (ppqNorm < 0.0)
+                    ppqNorm += 1.0;
+                ppqQueue->addPoint(0, ppqNorm, ptIdx);
+            }
+        }
+
         if (noteBuffer_.count > 0) {
             for (int lane = 0; lane < kMaxLanes; ++lane) {
                 if (laneVelocity[lane] > 0.0f) {
@@ -471,6 +484,18 @@ void PolyProcessor::applyParameter(Steinberg::Vst::ParamID id, double normalized
 Steinberg::tresult PLUGIN_API PolyProcessor::notify(Steinberg::Vst::IMessage* message) {
     if (!message)
         return Steinberg::kInvalidArgument;
+
+    if (Steinberg::FIDStringsEqual(message->getMessageID(), "NoteMapUpdate")) {
+        if (auto* attrs = message->getAttributes()) {
+            const void* data = nullptr;
+            Steinberg::uint32 size = 0;
+            if (attrs->getBinary("map", data, size) == Steinberg::kResultOk &&
+                size == sizeof(sceneState_.noteMap.map)) {
+                std::memcpy(sceneState_.noteMap.map.data(), data, size);
+            }
+        }
+        return Steinberg::kResultOk;
+    }
 
     if (Steinberg::FIDStringsEqual(message->getMessageID(), "RequestMidiExport")) {
         if (exportReady_.load(std::memory_order_acquire)) {

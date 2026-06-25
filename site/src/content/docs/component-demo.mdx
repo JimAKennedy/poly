@@ -1,0 +1,62 @@
+---
+title: Component Demo
+description: Test page for all custom MDX components.
+sidebar:
+  hidden: true
+---
+
+import PolyPatch from '../../components/PolyPatch.astro';
+import ListenFor from '../../components/ListenFor.astro';
+import CodeSnippet from '../../components/CodeSnippet.astro';
+import EuclideanDiagram from '../../components/EuclideanDiagram.astro';
+import PolyScreenshot from '../../components/PolyScreenshot.astro';
+
+## PolyPatch
+
+<PolyPatch title="Ewe Bell Ensemble (Agbekor Framework)" preset="Afrobeat 12/8">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Notes |
+|------|------|-------|------|----------|-------------|-------|
+| 1 | Gankogui Bell | 12 | 7 | 0 | 12 | Timeline ON |
+| 2 | Sogo Support | 12 | 3 | 1 | 12 | Ghost Floor 40 |
+| 3 | Atsimevu | 12 | 5 | 3 | 12 | Probability 0.70 |
+| 4 | Kidi (Kotekan) | 12 | — | — | 12 | Source: Lane 2 |
+
+</PolyPatch>
+
+## ListenFor
+
+<ListenFor>
+
+The bell pattern repeats exactly — timeline mode guarantees this even as macros push the other lanes. Lanes 2 and 4 form an interlocking pair: when one sounds, the other rests.
+
+</ListenFor>
+
+## CodeSnippet
+
+<CodeSnippet
+  file="engine/src/euclidean.cpp"
+  region="bjorklund"
+  caption="The Bjorklund algorithm — O(n) iterative implementation"
+/>
+
+## EuclideanDiagram
+
+Standard West African bell timeline — E(7,12):
+
+<EuclideanDiagram steps={12} hits={7} />
+
+Cuban tresillo — E(3,8):
+
+<EuclideanDiagram steps={8} hits={3} />
+
+With rotation — E(5,12) rotated by 3:
+
+<EuclideanDiagram steps={12} hits={5} rotation={3} />
+
+## PolyScreenshot
+
+<PolyScreenshot
+  src="/poly/screenshots/nonexistent.png"
+  caption="This image doesn't exist yet — placeholder should appear"
+/>

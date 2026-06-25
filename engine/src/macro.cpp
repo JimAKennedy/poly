@@ -9,6 +9,7 @@ static float lerp(float a, float b, float t) {
     return a + (b - a) * t;
 }
 
+// region:apply
 GrooveState resolveMacros(const GrooveState& input) {
     GrooveState out = input;
     const auto& m = input.macros;
@@ -116,5 +117,6 @@ GrooveState resolveMacros(const GrooveState& input) {
 
     return out;
 }
+// endregion:apply
 
 } // namespace poly

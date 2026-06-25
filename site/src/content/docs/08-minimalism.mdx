@@ -1,0 +1,82 @@
+---
+title: "8. Minimalism: Phase, Drift, and Gradual Process"
+description: "Steve Reich's phasing, Terry Riley's loops, and Philip Glass's additive patterns — minimalist composition as a special case of polymetric interaction."
+---
+
+import PolyPatch from '../../components/PolyPatch.astro';
+import ListenFor from '../../components/ListenFor.astro';
+import CodeSnippet from '../../components/CodeSnippet.astro';
+import EuclideanDiagram from '../../components/EuclideanDiagram.astro';
+import PolyScreenshot from '../../components/PolyScreenshot.astro';
+
+The American minimalists of the 1960s and 70s discovered something that West African and Indonesian musicians had known for centuries: when two identical patterns move at slightly different rates, the interference between them generates far more complexity than either pattern contains alone. Steve Reich called it "music as a gradual process." Poly calls it the Drift parameter.
+
+## Reich and Phase Shifting
+
+In *Drumming* (1971), Steve Reich starts two identical rhythmic patterns in unison, then gradually shifts one forward until it has moved through every possible phase relationship and returns to unison. The piece is an exhaustive exploration of a single pattern's rotational space.
+
+The core pattern of *Clapping Music* (1972) is even more explicit: `x x x . x x . x . x . .` — which is E(8,12), eight claps distributed across twelve positions. One performer holds steady while the other shifts by one position after every twelve bars. Twelve shifts later, they are back in unison.
+
+<EuclideanDiagram steps={12} hits={5} />
+
+E(5,12) is a sparser variant suitable for demonstrating the phasing effect in Poly. With five onsets across twelve positions, the pattern is open enough that each rotational phase produces an audibly distinct composite rhythm.
+
+## Drift as Phase Engine
+
+Poly's Drift parameter rotates a lane's pattern by a specified number of steps per bar. Set two lanes to identical step counts and hit patterns, leave one with Drift at 0, and give the other a small positive value. The second lane's pattern slowly rotates against the first, passing through every phase relationship.
+
+At Drift = +0.25 steps/bar, the pattern completes one full rotation every `steps / 0.25` bars. For a 12-step pattern, that is 48 bars — roughly two minutes at 120 BPM. At Drift = +1.0, the full rotation takes only 12 bars. The slower the drift, the more time you spend in each phase relationship, and the more you hear the gradual process that Reich described.
+
+<PolyPatch title="Reich Phasing Setup" preset="Gradual Process">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Drift | Velocity |
+|------|------|-------|------|----------|-------------|-------|----------|
+| 1 | Fixed pattern | 12 | 5 | 0 | 1/8 | 0 | 90 |
+| 2 | Drifting copy | 12 | 5 | 0 | 1/8 | +0.25 | 85 |
+| 3 | Low anchor | 4 | 4 | 0 | 1/4 | 0 | 70 |
+
+</PolyPatch>
+
+Lane 3 provides a steady quarter-note anchor so you can hear the phasing against a fixed reference. Without it, the composite rhythm drifts as a whole and the phasing effect is harder to perceive.
+
+<ListenFor>
+
+Start playback and wait. The two patterns begin in unison, sounding like a single voice. As Lane 2 drifts, the composite rhythm begins to shimmer — new accent patterns emerge that neither lane contains individually. After many bars, the patterns realign. That moment of return to unison, after minutes of divergence, is one of the most powerful effects in minimalist music. Poly produces it from a single parameter.
+
+</ListenFor>
+
+## Riley and the Layered Loop
+
+Terry Riley's *In C* (1964) takes a different approach: fifty-three short melodic phrases, performed by any number of players who move through them at their own pace. The texture at any moment depends on which phrases are active and how they overlap.
+
+Poly's phrase gating models this layered-entry structure. Each lane can have its own phrase Length, Gap, and Offset. Set five lanes to different Euclidean patterns with staggered Offsets, and voices enter and exit the texture at different points in the cycle — the same gradual accumulation and thinning that defines *In C*.
+
+<PolyPatch title="Riley-Inspired Layered Structure" preset="Staggered Entry">
+
+| Lane | Role | Steps | Hits | Subdivision | Offset | Length | Gap | Velocity |
+|------|------|-------|------|-------------|--------|--------|-----|----------|
+| 1 | Foundation | 8 | 5 | 1/8 | 0 | 0 | 0 | 95 |
+| 2 | Voice A | 12 | 7 | 1/8 | 4 | 16 | 8 | 80 |
+| 3 | Voice B | 10 | 6 | 1/8 | 12 | 12 | 12 | 75 |
+| 4 | Voice C | 7 | 4 | 1/8 | 20 | 8 | 16 | 70 |
+| 5 | Voice D | 9 | 3 | 1/4 | 32 | 24 | 8 | 65 |
+
+</PolyPatch>
+
+Lane 1 runs continuously as the foundation. Lanes 2 through 5 enter at different Offsets, play for their phrase Length, rest for the Gap, and repeat. The result is a slowly evolving texture where the number of active voices is always changing — sometimes sparse, sometimes dense, never quite the same twice.
+
+## Glass and Additive Pattern
+
+Philip Glass's signature technique is *additive rhythm*: a short cell that gradually grows by one note, then contracts. A pattern might progress from `1-2, 1-2, 1-2` to `1-2-3, 1-2-3` to `1-2-3-4, 1-2-3-4` and back. The listener perceives the cell expanding and contracting, breathing.
+
+Poly's Mutation parameter offers an analogous process. As Mutation increases, hits are gradually added to or removed from the Euclidean pattern. At 0%, the pattern is the pure Bjorklund distribution. At higher values, onsets are probabilistically added or removed, creating the sense of a pattern that breathes — growing denser, then thinning, never settling.
+
+The Complexity macro provides a higher-level control over this process. Sweep Complexity from 0.0 to 1.0 during a performance, and each lane's effective hit count changes, producing an additive-rhythm effect across the entire ensemble simultaneously.
+
+## Process Music and Determinism
+
+There is an important philosophical alignment between minimalism and Poly's engine. Reich insisted that his phasing process should be audible — the listener should be able to hear the system at work, not just its results. Poly's determinism guarantee serves the same principle: given the same patch and transport position, the output is identical every time. The process is transparent and repeatable.
+
+This is not the randomness of aleatoric music. It is the controlled inevitability of a system whose rules are simple but whose emergent behaviour is rich. Two identical patterns drifting apart at a quarter-step per bar will produce exactly the same sequence of composite rhythms every time you press play. The complexity is real, but it is derived, not random.
+
+<CodeSnippet file="engine/src/engine.cpp" region="drift-accumulator" caption="Drift accumulates fractional rotation from absolute PPQ position — no state between calls" />

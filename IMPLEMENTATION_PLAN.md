@@ -3,7 +3,7 @@
 A Cubase-targeted **VST3 instrument** that generates evolving polymetric grooves from
 4–8 independent rhythmic lanes, with dynamics-first velocity/emphasis modeling and
 superimposed multi-timescale envelopes. This document turns the
-[product roadmap](docs/roadmap.md) into a concrete engineering plan.
+[product roadmap](internal-docs/roadmap.md) into a concrete engineering plan.
 
 > **Working assumptions** (call these out / change if wrong):
 > - **Framework:** the **Steinberg VST3 SDK** directly (`Steinberg::Vst` component model),
