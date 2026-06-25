@@ -2,6 +2,7 @@ exclude_paths:
   - "build*/**"
   - "build-release*/**"
   - "graphify-out/**"
+  - "site/dist/**"
 
 exclude_test_paths: false
 
@@ -26,3 +27,23 @@ rules:
     - adr-gap
     # C++ SAST covered by clang-tidy + sanitizer CI jobs (ASAN/TSAN/UBSAN). Secrets scanning via gitleaks. DAST not applicable to a VST3 plugin binary.
     - ci-security-scan-missing
+    # deploy-site, nfr-review, and nfr-review-nightly workflows are not build pipelines; ci.yml has comprehensive test coverage.
+    - ci-test-stage-missing
+    # Rollback stages are not applicable to a VST3 plugin project — CI builds artifacts, it does not deploy services.
+    - PATCH-ROLL-002
+    # C++ project uses CMakeLists.txt, not pyproject.toml/package.json. The scanner does not recognise CMake manifests.
+    - HYG-DOC-001
+    # console_scripts/gui_scripts entry points are Python-specific; not applicable to a C++ CMake project.
+    - HYG-BLD-003
+    # Version is declared in root CMakeLists.txt via project(poly VERSION ...); the scanner only checks Python/JVM/Rust/C# manifests.
+    - HYG-BLD-002
+    # Pre-commit runs clang-format as a lint/format step in CI; the scanner does not detect non-JS linters.
+    - HYG-CI-003
+    # License headers on generated/config files (e.g. Astro content.config.ts) add noise without legal value.
+    - HYG-LIC-003
+    # False positive: .claude path in .gitignore matched as internal domain reference.
+    - HYG-PRV-002
+    # GPL-3.0-only is the deliberate license choice; the copyleft-vs-Apache compatibility check does not apply.
+    - HYG-LIC-001
+    # NOTICE file is an Apache License convention. GPL-3.0 requires copyright preservation in source, not a separate NOTICE file.
+    - HYG-LIC-002
