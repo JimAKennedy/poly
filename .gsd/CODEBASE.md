@@ -1,7 +1,7 @@
 # Codebase Map
 
-Generated: 2026-06-25T01:09:32Z | Files: 115 | Described: 0/115
-<!-- gsd:codebase-meta {"generatedAt":"2026-06-25T01:09:32Z","fingerprint":"2d3b0659a0cef5f9b51dd88c9aec5c131c15c86d","fileCount":115,"truncated":false} -->
+Generated: 2026-06-25T01:25:57Z | Files: 152 | Described: 0/152
+<!-- gsd:codebase-meta {"generatedAt":"2026-06-25T01:25:57Z","fingerprint":"df9a32e1cf244dac187a7c2a33f44eec48d19bd0","fileCount":152,"truncated":false} -->
 
 ### (root)/
 - `.clang-format`
@@ -22,6 +22,7 @@ Generated: 2026-06-25T01:09:32Z | Files: 115 | Described: 0/115
 
 ### .github/workflows/
 - `.github/workflows/ci.yml`
+- `.github/workflows/deploy-site.yml`
 - `.github/workflows/nfr-review-nightly.yml`
 - `.github/workflows/nfr-review.yml`
 - `.github/workflows/sanitizers.yml`
@@ -36,6 +37,7 @@ Generated: 2026-06-25T01:09:32Z | Files: 115 | Described: 0/115
 - `docs/engine-spec.md`
 - `docs/euclidean-rhythm-guide.md`
 - `docs/M002-UAT-SCRIPT.md`
+- `docs/midi-note-mapping.md`
 - `docs/PRD.md`
 - `docs/roadmap.md`
 - `docs/UAT-SCRIPT.md`
@@ -98,6 +100,51 @@ Generated: 2026-06-25T01:09:32Z | Files: 115 | Described: 0/115
 - `scripts/check-pragma-once.sh`
 - `scripts/check-realtime-safety.sh`
 - `scripts/pre-push-check.sh`
+
+### site/
+- `site/.gitignore`
+- `site/AGENTS.md`
+- `site/astro.config.mjs`
+- `site/CLAUDE.md`
+- `site/package-lock.json`
+- `site/package.json`
+- `site/README.md`
+- `site/tsconfig.json`
+
+### site/src/
+- `site/src/content.config.ts`
+
+### site/src/components/
+- `site/src/components/CodeSnippet.astro`
+- `site/src/components/EuclideanDiagram.astro`
+- `site/src/components/ListenFor.astro`
+- `site/src/components/PolyPatch.astro`
+- `site/src/components/PolyScreenshot.astro`
+
+### site/src/content/docs/
+- `site/src/content/docs/01-foundations.mdx`
+- `site/src/content/docs/02-sub-saharan-africa.mdx`
+- `site/src/content/docs/03-afro-cuban.mdx`
+- `site/src/content/docs/04-afrobeat.mdx`
+- `site/src/content/docs/05-gamelan.mdx`
+- `site/src/content/docs/06-indian-classical.mdx`
+- `site/src/content/docs/07-balkan.mdx`
+- `site/src/content/docs/08-minimalism.mdx`
+- `site/src/content/docs/09-electronic.mdx`
+- `site/src/content/docs/10-brazilian.mdx`
+- `site/src/content/docs/11-funk-soul.mdx`
+- `site/src/content/docs/12-jazz.mdx`
+- `site/src/content/docs/13-drum-and-bass.mdx`
+- `site/src/content/docs/14-synthesis.mdx`
+- `site/src/content/docs/15-compositional-grammar.mdx`
+- `site/src/content/docs/appendix-euclidean-reference.mdx`
+- `site/src/content/docs/appendix-presets.mdx`
+- `site/src/content/docs/component-demo.mdx`
+- `site/src/content/docs/index.mdx`
+- `site/src/content/docs/introduction.mdx`
+
+### site/src/styles/
+- `site/src/styles/custom.css`
 
 ### tests/
 - `tests/CMakeLists.txt`

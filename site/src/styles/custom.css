@@ -44,11 +44,16 @@
   --sl-text-code: 0.875rem;
 }
 
-/* Dark mode - keep the dark code panel aesthetic but don't force full dark */
+/* Dark mode */
 :root[data-theme='dark'] {
   --sl-color-accent-low: #0c4e54;
   --sl-color-accent: #2aa8af;
   --sl-color-accent-high: #ebf4f4;
+  --poly-patch-bg: #1a2e2e;
+  --poly-note-bg: #2a2510;
+  --poly-note-border: #c48f00;
+  --poly-text: #e0ddd8;
+  --poly-text-muted: #9a9896;
 }
 
 /* Headings */
