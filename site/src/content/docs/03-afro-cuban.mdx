@@ -1,6 +1,80 @@
 ---
-title: "3. Afro-Cuban"
-description: "Clave-based rhythmic systems and their Euclidean foundations."
+title: "3. Afro-Cuban: Clave and the Rhythmic Matrix"
+description: "How the son clave organises Cuban rhythm — tresillo, cinquillo, and the rotation principle that connects African timelines to Caribbean dance music."
 ---
 
-*Content pending migration from the rhythmic guide.*
+import PolyPatch from '../../components/PolyPatch.astro';
+import ListenFor from '../../components/ListenFor.astro';
+import CodeSnippet from '../../components/CodeSnippet.astro';
+import EuclideanDiagram from '../../components/EuclideanDiagram.astro';
+import PolyScreenshot from '../../components/PolyScreenshot.astro';
+
+Cuban music is organised around clave. Not a specific instrument, not a particular song form, but a rhythmic matrix — a two-bar pattern that every musician in the ensemble feels, whether or not anyone is playing it aloud. The clave is the gravitational centre of the arrangement. Parts that align with it feel grounded. Parts that push against it create tension. Parts that ignore it sound wrong.
+
+What makes clave remarkable from a Euclidean perspective is that its most common forms are simple distributions — the same algorithm that produces West African bell patterns generates the rhythmic DNA of Cuban son, rumba, and timba.
+
+## The Tresillo: E(3,8)
+
+Before there is clave, there is tresillo. Three onsets across eight pulses — E(3,8) — is the irreducible rhythmic cell of Afro-Caribbean music. It arrived in Cuba with enslaved Yoruba and Fon people, carrying the same distributional logic as the West African bell patterns explored in the previous chapter.
+
+<EuclideanDiagram steps={8} hits={3} />
+
+The tresillo groups eight pulses as 3-3-2: two long intervals followed by a short one. This asymmetry creates a forward momentum that wants to resolve on the next downbeat — the same generative tension found in E(7,12), compressed into a smaller frame.
+
+You hear the tresillo everywhere: in the bass tumbaos of Cuban son, in the montuno piano figures of salsa, in the kick patterns of reggaeton, in the habanera rhythm that Jelly Roll Morton called "the Spanish tinge." It is arguably the most widely distributed rhythmic pattern on earth.
+
+## The Cinquillo and Its Relationship to Tresillo
+
+Where tresillo distributes three hits across eight pulses, the cinquillo distributes five. E(5,8) is the tresillo's dense complement — it fills the spaces tresillo leaves open and shares two of its three onset positions.
+
+<EuclideanDiagram steps={8} hits={5} />
+
+The cinquillo was central to nineteenth-century Cuban contradanza and remains embedded in the conga patterns of modern salsa. When you layer tresillo and cinquillo in Poly, their interlocking creates a composite pattern that covers nearly every pulse — dense but never cluttered, because the underlying distributions are mathematically balanced.
+
+## Rotation: The Key to Clave
+
+The son clave — the pattern that organises virtually all Cuban popular music — is E(5,16). But its identity depends on where it starts. The 3-2 son clave places three hits in the first bar and two in the second. The 2-3 clave reverses this. They are the *same Euclidean pattern* at different rotations.
+
+<EuclideanDiagram steps={8} hits={3} rotation={0} />
+
+E(3,8) at rotation 0 gives the 3-side of the clave: three hits in the first half.
+
+<EuclideanDiagram steps={8} hits={3} rotation={3} />
+
+E(3,8) at rotation 3 shifts the pattern so that the two denser hits fall in the second half — the 2-side feel. In Poly, you do not need to program two different patterns for 3-2 and 2-3 clave. You program one and rotate it.
+
+This is not merely a convenience. It reflects something real about how Cuban musicians think about clave. The pattern does not change — your perspective on it does. A song is "in 3-2" or "in 2-3" depending on which bar the ensemble treats as the first bar. The Euclidean model captures this perfectly: same hits, same steps, different rotation.
+
+## Rumba vs Son
+
+The rumba clave shifts the third hit of the 3-side by one pulse, creating a slightly different distribution. In strict Euclidean terms, the son clave is a purer distribution while the rumba clave introduces a displacement that adds tension. For most Poly patches, the son clave (standard E(5,16) or paired E(3,8) patterns) is the starting point. To approximate rumba clave, increase the rotation by 1 on the clave lane and adjust to taste.
+
+## Building a Cuban Son Ensemble
+
+A son ensemble layers clave with cascara (the shell pattern played on the side of the timbale), a tumbao bass, congas, and a shaker or guiro providing continuous subdivision. Each part has a defined relationship to the clave — some reinforce it, some complement it, some deliberately play against it.
+
+<PolyPatch title="Cuban Son Ensemble" preset="Afro-Cuban: Son Montuno">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Note | Velocity | Ghost | Swing |
+|------|------|-------|------|----------|-------------|------|----------|-------|-------|
+| 1 | Clave | 16 | 5 | 0 | 1/16 | 75 | 100 | 0 | 0.25 |
+| 2 | Cascara shell | 8 | 5 | 1 | 1/8 | 37 | 80 | 45 | 0.25 |
+| 3 | Tumbao bass | 8 | 3 | 0 | 1/8 | 36 | 95 | 0 | 0.20 |
+| 4 | Conga | 16 | 7 | 2 | 1/16 | 63 | 85 | 55 | 0.30 |
+| 5 | Shaker ghost | 8 | 7 | 0 | 1/8 | 70 | 50 | 30 | 0.20 |
+
+</PolyPatch>
+
+Notice the swing values. Cuban rhythm is not straight and it is not swung in the jazz triplet sense — it sits in a zone around 0.20-0.30 on the Swing parameter, a subtle lilt that gives the groove its characteristic sway. The global Syncopation macro at 0.4-0.6 will shift emphasis toward the offbeats, reinforcing the clave feel without overriding the lane-level settings.
+
+<ListenFor>
+
+The clave lane at E(5,16) establishes the two-bar matrix. Listen for how the cascara's E(5,8) fills the spaces around the clave hits, and how the tumbao bass at E(3,8) locks to the tresillo skeleton beneath both. The conga's denser pattern at E(7,16) provides the conversational layer — adjust its mutation upward to simulate the improvisatory style of a live conguero.
+
+</ListenFor>
+
+## From Son to Timba
+
+Modern Cuban timba pushes these relationships further — denser conga patterns, more syncopated bass lines, and deliberate clave "crossings" where parts momentarily contradict the matrix for dramatic tension. In Poly, you explore this territory by increasing the Density and Syncopation macros, pushing mutation higher on the conga and bass lanes, and experimenting with phrase gating to create the sectional contrasts (verse vs montuno) that define timba arranging.
+
+The connection from E(7,12) in the Ewe bell to E(3,8) in the tresillo to E(5,16) in the son clave is not a metaphor. It is the same mathematical principle, carried across the Atlantic and adapted to new musical contexts. Poly makes this lineage audible.

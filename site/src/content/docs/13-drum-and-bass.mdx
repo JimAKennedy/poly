@@ -1,6 +1,78 @@
 ---
-title: "13. Drum and Bass"
-description: "Breakbeat manipulation and half-time feels."
+title: "13. Drum and Bass: Breakbeats, Speed, and Controlled Chaos"
+description: "The Amen break reimagined — how jungle, liquid, and neurofunk use fast subdivisions, syncopation, and probability to create impossible rhythms at 170 BPM."
 ---
 
-*Content pending migration from the rhythmic guide.*
+import PolyPatch from '../../components/PolyPatch.astro';
+import ListenFor from '../../components/ListenFor.astro';
+import CodeSnippet from '../../components/CodeSnippet.astro';
+import EuclideanDiagram from '../../components/EuclideanDiagram.astro';
+import PolyScreenshot from '../../components/PolyScreenshot.astro';
+
+In 1969, Gregory Cylvester Coleman played a four-bar drum solo on the Winstons' "Amen, Brother." That solo — the Amen break — became the most sampled recording in music history, the raw material for an entire genre built on chopping, time-stretching, and recombining breakbeats at speeds no human drummer could sustain. Drum and bass, and its precursor jungle, took acoustic drumming and made it impossible: kick patterns syncopated beyond what two feet could play, snares displaced by fractions of a beat, hi-hat patterns running at 1/32 while the half-time backbone holds everything to a danceable pulse.
+
+This is music that was born from sampling technology, but its rhythmic logic maps surprisingly well to Euclidean distribution. The chopped break is, at its core, an onset pattern with controlled gaps — exactly what Poly generates.
+
+## The Amen and Its Children
+
+The original Amen break is a straight funk beat — syncopated, but played by a human at a moderate tempo. What jungle producers did was speed it to 160-170 BPM and then chop it: slicing the break into individual hits and rearranging them, displacing the snare, doubling the hi-hat, creating patterns that reference the original but fracture it into something new.
+
+In Poly, you do not sample and chop. Instead, you build the rhythmic skeleton of a chopped break from Euclidean patterns. A syncopated kick lane, a snare locked to the half-time backbeat, a dense hat pattern, and a ghost layer that provides the rolling, unstable texture that defines jungle. The result is not a recreation of any specific break — it is a generator that produces an infinite family of breakbeat-derived patterns.
+
+## Half-Time Feel at Full Speed
+
+The defining trick of drum and bass is the half-time backbone. At 170 BPM, sixteenth notes arrive very quickly — roughly 90 milliseconds apart. The kick and snare play at half that rate, feeling like a groove at 85 BPM, while the hi-hats and ghost percussion run at full speed above. The listener's body moves to the half-time pulse; the ear tracks the double-time surface. This duality is what makes drum and bass simultaneously heavy and intricate.
+
+In Poly, you achieve this by setting kick and snare lanes to coarser subdivisions (1/4 or 1/2) while running hat and ghost lanes at 1/16. The engine handles the subdivision arithmetic — you do not need to think in terms of half-time notation, only in terms of which voice should move slowly and which should move fast.
+
+<EuclideanDiagram steps={16} hits={7} />
+
+E(7,16) is the characteristic jungle hat pattern — seven hits across sixteen steps, dense enough to create a continuous shimmer but irregular enough to avoid the mechanical feel of straight sixteenths. The gaps in the pattern are where the chopped-break character lives: silence where you expect a hit, creating the stumbling, off-balance quality that distinguishes jungle from straightforward dance music.
+
+## Jungle Break
+
+<PolyPatch title="Jungle Break" preset="D&B: Jungle Chopper">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Note | Velocity | Ghost | Spread | Mutation |
+|------|------|-------|------|----------|-------------|------|----------|-------|--------|----------|
+| 1 | Kick | 16 | 5 | 3 | 1/16 | 36 | 110 | 0 | 25% | 15% |
+| 2 | Snare | 4 | 2 | 1 | 1/4 | 38 | 105 | 0 | 15% | 10% |
+| 3 | Hi-hat | 16 | 7 | 0 | 1/16 | 42 | 80 | 45 | 40% | 15% |
+| 4 | Ghost layer | 16 | 11 | 2 | 1/16 | 38 | 35 | 25 | 60% | 20% |
+
+</PolyPatch>
+
+The kick at E(5,16) with rotation 3 is heavily syncopated — it avoids beat 1 and lands on unexpected subdivisions, which is the signature of chopped-break programming. The snare holds the half-time backbeat (E(2,4) rotated to hit beats 2 and 4 at 1/4 subdivision), providing the anchor that the kick displaces against. The ghost layer at E(11,16) fills almost every sixteenth-note position with quiet, randomised hits, creating the rolling undertow beneath the main pattern.
+
+<ListenFor>
+
+Set the tempo to 170 BPM and focus on the ghost layer. Those eleven hits across sixteen steps, at low velocity with 60% Spread and 20% Mutation, create a constantly shifting texture beneath the snare backbeat. This is the rolling, unstable quality that defines jungle — it sounds like a break being played, chopped, and recombined in real time. The gaps in the ghost layer (only five silent steps out of sixteen) are what prevent it from becoming a wash of noise.
+
+</ListenFor>
+
+## Liquid Drum and Bass
+
+Liquid D&B strips back jungle's aggression. The tempo stays at 170, but the patterns are cleaner, the dynamics softer, the swing more pronounced. The kick and snare sit closer to the grid, the hat pattern is sparser, and ghost notes are gentler. Where jungle fractures the break, liquid smooths it.
+
+<PolyPatch title="Liquid D&B Groove">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Note | Velocity | Ghost | Spread | Mutation |
+|------|------|-------|------|----------|-------------|------|----------|-------|--------|----------|
+| 1 | Kick | 8 | 2 | 0 | 1/8 | 36 | 100 | 0 | 15% | 5% |
+| 2 | Snare | 4 | 2 | 1 | 1/4 | 38 | 95 | 0 | 10% | 5% |
+| 3 | Hi-hat | 16 | 9 | 0 | 1/16 | 42 | 65 | 35 | 30% | 10% |
+| 4 | Ride | 8 | 5 | 2 | 1/8 | 51 | 55 | 30 | 25% | 10% |
+
+</PolyPatch>
+
+The kick simplifies to E(2,8) — just two hits in eight steps, a classic two-step pattern that sits in the pocket rather than fighting it. Mutation drops to 5-10% across all lanes. The hi-hat at E(9,16) is denser than the jungle patch but steadier, and the ride cymbal adds a mid-frequency wash that gives liquid its characteristic warmth.
+
+## Syncopation and Tension
+
+The Syncopation macro is critical for drum and bass. At 0.4-0.5, it displaces the kick from its natural position, creating the off-kilter feel of a chopped break. At 0.6-0.7, the displacement becomes extreme — closer to neurofunk, where the kick pattern is so syncopated it functions more as a melodic element than a rhythmic anchor.
+
+Tension at 0.5-0.8 creates the punchy, compressed dynamics that drum and bass demands. The gap between ghost notes and accents should be wide — this is not subtle music. The snare hits hard, the kick hits hard, and everything else stays below them. The wide dynamic range, combined with the speed of the subdivision, is what gives drum and bass its visceral, physical impact.
+
+## Neurofunk: Maximum Displacement
+
+For neurofunk and techstep, push Syncopation to 0.7-0.9 and Mutation to 20-30%. The kick pattern becomes almost unrecognisable as a backbeat — it weaves across the bar in unpredictable ways, functioning more like a Reese bass than a traditional kick drum. Add a second kick lane at a different step count (5 or 7 against the primary 16) to create polymetric bass drum patterns that reference Elvin Jones as much as they reference the Amen break. Increase Tension to 0.8-1.0 for maximum dynamic impact, and set Humanize near zero — neurofunk is machine music, precise and unforgiving.
