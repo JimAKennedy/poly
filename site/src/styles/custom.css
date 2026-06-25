@@ -49,11 +49,25 @@
   --sl-color-accent-low: #0c4e54;
   --sl-color-accent: #2aa8af;
   --sl-color-accent-high: #ebf4f4;
-  --poly-patch-bg: #1a2e2e;
-  --poly-note-bg: #2a2510;
-  --poly-note-border: #c48f00;
+  --sl-color-white: #e0ddd8;
+  --sl-color-black: #1a1916;
+  --sl-color-gray-1: #c0bdb8;
+  --sl-color-gray-2: #9a9896;
+  --sl-color-gray-3: #6a6866;
+  --sl-color-gray-4: #3a3836;
+  --sl-color-gray-5: #252320;
+  --sl-color-gray-6: #1f1d1a;
+
+  --poly-bg: #1a1916;
+  --poly-surface: #252320;
   --poly-text: #e0ddd8;
   --poly-text-muted: #9a9896;
+  --poly-primary: #2aa8af;
+  --poly-primary-dark: #7dd4d9;
+  --poly-patch-bg: #1a2e2e;
+  --poly-code-bg: #141210;
+  --poly-note-bg: #2a2510;
+  --poly-note-border: #c48f00;
 }
 
 /* Headings */
@@ -73,6 +87,7 @@ h3,
 h4 {
   font-family: var(--poly-font-sans);
   font-weight: 600;
+  color: var(--sl-color-white);
 }
 
 /* Body prose */

@@ -62,7 +62,7 @@ const label = `E(${hits},${steps})${rotation ? ` r${rotation}` : ''}`;
     role="img"
     aria-label={`Euclidean rhythm diagram: ${label}`}
   >
-    <circle cx={cx} cy={cy} r={radius} fill="none" stroke="#d0e8e8" stroke-width="1.5" />
+    <circle cx={cx} cy={cy} r={radius} fill="none" stroke="var(--sl-color-gray-4)" stroke-width="1.5" />
 
     {positions.map((pos, i) => {
       const next = positions[(i + 1) % steps];
@@ -77,8 +77,8 @@ const label = `E(${hits},${steps})${rotation ? ` r${rotation}` : ''}`;
         cx={pos.x}
         cy={pos.y}
         r={pos.isHit ? 7 : 5}
-        fill={pos.isHit ? 'var(--poly-primary)' : '#fff'}
-        stroke={pos.isHit ? 'var(--poly-primary-dark)' : '#b0aeac'}
+        fill={pos.isHit ? 'var(--poly-primary)' : 'var(--sl-color-black)'}
+        stroke={pos.isHit ? 'var(--poly-primary-dark)' : 'var(--sl-color-gray-3)'}
         stroke-width={pos.isHit ? 2 : 1.5}
       />
     ))}

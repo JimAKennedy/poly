@@ -17,6 +17,10 @@ export default defineConfig({
 					href: 'https://github.com/JimAKennedy/poly',
 				},
 			],
+			banner: {
+				content:
+					'🚧 Under active construction — content being developed and verified.',
+			},
 			customCss: ['./src/styles/custom.css'],
 			sidebar: [
 				{ label: 'Introduction', slug: 'introduction' },
@@ -50,6 +54,10 @@ export default defineConfig({
 						{
 							label: 'Euclidean Reference',
 							slug: 'appendix-euclidean-reference',
+						},
+						{
+							label: 'References',
+							slug: 'appendix-references',
 						},
 					],
 				},
