@@ -8,7 +8,7 @@
 
 namespace poly {
 
-static constexpr int32_t kCurrentStateVersion = 10;
+static constexpr int32_t kCurrentStateVersion = 11;
 
 // --- Internal body-only write (no version header, always writes latest body format) ---
 
@@ -436,6 +436,10 @@ template <typename WriteFn> bool writeSceneState(WriteFn&& write, const SceneSta
         return false;
     if (!write(&scene.morphAmount, sizeof(scene.morphAmount)))
         return false;
+    for (int i = 0; i < 128; ++i) {
+        if (!write(&scene.noteMap.map[static_cast<size_t>(i)], sizeof(int16_t)))
+            return false;
+    }
     return true;
 }
 
@@ -464,6 +468,14 @@ template <typename ReadFn> bool readSceneState(ReadFn&& read, SceneState& scene)
         scene.select = static_cast<SceneSelect>(select);
         if (!read(&scene.morphAmount, sizeof(scene.morphAmount)))
             return false;
+    }
+    if (version >= 11) {
+        for (int i = 0; i < 128; ++i) {
+            if (!read(&scene.noteMap.map[static_cast<size_t>(i)], sizeof(int16_t)))
+                return false;
+        }
+    } else {
+        scene.noteMap.reset();
     }
     return true;
 }

@@ -22,6 +22,8 @@ private:
 
     void applyPreset(int index);
     void resetToInit();
+    void toggleNoteMap();
+    VSTGUI::CRect noteMapButtonRect() const;
 
     Steinberg::Vst::EditController* controller_;
     int selectedPreset_ = -1;
