@@ -73,12 +73,12 @@ void CrossRhythmView::draw(CDrawContext* context) {
 
     auto font = makeOwned<CFontDesc>("Arial", 8.0);
 
-    int laneCount = static_cast<int>(std::round(controller_->getParamNormalized(ParamIDs::kActiveLaneCount) * 7.0)) + 1;
-
     int activeLanes[kMaxLanes];
     int activeCount = 0;
-    for (int lane = 0; lane < laneCount && lane < kMaxLanes; ++lane) {
-        activeLanes[activeCount++] = lane;
+    for (int lane = 0; lane < kMaxLanes; ++lane) {
+        double activeNorm = controller_->getParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kActive));
+        if (activeNorm > 0.5)
+            activeLanes[activeCount++] = lane;
     }
 
     if (activeCount == 0) {
