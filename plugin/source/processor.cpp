@@ -270,14 +270,17 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
             if (!resolved.lanes[lane].active)
                 continue;
 
-            double cycleBeats = resolved.lanes[lane].cycle.steps * (4.0 / resolved.lanes[lane].cycle.subdivision);
+            auto additive = computeAdditiveCells(resolved.lanes[lane]);
+            double cycleBeats = additive.count > 0
+                                    ? additive.totalPpq
+                                    : resolved.lanes[lane].cycle.steps * (4.0 / resolved.lanes[lane].cycle.subdivision);
             double lanePhase = std::fmod(tc_.ppqStart / cycleBeats, 1.0);
             if (lanePhase < 0.0)
                 lanePhase += 1.0;
 
             if (resolved.lanes[lane].driftRate != 0.0f) {
                 double barPos = tc_.ppqStart / 4.0;
-                int stepsInCycle = resolved.lanes[lane].cycle.steps;
+                int stepsInCycle = additive.count > 0 ? additive.count : resolved.lanes[lane].cycle.steps;
                 auto driftSteps =
                     static_cast<int64_t>(std::floor(barPos * static_cast<double>(resolved.lanes[lane].driftRate)));
                 double driftFrac =

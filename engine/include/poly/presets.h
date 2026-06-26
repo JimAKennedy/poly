@@ -59,7 +59,7 @@ inline GrooveState makeFourOnTheFloor() {
     perc.velocitySpread = 0.12f;
 
     s.macros.density = 0.5f;
-    s.macros.complexity = 0.3f;
+    s.macros.complexity = 0.5f;
     return s;
 }
 
