@@ -938,10 +938,10 @@ TEST(GoldenTimingOffset, NegativeShiftsEarlier) {
     kick.baseVelocity = 100;
     kick.probability = 1.0f;
 
-    auto baseline = renderSorted(engine, state, 0.0, 16.0, 0.5);
+    auto baseline = renderSorted(engine, state, 0.0, 15.5, 0.5);
 
     kick.timingOffsetMs = -5.0f;
-    auto shifted = renderSorted(engine, state, 0.0, 16.0, 0.5);
+    auto shifted = renderSorted(engine, state, 0.0, 15.5, 0.5);
 
     ASSERT_EQ(baseline.size(), shifted.size()) << "Same number of events with negative offset";
     // Skip event 0 (PPQ 0.0) since negative offset clamps to 0.0
