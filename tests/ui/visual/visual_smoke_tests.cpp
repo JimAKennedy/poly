@@ -105,7 +105,7 @@ protected:
         return rr;
     }
 
-    Steinberg::Vst::EditController* controller_ = nullptr;
+    poly::PolyController* controller_ = nullptr;
 };
 
 //------------------------------------------------------------------------
