@@ -14,6 +14,23 @@
 
 namespace poly {
 
+static const char* kPresetLaneNames[kFactoryPresetCount][kMaxLanes] = {
+    {"Kick", "Snare", "Hi-Hat", "Open Hat", "Tom Hi", "Tom Lo", "Ride", "Crash"},
+    {"Kick", "Rim", "Tom", "Hi-Hat", "Tom Hi", "Tom Lo", "Ride", "Crash"},
+    {"Kick", "Rim", "Ghost", "HH Open", "Tom Hi", "Tom Lo", "Ride", "Crash"},
+    {"Kick", "Snare", "Hi-Hat", "Tom", "Tom Hi", "Tom Lo", "Ride", "Crash"},
+    {"Clave", "Conga", "Shaker", "Cowbell", "Tom Hi", "Tom Lo", "Ride", "Crash"},
+    {"Kick", "Shaker", "Conga", "Djembe", "Perc", "Tom Lo", "Ride", "Crash"},
+    {"Fixed", "Drifting", "Pulse", "HH Open", "Tom Hi", "Tom Lo", "Ride", "Crash"},
+    {"Polos", "Sangsih", "Gong", "Shimmer", "Tom Hi", "Tom Lo", "Ride", "Crash"},
+    {"Kick", "Snare", "Hi-Hat", "Ghost", "Tom Hi", "Tom Lo", "Ride", "Crash"},
+    {"Bell", "Kick", "Snare", "Shaker", "Conga", "Tom Lo", "Ride", "Crash"},
+    {"Davul", "Rim", "Zurna", "Darbuka", "Tom Hi", "Tom Lo", "Ride", "Crash"},
+    {"Surdo", "Tamborim", "Agogo", "Pandeiro", "Tom Hi", "Tom Lo", "Ride", "Crash"},
+    {"Mridangam Lo", "Mridangam Hi", "Ghatam", "Kanjira", "Tom Hi", "Tom Lo", "Ride", "Crash"},
+    {"Kick", "Snare", "Hi-Hat", "Perc", "Glitch", "Tom Lo", "Ride", "Crash"},
+};
+
 HeaderView::HeaderView(const VSTGUI::CRect& size, Steinberg::Vst::EditController* controller)
     : CView(size), controller_(controller) {
     setMouseEnabled(true);
@@ -201,7 +218,10 @@ void HeaderView::applyPreset(int index) {
         pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreFixedPatternLen), cfg.fixedPatternLength / 64.0);
     }
 
-    static_cast<PolyController*>(controller_)->mutableCachedState().sceneA = state;
+    auto* polyCtrl = static_cast<PolyController*>(controller_);
+    polyCtrl->mutableCachedState().sceneA = state;
+    for (int lane = 0; lane < kMaxLanes; ++lane)
+        polyCtrl->setLaneName(lane, kPresetLaneNames[index][lane]);
 
     pushParam(ParamIDs::kMacroComplexity, state.macros.complexity);
     pushParam(ParamIDs::kMacroDensity, state.macros.density);

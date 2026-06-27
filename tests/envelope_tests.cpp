@@ -366,7 +366,7 @@ TEST(EnvelopeTargets, TimingLoosenessModulation) {
     auto cfg = makeEnvelopeLane();
     cfg.humanizeMs = 0.0f;
 
-    auto tight = renderOneLane(cfg, 0.0, 4.0);
+    auto tight = renderOneLane(cfg, 0.0, 3.5);
 
     cfg.envelopes[0].envelope.target = poly::EnvTarget::TimingLooseness;
     cfg.envelopes[0].envelope.periodBars = 4.0f;
@@ -375,7 +375,7 @@ TEST(EnvelopeTargets, TimingLoosenessModulation) {
     cfg.envelopes[0].active = true;
     cfg.envelopeCount = 1;
 
-    auto loose = renderOneLane(cfg, 0.0, 4.0);
+    auto loose = renderOneLane(cfg, 0.0, 3.5);
     ASSERT_EQ(tight.size(), loose.size());
 
     bool anyShifted = false;

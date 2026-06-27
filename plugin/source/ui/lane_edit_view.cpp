@@ -34,6 +34,7 @@ const LaneEditView::KnobDef LaneEditView::kLaneKnobs[kLaneKnobCount] = {
     {ParamIDs::kGhostFloor, false, "Ghost", 127.0, ValueFormat::Integer},
     {ParamIDs::kVelocitySpread, false, "Spread", 100.0, ValueFormat::Percent},
     {ParamIDs::kSwingAmount, false, "Swing", 100.0, ValueFormat::Percent},
+    {ParamIDs::kHumanizeMs, false, "Hum", 50.0, ValueFormat::Ms},
     {ParamIDs::kKotekanSource, false, "Kotek", 8.0, ValueFormat::KotekanSrc},
 };
 
@@ -86,7 +87,7 @@ CRect LaneEditView::laneNameRect() const {
 }
 
 CRect LaneEditView::laneKnobRect(int knob) const {
-    static constexpr double kKnobX[] = {268, 298, 328, 358, 388, 422, 452, 482, 512, 542};
+    static constexpr double kKnobX[] = {268, 298, 328, 358, 388, 420, 446, 472, 498, 524, 550};
     auto bounds = getViewSize();
     double x = bounds.left + kKnobX[knob];
     return CRect(x, bounds.top + 28, x + 26, bounds.top + 54);
@@ -232,6 +233,12 @@ void LaneEditView::drawKnob(CDrawContext* ctx, const CRect& rect, double value, 
             std::snprintf(valStr, sizeof(valStr), "off");
         else
             std::snprintf(valStr, sizeof(valStr), "%+.0f ms", ms);
+    } else if (def.format == ValueFormat::Ms) {
+        double ms = value * def.displayMax;
+        if (ms < 0.5)
+            std::snprintf(valStr, sizeof(valStr), "off");
+        else
+            std::snprintf(valStr, sizeof(valStr), "%.0f ms", ms);
     }
 
     auto smallFont = makeOwned<CFontDesc>("Arial", 7.0);
@@ -412,14 +419,14 @@ void LaneEditView::draw(CDrawContext* context) {
     auto groupFont = makeOwned<CFontDesc>("Arial", 7.0);
     context->setFont(groupFont);
     context->setFontColor(CColor(0x50, 0x50, 0x60, 0xFF));
-    CRect patternLabel(bounds.left + 268, bounds.top + 4, bounds.left + 420, bounds.top + 14);
+    CRect patternLabel(bounds.left + 268, bounds.top + 4, bounds.left + 414, bounds.top + 14);
     context->drawString("Pattern", patternLabel, kLeftText);
-    CRect voiceLabel(bounds.left + 422, bounds.top + 4, bounds.left + 575, bounds.top + 14);
+    CRect voiceLabel(bounds.left + 420, bounds.top + 4, bounds.left + 575, bounds.top + 14);
     context->drawString("Voice", voiceLabel, kLeftText);
 
     context->setLineWidth(0.5);
     context->setFrameColor(CColor(0x30, 0x30, 0x40, 0x60));
-    double divX = bounds.left + 416;
+    double divX = bounds.left + 414;
     context->drawLine(CPoint(divX, bounds.top + 14), CPoint(divX, bounds.top + 65));
 
     for (int k = 0; k < kLaneKnobCount; ++k) {

@@ -73,14 +73,16 @@ GrooveState resolveMacros(const GrooveState& input) {
         }
         lane.probability = std::clamp(lane.probability, 0.0f, 1.0f);
 
-        // --- Syncopation: offsets rotation and shifts accent bias ---
-        // At 0: rotation stays, emphasisProb stays
-        // At 1: rotation += half cycle, emphasisProb inverted from base
+        // --- Syncopation: timing displacement, rotation, and accent shift ---
+        // At 0: no change
+        // At 1: even steps pushed late (1/3 step), rotation += half cycle, emphasisProb inverted
         int syncopRotation = static_cast<int>(std::round(m.syncopation * rotRange));
         lane.rotation = (lane.rotation + syncopRotation) % maxSteps;
 
         lane.emphasisProb = lerp(base.emphasisProb, 1.0f - base.emphasisProb, m.syncopation);
         lane.emphasisProb = std::clamp(lane.emphasisProb, 0.0f, 1.0f);
+
+        lane.syncopationOffset = m.syncopation;
 
         // --- Swing: sets swingAmount across all lanes ---
         // Additive: macro swing adds to per-lane swing
@@ -110,8 +112,8 @@ GrooveState resolveMacros(const GrooveState& input) {
 
         // --- Humanize: sets humanizeMs and widens velocity spread ---
         // At 0: no humanize
-        // At 1: humanizeMs up to 10ms, spread increased
-        lane.humanizeMs = std::clamp(base.humanizeMs + m.humanize * 10.0f, 0.0f, 20.0f);
+        // At 1: humanizeMs up to 25ms, spread increased
+        lane.humanizeMs = std::clamp(base.humanizeMs + m.humanize * 25.0f, 0.0f, 50.0f);
         lane.velocitySpread = std::clamp(lane.velocitySpread + m.humanize * 0.05f, 0.0f, 0.5f);
     }
 
