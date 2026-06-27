@@ -24,6 +24,8 @@
 
 namespace poly {
 
+static const char* kDefaultLaneNames[] = {"Kick", "Snare", "HH Closed", "HH Open", "Tom Hi", "Tom Lo", "Ride", "Crash"};
+
 namespace {
 
 struct LaneParamDef {
@@ -74,10 +76,23 @@ static constexpr CoreParamDef kCoreParamDefs[] = {
 
 } // namespace
 
+void PolyController::setLaneName(int lane, const std::string& name) {
+    if (lane >= 0 && lane < kMaxLanes)
+        laneNames_[lane] = name;
+}
+
+void PolyController::resetLaneNames() {
+    for (int i = 0; i < kMaxLanes; ++i)
+        laneNames_[i] = kDefaultLaneNames[i];
+}
+
 Steinberg::tresult PLUGIN_API PolyController::initialize(Steinberg::FUnknown* context) {
     auto result = EditControllerEx1::initialize(context);
     if (result != Steinberg::kResultOk)
         return result;
+
+    for (int i = 0; i < kMaxLanes; ++i)
+        laneNames_[i] = kDefaultLaneNames[i];
 
     using namespace Steinberg::Vst;
     using Steinberg::Vst::ParameterInfo;
@@ -311,6 +326,49 @@ Steinberg::tresult PLUGIN_API PolyController::setComponentState(Steinberg::IBStr
     setParamNormalized(ParamIDs::kSeed, gs.seed / 999999.0);
     setParamNormalized(ParamIDs::kSceneSelect, static_cast<double>(static_cast<uint8_t>(cachedState_.select)) / 2.0);
     setParamNormalized(ParamIDs::kSceneMorph, static_cast<double>(cachedState_.morphAmount));
+
+    return Steinberg::kResultOk;
+}
+
+Steinberg::tresult PLUGIN_API PolyController::getState(Steinberg::IBStream* state) {
+    if (!state)
+        return Steinberg::kInvalidArgument;
+
+    Steinberg::int32 version = kControllerStateVersion;
+    state->write(&version, sizeof(version), nullptr);
+
+    for (int i = 0; i < kMaxLanes; ++i) {
+        auto len = static_cast<Steinberg::int32>(laneNames_[i].size());
+        state->write(&len, sizeof(len), nullptr);
+        if (len > 0)
+            state->write(laneNames_[i].data(), len, nullptr);
+    }
+
+    return Steinberg::kResultOk;
+}
+
+Steinberg::tresult PLUGIN_API PolyController::setState(Steinberg::IBStream* state) {
+    if (!state)
+        return Steinberg::kInvalidArgument;
+
+    Steinberg::int32 version = 0;
+    Steinberg::int32 bytesRead = 0;
+    if (state->read(&version, sizeof(version), &bytesRead) != Steinberg::kResultOk || bytesRead != sizeof(version))
+        return Steinberg::kResultFalse;
+
+    if (version >= 1) {
+        for (int i = 0; i < kMaxLanes; ++i) {
+            Steinberg::int32 len = 0;
+            if (state->read(&len, sizeof(len), &bytesRead) != Steinberg::kResultOk)
+                break;
+            if (len > 0 && len < 256) {
+                laneNames_[i].resize(static_cast<size_t>(len));
+                state->read(laneNames_[i].data(), len, &bytesRead);
+            } else {
+                laneNames_[i] = kDefaultLaneNames[i];
+            }
+        }
+    }
 
     return Steinberg::kResultOk;
 }

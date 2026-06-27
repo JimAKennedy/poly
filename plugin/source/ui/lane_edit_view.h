@@ -1,14 +1,18 @@
 #pragma once
 
+#include <string>
+
 #include "public.sdk/source/vst/vsteditcontroller.h"
 #include "vstgui/lib/cview.h"
 #include "vstgui/lib/cvstguitimer.h"
 
 namespace poly {
 
+class PolyController;
+
 class LaneEditView : public VSTGUI::CView {
 public:
-    LaneEditView(const VSTGUI::CRect& size, Steinberg::Vst::EditController* controller);
+    LaneEditView(const VSTGUI::CRect& size, PolyController* controller);
     ~LaneEditView() override;
 
     void draw(VSTGUI::CDrawContext* context) override;
@@ -17,12 +21,14 @@ public:
     VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
     VSTGUI::CMouseEventResult onMouseMoved(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
     VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
+    void onKeyboardEvent(VSTGUI::KeyboardEvent& event) override;
 
 private:
     static constexpr int kMaxLanes = 8;
     static constexpr int kLaneKnobCount = 10;
     static constexpr int kPhraseKnobCount = 6;
     static constexpr double kDragSensitivity = 200.0;
+    static constexpr int kMaxNameLength = 15;
 
     enum class ValueFormat { Integer, Subdivision, MidiNote, Percent, KotekanSrc, Beats, BipolarSteps, BipolarMs };
 
@@ -37,6 +43,7 @@ private:
     static const KnobDef kPhraseKnobs[kPhraseKnobCount];
 
     VSTGUI::CRect laneTabRect(int lane) const;
+    VSTGUI::CRect laneNameRect() const;
     VSTGUI::CRect laneKnobRect(int knob) const;
     VSTGUI::CRect phraseKnobRect(int knob) const;
     VSTGUI::CRect schematicRect() const;
@@ -48,10 +55,18 @@ private:
                   const KnobDef& def, bool enabled = true);
     void drawPhraseSchematic(VSTGUI::CDrawContext* ctx, const VSTGUI::CColor& color, double lenBeats, double gapBeats,
                              double ofsBeats);
+    void beginNameEdit();
+    void commitNameEdit();
+    void cancelNameEdit();
 
+    PolyController* polyController_;
     Steinberg::Vst::EditController* controller_;
     VSTGUI::SharedPointer<VSTGUI::CVSTGUITimer> refreshTimer_;
     int selectedLane_ = 0;
+
+    bool editingName_ = false;
+    std::string editText_;
+    int editCursorPos_ = 0;
 
     enum class DragTarget { None, LaneKnob, PhraseKnob };
     DragTarget dragTarget_ = DragTarget::None;

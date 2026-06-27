@@ -7,9 +7,11 @@
 
 namespace poly {
 
+class PolyController;
+
 class LaneGridView : public VSTGUI::CView {
 public:
-    LaneGridView(const VSTGUI::CRect& size, Steinberg::Vst::EditController* controller);
+    LaneGridView(const VSTGUI::CRect& size, PolyController* controller);
     ~LaneGridView() override;
 
     void draw(VSTGUI::CDrawContext* context) override;
@@ -27,6 +29,7 @@ private:
     double probabilityFromX(int lane, VSTGUI::CCoord x) const;
     VSTGUI::CRect laneRect(int lane) const;
 
+    PolyController* polyController_;
     Steinberg::Vst::EditController* controller_;
     VSTGUI::SharedPointer<VSTGUI::CVSTGUITimer> refreshTimer_;
     int dragLane_ = -1;

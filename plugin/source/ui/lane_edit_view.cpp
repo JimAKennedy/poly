@@ -6,7 +6,10 @@
 
 #include "vstgui/lib/cdrawcontext.h"
 #include "vstgui/lib/cfont.h"
+#include "vstgui/lib/cframe.h"
+#include "vstgui/lib/events.h"
 
+#include "../controller.h"
 #include "../plugids.h"
 
 namespace poly {
@@ -43,8 +46,8 @@ const LaneEditView::KnobDef LaneEditView::kPhraseKnobs[kPhraseKnobCount] = {
     {ParamIDs::kTimingOffset, false, "Time", 20.0, ValueFormat::BipolarMs},
 };
 
-LaneEditView::LaneEditView(const CRect& size, Steinberg::Vst::EditController* controller)
-    : CView(size), controller_(controller) {
+LaneEditView::LaneEditView(const CRect& size, PolyController* controller)
+    : CView(size), polyController_(controller), controller_(controller) {
     setMouseEnabled(true);
 }
 
@@ -75,6 +78,11 @@ CRect LaneEditView::laneTabRect(int lane) const {
     auto bounds = getViewSize();
     double x = bounds.left + 8 + lane * 27.0;
     return CRect(x, bounds.top + 34, x + 24, bounds.top + 48);
+}
+
+CRect LaneEditView::laneNameRect() const {
+    auto bounds = getViewSize();
+    return CRect(bounds.left + 8, bounds.top + 8, bounds.left + 250, bounds.top + 26);
 }
 
 CRect LaneEditView::laneKnobRect(int knob) const {
@@ -355,6 +363,27 @@ void LaneEditView::draw(CDrawContext* context) {
     context->setFillColor(CColor(0x1E, 0x1E, 0x26, 0xFF));
     context->drawRect(bounds, kDrawFilled);
 
+    auto laneColor = kLaneColors[selectedLane_];
+    auto nameFont = makeOwned<CFontDesc>("Arial", 13.0);
+    context->setFont(nameFont);
+    context->setFontColor(laneColor);
+    auto nameR = laneNameRect();
+    if (editingName_) {
+        CRect editBg = nameR;
+        editBg.extend(2, 1);
+        context->setFillColor(CColor(0x14, 0x14, 0x1C, 0xFF));
+        context->drawRect(editBg, kDrawFilled);
+        context->setFrameColor(CColor(laneColor.red, laneColor.green, laneColor.blue, 0x80));
+        context->setLineWidth(1.0);
+        context->drawRect(editBg, kDrawStroked);
+
+        std::string display = editText_;
+        display.insert(static_cast<size_t>(editCursorPos_), "|");
+        context->drawString(display.c_str(), nameR, kLeftText);
+    } else {
+        context->drawString(polyController_->laneName(selectedLane_).c_str(), nameR, kLeftText);
+    }
+
     auto tabFont = makeOwned<CFontDesc>("Arial", 9.0);
     context->setFont(tabFont);
 
@@ -379,8 +408,6 @@ void LaneEditView::draw(CDrawContext* context) {
         std::snprintf(lbl, sizeof(lbl), "%d", i + 1);
         context->drawString(lbl, r, kCenterText);
     }
-
-    auto laneColor = kLaneColors[selectedLane_];
 
     auto groupFont = makeOwned<CFontDesc>("Arial", 7.0);
     context->setFont(groupFont);
@@ -431,6 +458,15 @@ void LaneEditView::draw(CDrawContext* context) {
 CMouseEventResult LaneEditView::onMouseDown(CPoint& where, const CButtonState& buttons) {
     if (!(buttons & kLButton))
         return kMouseEventNotHandled;
+
+    if (laneNameRect().pointInside(where)) {
+        if (!editingName_)
+            beginNameEdit();
+        return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+    }
+
+    if (editingName_)
+        commitNameEdit();
 
     int tab = hitTestTab(where);
     if (tab >= 0) {
@@ -503,6 +539,103 @@ CMouseEventResult LaneEditView::onMouseUp(CPoint& where, const CButtonState& but
     dragTarget_ = DragTarget::None;
     dragKnob_ = -1;
     return kMouseEventHandled;
+}
+
+void LaneEditView::beginNameEdit() {
+    editingName_ = true;
+    editText_ = polyController_->laneName(selectedLane_);
+    editCursorPos_ = static_cast<int>(editText_.size());
+    setWantsFocus(true);
+    if (auto* frame = getFrame())
+        frame->setFocusView(this);
+    invalid();
+}
+
+void LaneEditView::commitNameEdit() {
+    if (!editingName_)
+        return;
+    if (!editText_.empty())
+        polyController_->setLaneName(selectedLane_, editText_);
+    editingName_ = false;
+    setWantsFocus(false);
+    invalid();
+}
+
+void LaneEditView::cancelNameEdit() {
+    editingName_ = false;
+    setWantsFocus(false);
+    invalid();
+}
+
+void LaneEditView::onKeyboardEvent(KeyboardEvent& event) {
+    if (!editingName_ || event.type != EventType::KeyDown)
+        return;
+
+    if (event.virt == VirtualKey::Return || event.virt == VirtualKey::Enter) {
+        commitNameEdit();
+        event.consumed = true;
+        return;
+    }
+    if (event.virt == VirtualKey::Escape) {
+        cancelNameEdit();
+        event.consumed = true;
+        return;
+    }
+    if (event.virt == VirtualKey::Back) {
+        if (editCursorPos_ > 0) {
+            editText_.erase(static_cast<size_t>(editCursorPos_ - 1), 1);
+            --editCursorPos_;
+            invalid();
+        }
+        event.consumed = true;
+        return;
+    }
+    if (event.virt == VirtualKey::Delete) {
+        if (editCursorPos_ < static_cast<int>(editText_.size())) {
+            editText_.erase(static_cast<size_t>(editCursorPos_), 1);
+            invalid();
+        }
+        event.consumed = true;
+        return;
+    }
+    if (event.virt == VirtualKey::Left) {
+        if (editCursorPos_ > 0) {
+            --editCursorPos_;
+            invalid();
+        }
+        event.consumed = true;
+        return;
+    }
+    if (event.virt == VirtualKey::Right) {
+        if (editCursorPos_ < static_cast<int>(editText_.size())) {
+            ++editCursorPos_;
+            invalid();
+        }
+        event.consumed = true;
+        return;
+    }
+    if (event.virt == VirtualKey::Home) {
+        editCursorPos_ = 0;
+        invalid();
+        event.consumed = true;
+        return;
+    }
+    if (event.virt == VirtualKey::End) {
+        editCursorPos_ = static_cast<int>(editText_.size());
+        invalid();
+        event.consumed = true;
+        return;
+    }
+
+    if (event.character >= 32 && event.character < 127 && static_cast<int>(editText_.size()) < kMaxNameLength) {
+        auto ch = static_cast<char>(event.character);
+        if (event.modifiers.has(ModifierKey::Shift) && ch >= 'a' && ch <= 'z')
+            ch = static_cast<char>(ch - 32);
+        editText_.insert(editText_.begin() + editCursorPos_, ch);
+        ++editCursorPos_;
+        invalid();
+        event.consumed = true;
+    }
 }
 
 } // namespace poly
