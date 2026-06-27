@@ -51,6 +51,7 @@ LaneConfig interpolateLane(const LaneConfig& a, const LaneConfig& b, float t) {
     r.velocitySpread = lerpf(a.velocitySpread, b.velocitySpread, t);
     r.humanizeMs = lerpf(a.humanizeMs, b.humanizeMs, t);
     r.swingAmount = lerpf(a.swingAmount, b.swingAmount, t);
+    r.syncopationOffset = lerpf(a.syncopationOffset, b.syncopationOffset, t);
     r.noteDuration = lerpf(a.noteDuration, b.noteDuration, t);
     r.active = snap(a.active, b.active, t);
     r.envelopeCount = snap(a.envelopeCount, b.envelopeCount, t);

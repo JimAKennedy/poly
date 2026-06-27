@@ -64,15 +64,32 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
         const bool isAdditive = additive.count > 0;
         const double cyclePpqLen = isAdditive ? additive.totalPpq : (cfg.cycle.steps * sPpq);
 
+        // Swing/syncopation/humanize shift note positions away from the grid.
+        // Extend the step scan window so notes whose shifted position falls in
+        // [ppqStart, ppqEnd) are found, even if their grid position is outside.
+        double maxStepDur = sPpq;
+        if (isAdditive) {
+            for (int c = 0; c < additive.count; ++c)
+                maxStepDur = std::max(maxStepDur, cfg.cellSizes[c] * (4.0 / cfg.cycle.subdivision));
+        }
+        double maxTimingShift = 0.0;
+        maxTimingShift += static_cast<double>(std::max(0.0f, cfg.swingAmount)) * maxStepDur / 3.0;
+        maxTimingShift += static_cast<double>(std::max(0.0f, cfg.syncopationOffset)) * maxStepDur / 3.0;
+        if (tc.tempo > 0.0) {
+            maxTimingShift += (static_cast<double>(std::max(0.0f, cfg.humanizeMs)) + 50.0) * tc.tempo / 60000.0;
+            maxTimingShift += std::abs(static_cast<double>(cfg.timingOffsetMs)) * tc.tempo / 60000.0;
+            maxTimingShift += 20.0 * tc.tempo / 60000.0;
+        }
+
         int64_t firstStep, lastStep;
         if (isAdditive) {
-            int64_t firstCycle = static_cast<int64_t>(std::floor(tc.ppqStart / cyclePpqLen));
-            int64_t lastCycle = static_cast<int64_t>(std::floor(tc.ppqEnd / cyclePpqLen)) + 1;
+            int64_t firstCycle = static_cast<int64_t>(std::floor((tc.ppqStart - maxTimingShift) / cyclePpqLen));
+            int64_t lastCycle = static_cast<int64_t>(std::floor((tc.ppqEnd + maxTimingShift) / cyclePpqLen)) + 1;
             firstStep = firstCycle * additive.count;
             lastStep = lastCycle * additive.count;
         } else {
-            firstStep = static_cast<int64_t>(std::ceil(tc.ppqStart / sPpq));
-            lastStep = static_cast<int64_t>(std::ceil(tc.ppqEnd / sPpq));
+            firstStep = static_cast<int64_t>(std::floor((tc.ppqStart - maxTimingShift) / sPpq));
+            lastStep = static_cast<int64_t>(std::ceil((tc.ppqEnd + maxTimingShift) / sPpq));
         }
 
         const bool hasPhraseGating = cfg.phraseLength > 0.0f;
@@ -96,8 +113,8 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
                 stepDurPpq = sPpq;
             }
 
-            // Floating point guard: must be within [ppqStart, ppqEnd)
-            if (ppq < tc.ppqStart || ppq >= tc.ppqEnd)
+            // Coarse guard: skip steps too far from the block even after shifts
+            if (ppq < tc.ppqStart - maxTimingShift || ppq >= tc.ppqEnd + maxTimingShift)
                 continue;
 
             if (hasPhraseGating && phraseCyclePpq > 0.0) {
@@ -249,6 +266,11 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
                 ppq += cfg.swingAmount * stepDurPpq * (1.0 / 3.0);
             }
 
+            // Syncopation: push even cycle-steps (0, 2, 4...) late
+            if (cfg.syncopationOffset > 0.0f && (cycleStep % 2) == 0) {
+                ppq += static_cast<double>(cfg.syncopationOffset) * stepDurPpq * (1.0 / 3.0);
+            }
+
             // Per-step micro-timing map
             float stepTimingMs = cfg.microTimingMs[static_cast<size_t>(cycleStep)];
             if (stepTimingMs != 0.0f && tc.tempo > 0.0) {
@@ -267,9 +289,13 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
             if (cfg.timingOffsetMs != 0.0f && tc.tempo > 0.0) {
                 double offsetPpq = static_cast<double>(cfg.timingOffsetMs) * tc.tempo / 60000.0;
                 ppq += offsetPpq;
-                if (ppq < 0.0)
-                    ppq = 0.0;
             }
+
+            if (ppq < 0.0)
+                ppq = 0.0;
+
+            if (ppq < tc.ppqStart || ppq >= tc.ppqEnd)
+                continue;
 
             NoteEvent ev{};
             ev.ppqPosition = ppq;

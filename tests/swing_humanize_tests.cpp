@@ -5,6 +5,7 @@
 #include <gtest/gtest.h>
 
 #include "poly/engine.h"
+#include "poly/macro.h"
 #include "poly/rng.h"
 #include "poly/types.h"
 
@@ -138,7 +139,7 @@ TEST(SwingHumanize, HumanizeRespectsBounds) {
     double tempo = 120.0;
     double jitterPpq = cfg.humanizeMs * tempo / 60000.0;
 
-    auto events = renderLane(cfg, 4.0, 42, tempo);
+    auto events = renderLane(cfg, 3.75, 42, tempo);
 
     ASSERT_EQ(events.size(), 8u);
     const double sPpq = 0.5;
@@ -176,8 +177,8 @@ TEST(SwingHumanize, HumanizeZeroMeansNoJitter) {
 TEST(SwingHumanize, HumanizeDifferentSeedDiffers) {
     auto cfg = makeBasicLane();
     cfg.humanizeMs = 10.0f;
-    auto run1 = renderLane(cfg, 4.0, 42);
-    auto run2 = renderLane(cfg, 4.0, 999);
+    auto run1 = renderLane(cfg, 3.75, 42);
+    auto run2 = renderLane(cfg, 3.75, 999);
 
     bool anyDifferent = false;
     ASSERT_EQ(run1.size(), run2.size());
@@ -199,7 +200,7 @@ TEST(SwingHumanize, SwingPlusHumanize) {
     double tempo = 120.0;
     double jitterPpq = cfg.humanizeMs * tempo / 60000.0;
 
-    auto events = renderLane(cfg, 4.0, 42, tempo);
+    auto events = renderLane(cfg, 3.75, 42, tempo);
     ASSERT_EQ(events.size(), 8u);
 
     const double sPpq = 0.5;
@@ -374,4 +375,270 @@ TEST(MicroTiming, GingaGrooveGolden) {
     EXPECT_NEAR(events[1].ppqPosition, 1.0 + microOff1, 1e-9);
     EXPECT_DOUBLE_EQ(events[2].ppqPosition, 2.0);
     EXPECT_NEAR(events[3].ppqPosition, 3.0 + microOff3, 1e-9);
+}
+
+// --- Effect Presence Tests ---
+// Verify each control produces a measurable change in output.
+
+static std::vector<poly::NoteEvent> renderWithMacros(const poly::GrooveState& state, double ppqEnd = 4.0,
+                                                     double tempo = 120.0) {
+    poly::GrooveState resolved = poly::resolveMacros(state);
+    poly::Engine engine;
+    poly::NoteEventBuffer buf;
+    poly::TransportContext tc{};
+    tc.ppqStart = 0.0;
+    tc.ppqEnd = ppqEnd;
+    tc.tempo = tempo;
+    tc.playing = true;
+    engine.renderRange(tc, resolved, buf);
+
+    std::vector<poly::NoteEvent> events;
+    for (size_t i = 0; i < buf.count; ++i)
+        events.push_back(buf.events[i]);
+    std::sort(events.begin(), events.end(), [](const auto& a, const auto& b) { return a.ppqPosition < b.ppqPosition; });
+    return events;
+}
+
+TEST(EffectPresence, SwingProducesMeasurableShift) {
+    auto cfg = makeBasicLane();
+    cfg.swingAmount = 0.0f;
+    auto baseline = renderLane(cfg);
+
+    cfg.swingAmount = 1.0f;
+    auto swung = renderLane(cfg);
+
+    ASSERT_EQ(baseline.size(), swung.size());
+    double maxShift = 0.0;
+    for (size_t i = 0; i < baseline.size(); ++i)
+        maxShift = std::max(maxShift, std::abs(swung[i].ppqPosition - baseline[i].ppqPosition));
+    EXPECT_GT(maxShift, 0.05) << "Full swing should shift notes by >0.05 PPQ";
+}
+
+TEST(EffectPresence, HumanizeProducesMeasurableJitter) {
+    auto cfg = makeBasicLane();
+    cfg.humanizeMs = 0.0f;
+    auto baseline = renderLane(cfg, 3.75);
+
+    cfg.humanizeMs = 30.0f;
+    auto humanized = renderLane(cfg, 3.75);
+
+    ASSERT_EQ(baseline.size(), humanized.size());
+    double maxShift = 0.0;
+    for (size_t i = 0; i < baseline.size(); ++i)
+        maxShift = std::max(maxShift, std::abs(humanized[i].ppqPosition - baseline[i].ppqPosition));
+    EXPECT_GT(maxShift, 0.01) << "30ms humanize should produce >0.01 PPQ jitter at 120 BPM";
+}
+
+TEST(EffectPresence, HumanizeFullRangeWorks) {
+    auto cfg = makeBasicLane();
+    cfg.humanizeMs = 50.0f;
+    double tempo = 120.0;
+    double maxJitterPpq = 50.0 * tempo / 60000.0;
+
+    auto events = renderLane(cfg, 4.0, 42, tempo);
+
+    const double sPpq = 0.5;
+    bool anyLargeJitter = false;
+    for (const auto& e : events) {
+        double nearestNominal = std::round(e.ppqPosition / sPpq) * sPpq;
+        double offset = std::abs(e.ppqPosition - nearestNominal);
+        EXPECT_LE(offset, maxJitterPpq + 1e-9) << "Jitter exceeds 50ms bound";
+        if (offset > 0.02)
+            anyLargeJitter = true;
+    }
+    EXPECT_TRUE(anyLargeJitter) << "50ms humanize should produce at least some large jitter values";
+}
+
+TEST(EffectPresence, MacroSwingProducesShift) {
+    poly::GrooveState state{};
+    state.activeLaneCount = 1;
+    state.seed = 42;
+    state.lanes[0] = makeBasicLane();
+    state.lanes[0].swingAmount = 0.0f;
+    state.macros.swing = 0.0f;
+    auto baseline = renderWithMacros(state);
+
+    state.macros.swing = 1.0f;
+    auto swung = renderWithMacros(state);
+
+    ASSERT_EQ(baseline.size(), swung.size());
+    double maxShift = 0.0;
+    for (size_t i = 0; i < baseline.size(); ++i)
+        maxShift = std::max(maxShift, std::abs(swung[i].ppqPosition - baseline[i].ppqPosition));
+    EXPECT_GT(maxShift, 0.05) << "Macro swing at 1.0 should produce >0.05 PPQ shift";
+}
+
+TEST(EffectPresence, MacroHumanizeProducesJitter) {
+    poly::GrooveState state{};
+    state.activeLaneCount = 1;
+    state.seed = 42;
+    state.lanes[0] = makeBasicLane();
+    state.lanes[0].humanizeMs = 0.0f;
+    state.macros.humanize = 0.0f;
+    auto baseline = renderWithMacros(state, 3.75);
+
+    state.macros.humanize = 1.0f;
+    auto humanized = renderWithMacros(state, 3.75);
+
+    ASSERT_EQ(baseline.size(), humanized.size());
+    double maxShift = 0.0;
+    for (size_t i = 0; i < baseline.size(); ++i)
+        maxShift = std::max(maxShift, std::abs(humanized[i].ppqPosition - baseline[i].ppqPosition));
+    EXPECT_GT(maxShift, 0.01) << "Macro humanize at 1.0 should produce >0.01 PPQ jitter at 120 BPM";
+}
+
+TEST(EffectPresence, MacroHumanizePreservesPerLaneRange) {
+    poly::GrooveState state{};
+    state.activeLaneCount = 1;
+    state.seed = 42;
+    state.lanes[0] = makeBasicLane();
+    state.lanes[0].humanizeMs = 40.0f;
+    state.macros.humanize = 0.0f;
+
+    auto resolved = poly::resolveMacros(state);
+    EXPECT_FLOAT_EQ(resolved.lanes[0].humanizeMs, 40.0f)
+        << "Macro resolution must not clamp per-lane humanize below its set value";
+}
+
+TEST(EffectPresence, ProbabilityReducesNoteCount) {
+    auto cfg = makeBasicLane();
+    cfg.probability = 1.0f;
+    auto full = renderLane(cfg);
+
+    cfg.probability = 0.3f;
+    auto sparse = renderLane(cfg);
+
+    EXPECT_LT(sparse.size(), full.size()) << "Lower probability should produce fewer notes";
+}
+
+TEST(EffectPresence, VelocitySpreadVariesOutput) {
+    auto cfg = makeBasicLane();
+    cfg.velocitySpread = 0.0f;
+    auto uniform = renderLane(cfg);
+
+    cfg.velocitySpread = 0.3f;
+    auto spread = renderLane(cfg);
+
+    bool anyDifferent = false;
+    ASSERT_EQ(uniform.size(), spread.size());
+    for (size_t i = 0; i < uniform.size(); ++i) {
+        if (std::abs(uniform[i].velocity - spread[i].velocity) > 1e-6)
+            anyDifferent = true;
+    }
+    EXPECT_TRUE(anyDifferent) << "Velocity spread should produce different velocities";
+}
+
+TEST(EffectPresence, NoteDurationChangesOutput) {
+    auto cfg = makeBasicLane();
+    cfg.noteDuration = 0.0f;
+    auto defaultDur = renderLane(cfg);
+
+    cfg.noteDuration = 1.0f;
+    auto longDur = renderLane(cfg);
+
+    ASSERT_EQ(defaultDur.size(), longDur.size());
+    bool anyDifferent = false;
+    for (size_t i = 0; i < defaultDur.size(); ++i) {
+        if (std::abs(defaultDur[i].duration - longDur[i].duration) > 1e-6)
+            anyDifferent = true;
+    }
+    EXPECT_TRUE(anyDifferent) << "Note duration setting should change output duration";
+}
+
+TEST(EffectPresence, TimingOffsetShiftsAllNotes) {
+    auto cfg = makeBasicLane();
+    cfg.timingOffsetMs = 0.0f;
+    auto baseline = renderLane(cfg);
+
+    cfg.timingOffsetMs = 15.0f;
+    auto shifted = renderLane(cfg);
+
+    ASSERT_EQ(baseline.size(), shifted.size());
+    for (size_t i = 0; i < baseline.size(); ++i) {
+        EXPECT_GT(shifted[i].ppqPosition, baseline[i].ppqPosition) << "Positive timing offset should shift notes later";
+    }
+}
+
+TEST(EffectPresence, SyncopationProducesMeasurableShift) {
+    poly::GrooveState state{};
+    state.activeLaneCount = 1;
+    state.seed = 42;
+    state.lanes[0] = makeBasicLane();
+    state.macros.syncopation = 0.0f;
+    auto baseline = renderWithMacros(state);
+
+    state.macros.syncopation = 1.0f;
+    auto syncopated = renderWithMacros(state);
+
+    ASSERT_EQ(baseline.size(), syncopated.size());
+    double maxShift = 0.0;
+    for (size_t i = 0; i < baseline.size(); ++i)
+        maxShift = std::max(maxShift, std::abs(syncopated[i].ppqPosition - baseline[i].ppqPosition));
+    EXPECT_GT(maxShift, 0.05) << "Full syncopation should shift notes by >0.05 PPQ";
+}
+
+TEST(EffectPresence, SyncopationShiftsEvenStepsOnly) {
+    auto cfg = makeBasicLane();
+    cfg.syncopationOffset = 0.5f;
+    auto events = renderLane(cfg);
+
+    ASSERT_EQ(events.size(), 8u);
+    const double sPpq = 0.5;
+    const double syncopOffset = 0.5f * sPpq * (1.0 / 3.0);
+
+    for (size_t i = 0; i < events.size(); ++i) {
+        double expected = i * sPpq;
+        if (i % 2 == 0)
+            expected += syncopOffset;
+        EXPECT_NEAR(events[i].ppqPosition, expected, 1e-9) << "Step " << i;
+    }
+}
+
+TEST(EffectPresence, SyncopationAndSwingCompose) {
+    auto cfg = makeBasicLane();
+    cfg.syncopationOffset = 0.5f;
+    cfg.swingAmount = 0.5f;
+    auto events = renderLane(cfg);
+
+    ASSERT_EQ(events.size(), 8u);
+    const double sPpq = 0.5;
+    const double offset = 0.5f * sPpq * (1.0 / 3.0);
+
+    for (size_t i = 0; i < events.size(); ++i) {
+        double expected = i * sPpq + offset;
+        EXPECT_NEAR(events[i].ppqPosition, expected, 1e-9)
+            << "Step " << i << ": both swing (odd) and syncopation (even) should shift by same amount";
+    }
+}
+
+TEST(EffectPresence, SyncopationDeterministic) {
+    auto cfg = makeBasicLane();
+    cfg.syncopationOffset = 0.7f;
+    auto run1 = renderLane(cfg);
+    auto run2 = renderLane(cfg);
+
+    ASSERT_EQ(run1.size(), run2.size());
+    for (size_t i = 0; i < run1.size(); ++i) {
+        EXPECT_DOUBLE_EQ(run1[i].ppqPosition, run2[i].ppqPosition);
+    }
+}
+
+TEST(EffectPresence, DriftRateChangesPatternOverTime) {
+    auto cfg = makeBasicLane();
+    cfg.hitCount = 3;
+    cfg.driftRate = 0.0f;
+    auto stable = renderLane(cfg, 8.0);
+
+    cfg.driftRate = 2.0f;
+    auto drifted = renderLane(cfg, 8.0);
+
+    bool anyPositionDiff = false;
+    size_t minSize = std::min(stable.size(), drifted.size());
+    for (size_t i = 0; i < minSize; ++i) {
+        if (std::abs(stable[i].ppqPosition - drifted[i].ppqPosition) > 1e-9) {
+            anyPositionDiff = true;
+            break;
+        }
+    }
+    EXPECT_TRUE(anyPositionDiff || stable.size() != drifted.size()) << "Drift should change which steps fire over time";
 }

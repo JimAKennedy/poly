@@ -140,6 +140,21 @@ TEST(Macro, SyncopationOneInvertsEmphasis) {
     EXPECT_NEAR(resolved.lanes[0].emphasisProb, 0.65f, 0.01f);
 }
 
+TEST(Macro, SyncopationSetsSyncopationOffset) {
+    auto state = makeBaseState();
+    state.macros.syncopation = 0.0f;
+    auto zero = poly::resolveMacros(state);
+    EXPECT_FLOAT_EQ(zero.lanes[0].syncopationOffset, 0.0f);
+
+    state.macros.syncopation = 0.7f;
+    auto mid = poly::resolveMacros(state);
+    EXPECT_FLOAT_EQ(mid.lanes[0].syncopationOffset, 0.7f);
+
+    state.macros.syncopation = 1.0f;
+    auto full = poly::resolveMacros(state);
+    EXPECT_FLOAT_EQ(full.lanes[0].syncopationOffset, 1.0f);
+}
+
 // --- Swing ---
 
 TEST(Macro, SwingAddsToBase) {
@@ -196,7 +211,7 @@ TEST(Macro, HumanizeOneAddsJitter) {
     state.macros.humanize = 1.0f;
     auto resolved = poly::resolveMacros(state);
 
-    EXPECT_FLOAT_EQ(resolved.lanes[0].humanizeMs, 10.0f);
+    EXPECT_FLOAT_EQ(resolved.lanes[0].humanizeMs, 25.0f);
     EXPECT_GT(resolved.lanes[0].velocitySpread, state.lanes[0].velocitySpread);
 }
 
