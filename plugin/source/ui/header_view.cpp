@@ -315,7 +315,9 @@ void HeaderView::resetToInit() {
         initState.lanes[static_cast<size_t>(lane)].active = true;
     }
     initState.activeLaneCount = kMaxLanes;
-    static_cast<PolyController*>(controller_)->mutableCachedState().sceneA = initState;
+    auto* polyCtrl = static_cast<PolyController*>(controller_);
+    polyCtrl->mutableCachedState().sceneA = initState;
+    polyCtrl->resetLaneNames();
 
     pushParam(ParamIDs::kMacroComplexity, 0.5);
     pushParam(ParamIDs::kMacroDensity, 0.5);

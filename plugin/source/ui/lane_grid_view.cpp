@@ -5,6 +5,7 @@
 #include "vstgui/lib/cdrawcontext.h"
 #include "vstgui/lib/cfont.h"
 
+#include "../controller.h"
 #include "../plugids.h"
 
 namespace poly {
@@ -16,8 +17,8 @@ static const VSTGUI::CColor kLaneColors[] = {
     VSTGUI::CColor(0xE6, 0x7E, 0x22, 0xFF), VSTGUI::CColor(0x34, 0x98, 0xDB, 0xFF),
 };
 
-LaneGridView::LaneGridView(const VSTGUI::CRect& size, Steinberg::Vst::EditController* controller)
-    : CView(size), controller_(controller) {
+LaneGridView::LaneGridView(const VSTGUI::CRect& size, PolyController* controller)
+    : CView(size), polyController_(controller), controller_(controller) {
     setMouseEnabled(true);
 }
 
@@ -54,8 +55,6 @@ void LaneGridView::draw(VSTGUI::CDrawContext* context) {
     double laneH = (bounds.getHeight() - kPad * (kMaxLanes + 1)) / kMaxLanes;
     double laneW = bounds.getWidth() - kPad * 2;
 
-    static const char* kLaneNames[] = {"Kick", "Snare", "HH Closed", "HH Open", "Tom Hi", "Tom Lo", "Ride", "Crash"};
-
     auto font = makeOwned<CFontDesc>("Arial", 11.0);
 
     int selectedLane = static_cast<int>(std::round(controller_->getParamNormalized(ParamIDs::kSelectedLane) * 7.0));
@@ -89,7 +88,7 @@ void LaneGridView::draw(VSTGUI::CDrawContext* context) {
         textRect.right = textRect.left + 80;
         context->setFont(font);
         context->setFontColor(active ? CColor(0xE8, 0xE8, 0xEC, 0xFF) : CColor(0x68, 0x68, 0x78, 0xFF));
-        context->drawString(kLaneNames[lane], textRect, kLeftText);
+        context->drawString(polyController_->laneName(lane).c_str(), textRect, kLeftText);
 
         auto kotekanId = ParamIDs::laneParam(lane, ParamIDs::kKotekanSource);
         int kotekanSrc = static_cast<int>(std::round(controller_->getParamNormalized(kotekanId) * 8.0)) - 1;
