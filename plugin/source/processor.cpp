@@ -67,6 +67,7 @@ Steinberg::tresult PLUGIN_API PolyProcessor::setActive(Steinberg::TBool state) {
         exportTriggered_ = false;
         expectedNextPpq_ = -1.0;
         macroSmoother_.initialized = false;
+        chainState_.reset();
     }
     return AudioEffect::setActive(state);
 }
@@ -154,6 +155,13 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
             }
         }
         pendingNoteOffs_.clear();
+    }
+
+    // --- Chain advance (override scene select when enabled) ---
+    if (sceneState_.chain.enabled && sceneState_.chain.entryCount > 0) {
+        if (tc_.jumped)
+            chainState_.reset();
+        sceneState_.select = chainState_.update(sceneState_.chain, tc_.ppqStart);
     }
 
     // --- Resolve scene with smoothed macros and render ---
@@ -271,9 +279,13 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
                 continue;
 
             auto additive = computeAdditiveCells(resolved.lanes[lane]);
+            double laneTempoScale = (resolved.lanes[lane].tempoMultiplier > 0.0f)
+                                        ? 1.0 / static_cast<double>(resolved.lanes[lane].tempoMultiplier)
+                                        : 1.0;
             double cycleBeats = additive.count > 0
-                                    ? additive.totalPpq
-                                    : resolved.lanes[lane].cycle.steps * (4.0 / resolved.lanes[lane].cycle.subdivision);
+                                    ? additive.totalPpq * laneTempoScale
+                                    : resolved.lanes[lane].cycle.steps *
+                                          (4.0 / resolved.lanes[lane].cycle.subdivision) * laneTempoScale;
             double lanePhase = std::fmod(tc_.ppqStart / cycleBeats, 1.0);
             if (lanePhase < 0.0)
                 lanePhase += 1.0;
@@ -345,6 +357,38 @@ void PolyProcessor::applyParameter(Steinberg::Vst::ParamID id, double normalized
         sceneState_.morphAmount = static_cast<float>(normalized);
         return;
     }
+    if (id == kChainEnabled) {
+        bool wasEnabled = sceneState_.chain.enabled;
+        sceneState_.chain.enabled = (normalized > 0.5);
+        if (sceneState_.chain.enabled && !wasEnabled)
+            chainState_.reset();
+        return;
+    }
+    if (id == kChainMode) {
+        int m = static_cast<int>(std::round(normalized * 2.0));
+        sceneState_.chain.mode = static_cast<ChainMode>(std::clamp(m, 0, 2));
+        return;
+    }
+    if (id == kChainEntryCount) {
+        sceneState_.chain.entryCount = static_cast<int>(std::round(normalized * static_cast<double>(kMaxChainEntries)));
+        return;
+    }
+    if (id >= kChainEntryBase &&
+        id < kChainEntryBase + static_cast<Steinberg::Vst::ParamID>(kMaxChainEntries * kChainParamsPerEntry)) {
+        auto rel = static_cast<int>(id - kChainEntryBase);
+        int entry = rel / kChainParamsPerEntry;
+        int offset = rel % kChainParamsPerEntry;
+        if (entry < kMaxChainEntries) {
+            auto& e = sceneState_.chain.entries[static_cast<size_t>(entry)];
+            if (offset == kChainEntryScene) {
+                int sel = static_cast<int>(std::round(normalized * 2.0));
+                e.scene = static_cast<SceneSelect>(std::clamp(sel, 0, 2));
+            } else if (offset == kChainEntryBars) {
+                e.bars = 1 + static_cast<int>(std::round(normalized * 31.0));
+            }
+        }
+        return;
+    }
 
     auto& gs = (sceneState_.select == SceneSelect::B) ? sceneState_.sceneB : sceneState_.sceneA;
 
@@ -381,6 +425,9 @@ void PolyProcessor::applyParameter(Steinberg::Vst::ParamID id, double normalized
             break;
         case kCoreFixedPatternLen:
             cfg.fixedPatternLength = static_cast<int>(std::round(normalized * 64.0));
+            break;
+        case kCoreTempoMult:
+            cfg.tempoMultiplier = static_cast<float>(0.25 + normalized * 3.75);
             break;
         default:
             break;

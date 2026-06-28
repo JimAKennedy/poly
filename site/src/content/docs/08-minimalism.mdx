@@ -73,6 +73,35 @@ Poly's Mutation parameter offers an analogous process. As Mutation increases, hi
 
 The Complexity macro provides a higher-level control over this process. Sweep Complexity from 0.0 to 1.0 during a performance, and each lane's effective hit count changes, producing an additive-rhythm effect across the entire ensemble simultaneously.
 
+## Nancarrow and Metric Modulation
+
+Conlon Nancarrow spent decades composing for player piano because no human performer could execute his central idea: simultaneous independent tempi. In *Study No. 36* (1970), four voices play at tempo ratios of 17:18:19:20 — each voice in its own temporal world, the composite rhythm impossibly dense and constantly shifting.
+
+Poly's **Tempo Mult** parameter brings Nancarrow's concept to the polymetric engine. Each lane has an independent tempo multiplier (0.25x to 4.0x) that scales its step grid relative to the host tempo. At 2.0x, a lane plays its Euclidean pattern at double speed — hits arrive at half the PPQ spacing. At 0.5x, the pattern stretches to double length. The host tempo remains unchanged; only the lane's internal clock speeds up or slows down.
+
+<PolyPatch title="Nancarrow-Style Independent Tempi" preset="Custom: Metric Modulation">
+
+| Lane | Role | Steps | Hits | Subdivision | Tempo Mult | Velocity |
+|------|------|-------|------|-------------|------------|----------|
+| 1 | Anchor | 4 | 4 | 1/4 | 1.0x | 100 |
+| 2 | Double-time hat | 8 | 5 | 1/8 | 2.0x | 70 |
+| 3 | Half-time pulse | 3 | 2 | 1/4 | 0.5x | 85 |
+| 4 | Hemiola voice | 6 | 4 | 1/8 | 1.5x | 75 |
+
+</PolyPatch>
+
+Lane 1 anchors the groove at the host tempo. Lane 2 runs at 2.0x — its 8-step pattern cycles in half the time, creating a busy double-time texture. Lane 3 at 0.5x stretches its 3-step pattern across twice the normal duration, providing a slow-moving foundation beneath the surface activity. Lane 4 at 1.5x creates a 3:2 hemiola against the anchor — the fundamental polymetric relationship in West African and Cuban music, here produced by tempo scaling rather than step-count ratios.
+
+<ListenFor>
+
+The anchor keeps steady time while the other lanes orbit at different rates. Lane 2's double-time pattern creates a shimmering surface above the kick. Lane 3's half-time pulse moves so slowly it feels like a different piece entirely — until it coincides with the anchor on a downbeat and the alignment snaps into focus. Lane 4's hemiola drifts in and out of phase with everything. The composite texture is richer than any single-tempo groove, but the mathematical relationships keep it from sounding arbitrary.
+
+</ListenFor>
+
+The interaction between tempo multiplier and drift is particularly powerful. A lane at 1.5x tempo with a slow drift rate produces a phasing effect that operates across two dimensions simultaneously — the pattern rotates *and* the tempo relationship creates its own cycle of alignment and divergence.
+
+Phrase gating intentionally stays in absolute PPQ regardless of tempo multiplier. A lane gated to play for 8 beats and rest for 4 will always gate at bar-aligned boundaries, even at 2.0x tempo. This means the structural phrasing stays locked to the song form while the internal pattern runs at its own speed — the musical equivalent of a soloist who plays double-time fills but still respects the 4-bar phrase structure.
+
 ## Process Music and Determinism
 
 There is an important philosophical alignment between minimalism and Poly's engine. Reich insisted that his phasing process should be audible — the listener should be able to hear the system at work, not just its results. Poly's determinism guarantee serves the same principle: given the same patch and transport position, the output is identical every time. The process is transparent and repeatable.

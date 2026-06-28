@@ -72,6 +72,7 @@ static constexpr CoreParamDef kCoreParamDefs[] = {
     {ParamIDs::kCoreCellCount, "Cell Count", "", 64, 0.0},
     {ParamIDs::kCoreTimeline, "Timeline", "", 1, 0.0},
     {ParamIDs::kCoreFixedPatternLen, "Pattern Length", "", 64, 0.0},
+    {ParamIDs::kCoreTempoMult, "Tempo Mult", "x", 0, 0.2},
 };
 
 } // namespace
@@ -192,6 +193,19 @@ Steinberg::tresult PLUGIN_API PolyController::initialize(Steinberg::FUnknown* co
 
     addParam(ParamIDs::kSceneSelect, "Select", "", 2, 0.0, UnitIDs::kScene);
     addParam(ParamIDs::kSceneMorph, "Morph", "%", 0, 0.0, UnitIDs::kScene);
+
+    addParam(ParamIDs::kChainEnabled, "Chain Enable", "", 1, 0.0, UnitIDs::kScene);
+    addParam(ParamIDs::kChainMode, "Chain Mode", "", 2, 0.0, UnitIDs::kScene);
+    addParam(ParamIDs::kChainEntryCount, "Chain Length", "", kMaxChainEntries, 0.0, UnitIDs::kScene);
+
+    for (int e = 0; e < kMaxChainEntries; ++e) {
+        char title[32];
+        std::snprintf(title, sizeof(title), "Chain %d Scene", e + 1);
+        addParam(ParamIDs::chainEntryParam(e, ParamIDs::kChainEntryScene), title, "", 2, 0.0, UnitIDs::kScene);
+        std::snprintf(title, sizeof(title), "Chain %d Bars", e + 1);
+        addParam(ParamIDs::chainEntryParam(e, ParamIDs::kChainEntryBars), title, "bars", 31, 3.0 / 31.0,
+                 UnitIDs::kScene);
+    }
 
     addUnit(new Unit(USTRING("Export"), UnitIDs::kExport, kRootUnitId));
     addParam(ParamIDs::kExportTrigger, "Export", "", 1, 0.0, UnitIDs::kExport);
@@ -314,6 +328,8 @@ Steinberg::tresult PLUGIN_API PolyController::setComponentState(Steinberg::IBStr
         setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreTimeline), cfg.timeline ? 1.0 : 0.0);
         setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreFixedPatternLen),
                            cfg.fixedPatternLength / 64.0);
+        setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreTempoMult),
+                           static_cast<double>((cfg.tempoMultiplier - 0.25f) / 3.75f));
     }
 
     setParamNormalized(ParamIDs::kMacroComplexity, gs.macros.complexity);
@@ -326,6 +342,18 @@ Steinberg::tresult PLUGIN_API PolyController::setComponentState(Steinberg::IBStr
     setParamNormalized(ParamIDs::kSeed, gs.seed / 999999.0);
     setParamNormalized(ParamIDs::kSceneSelect, static_cast<double>(static_cast<uint8_t>(cachedState_.select)) / 2.0);
     setParamNormalized(ParamIDs::kSceneMorph, static_cast<double>(cachedState_.morphAmount));
+
+    setParamNormalized(ParamIDs::kChainEnabled, cachedState_.chain.enabled ? 1.0 : 0.0);
+    setParamNormalized(ParamIDs::kChainMode, static_cast<double>(static_cast<uint8_t>(cachedState_.chain.mode)) / 2.0);
+    setParamNormalized(ParamIDs::kChainEntryCount,
+                       static_cast<double>(cachedState_.chain.entryCount) / static_cast<double>(kMaxChainEntries));
+    for (int e = 0; e < kMaxChainEntries; ++e) {
+        const auto& entry = cachedState_.chain.entries[static_cast<size_t>(e)];
+        setParamNormalized(ParamIDs::chainEntryParam(e, ParamIDs::kChainEntryScene),
+                           static_cast<double>(static_cast<uint8_t>(entry.scene)) / 2.0);
+        setParamNormalized(ParamIDs::chainEntryParam(e, ParamIDs::kChainEntryBars),
+                           static_cast<double>(entry.bars - 1) / 31.0);
+    }
 
     return Steinberg::kResultOk;
 }

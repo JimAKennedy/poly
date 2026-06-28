@@ -71,7 +71,7 @@ inline Steinberg::Vst::ParamID phrasePhaseOutput(int lane) {
 static constexpr Steinberg::Vst::ParamID kTransportPpqOutput = 450;
 
 static constexpr Steinberg::Vst::ParamID kLaneCoreBase = 800;
-static constexpr int kCoreParamsPerLane = 8;
+static constexpr int kCoreParamsPerLane = 9;
 static constexpr int kCoreSteps = 0;
 static constexpr int kCoreSubdivision = 1;
 static constexpr int kCoreHits = 2;
@@ -80,6 +80,7 @@ static constexpr int kCoreMidiNote = 4;
 static constexpr int kCoreCellCount = 5;
 static constexpr int kCoreTimeline = 6;
 static constexpr int kCoreFixedPatternLen = 7;
+static constexpr int kCoreTempoMult = 8;
 
 inline Steinberg::Vst::ParamID laneCoreParam(int lane, int offset) {
     return kLaneCoreBase + static_cast<Steinberg::Vst::ParamID>(lane * kCoreParamsPerLane + offset);
@@ -93,6 +94,18 @@ static constexpr Steinberg::Vst::ParamID kSceneMorph = 501;
 static constexpr Steinberg::Vst::ParamID kExportTrigger = 600;
 static constexpr Steinberg::Vst::ParamID kCaptureLength = 601;
 static constexpr Steinberg::Vst::ParamID kCaptureReady = 602;
+
+static constexpr Steinberg::Vst::ParamID kChainEnabled = 510;
+static constexpr Steinberg::Vst::ParamID kChainMode = 511;
+static constexpr Steinberg::Vst::ParamID kChainEntryCount = 512;
+static constexpr Steinberg::Vst::ParamID kChainEntryBase = 520;
+static constexpr int kChainParamsPerEntry = 2;
+static constexpr int kChainEntryScene = 0;
+static constexpr int kChainEntryBars = 1;
+
+inline Steinberg::Vst::ParamID chainEntryParam(int entry, int offset) {
+    return kChainEntryBase + static_cast<Steinberg::Vst::ParamID>(entry * kChainParamsPerEntry + offset);
+}
 
 } // namespace ParamIDs
 
