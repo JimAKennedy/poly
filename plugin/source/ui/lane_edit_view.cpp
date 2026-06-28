@@ -88,8 +88,12 @@ CRect LaneEditView::laneNameRect() const {
 }
 
 CRect LaneEditView::laneKnobRect(int knob) const {
-    static constexpr double kKnobX[] = {242, 272, 302, 332, 362, 398, 426, 454, 482, 510, 538, 566};
+    static constexpr double kKnobX[] = {242, 272, 302, 332, 362, 398, 426, 454, 482, 510, 538};
     auto bounds = getViewSize();
+    if (knob == 11) {
+        double x = bounds.left + 538;
+        return CRect(x, bounds.top + 86, x + 26, bounds.top + 112);
+    }
     double x = bounds.left + kKnobX[knob];
     return CRect(x, bounds.top + 28, x + 26, bounds.top + 54);
 }
@@ -103,7 +107,7 @@ CRect LaneEditView::phraseKnobRect(int knob) const {
 
 CRect LaneEditView::schematicRect() const {
     auto bounds = getViewSize();
-    return CRect(bounds.left + 232, bounds.top + 93, bounds.left + 564, bounds.top + 105);
+    return CRect(bounds.left + 232, bounds.top + 93, bounds.left + 526, bounds.top + 105);
 }
 
 int LaneEditView::hitTestTab(const CPoint& where) const {
