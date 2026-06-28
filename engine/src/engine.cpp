@@ -59,8 +59,14 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
             }
         }
 
-        const double sPpq = stepPpq(cfg.cycle);
-        const auto additive = computeAdditiveCells(cfg);
+        const double tempoScale = (cfg.tempoMultiplier > 0.0f) ? 1.0 / static_cast<double>(cfg.tempoMultiplier) : 1.0;
+        const double sPpq = stepPpq(cfg.cycle) * tempoScale;
+        auto additive = computeAdditiveCells(cfg);
+        if (tempoScale != 1.0 && additive.count > 0) {
+            for (int c = 0; c < additive.count; ++c)
+                additive.cumPpq[c] *= tempoScale;
+            additive.totalPpq *= tempoScale;
+        }
         const bool isAdditive = additive.count > 0;
         const double cyclePpqLen = isAdditive ? additive.totalPpq : (cfg.cycle.steps * sPpq);
 
@@ -70,7 +76,7 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
         double maxStepDur = sPpq;
         if (isAdditive) {
             for (int c = 0; c < additive.count; ++c)
-                maxStepDur = std::max(maxStepDur, cfg.cellSizes[c] * (4.0 / cfg.cycle.subdivision));
+                maxStepDur = std::max(maxStepDur, cfg.cellSizes[c] * sPpq);
         }
         double maxTimingShift = 0.0;
         maxTimingShift += static_cast<double>(std::max(0.0f, cfg.swingAmount)) * maxStepDur / 3.0;
@@ -106,8 +112,7 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
                 int64_t cycleIdx =
                     (absStep >= 0) ? absStep / additive.count : (absStep - additive.count + 1) / additive.count;
                 ppq = cycleIdx * cyclePpqLen + additive.cumPpq[localCell];
-                double basePpq = 4.0 / cfg.cycle.subdivision;
-                stepDurPpq = cfg.cellSizes[localCell] * basePpq;
+                stepDurPpq = cfg.cellSizes[localCell] * sPpq;
             } else {
                 ppq = absStep * sPpq;
                 stepDurPpq = sPpq;

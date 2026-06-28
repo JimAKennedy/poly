@@ -3,6 +3,7 @@
 
 #include <gtest/gtest.h>
 
+#include "poly/engine.h"
 #include "poly/scene.h"
 #include "poly/state_io.h"
 
@@ -425,6 +426,225 @@ TEST(SceneChainIO, V12BackwardsCompat_NoChain) {
     EXPECT_EQ(restored.chain.entryCount, 0);
     EXPECT_EQ(restored.sceneA.activeLaneCount, 4);
     EXPECT_EQ(static_cast<uint8_t>(restored.select), static_cast<uint8_t>(poly::SceneSelect::B));
+}
+
+// --- Metric modulation tests ---
+
+TEST(MetricModulation, DefaultMultiplierHasNoEffect) {
+    poly::GrooveState gs{};
+    gs.activeLaneCount = 1;
+    gs.lanes[0].active = true;
+    gs.lanes[0].cycle = {4, 4};
+    gs.lanes[0].hitCount = 4;
+    gs.lanes[0].probability = 1.0f;
+    gs.lanes[0].tempoMultiplier = 1.0f;
+
+    poly::TransportContext tc{};
+    tc.playing = true;
+    tc.tempo = 120.0;
+    tc.sampleRate = 44100.0;
+    tc.ppqStart = 0.0;
+    tc.ppqEnd = 4.0;
+
+    poly::Engine engine;
+    poly::NoteEventBuffer buf;
+    engine.renderRange(tc, gs, buf);
+
+    ASSERT_EQ(buf.count, 4u);
+    EXPECT_NEAR(buf.events[0].ppqPosition, 0.0, 0.001);
+    EXPECT_NEAR(buf.events[1].ppqPosition, 1.0, 0.001);
+    EXPECT_NEAR(buf.events[2].ppqPosition, 2.0, 0.001);
+    EXPECT_NEAR(buf.events[3].ppqPosition, 3.0, 0.001);
+}
+
+TEST(MetricModulation, DoubleSpeedDoublesNoteCount) {
+    poly::GrooveState gs{};
+    gs.activeLaneCount = 1;
+    gs.lanes[0].active = true;
+    gs.lanes[0].cycle = {4, 4};
+    gs.lanes[0].hitCount = 4;
+    gs.lanes[0].probability = 1.0f;
+    gs.lanes[0].tempoMultiplier = 2.0f;
+
+    poly::TransportContext tc{};
+    tc.playing = true;
+    tc.tempo = 120.0;
+    tc.sampleRate = 44100.0;
+    tc.ppqStart = 0.0;
+    tc.ppqEnd = 4.0;
+
+    poly::Engine engine;
+    poly::NoteEventBuffer buf;
+    engine.renderRange(tc, gs, buf);
+
+    ASSERT_EQ(buf.count, 8u);
+    EXPECT_NEAR(buf.events[0].ppqPosition, 0.0, 0.001);
+    EXPECT_NEAR(buf.events[1].ppqPosition, 0.5, 0.001);
+    EXPECT_NEAR(buf.events[2].ppqPosition, 1.0, 0.001);
+    EXPECT_NEAR(buf.events[3].ppqPosition, 1.5, 0.001);
+}
+
+TEST(MetricModulation, HalfSpeedHalvesNoteCount) {
+    poly::GrooveState gs{};
+    gs.activeLaneCount = 1;
+    gs.lanes[0].active = true;
+    gs.lanes[0].cycle = {4, 4};
+    gs.lanes[0].hitCount = 4;
+    gs.lanes[0].probability = 1.0f;
+    gs.lanes[0].tempoMultiplier = 0.5f;
+
+    poly::TransportContext tc{};
+    tc.playing = true;
+    tc.tempo = 120.0;
+    tc.sampleRate = 44100.0;
+    tc.ppqStart = 0.0;
+    tc.ppqEnd = 4.0;
+
+    poly::Engine engine;
+    poly::NoteEventBuffer buf;
+    engine.renderRange(tc, gs, buf);
+
+    ASSERT_EQ(buf.count, 2u);
+    EXPECT_NEAR(buf.events[0].ppqPosition, 0.0, 0.001);
+    EXPECT_NEAR(buf.events[1].ppqPosition, 2.0, 0.001);
+}
+
+TEST(MetricModulation, TwoLanesIndependentMultipliers) {
+    poly::GrooveState gs{};
+    gs.activeLaneCount = 2;
+    gs.lanes[0].active = true;
+    gs.lanes[0].cycle = {4, 4};
+    gs.lanes[0].hitCount = 4;
+    gs.lanes[0].probability = 1.0f;
+    gs.lanes[0].midiNote = 36;
+    gs.lanes[0].tempoMultiplier = 1.0f;
+
+    gs.lanes[1].active = true;
+    gs.lanes[1].id = 1;
+    gs.lanes[1].cycle = {4, 4};
+    gs.lanes[1].hitCount = 4;
+    gs.lanes[1].probability = 1.0f;
+    gs.lanes[1].midiNote = 38;
+    gs.lanes[1].tempoMultiplier = 2.0f;
+
+    poly::TransportContext tc{};
+    tc.playing = true;
+    tc.tempo = 120.0;
+    tc.sampleRate = 44100.0;
+    tc.ppqStart = 0.0;
+    tc.ppqEnd = 4.0;
+
+    poly::Engine engine;
+    poly::NoteEventBuffer buf;
+    engine.renderRange(tc, gs, buf);
+
+    int lane0Count = 0, lane1Count = 0;
+    for (size_t i = 0; i < buf.count; ++i) {
+        if (buf.events[i].channel == 0)
+            ++lane0Count;
+        else if (buf.events[i].channel == 1)
+            ++lane1Count;
+    }
+    EXPECT_EQ(lane0Count, 4);
+    EXPECT_EQ(lane1Count, 8);
+}
+
+TEST(MetricModulation, SerializationRoundTrip) {
+    poly::SceneState original{};
+    original.sceneA.activeLaneCount = 2;
+    original.sceneA.lanes[0].tempoMultiplier = 2.5f;
+    original.sceneA.lanes[1].tempoMultiplier = 0.25f;
+    original.sceneB.lanes[0].tempoMultiplier = 4.0f;
+
+    std::vector<uint8_t> buffer;
+    auto write = [&buffer](const void* data, size_t size) -> bool {
+        auto p = static_cast<const uint8_t*>(data);
+        buffer.insert(buffer.end(), p, p + size);
+        return true;
+    };
+    ASSERT_TRUE(poly::writeSceneState(write, original));
+
+    size_t pos = 0;
+    auto read = [&buffer, &pos](void* data, size_t size) -> bool {
+        if (pos + size > buffer.size())
+            return false;
+        std::memcpy(data, buffer.data() + pos, size);
+        pos += size;
+        return true;
+    };
+
+    poly::SceneState restored{};
+    ASSERT_TRUE(poly::readSceneState(read, restored));
+
+    EXPECT_FLOAT_EQ(restored.sceneA.lanes[0].tempoMultiplier, 2.5f);
+    EXPECT_FLOAT_EQ(restored.sceneA.lanes[1].tempoMultiplier, 0.25f);
+    EXPECT_FLOAT_EQ(restored.sceneB.lanes[0].tempoMultiplier, 4.0f);
+    EXPECT_FLOAT_EQ(restored.sceneB.lanes[1].tempoMultiplier, 1.0f);
+}
+
+TEST(MetricModulation, V13BackwardsCompat_DefaultsTo1x) {
+    poly::SceneState original{};
+    original.sceneA.activeLaneCount = 2;
+    original.sceneA.lanes[0].probability = 0.8f;
+    original.sceneB.activeLaneCount = 2;
+    original.select = poly::SceneSelect::A;
+    original.morphAmount = 0.0f;
+
+    std::vector<uint8_t> buffer;
+    auto write = [&buffer](const void* data, size_t size) -> bool {
+        auto p = static_cast<const uint8_t*>(data);
+        buffer.insert(buffer.end(), p, p + size);
+        return true;
+    };
+
+    int32_t v13 = 13;
+    ASSERT_TRUE(write(&v13, sizeof(v13)));
+    ASSERT_TRUE(poly::writeGrooveStateBody(write, original.sceneA, 13));
+    ASSERT_TRUE(poly::writeGrooveStateBody(write, original.sceneB, 13));
+    auto select = static_cast<uint8_t>(original.select);
+    ASSERT_TRUE(write(&select, sizeof(select)));
+    ASSERT_TRUE(write(&original.morphAmount, sizeof(original.morphAmount)));
+    for (int i = 0; i < 128; ++i) {
+        ASSERT_TRUE(write(&original.noteMap.map[static_cast<size_t>(i)], sizeof(int16_t)));
+    }
+    // v13 chain data
+    uint8_t chainEnabled = 0;
+    ASSERT_TRUE(write(&chainEnabled, sizeof(chainEnabled)));
+    int entryCount = 0;
+    ASSERT_TRUE(write(&entryCount, sizeof(entryCount)));
+    uint8_t chainMode = 0;
+    ASSERT_TRUE(write(&chainMode, sizeof(chainMode)));
+    for (int i = 0; i < poly::kMaxChainEntries; ++i) {
+        uint8_t entryScene = 0;
+        ASSERT_TRUE(write(&entryScene, sizeof(entryScene)));
+        int bars = 1;
+        ASSERT_TRUE(write(&bars, sizeof(bars)));
+    }
+
+    size_t pos = 0;
+    auto read = [&buffer, &pos](void* data, size_t size) -> bool {
+        if (pos + size > buffer.size())
+            return false;
+        std::memcpy(data, buffer.data() + pos, size);
+        pos += size;
+        return true;
+    };
+
+    poly::SceneState restored{};
+    ASSERT_TRUE(poly::readSceneState(read, restored));
+
+    EXPECT_FLOAT_EQ(restored.sceneA.lanes[0].tempoMultiplier, 1.0f);
+    EXPECT_FLOAT_EQ(restored.sceneA.lanes[1].tempoMultiplier, 1.0f);
+    EXPECT_FLOAT_EQ(restored.sceneA.lanes[0].probability, 0.8f);
+}
+
+TEST(MetricModulation, InterpolatesBetweenScenes) {
+    poly::GrooveState a{}, b{};
+    a.lanes[0].tempoMultiplier = 1.0f;
+    b.lanes[0].tempoMultiplier = 3.0f;
+
+    auto result = poly::interpolateGrooveState(a, b, 0.5f);
+    EXPECT_FLOAT_EQ(result.lanes[0].tempoMultiplier, 2.0f);
 }
 
 TEST(SceneIO, V1BackwardsCompat) {

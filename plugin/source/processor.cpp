@@ -279,9 +279,13 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
                 continue;
 
             auto additive = computeAdditiveCells(resolved.lanes[lane]);
+            double laneTempoScale = (resolved.lanes[lane].tempoMultiplier > 0.0f)
+                                        ? 1.0 / static_cast<double>(resolved.lanes[lane].tempoMultiplier)
+                                        : 1.0;
             double cycleBeats = additive.count > 0
-                                    ? additive.totalPpq
-                                    : resolved.lanes[lane].cycle.steps * (4.0 / resolved.lanes[lane].cycle.subdivision);
+                                    ? additive.totalPpq * laneTempoScale
+                                    : resolved.lanes[lane].cycle.steps *
+                                          (4.0 / resolved.lanes[lane].cycle.subdivision) * laneTempoScale;
             double lanePhase = std::fmod(tc_.ppqStart / cycleBeats, 1.0);
             if (lanePhase < 0.0)
                 lanePhase += 1.0;
@@ -421,6 +425,9 @@ void PolyProcessor::applyParameter(Steinberg::Vst::ParamID id, double normalized
             break;
         case kCoreFixedPatternLen:
             cfg.fixedPatternLength = static_cast<int>(std::round(normalized * 64.0));
+            break;
+        case kCoreTempoMult:
+            cfg.tempoMultiplier = static_cast<float>(0.25 + normalized * 3.75);
             break;
         default:
             break;

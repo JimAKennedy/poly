@@ -72,6 +72,7 @@ static constexpr CoreParamDef kCoreParamDefs[] = {
     {ParamIDs::kCoreCellCount, "Cell Count", "", 64, 0.0},
     {ParamIDs::kCoreTimeline, "Timeline", "", 1, 0.0},
     {ParamIDs::kCoreFixedPatternLen, "Pattern Length", "", 64, 0.0},
+    {ParamIDs::kCoreTempoMult, "Tempo Mult", "x", 0, 0.2},
 };
 
 } // namespace
@@ -327,6 +328,8 @@ Steinberg::tresult PLUGIN_API PolyController::setComponentState(Steinberg::IBStr
         setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreTimeline), cfg.timeline ? 1.0 : 0.0);
         setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreFixedPatternLen),
                            cfg.fixedPatternLength / 64.0);
+        setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreTempoMult),
+                           static_cast<double>((cfg.tempoMultiplier - 0.25f) / 3.75f));
     }
 
     setParamNormalized(ParamIDs::kMacroComplexity, gs.macros.complexity);
