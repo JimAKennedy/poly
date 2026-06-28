@@ -88,7 +88,7 @@ CRect LaneEditView::laneNameRect() const {
 }
 
 CRect LaneEditView::laneKnobRect(int knob) const {
-    static constexpr double kKnobX[] = {242, 272, 302, 332, 362, 398, 426, 454, 482, 510, 538};
+    static constexpr double kKnobX[] = {242, 272, 302, 332, 362, 398, 426, 454, 482, 510, 538, 566};
     auto bounds = getViewSize();
     if (knob == 11) {
         double x = bounds.left + 538;
