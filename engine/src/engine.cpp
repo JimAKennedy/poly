@@ -309,7 +309,8 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
             ev.velocity = vel;
             double baseDuration = cfg.noteDuration > 0.0f ? static_cast<double>(cfg.noteDuration) : stepDurPpq * 0.5;
             ev.duration = baseDuration * static_cast<double>(std::clamp(durationMod, 0.01f, 4.0f));
-            ev.channel = static_cast<int16_t>(lane);
+            ev.channel = (cfg.midiChannel >= 0) ? cfg.midiChannel : static_cast<int16_t>(lane);
+            ev.laneIndex = static_cast<int16_t>(lane);
 
             out.push(ev);
         }
