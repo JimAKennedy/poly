@@ -4,6 +4,8 @@ Polymetric drum pattern generator -- VST3 instrument outputting MIDI.
 
 [![CI](https://github.com/JimAKennedy/poly/actions/workflows/ci.yml/badge.svg)](https://github.com/JimAKennedy/poly/actions/workflows/ci.yml)
 
+**[Read the guide at poly.jk.digital](https://poly.jk.digital)** -- polyrhythmic traditions, Euclidean rhythm theory, and preset walkthroughs.
+
 Poly generates evolving polyrhythmic grooves from 4-8 independent rhythmic lanes.
 Each lane runs its own cycle length and Euclidean pattern, creating interlocking
 rhythms that shift and recombine over time. The plugin outputs MIDI note events to
@@ -61,8 +63,8 @@ Primary target: **Cubase**. Should work with any VST3-compatible host.
 
 ## Guide
 
-The `site/` directory contains a Starlight-based guide covering polyrhythmic
-traditions, Euclidean rhythm theory, and how to use Poly's preset system.
+**[poly.jk.digital](https://poly.jk.digital)** -- the full guide covering polyrhythmic
+traditions, Euclidean rhythm theory, and how to use Poly's preset system. Source is in `site/`.
 
 ## License
 

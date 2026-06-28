@@ -32,6 +32,16 @@ jk_target_warnings(poly_tests)
 include(GoogleTest)
 gtest_discover_tests(poly_tests)
 
+# --- Fuzz Tests (require LLVM clang with libFuzzer) ---
+if(BUILD_FUZZ_TESTS)
+    add_executable(fuzz_state_io fuzz/fuzz_state_io.cpp)
+    target_link_libraries(fuzz_state_io PRIVATE poly_engine)
+    target_compile_features(fuzz_state_io PRIVATE cxx_std_20)
+    target_compile_options(fuzz_state_io PRIVATE -fsanitize=fuzzer)
+    target_link_options(fuzz_state_io PRIVATE -fsanitize=fuzzer)
+    jk_target_warnings(fuzz_state_io)
+endif()
+
 # --- UI Tests (require VST3 SDK + VSTGUI) ---
 if(NOT POLY_ENGINE_ONLY)
     include(${CMAKE_SOURCE_DIR}/cmake/jk_ui_test_harness.cmake)

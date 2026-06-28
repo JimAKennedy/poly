@@ -189,7 +189,7 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
             }
 
             bool isPatternStep = pattern[static_cast<size_t>(cycleStep)];
-            bool isAnchor = cfg.constraints.anchorSteps.steps[static_cast<size_t>(cycleStep)];
+            bool isAnchor = cfg.constraints.anchorSteps.steps[static_cast<size_t>(cycleStep)] > 0.0f;
 
             bool mutatedToGhost = false;
             if (cfg.mutationRate > 0.0f && !isAnchor) {
@@ -240,11 +240,12 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
             float vel = velBase + spread;
 
             // Accent mask boost gated by emphasis probability + AccentBias envelope
-            if (cfg.accents.steps[static_cast<size_t>(cycleStep)]) {
+            float accentVal = cfg.accents.steps[static_cast<size_t>(cycleStep)];
+            if (accentVal > 0.0f) {
                 float effectiveEmphasis = std::clamp(cfg.emphasisProb + accentMod, 0.0f, 1.0f);
                 float emphRoll = deterministicRand(state.seed, cfg.id, absStep, 2);
                 if (emphRoll < effectiveEmphasis) {
-                    vel += 0.15f;
+                    vel += accentVal * 0.15f;
                 }
             }
 

@@ -87,7 +87,7 @@ CRect LaneEditView::laneNameRect() const {
 }
 
 CRect LaneEditView::laneKnobRect(int knob) const {
-    static constexpr double kKnobX[] = {268, 298, 328, 358, 388, 420, 446, 472, 498, 524, 550};
+    static constexpr double kKnobX[] = {242, 272, 302, 332, 362, 398, 426, 454, 482, 510, 538};
     auto bounds = getViewSize();
     double x = bounds.left + kKnobX[knob];
     return CRect(x, bounds.top + 28, x + 26, bounds.top + 54);
@@ -419,14 +419,14 @@ void LaneEditView::draw(CDrawContext* context) {
     auto groupFont = makeOwned<CFontDesc>("Arial", 7.0);
     context->setFont(groupFont);
     context->setFontColor(CColor(0x50, 0x50, 0x60, 0xFF));
-    CRect patternLabel(bounds.left + 268, bounds.top + 4, bounds.left + 414, bounds.top + 14);
+    CRect patternLabel(bounds.left + 242, bounds.top + 4, bounds.left + 388, bounds.top + 14);
     context->drawString("Pattern", patternLabel, kLeftText);
-    CRect voiceLabel(bounds.left + 420, bounds.top + 4, bounds.left + 575, bounds.top + 14);
+    CRect voiceLabel(bounds.left + 398, bounds.top + 4, bounds.left + 570, bounds.top + 14);
     context->drawString("Voice", voiceLabel, kLeftText);
 
     context->setLineWidth(0.5);
     context->setFrameColor(CColor(0x30, 0x30, 0x40, 0x60));
-    double divX = bounds.left + 414;
+    double divX = bounds.left + 393;
     context->drawLine(CPoint(divX, bounds.top + 14), CPoint(divX, bounds.top + 65));
 
     for (int k = 0; k < kLaneKnobCount; ++k) {
