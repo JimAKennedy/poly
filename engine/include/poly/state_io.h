@@ -13,7 +13,8 @@ static constexpr int32_t kCurrentStateVersion = 12;
 // --- Internal body-only write (no version header, always writes latest body format) ---
 
 template <typename WriteFn>
-bool writeGrooveStateBody(WriteFn&& write, const GrooveState& state, int32_t bodyVersion = kCurrentStateVersion) {
+[[nodiscard]] bool writeGrooveStateBody(WriteFn&& write, const GrooveState& state,
+                                        int32_t bodyVersion = kCurrentStateVersion) {
     if (!write(&state.activeLaneCount, sizeof(state.activeLaneCount)))
         return false;
     if (!write(&state.seed, sizeof(state.seed)))
@@ -211,7 +212,7 @@ bool writeGrooveStateBody(WriteFn&& write, const GrooveState& state, int32_t bod
 
 // --- Internal body-only read (version-aware, no version header) ---
 
-template <typename ReadFn> bool readGrooveStateBody(ReadFn&& read, GrooveState& state, int32_t version) {
+template <typename ReadFn> [[nodiscard]] bool readGrooveStateBody(ReadFn&& read, GrooveState& state, int32_t version) {
     if (!read(&state.activeLaneCount, sizeof(state.activeLaneCount)))
         return false;
     if (!read(&state.seed, sizeof(state.seed)))
@@ -420,14 +421,14 @@ template <typename ReadFn> bool readGrooveStateBody(ReadFn&& read, GrooveState& 
 
 // --- Public: single GrooveState (for engine-layer tests) ---
 
-template <typename WriteFn> bool writeGrooveState(WriteFn&& write, const GrooveState& state) {
+template <typename WriteFn> [[nodiscard]] bool writeGrooveState(WriteFn&& write, const GrooveState& state) {
     int32_t version = kCurrentStateVersion;
     if (!write(&version, sizeof(version)))
         return false;
     return writeGrooveStateBody(write, state);
 }
 
-template <typename ReadFn> bool readGrooveState(ReadFn&& read, GrooveState& state) {
+template <typename ReadFn> [[nodiscard]] bool readGrooveState(ReadFn&& read, GrooveState& state) {
     int32_t version = 0;
     if (!read(&version, sizeof(version)))
         return false;
@@ -438,7 +439,7 @@ template <typename ReadFn> bool readGrooveState(ReadFn&& read, GrooveState& stat
 
 // --- Public: SceneState (v3 format, used by processor/controller) ---
 
-template <typename WriteFn> bool writeSceneState(WriteFn&& write, const SceneState& scene) {
+template <typename WriteFn> [[nodiscard]] bool writeSceneState(WriteFn&& write, const SceneState& scene) {
     int32_t version = kCurrentStateVersion;
     if (!write(&version, sizeof(version)))
         return false;
@@ -458,7 +459,7 @@ template <typename WriteFn> bool writeSceneState(WriteFn&& write, const SceneSta
     return true;
 }
 
-template <typename ReadFn> bool readSceneState(ReadFn&& read, SceneState& scene) {
+template <typename ReadFn> [[nodiscard]] bool readSceneState(ReadFn&& read, SceneState& scene) {
     int32_t version = 0;
     if (!read(&version, sizeof(version)))
         return false;

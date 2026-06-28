@@ -335,13 +335,17 @@ Steinberg::tresult PLUGIN_API PolyController::getState(Steinberg::IBStream* stat
         return Steinberg::kInvalidArgument;
 
     Steinberg::int32 version = kControllerStateVersion;
-    state->write(&version, sizeof(version), nullptr);
+    if (state->write(&version, sizeof(version), nullptr) != Steinberg::kResultOk)
+        return Steinberg::kResultFalse;
 
     for (int i = 0; i < kMaxLanes; ++i) {
         auto len = static_cast<Steinberg::int32>(laneNames_[i].size());
-        state->write(&len, sizeof(len), nullptr);
-        if (len > 0)
-            state->write(laneNames_[i].data(), len, nullptr);
+        if (state->write(&len, sizeof(len), nullptr) != Steinberg::kResultOk)
+            return Steinberg::kResultFalse;
+        if (len > 0) {
+            if (state->write(laneNames_[i].data(), len, nullptr) != Steinberg::kResultOk)
+                return Steinberg::kResultFalse;
+        }
     }
 
     return Steinberg::kResultOk;
@@ -363,7 +367,8 @@ Steinberg::tresult PLUGIN_API PolyController::setState(Steinberg::IBStream* stat
                 break;
             if (len > 0 && len < 256) {
                 laneNames_[i].resize(static_cast<size_t>(len));
-                state->read(laneNames_[i].data(), len, &bytesRead);
+                if (state->read(laneNames_[i].data(), len, &bytesRead) != Steinberg::kResultOk)
+                    laneNames_[i] = kDefaultLaneNames[i];
             } else {
                 laneNames_[i] = kDefaultLaneNames[i];
             }
