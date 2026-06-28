@@ -55,8 +55,8 @@ TEST(Constraint, AnchorStepsAlwaysFireWithZeroProbability) {
     auto state = makeBaseState();
     auto& lane = state.lanes[0];
     lane.probability = 0.0f;
-    lane.constraints.anchorSteps.steps[0] = true;
-    lane.constraints.anchorSteps.steps[4] = true;
+    lane.constraints.anchorSteps.steps[0] = 1.0f;
+    lane.constraints.anchorSteps.steps[4] = 1.0f;
 
     poly::Engine engine;
     poly::NoteEventBuffer buf;
@@ -92,7 +92,7 @@ TEST(Constraint, AnchorStepsBypassActivationSuppression) {
     auto& lane = state.lanes[0];
     lane.hitCount = 8;
     lane.probability = 1.0f;
-    lane.constraints.anchorSteps.steps[0] = true;
+    lane.constraints.anchorSteps.steps[0] = 1.0f;
 
     lane.envelopeCount = 1;
     lane.envelopes[0].active = true;
@@ -239,8 +239,8 @@ TEST(Constraint, SerializationRoundTrip) {
     original.lanes[0].id = 0;
     original.lanes[0].cycle = {.steps = 8, .subdivision = 8};
     original.lanes[0].hitCount = 4;
-    original.lanes[0].constraints.anchorSteps.steps[0] = true;
-    original.lanes[0].constraints.anchorSteps.steps[3] = true;
+    original.lanes[0].constraints.anchorSteps.steps[0] = 1.0f;
+    original.lanes[0].constraints.anchorSteps.steps[3] = 1.0f;
     original.lanes[0].constraints.backbeatProtect = true;
     original.lanes[0].constraints.densityMin = 2;
     original.lanes[0].constraints.densityMax = 6;
@@ -267,9 +267,9 @@ TEST(Constraint, SerializationRoundTrip) {
 
     ASSERT_TRUE(poly::readGrooveState(read, loaded));
 
-    EXPECT_TRUE(loaded.lanes[0].constraints.anchorSteps.steps[0]);
-    EXPECT_TRUE(loaded.lanes[0].constraints.anchorSteps.steps[3]);
-    EXPECT_FALSE(loaded.lanes[0].constraints.anchorSteps.steps[1]);
+    EXPECT_FLOAT_EQ(loaded.lanes[0].constraints.anchorSteps.steps[0], 1.0f);
+    EXPECT_FLOAT_EQ(loaded.lanes[0].constraints.anchorSteps.steps[3], 1.0f);
+    EXPECT_FLOAT_EQ(loaded.lanes[0].constraints.anchorSteps.steps[1], 0.0f);
     EXPECT_TRUE(loaded.lanes[0].constraints.backbeatProtect);
     EXPECT_EQ(loaded.lanes[0].constraints.densityMin, 2);
     EXPECT_EQ(loaded.lanes[0].constraints.densityMax, 6);
@@ -279,7 +279,7 @@ TEST(Constraint, SerializationRoundTrip) {
 TEST(Constraint, SceneSerializationRoundTrip) {
     poly::SceneState original{};
     original.sceneA.activeLaneCount = 1;
-    original.sceneA.lanes[0].constraints.anchorSteps.steps[2] = true;
+    original.sceneA.lanes[0].constraints.anchorSteps.steps[2] = 1.0f;
     original.sceneA.lanes[0].constraints.backbeatProtect = true;
     original.sceneA.lanes[0].constraints.densityMin = 3;
     original.sceneA.lanes[0].constraints.densityMax = 7;
@@ -310,7 +310,7 @@ TEST(Constraint, SceneSerializationRoundTrip) {
 
     ASSERT_TRUE(poly::readSceneState(read, loaded));
 
-    EXPECT_TRUE(loaded.sceneA.lanes[0].constraints.anchorSteps.steps[2]);
+    EXPECT_FLOAT_EQ(loaded.sceneA.lanes[0].constraints.anchorSteps.steps[2], 1.0f);
     EXPECT_TRUE(loaded.sceneA.lanes[0].constraints.backbeatProtect);
     EXPECT_EQ(loaded.sceneA.lanes[0].constraints.densityMin, 3);
     EXPECT_EQ(loaded.sceneA.lanes[0].constraints.densityMax, 7);

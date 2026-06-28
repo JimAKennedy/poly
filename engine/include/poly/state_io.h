@@ -8,7 +8,7 @@
 
 namespace poly {
 
-static constexpr int32_t kCurrentStateVersion = 11;
+static constexpr int32_t kCurrentStateVersion = 12;
 
 // --- Internal body-only write (no version header, always writes latest body format) ---
 
@@ -43,13 +43,20 @@ bool writeGrooveStateBody(WriteFn&& write, const GrooveState& state, int32_t bod
         if (!write(&lane.baseVelocity, sizeof(lane.baseVelocity)))
             return false;
 
-        uint64_t accentBits = 0;
-        for (int s = 0; s < kMaxSteps; ++s) {
-            if (lane.accents.steps[static_cast<size_t>(s)])
-                accentBits |= (uint64_t{1} << s);
+        if (bodyVersion >= 12) {
+            for (int s = 0; s < kMaxSteps; ++s) {
+                if (!write(&lane.accents.steps[static_cast<size_t>(s)], sizeof(float)))
+                    return false;
+            }
+        } else {
+            uint64_t accentBits = 0;
+            for (int s = 0; s < kMaxSteps; ++s) {
+                if (lane.accents.steps[static_cast<size_t>(s)] > 0.0f)
+                    accentBits |= (uint64_t{1} << s);
+            }
+            if (!write(&accentBits, sizeof(accentBits)))
+                return false;
         }
-        if (!write(&accentBits, sizeof(accentBits)))
-            return false;
 
         if (!write(&lane.emphasisProb, sizeof(lane.emphasisProb)))
             return false;
@@ -99,7 +106,7 @@ bool writeGrooveStateBody(WriteFn&& write, const GrooveState& state, int32_t bod
         if (bodyVersion >= 4) {
             uint64_t anchorBits = 0;
             for (int s = 0; s < kMaxSteps; ++s) {
-                if (lane.constraints.anchorSteps.steps[static_cast<size_t>(s)])
+                if (lane.constraints.anchorSteps.steps[static_cast<size_t>(s)] > 0.0f)
                     anchorBits |= (uint64_t{1} << s);
             }
             if (!write(&anchorBits, sizeof(anchorBits)))
@@ -235,11 +242,18 @@ template <typename ReadFn> bool readGrooveStateBody(ReadFn&& read, GrooveState& 
         if (!read(&lane.baseVelocity, sizeof(lane.baseVelocity)))
             return false;
 
-        uint64_t accentBits = 0;
-        if (!read(&accentBits, sizeof(accentBits)))
-            return false;
-        for (int s = 0; s < kMaxSteps; ++s) {
-            lane.accents.steps[static_cast<size_t>(s)] = (accentBits & (uint64_t{1} << s)) != 0;
+        if (version >= 12) {
+            for (int s = 0; s < kMaxSteps; ++s) {
+                if (!read(&lane.accents.steps[static_cast<size_t>(s)], sizeof(float)))
+                    return false;
+            }
+        } else {
+            uint64_t accentBits = 0;
+            if (!read(&accentBits, sizeof(accentBits)))
+                return false;
+            for (int s = 0; s < kMaxSteps; ++s) {
+                lane.accents.steps[static_cast<size_t>(s)] = (accentBits & (uint64_t{1} << s)) != 0 ? 1.0f : 0.0f;
+            }
         }
 
         if (!read(&lane.emphasisProb, sizeof(lane.emphasisProb)))
@@ -298,7 +312,8 @@ template <typename ReadFn> bool readGrooveStateBody(ReadFn&& read, GrooveState& 
             if (!read(&anchorBits, sizeof(anchorBits)))
                 return false;
             for (int s = 0; s < kMaxSteps; ++s) {
-                lane.constraints.anchorSteps.steps[static_cast<size_t>(s)] = (anchorBits & (uint64_t{1} << s)) != 0;
+                lane.constraints.anchorSteps.steps[static_cast<size_t>(s)] =
+                    (anchorBits & (uint64_t{1} << s)) != 0 ? 1.0f : 0.0f;
             }
             uint8_t bbp = 0;
             if (!read(&bbp, sizeof(bbp)))

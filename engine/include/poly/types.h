@@ -63,7 +63,7 @@ struct Cycle {
 };
 
 struct AccentMask {
-    std::array<bool, kMaxSteps> steps{};
+    std::array<float, kMaxSteps> steps{};
 };
 
 // --- Envelopes ---

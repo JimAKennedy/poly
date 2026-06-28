@@ -178,8 +178,8 @@ inline GrooveState makeBreakbeat() {
     snare.hitCount = 2;
     snare.baseVelocity = 105;
     snare.probability = 1.0f;
-    snare.accents.steps[1] = true;
-    snare.accents.steps[3] = true;
+    snare.accents.steps[1] = 1.0f;
+    snare.accents.steps[3] = 1.0f;
     snare.emphasisProb = 0.8f;
 
     auto& hh = s.lanes[2];

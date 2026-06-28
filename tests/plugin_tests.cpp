@@ -156,8 +156,8 @@ static poly::GrooveState makeTestState() {
     lane0.rotation = 1;
     lane0.probability = 0.9f;
     lane0.baseVelocity = 110;
-    lane0.accents.steps[0] = true;
-    lane0.accents.steps[2] = true;
+    lane0.accents.steps[0] = 1.0f;
+    lane0.accents.steps[2] = 1.0f;
     lane0.emphasisProb = 0.6f;
     lane0.ghostFloor = 25;
     lane0.velocitySpread = 0.1f;
@@ -241,9 +241,9 @@ TEST(StateIO, RoundTrip) {
     EXPECT_EQ(lr.rotation, lo.rotation);
     EXPECT_FLOAT_EQ(lr.probability, lo.probability);
     EXPECT_EQ(lr.baseVelocity, lo.baseVelocity);
-    EXPECT_EQ(lr.accents.steps[0], true);
-    EXPECT_EQ(lr.accents.steps[1], false);
-    EXPECT_EQ(lr.accents.steps[2], true);
+    EXPECT_FLOAT_EQ(lr.accents.steps[0], 1.0f);
+    EXPECT_FLOAT_EQ(lr.accents.steps[1], 0.0f);
+    EXPECT_FLOAT_EQ(lr.accents.steps[2], 1.0f);
     EXPECT_FLOAT_EQ(lr.emphasisProb, lo.emphasisProb);
     EXPECT_EQ(lr.ghostFloor, lo.ghostFloor);
     EXPECT_FLOAT_EQ(lr.velocitySpread, lo.velocitySpread);
@@ -348,4 +348,73 @@ TEST(StateIO, DefaultStateRoundTrip) {
     EXPECT_EQ(restored.activeLaneCount, original.activeLaneCount);
     EXPECT_EQ(restored.seed, original.seed);
     EXPECT_FLOAT_EQ(restored.macros.complexity, original.macros.complexity);
+}
+
+TEST(StateIO, V11AccentBitmaskBackwardCompat) {
+    auto original = makeTestState();
+    original.lanes[0].accents.steps[0] = 1.0f;
+    original.lanes[0].accents.steps[2] = 1.0f;
+    original.lanes[0].accents.steps[5] = 1.0f;
+
+    std::vector<uint8_t> buffer;
+    auto write = [&buffer](const void* data, size_t size) -> bool {
+        auto p = static_cast<const uint8_t*>(data);
+        buffer.insert(buffer.end(), p, p + size);
+        return true;
+    };
+
+    int32_t v11 = 11;
+    ASSERT_TRUE(write(&v11, sizeof(v11)));
+    ASSERT_TRUE(poly::writeGrooveStateBody(write, original, 11));
+
+    size_t pos = 0;
+    auto read = [&buffer, &pos](void* data, size_t size) -> bool {
+        if (pos + size > buffer.size())
+            return false;
+        std::memcpy(data, buffer.data() + pos, size);
+        pos += size;
+        return true;
+    };
+
+    poly::GrooveState restored{};
+    ASSERT_TRUE(poly::readGrooveState(read, restored));
+
+    EXPECT_FLOAT_EQ(restored.lanes[0].accents.steps[0], 1.0f);
+    EXPECT_FLOAT_EQ(restored.lanes[0].accents.steps[1], 0.0f);
+    EXPECT_FLOAT_EQ(restored.lanes[0].accents.steps[2], 1.0f);
+    EXPECT_FLOAT_EQ(restored.lanes[0].accents.steps[3], 0.0f);
+    EXPECT_FLOAT_EQ(restored.lanes[0].accents.steps[5], 1.0f);
+}
+
+TEST(StateIO, V12FloatAccentRoundTrip) {
+    auto original = makeTestState();
+    original.lanes[0].accents.steps[0] = 0.75f;
+    original.lanes[0].accents.steps[1] = 0.25f;
+    original.lanes[0].accents.steps[2] = 1.0f;
+    original.lanes[0].accents.steps[3] = 0.0f;
+
+    std::vector<uint8_t> buffer;
+    auto write = [&buffer](const void* data, size_t size) -> bool {
+        auto p = static_cast<const uint8_t*>(data);
+        buffer.insert(buffer.end(), p, p + size);
+        return true;
+    };
+    ASSERT_TRUE(poly::writeGrooveState(write, original));
+
+    size_t pos = 0;
+    auto read = [&buffer, &pos](void* data, size_t size) -> bool {
+        if (pos + size > buffer.size())
+            return false;
+        std::memcpy(data, buffer.data() + pos, size);
+        pos += size;
+        return true;
+    };
+
+    poly::GrooveState restored{};
+    ASSERT_TRUE(poly::readGrooveState(read, restored));
+
+    EXPECT_FLOAT_EQ(restored.lanes[0].accents.steps[0], 0.75f);
+    EXPECT_FLOAT_EQ(restored.lanes[0].accents.steps[1], 0.25f);
+    EXPECT_FLOAT_EQ(restored.lanes[0].accents.steps[2], 1.0f);
+    EXPECT_FLOAT_EQ(restored.lanes[0].accents.steps[3], 0.0f);
 }
