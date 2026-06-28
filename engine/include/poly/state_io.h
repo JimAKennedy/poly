@@ -8,12 +8,13 @@
 
 namespace poly {
 
-static constexpr int32_t kCurrentStateVersion = 11;
+static constexpr int32_t kCurrentStateVersion = 12;
 
 // --- Internal body-only write (no version header, always writes latest body format) ---
 
 template <typename WriteFn>
-bool writeGrooveStateBody(WriteFn&& write, const GrooveState& state, int32_t bodyVersion = kCurrentStateVersion) {
+[[nodiscard]] bool writeGrooveStateBody(WriteFn&& write, const GrooveState& state,
+                                        int32_t bodyVersion = kCurrentStateVersion) {
     if (!write(&state.activeLaneCount, sizeof(state.activeLaneCount)))
         return false;
     if (!write(&state.seed, sizeof(state.seed)))
@@ -43,13 +44,20 @@ bool writeGrooveStateBody(WriteFn&& write, const GrooveState& state, int32_t bod
         if (!write(&lane.baseVelocity, sizeof(lane.baseVelocity)))
             return false;
 
-        uint64_t accentBits = 0;
-        for (int s = 0; s < kMaxSteps; ++s) {
-            if (lane.accents.steps[static_cast<size_t>(s)])
-                accentBits |= (uint64_t{1} << s);
+        if (bodyVersion >= 12) {
+            for (int s = 0; s < kMaxSteps; ++s) {
+                if (!write(&lane.accents.steps[static_cast<size_t>(s)], sizeof(float)))
+                    return false;
+            }
+        } else {
+            uint64_t accentBits = 0;
+            for (int s = 0; s < kMaxSteps; ++s) {
+                if (lane.accents.steps[static_cast<size_t>(s)] > 0.0f)
+                    accentBits |= (uint64_t{1} << s);
+            }
+            if (!write(&accentBits, sizeof(accentBits)))
+                return false;
         }
-        if (!write(&accentBits, sizeof(accentBits)))
-            return false;
 
         if (!write(&lane.emphasisProb, sizeof(lane.emphasisProb)))
             return false;
@@ -99,7 +107,7 @@ bool writeGrooveStateBody(WriteFn&& write, const GrooveState& state, int32_t bod
         if (bodyVersion >= 4) {
             uint64_t anchorBits = 0;
             for (int s = 0; s < kMaxSteps; ++s) {
-                if (lane.constraints.anchorSteps.steps[static_cast<size_t>(s)])
+                if (lane.constraints.anchorSteps.steps[static_cast<size_t>(s)] > 0.0f)
                     anchorBits |= (uint64_t{1} << s);
             }
             if (!write(&anchorBits, sizeof(anchorBits)))
@@ -204,7 +212,7 @@ bool writeGrooveStateBody(WriteFn&& write, const GrooveState& state, int32_t bod
 
 // --- Internal body-only read (version-aware, no version header) ---
 
-template <typename ReadFn> bool readGrooveStateBody(ReadFn&& read, GrooveState& state, int32_t version) {
+template <typename ReadFn> [[nodiscard]] bool readGrooveStateBody(ReadFn&& read, GrooveState& state, int32_t version) {
     if (!read(&state.activeLaneCount, sizeof(state.activeLaneCount)))
         return false;
     if (!read(&state.seed, sizeof(state.seed)))
@@ -235,11 +243,18 @@ template <typename ReadFn> bool readGrooveStateBody(ReadFn&& read, GrooveState& 
         if (!read(&lane.baseVelocity, sizeof(lane.baseVelocity)))
             return false;
 
-        uint64_t accentBits = 0;
-        if (!read(&accentBits, sizeof(accentBits)))
-            return false;
-        for (int s = 0; s < kMaxSteps; ++s) {
-            lane.accents.steps[static_cast<size_t>(s)] = (accentBits & (uint64_t{1} << s)) != 0;
+        if (version >= 12) {
+            for (int s = 0; s < kMaxSteps; ++s) {
+                if (!read(&lane.accents.steps[static_cast<size_t>(s)], sizeof(float)))
+                    return false;
+            }
+        } else {
+            uint64_t accentBits = 0;
+            if (!read(&accentBits, sizeof(accentBits)))
+                return false;
+            for (int s = 0; s < kMaxSteps; ++s) {
+                lane.accents.steps[static_cast<size_t>(s)] = (accentBits & (uint64_t{1} << s)) != 0 ? 1.0f : 0.0f;
+            }
         }
 
         if (!read(&lane.emphasisProb, sizeof(lane.emphasisProb)))
@@ -298,7 +313,8 @@ template <typename ReadFn> bool readGrooveStateBody(ReadFn&& read, GrooveState& 
             if (!read(&anchorBits, sizeof(anchorBits)))
                 return false;
             for (int s = 0; s < kMaxSteps; ++s) {
-                lane.constraints.anchorSteps.steps[static_cast<size_t>(s)] = (anchorBits & (uint64_t{1} << s)) != 0;
+                lane.constraints.anchorSteps.steps[static_cast<size_t>(s)] =
+                    (anchorBits & (uint64_t{1} << s)) != 0 ? 1.0f : 0.0f;
             }
             uint8_t bbp = 0;
             if (!read(&bbp, sizeof(bbp)))
@@ -405,14 +421,14 @@ template <typename ReadFn> bool readGrooveStateBody(ReadFn&& read, GrooveState& 
 
 // --- Public: single GrooveState (for engine-layer tests) ---
 
-template <typename WriteFn> bool writeGrooveState(WriteFn&& write, const GrooveState& state) {
+template <typename WriteFn> [[nodiscard]] bool writeGrooveState(WriteFn&& write, const GrooveState& state) {
     int32_t version = kCurrentStateVersion;
     if (!write(&version, sizeof(version)))
         return false;
     return writeGrooveStateBody(write, state);
 }
 
-template <typename ReadFn> bool readGrooveState(ReadFn&& read, GrooveState& state) {
+template <typename ReadFn> [[nodiscard]] bool readGrooveState(ReadFn&& read, GrooveState& state) {
     int32_t version = 0;
     if (!read(&version, sizeof(version)))
         return false;
@@ -423,7 +439,7 @@ template <typename ReadFn> bool readGrooveState(ReadFn&& read, GrooveState& stat
 
 // --- Public: SceneState (v3 format, used by processor/controller) ---
 
-template <typename WriteFn> bool writeSceneState(WriteFn&& write, const SceneState& scene) {
+template <typename WriteFn> [[nodiscard]] bool writeSceneState(WriteFn&& write, const SceneState& scene) {
     int32_t version = kCurrentStateVersion;
     if (!write(&version, sizeof(version)))
         return false;
@@ -443,7 +459,7 @@ template <typename WriteFn> bool writeSceneState(WriteFn&& write, const SceneSta
     return true;
 }
 
-template <typename ReadFn> bool readSceneState(ReadFn&& read, SceneState& scene) {
+template <typename ReadFn> [[nodiscard]] bool readSceneState(ReadFn&& read, SceneState& scene) {
     int32_t version = 0;
     if (!read(&version, sizeof(version)))
         return false;

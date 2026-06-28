@@ -314,7 +314,7 @@ TEST(EnvelopeTargets, AccentBiasModulation) {
     auto cfg = makeEnvelopeLane();
     cfg.emphasisProb = 0.0f;
     for (int i = 0; i < 4; ++i)
-        cfg.accents.steps[i] = true;
+        cfg.accents.steps[i] = 1.0f;
     cfg.baseVelocity = 80;
     cfg.velocitySpread = 0.0f;
 
@@ -426,7 +426,7 @@ TEST(EnvelopeTargets, ZeroDepthNoEffectAllTargets) {
     auto cfg = makeEnvelopeLane();
     cfg.probability = 0.8f;
     cfg.emphasisProb = 0.5f;
-    cfg.accents.steps[0] = true;
+    cfg.accents.steps[0] = 1.0f;
     cfg.humanizeMs = 0.0f;
     cfg.noteDuration = 1.0f;
 

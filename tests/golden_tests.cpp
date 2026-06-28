@@ -290,14 +290,14 @@ TEST(GoldenDeterminism, DynamicShapingBlockIndependence) {
     auto state = makeTestState();
 
     // Configure dynamic shaping on the kick lane
-    state.lanes[0].accents.steps[0] = true;
-    state.lanes[0].accents.steps[2] = true;
+    state.lanes[0].accents.steps[0] = 1.0f;
+    state.lanes[0].accents.steps[2] = 1.0f;
     state.lanes[0].emphasisProb = 0.7f;
     state.lanes[0].ghostFloor = 20;
 
     // Ghost lane already has ghostFloor=25; add accents
-    state.lanes[3].accents.steps[0] = true;
-    state.lanes[3].accents.steps[3] = true;
+    state.lanes[3].accents.steps[0] = 1.0f;
+    state.lanes[3].accents.steps[3] = 1.0f;
     state.lanes[3].emphasisProb = 0.5f;
 
     auto small = renderSorted(engine, state, 0.0, 16.0, 0.05);
@@ -313,7 +313,7 @@ TEST(GoldenDeterminism, DynamicShapingLoopRestart) {
     poly::Engine engine;
     auto state = makeTestState();
 
-    state.lanes[0].accents.steps[0] = true;
+    state.lanes[0].accents.steps[0] = 1.0f;
     state.lanes[0].emphasisProb = 0.8f;
     state.lanes[3].ghostFloor = 40;
 
@@ -428,8 +428,8 @@ TEST(GoldenDeterminism, ExtendedEnvelopeTargetsBlockIndependence) {
     auto state = makeTestState();
 
     // AccentBias on kick
-    state.lanes[0].accents.steps[0] = true;
-    state.lanes[0].accents.steps[2] = true;
+    state.lanes[0].accents.steps[0] = 1.0f;
+    state.lanes[0].accents.steps[2] = 1.0f;
     state.lanes[0].emphasisProb = 0.3f;
     state.lanes[0].envelopes[0].envelope = {poly::EnvTarget::AccentBias, 3.0f, poly::Shape::Sine, 0.8f, 0.0f};
     state.lanes[0].envelopes[0].active = true;
@@ -663,8 +663,8 @@ TEST(GoldenMutation, RespectsAnchors) {
     kick.baseVelocity = 100;
     kick.probability = 1.0f;
 
-    kick.constraints.anchorSteps.steps[0] = true;
-    kick.constraints.anchorSteps.steps[2] = true;
+    kick.constraints.anchorSteps.steps[0] = 1.0f;
+    kick.constraints.anchorSteps.steps[2] = 1.0f;
 
     auto baseline = renderSorted(engine, state, 0.0, 16.0, 0.5);
 

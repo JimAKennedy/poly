@@ -52,7 +52,7 @@ std::vector<poly::NoteEvent> renderLane(const poly::LaneConfig& cfg, uint64_t se
 
 TEST(DynamicShaping, AccentBoostApplied) {
     auto cfg = makeBasicLane();
-    cfg.accents.steps[0] = true;
+    cfg.accents.steps[0] = 1.0f;
 
     auto events = renderLane(cfg);
     ASSERT_GE(events.size(), 4u);
@@ -76,8 +76,8 @@ TEST(DynamicShaping, AccentNoMaskNoBoost) {
 
 TEST(DynamicShaping, AccentMultipleSteps) {
     auto cfg = makeBasicLane();
-    cfg.accents.steps[0] = true;
-    cfg.accents.steps[2] = true;
+    cfg.accents.steps[0] = 1.0f;
+    cfg.accents.steps[2] = 1.0f;
 
     auto events = renderLane(cfg);
     ASSERT_GE(events.size(), 4u);
@@ -89,12 +89,30 @@ TEST(DynamicShaping, AccentMultipleSteps) {
     EXPECT_NEAR(events[3].velocity, baseVel, 0.01f);
 }
 
+TEST(DynamicShaping, GraduatedAccentVelocity) {
+    auto cfg = makeBasicLane();
+    cfg.accents.steps[0] = 1.0f;
+    cfg.accents.steps[1] = 0.5f;
+    cfg.accents.steps[2] = 0.0f;
+    cfg.emphasisProb = 1.0f;
+
+    auto events = renderLane(cfg);
+    ASSERT_GE(events.size(), 3u);
+
+    float baseVel = 100.0f / 127.0f;
+    float fullBoost = events[0].velocity - baseVel;
+    float halfBoost = events[1].velocity - baseVel;
+    EXPECT_GT(fullBoost, 0.1f);
+    EXPECT_NEAR(halfBoost, fullBoost * 0.5f, 0.01f);
+    EXPECT_NEAR(events[2].velocity, baseVel, 0.01f);
+}
+
 // --- Emphasis Probability ---
 
 TEST(DynamicShaping, EmphasisZeroSuppressesAccent) {
     auto cfg = makeBasicLane();
     for (int i = 0; i < 4; ++i)
-        cfg.accents.steps[i] = true;
+        cfg.accents.steps[i] = 1.0f;
     cfg.emphasisProb = 0.0f;
 
     auto events = renderLane(cfg);
@@ -107,7 +125,7 @@ TEST(DynamicShaping, EmphasisZeroSuppressesAccent) {
 TEST(DynamicShaping, EmphasisOneAlwaysExpresses) {
     auto cfg = makeBasicLane();
     for (int i = 0; i < 4; ++i)
-        cfg.accents.steps[i] = true;
+        cfg.accents.steps[i] = 1.0f;
     cfg.emphasisProb = 1.0f;
 
     auto events = renderLane(cfg);
@@ -122,7 +140,7 @@ TEST(DynamicShaping, EmphasisPartialMix) {
     cfg.cycle = {.steps = 16, .subdivision = 16};
     cfg.hitCount = 16;
     for (int i = 0; i < 16; ++i)
-        cfg.accents.steps[i] = true;
+        cfg.accents.steps[i] = 1.0f;
     cfg.emphasisProb = 0.5f;
 
     poly::Engine engine;
@@ -195,7 +213,7 @@ TEST(DynamicShaping, AccentPlusFloor) {
     auto cfg = makeBasicLane();
     cfg.baseVelocity = 20;
     cfg.ghostFloor = 30;
-    cfg.accents.steps[0] = true;
+    cfg.accents.steps[0] = 1.0f;
     cfg.emphasisProb = 1.0f;
 
     auto events = renderLane(cfg);
@@ -212,7 +230,7 @@ TEST(DynamicShaping, VelocityClampedToRange) {
     auto cfg = makeBasicLane();
     cfg.baseVelocity = 127;
     cfg.velocitySpread = 0.2f;
-    cfg.accents.steps[0] = true;
+    cfg.accents.steps[0] = 1.0f;
     cfg.emphasisProb = 1.0f;
 
     auto events = renderLane(cfg);
@@ -224,8 +242,8 @@ TEST(DynamicShaping, VelocityClampedToRange) {
 
 TEST(DynamicShaping, Deterministic) {
     auto cfg = makeBasicLane();
-    cfg.accents.steps[0] = true;
-    cfg.accents.steps[2] = true;
+    cfg.accents.steps[0] = 1.0f;
+    cfg.accents.steps[2] = 1.0f;
     cfg.emphasisProb = 0.7f;
     cfg.ghostFloor = 20;
     cfg.velocitySpread = 0.1f;
