@@ -3,6 +3,7 @@
 Polymetric drum pattern generator -- VST3 instrument outputting MIDI.
 
 [![CI](https://github.com/JimAKennedy/poly/actions/workflows/ci.yml/badge.svg)](https://github.com/JimAKennedy/poly/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/JimAKennedy/poly/graph/badge.svg)](https://codecov.io/gh/JimAKennedy/poly)
 
 **[Read the guide at poly.jk.digital](https://poly.jk.digital)** -- polyrhythmic traditions, Euclidean rhythm theory, and preset walkthroughs.
 

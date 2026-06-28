@@ -20,6 +20,16 @@ export default defineConfig({
 			components: {
 				Banner: './src/components/Banner.astro',
 			},
+			head: [
+				{
+					tag: 'meta',
+					attrs: { property: 'og:image', content: 'https://jimakennedy.github.io/poly/og-image.png' },
+				},
+				{
+					tag: 'meta',
+					attrs: { name: 'twitter:image', content: 'https://jimakennedy.github.io/poly/og-image.png' },
+				},
+			],
 			customCss: ['./src/styles/custom.css'],
 			sidebar: [
 				{ label: 'Introduction', slug: 'introduction' },
