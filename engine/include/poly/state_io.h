@@ -8,7 +8,7 @@
 
 namespace poly {
 
-static constexpr int32_t kCurrentStateVersion = 12;
+static constexpr int32_t kCurrentStateVersion = 13;
 
 // --- Internal body-only write (no version header, always writes latest body format) ---
 
@@ -456,6 +456,24 @@ template <typename WriteFn> [[nodiscard]] bool writeSceneState(WriteFn&& write, 
         if (!write(&scene.noteMap.map[static_cast<size_t>(i)], sizeof(int16_t)))
             return false;
     }
+
+    // v13: scene chain config
+    uint8_t chainEnabled = scene.chain.enabled ? 1 : 0;
+    if (!write(&chainEnabled, sizeof(chainEnabled)))
+        return false;
+    if (!write(&scene.chain.entryCount, sizeof(scene.chain.entryCount)))
+        return false;
+    auto chainMode = static_cast<uint8_t>(scene.chain.mode);
+    if (!write(&chainMode, sizeof(chainMode)))
+        return false;
+    for (int i = 0; i < kMaxChainEntries; ++i) {
+        auto entryScene = static_cast<uint8_t>(scene.chain.entries[static_cast<size_t>(i)].scene);
+        if (!write(&entryScene, sizeof(entryScene)))
+            return false;
+        if (!write(&scene.chain.entries[static_cast<size_t>(i)].bars, sizeof(int)))
+            return false;
+    }
+
     return true;
 }
 
@@ -493,6 +511,30 @@ template <typename ReadFn> [[nodiscard]] bool readSceneState(ReadFn&& read, Scen
     } else {
         scene.noteMap.reset();
     }
+
+    if (version >= 13) {
+        uint8_t chainEnabled = 0;
+        if (!read(&chainEnabled, sizeof(chainEnabled)))
+            return false;
+        scene.chain.enabled = (chainEnabled != 0);
+        if (!read(&scene.chain.entryCount, sizeof(scene.chain.entryCount)))
+            return false;
+        uint8_t chainMode = 0;
+        if (!read(&chainMode, sizeof(chainMode)))
+            return false;
+        scene.chain.mode = static_cast<ChainMode>(chainMode);
+        for (int i = 0; i < kMaxChainEntries; ++i) {
+            uint8_t entryScene = 0;
+            if (!read(&entryScene, sizeof(entryScene)))
+                return false;
+            scene.chain.entries[static_cast<size_t>(i)].scene = static_cast<SceneSelect>(entryScene);
+            if (!read(&scene.chain.entries[static_cast<size_t>(i)].bars, sizeof(int)))
+                return false;
+        }
+    } else {
+        scene.chain = SceneChainConfig{};
+    }
+
     return true;
 }
 

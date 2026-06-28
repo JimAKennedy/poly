@@ -225,6 +225,208 @@ TEST(SceneIO, V2BackwardsCompat) {
     EXPECT_FLOAT_EQ(scene.morphAmount, 0.0f);
 }
 
+// --- Scene Chain tests ---
+
+TEST(SceneChain, AdvancesAtBarBoundary) {
+    poly::SceneChainConfig config{};
+    config.entryCount = 2;
+    config.entries[0] = {poly::SceneSelect::A, 2};
+    config.entries[1] = {poly::SceneSelect::B, 2};
+    config.mode = poly::ChainMode::Loop;
+    config.enabled = true;
+
+    poly::SceneChainState state{};
+
+    EXPECT_EQ(state.update(config, 0.0), poly::SceneSelect::A);
+    EXPECT_EQ(state.update(config, 4.0), poly::SceneSelect::A);
+    EXPECT_EQ(state.update(config, 8.0), poly::SceneSelect::B);
+    EXPECT_EQ(state.update(config, 12.0), poly::SceneSelect::B);
+    EXPECT_EQ(state.update(config, 16.0), poly::SceneSelect::A);
+}
+
+TEST(SceneChain, OneShotStopsAtEnd) {
+    poly::SceneChainConfig config{};
+    config.entryCount = 2;
+    config.entries[0] = {poly::SceneSelect::A, 1};
+    config.entries[1] = {poly::SceneSelect::B, 1};
+    config.mode = poly::ChainMode::OneShot;
+
+    poly::SceneChainState state{};
+
+    EXPECT_EQ(state.update(config, 0.0), poly::SceneSelect::A);
+    EXPECT_EQ(state.update(config, 4.0), poly::SceneSelect::B);
+    EXPECT_EQ(state.update(config, 8.0), poly::SceneSelect::B);
+    EXPECT_EQ(state.update(config, 12.0), poly::SceneSelect::B);
+}
+
+TEST(SceneChain, PingPongReversesDirection) {
+    poly::SceneChainConfig config{};
+    config.entryCount = 3;
+    config.entries[0] = {poly::SceneSelect::A, 1};
+    config.entries[1] = {poly::SceneSelect::Morph, 1};
+    config.entries[2] = {poly::SceneSelect::B, 1};
+    config.mode = poly::ChainMode::PingPong;
+
+    poly::SceneChainState state{};
+
+    EXPECT_EQ(state.update(config, 0.0), poly::SceneSelect::A);
+    EXPECT_EQ(state.update(config, 4.0), poly::SceneSelect::Morph);
+    EXPECT_EQ(state.update(config, 8.0), poly::SceneSelect::B);
+    EXPECT_EQ(state.update(config, 12.0), poly::SceneSelect::Morph);
+    EXPECT_EQ(state.update(config, 16.0), poly::SceneSelect::A);
+    EXPECT_EQ(state.update(config, 20.0), poly::SceneSelect::Morph);
+}
+
+TEST(SceneChain, ResetClearsState) {
+    poly::SceneChainConfig config{};
+    config.entryCount = 2;
+    config.entries[0] = {poly::SceneSelect::A, 1};
+    config.entries[1] = {poly::SceneSelect::B, 1};
+    config.mode = poly::ChainMode::Loop;
+
+    poly::SceneChainState state{};
+    state.update(config, 0.0);
+    state.update(config, 4.0);
+    EXPECT_EQ(state.update(config, 8.0), poly::SceneSelect::A);
+
+    state.reset();
+    EXPECT_EQ(state.update(config, 0.0), poly::SceneSelect::A);
+}
+
+TEST(SceneChain, SingleEntryStaysFixed) {
+    poly::SceneChainConfig config{};
+    config.entryCount = 1;
+    config.entries[0] = {poly::SceneSelect::B, 4};
+    config.mode = poly::ChainMode::Loop;
+
+    poly::SceneChainState state{};
+
+    EXPECT_EQ(state.update(config, 0.0), poly::SceneSelect::B);
+    EXPECT_EQ(state.update(config, 16.0), poly::SceneSelect::B);
+    EXPECT_EQ(state.update(config, 32.0), poly::SceneSelect::B);
+}
+
+TEST(SceneChain, EmptyChainDefaultsToA) {
+    poly::SceneChainConfig config{};
+    config.entryCount = 0;
+
+    poly::SceneChainState state{};
+    EXPECT_EQ(state.update(config, 0.0), poly::SceneSelect::A);
+}
+
+TEST(SceneChain, MultiBarEntries) {
+    poly::SceneChainConfig config{};
+    config.entryCount = 2;
+    config.entries[0] = {poly::SceneSelect::A, 4};
+    config.entries[1] = {poly::SceneSelect::B, 2};
+    config.mode = poly::ChainMode::Loop;
+
+    poly::SceneChainState state{};
+
+    // A for 4 bars (0-15 PPQ)
+    EXPECT_EQ(state.update(config, 0.0), poly::SceneSelect::A);
+    EXPECT_EQ(state.update(config, 4.0), poly::SceneSelect::A);
+    EXPECT_EQ(state.update(config, 8.0), poly::SceneSelect::A);
+    EXPECT_EQ(state.update(config, 12.0), poly::SceneSelect::A);
+    // B for 2 bars (16-23 PPQ)
+    EXPECT_EQ(state.update(config, 16.0), poly::SceneSelect::B);
+    EXPECT_EQ(state.update(config, 20.0), poly::SceneSelect::B);
+    // Back to A
+    EXPECT_EQ(state.update(config, 24.0), poly::SceneSelect::A);
+}
+
+// --- Scene Chain serialization ---
+
+TEST(SceneChainIO, RoundTrip) {
+    poly::SceneState original{};
+    original.sceneA.activeLaneCount = 4;
+    original.sceneB.activeLaneCount = 6;
+    original.select = poly::SceneSelect::A;
+    original.morphAmount = 0.0f;
+
+    original.chain.enabled = true;
+    original.chain.entryCount = 3;
+    original.chain.mode = poly::ChainMode::PingPong;
+    original.chain.entries[0] = {poly::SceneSelect::A, 4};
+    original.chain.entries[1] = {poly::SceneSelect::Morph, 2};
+    original.chain.entries[2] = {poly::SceneSelect::B, 8};
+
+    std::vector<uint8_t> buffer;
+    auto write = [&buffer](const void* data, size_t size) -> bool {
+        auto p = static_cast<const uint8_t*>(data);
+        buffer.insert(buffer.end(), p, p + size);
+        return true;
+    };
+    ASSERT_TRUE(poly::writeSceneState(write, original));
+
+    size_t pos = 0;
+    auto read = [&buffer, &pos](void* data, size_t size) -> bool {
+        if (pos + size > buffer.size())
+            return false;
+        std::memcpy(data, buffer.data() + pos, size);
+        pos += size;
+        return true;
+    };
+
+    poly::SceneState restored{};
+    ASSERT_TRUE(poly::readSceneState(read, restored));
+
+    EXPECT_EQ(restored.chain.enabled, true);
+    EXPECT_EQ(restored.chain.entryCount, 3);
+    EXPECT_EQ(static_cast<uint8_t>(restored.chain.mode), static_cast<uint8_t>(poly::ChainMode::PingPong));
+    EXPECT_EQ(static_cast<uint8_t>(restored.chain.entries[0].scene), static_cast<uint8_t>(poly::SceneSelect::A));
+    EXPECT_EQ(restored.chain.entries[0].bars, 4);
+    EXPECT_EQ(static_cast<uint8_t>(restored.chain.entries[1].scene), static_cast<uint8_t>(poly::SceneSelect::Morph));
+    EXPECT_EQ(restored.chain.entries[1].bars, 2);
+    EXPECT_EQ(static_cast<uint8_t>(restored.chain.entries[2].scene), static_cast<uint8_t>(poly::SceneSelect::B));
+    EXPECT_EQ(restored.chain.entries[2].bars, 8);
+}
+
+TEST(SceneChainIO, V12BackwardsCompat_NoChain) {
+    // Write a v12 scene state (no chain data) and verify it reads with chain disabled
+    poly::SceneState original{};
+    original.sceneA.activeLaneCount = 4;
+    original.sceneB.activeLaneCount = 6;
+    original.select = poly::SceneSelect::B;
+    original.morphAmount = 0.5f;
+
+    std::vector<uint8_t> buffer;
+    auto write = [&buffer](const void* data, size_t size) -> bool {
+        auto p = static_cast<const uint8_t*>(data);
+        buffer.insert(buffer.end(), p, p + size);
+        return true;
+    };
+
+    // Write as v12 (manually write version header + body without chain)
+    int32_t v12 = 12;
+    ASSERT_TRUE(write(&v12, sizeof(v12)));
+    ASSERT_TRUE(poly::writeGrooveStateBody(write, original.sceneA, 12));
+    ASSERT_TRUE(poly::writeGrooveStateBody(write, original.sceneB, 12));
+    auto select = static_cast<uint8_t>(original.select);
+    ASSERT_TRUE(write(&select, sizeof(select)));
+    ASSERT_TRUE(write(&original.morphAmount, sizeof(original.morphAmount)));
+    for (int i = 0; i < 128; ++i) {
+        ASSERT_TRUE(write(&original.noteMap.map[static_cast<size_t>(i)], sizeof(int16_t)));
+    }
+
+    size_t pos = 0;
+    auto read = [&buffer, &pos](void* data, size_t size) -> bool {
+        if (pos + size > buffer.size())
+            return false;
+        std::memcpy(data, buffer.data() + pos, size);
+        pos += size;
+        return true;
+    };
+
+    poly::SceneState restored{};
+    ASSERT_TRUE(poly::readSceneState(read, restored));
+
+    EXPECT_EQ(restored.chain.enabled, false);
+    EXPECT_EQ(restored.chain.entryCount, 0);
+    EXPECT_EQ(restored.sceneA.activeLaneCount, 4);
+    EXPECT_EQ(static_cast<uint8_t>(restored.select), static_cast<uint8_t>(poly::SceneSelect::B));
+}
+
 TEST(SceneIO, V1BackwardsCompat) {
     poly::GrooveState gs{};
     gs.activeLaneCount = 2;
