@@ -230,8 +230,8 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
             .channel = note.channel,
         });
 
-        if (note.channel >= 0 && note.channel < kMaxLanes) {
-            laneVelocity[note.channel] = note.velocity;
+        if (note.laneIndex >= 0 && note.laneIndex < kMaxLanes) {
+            laneVelocity[note.laneIndex] = note.velocity;
         }
     }
 
@@ -428,6 +428,9 @@ void PolyProcessor::applyParameter(Steinberg::Vst::ParamID id, double normalized
             break;
         case kCoreTempoMult:
             cfg.tempoMultiplier = static_cast<float>(0.25 + normalized * 3.75);
+            break;
+        case kCoreMidiChannel:
+            cfg.midiChannel = static_cast<int16_t>(std::round(normalized * 16.0)) - 1;
             break;
         default:
             break;

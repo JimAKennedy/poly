@@ -37,6 +37,7 @@ struct NoteEvent {
     float velocity = 0.0f;
     double duration = 0.0;
     int16_t channel = 0;
+    int16_t laneIndex = 0;
 };
 
 struct NoteEventBuffer {
