@@ -36,6 +36,7 @@ const LaneEditView::KnobDef LaneEditView::kLaneKnobs[kLaneKnobCount] = {
     {ParamIDs::kSwingAmount, false, "Swing", 100.0, ValueFormat::Percent},
     {ParamIDs::kHumanizeMs, false, "Hum", 50.0, ValueFormat::Ms},
     {ParamIDs::kKotekanSource, false, "Kotek", 8.0, ValueFormat::KotekanSrc},
+    {ParamIDs::kCoreMidiChannel, true, "Ch", 16.0, ValueFormat::MidiChannel},
 };
 
 const LaneEditView::KnobDef LaneEditView::kPhraseKnobs[kPhraseKnobCount] = {
@@ -87,7 +88,7 @@ CRect LaneEditView::laneNameRect() const {
 }
 
 CRect LaneEditView::laneKnobRect(int knob) const {
-    static constexpr double kKnobX[] = {242, 272, 302, 332, 362, 398, 426, 454, 482, 510, 538};
+    static constexpr double kKnobX[] = {242, 272, 302, 332, 362, 398, 426, 454, 482, 510, 538, 566};
     auto bounds = getViewSize();
     double x = bounds.left + kKnobX[knob];
     return CRect(x, bounds.top + 28, x + 26, bounds.top + 54);
@@ -203,6 +204,12 @@ void LaneEditView::drawKnob(CDrawContext* ctx, const CRect& rect, double value, 
         int octave = (note / 12) - 2;
         const char* name = kNoteNames[note % 12];
         std::snprintf(valStr, sizeof(valStr), "%s%d", name, octave);
+    } else if (def.format == ValueFormat::MidiChannel) {
+        int ch = static_cast<int>(std::round(value * 16.0)) - 1;
+        if (ch < 0)
+            std::snprintf(valStr, sizeof(valStr), "Auto");
+        else
+            std::snprintf(valStr, sizeof(valStr), "Ch%d", ch + 1);
     } else if (def.format == ValueFormat::Percent) {
         double pct = value * 100.0;
         if (pct < 0.5)

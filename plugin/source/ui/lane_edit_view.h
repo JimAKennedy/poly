@@ -25,12 +25,23 @@ public:
 
 private:
     static constexpr int kMaxLanes = 8;
-    static constexpr int kLaneKnobCount = 11;
+    static constexpr int kLaneKnobCount = 12;
     static constexpr int kPhraseKnobCount = 6;
     static constexpr double kDragSensitivity = 200.0;
     static constexpr int kMaxNameLength = 15;
 
-    enum class ValueFormat { Integer, Subdivision, MidiNote, Percent, KotekanSrc, Beats, BipolarSteps, BipolarMs, Ms };
+    enum class ValueFormat {
+        Integer,
+        Subdivision,
+        MidiNote,
+        MidiChannel,
+        Percent,
+        KotekanSrc,
+        Beats,
+        BipolarSteps,
+        BipolarMs,
+        Ms
+    };
 
     struct KnobDef {
         int paramOffset;
