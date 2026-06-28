@@ -46,6 +46,7 @@ private:
     int captureLengthBars_ = MidiCaptureBuffer::kDefaultCaptureBars;
     double expectedNextPpq_ = -1.0;
     MacroSmoother macroSmoother_{};
+    SceneChainState chainState_{};
 };
 
 } // namespace poly

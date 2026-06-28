@@ -70,15 +70,16 @@ Eight drum lanes, each representing an independent rhythmic voice. This is the p
 
 **Hidden parameters** (not visible in the UI, but exposed for DAW automation):
 
-| Parameter        | Range    | Purpose                                        |
-|------------------|----------|-------------------------------------------------|
-| Base Velocity    | 0-127    | Default velocity for notes in this lane         |
-| Emphasis Prob    | 0-100%   | Probability of accented (emphasized) hits       |
-| Ghost Floor      | 0-127    | Minimum velocity for ghost notes                |
-| Velocity Spread  | 0-100%   | Random velocity variation around base            |
-| Swing Amount     | 0-100%   | Swing feel (delays alternate notes)             |
-| Humanize         | 0-50 ms  | Random timing offset for natural feel           |
-| Note Duration    | 0-4 beats| Length of MIDI notes                            |
+| Parameter        | Range        | Purpose                                        |
+|------------------|--------------|------------------------------------------------|
+| Base Velocity    | 0-127        | Default velocity for notes in this lane         |
+| Emphasis Prob    | 0-100%       | Probability of accented (emphasized) hits       |
+| Ghost Floor      | 0-127        | Minimum velocity for ghost notes                |
+| Velocity Spread  | 0-100%       | Random velocity variation around base            |
+| Swing Amount     | 0-100%       | Swing feel (delays alternate notes)             |
+| Humanize         | 0-50 ms      | Random timing offset for natural feel           |
+| Note Duration    | 0-4 beats    | Length of MIDI notes                            |
+| Tempo Mult       | 0.25x-4.0x   | Per-lane tempo scaling (see Metric Modulation)  |
 
 These parameters can be automated from Cubase's automation lanes or adjusted via the VST3 generic editor.
 
@@ -161,6 +162,38 @@ The following parameters exist and can be automated from Cubase but have no dedi
 | Scene Morph  | 501 | 0-100%          | Crossfade between Scene A and B      |
 
 The scene system lets you save two different groove configurations and crossfade between them. Accessible via Cubase's generic editor or automation.
+
+### Scene Chaining
+
+| Parameter         | ID       | Range                     | Purpose                                   |
+|-------------------|----------|---------------------------|-------------------------------------------|
+| Chain Enable      | 510      | Off / On                  | Enable automatic scene sequencing         |
+| Chain Mode        | 511      | OneShot / Loop / PingPong | How the chain behaves at its end          |
+| Chain Length       | 512      | 1-16                      | Number of active entries in the chain     |
+| Entry N Scene     | 520+     | A / B / Morph             | Scene for chain entry N                   |
+| Entry N Bars      | 521+     | 1-32                      | Duration in bars for chain entry N        |
+
+Scene chaining automates transitions between scenes at bar boundaries. Configure a sequence of up to 16 entries, each specifying which scene (A, B, or Morph) to use and how many bars to hold it. Three modes control what happens when the chain reaches its end:
+
+- **OneShot** — stops at the last entry and holds it
+- **Loop** — wraps back to the first entry and repeats
+- **PingPong** — reverses direction at each boundary (A→B→A→B...)
+
+Chain parameters are per-entry, with IDs starting at 520. Each entry uses 2 parameter slots (scene, bars), so entry 0 is IDs 520-521, entry 1 is 522-523, etc.
+
+### Metric Modulation (Per-Lane Tempo)
+
+Each lane has a **Tempo Mult** parameter (range 0.25x to 4.0x, default 1.0x) that scales the lane's step grid independently from the host tempo. This is a per-lane core parameter, accessible via DAW automation.
+
+| Multiplier | Effect                                                    |
+|------------|-----------------------------------------------------------|
+| 0.25x      | Quarter speed — 4x longer between hits                   |
+| 0.5x       | Half speed — notes at double the PPQ spacing              |
+| 1.0x       | Normal — follows host tempo directly                      |
+| 2.0x       | Double speed — hits at half the PPQ spacing               |
+| 4.0x       | Quadruple speed — 4x faster than host tempo               |
+
+At 2.0x, a lane plays its pattern in half the time, effectively doubling its rate. At 0.5x, the pattern stretches to double length. Phrase gating stays in absolute PPQ (unscaled) so gating boundaries remain bar-aligned regardless of tempo multiplier. Scene interpolation lerps the multiplier smoothly when morphing between scenes.
 
 ### MIDI Export
 
