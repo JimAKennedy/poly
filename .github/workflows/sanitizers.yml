@@ -53,3 +53,64 @@ jobs:
         run: ctest --test-dir build --output-on-failure
         env:
           TSAN_OPTIONS: suppressions=${{ github.workspace }}/.github/tsan.supp
+
+  notify:
+    name: Failure notification
+    needs: [asan, ubsan, tsan]
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Check for failures
+        id: check
+        run: |
+          FAILED=""
+          [[ "${{ needs.asan.result }}" == "failure" ]] && FAILED="${FAILED} ASAN"
+          [[ "${{ needs.ubsan.result }}" == "failure" ]] && FAILED="${FAILED} UBSAN"
+          [[ "${{ needs.tsan.result }}" == "failure" ]] && FAILED="${FAILED} TSAN"
+          if [ -n "$FAILED" ]; then
+            echo "failed=${FAILED}" >> "$GITHUB_OUTPUT"
+            echo "has_failure=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_failure=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Create issue on failure
+        if: steps.check.outputs.has_failure == 'true'
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7
+        with:
+          script: |
+            const failed = '${{ steps.check.outputs.failed }}'.trim();
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const title = `Sanitizer nightly failure:${failed}`;
+            const body = [
+              `The nightly sanitizer run detected failures in: **${failed}**`,
+              '',
+              `[View workflow run](${runUrl})`,
+              '',
+              `Triggered: ${new Date().toISOString().split('T')[0]}`
+            ].join('\n');
+
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'sanitizer-failure',
+              state: 'open'
+            });
+
+            if (existing.data.length > 0) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing.data[0].number,
+                body: body
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: body,
+                labels: ['sanitizer-failure']
+              });
+            }
