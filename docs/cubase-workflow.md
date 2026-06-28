@@ -105,6 +105,54 @@ Freeze is primarily useful for audio instruments. Since Poly outputs MIDI only, 
 2. Edit → Render in Place → Render Settings
 3. This renders the drum instrument's audio output, not Poly's MIDI
 
+## Scene Chaining
+
+Scene chaining automates transitions between Scene A and Scene B at bar boundaries, removing the need to manually automate the Scene Select parameter.
+
+### Setup
+
+1. Open Cubase's generic editor for the Poly track (or use automation lanes)
+2. Set **Chain Enable** to On
+3. Set **Chain Mode**: OneShot (play once and stop), Loop (repeat), or PingPong (reverse at boundaries)
+4. Set **Chain Length** to the number of entries (1-16)
+5. For each entry, set the **Scene** (A, B, or Morph) and **Bars** (how long to hold it)
+
+### Example: A→B→A Structure
+
+A simple three-entry chain for verse→chorus→verse:
+
+| Entry | Scene | Bars |
+|-------|-------|------|
+| 1     | A     | 8    |
+| 2     | B     | 8    |
+| 3     | A     | 8    |
+
+With **OneShot** mode, the chain plays through all three entries (24 bars total) and holds the last entry. With **Loop**, it repeats indefinitely. With **PingPong**, it reverses at entry 3 and walks back: A→B→A→B→A→...
+
+### Transport Behavior
+
+- Chain position resets on transport jump (seek to a new position)
+- Chain advances only at bar boundaries — mid-bar transport starts wait for the next bar line
+- Recording captures the chain-driven scene changes as normal MIDI output
+
+## Metric Modulation (Per-Lane Tempo)
+
+Each lane has a **Tempo Mult** parameter that scales its step grid independently from the host tempo. At 2.0x, a lane runs at double speed. At 0.5x, half speed. This creates Nancarrow-style polymetric independence where lanes operate at different effective tempi.
+
+### Setup
+
+1. In Cubase's automation lanes, find the Tempo Mult parameter for the desired lane
+2. Set the value (0.25x to 4.0x, default 1.0x)
+3. Lanes at different multipliers produce cross-tempo polymetric interactions
+
+### Usage Tips
+
+- Start with simple ratios: 2.0x against 1.0x creates a 2:1 tempo relationship
+- 1.5x against 1.0x creates a 3:2 hemiola
+- Phrase gating boundaries stay bar-aligned (unscaled) regardless of tempo multiplier
+- Scene morphing interpolates tempo multiplier smoothly — automate Scene Morph for gradual metric modulation transitions
+- Works with both standard Euclidean and additive/aksak cycles
+
 ## Parameter Automation
 
 Poly exposes selected parameters to Cubase's automation system:
@@ -141,3 +189,6 @@ Poly uses versioned state serialization. Presets saved with older versions will 
 | Different output after restart | Patch seed changed | Verify seed in patch settings |
 | High CPU | Many active lanes with short subdivisions | Reduce active lane count or increase subdivision |
 | Missing notes | `kMaxEventsPerBlock` exceeded | Reduce lanes/density for very dense passages |
+| Chain not advancing | Chain Enable is Off | Set Chain Enable to On in generic editor |
+| Chain resets on seek | Expected behavior | Chain position resets when transport jumps |
+| Lane too fast/slow | Tempo Mult not at 1.0x | Check per-lane Tempo Mult in automation |

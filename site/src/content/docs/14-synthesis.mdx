@@ -76,6 +76,41 @@ Automate Scene Morph from 0 to 1.0 over 16 bars. The transition is not a switch 
 
 </ListenFor>
 
+## Scene Chaining: Composing With Structure
+
+Scene morphing gives you a continuous crossfade between two grooves. Scene chaining gives you a *sequence*. Where morphing is a gradient, chaining is architecture — verse, chorus, bridge, each at a defined bar boundary, advancing automatically.
+
+A scene chain is a list of up to 16 entries. Each entry specifies a scene (A, B, or Morph) and a bar count. Enable the chain and press play — Poly advances through the sequence at bar boundaries, switching scenes automatically. No automation curves to draw, no manual switching.
+
+Three modes control what happens when the chain reaches its end:
+
+- **OneShot** plays through the sequence once and holds the last entry — suitable for one-pass structures where you want a defined ending.
+- **Loop** wraps back to the first entry and repeats indefinitely — suitable for cyclic forms like A→B→A→B.
+- **PingPong** reverses direction at each boundary, walking the chain forward and backward — an A→B→C chain becomes A→B→C→B→A→B→C→... This produces palindromic structures that feel natural for gradual builds and retreats.
+
+<PolyPatch title="Scene Chain: Three-Section Arc" preset="Custom: Chain Demo">
+
+| Setting | Value |
+|---------|-------|
+| Chain Enable | On |
+| Chain Mode | PingPong |
+| Chain Length | 3 |
+| Entry 1 | Scene A, 8 bars |
+| Entry 2 | Scene B, 4 bars |
+| Entry 3 | Scene A, 8 bars |
+
+</PolyPatch>
+
+This chain creates a 20-bar arc: 8 bars of Scene A (sparse verse), 4 bars of Scene B (dense chorus), 8 bars back to Scene A. In PingPong mode, it then reverses — back through B and into A again — creating an endless breathing structure. In OneShot mode, it would play the 20 bars once and hold Scene A.
+
+<ListenFor>
+
+Enable a chain with two contrasting scenes — one sparse, one dense. Set mode to Loop with Scene A for 8 bars and Scene B for 4 bars. The transition is instantaneous at bar boundaries — not a morph, a switch. The structural effect is different from smooth morphing: the contrast is sharper, the sections are clearly delineated, and the listener perceives form rather than gradient. For the smoothest transitions, combine chaining with scene morphing by including Morph entries in the chain.
+
+</ListenFor>
+
+Chaining and morphing are complementary. A chain entry set to Scene Morph uses the current morph position, so you can automate Scene Morph *within* a chain entry to create smooth transitions between structural sections. The chain provides the macro form; the morph provides the micro-transitions within each section.
+
 ## Envelopes: Shaping the Journey
 
 Where scene morphing operates at the section level — verse to chorus, intro to climax — envelopes operate at the phrase level. An envelope is a repeating shape that modulates a target parameter over time. Each envelope has a shape (how it moves) and a target (what it controls).
