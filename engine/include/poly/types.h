@@ -114,6 +114,7 @@ struct LaneConfig {
     int id = 0;
     Role role = Role::Custom;
     int16_t midiNote = 36;
+    int16_t midiChannel = -1; // -1 = auto (lane index); 0-15 = explicit MIDI channel
     Cycle cycle{};
     int hitCount = 4;
     int rotation = 0;
