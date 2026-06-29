@@ -19,6 +19,8 @@ smtg_add_vst3plugin(poly_plugin
     source/ui/lane_grid_view.cpp
     source/ui/phase_alignment_view.h
     source/ui/phase_alignment_view.cpp
+    source/ui/chain_popover_view.h
+    source/ui/chain_popover_view.cpp
     source/ui/scene_bar_view.h
     source/ui/scene_bar_view.cpp
     source/ui/micro_timing_editor_view.h

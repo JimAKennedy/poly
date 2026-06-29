@@ -4,8 +4,10 @@
 
 #include "vstgui/lib/cdrawcontext.h"
 #include "vstgui/lib/cfont.h"
+#include "vstgui/lib/cframe.h"
 
 #include "../plugids.h"
+#include "chain_popover_view.h"
 
 namespace poly {
 
@@ -67,6 +69,7 @@ void SceneBarView::draw(VSTGUI::CDrawContext* context) {
     int sceneIdx = static_cast<int>(std::round(controller_->getParamNormalized(ParamIDs::kSceneSelect) * 2.0));
     double morphVal = controller_->getParamNormalized(ParamIDs::kSceneMorph);
     bool chainOn = controller_->getParamNormalized(ParamIDs::kChainEnabled) > 0.5;
+    bool popoverOpen = isChainPopoverOpen();
 
     auto buttonFont = makeOwned<CFontDesc>("Arial", 10.0, kBoldFace);
     context->setFont(buttonFont);
@@ -125,7 +128,8 @@ void SceneBarView::draw(VSTGUI::CDrawContext* context) {
     context->drawString("B", bLabelRect, kRightText);
 
     auto chainRect = chainButtonRect();
-    if (chainOn) {
+    bool chainHighlight = chainOn || popoverOpen;
+    if (chainHighlight) {
         context->setFillColor(CColor(0x2A, 0x3A, 0x4A, 0xFF));
         context->setFrameColor(CColor(0x4A, 0x9E, 0xFF, 0x80));
     } else {
@@ -137,7 +141,7 @@ void SceneBarView::draw(VSTGUI::CDrawContext* context) {
 
     auto chainFont = makeOwned<CFontDesc>("Arial", 8.0, kBoldFace);
     context->setFont(chainFont);
-    context->setFontColor(chainOn ? CColor(0x4A, 0x9E, 0xFF, 0xFF) : CColor(0x88, 0x88, 0xA0, 0xFF));
+    context->setFontColor(chainHighlight ? CColor(0x4A, 0x9E, 0xFF, 0xFF) : CColor(0x88, 0x88, 0xA0, 0xFF));
     context->drawString("CHAIN", chainRect, kCenterText);
 
     setDirty(false);
@@ -166,9 +170,7 @@ VSTGUI::CMouseEventResult SceneBarView::onMouseDown(VSTGUI::CPoint& where, const
     }
 
     if (chainButtonRect().pointInside(where)) {
-        bool current = controller_->getParamNormalized(ParamIDs::kChainEnabled) > 0.5;
-        pushParam(ParamIDs::kChainEnabled, current ? 0.0 : 1.0);
-        invalid();
+        toggleChainPopover();
         return VSTGUI::kMouseEventHandled;
     }
 
@@ -196,6 +198,37 @@ VSTGUI::CMouseEventResult SceneBarView::onMouseUp(VSTGUI::CPoint& where, const V
         return VSTGUI::kMouseEventHandled;
     }
     return VSTGUI::kMouseEventNotHandled;
+}
+
+bool SceneBarView::isChainPopoverOpen() const {
+    auto* frame = getFrame();
+    if (!frame)
+        return false;
+    for (uint32_t i = 0; i < frame->getNbViews(); ++i) {
+        if (dynamic_cast<ChainPopoverView*>(frame->getView(i)))
+            return true;
+    }
+    return false;
+}
+
+void SceneBarView::toggleChainPopover() {
+    auto* frame = getFrame();
+    if (!frame)
+        return;
+
+    for (uint32_t i = 0; i < frame->getNbViews(); ++i) {
+        if (auto* cpv = dynamic_cast<ChainPopoverView*>(frame->getView(i))) {
+            frame->removeView(cpv, true);
+            invalid();
+            return;
+        }
+    }
+
+    auto frameBounds = frame->getViewSize();
+    auto* cpv = new ChainPopoverView( // ownership-transfer
+        VSTGUI::CRect(0, 32, frameBounds.right, frameBounds.bottom), controller_);
+    frame->addView(cpv);
+    invalid();
 }
 
 } // namespace poly

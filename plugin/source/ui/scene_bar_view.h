@@ -20,6 +20,8 @@ private:
     VSTGUI::CRect chainButtonRect() const;
 
     void pushParam(Steinberg::Vst::ParamID id, double value);
+    void toggleChainPopover();
+    bool isChainPopoverOpen() const;
 
     Steinberg::Vst::EditController* controller_;
     bool draggingMorph_ = false;
