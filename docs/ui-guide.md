@@ -4,7 +4,7 @@ Reference for the Poly VST3 plugin interface. Poly is a polymetric drum pattern 
 
 ## Plugin Window Layout
 
-The plugin window is 600 x 550 pixels, laid out top to bottom:
+The plugin window is 600 x 870 pixels, laid out top to bottom:
 
 ```
 +-----------------------------------------------+
@@ -15,6 +15,8 @@ The plugin window is 600 x 550 pixels, laid out top to bottom:
 |  Snare      ████████████████████        ● L2   |  Lane Grid
 |  HH Closed  ██████████████████████████  ● L3   |  (interactive)
 |  ...                                           |
++-----------------------------------------------+
+|  [A] [B] [Morph]  ═══════▓════════   [CHAIN]   |  Scene Bar
 +-----------------------------------------------+
 |  MACROS                                        |
 |  ⟳    ⟳    ⟳    ⟳    ⟳    ⟳            |  Macro Knobs
@@ -82,6 +84,31 @@ Eight drum lanes, each representing an independent rhythmic voice. This is the p
 | Tempo Mult       | 0.25x-4.0x   | Per-lane tempo scaling (see Metric Modulation)  |
 
 These parameters can be automated from Cubase's automation lanes or adjusted via the VST3 generic editor.
+
+### Scene Bar
+
+A horizontal control strip between the lane grid and macros, providing direct access to the scene system without opening the generic editor.
+
+**Controls (left to right):**
+
+- **A / B / Morph buttons** — Select which scene is active. Click A or B for a fixed scene, or Morph to enable crossfading between the two. The active button shows a blue highlight.
+- **Morph slider** — When Morph is selected, drag this horizontal slider to blend between Scene A (left) and Scene B (right). The slider shows A/B labels at each end and a blue fill indicating the current morph position. Disabled (dimmed) when A or B is selected directly.
+- **CHAIN button** — Opens the chain configuration popover. Highlights blue when the chain is enabled or the popover is open.
+
+#### Chain Configuration Popover
+
+Clicking the CHAIN button opens a full-width overlay below the scene bar with controls for automated scene sequencing:
+
+- **Enable toggle** — ON/OFF button to activate chain playback. When enabled, the chain automatically advances through entries at bar boundaries during playback.
+- **Mode selector** — Three buttons to set chain behavior at the end of the sequence:
+  - **1-Shot** — Stops at the last entry and holds it
+  - **Loop** — Wraps back to the first entry and repeats
+  - **PingPong** — Reverses direction at each boundary (A→B→A→B...)
+- **Entry list** — Numbered rows (up to 16), each with:
+  - **Scene selector** — A / B / Morph buttons to choose which scene plays for this entry
+  - **Bars +/−** — Adjust how many bars (1-32) to hold this entry before advancing
+- **Add / Remove buttons** — Add a new entry at the end or remove the last entry
+- **Close button** (×) — Closes the popover
 
 ### Macros
 
@@ -154,30 +181,19 @@ The following parameters exist and can be automated from Cubase but have no dedi
 | Active Lane Count | 300 | 1-8       | Number of active lanes                 |
 | Seed              | 301 | 0-999999  | Random seed for pattern generation     |
 
-### Scenes
+### Scenes & Chaining
 
-| Parameter    | ID  | Range           | Purpose                              |
-|--------------|-----|-----------------|--------------------------------------|
-| Scene Select | 500 | A / B / Morph   | Choose between two groove snapshots  |
-| Scene Morph  | 501 | 0-100%          | Crossfade between Scene A and B      |
+Scene and chain parameters are now accessible from the **Scene Bar** in the plugin UI (see above). They remain available for DAW automation:
 
-The scene system lets you save two different groove configurations and crossfade between them. Accessible via Cubase's generic editor or automation.
-
-### Scene Chaining
-
-| Parameter         | ID       | Range                     | Purpose                                   |
+| Parameter         | ID       | Range                     | UI Control                                |
 |-------------------|----------|---------------------------|-------------------------------------------|
-| Chain Enable      | 510      | Off / On                  | Enable automatic scene sequencing         |
-| Chain Mode        | 511      | OneShot / Loop / PingPong | How the chain behaves at its end          |
-| Chain Length       | 512      | 1-16                      | Number of active entries in the chain     |
-| Entry N Scene     | 520+     | A / B / Morph             | Scene for chain entry N                   |
-| Entry N Bars      | 521+     | 1-32                      | Duration in bars for chain entry N        |
-
-Scene chaining automates transitions between scenes at bar boundaries. Configure a sequence of up to 16 entries, each specifying which scene (A, B, or Morph) to use and how many bars to hold it. Three modes control what happens when the chain reaches its end:
-
-- **OneShot** — stops at the last entry and holds it
-- **Loop** — wraps back to the first entry and repeats
-- **PingPong** — reverses direction at each boundary (A→B→A→B...)
+| Scene Select      | 500      | A / B / Morph             | Scene bar A/B/Morph buttons               |
+| Scene Morph       | 501      | 0-100%                    | Scene bar morph slider                    |
+| Chain Enable      | 510      | Off / On                  | Chain popover enable toggle               |
+| Chain Mode        | 511      | OneShot / Loop / PingPong | Chain popover mode buttons                |
+| Chain Length       | 512      | 1-16                      | Chain popover add/remove buttons          |
+| Entry N Scene     | 520+     | A / B / Morph             | Chain popover entry scene buttons         |
+| Entry N Bars      | 521+     | 1-32                      | Chain popover entry bars +/−              |
 
 Chain parameters are per-entry, with IDs starting at 520. Each entry uses 2 parameter slots (scene, bars), so entry 0 is IDs 520-521, entry 1 is 522-523, etc.
 
