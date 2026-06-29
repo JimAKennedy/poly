@@ -19,6 +19,7 @@
 #include "ui/micro_timing_editor_view.h"
 #include "ui/note_map_view.h"
 #include "ui/phase_alignment_view.h"
+#include "ui/scene_bar_view.h"
 #include "ui/timeline_step_editor_view.h"
 #include "ui/velocity_view.h"
 
@@ -255,11 +256,14 @@ VSTGUI::CView* PolyController::createCustomView(VSTGUI::UTF8StringPtr name, cons
     if (std::strcmp(name, "MicroTimingEditorView") == 0) {
         return new MicroTimingEditorView(VSTGUI::CRect(0, 0, 580, 60), this); // ownership-transfer
     }
+    if (std::strcmp(name, "SceneBarView") == 0) {
+        return new SceneBarView(VSTGUI::CRect(0, 0, 580, 46), this); // ownership-transfer
+    }
     if (std::strcmp(name, "CrossRhythmView") == 0) {
         return new CrossRhythmView(VSTGUI::CRect(0, 0, 580, 146), this); // ownership-transfer
     }
     if (std::strcmp(name, "NoteMapView") == 0) {
-        return new NoteMapView(VSTGUI::CRect(0, 0, 600, 778), this); // ownership-transfer
+        return new NoteMapView(VSTGUI::CRect(0, 0, 600, 838), this); // ownership-transfer
     }
     return nullptr;
 }
