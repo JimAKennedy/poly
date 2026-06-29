@@ -6,6 +6,7 @@ add_library(poly_engine STATIC
     src/euclidean.cpp
     src/macro.cpp
     src/midi_capture.cpp
+    src/presets.cpp
     src/scene.cpp
     src/smf_writer.cpp
 )

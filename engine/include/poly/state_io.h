@@ -10,6 +10,60 @@ namespace poly {
 
 static constexpr int32_t kCurrentStateVersion = 15;
 
+// --- Envelope serialization helpers ---
+
+template <typename WriteFn> [[nodiscard]] bool writeEnvelope(WriteFn&& write, const Envelope& env) {
+    auto target = static_cast<uint8_t>(env.target);
+    if (!write(&target, sizeof(target)))
+        return false;
+    if (!write(&env.periodBars, sizeof(env.periodBars)))
+        return false;
+    auto shape = static_cast<uint8_t>(env.shape);
+    if (!write(&shape, sizeof(shape)))
+        return false;
+    if (!write(&env.depth, sizeof(env.depth)))
+        return false;
+    if (!write(&env.phaseOffset, sizeof(env.phaseOffset)))
+        return false;
+    if (!write(&env.curvature, sizeof(env.curvature)))
+        return false;
+    if (!write(&env.stepCount, sizeof(env.stepCount)))
+        return false;
+    for (int s = 0; s < kMaxStepListEntries; ++s) {
+        if (!write(&env.stepValues[static_cast<size_t>(s)], sizeof(float)))
+            return false;
+    }
+    return true;
+}
+
+template <typename ReadFn> [[nodiscard]] bool readEnvelope(ReadFn&& read, Envelope& env, int32_t version) {
+    uint8_t target = 0;
+    if (!read(&target, sizeof(target)))
+        return false;
+    env.target = static_cast<EnvTarget>(target);
+    if (!read(&env.periodBars, sizeof(env.periodBars)))
+        return false;
+    uint8_t shape = 0;
+    if (!read(&shape, sizeof(shape)))
+        return false;
+    env.shape = static_cast<Shape>(shape);
+    if (!read(&env.depth, sizeof(env.depth)))
+        return false;
+    if (!read(&env.phaseOffset, sizeof(env.phaseOffset)))
+        return false;
+    if (version >= 2) {
+        if (!read(&env.curvature, sizeof(env.curvature)))
+            return false;
+        if (!read(&env.stepCount, sizeof(env.stepCount)))
+            return false;
+        for (int s = 0; s < kMaxStepListEntries; ++s) {
+            if (!read(&env.stepValues[static_cast<size_t>(s)], sizeof(float)))
+                return false;
+        }
+    }
+    return true;
+}
+
 // --- Internal body-only write (no version header, always writes latest body format) ---
 
 template <typename WriteFn>
@@ -79,26 +133,8 @@ template <typename WriteFn>
 
         for (int e = 0; e < kMaxEnvelopesPerLane; ++e) {
             const auto& ea = lane.envelopes[static_cast<size_t>(e)];
-            auto target = static_cast<uint8_t>(ea.envelope.target);
-            if (!write(&target, sizeof(target)))
+            if (!writeEnvelope(write, ea.envelope))
                 return false;
-            if (!write(&ea.envelope.periodBars, sizeof(ea.envelope.periodBars)))
-                return false;
-            auto shape = static_cast<uint8_t>(ea.envelope.shape);
-            if (!write(&shape, sizeof(shape)))
-                return false;
-            if (!write(&ea.envelope.depth, sizeof(ea.envelope.depth)))
-                return false;
-            if (!write(&ea.envelope.phaseOffset, sizeof(ea.envelope.phaseOffset)))
-                return false;
-            if (!write(&ea.envelope.curvature, sizeof(ea.envelope.curvature)))
-                return false;
-            if (!write(&ea.envelope.stepCount, sizeof(ea.envelope.stepCount)))
-                return false;
-            for (int s = 0; s < kMaxStepListEntries; ++s) {
-                if (!write(&ea.envelope.stepValues[static_cast<size_t>(s)], sizeof(float)))
-                    return false;
-            }
             uint8_t envActive = ea.active ? 1 : 0;
             if (!write(&envActive, sizeof(envActive)))
                 return false;
@@ -189,27 +225,8 @@ template <typename WriteFn>
     if (!write(&state.globalEnvelopeCount, sizeof(state.globalEnvelopeCount)))
         return false;
     for (int e = 0; e < kMaxGlobalEnvelopes; ++e) {
-        const auto& env = state.globalEnvelopes[static_cast<size_t>(e)];
-        auto target = static_cast<uint8_t>(env.target);
-        if (!write(&target, sizeof(target)))
+        if (!writeEnvelope(write, state.globalEnvelopes[static_cast<size_t>(e)]))
             return false;
-        if (!write(&env.periodBars, sizeof(env.periodBars)))
-            return false;
-        auto shape = static_cast<uint8_t>(env.shape);
-        if (!write(&shape, sizeof(shape)))
-            return false;
-        if (!write(&env.depth, sizeof(env.depth)))
-            return false;
-        if (!write(&env.phaseOffset, sizeof(env.phaseOffset)))
-            return false;
-        if (!write(&env.curvature, sizeof(env.curvature)))
-            return false;
-        if (!write(&env.stepCount, sizeof(env.stepCount)))
-            return false;
-        for (int s = 0; s < kMaxStepListEntries; ++s) {
-            if (!write(&env.stepValues[static_cast<size_t>(s)], sizeof(float)))
-                return false;
-        }
     }
 
     if (bodyVersion >= 4) {
@@ -288,30 +305,8 @@ template <typename ReadFn> [[nodiscard]] bool readGrooveStateBody(ReadFn&& read,
 
         for (int e = 0; e < kMaxEnvelopesPerLane; ++e) {
             auto& ea = lane.envelopes[static_cast<size_t>(e)];
-            uint8_t target = 0;
-            if (!read(&target, sizeof(target)))
+            if (!readEnvelope(read, ea.envelope, version))
                 return false;
-            ea.envelope.target = static_cast<EnvTarget>(target);
-            if (!read(&ea.envelope.periodBars, sizeof(ea.envelope.periodBars)))
-                return false;
-            uint8_t shape = 0;
-            if (!read(&shape, sizeof(shape)))
-                return false;
-            ea.envelope.shape = static_cast<Shape>(shape);
-            if (!read(&ea.envelope.depth, sizeof(ea.envelope.depth)))
-                return false;
-            if (!read(&ea.envelope.phaseOffset, sizeof(ea.envelope.phaseOffset)))
-                return false;
-            if (version >= 2) {
-                if (!read(&ea.envelope.curvature, sizeof(ea.envelope.curvature)))
-                    return false;
-                if (!read(&ea.envelope.stepCount, sizeof(ea.envelope.stepCount)))
-                    return false;
-                for (int s = 0; s < kMaxStepListEntries; ++s) {
-                    if (!read(&ea.envelope.stepValues[static_cast<size_t>(s)], sizeof(float)))
-                        return false;
-                }
-            }
             uint8_t envActive = 0;
             if (!read(&envActive, sizeof(envActive)))
                 return false;
@@ -404,31 +399,8 @@ template <typename ReadFn> [[nodiscard]] bool readGrooveStateBody(ReadFn&& read,
     if (!read(&state.globalEnvelopeCount, sizeof(state.globalEnvelopeCount)))
         return false;
     for (int e = 0; e < kMaxGlobalEnvelopes; ++e) {
-        auto& env = state.globalEnvelopes[static_cast<size_t>(e)];
-        uint8_t target = 0;
-        if (!read(&target, sizeof(target)))
+        if (!readEnvelope(read, state.globalEnvelopes[static_cast<size_t>(e)], version))
             return false;
-        env.target = static_cast<EnvTarget>(target);
-        if (!read(&env.periodBars, sizeof(env.periodBars)))
-            return false;
-        uint8_t shape = 0;
-        if (!read(&shape, sizeof(shape)))
-            return false;
-        env.shape = static_cast<Shape>(shape);
-        if (!read(&env.depth, sizeof(env.depth)))
-            return false;
-        if (!read(&env.phaseOffset, sizeof(env.phaseOffset)))
-            return false;
-        if (version >= 2) {
-            if (!read(&env.curvature, sizeof(env.curvature)))
-                return false;
-            if (!read(&env.stepCount, sizeof(env.stepCount)))
-                return false;
-            for (int s = 0; s < kMaxStepListEntries; ++s) {
-                if (!read(&env.stepValues[static_cast<size_t>(s)], sizeof(float)))
-                    return false;
-            }
-        }
     }
 
     if (version >= 4) {
@@ -477,7 +449,6 @@ template <typename WriteFn> [[nodiscard]] bool writeSceneState(WriteFn&& write, 
             return false;
     }
 
-    // v13: scene chain config
     uint8_t chainEnabled = scene.chain.enabled ? 1 : 0;
     if (!write(&chainEnabled, sizeof(chainEnabled)))
         return false;
