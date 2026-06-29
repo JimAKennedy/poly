@@ -10,8 +10,10 @@
 #include "controller.h"
 #include "headless_ui_host.h"
 #include "plugids.h"
+#include "ui/chain_popover_view.h"
 #include "ui/cross_rhythm_view.h"
 #include "ui/lane_grid_view.h"
+#include "ui/scene_bar_view.h"
 #include "ui/velocity_view.h"
 
 using namespace JKDigital::InteractionTest;
@@ -265,6 +267,7 @@ TEST_F(ViewTreeTest, CustomViewsInTree) {
     bool foundLaneGrid = false;
     bool foundVelocity = false;
     bool foundCrossRhythm = false;
+    bool foundSceneBar = false;
 
     std::function<void(VSTGUI::CViewContainer*)> walk = [&](VSTGUI::CViewContainer* container) {
         for (uint32_t i = 0; i < container->getNbViews(); ++i) {
@@ -277,6 +280,8 @@ TEST_F(ViewTreeTest, CustomViewsInTree) {
                 foundVelocity = true;
             if (dynamic_cast<poly::CrossRhythmView*>(child))
                 foundCrossRhythm = true;
+            if (dynamic_cast<poly::SceneBarView*>(child))
+                foundSceneBar = true;
             auto* sub = dynamic_cast<VSTGUI::CViewContainer*>(child);
             if (sub)
                 walk(sub);
@@ -288,4 +293,135 @@ TEST_F(ViewTreeTest, CustomViewsInTree) {
     EXPECT_TRUE(foundLaneGrid) << "LaneGridView should be in the view tree";
     EXPECT_TRUE(foundVelocity) << "VelocityView should be in the view tree";
     EXPECT_TRUE(foundCrossRhythm) << "CrossRhythmView should be in the view tree";
+    EXPECT_TRUE(foundSceneBar) << "SceneBarView should be in the view tree";
+}
+
+// -----------------------------------------------------------------------
+// Scene bar interaction tests
+// -----------------------------------------------------------------------
+
+class SceneBarTest : public ::testing::Test {
+protected:
+    void SetUp() override {
+        initPlatformOnce();
+#ifndef __APPLE__
+        GTEST_SKIP() << "Headless UI host requires macOS";
+#endif
+        host_ = std::make_unique<HeadlessUIHost>(makeControllerFactory(), UIDESC_RESOURCE_DIR);
+        ASSERT_TRUE(host_->open());
+    }
+
+    void TearDown() override {
+        if (host_ && host_->isOpen())
+            host_->close();
+    }
+
+    template <typename T> T* findView() const {
+        auto* frame = host_->getFrame();
+        if (!frame)
+            return nullptr;
+        T* found = nullptr;
+        std::function<void(VSTGUI::CViewContainer*)> walk = [&](VSTGUI::CViewContainer* container) {
+            for (uint32_t i = 0; i < container->getNbViews(); ++i) {
+                auto* child = container->getView(i);
+                if (!child)
+                    continue;
+                if (auto* match = dynamic_cast<T*>(child)) {
+                    found = match;
+                    return;
+                }
+                auto* sub = dynamic_cast<VSTGUI::CViewContainer*>(child);
+                if (sub)
+                    walk(sub);
+            }
+        };
+        walk(frame);
+        return found;
+    }
+
+    std::unique_ptr<HeadlessUIHost> host_;
+};
+
+TEST_F(SceneBarTest, SceneBarViewInTree) {
+    auto* sceneBar = findView<poly::SceneBarView>();
+    EXPECT_NE(sceneBar, nullptr) << "SceneBarView should be in the view tree";
+}
+
+TEST_F(SceneBarTest, SceneBarHasSensibleBounds) {
+    auto* sceneBar = findView<poly::SceneBarView>();
+    ASSERT_NE(sceneBar, nullptr);
+
+    auto rect = sceneBar->getViewSize();
+    EXPECT_GT(rect.getWidth(), 100) << "Scene bar should be wider than 100px";
+    EXPECT_GT(rect.getHeight(), 20) << "Scene bar should be taller than 20px";
+}
+
+TEST_F(SceneBarTest, ClickSceneAChangesParameter) {
+    auto* sceneBar = findView<poly::SceneBarView>();
+    ASSERT_NE(sceneBar, nullptr);
+
+    auto rect = sceneBar->getViewSize();
+    double y = rect.top + rect.getHeight() / 2.0;
+    double x = rect.left + 20;
+
+    host_->simulateClick(x, y);
+    double val = host_->getParameterValue(poly::ParamIDs::kSceneSelect);
+    EXPECT_NEAR(val, 0.0, 0.01) << "Clicking A button should set scene select to A (0.0)";
+}
+
+TEST_F(SceneBarTest, ClickSceneBChangesParameter) {
+    auto* sceneBar = findView<poly::SceneBarView>();
+    ASSERT_NE(sceneBar, nullptr);
+
+    auto rect = sceneBar->getViewSize();
+    double y = rect.top + rect.getHeight() / 2.0;
+    double x = rect.left + 10 + 36 + 2 + 18;
+
+    host_->simulateClick(x, y);
+    double val = host_->getParameterValue(poly::ParamIDs::kSceneSelect);
+    EXPECT_NEAR(val, 0.5, 0.01) << "Clicking B button should set scene select to B (0.5)";
+}
+
+TEST_F(SceneBarTest, ClickMorphChangesParameter) {
+    auto* sceneBar = findView<poly::SceneBarView>();
+    ASSERT_NE(sceneBar, nullptr);
+
+    auto rect = sceneBar->getViewSize();
+    double y = rect.top + rect.getHeight() / 2.0;
+    double x = rect.left + 10 + (36 + 2) * 2 + 25;
+
+    host_->simulateClick(x, y);
+    double val = host_->getParameterValue(poly::ParamIDs::kSceneSelect);
+    EXPECT_NEAR(val, 1.0, 0.01) << "Clicking Morph button should set scene select to Morph (1.0)";
+}
+
+TEST_F(SceneBarTest, ChainButtonOpensPopover) {
+    auto* sceneBar = findView<poly::SceneBarView>();
+    ASSERT_NE(sceneBar, nullptr);
+
+    EXPECT_EQ(findView<poly::ChainPopoverView>(), nullptr) << "Popover should not be open initially";
+
+    auto rect = sceneBar->getViewSize();
+    double y = rect.top + rect.getHeight() / 2.0;
+    double x = rect.right - 10 - 18;
+
+    host_->simulateClick(x, y);
+    EXPECT_NE(findView<poly::ChainPopoverView>(), nullptr) << "Popover should open after clicking chain button";
+}
+
+TEST_F(SceneBarTest, PopoverHasSensibleBounds) {
+    auto* sceneBar = findView<poly::SceneBarView>();
+    ASSERT_NE(sceneBar, nullptr);
+
+    auto rect = sceneBar->getViewSize();
+    double chainY = rect.top + rect.getHeight() / 2.0;
+    double chainX = rect.right - 10 - 18;
+    host_->simulateClick(chainX, chainY);
+
+    auto* popover = findView<poly::ChainPopoverView>();
+    ASSERT_NE(popover, nullptr);
+
+    auto pRect = popover->getViewSize();
+    EXPECT_GT(pRect.getWidth(), 200) << "Chain popover should be wider than 200px";
+    EXPECT_GT(pRect.getHeight(), 100) << "Chain popover should be taller than 100px";
 }

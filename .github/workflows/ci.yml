@@ -137,8 +137,15 @@ jobs:
           name: coverage-report
           path: coverage-report/
 
+  site-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Check site asset references
+        run: bash scripts/check-site-assets.sh
+
   ci-complete:
-    needs: [code-quality, build, engine-isolation, secrets-scan, code-coverage]
+    needs: [code-quality, build, engine-isolation, secrets-scan, code-coverage, site-lint]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -148,7 +155,8 @@ jobs:
              [[ "${{ needs.build.result }}" != "success" ]] || \
              [[ "${{ needs.engine-isolation.result }}" != "success" ]] || \
              [[ "${{ needs.secrets-scan.result }}" != "success" ]] || \
-             [[ "${{ needs.code-coverage.result }}" != "success" ]]; then
+             [[ "${{ needs.code-coverage.result }}" != "success" ]] || \
+             [[ "${{ needs.site-lint.result }}" != "success" ]]; then
             echo "One or more CI jobs failed"
             exit 1
           fi
