@@ -114,33 +114,24 @@ Steinberg::tresult PLUGIN_API PolyController::initialize(Steinberg::FUnknown* co
     addUnit(new Unit(USTRING("Scene"), UnitIDs::kScene, kRootUnitId));
     addUnit(new Unit(USTRING("Output"), UnitIDs::kOutput, kRootUnitId));
 
-    for (int lane = 0; lane < kMaxLanes; ++lane) {
-        for (const auto& def : kLaneParamDefs) {
-            ParameterInfo info = {};
-            info.id = ParamIDs::laneParam(lane, def.offset);
-            Steinberg::UString(info.title, 128).fromAscii(def.name);
-            Steinberg::UString(info.units, 128).fromAscii(def.units);
-            info.stepCount = def.steps;
-            info.defaultNormalizedValue = def.defaultNorm;
-            info.flags = ParameterInfo::kCanAutomate;
-            info.unitId = UnitIDs::lane(lane);
-            parameters.addParameter(info);
+    auto registerLaneParams = [this](const auto& defs, auto idFn) {
+        using Steinberg::Vst::ParameterInfo;
+        for (int lane = 0; lane < kMaxLanes; ++lane) {
+            for (const auto& def : defs) {
+                ParameterInfo info = {};
+                info.id = idFn(lane, def.offset);
+                Steinberg::UString(info.title, 128).fromAscii(def.name);
+                Steinberg::UString(info.units, 128).fromAscii(def.units);
+                info.stepCount = def.steps;
+                info.defaultNormalizedValue = def.defaultNorm;
+                info.flags = ParameterInfo::kCanAutomate;
+                info.unitId = UnitIDs::lane(lane);
+                parameters.addParameter(info);
+            }
         }
-    }
-
-    for (int lane = 0; lane < kMaxLanes; ++lane) {
-        for (const auto& def : kCoreParamDefs) {
-            ParameterInfo info = {};
-            info.id = ParamIDs::laneCoreParam(lane, def.offset);
-            Steinberg::UString(info.title, 128).fromAscii(def.name);
-            Steinberg::UString(info.units, 128).fromAscii(def.units);
-            info.stepCount = def.steps;
-            info.defaultNormalizedValue = def.defaultNorm;
-            info.flags = ParameterInfo::kCanAutomate;
-            info.unitId = UnitIDs::lane(lane);
-            parameters.addParameter(info);
-        }
-    }
+    };
+    registerLaneParams(kLaneParamDefs, ParamIDs::laneParam);
+    registerLaneParams(kCoreParamDefs, ParamIDs::laneCoreParam);
 
     auto addParam = [this](Steinberg::Vst::ParamID id, const char* title, const char* units, Steinberg::int32 steps,
                            double defNorm, Steinberg::Vst::UnitID unitId,
@@ -166,29 +157,7 @@ Steinberg::tresult PLUGIN_API PolyController::initialize(Steinberg::FUnknown* co
     addParam(ParamIDs::kActiveLaneCount, "Active Lanes", "", 7, 3.0 / 7.0, UnitIDs::kGlobal);
     addParam(ParamIDs::kSeed, "Seed", "", 0, 0.0, UnitIDs::kGlobal);
 
-    for (int lane = 0; lane < kMaxLanes; ++lane) {
-        char title[32];
-        std::snprintf(title, sizeof(title), "Lane %d", lane + 1);
-        addParam(ParamIDs::velocityOutput(lane), title, "", 0, 0.0, UnitIDs::kOutput, ParameterInfo::kIsReadOnly);
-    }
-
-    for (int lane = 0; lane < kMaxLanes; ++lane) {
-        char title[32];
-        std::snprintf(title, sizeof(title), "L%d Phase", lane + 1);
-        addParam(ParamIDs::lanePhaseOutput(lane), title, "", 0, 0.0, UnitIDs::kOutput, ParameterInfo::kIsReadOnly);
-    }
-
-    for (int lane = 0; lane < kMaxLanes; ++lane) {
-        char title[32];
-        std::snprintf(title, sizeof(title), "L%d Envelope", lane + 1);
-        addParam(ParamIDs::envelopeValueOutput(lane), title, "", 0, 0.0, UnitIDs::kOutput, ParameterInfo::kIsReadOnly);
-    }
-
-    for (int lane = 0; lane < kMaxLanes; ++lane) {
-        char title[32];
-        std::snprintf(title, sizeof(title), "L%d Phrase", lane + 1);
-        addParam(ParamIDs::phrasePhaseOutput(lane), title, "", 0, 0.0, UnitIDs::kOutput, ParameterInfo::kIsReadOnly);
-    }
+    registerOutputParameters();
 
     addParam(ParamIDs::kSelectedLane, "Selected Lane", "", 7, 0.0, UnitIDs::kGlobal, ParameterInfo::kNoFlags);
 
@@ -217,6 +186,40 @@ Steinberg::tresult PLUGIN_API PolyController::initialize(Steinberg::FUnknown* co
     addParam(ParamIDs::kCaptureEventCount, "Capture Events", "", 0, 0.0, UnitIDs::kExport, ParameterInfo::kIsReadOnly);
 
     return Steinberg::kResultOk;
+}
+
+void PolyController::registerOutputParameters() {
+    using namespace Steinberg::Vst;
+
+    auto addParam = [this](Steinberg::Vst::ParamID pid, const char* title, Steinberg::int32 flags) {
+        ParameterInfo info = {};
+        info.id = pid;
+        Steinberg::UString(info.title, 128).fromAscii(title);
+        info.flags = flags;
+        info.unitId = UnitIDs::kOutput;
+        parameters.addParameter(info);
+    };
+
+    for (int lane = 0; lane < kMaxLanes; ++lane) {
+        char title[32];
+        std::snprintf(title, sizeof(title), "Lane %d", lane + 1);
+        addParam(ParamIDs::velocityOutput(lane), title, ParameterInfo::kIsReadOnly);
+    }
+    for (int lane = 0; lane < kMaxLanes; ++lane) {
+        char title[32];
+        std::snprintf(title, sizeof(title), "L%d Phase", lane + 1);
+        addParam(ParamIDs::lanePhaseOutput(lane), title, ParameterInfo::kIsReadOnly);
+    }
+    for (int lane = 0; lane < kMaxLanes; ++lane) {
+        char title[32];
+        std::snprintf(title, sizeof(title), "L%d Envelope", lane + 1);
+        addParam(ParamIDs::envelopeValueOutput(lane), title, ParameterInfo::kIsReadOnly);
+    }
+    for (int lane = 0; lane < kMaxLanes; ++lane) {
+        char title[32];
+        std::snprintf(title, sizeof(title), "L%d Phrase", lane + 1);
+        addParam(ParamIDs::phrasePhaseOutput(lane), title, ParameterInfo::kIsReadOnly);
+    }
 }
 
 Steinberg::IPlugView* PLUGIN_API PolyController::createView(Steinberg::FIDString name) {

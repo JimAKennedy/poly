@@ -31,6 +31,12 @@ public:
 
 private:
     void applyParameter(Steinberg::Vst::ParamID id, double normalized);
+    void updateTransportContext(const Steinberg::Vst::ProcessData& data);
+    void handleTransportJump(Steinberg::Vst::IEventList* outputEvents);
+    void emitMidiOutput(Steinberg::Vst::IEventList* outputEvents, Steinberg::int32 numSamples);
+    void outputParameterFeedback(Steinberg::Vst::ProcessData& data, const GrooveState& resolved);
+    bool applySceneParameter(Steinberg::Vst::ParamID id, double normalized);
+    bool applyLaneParameter(Steinberg::Vst::ParamID id, double normalized, GrooveState& gs);
 
     Engine engine_;
     SceneState sceneState_{};
