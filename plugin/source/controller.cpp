@@ -13,6 +13,7 @@
 #include "ui/cell_editor_view.h"
 #include "ui/cross_rhythm_view.h"
 #include "ui/envelope_curve_view.h"
+#include "ui/export_controls_view.h"
 #include "ui/header_view.h"
 #include "ui/lane_edit_view.h"
 #include "ui/lane_grid_view.h"
@@ -213,6 +214,7 @@ Steinberg::tresult PLUGIN_API PolyController::initialize(Steinberg::FUnknown* co
     addParam(ParamIDs::kExportTrigger, "Export", "", 1, 0.0, UnitIDs::kExport);
     addParam(ParamIDs::kCaptureLength, "Capture Bars", "bars", 31, 7.0 / 31.0, UnitIDs::kExport);
     addParam(ParamIDs::kCaptureReady, "Capture Ready", "", 0, 0.0, UnitIDs::kExport, ParameterInfo::kIsReadOnly);
+    addParam(ParamIDs::kCaptureEventCount, "Capture Events", "", 0, 0.0, UnitIDs::kExport, ParameterInfo::kIsReadOnly);
 
     return Steinberg::kResultOk;
 }
@@ -264,6 +266,9 @@ VSTGUI::CView* PolyController::createCustomView(VSTGUI::UTF8StringPtr name, cons
     }
     if (std::strcmp(name, "NoteMapView") == 0) {
         return new NoteMapView(VSTGUI::CRect(0, 0, 600, 838), this); // ownership-transfer
+    }
+    if (std::strcmp(name, "ExportControlsView") == 0) {
+        return new ExportControlsView(VSTGUI::CRect(0, 0, 580, 46), this); // ownership-transfer
     }
     return nullptr;
 }
@@ -410,6 +415,26 @@ Steinberg::tresult PLUGIN_API PolyController::setState(Steinberg::IBStream* stat
     }
 
     return Steinberg::kResultOk;
+}
+
+Steinberg::tresult PLUGIN_API PolyController::notify(Steinberg::Vst::IMessage* message) {
+    if (!message)
+        return Steinberg::kInvalidArgument;
+
+    if (Steinberg::FIDStringsEqual(message->getMessageID(), "MidiExportData")) {
+        if (auto* attrs = message->getAttributes()) {
+            const void* data = nullptr;
+            Steinberg::uint32 size = 0;
+            if (attrs->getBinary("smf", data, size) == Steinberg::kResultOk && size > 0) {
+                auto* bytes = static_cast<const uint8_t*>(data);
+                pendingSmfData_.assign(bytes, bytes + size);
+                dragSmfCache_ = pendingSmfData_;
+            }
+        }
+        return Steinberg::kResultOk;
+    }
+
+    return EditControllerEx1::notify(message);
 }
 
 void PolyController::sendNoteMap() {

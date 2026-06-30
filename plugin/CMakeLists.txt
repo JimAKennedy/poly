@@ -31,6 +31,8 @@ smtg_add_vst3plugin(poly_plugin
     source/ui/timeline_step_editor_view.cpp
     source/ui/velocity_view.h
     source/ui/velocity_view.cpp
+    source/ui/export_controls_view.h
+    source/ui/export_controls_view.cpp
 )
 
 smtg_target_add_plugin_resources(poly_plugin

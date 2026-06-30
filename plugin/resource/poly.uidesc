@@ -38,11 +38,11 @@
 					"background-color": "bg",
 					"background-color-draw-style": "filled",
 					"class": "CViewContainer",
-					"minSize": "600, 870",
+					"minSize": "600, 932",
 					"mouse-enabled": "true",
 					"opacity": "1",
 					"origin": "0, 0",
-					"size": "600, 870",
+					"size": "600, 932",
 					"transparent": "false"
 				},
 				"children": {
@@ -439,6 +439,31 @@
 							"opacity": "1",
 							"origin": "10, 716",
 							"size": "580, 146",
+							"transparent": "false"
+						}
+					},
+					"CTextLabel#exportLabel": {
+						"attributes": {
+							"class": "CTextLabel",
+							"font": "~ NormalFontVerySmall",
+							"font-color": "text.section",
+							"mouse-enabled": "false",
+							"opacity": "1",
+							"origin": "14, 866",
+							"size": "80, 12",
+							"text-alignment": "left",
+							"title": "EXPORT",
+							"transparent": "true"
+						}
+					},
+					"CView#exportControlsView": {
+						"attributes": {
+							"class": "CView",
+							"custom-view-name": "ExportControlsView",
+							"mouse-enabled": "true",
+							"opacity": "1",
+							"origin": "10, 879",
+							"size": "580, 46",
 							"transparent": "false"
 						}
 					}

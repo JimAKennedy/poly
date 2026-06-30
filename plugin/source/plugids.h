@@ -95,6 +95,7 @@ static constexpr Steinberg::Vst::ParamID kSceneMorph = 501;
 static constexpr Steinberg::Vst::ParamID kExportTrigger = 600;
 static constexpr Steinberg::Vst::ParamID kCaptureLength = 601;
 static constexpr Steinberg::Vst::ParamID kCaptureReady = 602;
+static constexpr Steinberg::Vst::ParamID kCaptureEventCount = 603;
 
 static constexpr Steinberg::Vst::ParamID kChainEnabled = 510;
 static constexpr Steinberg::Vst::ParamID kChainMode = 511;

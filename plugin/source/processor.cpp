@@ -243,7 +243,8 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
     // --- Export trigger: snapshot to staging buffer ---
     if (exportTriggered_ && !exportReady_.load(std::memory_order_acquire)) {
         exportTriggered_ = false;
-        exportEventCount_ = captureBuffer_.copyRaw(exportEvents_.data(), exportEvents_.size());
+        exportEventCount_ =
+            captureBuffer_.extractLastBars(captureLengthBars_, exportEvents_.data(), exportEvents_.size());
         exportTempo_ = tc_.tempo;
         exportReady_.store(true, std::memory_order_release);
     }
@@ -338,6 +339,25 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
             if (phraseQueue) {
                 Steinberg::int32 ptIdx;
                 phraseQueue->addPoint(0, phrasePhase, ptIdx);
+            }
+        }
+
+        {
+            Steinberg::int32 idx;
+            auto* readyQueue = outParams->addParameterData(ParamIDs::kCaptureReady, idx);
+            if (readyQueue) {
+                Steinberg::int32 ptIdx;
+                readyQueue->addPoint(0, captureBuffer_.empty() ? 0.0 : 1.0, ptIdx);
+            }
+        }
+
+        {
+            Steinberg::int32 idx;
+            auto* countQueue = outParams->addParameterData(ParamIDs::kCaptureEventCount, idx);
+            if (countQueue) {
+                Steinberg::int32 ptIdx;
+                double norm = static_cast<double>(captureBuffer_.count()) / MidiCaptureBuffer::kCapacity;
+                countQueue->addPoint(0, norm, ptIdx);
             }
         }
     }
