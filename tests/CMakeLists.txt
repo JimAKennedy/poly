@@ -56,6 +56,8 @@ if(NOT POLY_ENGINE_ONLY)
         ${CMAKE_SOURCE_DIR}/plugin/source/ui/cross_rhythm_view.cpp
         ${CMAKE_SOURCE_DIR}/plugin/source/ui/envelope_curve_view.h
         ${CMAKE_SOURCE_DIR}/plugin/source/ui/envelope_curve_view.cpp
+        ${CMAKE_SOURCE_DIR}/plugin/source/ui/export_controls_view.h
+        ${CMAKE_SOURCE_DIR}/plugin/source/ui/export_controls_view.cpp
         ${CMAKE_SOURCE_DIR}/plugin/source/ui/header_view.h
         ${CMAKE_SOURCE_DIR}/plugin/source/ui/header_view.cpp
         ${CMAKE_SOURCE_DIR}/plugin/source/ui/lane_edit_view.h
