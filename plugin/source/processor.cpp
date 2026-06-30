@@ -72,9 +72,224 @@ Steinberg::tresult PLUGIN_API PolyProcessor::setActive(Steinberg::TBool state) {
     return AudioEffect::setActive(state);
 }
 
-Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData& data) {
+void PolyProcessor::updateTransportContext(const Steinberg::Vst::ProcessData& data) {
+    if (!data.processContext)
+        return;
 
-    // --- Silence audio outputs ---
+    auto& ctx = *data.processContext;
+    tc_.tempo = ctx.tempo;
+    tc_.sampleRate = ctx.sampleRate;
+    tc_.blockSize = data.numSamples;
+    tc_.playing = (ctx.state & Steinberg::Vst::ProcessContext::kPlaying) != 0;
+    tc_.looping = (ctx.state & Steinberg::Vst::ProcessContext::kCycleActive) != 0;
+
+    if (ctx.state & Steinberg::Vst::ProcessContext::kProjectTimeMusicValid) {
+        double ppqStart = ctx.projectTimeMusic;
+        double beatsPerSample = tc_.tempo > 0.0 ? tc_.tempo / (60.0 * tc_.sampleRate) : 0.0;
+        tc_.ppqStart = ppqStart;
+        tc_.ppqEnd = ppqStart + data.numSamples * beatsPerSample;
+
+        constexpr double kJumpThreshold = 0.001;
+        tc_.jumped = (expectedNextPpq_ >= 0.0 && std::abs(ppqStart - expectedNextPpq_) > kJumpThreshold);
+        expectedNextPpq_ = tc_.ppqEnd;
+    } else {
+        tc_.ppqStart = 0.0;
+        tc_.ppqEnd = 0.0;
+        tc_.jumped = false;
+        expectedNextPpq_ = -1.0;
+    }
+
+    if (ctx.state & Steinberg::Vst::ProcessContext::kCycleValid) {
+        tc_.loopStartPpq = ctx.cycleStartMusic;
+        tc_.loopEndPpq = ctx.cycleEndMusic;
+    }
+}
+
+void PolyProcessor::handleTransportJump(Steinberg::Vst::IEventList* outputEvents) {
+    if (!tc_.jumped)
+        return;
+
+    captureBuffer_.clear();
+    if (outputEvents) {
+        PendingNoteOff allOffs[PendingNoteOffBuffer::kCapacity];
+        size_t n = pendingNoteOffs_.flushDue(-1e12, 1e12, allOffs, PendingNoteOffBuffer::kCapacity);
+        for (size_t i = 0; i < n; ++i) {
+            Steinberg::Vst::Event ev = {};
+            ev.busIndex = 0;
+            ev.sampleOffset = 0;
+            ev.ppqPosition = tc_.ppqStart;
+            ev.type = Steinberg::Vst::Event::kNoteOffEvent;
+            ev.noteOff.channel = allOffs[i].channel;
+            ev.noteOff.pitch = allOffs[i].pitch;
+            ev.noteOff.velocity = 0.0f;
+            ev.noteOff.noteId = -1;
+            outputEvents->addEvent(ev);
+        }
+    }
+    pendingNoteOffs_.clear();
+}
+
+void PolyProcessor::emitMidiOutput(Steinberg::Vst::IEventList* outputEvents, Steinberg::int32 numSamples) {
+    PendingNoteOff dueOffs[kMaxEventsPerBlock];
+    size_t numDue = pendingNoteOffs_.flushDue(tc_.ppqStart, tc_.ppqEnd, dueOffs, kMaxEventsPerBlock);
+
+    for (size_t i = 0; i < numDue; ++i) {
+        Steinberg::Vst::Event ev = {};
+        ev.busIndex = 0;
+        ev.sampleOffset = ppqToSampleOffset(dueOffs[i].ppqOff, tc_.ppqStart, tc_.tempo, tc_.sampleRate, numSamples);
+        ev.ppqPosition = dueOffs[i].ppqOff;
+        ev.type = Steinberg::Vst::Event::kNoteOffEvent;
+        ev.noteOff.channel = dueOffs[i].channel;
+        ev.noteOff.pitch = dueOffs[i].pitch;
+        ev.noteOff.velocity = 0.0f;
+        ev.noteOff.noteId = -1;
+        outputEvents->addEvent(ev);
+    }
+
+    for (size_t i = 0; i < noteBuffer_.count; ++i) {
+        const auto& note = noteBuffer_.events[i];
+
+        Steinberg::Vst::Event ev = {};
+        ev.busIndex = 0;
+        ev.sampleOffset = ppqToSampleOffset(note.ppqPosition, tc_.ppqStart, tc_.tempo, tc_.sampleRate, numSamples);
+        ev.ppqPosition = note.ppqPosition;
+        ev.type = Steinberg::Vst::Event::kNoteOnEvent;
+        auto mappedPitch = sceneState_.noteMap.apply(note.pitch);
+        ev.noteOn.channel = note.channel;
+        ev.noteOn.pitch = mappedPitch;
+        ev.noteOn.velocity = note.velocity;
+        ev.noteOn.noteId = -1;
+        outputEvents->addEvent(ev);
+
+        pendingNoteOffs_.push({
+            .ppqOff = note.ppqPosition + note.duration,
+            .pitch = mappedPitch,
+            .channel = note.channel,
+        });
+    }
+}
+
+static void outputLaneVisualization(Steinberg::Vst::IParameterChanges* outParams, const LaneConfig& cfg, int lane,
+                                    double ppqStart) {
+    auto additive = computeAdditiveCells(cfg);
+    double laneTempoScale = (cfg.tempoMultiplier > 0.0f) ? 1.0 / static_cast<double>(cfg.tempoMultiplier) : 1.0;
+    double cycleBeats = additive.count > 0 ? additive.totalPpq * laneTempoScale
+                                           : cfg.cycle.steps * (4.0 / cfg.cycle.subdivision) * laneTempoScale;
+    double lanePhase = std::fmod(ppqStart / cycleBeats, 1.0);
+    if (lanePhase < 0.0)
+        lanePhase += 1.0;
+
+    if (cfg.driftRate != 0.0f) {
+        double barPos = ppqStart / 4.0;
+        int stepsInCycle = additive.count > 0 ? additive.count : cfg.cycle.steps;
+        auto driftSteps = static_cast<int64_t>(std::floor(barPos * static_cast<double>(cfg.driftRate)));
+        double driftFrac =
+            static_cast<double>(((driftSteps % stepsInCycle) + stepsInCycle) % stepsInCycle) / stepsInCycle;
+        lanePhase = std::fmod(lanePhase + driftFrac + 1.0, 1.0);
+    }
+
+    Steinberg::int32 idx;
+    auto* phaseQueue = outParams->addParameterData(ParamIDs::lanePhaseOutput(lane), idx);
+    if (phaseQueue) {
+        Steinberg::int32 ptIdx;
+        phaseQueue->addPoint(0, lanePhase, ptIdx);
+    }
+
+    double envValue = 0.5;
+    if (cfg.envelopeCount > 0) {
+        const auto& env = cfg.envelopes[0].envelope;
+        double envPhase = computeEnvelopePhase(ppqStart, env.periodBars, env.phaseOffset);
+        envValue = static_cast<double>(evaluateShapeFull(env, static_cast<float>(envPhase)));
+    }
+
+    auto* envQueue = outParams->addParameterData(ParamIDs::envelopeValueOutput(lane), idx);
+    if (envQueue) {
+        Steinberg::int32 ptIdx;
+        envQueue->addPoint(0, envValue, ptIdx);
+    }
+
+    double phrasePhase = 0.0;
+    if (cfg.phraseLength > 0.0f) {
+        double phraseLenPpq = static_cast<double>(cfg.phraseLength);
+        double phraseGapPpq = static_cast<double>(cfg.phraseGap);
+        double phraseCyclePpq = phraseLenPpq + phraseGapPpq;
+        if (phraseCyclePpq > 0.0) {
+            double offPpq = static_cast<double>(cfg.phraseOffset);
+            double pos = std::fmod(ppqStart - offPpq, phraseCyclePpq);
+            if (pos < 0.0)
+                pos += phraseCyclePpq;
+            phrasePhase = pos / phraseCyclePpq;
+        }
+    }
+
+    auto* phraseQueue = outParams->addParameterData(ParamIDs::phrasePhaseOutput(lane), idx);
+    if (phraseQueue) {
+        Steinberg::int32 ptIdx;
+        phraseQueue->addPoint(0, phrasePhase, ptIdx);
+    }
+}
+
+void PolyProcessor::outputParameterFeedback(Steinberg::Vst::ProcessData& data, const GrooveState& resolved) {
+    auto* outParams = data.outputParameterChanges;
+    if (!outParams)
+        return;
+
+    {
+        Steinberg::int32 idx;
+        auto* ppqQueue = outParams->addParameterData(ParamIDs::kTransportPpqOutput, idx);
+        if (ppqQueue) {
+            Steinberg::int32 ptIdx;
+            double ppqNorm = std::fmod(tc_.ppqStart, 128.0) / 128.0;
+            if (ppqNorm < 0.0)
+                ppqNorm += 1.0;
+            ppqQueue->addPoint(0, ppqNorm, ptIdx);
+        }
+    }
+
+    if (noteBuffer_.count > 0) {
+        for (int lane = 0; lane < kMaxLanes; ++lane) {
+            float vel = 0.0f;
+            for (size_t i = 0; i < noteBuffer_.count; ++i) {
+                if (noteBuffer_.events[i].laneIndex == lane)
+                    vel = noteBuffer_.events[i].velocity;
+            }
+            if (vel > 0.0f) {
+                Steinberg::int32 idx;
+                auto* queue = outParams->addParameterData(ParamIDs::velocityOutput(lane), idx);
+                if (queue) {
+                    Steinberg::int32 ptIdx;
+                    queue->addPoint(0, vel, ptIdx);
+                }
+            }
+        }
+    }
+
+    for (int lane = 0; lane < kMaxLanes; ++lane) {
+        if (resolved.lanes[lane].active)
+            outputLaneVisualization(outParams, resolved.lanes[lane], lane, tc_.ppqStart);
+    }
+
+    {
+        Steinberg::int32 idx;
+        auto* readyQueue = outParams->addParameterData(ParamIDs::kCaptureReady, idx);
+        if (readyQueue) {
+            Steinberg::int32 ptIdx;
+            readyQueue->addPoint(0, captureBuffer_.empty() ? 0.0 : 1.0, ptIdx);
+        }
+    }
+
+    {
+        Steinberg::int32 idx;
+        auto* countQueue = outParams->addParameterData(ParamIDs::kCaptureEventCount, idx);
+        if (countQueue) {
+            Steinberg::int32 ptIdx;
+            double norm = static_cast<double>(captureBuffer_.count()) / MidiCaptureBuffer::kCapacity;
+            countQueue->addPoint(0, norm, ptIdx);
+        }
+    }
+}
+
+Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData& data) {
     if (data.numOutputs > 0) {
         for (Steinberg::int32 ch = 0; ch < data.outputs[0].numChannels; ++ch) {
             if (data.outputs[0].channelBuffers32[ch]) {
@@ -85,7 +300,6 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
         data.outputs[0].silenceFlags = 0x3;
     }
 
-    // --- Read parameter changes ---
     if (auto* paramChanges = data.inputParameterChanges) {
         Steinberg::int32 numParams = paramChanges->getParameterCount();
         for (Steinberg::int32 i = 0; i < numParams; ++i) {
@@ -101,70 +315,18 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
         }
     }
 
-    // --- Build TransportContext from ProcessContext ---
-    if (data.processContext) {
-        auto& ctx = *data.processContext;
-        tc_.tempo = ctx.tempo;
-        tc_.sampleRate = ctx.sampleRate;
-        tc_.blockSize = data.numSamples;
-        tc_.playing = (ctx.state & Steinberg::Vst::ProcessContext::kPlaying) != 0;
-        tc_.looping = (ctx.state & Steinberg::Vst::ProcessContext::kCycleActive) != 0;
-
-        if (ctx.state & Steinberg::Vst::ProcessContext::kProjectTimeMusicValid) {
-            double ppqStart = ctx.projectTimeMusic;
-            double beatsPerSample = tc_.tempo > 0.0 ? tc_.tempo / (60.0 * tc_.sampleRate) : 0.0;
-            tc_.ppqStart = ppqStart;
-            tc_.ppqEnd = ppqStart + data.numSamples * beatsPerSample;
-
-            constexpr double kJumpThreshold = 0.001;
-            tc_.jumped = (expectedNextPpq_ >= 0.0 && std::abs(ppqStart - expectedNextPpq_) > kJumpThreshold);
-            expectedNextPpq_ = tc_.ppqEnd;
-        } else {
-            tc_.ppqStart = 0.0;
-            tc_.ppqEnd = 0.0;
-            tc_.jumped = false;
-            expectedNextPpq_ = -1.0;
-        }
-
-        if (ctx.state & Steinberg::Vst::ProcessContext::kCycleValid) {
-            tc_.loopStartPpq = ctx.cycleStartMusic;
-            tc_.loopEndPpq = ctx.cycleEndMusic;
-        }
-    }
-
+    updateTransportContext(data);
     if (!tc_.playing)
         return Steinberg::kResultOk;
 
-    // --- Handle transport jump: kill pending noteoffs, clear capture ---
-    if (tc_.jumped) {
-        captureBuffer_.clear();
-        if (data.outputEvents) {
-            PendingNoteOff allOffs[PendingNoteOffBuffer::kCapacity];
-            size_t n = pendingNoteOffs_.flushDue(-1e12, 1e12, allOffs, PendingNoteOffBuffer::kCapacity);
-            for (size_t i = 0; i < n; ++i) {
-                Steinberg::Vst::Event ev = {};
-                ev.busIndex = 0;
-                ev.sampleOffset = 0;
-                ev.ppqPosition = tc_.ppqStart;
-                ev.type = Steinberg::Vst::Event::kNoteOffEvent;
-                ev.noteOff.channel = allOffs[i].channel;
-                ev.noteOff.pitch = allOffs[i].pitch;
-                ev.noteOff.velocity = 0.0f;
-                ev.noteOff.noteId = -1;
-                data.outputEvents->addEvent(ev);
-            }
-        }
-        pendingNoteOffs_.clear();
-    }
+    handleTransportJump(data.outputEvents);
 
-    // --- Chain advance (override scene select when enabled) ---
     if (sceneState_.chain.enabled && sceneState_.chain.entryCount > 0) {
         if (tc_.jumped)
             chainState_.reset();
         sceneState_.select = chainState_.update(sceneState_.chain, tc_.ppqStart);
     }
 
-    // --- Resolve scene with smoothed macros and render ---
     GrooveState base;
     if (sceneState_.select == SceneSelect::Morph) {
         base = interpolateGrooveState(sceneState_.sceneA, sceneState_.sceneB, sceneState_.morphAmount);
@@ -183,64 +345,14 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
     GrooveState resolved = resolveConstraints(base, resolveMacros(base));
     engine_.renderRange(tc_, resolved, noteBuffer_);
 
-    // --- Emit MIDI events ---
-    auto* outputEvents = data.outputEvents;
-    if (!outputEvents)
+    if (!data.outputEvents)
         return Steinberg::kResultOk;
 
-    // Flush due noteoffs
-    PendingNoteOff dueOffs[kMaxEventsPerBlock];
-    size_t numDue = pendingNoteOffs_.flushDue(tc_.ppqStart, tc_.ppqEnd, dueOffs, kMaxEventsPerBlock);
+    emitMidiOutput(data.outputEvents, data.numSamples);
 
-    for (size_t i = 0; i < numDue; ++i) {
-        Steinberg::Vst::Event ev = {};
-        ev.busIndex = 0;
-        ev.sampleOffset =
-            ppqToSampleOffset(dueOffs[i].ppqOff, tc_.ppqStart, tc_.tempo, tc_.sampleRate, data.numSamples);
-        ev.ppqPosition = dueOffs[i].ppqOff;
-        ev.type = Steinberg::Vst::Event::kNoteOffEvent;
-        ev.noteOff.channel = dueOffs[i].channel;
-        ev.noteOff.pitch = dueOffs[i].pitch;
-        ev.noteOff.velocity = 0.0f;
-        ev.noteOff.noteId = -1;
-        outputEvents->addEvent(ev);
-    }
-
-    // Emit noteons, schedule noteoffs, track per-lane velocity
-    float laneVelocity[kMaxLanes] = {};
-
-    for (size_t i = 0; i < noteBuffer_.count; ++i) {
-        const auto& note = noteBuffer_.events[i];
-
-        Steinberg::Vst::Event ev = {};
-        ev.busIndex = 0;
-        ev.sampleOffset = ppqToSampleOffset(note.ppqPosition, tc_.ppqStart, tc_.tempo, tc_.sampleRate, data.numSamples);
-        ev.ppqPosition = note.ppqPosition;
-        ev.type = Steinberg::Vst::Event::kNoteOnEvent;
-        auto mappedPitch = sceneState_.noteMap.apply(note.pitch);
-        ev.noteOn.channel = note.channel;
-        ev.noteOn.pitch = mappedPitch;
-        ev.noteOn.velocity = note.velocity;
-        ev.noteOn.noteId = -1;
-        outputEvents->addEvent(ev);
-
-        pendingNoteOffs_.push({
-            .ppqOff = note.ppqPosition + note.duration,
-            .pitch = mappedPitch,
-            .channel = note.channel,
-        });
-
-        if (note.laneIndex >= 0 && note.laneIndex < kMaxLanes) {
-            laneVelocity[note.laneIndex] = note.velocity;
-        }
-    }
-
-    // --- Push to capture buffer ---
-    for (size_t i = 0; i < noteBuffer_.count; ++i) {
+    for (size_t i = 0; i < noteBuffer_.count; ++i)
         captureBuffer_.push(noteBuffer_.events[i]);
-    }
 
-    // --- Export trigger: snapshot to staging buffer ---
     if (exportTriggered_ && !exportReady_.load(std::memory_order_acquire)) {
         exportTriggered_ = false;
         exportEventCount_ =
@@ -249,149 +361,37 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
         exportReady_.store(true, std::memory_order_release);
     }
 
-    if (auto* outParams = data.outputParameterChanges) {
-        {
-            Steinberg::int32 idx;
-            auto* ppqQueue = outParams->addParameterData(ParamIDs::kTransportPpqOutput, idx);
-            if (ppqQueue) {
-                Steinberg::int32 ptIdx;
-                double ppqNorm = std::fmod(tc_.ppqStart, 128.0) / 128.0;
-                if (ppqNorm < 0.0)
-                    ppqNorm += 1.0;
-                ppqQueue->addPoint(0, ppqNorm, ptIdx);
-            }
-        }
-
-        if (noteBuffer_.count > 0) {
-            for (int lane = 0; lane < kMaxLanes; ++lane) {
-                if (laneVelocity[lane] > 0.0f) {
-                    Steinberg::int32 idx;
-                    auto* queue = outParams->addParameterData(ParamIDs::velocityOutput(lane), idx);
-                    if (queue) {
-                        Steinberg::int32 ptIdx;
-                        queue->addPoint(0, laneVelocity[lane], ptIdx);
-                    }
-                }
-            }
-        }
-
-        for (int lane = 0; lane < kMaxLanes; ++lane) {
-            if (!resolved.lanes[lane].active)
-                continue;
-
-            auto additive = computeAdditiveCells(resolved.lanes[lane]);
-            double laneTempoScale = (resolved.lanes[lane].tempoMultiplier > 0.0f)
-                                        ? 1.0 / static_cast<double>(resolved.lanes[lane].tempoMultiplier)
-                                        : 1.0;
-            double cycleBeats = additive.count > 0
-                                    ? additive.totalPpq * laneTempoScale
-                                    : resolved.lanes[lane].cycle.steps *
-                                          (4.0 / resolved.lanes[lane].cycle.subdivision) * laneTempoScale;
-            double lanePhase = std::fmod(tc_.ppqStart / cycleBeats, 1.0);
-            if (lanePhase < 0.0)
-                lanePhase += 1.0;
-
-            if (resolved.lanes[lane].driftRate != 0.0f) {
-                double barPos = tc_.ppqStart / 4.0;
-                int stepsInCycle = additive.count > 0 ? additive.count : resolved.lanes[lane].cycle.steps;
-                auto driftSteps =
-                    static_cast<int64_t>(std::floor(barPos * static_cast<double>(resolved.lanes[lane].driftRate)));
-                double driftFrac =
-                    static_cast<double>(((driftSteps % stepsInCycle) + stepsInCycle) % stepsInCycle) / stepsInCycle;
-                lanePhase = std::fmod(lanePhase + driftFrac + 1.0, 1.0);
-            }
-
-            Steinberg::int32 idx;
-            auto* phaseQueue = outParams->addParameterData(ParamIDs::lanePhaseOutput(lane), idx);
-            if (phaseQueue) {
-                Steinberg::int32 ptIdx;
-                phaseQueue->addPoint(0, lanePhase, ptIdx);
-            }
-
-            double envValue = 0.5;
-            if (resolved.lanes[lane].envelopeCount > 0) {
-                const auto& env = resolved.lanes[lane].envelopes[0].envelope;
-                double envPhase = computeEnvelopePhase(tc_.ppqStart, env.periodBars, env.phaseOffset);
-                envValue = static_cast<double>(evaluateShapeFull(env, static_cast<float>(envPhase)));
-            }
-
-            auto* envQueue = outParams->addParameterData(ParamIDs::envelopeValueOutput(lane), idx);
-            if (envQueue) {
-                Steinberg::int32 ptIdx;
-                envQueue->addPoint(0, envValue, ptIdx);
-            }
-
-            double phrasePhase = 0.0;
-            if (resolved.lanes[lane].phraseLength > 0.0f) {
-                double phraseLenPpq = static_cast<double>(resolved.lanes[lane].phraseLength);
-                double phraseGapPpq = static_cast<double>(resolved.lanes[lane].phraseGap);
-                double phraseCyclePpq = phraseLenPpq + phraseGapPpq;
-                if (phraseCyclePpq > 0.0) {
-                    double offPpq = static_cast<double>(resolved.lanes[lane].phraseOffset);
-                    double pos = std::fmod(tc_.ppqStart - offPpq, phraseCyclePpq);
-                    if (pos < 0.0)
-                        pos += phraseCyclePpq;
-                    phrasePhase = pos / phraseCyclePpq;
-                }
-            }
-
-            auto* phraseQueue = outParams->addParameterData(ParamIDs::phrasePhaseOutput(lane), idx);
-            if (phraseQueue) {
-                Steinberg::int32 ptIdx;
-                phraseQueue->addPoint(0, phrasePhase, ptIdx);
-            }
-        }
-
-        {
-            Steinberg::int32 idx;
-            auto* readyQueue = outParams->addParameterData(ParamIDs::kCaptureReady, idx);
-            if (readyQueue) {
-                Steinberg::int32 ptIdx;
-                readyQueue->addPoint(0, captureBuffer_.empty() ? 0.0 : 1.0, ptIdx);
-            }
-        }
-
-        {
-            Steinberg::int32 idx;
-            auto* countQueue = outParams->addParameterData(ParamIDs::kCaptureEventCount, idx);
-            if (countQueue) {
-                Steinberg::int32 ptIdx;
-                double norm = static_cast<double>(captureBuffer_.count()) / MidiCaptureBuffer::kCapacity;
-                countQueue->addPoint(0, norm, ptIdx);
-            }
-        }
-    }
-
+    outputParameterFeedback(data, resolved);
     return Steinberg::kResultOk;
 }
 
-void PolyProcessor::applyParameter(Steinberg::Vst::ParamID id, double normalized) {
+bool PolyProcessor::applySceneParameter(Steinberg::Vst::ParamID id, double normalized) {
     using namespace ParamIDs;
 
     if (id == kSceneSelect) {
         int sel = static_cast<int>(std::round(normalized * 2.0));
         sceneState_.select = static_cast<SceneSelect>(std::clamp(sel, 0, 2));
-        return;
+        return true;
     }
     if (id == kSceneMorph) {
         sceneState_.morphAmount = static_cast<float>(normalized);
-        return;
+        return true;
     }
     if (id == kChainEnabled) {
         bool wasEnabled = sceneState_.chain.enabled;
         sceneState_.chain.enabled = (normalized > 0.5);
         if (sceneState_.chain.enabled && !wasEnabled)
             chainState_.reset();
-        return;
+        return true;
     }
     if (id == kChainMode) {
         int m = static_cast<int>(std::round(normalized * 2.0));
         sceneState_.chain.mode = static_cast<ChainMode>(std::clamp(m, 0, 2));
-        return;
+        return true;
     }
     if (id == kChainEntryCount) {
         sceneState_.chain.entryCount = static_cast<int>(std::round(normalized * static_cast<double>(kMaxChainEntries)));
-        return;
+        return true;
     }
     if (id >= kChainEntryBase &&
         id < kChainEntryBase + static_cast<Steinberg::Vst::ParamID>(kMaxChainEntries * kChainParamsPerEntry)) {
@@ -407,150 +407,173 @@ void PolyProcessor::applyParameter(Steinberg::Vst::ParamID id, double normalized
                 e.bars = 1 + static_cast<int>(std::round(normalized * 31.0));
             }
         }
-        return;
+        return true;
     }
+    return false;
+}
+
+static bool applyCoreParam(Steinberg::Vst::ParamID id, double normalized, GrooveState& gs) {
+    using namespace ParamIDs;
+    if (id < kLaneCoreBase ||
+        id >= kLaneCoreBase + static_cast<Steinberg::Vst::ParamID>(kMaxLanes * kCoreParamsPerLane))
+        return false;
+
+    auto rel = static_cast<int>(id - kLaneCoreBase);
+    int lane = rel / kCoreParamsPerLane;
+    int offset = rel % kCoreParamsPerLane;
+    auto& cfg = gs.lanes[lane];
+    switch (offset) {
+    case kCoreSteps:
+        cfg.cycle.steps = 1 + static_cast<int>(std::round(normalized * 63.0));
+        break;
+    case kCoreSubdivision: {
+        static constexpr int subdivs[] = {1, 2, 4, 8, 16};
+        int idx = static_cast<int>(std::round(normalized * 4.0));
+        cfg.cycle.subdivision = subdivs[std::clamp(idx, 0, 4)];
+        break;
+    }
+    case kCoreHits:
+        cfg.hitCount = static_cast<int>(std::round(normalized * 64.0));
+        break;
+    case kCoreRotation:
+        cfg.rotation = static_cast<int>(std::round(normalized * 63.0));
+        break;
+    case kCoreMidiNote:
+        cfg.midiNote = static_cast<int16_t>(std::round(normalized * 127.0));
+        break;
+    case kCoreCellCount:
+        cfg.cellCount = static_cast<int>(std::round(normalized * 64.0));
+        break;
+    case kCoreTimeline:
+        cfg.timeline = normalized > 0.5;
+        break;
+    case kCoreFixedPatternLen:
+        cfg.fixedPatternLength = static_cast<int>(std::round(normalized * 64.0));
+        break;
+    case kCoreTempoMult:
+        cfg.tempoMultiplier = static_cast<float>(0.25 + normalized * 3.75);
+        break;
+    case kCoreMidiChannel:
+        cfg.midiChannel = static_cast<int16_t>(std::round(normalized * 16.0)) - 1;
+        break;
+    default:
+        break;
+    }
+    return true;
+}
+
+static bool applyExpressionParam(Steinberg::Vst::ParamID id, double normalized, GrooveState& gs) {
+    using namespace ParamIDs;
+    if (id >= static_cast<Steinberg::Vst::ParamID>(kMaxLanes * kParamsPerLane))
+        return false;
+
+    int lane = static_cast<int>(id) / kParamsPerLane;
+    int offset = static_cast<int>(id) % kParamsPerLane;
+    auto& cfg = gs.lanes[lane];
+    switch (offset) {
+    case kProbability:
+        cfg.probability = static_cast<float>(normalized);
+        break;
+    case kBaseVelocity:
+        cfg.baseVelocity = static_cast<uint8_t>(std::round(normalized * 127.0));
+        break;
+    case kEmphasisProb:
+        cfg.emphasisProb = static_cast<float>(normalized);
+        break;
+    case kGhostFloor:
+        cfg.ghostFloor = static_cast<uint8_t>(std::round(normalized * 127.0));
+        break;
+    case kVelocitySpread:
+        cfg.velocitySpread = static_cast<float>(normalized);
+        break;
+    case kSwingAmount:
+        cfg.swingAmount = static_cast<float>(normalized);
+        break;
+    case kHumanizeMs:
+        cfg.humanizeMs = static_cast<float>(normalized * 50.0);
+        break;
+    case kNoteDuration:
+        cfg.noteDuration = static_cast<float>(normalized * 4.0);
+        break;
+    case kActive:
+        cfg.active = (normalized > 0.5);
+        break;
+    case kPhraseLength:
+        cfg.phraseLength = static_cast<float>(normalized * 64.0);
+        break;
+    case kPhraseGap:
+        cfg.phraseGap = static_cast<float>(normalized * 64.0);
+        break;
+    case kPhraseOffset:
+        cfg.phraseOffset = static_cast<float>(normalized * 64.0);
+        break;
+    case kMutationRate:
+        cfg.mutationRate = static_cast<float>(normalized);
+        break;
+    case kDriftRate:
+        cfg.driftRate = static_cast<float>(normalized * 8.0 - 4.0);
+        break;
+    case kTimingOffset:
+        cfg.timingOffsetMs = static_cast<float>(normalized * 40.0 - 20.0);
+        break;
+    case kKotekanSource:
+        cfg.kotekanSourceLane = static_cast<int>(std::round(normalized * 8.0)) - 1;
+        break;
+    default:
+        break;
+    }
+    return true;
+}
+
+bool PolyProcessor::applyLaneParameter(Steinberg::Vst::ParamID id, double normalized, GrooveState& gs) {
+    return applyCoreParam(id, normalized, gs) || applyExpressionParam(id, normalized, gs);
+}
+
+void PolyProcessor::applyParameter(Steinberg::Vst::ParamID id, double normalized) {
+    using namespace ParamIDs;
+
+    if (applySceneParameter(id, normalized))
+        return;
 
     auto& gs = (sceneState_.select == SceneSelect::B) ? sceneState_.sceneB : sceneState_.sceneA;
 
-    if (id >= kLaneCoreBase &&
-        id < kLaneCoreBase + static_cast<Steinberg::Vst::ParamID>(kMaxLanes * kCoreParamsPerLane)) {
-        auto rel = static_cast<int>(id - kLaneCoreBase);
-        int lane = rel / kCoreParamsPerLane;
-        int offset = rel % kCoreParamsPerLane;
-        auto& cfg = gs.lanes[lane];
-        switch (offset) {
-        case kCoreSteps:
-            cfg.cycle.steps = 1 + static_cast<int>(std::round(normalized * 63.0));
-            break;
-        case kCoreSubdivision: {
-            static constexpr int subdivs[] = {1, 2, 4, 8, 16};
-            int idx = static_cast<int>(std::round(normalized * 4.0));
-            cfg.cycle.subdivision = subdivs[std::clamp(idx, 0, 4)];
-            break;
-        }
-        case kCoreHits:
-            cfg.hitCount = static_cast<int>(std::round(normalized * 64.0));
-            break;
-        case kCoreRotation:
-            cfg.rotation = static_cast<int>(std::round(normalized * 63.0));
-            break;
-        case kCoreMidiNote:
-            cfg.midiNote = static_cast<int16_t>(std::round(normalized * 127.0));
-            break;
-        case kCoreCellCount:
-            cfg.cellCount = static_cast<int>(std::round(normalized * 64.0));
-            break;
-        case kCoreTimeline:
-            cfg.timeline = normalized > 0.5;
-            break;
-        case kCoreFixedPatternLen:
-            cfg.fixedPatternLength = static_cast<int>(std::round(normalized * 64.0));
-            break;
-        case kCoreTempoMult:
-            cfg.tempoMultiplier = static_cast<float>(0.25 + normalized * 3.75);
-            break;
-        case kCoreMidiChannel:
-            cfg.midiChannel = static_cast<int16_t>(std::round(normalized * 16.0)) - 1;
-            break;
-        default:
-            break;
-        }
+    if (applyLaneParameter(id, normalized, gs))
         return;
-    }
 
-    if (id < static_cast<Steinberg::Vst::ParamID>(kMaxLanes * kParamsPerLane)) {
-        int lane = static_cast<int>(id) / kParamsPerLane;
-        int offset = static_cast<int>(id) % kParamsPerLane;
-        auto& cfg = gs.lanes[lane];
-
-        switch (offset) {
-        case kProbability:
-            cfg.probability = static_cast<float>(normalized);
-            break;
-        case kBaseVelocity:
-            cfg.baseVelocity = static_cast<uint8_t>(std::round(normalized * 127.0));
-            break;
-        case kEmphasisProb:
-            cfg.emphasisProb = static_cast<float>(normalized);
-            break;
-        case kGhostFloor:
-            cfg.ghostFloor = static_cast<uint8_t>(std::round(normalized * 127.0));
-            break;
-        case kVelocitySpread:
-            cfg.velocitySpread = static_cast<float>(normalized);
-            break;
-        case kSwingAmount:
-            cfg.swingAmount = static_cast<float>(normalized);
-            break;
-        case kHumanizeMs:
-            cfg.humanizeMs = static_cast<float>(normalized * 50.0);
-            break;
-        case kNoteDuration:
-            cfg.noteDuration = static_cast<float>(normalized * 4.0);
-            break;
-        case kActive:
-            cfg.active = (normalized > 0.5);
-            break;
-        case kPhraseLength:
-            cfg.phraseLength = static_cast<float>(normalized * 64.0);
-            break;
-        case kPhraseGap:
-            cfg.phraseGap = static_cast<float>(normalized * 64.0);
-            break;
-        case kPhraseOffset:
-            cfg.phraseOffset = static_cast<float>(normalized * 64.0);
-            break;
-        case kMutationRate:
-            cfg.mutationRate = static_cast<float>(normalized);
-            break;
-        case kDriftRate:
-            cfg.driftRate = static_cast<float>(normalized * 8.0 - 4.0);
-            break;
-        case kTimingOffset:
-            cfg.timingOffsetMs = static_cast<float>(normalized * 40.0 - 20.0);
-            break;
-        case kKotekanSource:
-            cfg.kotekanSourceLane = static_cast<int>(std::round(normalized * 8.0)) - 1;
-            break;
-        default:
-            break;
-        }
-    } else {
-        switch (id) {
-        case kMacroComplexity:
-            gs.macros.complexity = static_cast<float>(normalized);
-            break;
-        case kMacroDensity:
-            gs.macros.density = static_cast<float>(normalized);
-            break;
-        case kMacroSyncopation:
-            gs.macros.syncopation = static_cast<float>(normalized);
-            break;
-        case kMacroSwing:
-            gs.macros.swing = static_cast<float>(normalized);
-            break;
-        case kMacroTension:
-            gs.macros.tension = static_cast<float>(normalized);
-            break;
-        case kMacroHumanize:
-            gs.macros.humanize = static_cast<float>(normalized);
-            break;
-        case kActiveLaneCount:
-            gs.activeLaneCount = 1 + static_cast<int>(std::round(normalized * 7.0));
-            break;
-        case kSeed:
-            gs.seed = static_cast<uint64_t>(std::round(normalized * 999999.0));
-            break;
-        case kExportTrigger:
-            if (normalized > 0.5)
-                exportTriggered_ = true;
-            break;
-        case kCaptureLength:
-            captureLengthBars_ = 1 + static_cast<int>(std::round(normalized * 31.0));
-            break;
-        default:
-            break;
-        }
+    switch (id) {
+    case kMacroComplexity:
+        gs.macros.complexity = static_cast<float>(normalized);
+        break;
+    case kMacroDensity:
+        gs.macros.density = static_cast<float>(normalized);
+        break;
+    case kMacroSyncopation:
+        gs.macros.syncopation = static_cast<float>(normalized);
+        break;
+    case kMacroSwing:
+        gs.macros.swing = static_cast<float>(normalized);
+        break;
+    case kMacroTension:
+        gs.macros.tension = static_cast<float>(normalized);
+        break;
+    case kMacroHumanize:
+        gs.macros.humanize = static_cast<float>(normalized);
+        break;
+    case kActiveLaneCount:
+        gs.activeLaneCount = 1 + static_cast<int>(std::round(normalized * 7.0));
+        break;
+    case kSeed:
+        gs.seed = static_cast<uint64_t>(std::round(normalized * 999999.0));
+        break;
+    case kExportTrigger:
+        if (normalized > 0.5)
+            exportTriggered_ = true;
+        break;
+    case kCaptureLength:
+        captureLengthBars_ = 1 + static_cast<int>(std::round(normalized * 31.0));
+        break;
+    default:
+        break;
     }
 }
 
