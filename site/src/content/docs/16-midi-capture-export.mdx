@@ -1,0 +1,80 @@
+---
+title: "16. MIDI Capture and Export"
+description: "Record Poly's generated grooves as Standard MIDI Files — circular buffer capture, export controls, and drag-and-drop workflow."
+---
+
+import PolyPatch from '../../components/PolyPatch.astro';
+import ListenFor from '../../components/ListenFor.astro';
+import CodeSnippet from '../../components/CodeSnippet.astro';
+
+Poly generates rhythms that evolve. The macro system, mutation engine, and envelope modulators mean that the groove you hear at bar 12 is not the same groove you heard at bar 4 — and may never recur in exactly that form again. This is the engine's strength, but it creates a practical problem: how do you keep the good ones?
+
+The answer is MIDI capture. Poly continuously records every note it generates into a circular buffer, and on demand, exports that buffer as a Standard MIDI File. No arming, no pre-roll, no configuration. You play until you hear something worth keeping, trigger an export, and the last several bars of output become a `.mid` file you can import into any DAW arrangement.
+
+## The Capture Buffer
+
+Every `NoteEvent` that Poly's engine produces during playback is written into a `MidiCaptureBuffer` — a fixed-size circular buffer that holds the most recent 2048 events. At typical groove densities (four to six active lanes, moderate Density), this covers roughly eight bars of output. Busier patches with high Complexity and many active lanes will fill the buffer faster; sparser patches will retain more history.
+
+The buffer stores each event's PPQ position, pitch, velocity, MIDI channel, and duration — everything needed to reconstruct the musical content as a standard MIDI part. There is no separate "recording" state to engage. As long as the DAW transport is running, the buffer is capturing. When the transport stops, the buffer resets.
+
+This design is deliberate. Poly's output is generative — every playback produces a slightly different result, shaped by mutation, humanization, and macro modulation. The circular buffer ensures that whatever you just heard is always available for export, without requiring you to anticipate which pass will produce the keeper. You listen, you react, you capture.
+
+The 2048-event capacity is a hard limit. When the buffer is full, the oldest events are overwritten as new ones arrive. This is the standard circular buffer trade-off: you always have the most recent material, but distant history is gone. For most workflows this is exactly right — you are capturing a moment, not an entire session.
+
+## Export Controls
+
+Three parameters control the capture-to-file workflow. All three are exposed as standard VST3 parameters, which means they can be automated from the DAW timeline or triggered from a MIDI controller.
+
+| Parameter | ID | Range | Purpose |
+|---|---|---|---|
+| Export Trigger | 600 | Button | Initiates export of the capture buffer |
+| Capture Length | 601 | 1-32 bars | How many bars of history to include |
+| Capture Ready | 602 | Read-only | Signals that export is complete |
+
+The workflow is straightforward. While Poly is playing and generating output, set the Capture Length to however many bars you want to retain — the default is 8, which suits most four-to-eight-bar groove cycles. When you hear a passage worth exporting, trigger Export. Poly's engine calls `extractLastBars()` on the circular buffer, pulling the most recent N bars of events sorted by PPQ position. Those events are then passed to the SMF writer, which produces a binary Standard MIDI File.
+
+The Capture Ready parameter flips to indicate completion. In the plugin's export controls view, this manifests as a visual confirmation — the export button reflects the ready state so you know the file has been written.
+
+The Capture Length parameter accepts values from 1 to 32 bars. For short, punchy loops — a two-bar clave figure, a four-bar kick pattern — lower values produce tighter exports with less material to trim. For polymetric patches with long repeat cycles, higher values (16 or 32 bars) ensure you capture a full cycle of the combined pattern. Remember that `lcm(7, 12) = 84` steps — at 1/8 subdivision, that is over 10 bars before the pattern repeats. Capture enough to hear the full polymetric arc.
+
+## Standard MIDI File Format
+
+The SMF writer converts captured `NoteEvent` objects into a binary Type 0 Standard MIDI File — a single-track format understood by every DAW, notation program, and MIDI utility in existence.
+
+<CodeSnippet file="engine/include/poly/smf_writer.h" region="writeSMF" caption="SMF writer converts captured events to binary MIDI file format" />
+
+The function takes a pointer to the captured events, the event count, the current DAW tempo, and an optional PPQ offset for normalizing event positions to start at beat zero. It returns the complete SMF as a byte vector.
+
+Key details of the output format:
+
+The resolution is 480 ticks per quarter note — high enough to preserve the micro-timing variations from Poly's Humanize and Swing parameters without quantization artifacts. Each event becomes a note-on/note-off pair, with velocities mapped from the engine's 0.0-1.0 float range to MIDI's 0-127 integer range. All MIDI channels from the input events are preserved, so if your lanes are routed to different channels (kick on channel 10, hi-hat on channel 11), the exported file retains that routing. A tempo meta-event at the start of the track records the DAW's current tempo, ensuring the file plays back at the correct speed when imported.
+
+The note-on and note-off messages are sorted by tick position, with note-off events ordered before note-on events at the same tick to avoid hanging notes. The resulting file ends with a standard end-of-track meta-event. The entire structure conforms to the MIDI 1.0 specification — no extensions, no proprietary data, no compatibility surprises.
+
+## Practical Workflow
+
+A typical capture session follows a natural cycle of exploration and commitment.
+
+Start by loading a preset or building a patch from scratch. Play for several bars, adjusting macros — sweeping Density to find the right texture, nudging Complexity to add or remove ornamentation, experimenting with Swing and Humanize values until the feel is right. The capture buffer is silently recording everything.
+
+When you hear a passage that works — a four-bar groove where the polymetric convergence lands perfectly, or a transition where a scene morph produces an unexpectedly musical density shift — trigger the export. Set Capture Length to match the passage you want (8 bars is a safe default; adjust if you know you want a shorter loop or a longer arc), and press the Export button.
+
+The resulting SMF file appears in your project directory. Import it into your DAW as a standard MIDI part — in Cubase, drag it onto a MIDI or Instrument track; in other DAWs, use the standard MIDI import. The part appears in the Key Editor or Drum Editor as ordinary MIDI notes, fully editable. You can quantize, transpose, thin, layer, or rearrange the captured material. It is completely independent of Poly — the export is a snapshot, not a live link.
+
+This independence is the point. Poly's generative output is excellent for discovering rhythmic ideas, but a final arrangement needs stability. Export captures the moment of discovery; the DAW provides the tools for refinement.
+
+## Tips
+
+Capture is especially powerful during scene morphs. When the Scene Morph parameter sweeps from A to B, the groove transforms continuously — Density shifts, Complexity evolves, the rhythmic texture reorganizes itself. Exporting during a morph captures that transition as concrete MIDI data. You get a passage that starts sparse and ends dense (or vice versa), with every intermediate state preserved as actual note events rather than parameter automation.
+
+For polymetric patches with long repeat cycles, use correspondingly long capture lengths. A patch combining 7-step, 12-step, and 5-step lanes has a combined cycle of `lcm(7, 12, 5) = 420` steps — at 1/8 subdivision, that is over 26 bars before the full polymetric pattern repeats. A 32-bar capture at that scale gives you most of the cycle, enough to identify the structural landmarks and convergence points.
+
+Export at several different points during a mutation-heavy patch to collect variations. Each capture is a different snapshot of the same generative process — different ghost-note placements, different fill events, different micro-timing offsets. Import three or four captures into adjacent DAW tracks and compare them in the Drum Editor. You will quickly see which variations have the strongest grooves, and you can composite the best sections from each.
+
+The export includes all active lanes, each on its own MIDI channel. After import, you can mute or delete individual channels to isolate specific voices — strip out everything except the kick and snare, or keep only the ghost-hat pattern. This is a fast way to build a static arrangement from Poly's ensemble output: capture the full texture, then sculpt it down to exactly what the mix needs.
+
+<ListenFor>
+
+Build a patch with high mutation and moderate Complexity. Play for 16 bars, then export. Import the capture into your DAW and study it in the Drum Editor — you will see the mutation engine's fingerprints as subtle velocity variations and displaced ghost notes that you never would have programmed by hand. Now play another 16 bars and export again. Compare the two captures side by side. The Euclidean skeleton is identical, but the surface detail is different — different ghost placements, different fill events, different timing offsets. This is Poly's compositional value: each capture is a unique realization of the same generative structure. Layer two or three captures, mute the weaker sections, and you have an arrangement built from controlled variation rather than copy-paste repetition.
+
+</ListenFor>
