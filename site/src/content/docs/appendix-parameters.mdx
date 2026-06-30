@@ -1,0 +1,142 @@
+---
+title: "Appendix: Parameter Reference"
+description: "Complete reference for all lane, macro, scene, export, and global parameters — ranges, defaults, and descriptions."
+---
+
+This appendix is the single-source lookup for every parameter in Poly. Parameters are grouped by category; internal parameter IDs are listed where applicable for preset authors and automation mapping.
+
+## Per-Lane Parameters
+
+Each of the 8 lanes exposes the following parameters. Lane-scoped parameter IDs are computed as `lane * 16 + offset` (expression parameters) and `800 + lane * 10 + offset` (core parameters).
+
+### Core
+
+| Parameter | ID Offset | Range | Default | Description |
+|---|---|---|---|---|
+| Active | 8 | On / Off | On (L1--L4), Off (L5--L8) | Enable or disable the lane |
+| MIDI Note | core 4 | 0--127 | Varies by lane (36, 38, 42, 45, 46, 39, 43, 50) | GM drum note assignment |
+| MIDI Channel | core 9 | -1 to 15 | -1 (Auto) | -1 = lane index as channel; 0--15 = explicit MIDI channel |
+| Steps | core 0 | 1--64 | 8 | Cycle length in steps |
+| Hits | core 2 | 0--Steps | 3 | Number of active hits per cycle (Euclidean distribution) |
+| Rotation | core 3 | 0--(Steps-1) | 0 | Pattern rotation offset |
+| Subdivision | core 1 | 1, 2, 4, 8, 16 | 8 (1/8 note) | Step grid resolution: 1=whole, 2=half, 4=quarter, 8=eighth, 16=sixteenth |
+| Tempo Mult | core 8 | 0.25x--4.0x | 1.0x | Per-lane tempo scaling (Nancarrow-style) |
+
+### Expression
+
+| Parameter | ID Offset | Range | Default | Description |
+|---|---|---|---|---|
+| Probability | 0 | 0--100% | 100% | Chance each note triggers per cycle |
+| Base Velocity | 1 | 0--127 | 100 | Default MIDI velocity |
+| Emphasis Prob | 2 | 0--100% | 50% | Probability of accented hits |
+| Ghost Floor | 3 | 0--127 | 30 | Minimum velocity for ghost notes |
+| Velocity Spread | 4 | 0--100% | 5% | Random velocity variation around base velocity |
+| Swing Amount | 5 | 0--100% | 0% | Swing feel (delays alternate steps) |
+| Humanize | 6 | 0--50ms | 0ms | Random timing jitter per note |
+| Note Duration | 7 | 0--4 beats | 0.0 | MIDI note-off duration |
+| Phrase Length | 9 | 0--32 beats | 0 (continuous) | Phrase gating period; 0 = no gating |
+| Phrase Gap | 10 | 0--32 beats | 0 | Silence between phrases |
+| Phrase Offset | 11 | 0--32 beats | 0 | Phase offset for this lane's phrase cycle |
+| Mutation Rate | 12 | 0--100% | 0% | Per-step random pattern variation each cycle |
+| Drift Rate | 13 | 0--10 steps/bar | 0 | Phase drift speed (Reich phasing) |
+| Timing Offset | 14 | -20 to +20ms | 0ms | Fixed per-lane timing offset (positive = late) |
+| Kotekan Source | 15 | -1 to 7 | -1 | -1 = independent; 0--7 = complement source lane |
+
+### Additive / Timeline
+
+| Parameter | ID Offset | Range | Default | Description |
+|---|---|---|---|---|
+| Cell Count | core 5 | 0--64 | 0 | 0 = standard Euclidean; >0 = additive cell mode (aksak) |
+| Cell Sizes | (state only) | Array of ints | [] | Subdivision units per cell (e.g., [2,2,3] for 7/8) |
+| Timeline | core 6 | On / Off | Off | Use fixed pattern instead of Euclidean distribution |
+| Fixed Pattern | (state only) | Array of booleans | [] | Per-step on/off for timeline mode |
+| Fixed Pattern Length | core 7 | 0--64 | 0 | 0 = use Steps value; >0 = explicit timeline length |
+
+### Per-Step Modulation
+
+| Parameter | Range | Default | Description |
+|---|---|---|---|
+| Syncopation Offset | 0.0--1.0 | 0.0 | Push strong-beat steps late |
+| Micro-Timing | -20 to +20ms per step | 0ms | Per-step timing offset array |
+
+## Envelope Parameters
+
+Each lane supports up to 4 envelope assignments (`kMaxEnvelopesPerLane = 4`). Envelopes modulate lane parameters over time, phase-locked to transport position.
+
+| Parameter | Range | Default | Description |
+|---|---|---|---|
+| Target | Velocity, Density, Probability, AccentBias, NoteLength, TimingLooseness, ActivationWeight, FillLikelihood | Velocity | Which parameter the envelope modulates |
+| Shape | Ramp, Sine, Triangle, Curve, StepList | Sine | Envelope waveform |
+| Depth | 0--100% | 100% | Modulation depth |
+| Period | 0.25--64 bars | 4 bars | Envelope cycle length in bars |
+| Phase Offset | 0--100% | 0% | Initial phase offset |
+| Curvature | -1.0 to 1.0 | 0.0 | Shape curvature bias (Curve shape only) |
+| Step Values | Array of floats (max 16) | [] | Per-step levels (StepList shape only) |
+| Active | On / Off | On | Enable or disable this envelope slot |
+
+## Macro Parameters
+
+Macros apply broad-stroke adjustments across all lanes simultaneously.
+
+| Parameter | ID | Range | Default | Description |
+|---|---|---|---|---|
+| Complexity | 200 | 0--100% | 50% | Rhythmic intricacy across all lanes |
+| Density | 201 | 0--100% | 50% | Active hit count per cycle |
+| Syncopation | 202 | 0--100% | 0% | Emphasis shift away from strong beats |
+| Swing | 203 | 0--100% | 0% | Global swing feel |
+| Tension | 204 | 0--100% | 0% | Rhythmic unpredictability and conflict |
+| Humanize | 205 | 0--100% | 0% | Global timing and velocity imperfections |
+
+## Scene Parameters
+
+| Parameter | ID | Range | Default | Description |
+|---|---|---|---|---|
+| Scene Select | 500 | A / B / Morph | A | Active scene (3-way: 0=A, 1=B, 2=Morph) |
+| Morph Amount | 501 | 0--100% | 0% | Blend between Scene A and Scene B |
+
+## Chain Parameters
+
+| Parameter | ID | Range | Default | Description |
+|---|---|---|---|---|
+| Chain Enable | 510 | On / Off | Off | Activate automated scene sequencing |
+| Chain Mode | 511 | OneShot / Loop / PingPong | OneShot | Behavior at end of sequence |
+| Chain Length | 512 | 1--16 | 1 | Number of entries in the chain |
+| Entry N Scene | 520 + N*2 | A / B / Morph | A | Scene for entry N |
+| Entry N Bars | 521 + N*2 | 1--32 | 4 | Duration of entry N in bars |
+
+## Global Parameters
+
+| Parameter | ID | Range | Default | Description |
+|---|---|---|---|---|
+| Active Lane Count | 300 | 1--8 | 4 | Number of active lanes |
+| Seed | 301 | 0--999999 | 0 | Random seed for pattern generation |
+| Selected Lane | 700 | 0--7 | 0 | Currently selected lane in the UI |
+
+## MIDI Export Parameters
+
+| Parameter | ID | Range | Description |
+|---|---|---|---|
+| Export Trigger | 600 | Button | Initiates capture-to-file |
+| Capture Length | 601 | 1--32 bars | History window for export |
+| Capture Ready | 602 | Read-only | Indicates export buffer is complete |
+| Capture Event Count | 603 | Read-only | Number of events in the capture buffer |
+
+## Output Parameters (Read-Only)
+
+These parameters are written by the engine for UI display; they are not user-editable.
+
+| Parameter | ID | Description |
+|---|---|---|
+| Velocity Output (per lane) | 400--407 | Last-triggered velocity for lane 0--7 |
+| Lane Phase Output (per lane) | 420--427 | Current cycle phase for lane 0--7 |
+| Envelope Value Output (per lane) | 430--437 | Current envelope modulation value for lane 0--7 |
+| Phrase Phase Output (per lane) | 440--447 | Current phrase cycle phase for lane 0--7 |
+| Transport PPQ | 450 | Current transport position in PPQ |
+
+## Note Map
+
+The Note Map is a 128-entry remapping grid at the scene level. Each MIDI note (0--127) maps to a destination note. Default: identity mapping (note N maps to note N). Applied globally to all lane output after channel assignment.
+
+---
+
+For the musical context and application of each parameter, see the relevant chapters. For factory preset configurations, see the [Preset Reference](/poly/appendix-presets/) appendix.

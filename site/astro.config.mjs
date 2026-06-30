@@ -33,6 +33,7 @@ export default defineConfig({
 			customCss: ['./src/styles/custom.css'],
 			sidebar: [
 				{ label: 'Introduction', slug: 'introduction' },
+				{ label: 'Quick Start', slug: 'quick-start' },
 				{
 					label: 'Chapters',
 					items: [
@@ -54,6 +55,25 @@ export default defineConfig({
 							label: '15. Compositional Grammar',
 							slug: '15-compositional-grammar',
 						},
+						{
+							label: '16. MIDI Capture & Export',
+							slug: '16-midi-capture-export',
+						},
+						{
+							label: '17. MIDI Routing & Note Map',
+							slug: '17-midi-routing-note-map',
+						},
+						{
+							label: '18. Editors & Advanced Views',
+							slug: '18-editors-and-views',
+						},
+					],
+				},
+				{
+					label: 'Guides',
+					items: [
+						{ label: 'Cubase Workflow', slug: 'guide-cubase-workflow' },
+						{ label: 'UI Reference', slug: 'guide-ui-reference' },
 					],
 				},
 				{
@@ -63,6 +83,14 @@ export default defineConfig({
 						{
 							label: 'Euclidean Reference',
 							slug: 'appendix-euclidean-reference',
+						},
+						{
+							label: 'MIDI Note Mapping',
+							slug: 'appendix-midi-mapping',
+						},
+						{
+							label: 'Parameter Reference',
+							slug: 'appendix-parameters',
 						},
 						{
 							label: 'References',

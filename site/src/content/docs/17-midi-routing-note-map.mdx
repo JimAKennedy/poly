@@ -1,0 +1,115 @@
+---
+title: "17. MIDI Routing and Note Map"
+description: "Per-lane MIDI channel assignment for multi-instrument setups, and the 128-note remapping grid for custom kit layouts."
+---
+
+import PolyPatch from '../../components/PolyPatch.astro';
+import ListenFor from '../../components/ListenFor.astro';
+import CodeSnippet from '../../components/CodeSnippet.astro';
+
+The preceding chapters have focused on what Poly generates -- Euclidean distributions, macro-driven density curves, scene morphing, compositional arcs. But generation is only half the story. The other half is *routing*: where those generated notes go, and what they sound like when they arrive. Poly's MIDI channel assignment and Note Map systems sit between the engine's output and your DAW's instruments, giving you precise control over which sounds receive which patterns without ever touching the rhythmic logic itself.
+
+This separation is deliberate. The engine generates patterns based on Euclidean mathematics, cycle lengths, and macro modulation. The routing layer shapes the sonic result independently. Change a lane's MIDI channel and the pattern stays identical -- only the destination instrument changes. Remap a note and the rhythm is untouched -- only the timbre shifts. This decoupling means you can experiment with orchestration freely, swapping kit pieces or entire instruments without rebuilding your patch from scratch.
+
+## Per-Lane MIDI Channel
+
+Each lane in Poly has a `midiChannel` parameter that determines which MIDI channel its output events are sent on. The parameter accepts two kinds of values:
+
+- **-1 (Auto)** -- uses the lane index as the channel. Lane 0 sends on Channel 0, Lane 1 on Channel 1, and so on. This is the default for new patches.
+- **0-15** -- explicit channel assignment. The lane always sends on the specified channel, regardless of its position in the lane list.
+
+In the engine, the channel resolution is straightforward: if `midiChannel` is non-negative, the lane uses that value directly; otherwise it falls back to the lane index. The result is stamped on every `NoteEvent` the lane produces, and the plugin's processor passes it through to the VST3 output event list unchanged.
+
+### Single-Instrument Setup (Default)
+
+The simplest configuration is all lanes on the same channel. Set every lane's MIDI channel to 0 (or leave them all on Auto with only Channel 0 matters to your instrument). All notes flow to a single drum kit -- Groove Agent, Battery, Kontakt, or whatever sits downstream. This is how the factory presets work: the routing is invisible because there is nothing to route. One instrument receives everything, and the kit mapping within that instrument determines what each MIDI note sounds like.
+
+For most creative work with a single drum kit, this is all you need. The per-lane channel becomes interesting when you want to break out of a single instrument.
+
+### Multi-Instrument Setup
+
+Assign lanes to different MIDI channels and you can drive separate instruments from a single Poly instance. A kick and snare go to an acoustic kit on Channel 0. A hi-hat goes to an electronic kit on Channel 1. A percussion lane goes to a world percussion library on Channel 2. Each instrument receives only the lanes assigned to its channel, and each can have its own processing chain, mix level, and spatial positioning.
+
+<PolyPatch title="Multi-Instrument Routing" preset="Custom: Multi-Output">
+
+| Lane | Role | Note | MIDI Ch | Target |
+|------|------|------|---------|--------|
+| 1 | Kick | 36 | 0 | Groove Agent (acoustic kit) |
+| 2 | Snare | 38 | 0 | Groove Agent (acoustic kit) |
+| 3 | Hi-hat | 42 | 1 | Battery (electronic kit) |
+| 4 | Perc | 63 | 2 | Kontakt (world percussion) |
+
+</PolyPatch>
+
+This configuration produces a hybrid groove where the kick and snare share the warm acoustic character of one kit, the hi-hat has the crisp attack of an electronic sample, and the percussion lane draws from an entirely different timbral world. The polymetric relationships between the lanes are unchanged -- the engine does not care about channels. But the sonic result is dramatically different from routing everything to a single instrument.
+
+The practical benefit extends beyond timbre. With separate instruments on separate channels, you get independent mixing. The acoustic kit can sit in a tight, dry room. The electronic hat can have its own sidechain compression. The world percussion can swim in a long reverb. Each timbral layer occupies its own space in the mix because each has its own signal path.
+
+### DAW Routing in Cubase
+
+Setting up multi-channel routing in Cubase requires a few steps, but the result is a flexible setup that you can reuse across projects:
+
+1. **Set Poly's MIDI output to "All MIDI Channels"** in the instrument track's output routing. This ensures Poly does not filter its output to a single channel.
+
+2. **Create instrument tracks for each target.** Add a Groove Agent track, a Battery track, a Kontakt track -- one for each destination instrument in your multi-channel configuration.
+
+3. **Set each target track's MIDI input to "Poly" with channel filtering.** In Cubase's Inspector, set the MIDI input to your Poly instance and restrict the channel to match the lanes you want that instrument to receive. The Groove Agent track listens on Channel 0, Battery on Channel 1, Kontakt on Channel 2.
+
+4. **Each track receives only its assigned lane's notes.** The channel filtering ensures clean separation -- no cross-talk between instruments. Poly sends everything on every channel simultaneously, and each target picks out only its own.
+
+This approach scales to as many instruments as you have channels. With 16 MIDI channels available and up to 8 lanes in Poly, you have more than enough headroom for complex multi-timbral setups. You can also double up -- put two lanes on the same channel when you want them to share an instrument, as in the kick-and-snare pairing above.
+
+## Note Map
+
+The Note Map is a 128-entry remapping grid that transforms MIDI note numbers before they reach the output. It sits at the scene level in the `SceneState`, which means the same mapping applies to all lane output regardless of which scene is active or where the Scene Morph position sits.
+
+The concept is simple: each of the 128 MIDI note numbers (0-127) has a destination note. By default, the map is an identity -- note 36 maps to note 36, note 42 maps to note 42, every note passes through unchanged. But you can remap any source note to any destination note, and the transformation happens after the engine generates its events but before they reach the DAW.
+
+In code, the mapping is a single array lookup. The `NoteMap::apply()` method takes a source note, bounds-checks it, and returns the destination from the map array. The processor calls this on every note-on event just before writing it to the VST3 output event list. The operation is trivial in cost and completely transparent to the engine -- the rhythmic generation has no knowledge that its output is being remapped.
+
+### The NoteMapView Editor
+
+The Note Map is edited through the NoteMapView panel in Poly's UI. The editor displays a row for each active lane, showing the lane's source note, its GM drum name (if applicable), and the current destination note. Click any destination cell to open a menu of all available drum notes with their GM names. A Reset button restores the identity mapping.
+
+The editor focuses on the drum range (notes 35-81) where General MIDI defines percussion sounds, but the underlying map covers the full 0-127 range. Remapped entries are visually highlighted so you can see at a glance which notes have been changed from their defaults.
+
+### GM Drum Kit Reference
+
+The editor labels notes with their General MIDI drum names for quick identification. Here is a representative subset of the most commonly used mappings:
+
+| Note | GM Name | Common Use |
+|------|---------|------------|
+| 35 | Kick 2 | Secondary kick |
+| 36 | Kick 1 | Primary kick |
+| 37 | Side Stick | Rimshot, cross-stick |
+| 38 | Snare | Acoustic snare |
+| 39 | Clap | Handclap |
+| 42 | Closed HH | Closed hi-hat |
+| 44 | Pedal HH | Pedal hi-hat |
+| 46 | Open HH | Open hi-hat |
+| 49 | Crash 1 | Crash cymbal |
+| 51 | Ride 1 | Ride cymbal |
+| 56 | Cowbell | Bell patterns |
+| 60 | Hi Bongo | Bongo high |
+| 63 | Open Conga H | High conga open |
+| 75 | Claves | Clave patterns |
+
+The full GM percussion map runs from note 35 (Kick 2) through note 81 (Triangle Open), covering 47 defined instruments. Poly's editor includes all of them in its destination menu.
+
+### Practical Examples
+
+**Kit Swap.** You have built an intricate six-lane patch using GM-standard note numbers, but your target kit uses a non-standard layout -- perhaps a vintage drum machine where the kick lives on note 48 instead of 36, and the snare is on note 52 instead of 38. Rather than editing every lane's note assignment and breaking your carefully tuned Euclidean distributions, remap 36 to 48 and 38 to 52 in the Note Map. The patterns are identical; only the kit layout changes. Swap to a different non-standard kit and you only need to update the Note Map, not the patch.
+
+**Octave Layer.** Map kick note 36 to destination 48. Now every kick hit triggers the sample on note 48 instead of 36. If you have a second Poly instance or a layered kit that responds to both 36 and 48, you get sub-bass from one sample and attack from the other. The engine generates one event per kick hit; the Note Map and instrument routing turn it into a layered sound.
+
+**Melodic Percussion.** Remap your lane notes to pitched instruments -- marimbas, steel drums, tuned percussion. A lane generating Euclidean patterns on note 60 (Middle C) through note 72 produces a tonal polyrhythmic melody. The patterns are still governed by Euclidean distribution and macro modulation, but the result is melodic rather than percussive. This works especially well with kotekan interlocking lanes, where the complementary patterns create implied harmonies.
+
+### Note Map and MIDI Channel Interaction
+
+The Note Map applies to all notes regardless of their MIDI channel. A kick on Channel 0 and a kick on Channel 2 will both be remapped if note 36 has a non-identity mapping. This is by design -- the Note Map is a pitch transformation layer, not a channel-aware router. If you need channel-specific remapping, use different source notes on different lanes and remap each independently.
+
+<ListenFor>
+
+Per-lane MIDI channels and the Note Map separate *what plays* from *what you hear*. The engine generates patterns based on Euclidean logic, cycle lengths, and macro modulation -- pure rhythmic structure with no awareness of timbre or routing. The channel assignment directs each lane's output to a specific instrument. The Note Map transforms note numbers to match whatever kit layout that instrument expects. Change the routing and the groove is unchanged. Change the Note Map and the groove is unchanged. Only the sonic result shifts. Listen for how the same patch sounds radically different when you reassign channels to contrasting instruments or remap notes to unexpected destinations -- the rhythmic relationships remain locked, but the timbral character transforms entirely.
+
+</ListenFor>

@@ -45,7 +45,7 @@ Displays the plugin name **POLY** (blue), a **preset selector dropdown**, and th
 **Preset selector:** Click the dropdown in the center of the header bar. The menu offers:
 
 - **Init (All Lanes)** — resets all parameters to defaults with all 8 lanes active. Use this to return to a clean state after loading a preset.
-- **5 factory presets** — each loads lane configurations, macro settings, active lane count, and seed in one shot.
+- **14 factory presets** — each loads lane configurations, macro settings, active lane count, and seed in one shot.
 
 After loading, the preset name displays in the header. All knobs, bars, and visualizations update immediately.
 
@@ -223,7 +223,7 @@ At 2.0x, a lane plays its pattern in half the time, effectively doubling its rat
 
 ## Presets
 
-Poly has **5 factory presets** built into the engine:
+Poly has **14 factory presets** built into the engine:
 
 | #  | Name              | Style                                              | Active Lanes |
 |----|-------------------|----------------------------------------------------|--------------|
@@ -233,6 +233,15 @@ Poly has **5 factory presets** built into the engine:
 | 3  | Sparse Pulse      | Minimal, spacious groove with gentle ghosts         | 3            |
 | 4  | Breakbeat         | Syncopated kick with punchy snare and fast hats     | 4            |
 | 5  | Latin Feel        | Clave-inspired with conga, shaker, cowbell          | 4            |
+| 6  | Afro-House Phrases| Staggered phrase loops with breathing percussion    | 5            |
+| 7  | Reich Phasing     | Two identical patterns gradually phase apart        | 3            |
+| 8  | Kotekan Interlock | Balinese interlocking pair (polos and sangsih)      | 4            |
+| 9  | Pocket Groove     | J Dilla-style micro-timing with gentle mutation     | 4            |
+| 10 | Afrobeat 12/8     | Compound-time groove with timeline bell pattern     | 5            |
+| 11 | Balkan Aksak      | 7/8 aksak [2+2+3] with additive cells               | 4            |
+| 12 | Bossa Nova        | Clave timeline with ginga micro-timing              | 4            |
+| 13 | Carnatic Tala     | Adi tala [4+2+2] with additive cells                | 4            |
+| 14 | IDM Glitch        | Irregular additive cells with heavy mutation        | 5            |
 
 **How to access:** Click the preset selector dropdown in the header bar. "Init (All Lanes)" is at the top, separated from the factory presets. Selecting any entry immediately loads all its parameters. The name stays displayed in the header until you select a different one.
 
