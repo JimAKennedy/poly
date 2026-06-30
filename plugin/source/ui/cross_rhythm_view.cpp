@@ -107,7 +107,6 @@ void CrossRhythmView::draw(CDrawContext* context) {
 
     const auto& cachedScene = controller_->cachedState().sceneA;
 
-    // Read per-lane rhythm params live (not from cached state, which is only set on state restore)
     int laneSteps[kMaxLanes]{};
     int laneSubdiv[kMaxLanes]{};
     int laneCellCount[kMaxLanes]{};
@@ -116,6 +115,8 @@ void CrossRhythmView::draw(CDrawContext* context) {
     bool laneTimeline[kMaxLanes]{};
     std::array<bool, kMaxSteps> lanePattern[kMaxLanes]{};
     int laneKotekanSrc[kMaxLanes]{};
+    double laneSwing[kMaxLanes]{};
+    double laneHumanize[kMaxLanes]{};
     for (int i = 0; i < activeCount; ++i) {
         int lane = activeLanes[i];
         laneSteps[i] =
@@ -137,6 +138,9 @@ void CrossRhythmView::draw(CDrawContext* context) {
         double kotekanNorm = controller_->getParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kKotekanSource));
         laneKotekanSrc[i] = static_cast<int>(std::round(kotekanNorm * 8.0)) - 1;
 
+        laneSwing[i] = controller_->getParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kSwingAmount));
+        laneHumanize[i] = controller_->getParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kHumanizeMs));
+
         lanePattern[i].fill(false);
         if (laneTimeline[i]) {
             const auto& fixedPat = cachedScene.lanes[lane].fixedPattern;
@@ -147,8 +151,6 @@ void CrossRhythmView::draw(CDrawContext* context) {
         }
     }
 
-    // Apply kotekan complement: if a lane has a kotekan source, its actual pattern is the
-    // inverse of the source lane's pattern (matching engine logic in engine.cpp).
     for (int i = 0; i < activeCount; ++i) {
         int srcLane = laneKotekanSrc[i];
         if (srcLane < 0 || srcLane >= kMaxLanes || laneTimeline[i])
@@ -188,12 +190,10 @@ void CrossRhythmView::draw(CDrawContext* context) {
             cyclePpqs[i] = 4.0;
     }
 
-    // Determine span: show enough bars to see at least one full LCM period, capped at 8 bars
     constexpr double kBarPpq = 4.0;
     constexpr int kMaxBars = 8;
     constexpr int kMinBars = 1;
 
-    // Find LCM of cycle lengths (approximate as rational multiples of basePpq)
     int64_t lcmTicks = 1;
     for (int i = 0; i < activeCount; ++i) {
         int64_t ticks = static_cast<int64_t>(std::round(cyclePpqs[i] * 960.0));
@@ -257,6 +257,24 @@ void CrossRhythmView::draw(CDrawContext* context) {
         }
     }
 
+    // Collect unique convergence PPQ positions for lookahead
+    static constexpr int kMaxConvPoints = 64;
+    double convPpqs[kMaxConvPoints]{};
+    int convCount = 0;
+    for (int b = 0; b < boundaryCount; ++b) {
+        if (!isConvergence[b])
+            continue;
+        bool dup = false;
+        for (int c = 0; c < convCount; ++c) {
+            if (std::abs(convPpqs[c] - allBoundaries[b].ppq) < kConvergenceTol) {
+                dup = true;
+                break;
+            }
+        }
+        if (!dup && convCount < kMaxConvPoints)
+            convPpqs[convCount++] = allBoundaries[b].ppq;
+    }
+
     // Draw each lane's row
     for (int i = 0; i < activeCount; ++i) {
         int lane = activeLanes[i];
@@ -278,11 +296,53 @@ void CrossRhythmView::draw(CDrawContext* context) {
         context->setLineWidth(1.0);
         context->drawLine(CPoint(timelineLeft, rowMid), CPoint(timelineRight, rowMid));
 
-        // Draw step/cell markers within cycles — active hits as filled dots, silent steps as faint ticks
         double cyclePpq = cyclePpqs[i];
         double basePpq = 4.0 / laneSubdiv[i];
         int cellCount = laneCellCount[i];
         int steps = laneSteps[i];
+        double swing = laneSwing[i];
+        double humanize = laneHumanize[i];
+
+        auto drawStepMarker = [&](double stepPpqPos, int step, bool isHit) {
+            double swingOffset = 0.0;
+            if (swing > 0.01 && (step % 2) == 1) {
+                swingOffset = swing * basePpq * (1.0 / 3.0);
+            }
+            double displayPpq = stepPpqPos + swingOffset;
+            double x = timelineLeft + (displayPpq / spanPpq) * timelineW;
+            if (x < timelineLeft || x > timelineRight)
+                return;
+
+            if (isHit) {
+                constexpr double kDotR = 3.0;
+                CRect dot(x - kDotR, rowMid - kDotR, x + kDotR, rowMid + kDotR);
+                CColor dotColor = kLaneColors[lane];
+                dotColor.alpha = 0xE0;
+                context->setFillColor(dotColor);
+                context->drawEllipse(dot, kDrawFilled);
+
+                if (humanize > 0.01) {
+                    double humanizePpx = humanize * 50.0 / 60000.0 * 120.0;
+                    double whiskerPx = (humanizePpx / spanPpq) * timelineW;
+                    whiskerPx = std::min(whiskerPx, 8.0);
+                    CColor whiskerColor = kLaneColors[lane];
+                    whiskerColor.alpha = 0x50;
+                    context->setFrameColor(whiskerColor);
+                    context->setLineWidth(1.0);
+                    double wy = rowMid + kDotR + 2;
+                    context->drawLine(CPoint(x - whiskerPx, wy), CPoint(x + whiskerPx, wy));
+                    context->drawLine(CPoint(x - whiskerPx, wy - 1), CPoint(x - whiskerPx, wy + 1));
+                    context->drawLine(CPoint(x + whiskerPx, wy - 1), CPoint(x + whiskerPx, wy + 1));
+                }
+            } else {
+                double tickH = laneH * 0.15;
+                CColor tickColor = kLaneColors[lane];
+                tickColor.alpha = 0x25;
+                context->setFrameColor(tickColor);
+                context->setLineWidth(1.0);
+                context->drawLine(CPoint(x, rowMid - tickH), CPoint(x, rowMid + tickH));
+            }
+        };
 
         for (double cycleStart = 0.0; cycleStart < spanPpq; cycleStart += cyclePpq) {
             if (cellCount > 0) {
@@ -291,23 +351,8 @@ void CrossRhythmView::draw(CDrawContext* context) {
                 for (int c = 0; c < cellCount && c < kMaxSteps; ++c) {
                     double stepPpqPos = cycleStart + cellPos;
                     if (stepPpqPos >= 0.0 && stepPpqPos <= spanPpq) {
-                        double x = timelineLeft + (stepPpqPos / spanPpq) * timelineW;
                         bool isHit = (c < steps) && lanePattern[i][c];
-                        if (isHit) {
-                            constexpr double kDotR = 3.0;
-                            CRect dot(x - kDotR, rowMid - kDotR, x + kDotR, rowMid + kDotR);
-                            CColor dotColor = kLaneColors[lane];
-                            dotColor.alpha = 0xE0;
-                            context->setFillColor(dotColor);
-                            context->drawEllipse(dot, kDrawFilled);
-                        } else {
-                            double tickH = laneH * 0.15;
-                            CColor tickColor = kLaneColors[lane];
-                            tickColor.alpha = 0x25;
-                            context->setFrameColor(tickColor);
-                            context->setLineWidth(1.0);
-                            context->drawLine(CPoint(x, rowMid - tickH), CPoint(x, rowMid + tickH));
-                        }
+                        drawStepMarker(stepPpqPos, c, isHit);
                     }
                     cellPos += std::max(1, cellSizes[c]) * basePpq;
                 }
@@ -315,23 +360,8 @@ void CrossRhythmView::draw(CDrawContext* context) {
                 for (int step = 0; step < steps; ++step) {
                     double stepPpqPos = cycleStart + step * basePpq;
                     if (stepPpqPos >= 0.0 && stepPpqPos <= spanPpq) {
-                        double x = timelineLeft + (stepPpqPos / spanPpq) * timelineW;
                         bool isHit = lanePattern[i][step];
-                        if (isHit) {
-                            constexpr double kDotR = 3.0;
-                            CRect dot(x - kDotR, rowMid - kDotR, x + kDotR, rowMid + kDotR);
-                            CColor dotColor = kLaneColors[lane];
-                            dotColor.alpha = 0xE0;
-                            context->setFillColor(dotColor);
-                            context->drawEllipse(dot, kDrawFilled);
-                        } else {
-                            double tickH = laneH * 0.15;
-                            CColor tickColor = kLaneColors[lane];
-                            tickColor.alpha = 0x25;
-                            context->setFrameColor(tickColor);
-                            context->setLineWidth(1.0);
-                            context->drawLine(CPoint(x, rowMid - tickH), CPoint(x, rowMid + tickH));
-                        }
+                        drawStepMarker(stepPpqPos, step, isHit);
                     }
                 }
             }
@@ -422,13 +452,54 @@ void CrossRhythmView::draw(CDrawContext* context) {
         }
     }
 
-    // Playhead
+    // Convergence lookahead: show countdown to next convergence from playhead
     double ppqNorm = controller_->getParamNormalized(ParamIDs::kTransportPpqOutput);
+    double currentPpq = ppqNorm * 128.0;
+    double playheadPpq = std::fmod(currentPpq, spanPpq);
+    if (playheadPpq < 0.0)
+        playheadPpq += spanPpq;
+
+    if (convCount > 0 && (ppqNorm > 0.0 || activeCount > 0)) {
+        double nextConvPpq = -1.0;
+        for (int c = 0; c < convCount; ++c) {
+            if (convPpqs[c] > playheadPpq + kConvergenceTol) {
+                if (nextConvPpq < 0.0 || convPpqs[c] < nextConvPpq)
+                    nextConvPpq = convPpqs[c];
+            }
+        }
+        if (nextConvPpq < 0.0) {
+            for (int c = 0; c < convCount; ++c) {
+                double wrapped = convPpqs[c] + spanPpq;
+                if (nextConvPpq < 0.0 || wrapped < nextConvPpq)
+                    nextConvPpq = wrapped;
+            }
+        }
+
+        if (nextConvPpq >= 0.0) {
+            double beatsAway = nextConvPpq - playheadPpq;
+            if (beatsAway < 0.0)
+                beatsAway += spanPpq;
+            double dispPpq = std::fmod(nextConvPpq, spanPpq);
+            if (dispPpq < 0.0)
+                dispPpq += spanPpq;
+            double convX = timelineLeft + (dispPpq / spanPpq) * timelineW;
+
+            char countdownLabel[16];
+            if (beatsAway < 1.0)
+                snprintf(countdownLabel, sizeof(countdownLabel), "<1");
+            else
+                snprintf(countdownLabel, sizeof(countdownLabel), "%.0f", std::ceil(beatsAway));
+
+            auto countdownFont = makeOwned<CFontDesc>("Arial", 7.0);
+            context->setFont(countdownFont);
+            context->setFontColor(CColor(0xFF, 0xD7, 0x00, 0xA0));
+            CRect cdRect(convX - 10, laneAreaBot + 1, convX + 10, laneAreaBot + 11);
+            context->drawString(countdownLabel, cdRect, kCenterText);
+        }
+    }
+
+    // Playhead
     if (ppqNorm > 0.0 || activeCount > 0) {
-        double currentPpq = ppqNorm * 128.0;
-        double playheadPpq = std::fmod(currentPpq, spanPpq);
-        if (playheadPpq < 0.0)
-            playheadPpq += spanPpq;
         double playheadX = timelineLeft + (playheadPpq / spanPpq) * timelineW;
 
         context->setFrameColor(CColor(0xFF, 0xFF, 0xFF, 0xA0));

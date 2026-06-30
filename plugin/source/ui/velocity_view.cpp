@@ -1,13 +1,17 @@
 #include "velocity_view.h"
 
+#include <algorithm>
+#include <cmath>
+
 #include "vstgui/lib/cdrawcontext.h"
 #include "vstgui/lib/cfont.h"
 
+#include "../controller.h"
 #include "../plugids.h"
 
 namespace poly {
 
-VelocityView::VelocityView(const VSTGUI::CRect& size, Steinberg::Vst::EditController* controller)
+VelocityView::VelocityView(const VSTGUI::CRect& size, PolyController* controller)
     : CView(size), controller_(controller) {
     setWantsFocus(false);
 }
@@ -67,9 +71,12 @@ void VelocityView::draw(VSTGUI::CDrawContext* context) {
         bool selected = (lane == selectedLane);
 
         double vel = 0.0;
+        double spread = 0.0;
+        double ghostFloorNorm = 0.0;
         if (active) {
-            auto velId = ParamIDs::velocityOutput(lane);
-            vel = controller_->getParamNormalized(velId);
+            vel = controller_->getParamNormalized(ParamIDs::velocityOutput(lane));
+            spread = controller_->getParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kVelocitySpread));
+            ghostFloorNorm = controller_->getParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kGhostFloor));
         }
 
         CRect bgRect(x, bounds.top + kPad, x + barW, bounds.top + kPad + maxBarH);
@@ -84,6 +91,36 @@ void VelocityView::draw(VSTGUI::CDrawContext* context) {
             uint8_t a = static_cast<uint8_t>(0x40 + vel * 0x8F);
             context->setFillColor(CColor(laneColor.red, laneColor.green, laneColor.blue, a));
             context->drawRect(barRect, kDrawFilled);
+
+            if (spread > 0.01) {
+                double spreadLo = std::max(0.0, vel - spread);
+                double spreadHi = std::min(1.0, vel + spread);
+                double loY = bgRect.bottom - spreadLo * maxBarH;
+                double hiY = bgRect.bottom - spreadHi * maxBarH;
+                CRect spreadRect(x + 1, hiY, x + barW - 1, loY);
+                context->setFillColor(CColor(laneColor.red, laneColor.green, laneColor.blue, 0x20));
+                context->drawRect(spreadRect, kDrawFilled);
+                context->setFrameColor(CColor(laneColor.red, laneColor.green, laneColor.blue, 0x60));
+                context->setLineWidth(1.0);
+                context->drawLine(CPoint(x + 2, hiY), CPoint(x + barW - 2, hiY));
+                context->drawLine(CPoint(x + 2, loY), CPoint(x + barW - 2, loY));
+            }
+        }
+
+        if (active && ghostFloorNorm > 0.01) {
+            double ghostY = bgRect.bottom - ghostFloorNorm * maxBarH;
+            auto laneColor = kLaneColors[lane];
+            context->setFrameColor(CColor(laneColor.red, laneColor.green, laneColor.blue, 0x50));
+            context->setLineWidth(1.0);
+            constexpr double kDashLen = 3.0;
+            for (double dx = x + 1; dx < x + barW - 1; dx += kDashLen * 2) {
+                double end = std::min(dx + kDashLen, x + barW - 1);
+                context->drawLine(CPoint(dx, ghostY), CPoint(end, ghostY));
+            }
+            constexpr double kDotR = 2.0;
+            CRect ghostDot(x + barW * 0.5 - kDotR, ghostY - kDotR, x + barW * 0.5 + kDotR, ghostY + kDotR);
+            context->setFillColor(CColor(laneColor.red, laneColor.green, laneColor.blue, 0x70));
+            context->drawEllipse(ghostDot, kDrawFilled);
         }
 
         if (selected) {
