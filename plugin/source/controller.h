@@ -42,6 +42,7 @@ public:
     void resetLaneNames();
 
 private:
+    void registerOutputParameters();
     static constexpr int kControllerStateVersion = 1;
     SceneState cachedState_{};
     std::array<std::string, kMaxLanes> laneNames_;

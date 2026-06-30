@@ -74,6 +74,7 @@ static void buildLanePattern(const LaneConfig& cfg, const GrooveState& state, in
         for (int s = 0; s < patLen && s < kMaxSteps; ++s)
             pattern[s] = cfg.fixedPattern[s];
     } else {
+        // region:kotekan
         bool useKotekan = cfg.kotekanSourceLane >= 0 && cfg.kotekanSourceLane < state.activeLaneCount &&
                           cfg.kotekanSourceLane != lane;
         if (useKotekan) {
@@ -89,6 +90,7 @@ static void buildLanePattern(const LaneConfig& cfg, const GrooveState& state, in
                 pattern[s] = !srcPattern[s];
             for (int s = src.cycle.steps; s < cfg.cycle.steps; ++s)
                 pattern[s] = true;
+            // endregion:kotekan
         } else {
             euclidean(cfg.hitCount, cfg.cycle.steps, cfg.rotation, pattern);
         }
@@ -226,6 +228,119 @@ static double applyTimingShifts(const LaneConfig& cfg, const TransportContext& t
     return ppq;
 }
 
+struct LaneRenderContext {
+    std::array<bool, kMaxSteps> pattern{};
+    AdditiveCellInfo additive{};
+    double sPpq = 0.0;
+    double cyclePpqLen = 0.0;
+    double maxTimingShift = 0.0;
+    int64_t firstStep = 0;
+    int64_t lastStep = 0;
+    double phraseLenPpq = 0.0;
+    double phraseCyclePpq = 0.0;
+    double phraseOffPpq = 0.0;
+    bool hasPhraseGating = false;
+    bool isAdditive = false;
+};
+
+static LaneRenderContext prepareLaneContext(const LaneConfig& cfg, const GrooveState& state, int lane,
+                                            const TransportContext& tc) {
+    LaneRenderContext ctx{};
+    buildLanePattern(cfg, state, lane, ctx.pattern);
+
+    const double tempoScale = (cfg.tempoMultiplier > 0.0f) ? 1.0 / static_cast<double>(cfg.tempoMultiplier) : 1.0;
+    ctx.sPpq = stepPpq(cfg.cycle) * tempoScale;
+    ctx.additive = computeAdditiveCells(cfg);
+    if (tempoScale != 1.0 && ctx.additive.count > 0) {
+        for (int c = 0; c < ctx.additive.count; ++c)
+            ctx.additive.cumPpq[c] *= tempoScale;
+        ctx.additive.totalPpq *= tempoScale;
+    }
+    ctx.isAdditive = ctx.additive.count > 0;
+    ctx.cyclePpqLen = ctx.isAdditive ? ctx.additive.totalPpq : (cfg.cycle.steps * ctx.sPpq);
+
+    double maxStepDur = ctx.sPpq;
+    if (ctx.isAdditive) {
+        for (int c = 0; c < ctx.additive.count; ++c)
+            maxStepDur = std::max(maxStepDur, cfg.cellSizes[c] * ctx.sPpq);
+    }
+    ctx.maxTimingShift = 0.0;
+    ctx.maxTimingShift += static_cast<double>(std::max(0.0f, cfg.swingAmount)) * maxStepDur / 3.0;
+    ctx.maxTimingShift += static_cast<double>(std::max(0.0f, cfg.syncopationOffset)) * maxStepDur / 3.0;
+    if (tc.tempo > 0.0) {
+        ctx.maxTimingShift += (static_cast<double>(std::max(0.0f, cfg.humanizeMs)) + 50.0) * tc.tempo / 60000.0;
+        ctx.maxTimingShift += std::abs(static_cast<double>(cfg.timingOffsetMs)) * tc.tempo / 60000.0;
+        ctx.maxTimingShift += 20.0 * tc.tempo / 60000.0;
+    }
+
+    if (ctx.isAdditive) {
+        int64_t firstCycle = static_cast<int64_t>(std::floor((tc.ppqStart - ctx.maxTimingShift) / ctx.cyclePpqLen));
+        int64_t lastCycle = static_cast<int64_t>(std::floor((tc.ppqEnd + ctx.maxTimingShift) / ctx.cyclePpqLen)) + 1;
+        ctx.firstStep = firstCycle * ctx.additive.count;
+        ctx.lastStep = lastCycle * ctx.additive.count;
+    } else {
+        ctx.firstStep = static_cast<int64_t>(std::floor((tc.ppqStart - ctx.maxTimingShift) / ctx.sPpq));
+        ctx.lastStep = static_cast<int64_t>(std::ceil((tc.ppqEnd + ctx.maxTimingShift) / ctx.sPpq));
+    }
+
+    ctx.hasPhraseGating = cfg.phraseLength > 0.0f;
+    ctx.phraseLenPpq = static_cast<double>(cfg.phraseLength);
+    ctx.phraseCyclePpq = ctx.phraseLenPpq + static_cast<double>(cfg.phraseGap);
+    ctx.phraseOffPpq = static_cast<double>(cfg.phraseOffset);
+
+    return ctx;
+}
+
+static void computeStepPpqAndDuration(const LaneRenderContext& ctx, const LaneConfig& cfg, int64_t absStep, double& ppq,
+                                      double& stepDurPpq) {
+    if (ctx.isAdditive) {
+        int localCell = static_cast<int>(((absStep % ctx.additive.count) + ctx.additive.count) % ctx.additive.count);
+        int64_t cycleIdx =
+            (absStep >= 0) ? absStep / ctx.additive.count : (absStep - ctx.additive.count + 1) / ctx.additive.count;
+        ppq = cycleIdx * ctx.cyclePpqLen + ctx.additive.cumPpq[localCell];
+        stepDurPpq = cfg.cellSizes[localCell] * ctx.sPpq;
+    } else {
+        ppq = absStep * ctx.sPpq;
+        stepDurPpq = ctx.sPpq;
+    }
+}
+
+static bool passesPhraseGating(const LaneRenderContext& ctx, double ppq) {
+    if (!ctx.hasPhraseGating || ctx.phraseCyclePpq <= 0.0)
+        return true;
+    double phrasePos = std::fmod(ppq - ctx.phraseOffPpq, ctx.phraseCyclePpq);
+    if (phrasePos < 0.0)
+        phrasePos += ctx.phraseCyclePpq;
+    return phrasePos < ctx.phraseLenPpq;
+}
+
+// region:drift-accumulator
+static int64_t computeDriftedCycleStep(const LaneConfig& cfg, const LaneRenderContext& ctx, int64_t absStep,
+                                       double ppq) {
+    int stepsInCycle = ctx.isAdditive ? ctx.additive.count : cfg.cycle.steps;
+    int64_t cycleStep = ((absStep % stepsInCycle) + stepsInCycle) % stepsInCycle;
+    if (cfg.driftRate != 0.0f) {
+        double barPos = ppq / 4.0;
+        auto driftSteps = static_cast<int64_t>(std::floor(barPos * static_cast<double>(cfg.driftRate)));
+        cycleStep = ((cycleStep + driftSteps) % stepsInCycle + stepsInCycle) % stepsInCycle;
+    }
+    return cycleStep;
+}
+// endregion:drift-accumulator
+
+static void buildNoteEvent(NoteEventBuffer& out, const LaneConfig& cfg, int lane, double ppq, float vel,
+                           double stepDurPpq, const EnvelopeMods& mods) {
+    NoteEvent ev{};
+    ev.ppqPosition = ppq;
+    ev.pitch = cfg.midiNote;
+    ev.velocity = vel;
+    double baseDuration = cfg.noteDuration > 0.0f ? static_cast<double>(cfg.noteDuration) : stepDurPpq * 0.5;
+    ev.duration = baseDuration * static_cast<double>(std::clamp(mods.duration, 0.01f, 4.0f));
+    ev.channel = (cfg.midiChannel >= 0) ? cfg.midiChannel : static_cast<int16_t>(lane);
+    ev.laneIndex = static_cast<int16_t>(lane);
+    out.push(ev);
+}
+
 void Engine::renderRange(const TransportContext& tc, const GrooveState& state, NoteEventBuffer& out) {
     out.clear();
 
@@ -234,116 +349,36 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
 
     for (int lane = 0; lane < state.activeLaneCount; ++lane) {
         const auto& cfg = state.lanes[lane];
-        if (!cfg.active)
-            continue;
-        if (cfg.cycle.steps <= 0 || cfg.cycle.subdivision <= 0)
+        if (!cfg.active || cfg.cycle.steps <= 0 || cfg.cycle.subdivision <= 0)
             continue;
 
-        std::array<bool, kMaxSteps> pattern{};
-        buildLanePattern(cfg, state, lane, pattern);
+        auto ctx = prepareLaneContext(cfg, state, lane, tc);
 
-        const double tempoScale = (cfg.tempoMultiplier > 0.0f) ? 1.0 / static_cast<double>(cfg.tempoMultiplier) : 1.0;
-        const double sPpq = stepPpq(cfg.cycle) * tempoScale;
-        auto additive = computeAdditiveCells(cfg);
-        if (tempoScale != 1.0 && additive.count > 0) {
-            for (int c = 0; c < additive.count; ++c)
-                additive.cumPpq[c] *= tempoScale;
-            additive.totalPpq *= tempoScale;
-        }
-        const bool isAdditive = additive.count > 0;
-        const double cyclePpqLen = isAdditive ? additive.totalPpq : (cfg.cycle.steps * sPpq);
+        for (int64_t absStep = ctx.firstStep; absStep < ctx.lastStep; ++absStep) {
+            double ppq = 0.0;
+            double stepDurPpq = 0.0;
+            computeStepPpqAndDuration(ctx, cfg, absStep, ppq, stepDurPpq);
 
-        double maxStepDur = sPpq;
-        if (isAdditive) {
-            for (int c = 0; c < additive.count; ++c)
-                maxStepDur = std::max(maxStepDur, cfg.cellSizes[c] * sPpq);
-        }
-        double maxTimingShift = 0.0;
-        maxTimingShift += static_cast<double>(std::max(0.0f, cfg.swingAmount)) * maxStepDur / 3.0;
-        maxTimingShift += static_cast<double>(std::max(0.0f, cfg.syncopationOffset)) * maxStepDur / 3.0;
-        if (tc.tempo > 0.0) {
-            maxTimingShift += (static_cast<double>(std::max(0.0f, cfg.humanizeMs)) + 50.0) * tc.tempo / 60000.0;
-            maxTimingShift += std::abs(static_cast<double>(cfg.timingOffsetMs)) * tc.tempo / 60000.0;
-            maxTimingShift += 20.0 * tc.tempo / 60000.0;
-        }
-
-        int64_t firstStep, lastStep;
-        if (isAdditive) {
-            int64_t firstCycle = static_cast<int64_t>(std::floor((tc.ppqStart - maxTimingShift) / cyclePpqLen));
-            int64_t lastCycle = static_cast<int64_t>(std::floor((tc.ppqEnd + maxTimingShift) / cyclePpqLen)) + 1;
-            firstStep = firstCycle * additive.count;
-            lastStep = lastCycle * additive.count;
-        } else {
-            firstStep = static_cast<int64_t>(std::floor((tc.ppqStart - maxTimingShift) / sPpq));
-            lastStep = static_cast<int64_t>(std::ceil((tc.ppqEnd + maxTimingShift) / sPpq));
-        }
-
-        const bool hasPhraseGating = cfg.phraseLength > 0.0f;
-        const double phraseLenPpq = static_cast<double>(cfg.phraseLength);
-        const double phraseGapPpq = static_cast<double>(cfg.phraseGap);
-        const double phraseCyclePpq = phraseLenPpq + phraseGapPpq;
-        const double phraseOffPpq = static_cast<double>(cfg.phraseOffset);
-
-        for (int64_t absStep = firstStep; absStep < lastStep; ++absStep) {
-            double ppq;
-            double stepDurPpq;
-            if (isAdditive) {
-                int localCell = static_cast<int>(((absStep % additive.count) + additive.count) % additive.count);
-                int64_t cycleIdx =
-                    (absStep >= 0) ? absStep / additive.count : (absStep - additive.count + 1) / additive.count;
-                ppq = cycleIdx * cyclePpqLen + additive.cumPpq[localCell];
-                stepDurPpq = cfg.cellSizes[localCell] * sPpq;
-            } else {
-                ppq = absStep * sPpq;
-                stepDurPpq = sPpq;
-            }
-
-            if (ppq < tc.ppqStart - maxTimingShift || ppq >= tc.ppqEnd + maxTimingShift)
+            if (ppq < tc.ppqStart - ctx.maxTimingShift || ppq >= tc.ppqEnd + ctx.maxTimingShift)
+                continue;
+            if (!passesPhraseGating(ctx, ppq))
                 continue;
 
-            if (hasPhraseGating && phraseCyclePpq > 0.0) {
-                double phrasePos = std::fmod(ppq - phraseOffPpq, phraseCyclePpq);
-                if (phrasePos < 0.0)
-                    phrasePos += phraseCyclePpq;
-                if (phrasePos >= phraseLenPpq)
-                    continue;
-            }
-
-            int stepsInCycle = isAdditive ? additive.count : cfg.cycle.steps;
-            int64_t cycleStep = ((absStep % stepsInCycle) + stepsInCycle) % stepsInCycle;
-
-            if (cfg.driftRate != 0.0f) {
-                double barPos = ppq / 4.0;
-                auto driftSteps = static_cast<int64_t>(std::floor(barPos * static_cast<double>(cfg.driftRate)));
-                cycleStep = ((cycleStep + driftSteps) % stepsInCycle + stepsInCycle) % stepsInCycle;
-            }
-
+            int64_t cycleStep = computeDriftedCycleStep(cfg, ctx, absStep, ppq);
             EnvelopeMods mods = computeEnvelopeMods(cfg, state, ppq);
 
-            bool isPatternStep = pattern[static_cast<size_t>(cycleStep)];
+            bool isPatternStep = ctx.pattern[static_cast<size_t>(cycleStep)];
             bool isAnchor = cfg.constraints.anchorSteps.steps[static_cast<size_t>(cycleStep)] > 0.0f;
             bool mutatedToGhost = false;
-
             if (!shouldEmitStep(cfg, state, absStep, cycleStep, isPatternStep, isAnchor, mods, mutatedToGhost))
                 continue;
 
             float vel = computeStepVelocity(cfg, state, absStep, cycleStep, mods, mutatedToGhost);
-
             ppq = applyTimingShifts(cfg, tc, state, ppq, stepDurPpq, absStep, cycleStep, mods.humanize);
-
             if (ppq < tc.ppqStart || ppq >= tc.ppqEnd)
                 continue;
 
-            NoteEvent ev{};
-            ev.ppqPosition = ppq;
-            ev.pitch = cfg.midiNote;
-            ev.velocity = vel;
-            double baseDuration = cfg.noteDuration > 0.0f ? static_cast<double>(cfg.noteDuration) : stepDurPpq * 0.5;
-            ev.duration = baseDuration * static_cast<double>(std::clamp(mods.duration, 0.01f, 4.0f));
-            ev.channel = (cfg.midiChannel >= 0) ? cfg.midiChannel : static_cast<int16_t>(lane);
-            ev.laneIndex = static_cast<int16_t>(lane);
-
-            out.push(ev);
+            buildNoteEvent(out, cfg, lane, ppq, vel, stepDurPpq, mods);
         }
     }
 }
