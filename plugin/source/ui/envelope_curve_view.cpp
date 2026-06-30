@@ -1,20 +1,21 @@
 #include "envelope_curve_view.h"
 
+#include <algorithm>
 #include <cmath>
 
 #include "vstgui/lib/cdrawcontext.h"
 #include "vstgui/lib/cfont.h"
 #include "vstgui/lib/cgraphicspath.h"
 
+#include "../controller.h"
 #include "../plugids.h"
+#include "poly/envelope.h"
 
 namespace poly {
 
-static constexpr double kTwoPi = 6.283185307179586;
-static constexpr int kMaxLanes = 8;
 static constexpr int kCurvePoints = 64;
 
-EnvelopeCurveView::EnvelopeCurveView(const VSTGUI::CRect& size, Steinberg::Vst::EditController* controller)
+EnvelopeCurveView::EnvelopeCurveView(const VSTGUI::CRect& size, PolyController* controller)
     : CView(size), controller_(controller) {
     setWantsFocus(false);
 }
@@ -66,13 +67,6 @@ void EnvelopeCurveView::draw(VSTGUI::CDrawContext* context) {
     CRect plotFrame(plotLeft, plotTop, plotRight, plotBottom);
     context->drawRect(plotFrame, kDrawStroked);
 
-    int activeLanes = 0;
-    for (int lane = 0; lane < kMaxLanes; ++lane) {
-        auto activeId = ParamIDs::laneParam(lane, ParamIDs::kActive);
-        if (controller_->getParamNormalized(activeId) > 0.5)
-            activeLanes++;
-    }
-
     static const CColor kLaneColors[] = {
         CColor(0x4A, 0x9E, 0xFF, 0xB0), CColor(0xF5, 0xA6, 0x23, 0xB0), CColor(0x27, 0xAE, 0x60, 0xB0),
         CColor(0xE7, 0x4C, 0x3C, 0xB0), CColor(0x9B, 0x59, 0xB6, 0xB0), CColor(0x1A, 0xBC, 0x9C, 0xB0),
@@ -80,6 +74,7 @@ void EnvelopeCurveView::draw(VSTGUI::CDrawContext* context) {
     };
 
     int selectedLane = static_cast<int>(std::round(controller_->getParamNormalized(ParamIDs::kSelectedLane) * 7.0));
+    const auto& cachedScene = controller_->cachedState().sceneA;
 
     for (int lane = 0; lane < kMaxLanes; ++lane) {
         auto activeId = ParamIDs::laneParam(lane, ParamIDs::kActive);
@@ -90,13 +85,18 @@ void EnvelopeCurveView::draw(VSTGUI::CDrawContext* context) {
         double envVal = controller_->getParamNormalized(ParamIDs::envelopeValueOutput(lane));
         double phase = controller_->getParamNormalized(ParamIDs::lanePhaseOutput(lane));
 
+        const auto& laneConfig = cachedScene.lanes[lane];
+        Envelope env{};
+        if (laneConfig.envelopeCount > 0)
+            env = laneConfig.envelopes[0].envelope;
+
         auto* path = context->createGraphicsPath();
         if (!path)
             continue;
 
         for (int i = 0; i <= kCurvePoints; ++i) {
             double t = static_cast<double>(i) / kCurvePoints;
-            double val = 0.5 * (1.0 + std::sin(kTwoPi * t));
+            double val = static_cast<double>(evaluateShapeFull(env, static_cast<float>(t)));
             double x = plotLeft + t * plotW;
             double y = plotBottom - val * plotH;
 
