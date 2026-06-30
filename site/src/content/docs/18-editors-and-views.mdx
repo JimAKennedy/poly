@@ -1,0 +1,95 @@
+---
+title: "18. Editors and Advanced Views"
+description: "Timeline step editor, micro-timing editor, and additive cell editor — direct control over pattern details beyond the macro layer."
+---
+
+import ListenFor from '../../components/ListenFor.astro';
+import PolyPatch from '../../components/PolyPatch.astro';
+
+The preceding chapters have treated Poly's lanes through the lens of macro controls — Density, Complexity, Swing, Humanize, Mutation. These knobs operate at the level of character: they shape what kind of groove emerges, not which specific steps fire or how each individual note sits in time. For most creative work, that is exactly the right level of control. You describe the musical intent, and the engine handles the details.
+
+But sometimes you need the details. A bell pattern that must not change. A surdo hit that needs to land 8 milliseconds late on every cycle. A 7/8 aksak grouping that Euclidean distribution approximates but does not quite capture. These are the cases where Poly's three editor views take over — providing step-level, timing-level, and cell-level control that operates beneath the macro layer.
+
+## Timeline Mode and the Step Editor
+
+Timeline mode locks a lane to a fixed on/off pattern that is immune to macro modulation, mutation, and Euclidean redistribution. When `timeline = true`, the lane plays exactly the pattern defined in `fixedPattern[]`, step by step. No algorithm decides where the hits go. You draw them, and they stay drawn.
+
+The **TimelineView** provides a step grid for editing these fixed patterns. Each step in the grid is either on (filled, blue) or off (dark). Click a step to toggle it. The pattern length matches the lane's cycle steps, or `fixedPatternLength` if you have overridden it to a different value.
+
+The critical difference from a normal lane is what timeline mode ignores. A timeline lane does not respond to Density — it will not add or remove hits when the macro changes. It does not respond to Complexity — no ghost notes, no fills. Syncopation has no effect. Mutation is suppressed. The lane plays the pattern you drew, identically, on every cycle. This is not a limitation. It is the point.
+
+In West African ensemble music, one instrument holds a fixed repeating pattern — the bell timeline — against which every other part orients itself. The bell does not improvise. It does not respond to the energy of the room. It provides the stable temporal scaffold that makes everyone else's rhythmic freedom possible. In Afrobeat, the twelve-beat bell pattern is the skeleton of the entire groove. In Afro-Cuban music, the clave serves the same structural role. In Bossa Nova, the tamborim pattern anchors the samba rhythm section.
+
+Timeline lanes in Poly serve exactly this function. While other lanes respond to macro modulation, evolve through mutation, and shift character with scene morphing, timeline lanes hold steady. They are the reference that the ear locks onto — the rhythmic ground truth against which polymetric tension is perceived.
+
+<PolyPatch title="Timeline Bell Pattern" preset="Afrobeat 12/8, Lane 1">
+
+| Step | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 |
+|------|---|---|---|---|---|---|---|---|---|----|----|-----|
+| Bell | x | . | x | . | x | x | . | x | . | x  | .  | x  |
+
+</PolyPatch>
+
+This is the standard Afrobeat bell pattern: seven hits across twelve positions, with the characteristic asymmetric clustering in the second half of the cycle (steps 5-6 and 9-10 are consecutive). This specific distribution is not Euclidean — E(7,12) produces a different arrangement. It is a culturally specific pattern that emerged from centuries of musical practice, and it sounds right in a way that no algorithm can derive from first principles. Timeline mode lets you enter it exactly as tradition dictates.
+
+Use cases for timeline mode extend beyond bell patterns. Any part that must remain invariant belongs on a timeline lane: a clave pattern in an Afro-Cuban groove, a tamborim figure in a Bossa Nova patch, a tabla theka in a Carnatic-inspired composition, or a programmed breakbeat pattern that you have hand-placed and do not want the engine to touch. Timeline mode is the escape hatch from generative logic — the place where you assert direct authorship over a lane's output. See [Chapter 2 (Sub-Saharan Africa)](/poly/02-sub-saharan-africa/) and [Chapter 4 (Afrobeat)](/poly/04-afrobeat/) for deeper context on the musical role of timeline instruments.
+
+## Micro-Timing Editor
+
+The **MicroTimingEditorView** provides per-step timing offsets in milliseconds, giving each step its own push or pull independently of the lane's global timing parameters. Where Swing displaces alternate steps and Humanize adds random jitter, micro-timing lets you sculpt the exact temporal feel of individual hits — deterministically, repeatably, on every cycle.
+
+The editor displays a horizontal bar per step, centered at zero milliseconds. Drag a bar right to push the step late (positive offset, laid-back feel). Drag left to pull it early (negative offset, pushing feel). The range is approximately plus or minus 20 milliseconds per step — small enough that the displacement is felt rather than heard as a separate event, large enough to fundamentally alter the groove's character.
+
+These offsets are deterministic. Unlike Humanize, which adds a different random displacement on every cycle, micro-timing offsets apply identically every time. If you set step 3 to +5ms, step 3 will be 5 milliseconds late on every cycle, forever. This is the distinction between *feel* and *liveness*: micro-timing defines the underlying temporal signature of the pattern, while Humanize adds the organic variation on top.
+
+### Three Layers of Timing
+
+A step's final timing in Poly is the sum of three independent layers:
+
+**timingOffsetMs** is the global per-lane offset. It shifts every note in the lane by the same amount. Set the kick lane to -3ms and every kick hit arrives 3 milliseconds early, creating a subtle pushing feel across the entire part. This is the broadest timing control — a single value that characterizes the lane's overall relationship to the grid.
+
+**microTimingMs[]** is the per-step offset array. Each step has its own timing signature, independent of every other step. Step 1 might sit right on the grid, step 3 might push 5ms late, step 7 might pull 3ms early. This is where you encode the specific timing irregularities that define a style — the Bossa Nova ginga, the Afrobeat bell phrasing, the neo-soul pocket.
+
+**humanizeMs** is random jitter. On each cycle, every note receives a random displacement within the specified range, drawn fresh each time. This is the liveness layer — it prevents the pattern from sounding mechanical by ensuring no two repetitions are timing-identical.
+
+These three layers stack additively. A step's final position is: lane offset + step micro-timing + random humanize. The first two are deterministic and repeat exactly on every cycle. The third adds controlled randomness. The separation matters because you can dial in a precise feel (the first two layers) and then independently control how much organic variation sits on top (the third).
+
+### When Micro-Timing Matters
+
+The Bossa Nova preset uses per-step micro-timing on surdo, agogo, and pandeiro lanes to encode the characteristic ginga — a lilting, swaying quality that is structural to the style, not the result of random variation. A straight quantized Bossa Nova pattern sounds stiff and foreign; the same pattern with correct micro-timing offsets sounds Brazilian. The difference is 5-10 milliseconds per step, and it is immediately audible.
+
+The Afrobeat presets apply micro-timing to the bell pattern's second half, where the consecutive-step clusters (steps 5-6, 9-10) are played with subtle timing asymmetries that a straight grid cannot capture. These are not random — they are characteristic of the style, reproduced by skilled players on every repetition.
+
+Any style where timing irregularities are structural rather than random is a candidate for per-step micro-timing. If the displacement is part of the pattern's identity — if removing it makes the groove sound wrong rather than merely different — it belongs in the micro-timing array, not in the Humanize parameter.
+
+## Additive Cell Editor
+
+The **CellEditorView** enables additive rhythm construction by defining unequal cell sizes that replace Euclidean equal distribution. Where Euclidean mode distributes hits as evenly as possible across the available steps, additive mode lets you specify exactly how wide each grouping should be — producing the unequal, asymmetric meters that define traditions from the Balkans to South India.
+
+When `cellCount > 0`, the lane switches from Euclidean mode to additive mode. Each cell is assigned a size in subdivision units. A rachenitsa in 7/8 is three cells of sizes 2, 2, and 3 — written [2+2+3], totalling 7 units. A Carnatic adi tala is three cells of sizes 4, 2, and 2 — written [4+2+2], totalling 8 units. Hits are placed at cell boundaries: one hit at the start of each cell, producing a pattern where the gaps between hits are unequal.
+
+The editor displays cells as variable-width blocks, visually proportional to their size. Click the plus or minus controls on a cell to increase or decrease its width by one subdivision unit. Add a new cell to extend the meter, or remove a cell to shorten it. The total step count adjusts automatically to match the sum of all cell sizes.
+
+### Euclidean vs. Additive
+
+The distinction between Euclidean and additive distribution is subtle but musically fundamental.
+
+Euclidean distribution solves an optimization problem: given K hits and N steps, place the hits as evenly as possible. E(3,7) produces the inter-onset pattern [2+2+3] — three hits, seven steps, maximum evenness. This happens to match the rachenitsa grouping, which is why [Chapter 7 (Balkan)](/poly/07-balkan/) can demonstrate aksak patterns using Euclidean distribution. But the match is a fortunate coincidence, not a guarantee.
+
+Additive distribution solves a different problem: place hits at the boundaries of explicitly defined groupings. Cells [2+2+3] place hits at positions 0, 2, and 4 — the same result as E(3,7), in this case. But cells [3+2+2] place hits at positions 0, 3, and 5 — a different pattern that E(3,7) at rotation 0 does not produce.
+
+The feel is fundamentally different when the groupings diverge from Euclidean evenness. Additive meters have a characteristic lopsided quality — aksak literally means "limping" in Turkish. The long cells create a sense of weight or pause, while the short cells rush forward. This is not swing (which displaces alternate steps within an even grid) and it is not syncopation (which accents weak positions within a regular meter). It is a genuinely unequal meter, where the beats themselves are different sizes.
+
+The Balkan Aksak preset ([2+2+3]) and the Carnatic Tala preset ([4+2+2]) demonstrate two distinct additive traditions. The Balkan pattern uses small cells (twos and threes) that create a quick limping dance rhythm. The Carnatic pattern uses a larger opening cell (four) followed by two short cells (two each), producing a longer opening phrase that resolves into rapid cadential strokes — a fundamentally different rhythmic architecture built from the same additive principle.
+
+### Building Custom Meters
+
+The Cell Editor's add and resize controls let you construct meters that do not appear in any preset library. A [3+3+2+2+3] grouping in 13/16 has no standard name in any tradition, but it might be exactly the lopsided, lurching feel that a particular composition needs. This is where the additive editor moves beyond historical recreation and becomes a compositional tool — you are not reproducing a known aksak pattern, you are inventing a new one.
+
+The constraint is that cell sizes must be positive integers (minimum 1 subdivision unit per cell). Beyond that, any combination is valid. Five cells of [1+1+1+1+1] is functionally equivalent to a straight five-beat pattern. Two cells of [6+6] is a simple duple meter. The extremes are trivial; the interesting territory is everything in between.
+
+<ListenFor>
+
+These three editors — timeline, micro-timing, and additive cells — are the surgical tools that complement the macro knobs' broad strokes. Where Density, Complexity, and Mutation describe the character of a groove in general terms, the editors let you reach inside and control the specifics: which exact steps fire, how each note sits in time, how wide each metric grouping is. Most patches will never need them — the macro layer handles the vast majority of musical intent. But when you need a bell pattern that does not budge, a surdo that drags by exactly 8 milliseconds, or a 13/8 meter that no Euclidean approximation quite captures, the editors are where you go. They are the difference between describing what you want and specifying it.
+
+</ListenFor>

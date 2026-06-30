@@ -1,6 +1,6 @@
 ---
 title: "Appendix: Factory Preset Reference"
-description: "Complete parameter tables for all nine factory presets — lane configurations, macro settings, and suggested experiments."
+description: "Complete parameter tables for all fourteen factory presets — lane configurations, macro settings, and suggested experiments."
 ---
 
 import PolyPatch from '../../components/PolyPatch.astro';
@@ -9,7 +9,7 @@ import CodeSnippet from '../../components/CodeSnippet.astro';
 import EuclideanDiagram from '../../components/EuclideanDiagram.astro';
 import PolyScreenshot from '../../components/PolyScreenshot.astro';
 
-This appendix documents every factory preset shipped with Poly. Each preset is a starting point, not a destination — the parameter tables and experiment suggestions below are designed to help you understand what each preset does and where you might take it.
+This appendix documents all fourteen factory presets shipped with Poly. Each preset is a starting point, not a destination — the parameter tables and experiment suggestions below are designed to help you understand what each preset does and where you might take it.
 
 ## 1. Four on the Floor
 
@@ -213,6 +213,118 @@ A tight four-lane groove emphasising micro-timing offsets and subtle mutation. T
 - Push Humanize to 0.5 for an extremely loose, almost drunk feel.
 - Zero out all Timing offsets to hear how the pocket tightens — the same pattern with precise timing sounds robotic by comparison.
 - Increase Lane 4's mutation to 30 and add phrase gating (Length 6, Gap 2) for a ghost layer that breathes and varies.
+
+## 10. Afrobeat 12/8
+
+A compound-time groove built around a fixed timeline bell pattern — the 12/8 standard that organises West African ensemble music. The bell plays E(7,12) as a timeline (immune to macro modulation), while a four-on-the-floor kick anchors the downbeat. Shaker fills continuously at 12/12, and conga ghosts drift underneath with humanised timing.
+
+<PolyPatch title="Afrobeat 12/8" preset="Factory: Afrobeat 12/8">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Note | Velocity | Ghost | Special |
+|------|------|-------|------|----------|-------------|------|----------|-------|---------|
+| 1 | Bell (timeline) | 12 | 7 | 0 | 1/8 | 56 | 90 | 0 | Fixed pattern |
+| 2 | Kick | 4 | 4 | 0 | 1/4 | 36 | 112 | 0 | — |
+| 3 | Snare | 3 | 2 | 0 | 1/8 | 38 | 95 | 0 | — |
+| 4 | Shaker | 12 | 12 | 0 | 1/12 | 70 | 55 | 0 | — |
+| 5 | Conga | 5 | 3 | 0 | 1/8 | 63 | 65 | 25 | Humanize 2.5ms |
+
+</PolyPatch>
+
+**Macros:** Density 0.5, Complexity 0, Syncopation 0, Swing 0.1, Tension 0, Humanize 0.15
+
+**Experiments:**
+- The bell pattern is a fixed timeline — it does not respond to Density or Complexity macros. Push those macros freely to reshape the supporting parts while the bell holds the structure.
+- Increase Lane 5's probability to 1.0 and ghost floor to 40 for a louder, more prominent conga part that steps forward from the texture.
+- Try scene morphing from this preset to Pocket Groove — the compound-to-straight transition is a classic Afrobeat arrangement technique.
+
+## 11. Balkan Aksak
+
+A 7/8 aksak pattern using additive cells [2+2+3] — the rachenitsa meter of Bulgarian dance music. The davul (bass drum) and rim share the same additive grid, while zurna and darbuka overlay Euclidean patterns at E(7,8) that create polymetric tension against the asymmetric foundation.
+
+<PolyPatch title="Balkan Aksak" preset="Factory: Balkan Aksak">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Note | Velocity | Ghost | Cells |
+|------|------|-------|------|----------|-------------|------|----------|-------|-------|
+| 1 | Davul | 3 | 2 | 0 | 1/8 | 36 | 110 | 0 | [2+2+3] |
+| 2 | Rim | 3 | 1 | 0 | 1/8 | 37 | 95 | 0 | [2+2+3] |
+| 3 | Zurna | 7 | 4 | 0 | 1/8 | 76 | 80 | 0 | — |
+| 4 | Darbuka | 7 | 3 | 0 | 1/8 | 43 | 60 | 20 | — |
+
+</PolyPatch>
+
+**Macros:** Density 0.45, Complexity 0.4, Syncopation 0, Swing 0, Tension 0, Humanize 0
+
+**Experiments:**
+- Change the cell sizes to [2+3+2] or [3+2+2] for different aksak variants — each rotation of the 7/8 feel changes the dance character entirely.
+- Increase Lane 3's humanize to 3ms for a looser zurna feel reminiscent of wedding band performance style.
+- Add a 5th lane at E(4,11) for a kopanitsa cross-rhythm that plays 11/8 against the 7/8 foundation.
+
+## 12. Bossa Nova
+
+A bossa nova groove built around a fixed tamborim clave with ginga micro-timing — the subtle push-pull timing offsets that give Brazilian music its characteristic sway. The surdo anchors on beats 1 and 3 with micro-timing delays on the off-beats, while agogo and pandeiro weave around the clave with their own per-step timing variations.
+
+<PolyPatch title="Bossa Nova" preset="Factory: Bossa Nova">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Note | Velocity | Ghost | Special |
+|------|------|-------|------|----------|-------------|------|----------|-------|---------|
+| 1 | Surdo | 4 | 2 | 0 | 1/4 | 36 | 100 | 0 | Micro-timing |
+| 2 | Tamborim (clave) | 16 | 5 | 0 | 1/16 | 76 | 85 | 0 | Fixed pattern |
+| 3 | Agogo | 8 | 5 | 0 | 1/8 | 67 | 70 | 0 | Micro-timing |
+| 4 | Pandeiro | 16 | 12 | 0 | 1/16 | 70 | 50 | 0 | Micro-timing |
+
+</PolyPatch>
+
+**Macros:** Density 0, Complexity 0.35, Syncopation 0, Swing 0.2, Tension 0, Humanize 0.2
+
+**Experiments:**
+- Zero out all micro-timing offsets and hear how the groove loses its ginga — the same notes without the timing feel mechanical and lifeless.
+- Increase Lane 4's velocity spread to 0.3 for a more dynamic pandeiro that breathes with the pattern.
+- Try scene morphing from Bossa Nova to Latin Feel — both share clave-derived structures but the timing and instrumentation create very different moods.
+
+## 13. Carnatic Tala
+
+An adi tala pattern [4+2+2] — the eight-beat cycle of South Indian classical music, divided into three unequal groups. The mridangam bass and treble share the additive grid, ghatam provides shimmer at E(5,8), and kanjira adds ghosted cross-rhythmic texture at E(3,8).
+
+<PolyPatch title="Carnatic Tala" preset="Factory: Carnatic Tala">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Note | Velocity | Ghost | Cells |
+|------|------|-------|------|----------|-------------|------|----------|-------|-------|
+| 1 | Mridangam (bass) | 3 | 2 | 0 | 1/4 | 36 | 105 | 0 | [4+2+2] |
+| 2 | Mridangam (treble) | 3 | 3 | 0 | 1/4 | 43 | 90 | 0 | [4+2+2] |
+| 3 | Ghatam | 8 | 5 | 0 | 1/8 | 42 | 65 | 0 | — |
+| 4 | Kanjira | 5 | 3 | 0 | 1/8 | 39 | 50 | 20 | — |
+
+</PolyPatch>
+
+**Macros:** Density 0.4, Complexity 0.5, Syncopation 0, Swing 0, Tension 0, Humanize 0
+
+**Experiments:**
+- Change the cell sizes to [3+2+3] for rupak tala (7 beats) or [4+4] for eka tala — each tala creates a different gravitational landscape.
+- Increase Lane 4's humanize to 3ms for a more organic kanjira feel.
+- Push Complexity to 0.8 for layakari-style subdivision doubling — the pattern fills with faster ornamental notes while maintaining the tala architecture.
+
+## 14. IDM Glitch
+
+Irregular additive cells [3+2+5+3] with heavy mutation, erratic per-step micro-timing offsets, and high probability variation across five lanes. This preset is deliberately unstable — it uses mutation rates up to 0.4 and micro-timing swings of ±12ms to create patterns that never settle into a repeatable groove. The Complexity and Tension macros push the engine toward maximum rhythmic entropy.
+
+<PolyPatch title="IDM Glitch" preset="Factory: IDM Glitch">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Note | Velocity | Ghost | Mutation | Cells |
+|------|------|-------|------|----------|-------------|------|----------|-------|----------|-------|
+| 1 | Kick | 4 | 3 | 0 | 1/16 | 36 | 115 | 0 | 25% | [3+2+5+3] |
+| 2 | Snare | 5 | 2 | 0 | 1/16 | 38 | 100 | 0 | 30% | — |
+| 3 | Hat | 9 | 6 | 0 | 1/16 | 42 | 70 | 0 | 0% | Micro-timing |
+| 4 | Perc | 7 | 3 | 0 | 1/16 | 45 | 55 | 15 | 35% | — |
+| 5 | Glitch | 11 | 4 | 0 | 1/16 | 56 | 75 | 0 | 40% | Micro-timing |
+
+</PolyPatch>
+
+**Macros:** Density 0.35, Complexity 0.8, Syncopation 0.5, Swing 0, Tension 0.6, Humanize 0
+
+**Experiments:**
+- Reduce all mutation rates to 0 and hear the underlying additive/Euclidean skeleton — the pattern is surprisingly structured beneath the chaos.
+- Push Lane 5's probability to 1.0 for maximum glitch density, or drop it to 0.3 for occasional bursts of erratic hits.
+- Use MIDI capture (Export Trigger) to record several passes — each mutation cycle produces a different version. Layer the best takes in your arrangement for controlled complexity.
 
 ---
 
