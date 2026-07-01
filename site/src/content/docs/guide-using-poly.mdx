@@ -1,0 +1,362 @@
+---
+title: "Using Poly"
+description: "Complete guide to installing, configuring, and using the Poly VST3 polymetric drum generator — setup, interface, routing, recording, scenes, and export."
+---
+
+import ListenFor from '../../components/ListenFor.astro';
+import PolyPatch from '../../components/PolyPatch.astro';
+
+Everything you need to use Poly in one place: installation, MIDI routing, the plugin interface, DAW workflow, scenes, capture, and troubleshooting. The chapters in this guide explore each rhythmic tradition in depth — this page covers the instrument itself.
+
+## Getting Started
+
+### Install
+
+Copy the `Poly.vst3` bundle to your system's VST3 plugin folder:
+
+- **macOS:** `~/Library/Audio/Plug-Ins/VST3/`
+- **Windows:** `C:\Program Files\Common Files\VST3\`
+
+Restart your DAW so it rescans for new plugins.
+
+### Load Poly
+
+Add an instrument track with Poly as the instrument. In Cubase: **Project > Add Track > Instrument**, then select **Poly** from the plugin list.
+
+Poly generates MIDI only — it produces no audio on its own. You need a drum sound source (Groove Agent, Battery, Kontakt, or any GM-compatible drum plugin) to hear the output.
+
+### Route MIDI to a Drum Instrument
+
+**Option A — MIDI Send (recommended)**
+
+1. Select the Poly instrument track
+2. In the Inspector, open **MIDI Sends**
+3. Enable a send and route it to the target drum instrument's MIDI input
+4. The drum instrument receives Poly's generated notes in real time
+
+**Option B — Record then route**
+
+1. Record Poly's output to a MIDI part (see [Recording](#recording) below)
+2. Move or copy the MIDI part to the drum instrument track
+3. This gives full editing control before the notes reach the instrument
+
+**Monitor configuration:** enable Monitor on the Poly track to hear generated output during playback. If using MIDI sends, monitor the drum instrument track instead. Set MIDI Thru in **Preferences > MIDI** if needed for real-time monitoring.
+
+### Press Play
+
+Hit play in your DAW. The lane phase indicators animate and you hear the groove through your drum instrument. The output is deterministic — the same settings always produce the same result.
+
+## The Plugin Interface
+
+The plugin window is 600 x 870 pixels, laid out as six horizontal sections from top to bottom.
+
+```
++-----------------------------------------------+
+|  POLY    [ Select Preset...  v ]        1.0.0  |  Header
++-----------------------------------------------+
+|  LANES                                         |
+|  Kick       ██████████████████████████  ● L1   |
+|  Snare      ████████████████████        ● L2   |  Lane Grid
+|  HH Closed  ██████████████████████████  ● L3   |  (interactive)
+|  ...                                           |
++-----------------------------------------------+
+|  [A] [B] [Morph]  ═══════▓════════   [CHAIN]   |  Scene Bar
++-----------------------------------------------+
+|  MACROS                                        |
+|  (o)   (o)   (o)   (o)   (o)   (o)             |  Macro Knobs
+|  Cmplx Dens Sync Swing Tens Human              |
++-----------------------------------------------+
+|  VELOCITY                                      |
+|  ██  ██  ██  ██                                |  Velocity Bars
+|  L1  L2  L3  L4  L5  L6  L7  L8               |  (read-only)
++-----------------------------------------------+
+|  VISUALIZATION                                 |
+|  +------------------+  +-----------+           |
+|  | Envelope curves  |  | Phase     |           |  Visualizations
+|  | with markers     |  | circles   |           |  (read-only)
+|  +------------------+  +-----------+           |
++-----------------------------------------------+
+```
+
+### Header
+
+Displays the plugin name **POLY** (blue), a **preset selector dropdown** in the center, and the version number (gray) on the right. Click the preset dropdown to access Init (All Lanes) and all 14 factory presets. Selecting any entry immediately loads all parameters.
+
+### Lane Grid
+
+Eight drum lanes, each representing an independent rhythmic voice. This is the primary interactive area.
+
+**Default MIDI note assignments:**
+
+| Lane | Name | Default MIDI Note |
+|------|------|-------------------|
+| L1 | Kick | C1 (36) |
+| L2 | Snare | D1 (38) |
+| L3 | HH Closed | F#1 (42) |
+| L4 | HH Open | A1 (45) |
+| L5 | Tom Hi | A#1 (46) |
+| L6 | Tom Lo | D#1 (39) |
+| L7 | Ride | G1 (43) |
+| L8 | Crash | D2 (50) |
+
+**Controls per lane:**
+
+- **Active toggle** — click the lane name to enable or disable it. Active lanes show a blue-tinted background; inactive lanes are dark gray.
+- **Probability slider** — click or drag the horizontal blue bar to set the probability (0–100%) that each note triggers. Full bar = always plays; shorter bar = notes are randomly skipped.
+- **Phase indicator** — the colored circle on the right (L1–L8) shows a rotating dot indicating the lane's current position within its rhythmic cycle. Each lane can have a different cycle length, so they rotate at different speeds.
+
+### Scene Bar
+
+A horizontal control strip between the lane grid and macros.
+
+- **A / B / Morph buttons** — select which scene is active. Click A or B for a fixed scene, or Morph to enable crossfading between the two. The active button shows a blue highlight.
+- **Morph slider** — when Morph is selected, drag to blend between Scene A (left) and Scene B (right). Disabled when A or B is selected directly.
+- **CHAIN button** — opens the chain configuration popover (see [Scene Chaining](#scene-chaining)).
+
+### Macro Knobs
+
+Six rotary knobs that shape the overall groove character. These are high-level controls that influence multiple engine parameters at once.
+
+| Knob | Default | Effect |
+|------|---------|--------|
+| Complexity | 50% | Increases rhythmic intricacy across all lanes |
+| Density | 50% | Controls how many hits are active in the pattern |
+| Syncopation | 0% | Shifts emphasis away from strong beats |
+| Swing | 0% | Applies swing feel globally |
+| Tension | 0% | Increases rhythmic unpredictability and conflict |
+| Humanize | 0% | Adds timing and velocity imperfections globally |
+
+Click and drag up/down on any knob to adjust. Start with **Density** and **Swing** — they have the most immediate impact on the feel.
+
+### Velocity Display
+
+Eight vertical bar graphs (one per lane, L1–L8) showing the real-time velocity of the most recent note triggered. Green bars pulse when notes fire during playback. This section is read-only.
+
+### Visualization
+
+Two real-time displays at the bottom of the plugin window.
+
+**Envelope Panel (left):** Shows envelope and automation curves for all active lanes overlaid in a single plot. Each lane uses a distinct color (L1 blue, L2 orange, L3 green, L4 red, L5 purple, L6 teal, L7 dark orange, L8 light blue). A vertical line moves across the plot showing the current phase position, with a colored dot following along each curve.
+
+**Phase Alignment Panel (right):** Concentric rings, one per active lane. A colored dot orbits each ring at the lane's cycle rate. When dots align vertically (top), those lanes are "in phase" — their downbeats coincide. When dots scatter, the polymetric pattern is at maximum divergence. This is the key visualization for Poly's core concept: independent rhythmic cycles drifting in and out of alignment.
+
+### Hidden Parameters
+
+These parameters are not visible in the plugin UI but are exposed for DAW automation:
+
+| Parameter | Range | Purpose |
+|-----------|-------|---------|
+| Base Velocity | 0–127 | Default velocity for notes in a lane |
+| Emphasis Prob | 0–100% | Probability of accented hits |
+| Ghost Floor | 0–127 | Minimum velocity for ghost notes |
+| Velocity Spread | 0–100% | Random velocity variation |
+| Swing Amount | 0–100% | Per-lane swing feel |
+| Humanize | 0–50 ms | Per-lane random timing offset |
+| Note Duration | 0–4 beats | Length of MIDI notes |
+| Tempo Mult | 0.25x–4.0x | Per-lane tempo scaling (see [Metric Modulation](#metric-modulation)) |
+| Active Lane Count | 1–8 | Number of active lanes (ID 300) |
+| Seed | 0–999999 | Random seed for pattern generation (ID 301) |
+
+See the [Parameter Reference](/poly/appendix-parameters/) for the complete parameter list with IDs and ranges.
+
+## MIDI Routing
+
+### Single-Instrument Setup (Default)
+
+All lanes on the same channel: set every lane's MIDI channel to 0 (or leave on Auto). All notes flow to a single drum kit. This is how the factory presets work — one instrument receives everything, and the kit mapping within that instrument determines what each MIDI note sounds like.
+
+### Multi-Instrument Setup
+
+Assign lanes to different MIDI channels to drive separate instruments from a single Poly instance.
+
+<PolyPatch title="Multi-Instrument Routing" preset="Custom: Multi-Output">
+
+| Lane | Role | Note | MIDI Ch | Target |
+|------|------|------|---------|--------|
+| 1 | Kick | 36 | 0 | Groove Agent (acoustic kit) |
+| 2 | Snare | 38 | 0 | Groove Agent (acoustic kit) |
+| 3 | Hi-hat | 42 | 1 | Battery (electronic kit) |
+| 4 | Perc | 63 | 2 | Kontakt (world percussion) |
+
+</PolyPatch>
+
+With separate instruments on separate channels, you get independent mixing, processing, and spatial positioning for each timbral layer.
+
+### Multi-Channel Routing in Cubase
+
+1. Set Poly's MIDI output to **All MIDI Channels** in the instrument track's output routing
+2. Create instrument tracks for each target (Groove Agent, Battery, Kontakt, etc.)
+3. Set each target track's MIDI input to **Poly** with channel filtering matching the lanes you want
+4. Each track receives only its assigned lanes' notes — no cross-talk between instruments
+
+### Note Map
+
+The Note Map is a 128-entry remapping grid that transforms MIDI note numbers before they reach the output. By default, it is an identity map (every note passes through unchanged). Remap any source note to any destination to match non-standard kit layouts, create octave layers, or route lanes to pitched instruments.
+
+The NoteMapView editor in Poly's UI displays each active lane's source note, its GM drum name, and the current destination. Click any destination to change it. A Reset button restores the identity mapping.
+
+**Practical examples:**
+
+- **Kit swap** — remap 36→48, 38→52 to match a non-standard drum machine layout without changing your patch
+- **Octave layer** — map kick 36→48 so hits trigger both the original and layered sample
+- **Melodic percussion** — remap lane notes to pitched instruments (marimba, steel drum) for tonal polyrhythmic melodies
+
+## Playback and Transport
+
+Poly derives all timing from the DAW transport. Everything is PPQ-based, so transport operations work without drift:
+
+- **Play** — generates notes based on current PPQ position
+- **Stop** — output ceases immediately
+- **Loop** — seamless; Poly recalculates from the loop-start position
+- **Tempo changes** — take effect immediately
+- **Position jumps** — correct output from the new position (no accumulated state to reset)
+
+Identical transport playback produces identical MIDI output every time. Poly's output is a pure function of the patch settings and transport position. Changing the block size or buffer settings does not affect the musical result.
+
+## Scene Chaining
+
+Scene chaining automates transitions between Scene A and Scene B at bar boundaries, removing the need to manually automate the Scene Select parameter.
+
+### Chain Configuration
+
+Click the **CHAIN** button in the scene bar to open the chain popover:
+
+- **Enable toggle** — ON/OFF to activate chain playback
+- **Mode selector** — behavior at the end of the sequence:
+  - **1-Shot** — stops at the last entry and holds it
+  - **Loop** — wraps back to the first entry and repeats
+  - **PingPong** — reverses direction at each boundary (A-B-A-B...)
+- **Entry list** — up to 16 entries, each with a scene (A/B/Morph) and bar count (1–32)
+- **Add / Remove** — manage entries
+
+### Example: A-B-A Structure
+
+| Entry | Scene | Bars |
+|-------|-------|------|
+| 1 | A | 8 |
+| 2 | B | 8 |
+| 3 | A | 8 |
+
+With **1-Shot**, the chain plays 24 bars and holds the last entry. With **Loop**, it repeats indefinitely. With **PingPong**, it reverses: A-B-A-B-A...
+
+Chain position resets on transport jumps. Chain advances only at bar boundaries — mid-bar starts wait for the next bar line.
+
+## Metric Modulation
+
+Each lane has a **Tempo Mult** parameter that scales its step grid independently from the host tempo.
+
+| Multiplier | Effect |
+|------------|--------|
+| 0.25x | Quarter speed — 4x longer between hits |
+| 0.5x | Half speed |
+| 1.0x | Normal — follows host tempo |
+| 2.0x | Double speed |
+| 4.0x | Quadruple speed |
+
+Start with simple ratios: **2.0x against 1.0x** creates a 2:1 tempo relationship. **1.5x against 1.0x** creates a 3:2 hemiola. Phrase gating stays in absolute PPQ (unscaled), so gating boundaries remain bar-aligned regardless of the multiplier. Scene morphing interpolates the multiplier smoothly.
+
+## Recording
+
+### Record MIDI Output
+
+1. Arm the Poly track for recording
+2. Press **Record** in the transport
+3. Poly's generated events are captured as a standard MIDI part
+4. Stop recording — the part appears in the arrangement
+
+### Record to a Separate Track
+
+1. Create an empty MIDI track
+2. Set its input to **Poly**
+3. Arm the MIDI track for recording
+4. The MIDI track captures Poly's output independently
+
+### Loop Recording
+
+Cubase's loop recording modes work with Poly:
+
+- **Mix** — each pass adds to the same part (layered takes)
+- **Replace** — each pass overwrites the previous
+
+Since Poly is deterministic, Replace mode produces identical content each pass unless you change parameters between passes.
+
+### Editing Recorded MIDI
+
+After recording, the MIDI part is standard Cubase data: open in the Key Editor or Drum Editor, quantize, transpose, or process with any MIDI function. The recorded MIDI is fully independent of Poly.
+
+## MIDI Capture and Export
+
+Poly continuously records every note it generates into a circular buffer holding the most recent 2048 events (roughly 8 bars at typical density). No arming or configuration needed — the buffer captures automatically during playback.
+
+### Export Workflow
+
+1. Play until you hear a passage worth keeping
+2. Set **Capture Length** to match the passage (1–32 bars, default 8)
+3. Trigger **Export** — Poly writes a Standard MIDI File (Type 0, 480 ticks/quarter)
+4. Import the `.mid` file into your DAW as a standard MIDI part
+
+The export preserves all MIDI channels, velocities, and micro-timing from Humanize and Swing. The captured material is completely independent of Poly — edit it, layer it, rearrange it.
+
+Capture is especially powerful during scene morphs, where the groove transforms continuously. Exporting during a morph captures that transition as concrete MIDI data.
+
+## Parameter Automation
+
+Poly exposes all macro knobs, scene controls, chain parameters, per-lane settings, and metric modulation values to the DAW automation system. Show automation lanes on the Poly track and draw curves or record automation moves.
+
+## Preset Management
+
+### Factory Presets
+
+| # | Name | Style | Active Lanes |
+|---|------|-------|--------------|
+| — | Init (All Lanes) | Default state, all 8 lanes active | 8 |
+| 1 | Four on the Floor | Classic club groove with straight 8th hats | 4 |
+| 2 | Polymetric Drift | Prime-number cycles (3, 5, 7, 11) | 4 |
+| 3 | Sparse Pulse | Minimal, spacious groove | 3 |
+| 4 | Breakbeat | Syncopated kick with fast hats | 4 |
+| 5 | Latin Feel | Clave-inspired with percussion | 4 |
+| 6 | Afro-House Phrases | Staggered phrase loops | 5 |
+| 7 | Reich Phasing | Two identical patterns phasing apart | 3 |
+| 8 | Kotekan Interlock | Balinese interlocking pair | 4 |
+| 9 | Pocket Groove | J Dilla-style micro-timing | 4 |
+| 10 | Afrobeat 12/8 | Compound-time with timeline bell | 5 |
+| 11 | Balkan Aksak | 7/8 aksak [2+2+3] | 4 |
+| 12 | Bossa Nova | Clave timeline with ginga micro-timing | 4 |
+| 13 | Carnatic Tala | Adi tala [4+2+2] | 4 |
+| 14 | IDM Glitch | Irregular additive cells | 5 |
+
+### Save and Load
+
+Save presets via the preset selector dropdown in the header bar, or use your DAW's preset manager (`.vstpreset` files). Presets saved with older versions load correctly in newer versions — Poly uses versioned state serialization and migrates forward automatically.
+
+## Following the Chapter Examples
+
+Each chapter in this guide includes **patch recipes** — teal-highlighted boxes with lane-by-lane parameter tables. To hear any chapter's examples:
+
+1. Open Poly and load the factory preset named in the recipe (or start from Init)
+2. Set the lane parameters as shown in the recipe's table (steps, hits, rotation, subdivision, note assignment)
+3. Route MIDI to a drum instrument as described in [Getting Started](#getting-started)
+4. Press play — the rhythmic tradition described in the chapter plays through your drum kit
+
+Most recipes build on the factory presets. If a recipe says "Start from **Afrobeat 12/8**," load that preset first, then apply the modifications listed. If it says "Custom," build from the Init preset.
+
+The chapters progress from foundational concepts (Euclidean distribution, cycle independence) through regional traditions (Sub-Saharan Africa, Afro-Cuban, Gamelan, Indian classical) to synthesis techniques that combine multiple traditions. You can read linearly or jump to any chapter — each is self-contained.
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| No sound | MIDI not routed to drum instrument | Check MIDI send or recording workflow |
+| Notes cut off at loop point | Expected — Poly recalculates from loop start | Correct deterministic behavior |
+| Different output after restart | Patch seed changed | Verify seed in patch settings |
+| High CPU | Many active lanes with short subdivisions | Reduce active lane count or increase subdivision |
+| Missing notes | `kMaxEventsPerBlock` exceeded | Reduce lanes or density |
+| Chain not advancing | Chain Enable is Off | Set Chain Enable to On in the chain popover |
+| Chain resets on seek | Expected behavior | Chain position resets on transport jumps |
+| Lane too fast or slow | Tempo Mult not at 1.0x | Check per-lane Tempo Mult in automation |
+
+<ListenFor>
+
+Start with the macro knobs — they are the fastest way to change the character of any preset. Once you have a feel you like, explore the lane grid: click a lane name to toggle it on/off, drag the probability bar to add randomness, and watch the phase circles to see how independent cycles drift in and out of alignment. MIDI sends let you hear changes in real time without recording. When you find a groove worth keeping, either arm the track and record a pass, or use the MIDI capture system to export the last several bars as a Standard MIDI File.
+
+</ListenFor>
