@@ -1,0 +1,221 @@
+---
+title: "Architecture"
+description: "Engine pipeline, threading model, class reference, and code architecture of the Poly polymetric drum generator."
+---
+
+import CodeSnippet from '../../components/CodeSnippet.astro';
+
+Poly is split into two libraries with a strict isolation boundary: a pure C++ engine (`poly_engine`) that generates rhythmic patterns, and a VST3 plugin layer (`poly_plugin`) that bridges the engine to the DAW. This separation is the foundation of the entire architecture — the engine has zero VST3, audio-thread, or platform dependencies, and must compile and pass its full test suite without a DAW.
+
+## System Overview
+
+```
+                         ┌──────────────────────────────────────────────┐
+   Host (Cubase/VST3)    │                 poly_engine                   │
+   ┌───────────────┐     │  (pure C++, no VST3, no audio-thread alloc)  │
+   │ ProcessContext│────►│  Transport/Time   →  bar/beat/sub/lane-phase  │
+   │ Tempo / PPQ   │     │  Lane Generator   →  hit candidates per lane │
+   │ Loop / jumps  │     │  Dynamic Shaping  →  velocity/emphasis/env   │
+   └───────────────┘     │  Constraint Layer →  anchors / density caps  │
+   ┌───────────────┐     │  Output Scheduler →  ordered NoteEvent list  │
+   │ Event MIDI out│◄────│                                              │
+   └───────────────┘     └──────────────────────────────────────────────┘
+            ▲                                   ▲
+            │                                   │
+   ┌────────┴────────────┐             ┌────────┴────────┐
+   │ poly_plugin          │            │ poly_tests       │
+   │ AudioEffect/Processor│            │ (off-host unit   │
+   │ + EditController     │            │  + golden tests) │
+   │ + VSTGUI editor      │            └─────────────────┘
+   └──────────────────────┘
+```
+
+The plugin layer feeds the engine two things: the current transport state (`TransportContext`) and the resolved patch settings (`GrooveState`). The engine returns a buffer of `NoteEvent` objects. The plugin writes those events to the VST3 output `IEventList`. That is the entire interface.
+
+## Repository Structure
+
+```
+poly/
+├── engine/               # poly_engine — pure C++ static library
+│   ├── include/poly/     # public headers (types, engine, envelope, scene, etc.)
+│   └── src/              # implementation
+├── plugin/               # poly_plugin — VST3 instrument
+│   ├── source/           # processor, controller, factory, UI views
+│   └── resource/         # VSTGUI .uidesc layout
+├── tests/                # Google Test suite (runs without VST3 SDK)
+│   ├── golden/           # deterministic reference output files
+│   └── ui/               # visual regression and interaction tests
+└── tools/harness/        # headless CLI engine runner
+```
+
+## Threading Model
+
+Poly operates on two threads with no shared mutable state between them.
+
+### Audio Thread
+
+The DAW calls `PolyProcessor::process()` on the audio thread at each buffer cycle. This function:
+
+1. Reads the `ProcessContext` (PPQ position, tempo, sample rate, loop state)
+2. Reads parameter changes from the input `IParameterChanges`
+3. Calls `Engine::renderRange()` to generate note events for the current buffer
+4. Writes `NoteEvent` objects to the VST3 output `IEventList`
+5. Updates the MIDI capture buffer
+
+**Real-time safety rule:** No heap allocation, locks, exceptions, or I/O may occur in `process()` or `renderRange()`. All buffers are pre-allocated in `initialize()`. The engine is a pure function — it reads state and produces events, nothing more.
+
+### UI Thread
+
+The VSTGUI editor runs on the UI thread. It reads parameter values for display (knob positions, lane states, visualization data) and writes parameter changes when the user interacts with controls. Communication between threads uses the VST3 parameter system — no custom locks or message queues.
+
+### No Message-Passing Layer
+
+Unlike some plugin architectures that use ring buffers or lock-free queues between threads, Poly's engine is stateless — it derives everything from the current transport position and patch state. There is no accumulated state to synchronize. The `GrooveState` is read atomically by the audio thread; parameter changes from the UI thread flow through the VST3 parameter system, which handles thread safety.
+
+## Processing Pipeline
+
+`Engine::renderRange()` is the single entry point for all note generation. For each active lane, it runs a multi-stage pipeline:
+
+### 1. Pattern Generation (Euclidean)
+
+Each lane's rhythm is generated using the Björklund/Bresenham algorithm, which distributes `k` pulses evenly across `n` steps. The result is a boolean pattern array where `true` positions are hit candidates.
+
+Three pattern modes are supported:
+- **Euclidean** (default) — algorithmically distributed pulses with optional rotation
+- **Timeline** — fixed patterns immune to macro modulation, used for culturally specific rhythms
+- **Kotekan** — Balinese interlocking, where the lane generates the complement of a sibling lane's pattern
+
+### 2. Macro Resolution
+
+The six macro knobs (Complexity, Density, Syncopation, Swing, Tension, Humanize) are resolved into concrete per-lane parameter modifications. Each macro influences multiple parameters coherently — for example, Density scales hit count, probability, and activation envelopes together, not as independent multiplies.
+
+Macro transitions are smoothed over ~400ms using an exponential moving average to prevent audible discontinuities when knobs are turned.
+
+### 3. Envelope Accumulation
+
+Per-lane and global envelopes modulate eight targets: Velocity, Density, Probability, AccentBias, NoteLength, TimingLooseness, ActivationWeight, and FillLikelihood. Envelope phase is derived from the absolute PPQ position — never accumulated across blocks — so loop restarts and position jumps reproduce identically.
+
+Envelopes use five shape types (Ramp, Sine, Triangle, Curve, StepList) with configurable period, depth, and phase offset. Multiple envelopes can stack on the same target, and each envelope can have a different period, creating multi-timescale modulation.
+
+### 4. Humanization
+
+Three layers of humanization add natural feel:
+- **Swing** — delays alternate steps by a configurable amount
+- **Micro-timing** — per-step timing offsets in milliseconds for style-specific feel (e.g., laid-back snare)
+- **Humanize** — random timing and velocity variation within configurable bounds
+
+These layers stack additively: the final timing offset is `lane offset + micro-timing + humanize jitter`.
+
+### 5. Constraint Resolution
+
+Post-processing rules enforce musical constraints:
+- **Anchor step masking** — ensures certain beats always trigger (e.g., kick on beat 1)
+- **Backbeat protection** — preserves snare placement
+- **Density min/max** — caps the number of active hits per lane
+
+### 6. Event Output
+
+Hit candidates that survive all pipeline stages become `NoteEvent` objects with precise PPQ position, pitch, velocity, channel, and duration. Events are written to the `NoteEventBuffer` (capacity 256 per block) in time-sorted order.
+
+## Core Types
+
+### LaneConfig
+
+Defines a single rhythmic lane — the fundamental unit of pattern generation.
+
+```cpp
+struct LaneConfig {
+    int hitCount = 4;            // Euclidean pulses
+    Cycle cycle{};               // steps + subdivision
+    float probability = 1.0f;    // per-step trigger chance
+    float tempoMultiplier = 1.0f;// per-lane tempo scaling
+    int kotekanSourceLane = -1;  // Balinese interlocking source
+    bool timeline = false;       // fixed pattern mode
+    // ... velocity, humanize, envelope assignments
+};
+```
+
+### TransportContext
+
+Carries the DAW's current transport state into the engine.
+
+```cpp
+struct TransportContext {
+    double ppqStart;       // start of this buffer in PPQ
+    double ppqEnd;         // end of this buffer in PPQ
+    double tempo;          // current BPM
+    double sampleRate;
+    bool isPlaying;
+    bool isLooping;
+    double loopStartPpq;
+    double loopEndPpq;
+};
+```
+
+### GrooveState
+
+The complete serializable patch — everything the engine needs to produce output.
+
+```cpp
+struct GrooveState {
+    std::array<LaneConfig, 8> lanes;
+    std::vector<Envelope> globalEnvelopes;
+    MacroValues macros;
+    uint64_t seed;
+    // ... scene state, constraints
+};
+```
+
+### NoteEvent
+
+A single MIDI note event produced by the engine.
+
+```cpp
+struct NoteEvent {
+    double ppqPosition;    // absolute PPQ time
+    int pitch;             // MIDI note number (0-127)
+    float velocity;        // 0.0-1.0
+    float duration;        // in PPQ
+    int channel;           // MIDI channel (0-15)
+};
+```
+
+### Scene System
+
+Two complete `GrooveState` snapshots (Scene A and Scene B) with smooth interpolation via `interpolateGrooveState()`. The `SceneChainState` sequencer automates transitions between scenes at bar boundaries using three modes: OneShot, Loop, and PingPong.
+
+### MidiCaptureBuffer
+
+A fixed-size circular buffer (2048 events) that continuously records engine output. Supports range extraction and last-N-bars queries for on-demand SMF export. The buffer captures silently during playback with zero allocation.
+
+## Determinism
+
+The engine is a pure function: `renderRange(transport, state) → events`. Given the same transport context and groove state (including seed), the output is identical every time. This is enforced by:
+
+- **PPQ-absolute phase calculation** — no accumulated state across blocks
+- **Seeded RNG** — all randomness (probability, humanize, velocity spread) derives from a deterministic seed
+- **Golden tests** — CI runs reference patches through the engine and compares output byte-for-byte against recorded baselines
+
+This determinism means loop restarts, tempo changes, and position jumps all produce correct output without any state reset logic.
+
+## Plugin Bridge
+
+`PolyProcessor` (the VST3 `AudioEffect` subclass) is deliberately thin:
+
+1. **Constructor** — initializes 8 default lanes with drum kit roles (Kick, Snare, HH Closed, HH Open, Tom Hi, Tom Lo, Ride, Crash)
+2. **`process()`** — reads transport, resolves parameters, calls `Engine::renderRange()`, writes events to VST3 output, updates capture buffer
+3. **`getState()`/`setState()`** — versioned binary serialization with forward migration
+
+The processor contains no musical logic. It translates between VST3's data structures and the engine's domain types, nothing more. This is what makes the engine fully testable without a DAW.
+
+## Test Architecture
+
+The test suite runs entirely off-host using Google Test:
+
+- **Unit tests** — individual components (Euclidean generator, envelope evaluation, macro resolution, constraints, scene interpolation)
+- **Golden tests** — full engine rendering compared against recorded reference output
+- **Fuzz tests** — randomized `GrooveState` inputs fed to `renderRange()` checking for crashes
+- **UI interaction tests** — headless VSTGUI host verifying control behavior
+- **Visual regression tests** — pixel comparison of rendered UI (platform-specific baselines)
+
+All tests except visual regression are deterministic and platform-independent.

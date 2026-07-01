@@ -33,7 +33,7 @@ export default defineConfig({
 			customCss: ['./src/styles/custom.css'],
 			sidebar: [
 				{ label: 'Introduction', slug: 'introduction' },
-				{ label: 'Quick Start', slug: 'quick-start' },
+				{ label: 'Using Poly', slug: 'guide-using-poly' },
 				{
 					label: 'Chapters',
 					items: [
@@ -70,13 +70,6 @@ export default defineConfig({
 					],
 				},
 				{
-					label: 'Guides',
-					items: [
-						{ label: 'Cubase Workflow', slug: 'guide-cubase-workflow' },
-						{ label: 'UI Reference', slug: 'guide-ui-reference' },
-					],
-				},
-				{
 					label: 'Appendices',
 					items: [
 						{ label: 'Preset Reference', slug: 'appendix-presets' },
@@ -91,6 +84,14 @@ export default defineConfig({
 						{
 							label: 'Parameter Reference',
 							slug: 'appendix-parameters',
+						},
+						{
+							label: 'Architecture',
+							slug: 'appendix-architecture',
+						},
+						{
+							label: 'Design Decisions',
+							slug: 'appendix-design-decisions',
 						},
 						{
 							label: 'References',

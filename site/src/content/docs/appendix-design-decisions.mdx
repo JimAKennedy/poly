@@ -1,0 +1,165 @@
+---
+title: "Design Decisions"
+description: "Key architectural and engineering decisions in Poly's design, with context, alternatives considered, and rationale."
+---
+
+The decisions behind Poly's architecture — what was chosen, what was rejected, and why. These are not obvious from the code alone; they represent deliberate trade-offs that shaped the instrument.
+
+## Engine Isolation
+
+**Decision:** The groove engine (`poly_engine`) is a pure C++ static library with zero VST3 SDK, audio-thread, or platform dependencies.
+
+**Alternatives considered:**
+- Embed engine logic directly in the VST3 processor (simpler project structure)
+- Use JUCE, which provides its own abstraction layer
+
+**Rationale:** Engine isolation makes the core musical logic fully unit-testable without a DAW. Golden tests can verify deterministic output in CI without loading VST3 infrastructure. It also future-proofs the engine for use in other contexts (different plugin formats, standalone tools, headless batch processing). The cost is a thin bridge layer in the processor, which turned out to be ~100 lines of translation code.
+
+## PPQ-Absolute Positioning
+
+**Decision:** All envelope phases, cycle positions, and timing calculations derive from the absolute PPQ position reported by the DAW transport. No state is accumulated across process blocks.
+
+**Alternatives considered:**
+- Accumulator-based sequencing (increment phase each block)
+- Sample-counting with tempo tracking
+
+**Rationale:** Accumulator-based sequencers drift on loop restarts, tempo changes, and transport jumps. The DAW can seek to any position at any time — an accumulated phase would need complex reset logic for every transport event. PPQ-absolute calculation means the engine produces correct output from any position without knowing what happened before. This is what makes Poly deterministic: same position, same state, same output. Golden tests enforce this invariant in CI.
+
+## Euclidean Rhythms as the Foundation
+
+**Decision:** All lane patterns are generated using the Björklund/Bresenham Euclidean algorithm (distribute `k` pulses evenly across `n` steps), with timeline and kotekan modes as extensions.
+
+**Alternatives considered:**
+- Step sequencer (user places each hit manually)
+- Probability grid (each step has an independent trigger probability)
+- Pre-authored pattern library
+
+**Rationale:** Euclidean distribution produces musically valid rhythms from two integers (hits, steps). This is both a generative advantage (the parameter space is small but the musical output is rich) and a UI advantage (two knobs vs. a grid of 32 toggles). The algorithm naturally produces patterns found across world music traditions — the gankogui bell pattern E(7,12), the son clave E(3,8), the bossa nova E(5,16) — which makes it an ideal foundation for a guide that explores polymetric drumming through cultural traditions.
+
+Timeline mode (fixed patterns) was added for rhythms that cannot be expressed as Euclidean distributions, and kotekan mode for Balinese interlocking patterns where one lane generates the complement of another.
+
+## C++20
+
+**Decision:** Poly uses C++20, while the rest of the jk.digital audio plugin portfolio uses C++17.
+
+**Alternatives considered:**
+- Stay on C++17 for consistency
+- Wait for broader C++20 adoption in audio toolchains
+
+**Rationale:** Poly is intentionally the proving ground for C++20 features in the portfolio. Designated initializers make `LaneConfig` and `GrooveState` construction more readable. `std::span` replaces raw pointer/size pairs at API boundaries. Concepts could constrain template parameters in the envelope system. If C++20 causes friction with the VST3 SDK or CI toolchains, the issues are documented here before the portfolio-wide decision is made.
+
+## Macro System (Six High-Level Knobs)
+
+**Decision:** Six macro knobs (Complexity, Density, Syncopation, Swing, Tension, Humanize) each influence multiple engine parameters coherently, rather than exposing individual parameters directly.
+
+**Alternatives considered:**
+- Direct parameter access only (full control, no abstraction)
+- Fewer macros with more per-lane controls exposed
+
+**Rationale:** A polymetric drum generator with 8 lanes, each with 10+ parameters, has over 80 individual controls. This is overwhelming for real-time performance and exploration. The macro system provides a musically meaningful abstraction layer: turning the Density knob adjusts hit count, probability, and activation envelopes together in a way that produces a coherent musical result. Users who need fine control can still automate individual parameters from the DAW.
+
+Macro transitions are smoothed over ~400ms with exponential moving average to prevent audible discontinuities.
+
+## Scene System with Morphing
+
+**Decision:** Two complete groove states (Scene A, Scene B) with smooth parameter interpolation via a morph slider, plus a chain sequencer that automates scene transitions.
+
+**Alternatives considered:**
+- Single state with parameter automation only
+- Multiple scenes (3+) with crossfade matrix
+- Snapshot recall with no interpolation
+
+**Rationale:** Two scenes with morphing strike a balance between expressiveness and complexity. The morph slider continuously interpolates every parameter between the two scenes, creating smooth transitions impossible to achieve by automating individual parameters. The chain sequencer adds structural control (verse-chorus, build-drop) without requiring the user to draw automation curves.
+
+Two scenes is enough for most musical structures (tension/release, verse/chorus, sparse/dense). Adding more scenes would complicate the UI and the interpolation model without proportional musical benefit.
+
+## MIDI-Only Output
+
+**Decision:** Poly generates MIDI note events only. It produces no audio output. The user routes MIDI to a separate drum instrument.
+
+**Alternatives considered:**
+- Built-in sample playback (self-contained instrument)
+- Audio output with embedded drum sounds
+
+**Rationale:** Separating rhythm generation from sound production lets users pair Poly with any drum instrument — acoustic kits, electronic samples, world percussion libraries, synthesizers. The sonic palette is unlimited because it is not Poly's responsibility. This also keeps the plugin lightweight (no sample library to ship) and focused on its core competency: rhythmic pattern generation.
+
+The trade-off is an extra routing step in the DAW, which is documented in the [Using Poly](/poly/guide-using-poly/) guide.
+
+## No drumcore Dependency
+
+**Decision:** Poly's engine is completely independent of drumcore (the shared drum pattern library used by other jk.digital plugins).
+
+**Alternatives considered:**
+- Use drumcore's `[10][32]` bar-grid model as the pattern representation
+- Share drumcore's MIDI mapping and preset format
+
+**Rationale:** Poly's polymetric engine uses variable-length cycles (`LaneConfig` with per-lane step counts and subdivisions) which do not map to drumcore's fixed 10-instrument, 32-step bar grid. Forcing Poly's patterns into drumcore's model would either constrain the rhythmic possibilities or require a complex adapter layer. The engine stays independent; a thin adapter for MIDI export interop may come later if there is a concrete use case.
+
+## State Versioning
+
+**Decision:** Every serialized state blob starts with a `kStateVersion` integer. `getState()` writes the current version; `setState()` branches on the version number and migrates forward.
+
+**Alternatives considered:**
+- No version number (simpler, but brittle)
+- JSON or XML format (self-describing, but slower to parse on the audio thread)
+
+**Rationale:** Binary serialization is fast and compact, which matters for preset switching during performance. The version number is the only metadata needed — it tells `setState()` exactly which fields to expect and how to fill in defaults for fields added in later versions. This ensures presets saved with older versions always load correctly in newer versions.
+
+Omitting a version number is a preset compatibility time bomb: every new field added to the state requires a separate fallback path with no way to distinguish "old format" from "corrupted data."
+
+## Real-Time Safety Constraints
+
+**Decision:** `process()` and `renderRange()` must never allocate heap memory, acquire locks, throw exceptions, or perform I/O. All buffers are pre-allocated in `initialize()` and only cleared/reset in `setActive()`.
+
+**Alternatives considered:**
+- Allow allocation in `process()` with a custom allocator
+- Use a real-time allocator pool
+
+**Rationale:** The audio thread in a DAW runs under hard real-time constraints — any operation that can block (malloc, mutex, I/O) can cause audible glitches. Pre-allocating everything eliminates the entire class of problems. The constraint is enforced by:
+
+1. A CI script (`scripts/check-realtime-safety.sh`) that scans for prohibited patterns
+2. Code review convention requiring `// RT-SAFE-OK` annotations for legitimate exceptions
+3. The engine isolation boundary, which makes it easy to audit (no VST3 SDK complexity in the hot path)
+
+Some DAW hosts call `setActive()` from the audio thread, so even the activation path avoids allocation.
+
+## Seeded Deterministic RNG
+
+**Decision:** All randomness in the engine (probability gates, humanize jitter, velocity spread) derives from a deterministic seed stored in the patch state.
+
+**Alternatives considered:**
+- True randomness (each playback is different)
+- User-selectable randomness mode (deterministic vs. free-running)
+
+**Rationale:** Deterministic output is fundamental to Poly's design. The same patch at the same transport position always produces the same notes. This means:
+
+- Loop playback is consistent — you hear the same groove every pass
+- Golden tests can verify output byte-for-byte
+- Preset sharing produces identical results on different machines
+- Recording captures exactly what you heard during preview
+
+The seed is exposed as a parameter, so changing it produces a different but equally deterministic realization of the same patch settings.
+
+## Multi-Timescale Envelope Modulation
+
+**Decision:** Envelopes modulate eight different targets (velocity, density, probability, accent bias, note length, timing looseness, activation weight, fill likelihood) with independent periods that need not divide evenly into the bar length.
+
+**Alternatives considered:**
+- Bar-locked envelopes only (period must be 1, 2, 4, 8 bars)
+- Single envelope per lane
+
+**Rationale:** Non-bar-aligned envelope periods are the key to Poly's evolving quality. A 7-bar velocity envelope against a 4-bar density envelope creates a 28-bar meta-cycle where the groove's character shifts continuously. This is the envelope equivalent of polymetric rhythm — the modulation itself is polymetric.
+
+Multiple envelopes per lane, each targeting a different parameter with a different period, create rich texture evolution from simple ingredients.
+
+## Per-Lane Tempo Multiplier
+
+**Decision:** Each lane has a `tempoMultiplier` parameter (0.25x–4.0x) that scales its step grid independently from the host tempo.
+
+**Alternatives considered:**
+- Fixed tempo for all lanes (polymetry through step-count differences only)
+- Free-running lanes with independent BPM
+
+**Rationale:** Per-lane tempo scaling creates Nancarrow-style polymetric independence where lanes operate at different effective tempi. A 2.0x lane against a 1.0x lane produces a 2:1 tempo relationship — the rhythmic equivalent of a hemiola at the tempo level. Combined with different step counts, this creates a much richer space of polymetric interactions than step-count differences alone.
+
+Phrase gating boundaries stay in absolute PPQ (unscaled), so structural landmarks remain bar-aligned regardless of tempo multiplier. Scene morphing interpolates the multiplier smoothly for gradual metric modulation transitions.
