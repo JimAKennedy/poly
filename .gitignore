@@ -254,3 +254,4 @@ site/dist/
 # Internal Docs (planning, UAT, reviews — not published)
 # -----------------------------------------------------------------------------
 internal-docs/
+docs/internal/
