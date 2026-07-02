@@ -230,11 +230,39 @@ CMouseEventResult CellEditorView::onMouseDown(CPoint& where, const CButtonState&
 
     int cell = hitTestCell(where);
     if (cell >= 0) {
-        invalid();
-        return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+        dragCell_ = cell;
+        dragLane_ = selectedLane;
+        dragStartY_ = where.y;
+        dragStartSize_ = std::max(1, controller_->cachedState().sceneA.lanes[selectedLane].cellSizes[cell]);
+        return kMouseEventHandled;
     }
 
     return kMouseEventNotHandled;
+}
+
+CMouseEventResult CellEditorView::onMouseMoved(CPoint& where, const CButtonState& /*buttons*/) {
+    if (dragCell_ < 0)
+        return kMouseEventNotHandled;
+
+    double delta = (dragStartY_ - where.y) / kDragPixelsPerUnit;
+    int newSize = std::max(1, dragStartSize_ + static_cast<int>(std::round(delta)));
+
+    auto& lane = controller_->mutableCachedState().sceneA.lanes[dragLane_];
+    if (lane.cellSizes[dragCell_] != newSize) {
+        lane.cellSizes[dragCell_] = newSize;
+        controller_->sendCellSizes(dragLane_);
+        invalid();
+    }
+    return kMouseEventHandled;
+}
+
+CMouseEventResult CellEditorView::onMouseUp(CPoint& /*where*/, const CButtonState& /*buttons*/) {
+    if (dragCell_ < 0)
+        return kMouseEventNotHandled;
+
+    dragCell_ = -1;
+    dragLane_ = -1;
+    return kMouseEventHandled;
 }
 
 } // namespace poly
