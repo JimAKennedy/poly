@@ -144,7 +144,10 @@ template <typename ReadFn> [[nodiscard]] bool readGrooveState(ReadFn&& read, Gro
         return false;
     if (version < 1 || version > kCurrentStateVersion)
         return false;
-    return readGrooveStateBody(read, state, version);
+    if (!readGrooveStateBody(read, state, version))
+        return false;
+    sanitize(state);
+    return true;
 }
 
 // --- Public: SceneState (v3 format, used by processor/controller) ---
@@ -196,6 +199,7 @@ template <typename ReadFn> [[nodiscard]] bool readSceneState(ReadFn&& read, Scen
     if (version <= 2) {
         if (!readGrooveStateBody(read, scene.sceneA, version))
             return false;
+        sanitize(scene.sceneA);
         scene.sceneB = scene.sceneA;
         scene.select = SceneSelect::A;
         scene.morphAmount = 0.0f;
@@ -205,6 +209,8 @@ template <typename ReadFn> [[nodiscard]] bool readSceneState(ReadFn&& read, Scen
             return false;
         if (!readGrooveStateBody(read, scene.sceneB, bodyVersion))
             return false;
+        sanitize(scene.sceneA);
+        sanitize(scene.sceneB);
         uint8_t select = 0;
         if (!read(&select, sizeof(select)))
             return false;

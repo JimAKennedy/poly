@@ -175,6 +175,8 @@ static void outputLaneVisualization(Steinberg::Vst::IParameterChanges* outParams
     double laneTempoScale = (cfg.tempoMultiplier > 0.0f) ? 1.0 / static_cast<double>(cfg.tempoMultiplier) : 1.0;
     double cycleBeats = additive.count > 0 ? additive.totalPpq * laneTempoScale
                                            : cfg.cycle.steps * (4.0 / cfg.cycle.subdivision) * laneTempoScale;
+    if (cycleBeats <= 0.0)
+        return;
     double lanePhase = std::fmod(ppqStart / cycleBeats, 1.0);
     if (lanePhase < 0.0)
         lanePhase += 1.0;
@@ -315,9 +317,39 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
         }
     }
 
+    if (stateReady_.load(std::memory_order_acquire)) {
+        sceneState_ = pendingState_;
+        stateReady_.store(false, std::memory_order_release);
+    }
+    if (noteMapReady_.load(std::memory_order_acquire)) {
+        sceneState_.noteMap = pendingNoteMap_;
+        noteMapReady_.store(false, std::memory_order_release);
+    }
+
     updateTransportContext(data);
-    if (!tc_.playing)
+
+    if (!tc_.playing) {
+        if (wasPlaying_ && pendingNoteOffs_.count() > 0 && data.outputEvents) {
+            PendingNoteOff allOffs[PendingNoteOffBuffer::kCapacity];
+            size_t n = pendingNoteOffs_.flushDue(-1e12, 1e12, allOffs, PendingNoteOffBuffer::kCapacity);
+            for (size_t i = 0; i < n; ++i) {
+                Steinberg::Vst::Event ev = {};
+                ev.busIndex = 0;
+                ev.sampleOffset = 0;
+                ev.ppqPosition = tc_.ppqStart;
+                ev.type = Steinberg::Vst::Event::kNoteOffEvent;
+                ev.noteOff.channel = allOffs[i].channel;
+                ev.noteOff.pitch = allOffs[i].pitch;
+                ev.noteOff.velocity = 0.0f;
+                ev.noteOff.noteId = -1;
+                data.outputEvents->addEvent(ev);
+            }
+            pendingNoteOffs_.clear();
+        }
+        wasPlaying_ = false;
         return Steinberg::kResultOk;
+    }
+    wasPlaying_ = true;
 
     handleTransportJump(data.outputEvents);
 
@@ -350,8 +382,11 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
 
     emitMidiOutput(data.outputEvents, data.numSamples);
 
-    for (size_t i = 0; i < noteBuffer_.count; ++i)
-        captureBuffer_.push(noteBuffer_.events[i]);
+    for (size_t i = 0; i < noteBuffer_.count; ++i) {
+        auto mapped = noteBuffer_.events[i];
+        mapped.pitch = sceneState_.noteMap.apply(mapped.pitch);
+        captureBuffer_.push(mapped);
+    }
 
     if (exportTriggered_ && !exportReady_.load(std::memory_order_acquire)) {
         exportTriggered_ = false;
@@ -362,6 +397,12 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
     }
 
     outputParameterFeedback(data, resolved);
+
+    if (!snapshotReady_.load(std::memory_order_acquire)) {
+        stateSnapshot_ = sceneState_;
+        snapshotReady_.store(true, std::memory_order_release);
+    }
+
     return Steinberg::kResultOk;
 }
 
@@ -585,9 +626,9 @@ Steinberg::tresult PLUGIN_API PolyProcessor::notify(Steinberg::Vst::IMessage* me
         if (auto* attrs = message->getAttributes()) {
             const void* data = nullptr;
             Steinberg::uint32 size = 0;
-            if (attrs->getBinary("map", data, size) == Steinberg::kResultOk &&
-                size == sizeof(sceneState_.noteMap.map)) {
-                std::memcpy(sceneState_.noteMap.map.data(), data, size);
+            if (attrs->getBinary("map", data, size) == Steinberg::kResultOk && size == sizeof(pendingNoteMap_.map)) {
+                std::memcpy(pendingNoteMap_.map.data(), data, size);
+                noteMapReady_.store(true, std::memory_order_release);
             }
         }
         return Steinberg::kResultOk;
@@ -628,6 +669,11 @@ Steinberg::tresult PLUGIN_API PolyProcessor::getState(Steinberg::IBStream* state
                Steinberg::kResultOk;
     };
 
+    if (snapshotReady_.load(std::memory_order_acquire)) {
+        auto result = writeSceneState(write, stateSnapshot_) ? Steinberg::kResultOk : Steinberg::kResultFalse;
+        snapshotReady_.store(false, std::memory_order_release);
+        return result;
+    }
     return writeSceneState(write, sceneState_) ? Steinberg::kResultOk : Steinberg::kResultFalse;
 }
 
@@ -640,7 +686,10 @@ Steinberg::tresult PLUGIN_API PolyProcessor::setState(Steinberg::IBStream* state
         return state->read(data, static_cast<Steinberg::int32>(size), &bytesRead) == Steinberg::kResultOk;
     };
 
-    return readSceneState(read, sceneState_) ? Steinberg::kResultOk : Steinberg::kResultFalse;
+    if (!readSceneState(read, pendingState_))
+        return Steinberg::kResultFalse;
+    stateReady_.store(true, std::memory_order_release);
+    return Steinberg::kResultOk;
 }
 
 } // namespace poly

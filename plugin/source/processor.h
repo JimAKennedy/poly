@@ -49,10 +49,18 @@ private:
     double exportTempo_ = 120.0;
     std::atomic<bool> exportReady_{false};
     bool exportTriggered_ = false;
+    bool wasPlaying_ = false;
     int captureLengthBars_ = MidiCaptureBuffer::kDefaultCaptureBars;
     double expectedNextPpq_ = -1.0;
     MacroSmoother macroSmoother_{};
     SceneChainState chainState_{};
+
+    SceneState pendingState_{};
+    std::atomic<bool> stateReady_{false};
+    NoteMap pendingNoteMap_{};
+    std::atomic<bool> noteMapReady_{false};
+    SceneState stateSnapshot_{};
+    std::atomic<bool> snapshotReady_{false};
 };
 
 } // namespace poly

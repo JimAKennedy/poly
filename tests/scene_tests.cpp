@@ -1,3 +1,4 @@
+#include <cmath>
 #include <cstring>
 #include <vector>
 
@@ -733,4 +734,204 @@ TEST(SceneIO, V1BackwardsCompat) {
     EXPECT_EQ(scene.sceneA.lanes[0].envelopes[0].envelope.curvature, 0.0f);
     EXPECT_EQ(scene.sceneA.lanes[0].envelopes[0].envelope.stepCount, 0);
     EXPECT_EQ(static_cast<uint8_t>(scene.select), static_cast<uint8_t>(poly::SceneSelect::A));
+}
+
+// --- Sanitize tests (M027-S02) ---
+
+TEST(Sanitize, ClampsActiveLaneCount) {
+    poly::GrooveState state{};
+    state.activeLaneCount = 100;
+    poly::sanitize(state);
+    EXPECT_EQ(state.activeLaneCount, poly::kMaxLanes);
+}
+
+TEST(Sanitize, ClampsNegativeActiveLaneCount) {
+    poly::GrooveState state{};
+    state.activeLaneCount = -5;
+    poly::sanitize(state);
+    EXPECT_EQ(state.activeLaneCount, 0);
+}
+
+TEST(Sanitize, ClampsCycleSteps) {
+    poly::GrooveState state{};
+    state.lanes[0].cycle.steps = 200;
+    poly::sanitize(state);
+    EXPECT_EQ(state.lanes[0].cycle.steps, poly::kMaxSteps);
+}
+
+TEST(Sanitize, ClampsCycleStepsMinimum) {
+    poly::GrooveState state{};
+    state.lanes[0].cycle.steps = 0;
+    poly::sanitize(state);
+    EXPECT_EQ(state.lanes[0].cycle.steps, 1);
+}
+
+TEST(Sanitize, ClampsCellCount) {
+    poly::GrooveState state{};
+    state.lanes[0].cellCount = 999;
+    poly::sanitize(state);
+    EXPECT_EQ(state.lanes[0].cellCount, poly::kMaxSteps);
+}
+
+TEST(Sanitize, ClampsEnvelopeCount) {
+    poly::GrooveState state{};
+    state.lanes[0].envelopeCount = 50;
+    poly::sanitize(state);
+    EXPECT_EQ(state.lanes[0].envelopeCount, poly::kMaxEnvelopesPerLane);
+}
+
+TEST(Sanitize, ClampsGlobalEnvelopeCount) {
+    poly::GrooveState state{};
+    state.globalEnvelopeCount = 99;
+    poly::sanitize(state);
+    EXPECT_EQ(state.globalEnvelopeCount, poly::kMaxGlobalEnvelopes);
+}
+
+TEST(Sanitize, FixesZeroPeriodBars) {
+    poly::GrooveState state{};
+    state.lanes[0].envelopeCount = 1;
+    state.lanes[0].envelopes[0].envelope.periodBars = 0.0f;
+    poly::sanitize(state);
+    EXPECT_GT(state.lanes[0].envelopes[0].envelope.periodBars, 0.0f);
+}
+
+TEST(Sanitize, FixesNegativePeriodBars) {
+    poly::GrooveState state{};
+    state.lanes[0].envelopeCount = 1;
+    state.lanes[0].envelopes[0].envelope.periodBars = -5.0f;
+    poly::sanitize(state);
+    EXPECT_GT(state.lanes[0].envelopes[0].envelope.periodBars, 0.0f);
+}
+
+TEST(Sanitize, ClampsKotekanSourceLane) {
+    poly::GrooveState state{};
+    state.lanes[0].kotekanSourceLane = 99;
+    poly::sanitize(state);
+    EXPECT_LE(state.lanes[0].kotekanSourceLane, poly::kMaxLanes - 1);
+}
+
+TEST(Sanitize, ClampsTempoMultiplier) {
+    poly::GrooveState state{};
+    state.lanes[0].tempoMultiplier = 0.0f;
+    poly::sanitize(state);
+    EXPECT_GT(state.lanes[0].tempoMultiplier, 0.0f);
+}
+
+TEST(Sanitize, ClampsMicroTimingMs) {
+    poly::GrooveState state{};
+    state.lanes[0].microTimingMs[0] = 100.0f;
+    state.lanes[0].microTimingMs[1] = -100.0f;
+    poly::sanitize(state);
+    EXPECT_LE(state.lanes[0].microTimingMs[0], 20.0f);
+    EXPECT_GE(state.lanes[0].microTimingMs[1], -20.0f);
+}
+
+TEST(Sanitize, ExtremeValuesRenderWithoutCrash) {
+    poly::GrooveState state{};
+    state.activeLaneCount = 100;
+    state.lanes[0].cycle.steps = 200;
+    state.lanes[0].cycle.subdivision = 0;
+    state.lanes[0].cellCount = 999;
+    state.lanes[0].envelopeCount = 50;
+    state.lanes[0].envelopes[0].envelope.periodBars = -5.0f;
+    state.lanes[0].kotekanSourceLane = 99;
+    state.lanes[0].tempoMultiplier = 0.0f;
+    state.globalEnvelopeCount = 99;
+    state.globalEnvelopes[0].periodBars = 0.0f;
+
+    poly::sanitize(state);
+
+    poly::Engine engine;
+    poly::NoteEventBuffer buf;
+    poly::TransportContext tc{};
+    tc.playing = true;
+    tc.ppqStart = 0.0;
+    tc.ppqEnd = 4.0;
+    tc.tempo = 120.0;
+    tc.sampleRate = 44100.0;
+    tc.blockSize = 512;
+
+    engine.renderRange(tc, state, buf);
+
+    for (size_t i = 0; i < buf.count; ++i) {
+        EXPECT_FALSE(std::isnan(buf.events[i].velocity)) << "NaN at event " << i;
+        EXPECT_FALSE(std::isnan(buf.events[i].ppqPosition)) << "NaN ppq at event " << i;
+    }
+}
+
+// --- Morph field-coverage regression test (M027-S03) ---
+
+TEST(Scene, MorphAtZeroPreservesAllLaneFields) {
+    poly::LaneConfig a{};
+    a.id = 3;
+    a.role = poly::Role::Shimmer;
+    a.midiNote = 42;
+    a.midiChannel = 5;
+    a.cycle = {7, 8};
+    a.hitCount = 5;
+    a.rotation = 2;
+    a.probability = 0.85f;
+    a.baseVelocity = 110;
+    a.emphasisProb = 0.7f;
+    a.ghostFloor = 40;
+    a.velocitySpread = 0.1f;
+    a.humanizeMs = 5.0f;
+    a.swingAmount = 0.3f;
+    a.syncopationOffset = 0.15f;
+    a.tempoMultiplier = 2.0f;
+    a.noteDuration = 0.5f;
+    a.phraseLength = 4.0f;
+    a.phraseGap = 2.0f;
+    a.phraseOffset = 1.0f;
+    a.mutationRate = 0.2f;
+    a.driftRate = 1.5f;
+    a.timingOffsetMs = 5.0f;
+    a.kotekanSourceLane = 2;
+    a.cellCount = 3;
+    a.cellSizes[0] = 2;
+    a.cellSizes[1] = 2;
+    a.cellSizes[2] = 3;
+    a.timeline = true;
+    a.fixedPattern[0] = true;
+    a.fixedPattern[2] = true;
+    a.fixedPatternLength = 4;
+    a.microTimingMs[0] = 3.0f;
+    a.microTimingMs[1] = -2.0f;
+    a.active = true;
+
+    poly::LaneConfig b{};
+    b.midiChannel = 10;
+    b.phraseLength = 8.0f;
+    b.mutationRate = 0.8f;
+    b.cellCount = 4;
+    b.timeline = false;
+    b.kotekanSourceLane = 5;
+
+    poly::GrooveState stateA{}, stateB{};
+    stateA.lanes[0] = a;
+    stateB.lanes[0] = b;
+    stateA.activeLaneCount = 1;
+    stateB.activeLaneCount = 1;
+
+    auto result = poly::interpolateGrooveState(stateA, stateB, 0.0f);
+    const auto& r = result.lanes[0];
+
+    EXPECT_EQ(r.midiChannel, a.midiChannel);
+    EXPECT_FLOAT_EQ(r.phraseLength, a.phraseLength);
+    EXPECT_FLOAT_EQ(r.phraseGap, a.phraseGap);
+    EXPECT_FLOAT_EQ(r.phraseOffset, a.phraseOffset);
+    EXPECT_FLOAT_EQ(r.mutationRate, a.mutationRate);
+    EXPECT_FLOAT_EQ(r.driftRate, a.driftRate);
+    EXPECT_FLOAT_EQ(r.timingOffsetMs, a.timingOffsetMs);
+    EXPECT_EQ(r.kotekanSourceLane, a.kotekanSourceLane);
+    EXPECT_EQ(r.cellCount, a.cellCount);
+    EXPECT_EQ(r.cellSizes[0], a.cellSizes[0]);
+    EXPECT_EQ(r.cellSizes[1], a.cellSizes[1]);
+    EXPECT_EQ(r.cellSizes[2], a.cellSizes[2]);
+    EXPECT_EQ(r.timeline, a.timeline);
+    EXPECT_EQ(r.fixedPattern[0], a.fixedPattern[0]);
+    EXPECT_EQ(r.fixedPattern[2], a.fixedPattern[2]);
+    EXPECT_EQ(r.fixedPatternLength, a.fixedPatternLength);
+    EXPECT_FLOAT_EQ(r.microTimingMs[0], a.microTimingMs[0]);
+    EXPECT_FLOAT_EQ(r.microTimingMs[1], a.microTimingMs[1]);
 }
