@@ -439,6 +439,84 @@ TEST(CellSizes, AksakProducesDifferentTiming) {
     EXPECT_TRUE(timingsDiffer) << "Aksak cellSizes should produce different note timing than equal cells";
 }
 
+TEST(Timeline, FixedPatternSelectsSteps) {
+    poly::GrooveState state{};
+    state.activeLaneCount = 1;
+    state.seed = 42;
+    state.macros.density = 1.0f;
+    auto& lane = state.lanes[0];
+    lane.active = true;
+    lane.midiNote = 36;
+    lane.cycle = {.steps = 4, .subdivision = 4};
+    lane.hitCount = 4;
+    lane.probability = 1.0f;
+    lane.baseVelocity = 100;
+    lane.timeline = true;
+    lane.fixedPatternLength = 4;
+    lane.fixedPattern[0] = true;
+    lane.fixedPattern[1] = false;
+    lane.fixedPattern[2] = true;
+    lane.fixedPattern[3] = false;
+
+    poly::TransportContext tc{};
+    tc.ppqStart = 0.0;
+    tc.ppqEnd = 4.0;
+    tc.tempo = 120.0;
+    tc.sampleRate = 44100.0;
+    tc.blockSize = 44100;
+    tc.playing = true;
+
+    poly::Engine engine;
+    poly::NoteEventBuffer out;
+    engine.renderRange(tc, state, out);
+
+    ASSERT_GT(out.count, 0u);
+    EXPECT_LE(out.count, 2u) << "Only steps 0 and 2 are on; should produce at most 2 notes";
+}
+
+TEST(MicroTiming, OffsetsShiftNotePosition) {
+    poly::GrooveState baseState{};
+    baseState.activeLaneCount = 1;
+    baseState.seed = 42;
+    baseState.macros.density = 1.0f;
+    auto& baseLane = baseState.lanes[0];
+    baseLane.active = true;
+    baseLane.midiNote = 36;
+    baseLane.cycle = {.steps = 4, .subdivision = 4};
+    baseLane.hitCount = 4;
+    baseLane.probability = 1.0f;
+    baseLane.baseVelocity = 100;
+
+    poly::GrooveState offsetState = baseState;
+    for (int i = 0; i < 4; ++i)
+        offsetState.lanes[0].microTimingMs[i] = 10.0f;
+
+    poly::TransportContext tc{};
+    tc.ppqStart = 0.0;
+    tc.ppqEnd = 4.0;
+    tc.tempo = 120.0;
+    tc.sampleRate = 44100.0;
+    tc.blockSize = 44100;
+    tc.playing = true;
+
+    poly::Engine engine;
+    poly::NoteEventBuffer baseOut, offsetOut;
+    engine.renderRange(tc, baseState, baseOut);
+    engine.renderRange(tc, offsetState, offsetOut);
+
+    ASSERT_GT(baseOut.count, 0u);
+    ASSERT_EQ(baseOut.count, offsetOut.count);
+
+    bool anyShifted = false;
+    for (size_t i = 0; i < baseOut.count; ++i) {
+        if (std::abs(baseOut.events[i].ppqPosition - offsetOut.events[i].ppqPosition) > 1e-9) {
+            anyShifted = true;
+            break;
+        }
+    }
+    EXPECT_TRUE(anyShifted) << "Micro-timing offsets should shift note positions";
+}
+
 TEST(StateIO, V12FloatAccentRoundTrip) {
     auto original = makeTestState();
     original.lanes[0].accents.steps[0] = 0.75f;

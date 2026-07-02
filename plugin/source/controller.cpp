@@ -467,4 +467,37 @@ void PolyController::sendCellSizes(int laneIndex) {
     }
 }
 
+void PolyController::sendTimelinePattern(int laneIndex) {
+    if (laneIndex < 0 || laneIndex >= kMaxLanes)
+        return;
+    if (auto* msg = allocateMessage()) {
+        msg->setMessageID("TimelinePatternUpdate");
+        if (auto* attrs = msg->getAttributes()) {
+            const auto& lane = cachedState_.sceneA.lanes[laneIndex];
+            attrs->setInt("lane", laneIndex);
+            attrs->setInt("patLen", lane.fixedPatternLength);
+            attrs->setBinary("pattern", lane.fixedPattern.data(),
+                             static_cast<Steinberg::uint32>(sizeof(lane.fixedPattern)));
+        }
+        sendMessage(msg);
+        msg->release();
+    }
+}
+
+void PolyController::sendMicroTiming(int laneIndex) {
+    if (laneIndex < 0 || laneIndex >= kMaxLanes)
+        return;
+    if (auto* msg = allocateMessage()) {
+        msg->setMessageID("MicroTimingUpdate");
+        if (auto* attrs = msg->getAttributes()) {
+            attrs->setInt("lane", laneIndex);
+            attrs->setBinary(
+                "timing", cachedState_.sceneA.lanes[laneIndex].microTimingMs.data(),
+                static_cast<Steinberg::uint32>(sizeof(cachedState_.sceneA.lanes[laneIndex].microTimingMs)));
+        }
+        sendMessage(msg);
+        msg->release();
+    }
+}
+
 } // namespace poly

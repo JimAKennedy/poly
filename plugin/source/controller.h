@@ -31,6 +31,8 @@ public:
     SceneState& mutableCachedState() { return cachedState_; }
     void sendNoteMap();
     void sendCellSizes(int laneIndex);
+    void sendTimelinePattern(int laneIndex);
+    void sendMicroTiming(int laneIndex);
 
     bool hasPendingSmf() const { return !pendingSmfData_.empty(); }
     std::vector<uint8_t> consumeSmfData() { return std::move(pendingSmfData_); }

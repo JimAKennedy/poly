@@ -330,6 +330,17 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
         lane.cellSizes = pendingCellSizes_.sizes;
         cellSizesReady_.store(false, std::memory_order_release);
     }
+    if (timelineReady_.load(std::memory_order_acquire)) {
+        auto& lane = sceneState_.sceneA.lanes[pendingTimeline_.laneIndex];
+        lane.fixedPattern = pendingTimeline_.pattern;
+        lane.fixedPatternLength = pendingTimeline_.patternLength;
+        timelineReady_.store(false, std::memory_order_release);
+    }
+    if (microTimingReady_.load(std::memory_order_acquire)) {
+        auto& lane = sceneState_.sceneA.lanes[pendingMicroTiming_.laneIndex];
+        lane.microTimingMs = pendingMicroTiming_.timingMs;
+        microTimingReady_.store(false, std::memory_order_release);
+    }
 
     updateTransportContext(data);
 
@@ -650,6 +661,41 @@ Steinberg::tresult PLUGIN_API PolyProcessor::notify(Steinberg::Vst::IMessage* me
                 pendingCellSizes_.laneIndex = static_cast<int>(laneIndex);
                 std::memcpy(pendingCellSizes_.sizes.data(), data, size);
                 cellSizesReady_.store(true, std::memory_order_release);
+            }
+        }
+        return Steinberg::kResultOk;
+    }
+
+    if (Steinberg::FIDStringsEqual(message->getMessageID(), "TimelinePatternUpdate")) {
+        if (auto* attrs = message->getAttributes()) {
+            Steinberg::int64 laneIndex = 0;
+            Steinberg::int64 patLen = 0;
+            const void* data = nullptr;
+            Steinberg::uint32 size = 0;
+            if (attrs->getInt("lane", laneIndex) == Steinberg::kResultOk &&
+                attrs->getInt("patLen", patLen) == Steinberg::kResultOk &&
+                attrs->getBinary("pattern", data, size) == Steinberg::kResultOk && laneIndex >= 0 &&
+                laneIndex < kMaxLanes && size == sizeof(pendingTimeline_.pattern)) {
+                pendingTimeline_.laneIndex = static_cast<int>(laneIndex);
+                pendingTimeline_.patternLength = static_cast<int>(patLen);
+                std::memcpy(pendingTimeline_.pattern.data(), data, size);
+                timelineReady_.store(true, std::memory_order_release);
+            }
+        }
+        return Steinberg::kResultOk;
+    }
+
+    if (Steinberg::FIDStringsEqual(message->getMessageID(), "MicroTimingUpdate")) {
+        if (auto* attrs = message->getAttributes()) {
+            Steinberg::int64 laneIndex = 0;
+            const void* data = nullptr;
+            Steinberg::uint32 size = 0;
+            if (attrs->getInt("lane", laneIndex) == Steinberg::kResultOk &&
+                attrs->getBinary("timing", data, size) == Steinberg::kResultOk && laneIndex >= 0 &&
+                laneIndex < kMaxLanes && size == sizeof(pendingMicroTiming_.timingMs)) {
+                pendingMicroTiming_.laneIndex = static_cast<int>(laneIndex);
+                std::memcpy(pendingMicroTiming_.timingMs.data(), data, size);
+                microTimingReady_.store(true, std::memory_order_release);
             }
         }
         return Steinberg::kResultOk;

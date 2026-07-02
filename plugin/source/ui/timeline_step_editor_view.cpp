@@ -145,6 +145,7 @@ CMouseEventResult TimelineStepEditorView::onMouseDown(CPoint& where, const CButt
     int selectedLane = static_cast<int>(std::round(controller_->getParamNormalized(ParamIDs::kSelectedLane) * 7.0));
     auto& cfg = controller_->mutableCachedState().sceneA.lanes[selectedLane];
     cfg.fixedPattern[step] = !cfg.fixedPattern[step];
+    controller_->sendTimelinePattern(selectedLane);
     invalid();
     return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
 }

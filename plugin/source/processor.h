@@ -67,6 +67,21 @@ private:
     PendingCellSizes pendingCellSizes_{};
     std::atomic<bool> cellSizesReady_{false};
 
+    struct PendingTimelinePattern {
+        int laneIndex = 0;
+        std::array<bool, kMaxSteps> pattern{};
+        int patternLength = 0;
+    };
+    PendingTimelinePattern pendingTimeline_{};
+    std::atomic<bool> timelineReady_{false};
+
+    struct PendingMicroTiming {
+        int laneIndex = 0;
+        std::array<float, kMaxSteps> timingMs{};
+    };
+    PendingMicroTiming pendingMicroTiming_{};
+    std::atomic<bool> microTimingReady_{false};
+
     SceneState stateSnapshot_{};
     std::atomic<bool> snapshotReady_{false};
 };

@@ -165,6 +165,7 @@ CMouseEventResult MicroTimingEditorView::onMouseDown(CPoint& where, const CButto
         int selectedLane = static_cast<int>(std::round(controller_->getParamNormalized(ParamIDs::kSelectedLane) * 7.0));
         auto& cfg = controller_->mutableCachedState().sceneA.lanes[selectedLane];
         cfg.microTimingMs[step] = 0.0f;
+        controller_->sendMicroTiming(selectedLane);
         invalid();
         return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
     }
@@ -191,6 +192,8 @@ CMouseEventResult MicroTimingEditorView::onMouseMoved(CPoint& where, const CButt
 CMouseEventResult MicroTimingEditorView::onMouseUp(CPoint& where, const CButtonState& buttons) {
     if (dragStep_ < 0)
         return kMouseEventNotHandled;
+    int selectedLane = static_cast<int>(std::round(controller_->getParamNormalized(ParamIDs::kSelectedLane) * 7.0));
+    controller_->sendMicroTiming(selectedLane);
     dragStep_ = -1;
     return kMouseEventHandled;
 }
