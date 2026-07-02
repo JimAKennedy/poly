@@ -1,9 +1,12 @@
+#include <algorithm>
+#include <cmath>
 #include <cstring>
 #include <vector>
 
 #include <gtest/gtest.h>
 
 #include "poly/bridge.h"
+#include "poly/engine.h"
 #include "poly/state_io.h"
 #include "poly/types.h"
 
@@ -384,6 +387,56 @@ TEST(StateIO, V11AccentBitmaskBackwardCompat) {
     EXPECT_FLOAT_EQ(restored.lanes[0].accents.steps[2], 1.0f);
     EXPECT_FLOAT_EQ(restored.lanes[0].accents.steps[3], 0.0f);
     EXPECT_FLOAT_EQ(restored.lanes[0].accents.steps[5], 1.0f);
+}
+
+TEST(CellSizes, AksakProducesDifferentTiming) {
+    poly::GrooveState equalState{};
+    equalState.activeLaneCount = 1;
+    equalState.seed = 42;
+    equalState.macros.density = 1.0f;
+    auto& eqLane = equalState.lanes[0];
+    eqLane.active = true;
+    eqLane.midiNote = 36;
+    eqLane.cycle = {.steps = 3, .subdivision = 8};
+    eqLane.hitCount = 3;
+    eqLane.probability = 1.0f;
+    eqLane.baseVelocity = 100;
+    eqLane.cellCount = 0;
+
+    poly::GrooveState aksakState = equalState;
+    auto& akLane = aksakState.lanes[0];
+    akLane.cellCount = 3;
+    akLane.cellSizes[0] = 2;
+    akLane.cellSizes[1] = 2;
+    akLane.cellSizes[2] = 3;
+
+    poly::TransportContext tc{};
+    tc.ppqStart = 0.0;
+    tc.ppqEnd = 4.0;
+    tc.tempo = 120.0;
+    tc.sampleRate = 44100.0;
+    tc.blockSize = 44100;
+    tc.playing = true;
+
+    poly::Engine engine;
+    poly::NoteEventBuffer eqOut, akOut;
+    engine.renderRange(tc, equalState, eqOut);
+    engine.renderRange(tc, aksakState, akOut);
+
+    ASSERT_GT(eqOut.count, 0u);
+    ASSERT_GT(akOut.count, 0u);
+
+    bool timingsDiffer = false;
+    size_t minCount = std::min(eqOut.count, akOut.count);
+    for (size_t i = 0; i < minCount; ++i) {
+        if (std::abs(eqOut.events[i].ppqPosition - akOut.events[i].ppqPosition) > 1e-6) {
+            timingsDiffer = true;
+            break;
+        }
+    }
+    if (eqOut.count != akOut.count)
+        timingsDiffer = true;
+    EXPECT_TRUE(timingsDiffer) << "Aksak cellSizes should produce different note timing than equal cells";
 }
 
 TEST(StateIO, V12FloatAccentRoundTrip) {
