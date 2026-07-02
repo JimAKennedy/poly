@@ -9,8 +9,19 @@
 
 namespace poly {
 
+static constexpr double kPpqPerBar = 4.0;
+static constexpr double kMsPerMinute = 60000.0;
+static constexpr float kMidiVelocityMax = 127.0f;
+static constexpr float kMutationDropThreshold = 0.4f;
+static constexpr float kMutationGhostThreshold = 0.7f;
+static constexpr float kAccentVelocityBoost = 0.15f;
+static constexpr float kHumanizeEnvelopeScale = 10.0f;
+static constexpr double kTimingSafetyMarginMs = 20.0;
+static constexpr double kDefaultDurationFraction = 0.5;
+static constexpr double kSwingSyncopationDivisor = 3.0;
+
 static double stepPpq(const Cycle& cycle) {
-    return 4.0 / cycle.subdivision;
+    return kPpqPerBar / cycle.subdivision;
 }
 
 struct EnvelopeMods {
@@ -97,27 +108,18 @@ static void buildLanePattern(const LaneConfig& cfg, const GrooveState& state, in
     }
 }
 
-static double computeMaxTimingShift(const LaneConfig& cfg, const TransportContext& tc, double maxStepDur,
-                                    const AdditiveCellInfo& additive) {
-    double sPpq = stepPpq(cfg.cycle);
-    if (cfg.tempoMultiplier > 0.0f)
-        sPpq *= 1.0 / static_cast<double>(cfg.tempoMultiplier);
-
-    double effectiveMaxDur = maxStepDur;
-    if (additive.count > 0) {
-        for (int c = 0; c < additive.count; ++c)
-            effectiveMaxDur = std::max(effectiveMaxDur, cfg.cellSizes[c] * sPpq);
+static float computeMaxEnvelopeHumanizeMs(const LaneConfig& cfg, const GrooveState& state) {
+    float maxMs = 0.0f;
+    for (int e = 0; e < cfg.envelopeCount; ++e) {
+        const auto& ea = cfg.envelopes[e];
+        if (ea.active && ea.envelope.target == EnvTarget::TimingLooseness)
+            maxMs += std::abs(ea.envelope.depth) * kHumanizeEnvelopeScale;
     }
-
-    double shift = 0.0;
-    shift += static_cast<double>(std::max(0.0f, cfg.swingAmount)) * effectiveMaxDur / 3.0;
-    shift += static_cast<double>(std::max(0.0f, cfg.syncopationOffset)) * effectiveMaxDur / 3.0;
-    if (tc.tempo > 0.0) {
-        shift += (static_cast<double>(std::max(0.0f, cfg.humanizeMs)) + 50.0) * tc.tempo / 60000.0;
-        shift += std::abs(static_cast<double>(cfg.timingOffsetMs)) * tc.tempo / 60000.0;
-        shift += 20.0 * tc.tempo / 60000.0;
+    for (int e = 0; e < state.globalEnvelopeCount; ++e) {
+        if (state.globalEnvelopes[e].target == EnvTarget::TimingLooseness)
+            maxMs += std::abs(state.globalEnvelopes[e].depth) * kHumanizeEnvelopeScale;
     }
-    return shift;
+    return maxMs;
 }
 
 static bool shouldEmitStep(const LaneConfig& cfg, const GrooveState& state, int64_t absStep, int64_t cycleStep,
@@ -126,14 +128,14 @@ static bool shouldEmitStep(const LaneConfig& cfg, const GrooveState& state, int6
     mutatedToGhost = false;
 
     if (cfg.mutationRate > 0.0f && !isAnchor) {
-        int64_t cycleIndex = absStep / stepsInCycle;
+        int64_t cycleIndex = (absStep >= 0) ? absStep / stepsInCycle : (absStep - stepsInCycle + 1) / stepsInCycle;
         float mutRoll = deterministicRand(state.seed, cfg.id, cycleIndex * kMaxSteps + cycleStep, 8);
         if (mutRoll < cfg.mutationRate) {
             float typeRoll = deterministicRand(state.seed, cfg.id, cycleIndex * kMaxSteps + cycleStep, 9);
-            if (typeRoll < 0.4f) {
+            if (typeRoll < kMutationDropThreshold) {
                 if (isPatternStep)
                     isPatternStep = false;
-            } else if (typeRoll < 0.7f) {
+            } else if (typeRoll < kMutationGhostThreshold) {
                 if (isPatternStep)
                     mutatedToGhost = true;
             } else {
@@ -170,7 +172,7 @@ static bool shouldEmitStep(const LaneConfig& cfg, const GrooveState& state, int6
 
 static float computeStepVelocity(const LaneConfig& cfg, const GrooveState& state, int64_t absStep, int64_t cycleStep,
                                  const EnvelopeMods& mods, bool mutatedToGhost) {
-    float velBase = cfg.baseVelocity / 127.0f;
+    float velBase = cfg.baseVelocity / kMidiVelocityMax;
     float velRand = deterministicRand(state.seed, cfg.id, absStep, 1);
     float spread = cfg.velocitySpread * (velRand * 2.0f - 1.0f);
     float vel = velBase + spread;
@@ -180,11 +182,11 @@ static float computeStepVelocity(const LaneConfig& cfg, const GrooveState& state
         float effectiveEmphasis = std::clamp(cfg.emphasisProb + mods.accent, 0.0f, 1.0f);
         float emphRoll = deterministicRand(state.seed, cfg.id, absStep, 2);
         if (emphRoll < effectiveEmphasis) {
-            vel += accentVal * 0.15f;
+            vel += accentVal * kAccentVelocityBoost;
         }
     }
 
-    float ghostFloor = cfg.ghostFloor / 127.0f;
+    float ghostFloor = cfg.ghostFloor / kMidiVelocityMax;
     if (vel < ghostFloor)
         vel = ghostFloor;
 
@@ -200,26 +202,26 @@ static float computeStepVelocity(const LaneConfig& cfg, const GrooveState& state
 static double applyTimingShifts(const LaneConfig& cfg, const TransportContext& tc, const GrooveState& state, double ppq,
                                 double stepDurPpq, int64_t absStep, int64_t cycleStep, float humanizeMod) {
     if (cfg.swingAmount > 0.0f && (cycleStep % 2) == 1) {
-        ppq += cfg.swingAmount * stepDurPpq * (1.0 / 3.0);
+        ppq += cfg.swingAmount * stepDurPpq * (1.0 / kSwingSyncopationDivisor);
     }
     if (cfg.syncopationOffset > 0.0f && (cycleStep % 2) == 0) {
-        ppq += static_cast<double>(cfg.syncopationOffset) * stepDurPpq * (1.0 / 3.0);
+        ppq += static_cast<double>(cfg.syncopationOffset) * stepDurPpq * (1.0 / kSwingSyncopationDivisor);
     }
 
     float stepTimingMs = cfg.microTimingMs[static_cast<size_t>(cycleStep)];
     if (stepTimingMs != 0.0f && tc.tempo > 0.0) {
-        ppq += static_cast<double>(stepTimingMs) * tc.tempo / 60000.0;
+        ppq += static_cast<double>(stepTimingMs) * tc.tempo / kMsPerMinute;
     }
 
-    float effectiveHumanize = cfg.humanizeMs + humanizeMod * 10.0f;
+    float effectiveHumanize = cfg.humanizeMs + humanizeMod * kHumanizeEnvelopeScale;
     if (effectiveHumanize > 0.0f && tc.tempo > 0.0) {
-        double jitterPpq = static_cast<double>(effectiveHumanize) * tc.tempo / 60000.0;
+        double jitterPpq = static_cast<double>(effectiveHumanize) * tc.tempo / kMsPerMinute;
         float jitterRand = deterministicRand(state.seed, cfg.id, absStep, 3);
         ppq += jitterPpq * (jitterRand * 2.0f - 1.0f);
     }
 
     if (cfg.timingOffsetMs != 0.0f && tc.tempo > 0.0) {
-        ppq += static_cast<double>(cfg.timingOffsetMs) * tc.tempo / 60000.0;
+        ppq += static_cast<double>(cfg.timingOffsetMs) * tc.tempo / kMsPerMinute;
     }
 
     if (ppq < 0.0)
@@ -265,12 +267,15 @@ static LaneRenderContext prepareLaneContext(const LaneConfig& cfg, const GrooveS
             maxStepDur = std::max(maxStepDur, cfg.cellSizes[c] * ctx.sPpq);
     }
     ctx.maxTimingShift = 0.0;
-    ctx.maxTimingShift += static_cast<double>(std::max(0.0f, cfg.swingAmount)) * maxStepDur / 3.0;
-    ctx.maxTimingShift += static_cast<double>(std::max(0.0f, cfg.syncopationOffset)) * maxStepDur / 3.0;
+    ctx.maxTimingShift += static_cast<double>(std::max(0.0f, cfg.swingAmount)) * maxStepDur / kSwingSyncopationDivisor;
+    ctx.maxTimingShift +=
+        static_cast<double>(std::max(0.0f, cfg.syncopationOffset)) * maxStepDur / kSwingSyncopationDivisor;
     if (tc.tempo > 0.0) {
-        ctx.maxTimingShift += (static_cast<double>(std::max(0.0f, cfg.humanizeMs)) + 50.0) * tc.tempo / 60000.0;
-        ctx.maxTimingShift += std::abs(static_cast<double>(cfg.timingOffsetMs)) * tc.tempo / 60000.0;
-        ctx.maxTimingShift += 20.0 * tc.tempo / 60000.0;
+        float envHumanizeMs = computeMaxEnvelopeHumanizeMs(cfg, state);
+        ctx.maxTimingShift +=
+            static_cast<double>(std::max(0.0f, cfg.humanizeMs) + envHumanizeMs) * tc.tempo / kMsPerMinute;
+        ctx.maxTimingShift += std::abs(static_cast<double>(cfg.timingOffsetMs)) * tc.tempo / kMsPerMinute;
+        ctx.maxTimingShift += kTimingSafetyMarginMs * tc.tempo / kMsPerMinute;
     }
 
     if (ctx.isAdditive) {
@@ -320,7 +325,7 @@ static int64_t computeDriftedCycleStep(const LaneConfig& cfg, const LaneRenderCo
     int stepsInCycle = ctx.isAdditive ? ctx.additive.count : cfg.cycle.steps;
     int64_t cycleStep = ((absStep % stepsInCycle) + stepsInCycle) % stepsInCycle;
     if (cfg.driftRate != 0.0f) {
-        double barPos = ppq / 4.0;
+        double barPos = ppq / kPpqPerBar;
         auto driftSteps = static_cast<int64_t>(std::floor(barPos * static_cast<double>(cfg.driftRate)));
         cycleStep = ((cycleStep + driftSteps) % stepsInCycle + stepsInCycle) % stepsInCycle;
     }
@@ -334,7 +339,8 @@ static void buildNoteEvent(NoteEventBuffer& out, const LaneConfig& cfg, int lane
     ev.ppqPosition = ppq;
     ev.pitch = cfg.midiNote;
     ev.velocity = vel;
-    double baseDuration = cfg.noteDuration > 0.0f ? static_cast<double>(cfg.noteDuration) : stepDurPpq * 0.5;
+    double baseDuration =
+        cfg.noteDuration > 0.0f ? static_cast<double>(cfg.noteDuration) : stepDurPpq * kDefaultDurationFraction;
     ev.duration = baseDuration * static_cast<double>(std::clamp(mods.duration, 0.01f, 4.0f));
     ev.channel = (cfg.midiChannel >= 0) ? cfg.midiChannel : static_cast<int16_t>(lane);
     ev.laneIndex = static_cast<int16_t>(lane);

@@ -36,12 +36,14 @@ struct SceneChainState {
     int barsInCurrentEntry = 0;
     int direction = 1;
     int64_t lastBarNumber = -1;
+    int64_t startBarNumber = -1;
 
     void reset() {
         currentIndex = 0;
         barsInCurrentEntry = 0;
         direction = 1;
         lastBarNumber = -1;
+        startBarNumber = -1;
     }
 
     SceneSelect update(const SceneChainConfig& config, double ppqPosition) {
@@ -50,21 +52,17 @@ struct SceneChainState {
 
         int64_t barNumber = static_cast<int64_t>(std::floor(ppqPosition / 4.0));
 
-        if (lastBarNumber < 0) {
+        if (startBarNumber < 0) {
+            startBarNumber = barNumber;
             lastBarNumber = barNumber;
             currentIndex = 0;
             barsInCurrentEntry = 0;
             return config.entries[0].scene;
         }
 
-        while (barNumber > lastBarNumber) {
-            ++lastBarNumber;
-            ++barsInCurrentEntry;
-
-            if (barsInCurrentEntry >= config.entries[static_cast<size_t>(currentIndex)].bars) {
-                barsInCurrentEntry = 0;
-                advance(config);
-            }
+        if (barNumber > lastBarNumber) {
+            lastBarNumber = barNumber;
+            resolveAbsolutePosition(config, barNumber - startBarNumber);
         }
 
         int idx = std::clamp(currentIndex, 0, config.entryCount - 1);
@@ -72,39 +70,82 @@ struct SceneChainState {
     }
 
 private:
-    void advance(const SceneChainConfig& config) {
-        int next = currentIndex + direction;
+    void resolveAbsolutePosition(const SceneChainConfig& config, int64_t totalBarsElapsed) {
+        int totalCycleBars = 0;
+        for (int i = 0; i < config.entryCount; ++i)
+            totalCycleBars += std::max(1, config.entries[i].bars);
 
         switch (config.mode) {
-        case ChainMode::OneShot:
-            if (next >= config.entryCount)
-                next = config.entryCount - 1;
-            else if (next < 0)
-                next = 0;
+        case ChainMode::Loop: {
+            int64_t pos = totalBarsElapsed % totalCycleBars;
+            if (pos < 0)
+                pos += totalCycleBars;
+            findEntryAtPosition(config, pos);
             break;
-
-        case ChainMode::Loop:
-            next = next % config.entryCount;
-            if (next < 0)
-                next += config.entryCount;
-            break;
-
-        case ChainMode::PingPong:
-            if (next >= config.entryCount) {
-                direction = -1;
-                next = config.entryCount - 2;
-                if (next < 0)
-                    next = 0;
-            } else if (next < 0) {
-                direction = 1;
-                next = 1;
-                if (next >= config.entryCount)
-                    next = 0;
+        }
+        case ChainMode::OneShot: {
+            if (totalBarsElapsed >= totalCycleBars) {
+                currentIndex = config.entryCount - 1;
+                barsInCurrentEntry = std::max(1, config.entries[currentIndex].bars) - 1;
+            } else {
+                findEntryAtPosition(config, totalBarsElapsed);
             }
             break;
         }
+        case ChainMode::PingPong: {
+            if (config.entryCount == 1) {
+                currentIndex = 0;
+                barsInCurrentEntry = 0;
+                break;
+            }
+            int pingPongPeriod = totalCycleBars * 2 - std::max(1, config.entries[0].bars) -
+                                 std::max(1, config.entries[config.entryCount - 1].bars);
+            if (pingPongPeriod <= 0) {
+                currentIndex = 0;
+                barsInCurrentEntry = 0;
+                break;
+            }
+            int64_t pos = totalBarsElapsed % pingPongPeriod;
+            if (pos < 0)
+                pos += pingPongPeriod;
+            if (pos < totalCycleBars) {
+                findEntryAtPosition(config, pos);
+                direction = 1;
+            } else {
+                int64_t reversePos = pos - totalCycleBars;
+                int64_t cumulative = 0;
+                for (int i = config.entryCount - 2; i >= 1; --i) {
+                    int entryBars = std::max(1, config.entries[i].bars);
+                    if (cumulative + entryBars > reversePos) {
+                        currentIndex = i;
+                        barsInCurrentEntry = static_cast<int>(reversePos - cumulative);
+                        direction = -1;
+                        return;
+                    }
+                    cumulative += entryBars;
+                }
+                currentIndex = 1;
+                barsInCurrentEntry = 0;
+                direction = -1;
+            }
+            break;
+        }
+        }
+    }
 
-        currentIndex = next;
+    void findEntryAtPosition(const SceneChainConfig& config, int64_t posInCycle) {
+        int64_t cumulative = 0;
+        for (int i = 0; i < config.entryCount; ++i) {
+            int entryBars = std::max(1, config.entries[i].bars);
+            if (cumulative + entryBars > posInCycle) {
+                currentIndex = i;
+                barsInCurrentEntry = static_cast<int>(posInCycle - cumulative);
+                return;
+            }
+            cumulative += entryBars;
+        }
+        currentIndex = config.entryCount - 1;
+        barsInCurrentEntry = 0;
     }
 };
 
