@@ -61,6 +61,23 @@ LaneConfig interpolateLane(const LaneConfig& a, const LaneConfig& b, float t) {
         r.envelopes[idx].envelope = interpolateEnvelope(a.envelopes[idx].envelope, b.envelopes[idx].envelope, t);
         r.envelopes[idx].active = snap(a.envelopes[idx].active, b.envelopes[idx].active, t);
     }
+    r.midiChannel = snap(a.midiChannel, b.midiChannel, t);
+    r.phraseLength = lerpf(a.phraseLength, b.phraseLength, t);
+    r.phraseGap = lerpf(a.phraseGap, b.phraseGap, t);
+    r.phraseOffset = lerpf(a.phraseOffset, b.phraseOffset, t);
+    r.mutationRate = lerpf(a.mutationRate, b.mutationRate, t);
+    r.driftRate = lerpf(a.driftRate, b.driftRate, t);
+    r.timingOffsetMs = lerpf(a.timingOffsetMs, b.timingOffsetMs, t);
+    r.kotekanSourceLane = snap(a.kotekanSourceLane, b.kotekanSourceLane, t);
+    r.cellCount = snap(a.cellCount, b.cellCount, t);
+    r.cellSizes = snap(a.cellSizes, b.cellSizes, t);
+    r.timeline = snap(a.timeline, b.timeline, t);
+    r.fixedPattern = snap(a.fixedPattern, b.fixedPattern, t);
+    r.fixedPatternLength = snap(a.fixedPatternLength, b.fixedPatternLength, t);
+    for (int i = 0; i < kMaxSteps; ++i) {
+        auto idx = static_cast<size_t>(i);
+        r.microTimingMs[idx] = lerpf(a.microTimingMs[idx], b.microTimingMs[idx], t);
+    }
     r.constraints.anchorSteps = snap(a.constraints.anchorSteps, b.constraints.anchorSteps, t);
     r.constraints.backbeatProtect = snap(a.constraints.backbeatProtect, b.constraints.backbeatProtect, t);
     r.constraints.densityMin = snap(a.constraints.densityMin, b.constraints.densityMin, t);

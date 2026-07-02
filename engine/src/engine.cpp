@@ -354,6 +354,9 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
 
         auto ctx = prepareLaneContext(cfg, state, lane, tc);
 
+        if (ctx.cyclePpqLen <= 0.0)
+            continue;
+
         for (int64_t absStep = ctx.firstStep; absStep < ctx.lastStep; ++absStep) {
             double ppq = 0.0;
             double stepDurPpq = 0.0;

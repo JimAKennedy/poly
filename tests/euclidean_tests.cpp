@@ -355,3 +355,39 @@ TEST(Timeline, BellPatternGolden) {
     EXPECT_NEAR(pos[5], 8.0 * sPpq, 1e-9);
     EXPECT_NEAR(pos[6], 10.0 * sPpq, 1e-9);
 }
+
+// --- Zero-guard regression tests (M027-S01) ---
+
+TEST(AdditiveCells, ZeroCellSizesDoNotHang) {
+    poly::LaneConfig cfg{};
+    cfg.id = 0;
+    cfg.midiNote = 36;
+    cfg.cycle.steps = 3;
+    cfg.cycle.subdivision = 8;
+    cfg.hitCount = 3;
+    cfg.baseVelocity = 100;
+    cfg.probability = 1.0f;
+    cfg.active = true;
+    cfg.cellCount = 3;
+
+    poly::GrooveState state{};
+    state.activeLaneCount = 1;
+    state.lanes[0] = cfg;
+
+    poly::TransportContext tc{};
+    tc.playing = true;
+    tc.ppqStart = 0.0;
+    tc.ppqEnd = 4.0;
+    tc.tempo = 120.0;
+
+    poly::NoteEventBuffer buf;
+    poly::Engine engine;
+    engine.renderRange(tc, state, buf);
+    EXPECT_EQ(buf.count, 0u);
+}
+
+TEST(AdditiveCells, ValidCellSizesProduceEvents) {
+    auto cfg = makeAdditiveConfig({2, 2, 3}, 8, 3);
+    auto pos = renderPpqPositions(cfg, 0.0, 4.0);
+    EXPECT_GT(pos.size(), 0u);
+}
