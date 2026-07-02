@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cmath>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -7,6 +8,7 @@
 
 #include "poly/engine.h"
 #include "poly/euclidean.h"
+#include "poly/rng.h"
 #include "poly/types.h"
 
 namespace {
@@ -390,4 +392,48 @@ TEST(AdditiveCells, ValidCellSizesProduceEvents) {
     auto cfg = makeAdditiveConfig({2, 2, 3}, 8, 3);
     auto pos = renderPpqPositions(cfg, 0.0, 4.0);
     EXPECT_GT(pos.size(), 0u);
+}
+
+// --- RNG and buffer tests ---
+
+TEST(Rng, SeedZeroProducesVariedOutput) {
+    std::set<float> values;
+    for (int lane = 0; lane < 4; ++lane) {
+        for (int step = 0; step < 8; ++step) {
+            values.insert(poly::deterministicRand(0, lane, step, 0));
+        }
+    }
+    EXPECT_GE(values.size(), 20u) << "Seed 0 should produce varied values across lanes and steps";
+}
+
+TEST(Rng, SeedZeroDiffersFromSeedOne) {
+    float v0 = poly::deterministicRand(0, 0, 0, 0);
+    float v1 = poly::deterministicRand(1, 0, 0, 0);
+    EXPECT_NE(v0, v1);
+}
+
+TEST(NoteEventBuffer, DroppedCountIncrementsOnOverflow) {
+    poly::NoteEventBuffer buf;
+    poly::NoteEvent ev{};
+    for (size_t i = 0; i < poly::kMaxEventsPerBlock; ++i)
+        EXPECT_TRUE(buf.push(ev));
+    EXPECT_EQ(buf.droppedCount, 0u);
+
+    EXPECT_FALSE(buf.push(ev));
+    EXPECT_EQ(buf.droppedCount, 1u);
+    EXPECT_FALSE(buf.push(ev));
+    EXPECT_EQ(buf.droppedCount, 2u);
+    EXPECT_EQ(buf.count, poly::kMaxEventsPerBlock);
+}
+
+TEST(NoteEventBuffer, ClearResetsDroppedCount) {
+    poly::NoteEventBuffer buf;
+    poly::NoteEvent ev{};
+    for (size_t i = 0; i < poly::kMaxEventsPerBlock + 3; ++i)
+        buf.push(ev);
+    EXPECT_EQ(buf.droppedCount, 3u);
+
+    buf.clear();
+    EXPECT_EQ(buf.count, 0u);
+    EXPECT_EQ(buf.droppedCount, 0u);
 }

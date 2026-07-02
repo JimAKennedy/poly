@@ -497,4 +497,88 @@ TEST(EnvelopeIntegration, ZeroPeriodBarsDoesNotProduceNaN) {
     }
 }
 
+TEST(EnvelopeIntegration, MaxDepthStackedHumanizeNoNaN) {
+    poly::LaneConfig cfg{};
+    cfg.id = 0;
+    cfg.midiNote = 36;
+    cfg.cycle.steps = 4;
+    cfg.cycle.subdivision = 4;
+    cfg.hitCount = 4;
+    cfg.baseVelocity = 100;
+    cfg.probability = 1.0f;
+    cfg.humanizeMs = 50.0f;
+    cfg.active = true;
+    cfg.envelopeCount = 3;
+    for (int e = 0; e < 3; ++e) {
+        cfg.envelopes[e].active = true;
+        cfg.envelopes[e].envelope.target = poly::EnvTarget::TimingLooseness;
+        cfg.envelopes[e].envelope.periodBars = 4.0f;
+        cfg.envelopes[e].envelope.depth = 1.0f;
+        cfg.envelopes[e].envelope.shape = poly::Shape::Sine;
+    }
+
+    poly::GrooveState state{};
+    state.activeLaneCount = 1;
+    state.lanes[0] = cfg;
+
+    poly::TransportContext tc{};
+    tc.playing = true;
+    tc.ppqStart = 0.0;
+    tc.ppqEnd = 16.0;
+    tc.tempo = 200.0;
+
+    poly::NoteEventBuffer buf;
+    poly::Engine engine;
+    engine.renderRange(tc, state, buf);
+
+    for (size_t i = 0; i < buf.count; ++i) {
+        EXPECT_FALSE(std::isnan(buf.events[i].ppqPosition)) << "NaN ppq at event " << i;
+        EXPECT_FALSE(std::isinf(buf.events[i].ppqPosition)) << "Inf ppq at event " << i;
+        EXPECT_FALSE(std::isnan(buf.events[i].velocity)) << "NaN velocity at event " << i;
+    }
+}
+
+TEST(EnvelopeIntegration, ZeroPeriodBarsAllTargetsNoNaN) {
+    poly::LaneConfig cfg{};
+    cfg.id = 0;
+    cfg.midiNote = 36;
+    cfg.cycle.steps = 4;
+    cfg.cycle.subdivision = 4;
+    cfg.hitCount = 4;
+    cfg.baseVelocity = 100;
+    cfg.probability = 1.0f;
+    cfg.active = true;
+
+    std::array<poly::EnvTarget, 3> targets = {poly::EnvTarget::TimingLooseness, poly::EnvTarget::Probability,
+                                              poly::EnvTarget::NoteLength};
+    for (auto target : targets) {
+        cfg.envelopeCount = 1;
+        cfg.envelopes[0].active = true;
+        cfg.envelopes[0].envelope.target = target;
+        cfg.envelopes[0].envelope.periodBars = 0.0f;
+        cfg.envelopes[0].envelope.depth = 1.0f;
+
+        poly::GrooveState state{};
+        state.activeLaneCount = 1;
+        state.lanes[0] = cfg;
+
+        poly::TransportContext tc{};
+        tc.playing = true;
+        tc.ppqStart = 0.0;
+        tc.ppqEnd = 4.0;
+        tc.tempo = 120.0;
+
+        poly::NoteEventBuffer buf;
+        poly::Engine engine;
+        engine.renderRange(tc, state, buf);
+
+        for (size_t i = 0; i < buf.count; ++i) {
+            EXPECT_FALSE(std::isnan(buf.events[i].ppqPosition));
+            EXPECT_FALSE(std::isinf(buf.events[i].ppqPosition));
+            EXPECT_FALSE(std::isnan(buf.events[i].velocity));
+            EXPECT_FALSE(std::isnan(buf.events[i].duration));
+        }
+    }
+}
+
 } // namespace

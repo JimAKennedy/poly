@@ -44,12 +44,18 @@ struct NoteEvent {
 struct NoteEventBuffer {
     std::array<NoteEvent, kMaxEventsPerBlock> events{};
     size_t count = 0;
+    size_t droppedCount = 0;
 
-    void clear() { count = 0; }
+    void clear() {
+        count = 0;
+        droppedCount = 0;
+    }
 
     bool push(const NoteEvent& e) {
-        if (count >= kMaxEventsPerBlock)
+        if (count >= kMaxEventsPerBlock) {
+            ++droppedCount;
             return false;
+        }
         events[count++] = e;
         return true;
     }
