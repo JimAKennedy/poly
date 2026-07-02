@@ -74,7 +74,7 @@ void EnvelopeCurveView::draw(VSTGUI::CDrawContext* context) {
     };
 
     int selectedLane = static_cast<int>(std::round(controller_->getParamNormalized(ParamIDs::kSelectedLane) * 7.0));
-    const auto& cachedScene = controller_->cachedState().sceneA;
+    const auto& cachedScene = controller_->activeScene();
 
     for (int lane = 0; lane < kMaxLanes; ++lane) {
         auto activeId = ParamIDs::laneParam(lane, ParamIDs::kActive);
@@ -149,7 +149,7 @@ void EnvelopeCurveView::draw(VSTGUI::CDrawContext* context) {
 
 CMouseEventResult EnvelopeCurveView::onMouseDown(CPoint& where, const CButtonState& buttons) {
     int selectedLane = static_cast<int>(std::round(controller_->getParamNormalized(ParamIDs::kSelectedLane) * 7.0));
-    auto& lane = controller_->mutableCachedState().sceneA.lanes[selectedLane];
+    auto& lane = controller_->mutableActiveScene().lanes[selectedLane];
 
     if (buttons.isRightButton()) {
         if (lane.envelopeCount > 0) {
@@ -176,7 +176,7 @@ CMouseEventResult EnvelopeCurveView::onMouseMoved(CPoint& where, const CButtonSt
         return kMouseEventNotHandled;
 
     int selectedLane = static_cast<int>(std::round(controller_->getParamNormalized(ParamIDs::kSelectedLane) * 7.0));
-    auto& lane = controller_->mutableCachedState().sceneA.lanes[selectedLane];
+    auto& lane = controller_->mutableActiveScene().lanes[selectedLane];
 
     float dy = dragStartY_ - static_cast<float>(where.y);
     float newDepth = std::clamp(dragStartDepth_ + dy * 0.01f, 0.0f, 1.0f);

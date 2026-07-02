@@ -459,8 +459,9 @@ void PolyController::sendCellSizes(int laneIndex) {
         msg->setMessageID("CellSizesUpdate");
         if (auto* attrs = msg->getAttributes()) {
             attrs->setInt("lane", laneIndex);
-            attrs->setBinary("sizes", cachedState_.sceneA.lanes[laneIndex].cellSizes.data(),
-                             static_cast<Steinberg::uint32>(sizeof(cachedState_.sceneA.lanes[laneIndex].cellSizes)));
+            const auto& scene = activeScene();
+            attrs->setBinary("sizes", scene.lanes[laneIndex].cellSizes.data(),
+                             static_cast<Steinberg::uint32>(sizeof(scene.lanes[laneIndex].cellSizes)));
         }
         sendMessage(msg);
         msg->release();
@@ -473,7 +474,7 @@ void PolyController::sendTimelinePattern(int laneIndex) {
     if (auto* msg = allocateMessage()) {
         msg->setMessageID("TimelinePatternUpdate");
         if (auto* attrs = msg->getAttributes()) {
-            const auto& lane = cachedState_.sceneA.lanes[laneIndex];
+            const auto& lane = activeScene().lanes[laneIndex];
             attrs->setInt("lane", laneIndex);
             attrs->setInt("patLen", lane.fixedPatternLength);
             attrs->setBinary("pattern", lane.fixedPattern.data(),
@@ -491,9 +492,9 @@ void PolyController::sendMicroTiming(int laneIndex) {
         msg->setMessageID("MicroTimingUpdate");
         if (auto* attrs = msg->getAttributes()) {
             attrs->setInt("lane", laneIndex);
-            attrs->setBinary(
-                "timing", cachedState_.sceneA.lanes[laneIndex].microTimingMs.data(),
-                static_cast<Steinberg::uint32>(sizeof(cachedState_.sceneA.lanes[laneIndex].microTimingMs)));
+            const auto& scene = activeScene();
+            attrs->setBinary("timing", scene.lanes[laneIndex].microTimingMs.data(),
+                             static_cast<Steinberg::uint32>(sizeof(scene.lanes[laneIndex].microTimingMs)));
         }
         sendMessage(msg);
         msg->release();
@@ -508,7 +509,7 @@ void PolyController::sendEnvelopeUpdate(int laneIndex, int envelopeIndex) {
     if (auto* msg = allocateMessage()) {
         msg->setMessageID("EnvelopeUpdate");
         if (auto* attrs = msg->getAttributes()) {
-            const auto& ea = cachedState_.sceneA.lanes[laneIndex].envelopes[envelopeIndex];
+            const auto& ea = activeScene().lanes[laneIndex].envelopes[envelopeIndex];
             attrs->setInt("lane", laneIndex);
             attrs->setInt("envIdx", envelopeIndex);
             attrs->setBinary("envelope", &ea.envelope, static_cast<Steinberg::uint32>(sizeof(ea.envelope)));

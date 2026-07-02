@@ -105,7 +105,7 @@ void CrossRhythmView::draw(CDrawContext* context) {
     double laneH = activeCount > 0 ? (laneAreaBot - laneAreaTop) / activeCount : 20.0;
     laneH = std::min(laneH, 24.0);
 
-    const auto& cachedScene = controller_->cachedState().sceneA;
+    const auto& cachedScene = controller_->activeScene();
 
     int laneSteps[kMaxLanes]{};
     int laneSubdiv[kMaxLanes]{};

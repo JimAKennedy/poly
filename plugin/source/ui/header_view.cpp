@@ -219,7 +219,7 @@ void HeaderView::applyPreset(int index) {
     }
 
     auto* polyCtrl = static_cast<PolyController*>(controller_);
-    polyCtrl->mutableCachedState().sceneA = state;
+    polyCtrl->mutableActiveScene() = state;
     for (int lane = 0; lane < kMaxLanes; ++lane)
         polyCtrl->setLaneName(lane, kPresetLaneNames[index][lane]);
 
@@ -336,7 +336,7 @@ void HeaderView::resetToInit() {
     }
     initState.activeLaneCount = kMaxLanes;
     auto* polyCtrl = static_cast<PolyController*>(controller_);
-    polyCtrl->mutableCachedState().sceneA = initState;
+    polyCtrl->mutableActiveScene() = initState;
     polyCtrl->resetLaneNames();
 
     pushParam(ParamIDs::kMacroComplexity, 0.5);

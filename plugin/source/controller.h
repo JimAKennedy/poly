@@ -29,6 +29,12 @@ public:
 
     const SceneState& cachedState() const { return cachedState_; }
     SceneState& mutableCachedState() { return cachedState_; }
+    const GrooveState& activeScene() const {
+        return (cachedState_.select == SceneSelect::B) ? cachedState_.sceneB : cachedState_.sceneA;
+    }
+    GrooveState& mutableActiveScene() {
+        return (cachedState_.select == SceneSelect::B) ? cachedState_.sceneB : cachedState_.sceneA;
+    }
     void sendNoteMap();
     void sendCellSizes(int laneIndex);
     void sendTimelinePattern(int laneIndex);

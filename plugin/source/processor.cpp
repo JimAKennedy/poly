@@ -325,24 +325,25 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
         sceneState_.noteMap = pendingNoteMap_;
         noteMapReady_.store(false, std::memory_order_release);
     }
+    auto& activeScene = (sceneState_.select == SceneSelect::B) ? sceneState_.sceneB : sceneState_.sceneA;
     if (cellSizesReady_.load(std::memory_order_acquire)) {
-        auto& lane = sceneState_.sceneA.lanes[pendingCellSizes_.laneIndex];
+        auto& lane = activeScene.lanes[pendingCellSizes_.laneIndex];
         lane.cellSizes = pendingCellSizes_.sizes;
         cellSizesReady_.store(false, std::memory_order_release);
     }
     if (timelineReady_.load(std::memory_order_acquire)) {
-        auto& lane = sceneState_.sceneA.lanes[pendingTimeline_.laneIndex];
+        auto& lane = activeScene.lanes[pendingTimeline_.laneIndex];
         lane.fixedPattern = pendingTimeline_.pattern;
         lane.fixedPatternLength = pendingTimeline_.patternLength;
         timelineReady_.store(false, std::memory_order_release);
     }
     if (microTimingReady_.load(std::memory_order_acquire)) {
-        auto& lane = sceneState_.sceneA.lanes[pendingMicroTiming_.laneIndex];
+        auto& lane = activeScene.lanes[pendingMicroTiming_.laneIndex];
         lane.microTimingMs = pendingMicroTiming_.timingMs;
         microTimingReady_.store(false, std::memory_order_release);
     }
     if (envelopeReady_.load(std::memory_order_acquire)) {
-        auto& lane = sceneState_.sceneA.lanes[pendingEnvelope_.laneIndex];
+        auto& lane = activeScene.lanes[pendingEnvelope_.laneIndex];
         lane.envelopes[pendingEnvelope_.envelopeIndex].envelope = pendingEnvelope_.envelope;
         lane.envelopes[pendingEnvelope_.envelopeIndex].active = pendingEnvelope_.active;
         envelopeReady_.store(false, std::memory_order_release);
