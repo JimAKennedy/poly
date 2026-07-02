@@ -368,6 +368,13 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
             }
             pendingNoteOffs_.clear();
         }
+        if (exportTriggered_ && !exportReady_.load(std::memory_order_acquire)) {
+            exportTriggered_ = false;
+            exportEventCount_ =
+                captureBuffer_.extractLastBars(captureLengthBars_, exportEvents_.data(), exportEvents_.size());
+            exportTempo_ = tc_.tempo;
+            exportReady_.store(true, std::memory_order_release);
+        }
         wasPlaying_ = false;
         return Steinberg::kResultOk;
     }

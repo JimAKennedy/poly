@@ -654,8 +654,11 @@ TEST(MetricModulation, SerializationRoundTrip) {
     poly::SceneState original{};
     original.sceneA.activeLaneCount = 2;
     original.sceneA.lanes[0].tempoMultiplier = 2.5f;
+    original.sceneA.lanes[0].midiChannel = 5;
     original.sceneA.lanes[1].tempoMultiplier = 0.25f;
+    original.sceneA.lanes[1].midiChannel = 15;
     original.sceneB.lanes[0].tempoMultiplier = 4.0f;
+    original.sceneB.lanes[0].midiChannel = 0;
 
     std::vector<uint8_t> buffer;
     auto write = [&buffer](const void* data, size_t size) -> bool {
@@ -681,6 +684,11 @@ TEST(MetricModulation, SerializationRoundTrip) {
     EXPECT_FLOAT_EQ(restored.sceneA.lanes[1].tempoMultiplier, 0.25f);
     EXPECT_FLOAT_EQ(restored.sceneB.lanes[0].tempoMultiplier, 4.0f);
     EXPECT_FLOAT_EQ(restored.sceneB.lanes[1].tempoMultiplier, 1.0f);
+
+    EXPECT_EQ(restored.sceneA.lanes[0].midiChannel, 5);
+    EXPECT_EQ(restored.sceneA.lanes[1].midiChannel, 15);
+    EXPECT_EQ(restored.sceneB.lanes[0].midiChannel, 0);
+    EXPECT_EQ(restored.sceneB.lanes[1].midiChannel, -1);
 }
 
 TEST(MetricModulation, V13BackwardsCompat_DefaultsTo1x) {
