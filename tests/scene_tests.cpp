@@ -337,6 +337,106 @@ TEST(SceneChain, MultiBarEntries) {
     EXPECT_EQ(state.update(config, 24.0), poly::SceneSelect::A);
 }
 
+// --- Scene Chain O(1) transport-jump stress tests ---
+
+TEST(SceneChain, LoopTransportJump1000Bars) {
+    poly::SceneChainConfig config{};
+    config.entryCount = 3;
+    config.entries[0] = {poly::SceneSelect::A, 2};
+    config.entries[1] = {poly::SceneSelect::Morph, 3};
+    config.entries[2] = {poly::SceneSelect::B, 1};
+    config.mode = poly::ChainMode::Loop;
+
+    // Build reference by iterating bar-by-bar
+    poly::SceneChainState refState{};
+    refState.update(config, 0.0);
+    poly::SceneSelect expected{};
+    for (int bar = 1; bar <= 1000; ++bar)
+        expected = refState.update(config, bar * 4.0);
+
+    // Jump directly to bar 1000
+    poly::SceneChainState jumpState{};
+    jumpState.update(config, 0.0);
+    poly::SceneSelect actual = jumpState.update(config, 1000.0 * 4.0);
+
+    EXPECT_EQ(actual, expected);
+}
+
+TEST(SceneChain, OneShotTransportJump1000Bars) {
+    poly::SceneChainConfig config{};
+    config.entryCount = 3;
+    config.entries[0] = {poly::SceneSelect::A, 2};
+    config.entries[1] = {poly::SceneSelect::Morph, 3};
+    config.entries[2] = {poly::SceneSelect::B, 1};
+    config.mode = poly::ChainMode::OneShot;
+
+    poly::SceneChainState jumpState{};
+    jumpState.update(config, 0.0);
+    poly::SceneSelect actual = jumpState.update(config, 1000.0 * 4.0);
+    EXPECT_EQ(actual, poly::SceneSelect::B);
+}
+
+TEST(SceneChain, PingPongTransportJump1000Bars) {
+    poly::SceneChainConfig config{};
+    config.entryCount = 3;
+    config.entries[0] = {poly::SceneSelect::A, 2};
+    config.entries[1] = {poly::SceneSelect::Morph, 3};
+    config.entries[2] = {poly::SceneSelect::B, 1};
+    config.mode = poly::ChainMode::PingPong;
+
+    // Build reference by iterating bar-by-bar
+    poly::SceneChainState refState{};
+    refState.update(config, 0.0);
+    poly::SceneSelect expected{};
+    for (int bar = 1; bar <= 1000; ++bar)
+        expected = refState.update(config, bar * 4.0);
+
+    poly::SceneChainState jumpState{};
+    jumpState.update(config, 0.0);
+    poly::SceneSelect actual = jumpState.update(config, 1000.0 * 4.0);
+
+    EXPECT_EQ(actual, expected);
+}
+
+TEST(SceneChain, PingPongTwoEntryTransportJump) {
+    poly::SceneChainConfig config{};
+    config.entryCount = 2;
+    config.entries[0] = {poly::SceneSelect::A, 1};
+    config.entries[1] = {poly::SceneSelect::B, 1};
+    config.mode = poly::ChainMode::PingPong;
+
+    // A, B, A, B, ... — period 2
+    poly::SceneChainState state{};
+    EXPECT_EQ(state.update(config, 0.0), poly::SceneSelect::A);
+    EXPECT_EQ(state.update(config, 400.0), poly::SceneSelect::A); // bar 100 = even
+    EXPECT_EQ(state.update(config, 404.0), poly::SceneSelect::B); // bar 101 = odd
+}
+
+TEST(SceneChain, LoopMultiBarJumpMatchesIterative) {
+    poly::SceneChainConfig config{};
+    config.entryCount = 4;
+    config.entries[0] = {poly::SceneSelect::A, 3};
+    config.entries[1] = {poly::SceneSelect::Morph, 2};
+    config.entries[2] = {poly::SceneSelect::B, 5};
+    config.entries[3] = {poly::SceneSelect::A, 1};
+    config.mode = poly::ChainMode::Loop;
+
+    // Verify jump at multiple points matches iterative
+    for (int targetBar : {7, 11, 22, 33, 100, 500}) {
+        poly::SceneChainState refState{};
+        refState.update(config, 0.0);
+        poly::SceneSelect expected{};
+        for (int bar = 1; bar <= targetBar; ++bar)
+            expected = refState.update(config, bar * 4.0);
+
+        poly::SceneChainState jumpState{};
+        jumpState.update(config, 0.0);
+        poly::SceneSelect actual = jumpState.update(config, targetBar * 4.0);
+
+        EXPECT_EQ(actual, expected) << "Mismatch at bar " << targetBar;
+    }
+}
+
 // --- Scene Chain serialization ---
 
 TEST(SceneChainIO, RoundTrip) {
