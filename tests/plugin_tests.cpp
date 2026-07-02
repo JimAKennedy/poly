@@ -517,6 +517,53 @@ TEST(MicroTiming, OffsetsShiftNotePosition) {
     EXPECT_TRUE(anyShifted) << "Micro-timing offsets should shift note positions";
 }
 
+TEST(Envelope, DepthModulatesVelocity) {
+    poly::GrooveState baseState{};
+    baseState.activeLaneCount = 1;
+    baseState.seed = 42;
+    baseState.macros.density = 1.0f;
+    auto& baseLane = baseState.lanes[0];
+    baseLane.active = true;
+    baseLane.midiNote = 36;
+    baseLane.cycle = {.steps = 4, .subdivision = 4};
+    baseLane.hitCount = 4;
+    baseLane.probability = 1.0f;
+    baseLane.baseVelocity = 100;
+
+    poly::GrooveState envState = baseState;
+    envState.lanes[0].envelopeCount = 1;
+    envState.lanes[0].envelopes[0].active = true;
+    envState.lanes[0].envelopes[0].envelope.target = poly::EnvTarget::Velocity;
+    envState.lanes[0].envelopes[0].envelope.shape = poly::Shape::Sine;
+    envState.lanes[0].envelopes[0].envelope.depth = 0.5f;
+    envState.lanes[0].envelopes[0].envelope.periodBars = 1.0f;
+
+    poly::TransportContext tc{};
+    tc.ppqStart = 0.0;
+    tc.ppqEnd = 4.0;
+    tc.tempo = 120.0;
+    tc.sampleRate = 44100.0;
+    tc.blockSize = 44100;
+    tc.playing = true;
+
+    poly::Engine engine;
+    poly::NoteEventBuffer baseOut, envOut;
+    engine.renderRange(tc, baseState, baseOut);
+    engine.renderRange(tc, envState, envOut);
+
+    ASSERT_GT(baseOut.count, 0u);
+    ASSERT_EQ(baseOut.count, envOut.count);
+
+    bool anyDiff = false;
+    for (size_t i = 0; i < baseOut.count; ++i) {
+        if (baseOut.events[i].velocity != envOut.events[i].velocity) {
+            anyDiff = true;
+            break;
+        }
+    }
+    EXPECT_TRUE(anyDiff) << "Envelope with velocity target should modulate note velocities";
+}
+
 TEST(StateIO, V12FloatAccentRoundTrip) {
     auto original = makeTestState();
     original.lanes[0].accents.steps[0] = 0.75f;

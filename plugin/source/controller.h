@@ -33,6 +33,7 @@ public:
     void sendCellSizes(int laneIndex);
     void sendTimelinePattern(int laneIndex);
     void sendMicroTiming(int laneIndex);
+    void sendEnvelopeUpdate(int laneIndex, int envelopeIndex);
 
     bool hasPendingSmf() const { return !pendingSmfData_.empty(); }
     std::vector<uint8_t> consumeSmfData() { return std::move(pendingSmfData_); }

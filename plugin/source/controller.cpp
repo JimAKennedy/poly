@@ -500,4 +500,23 @@ void PolyController::sendMicroTiming(int laneIndex) {
     }
 }
 
+void PolyController::sendEnvelopeUpdate(int laneIndex, int envelopeIndex) {
+    if (laneIndex < 0 || laneIndex >= kMaxLanes)
+        return;
+    if (envelopeIndex < 0 || envelopeIndex >= kMaxEnvelopesPerLane)
+        return;
+    if (auto* msg = allocateMessage()) {
+        msg->setMessageID("EnvelopeUpdate");
+        if (auto* attrs = msg->getAttributes()) {
+            const auto& ea = cachedState_.sceneA.lanes[laneIndex].envelopes[envelopeIndex];
+            attrs->setInt("lane", laneIndex);
+            attrs->setInt("envIdx", envelopeIndex);
+            attrs->setBinary("envelope", &ea.envelope, static_cast<Steinberg::uint32>(sizeof(ea.envelope)));
+            attrs->setInt("active", ea.active ? 1 : 0);
+        }
+        sendMessage(msg);
+        msg->release();
+    }
+}
+
 } // namespace poly

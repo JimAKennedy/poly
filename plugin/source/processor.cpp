@@ -341,6 +341,12 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
         lane.microTimingMs = pendingMicroTiming_.timingMs;
         microTimingReady_.store(false, std::memory_order_release);
     }
+    if (envelopeReady_.load(std::memory_order_acquire)) {
+        auto& lane = sceneState_.sceneA.lanes[pendingEnvelope_.laneIndex];
+        lane.envelopes[pendingEnvelope_.envelopeIndex].envelope = pendingEnvelope_.envelope;
+        lane.envelopes[pendingEnvelope_.envelopeIndex].active = pendingEnvelope_.active;
+        envelopeReady_.store(false, std::memory_order_release);
+    }
 
     updateTransportContext(data);
 
@@ -696,6 +702,29 @@ Steinberg::tresult PLUGIN_API PolyProcessor::notify(Steinberg::Vst::IMessage* me
                 pendingMicroTiming_.laneIndex = static_cast<int>(laneIndex);
                 std::memcpy(pendingMicroTiming_.timingMs.data(), data, size);
                 microTimingReady_.store(true, std::memory_order_release);
+            }
+        }
+        return Steinberg::kResultOk;
+    }
+
+    if (Steinberg::FIDStringsEqual(message->getMessageID(), "EnvelopeUpdate")) {
+        if (auto* attrs = message->getAttributes()) {
+            Steinberg::int64 laneIndex = 0;
+            Steinberg::int64 envIdx = 0;
+            Steinberg::int64 activeVal = 1;
+            const void* data = nullptr;
+            Steinberg::uint32 size = 0;
+            if (attrs->getInt("lane", laneIndex) == Steinberg::kResultOk &&
+                attrs->getInt("envIdx", envIdx) == Steinberg::kResultOk &&
+                attrs->getBinary("envelope", data, size) == Steinberg::kResultOk && laneIndex >= 0 &&
+                laneIndex < kMaxLanes && envIdx >= 0 && envIdx < kMaxEnvelopesPerLane &&
+                size == sizeof(pendingEnvelope_.envelope)) {
+                pendingEnvelope_.laneIndex = static_cast<int>(laneIndex);
+                pendingEnvelope_.envelopeIndex = static_cast<int>(envIdx);
+                std::memcpy(&pendingEnvelope_.envelope, data, size);
+                attrs->getInt("active", activeVal);
+                pendingEnvelope_.active = (activeVal != 0);
+                envelopeReady_.store(true, std::memory_order_release);
             }
         }
         return Steinberg::kResultOk;

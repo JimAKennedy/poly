@@ -82,6 +82,15 @@ private:
     PendingMicroTiming pendingMicroTiming_{};
     std::atomic<bool> microTimingReady_{false};
 
+    struct PendingEnvelope {
+        int laneIndex = 0;
+        int envelopeIndex = 0;
+        Envelope envelope{};
+        bool active = true;
+    };
+    PendingEnvelope pendingEnvelope_{};
+    std::atomic<bool> envelopeReady_{false};
+
     SceneState stateSnapshot_{};
     std::atomic<bool> snapshotReady_{false};
 };

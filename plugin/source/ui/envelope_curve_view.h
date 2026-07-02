@@ -17,9 +17,16 @@ public:
     bool attached(CView* parent) override;
     bool removed(CView* parent) override;
 
+    VSTGUI::CMouseEventResult onMouseDown(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
+    VSTGUI::CMouseEventResult onMouseMoved(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
+    VSTGUI::CMouseEventResult onMouseUp(VSTGUI::CPoint& where, const VSTGUI::CButtonState& buttons) override;
+
 private:
     PolyController* controller_;
     VSTGUI::SharedPointer<VSTGUI::CVSTGUITimer> refreshTimer_;
+    bool dragging_ = false;
+    float dragStartY_ = 0.0f;
+    float dragStartDepth_ = 0.0f;
 };
 
 } // namespace poly
