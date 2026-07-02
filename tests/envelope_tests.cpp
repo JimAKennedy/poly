@@ -452,4 +452,49 @@ TEST(EnvelopeTargets, ZeroDepthNoEffectAllTargets) {
     }
 }
 
+TEST(EnvelopePhase, ZeroPeriodBarsReturnsZero) {
+    double phase = poly::computeEnvelopePhase(4.0, 0.0f, 0.0f);
+    EXPECT_EQ(phase, 0.0);
+}
+
+TEST(EnvelopePhase, NegativePeriodBarsReturnsZero) {
+    double phase = poly::computeEnvelopePhase(4.0, -1.0f, 0.0f);
+    EXPECT_EQ(phase, 0.0);
+}
+
+TEST(EnvelopeIntegration, ZeroPeriodBarsDoesNotProduceNaN) {
+    poly::LaneConfig cfg{};
+    cfg.id = 0;
+    cfg.midiNote = 36;
+    cfg.cycle.steps = 4;
+    cfg.cycle.subdivision = 4;
+    cfg.hitCount = 4;
+    cfg.baseVelocity = 100;
+    cfg.probability = 1.0f;
+    cfg.active = true;
+    cfg.envelopeCount = 1;
+    cfg.envelopes[0].active = true;
+    cfg.envelopes[0].envelope.target = poly::EnvTarget::Velocity;
+    cfg.envelopes[0].envelope.periodBars = 0.0f;
+    cfg.envelopes[0].envelope.depth = 1.0f;
+
+    poly::GrooveState state{};
+    state.activeLaneCount = 1;
+    state.lanes[0] = cfg;
+
+    poly::TransportContext tc{};
+    tc.playing = true;
+    tc.ppqStart = 0.0;
+    tc.ppqEnd = 4.0;
+    tc.tempo = 120.0;
+
+    poly::NoteEventBuffer buf;
+    poly::Engine engine;
+    engine.renderRange(tc, state, buf);
+
+    for (size_t i = 0; i < buf.count; ++i) {
+        EXPECT_FALSE(std::isnan(buf.events[i].velocity)) << "NaN velocity at event " << i;
+    }
+}
+
 } // namespace

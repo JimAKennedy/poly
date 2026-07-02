@@ -49,6 +49,8 @@ float evaluateShapeFull(const Envelope& env, float phase) {
 }
 
 double computeEnvelopePhase(double ppqPosition, float periodBars, float phaseOffset) {
+    if (periodBars <= 0.0f)
+        return 0.0;
     double periodPpq = static_cast<double>(periodBars) * 4.0;
     double raw = std::fmod(ppqPosition / periodPpq + static_cast<double>(phaseOffset), 1.0);
     if (raw < 0.0)
