@@ -59,6 +59,14 @@ private:
     std::atomic<bool> stateReady_{false};
     NoteMap pendingNoteMap_{};
     std::atomic<bool> noteMapReady_{false};
+
+    struct PendingCellSizes {
+        int laneIndex = 0;
+        std::array<int, kMaxSteps> sizes{};
+    };
+    PendingCellSizes pendingCellSizes_{};
+    std::atomic<bool> cellSizesReady_{false};
+
     SceneState stateSnapshot_{};
     std::atomic<bool> snapshotReady_{false};
 };

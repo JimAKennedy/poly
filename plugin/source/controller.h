@@ -30,6 +30,7 @@ public:
     const SceneState& cachedState() const { return cachedState_; }
     SceneState& mutableCachedState() { return cachedState_; }
     void sendNoteMap();
+    void sendCellSizes(int laneIndex);
 
     bool hasPendingSmf() const { return !pendingSmfData_.empty(); }
     std::vector<uint8_t> consumeSmfData() { return std::move(pendingSmfData_); }

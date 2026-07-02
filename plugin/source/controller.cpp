@@ -452,4 +452,19 @@ void PolyController::sendNoteMap() {
     }
 }
 
+void PolyController::sendCellSizes(int laneIndex) {
+    if (laneIndex < 0 || laneIndex >= kMaxLanes)
+        return;
+    if (auto* msg = allocateMessage()) {
+        msg->setMessageID("CellSizesUpdate");
+        if (auto* attrs = msg->getAttributes()) {
+            attrs->setInt("lane", laneIndex);
+            attrs->setBinary("sizes", cachedState_.sceneA.lanes[laneIndex].cellSizes.data(),
+                             static_cast<Steinberg::uint32>(sizeof(cachedState_.sceneA.lanes[laneIndex].cellSizes)));
+        }
+        sendMessage(msg);
+        msg->release();
+    }
+}
+
 } // namespace poly

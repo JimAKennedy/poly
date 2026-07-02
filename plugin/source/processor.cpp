@@ -325,6 +325,11 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
         sceneState_.noteMap = pendingNoteMap_;
         noteMapReady_.store(false, std::memory_order_release);
     }
+    if (cellSizesReady_.load(std::memory_order_acquire)) {
+        auto& lane = sceneState_.sceneA.lanes[pendingCellSizes_.laneIndex];
+        lane.cellSizes = pendingCellSizes_.sizes;
+        cellSizesReady_.store(false, std::memory_order_release);
+    }
 
     updateTransportContext(data);
 
@@ -629,6 +634,22 @@ Steinberg::tresult PLUGIN_API PolyProcessor::notify(Steinberg::Vst::IMessage* me
             if (attrs->getBinary("map", data, size) == Steinberg::kResultOk && size == sizeof(pendingNoteMap_.map)) {
                 std::memcpy(pendingNoteMap_.map.data(), data, size);
                 noteMapReady_.store(true, std::memory_order_release);
+            }
+        }
+        return Steinberg::kResultOk;
+    }
+
+    if (Steinberg::FIDStringsEqual(message->getMessageID(), "CellSizesUpdate")) {
+        if (auto* attrs = message->getAttributes()) {
+            Steinberg::int64 laneIndex = 0;
+            const void* data = nullptr;
+            Steinberg::uint32 size = 0;
+            if (attrs->getInt("lane", laneIndex) == Steinberg::kResultOk &&
+                attrs->getBinary("sizes", data, size) == Steinberg::kResultOk && laneIndex >= 0 &&
+                laneIndex < kMaxLanes && size == sizeof(pendingCellSizes_.sizes)) {
+                pendingCellSizes_.laneIndex = static_cast<int>(laneIndex);
+                std::memcpy(pendingCellSizes_.sizes.data(), data, size);
+                cellSizesReady_.store(true, std::memory_order_release);
             }
         }
         return Steinberg::kResultOk;
