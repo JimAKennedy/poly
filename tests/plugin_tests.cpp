@@ -1,9 +1,12 @@
+#include <algorithm>
+#include <cmath>
 #include <cstring>
 #include <vector>
 
 #include <gtest/gtest.h>
 
 #include "poly/bridge.h"
+#include "poly/engine.h"
 #include "poly/state_io.h"
 #include "poly/types.h"
 
@@ -384,6 +387,181 @@ TEST(StateIO, V11AccentBitmaskBackwardCompat) {
     EXPECT_FLOAT_EQ(restored.lanes[0].accents.steps[2], 1.0f);
     EXPECT_FLOAT_EQ(restored.lanes[0].accents.steps[3], 0.0f);
     EXPECT_FLOAT_EQ(restored.lanes[0].accents.steps[5], 1.0f);
+}
+
+TEST(CellSizes, AksakProducesDifferentTiming) {
+    poly::GrooveState equalState{};
+    equalState.activeLaneCount = 1;
+    equalState.seed = 42;
+    equalState.macros.density = 1.0f;
+    auto& eqLane = equalState.lanes[0];
+    eqLane.active = true;
+    eqLane.midiNote = 36;
+    eqLane.cycle = {.steps = 3, .subdivision = 8};
+    eqLane.hitCount = 3;
+    eqLane.probability = 1.0f;
+    eqLane.baseVelocity = 100;
+    eqLane.cellCount = 0;
+
+    poly::GrooveState aksakState = equalState;
+    auto& akLane = aksakState.lanes[0];
+    akLane.cellCount = 3;
+    akLane.cellSizes[0] = 2;
+    akLane.cellSizes[1] = 2;
+    akLane.cellSizes[2] = 3;
+
+    poly::TransportContext tc{};
+    tc.ppqStart = 0.0;
+    tc.ppqEnd = 4.0;
+    tc.tempo = 120.0;
+    tc.sampleRate = 44100.0;
+    tc.blockSize = 44100;
+    tc.playing = true;
+
+    poly::Engine engine;
+    poly::NoteEventBuffer eqOut, akOut;
+    engine.renderRange(tc, equalState, eqOut);
+    engine.renderRange(tc, aksakState, akOut);
+
+    ASSERT_GT(eqOut.count, 0u);
+    ASSERT_GT(akOut.count, 0u);
+
+    bool timingsDiffer = false;
+    size_t minCount = std::min(eqOut.count, akOut.count);
+    for (size_t i = 0; i < minCount; ++i) {
+        if (std::abs(eqOut.events[i].ppqPosition - akOut.events[i].ppqPosition) > 1e-6) {
+            timingsDiffer = true;
+            break;
+        }
+    }
+    if (eqOut.count != akOut.count)
+        timingsDiffer = true;
+    EXPECT_TRUE(timingsDiffer) << "Aksak cellSizes should produce different note timing than equal cells";
+}
+
+TEST(Timeline, FixedPatternSelectsSteps) {
+    poly::GrooveState state{};
+    state.activeLaneCount = 1;
+    state.seed = 42;
+    state.macros.density = 1.0f;
+    auto& lane = state.lanes[0];
+    lane.active = true;
+    lane.midiNote = 36;
+    lane.cycle = {.steps = 4, .subdivision = 4};
+    lane.hitCount = 4;
+    lane.probability = 1.0f;
+    lane.baseVelocity = 100;
+    lane.timeline = true;
+    lane.fixedPatternLength = 4;
+    lane.fixedPattern[0] = true;
+    lane.fixedPattern[1] = false;
+    lane.fixedPattern[2] = true;
+    lane.fixedPattern[3] = false;
+
+    poly::TransportContext tc{};
+    tc.ppqStart = 0.0;
+    tc.ppqEnd = 4.0;
+    tc.tempo = 120.0;
+    tc.sampleRate = 44100.0;
+    tc.blockSize = 44100;
+    tc.playing = true;
+
+    poly::Engine engine;
+    poly::NoteEventBuffer out;
+    engine.renderRange(tc, state, out);
+
+    ASSERT_GT(out.count, 0u);
+    EXPECT_LE(out.count, 2u) << "Only steps 0 and 2 are on; should produce at most 2 notes";
+}
+
+TEST(MicroTiming, OffsetsShiftNotePosition) {
+    poly::GrooveState baseState{};
+    baseState.activeLaneCount = 1;
+    baseState.seed = 42;
+    baseState.macros.density = 1.0f;
+    auto& baseLane = baseState.lanes[0];
+    baseLane.active = true;
+    baseLane.midiNote = 36;
+    baseLane.cycle = {.steps = 4, .subdivision = 4};
+    baseLane.hitCount = 4;
+    baseLane.probability = 1.0f;
+    baseLane.baseVelocity = 100;
+
+    poly::GrooveState offsetState = baseState;
+    for (int i = 0; i < 4; ++i)
+        offsetState.lanes[0].microTimingMs[i] = 10.0f;
+
+    poly::TransportContext tc{};
+    tc.ppqStart = 0.0;
+    tc.ppqEnd = 4.0;
+    tc.tempo = 120.0;
+    tc.sampleRate = 44100.0;
+    tc.blockSize = 44100;
+    tc.playing = true;
+
+    poly::Engine engine;
+    poly::NoteEventBuffer baseOut, offsetOut;
+    engine.renderRange(tc, baseState, baseOut);
+    engine.renderRange(tc, offsetState, offsetOut);
+
+    ASSERT_GT(baseOut.count, 0u);
+    ASSERT_EQ(baseOut.count, offsetOut.count);
+
+    bool anyShifted = false;
+    for (size_t i = 0; i < baseOut.count; ++i) {
+        if (std::abs(baseOut.events[i].ppqPosition - offsetOut.events[i].ppqPosition) > 1e-9) {
+            anyShifted = true;
+            break;
+        }
+    }
+    EXPECT_TRUE(anyShifted) << "Micro-timing offsets should shift note positions";
+}
+
+TEST(Envelope, DepthModulatesVelocity) {
+    poly::GrooveState baseState{};
+    baseState.activeLaneCount = 1;
+    baseState.seed = 42;
+    baseState.macros.density = 1.0f;
+    auto& baseLane = baseState.lanes[0];
+    baseLane.active = true;
+    baseLane.midiNote = 36;
+    baseLane.cycle = {.steps = 4, .subdivision = 4};
+    baseLane.hitCount = 4;
+    baseLane.probability = 1.0f;
+    baseLane.baseVelocity = 100;
+
+    poly::GrooveState envState = baseState;
+    envState.lanes[0].envelopeCount = 1;
+    envState.lanes[0].envelopes[0].active = true;
+    envState.lanes[0].envelopes[0].envelope.target = poly::EnvTarget::Velocity;
+    envState.lanes[0].envelopes[0].envelope.shape = poly::Shape::Sine;
+    envState.lanes[0].envelopes[0].envelope.depth = 0.5f;
+    envState.lanes[0].envelopes[0].envelope.periodBars = 1.0f;
+
+    poly::TransportContext tc{};
+    tc.ppqStart = 0.0;
+    tc.ppqEnd = 4.0;
+    tc.tempo = 120.0;
+    tc.sampleRate = 44100.0;
+    tc.blockSize = 44100;
+    tc.playing = true;
+
+    poly::Engine engine;
+    poly::NoteEventBuffer baseOut, envOut;
+    engine.renderRange(tc, baseState, baseOut);
+    engine.renderRange(tc, envState, envOut);
+
+    ASSERT_GT(baseOut.count, 0u);
+    ASSERT_EQ(baseOut.count, envOut.count);
+
+    bool anyDiff = false;
+    for (size_t i = 0; i < baseOut.count; ++i) {
+        if (baseOut.events[i].velocity != envOut.events[i].velocity) {
+            anyDiff = true;
+            break;
+        }
+    }
+    EXPECT_TRUE(anyDiff) << "Envelope with velocity target should modulate note velocities";
 }
 
 TEST(StateIO, V12FloatAccentRoundTrip) {

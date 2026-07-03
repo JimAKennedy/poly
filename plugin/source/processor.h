@@ -59,6 +59,38 @@ private:
     std::atomic<bool> stateReady_{false};
     NoteMap pendingNoteMap_{};
     std::atomic<bool> noteMapReady_{false};
+
+    struct PendingCellSizes {
+        int laneIndex = 0;
+        std::array<int, kMaxSteps> sizes{};
+    };
+    PendingCellSizes pendingCellSizes_{};
+    std::atomic<bool> cellSizesReady_{false};
+
+    struct PendingTimelinePattern {
+        int laneIndex = 0;
+        std::array<bool, kMaxSteps> pattern{};
+        int patternLength = 0;
+    };
+    PendingTimelinePattern pendingTimeline_{};
+    std::atomic<bool> timelineReady_{false};
+
+    struct PendingMicroTiming {
+        int laneIndex = 0;
+        std::array<float, kMaxSteps> timingMs{};
+    };
+    PendingMicroTiming pendingMicroTiming_{};
+    std::atomic<bool> microTimingReady_{false};
+
+    struct PendingEnvelope {
+        int laneIndex = 0;
+        int envelopeIndex = 0;
+        Envelope envelope{};
+        bool active = true;
+    };
+    PendingEnvelope pendingEnvelope_{};
+    std::atomic<bool> envelopeReady_{false};
+
     SceneState stateSnapshot_{};
     std::atomic<bool> snapshotReady_{false};
 };

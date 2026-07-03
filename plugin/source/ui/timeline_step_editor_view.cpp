@@ -61,7 +61,7 @@ CRect TimelineStepEditorView::stepRect(int stepIdx, int totalSteps) const {
 
 int TimelineStepEditorView::hitTestStep(const CPoint& where) const {
     int selectedLane = static_cast<int>(std::round(controller_->getParamNormalized(ParamIDs::kSelectedLane) * 7.0));
-    const auto& cfg = controller_->cachedState().sceneA.lanes[selectedLane];
+    const auto& cfg = controller_->activeScene().lanes[selectedLane];
     if (!cfg.timeline)
         return -1;
     int patLen = cfg.fixedPatternLength > 0 ? cfg.fixedPatternLength : cfg.cycle.steps;
@@ -82,8 +82,7 @@ void TimelineStepEditorView::draw(CDrawContext* context) {
 
     int selectedLane = static_cast<int>(std::round(controller_->getParamNormalized(ParamIDs::kSelectedLane) * 7.0));
     auto laneColor = kLaneColors[selectedLane];
-    const auto& state = controller_->cachedState();
-    const auto& cfg = state.sceneA.lanes[selectedLane];
+    const auto& cfg = controller_->activeScene().lanes[selectedLane];
 
     auto labelFont = makeOwned<CFontDesc>("Arial", 8.0);
     context->setFont(labelFont);
@@ -143,8 +142,9 @@ CMouseEventResult TimelineStepEditorView::onMouseDown(CPoint& where, const CButt
         return kMouseEventNotHandled;
 
     int selectedLane = static_cast<int>(std::round(controller_->getParamNormalized(ParamIDs::kSelectedLane) * 7.0));
-    auto& cfg = controller_->mutableCachedState().sceneA.lanes[selectedLane];
+    auto& cfg = controller_->mutableActiveScene().lanes[selectedLane];
     cfg.fixedPattern[step] = !cfg.fixedPattern[step];
+    controller_->sendTimelinePattern(selectedLane);
     invalid();
     return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
 }

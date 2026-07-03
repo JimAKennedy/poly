@@ -65,8 +65,7 @@ void CellEditorView::draw(CDrawContext* context) {
 
     int selectedLane = static_cast<int>(std::round(controller_->getParamNormalized(ParamIDs::kSelectedLane) * 7.0));
     auto laneColor = kLaneColors[selectedLane];
-    const auto& state = controller_->cachedState();
-    const auto& cfg = state.sceneA.lanes[selectedLane];
+    const auto& cfg = controller_->activeScene().lanes[selectedLane];
     int cellCount = cfg.cellCount;
 
     auto labelFont = makeOwned<CFontDesc>("Arial", 8.0);
@@ -160,7 +159,7 @@ void CellEditorView::draw(CDrawContext* context) {
 int CellEditorView::hitTestCell(const CPoint& where) const {
     auto bounds = getViewSize();
     int selectedLane = static_cast<int>(std::round(controller_->getParamNormalized(ParamIDs::kSelectedLane) * 7.0));
-    const auto& cfg = controller_->cachedState().sceneA.lanes[selectedLane];
+    const auto& cfg = controller_->activeScene().lanes[selectedLane];
     if (cfg.cellCount <= 0)
         return -1;
 
@@ -230,11 +229,39 @@ CMouseEventResult CellEditorView::onMouseDown(CPoint& where, const CButtonState&
 
     int cell = hitTestCell(where);
     if (cell >= 0) {
-        invalid();
-        return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+        dragCell_ = cell;
+        dragLane_ = selectedLane;
+        dragStartY_ = where.y;
+        dragStartSize_ = std::max(1, controller_->activeScene().lanes[selectedLane].cellSizes[cell]);
+        return kMouseEventHandled;
     }
 
     return kMouseEventNotHandled;
+}
+
+CMouseEventResult CellEditorView::onMouseMoved(CPoint& where, const CButtonState& /*buttons*/) {
+    if (dragCell_ < 0)
+        return kMouseEventNotHandled;
+
+    double delta = (dragStartY_ - where.y) / kDragPixelsPerUnit;
+    int newSize = std::max(1, dragStartSize_ + static_cast<int>(std::round(delta)));
+
+    auto& lane = controller_->mutableActiveScene().lanes[dragLane_];
+    if (lane.cellSizes[dragCell_] != newSize) {
+        lane.cellSizes[dragCell_] = newSize;
+        controller_->sendCellSizes(dragLane_);
+        invalid();
+    }
+    return kMouseEventHandled;
+}
+
+CMouseEventResult CellEditorView::onMouseUp(CPoint& /*where*/, const CButtonState& /*buttons*/) {
+    if (dragCell_ < 0)
+        return kMouseEventNotHandled;
+
+    dragCell_ = -1;
+    dragLane_ = -1;
+    return kMouseEventHandled;
 }
 
 } // namespace poly
