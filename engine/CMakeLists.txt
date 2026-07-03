@@ -7,6 +7,7 @@ add_library(poly_engine STATIC
     src/macro.cpp
     src/midi_capture.cpp
     src/presets.cpp
+    src/sanitize.cpp
     src/scene.cpp
     src/smf_writer.cpp
 )

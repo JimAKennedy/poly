@@ -353,9 +353,10 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
     if (!tc.playing || tc.ppqEnd <= tc.ppqStart)
         return;
 
-    for (int lane = 0; lane < state.activeLaneCount; ++lane) {
+    const int laneCount = std::clamp(state.activeLaneCount, 0, kMaxLanes);
+    for (int lane = 0; lane < laneCount; ++lane) {
         const auto& cfg = state.lanes[lane];
-        if (!cfg.active || cfg.cycle.steps <= 0 || cfg.cycle.subdivision <= 0)
+        if (!cfg.active || cfg.cycle.steps <= 0 || cfg.cycle.steps > kMaxSteps || cfg.cycle.subdivision <= 0)
             continue;
 
         auto ctx = prepareLaneContext(cfg, state, lane, tc);

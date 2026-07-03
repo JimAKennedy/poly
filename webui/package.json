@@ -1,0 +1,12 @@
+{
+  "name": "poly-webui",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Poly plugin web UI — host-agnostic bundle + Playwright tests",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1"
+  }
+}

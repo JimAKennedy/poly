@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Poly — Web UI</title>
+  <link rel="stylesheet" href="ui.css">
+</head>
+<body>
+  <div id="win" role="application" aria-label="Poly plugin window — desk and cloth modes">
+    <div id="chrome">
+      <span class="logo">POLY</span>
+      <button id="play" aria-label="Play or stop"><svg width="12" height="12" viewBox="0 0 14 14"><path id="picon" d="M3 2 L12 7 L3 12 Z" fill="currentColor"/></svg></button>
+      <div class="tempo"><span id="tempoVal">126.0</span><small>BPM · 12/8</small></div>
+      <span class="preset">Preset · <b id="presetName">—</b> · seed <span id="seedVal">—</span></span>
+      <div id="modes">
+        <button class="chip" id="mCloth">Cloth</button>
+        <button class="chip on" id="mDesk">Desk</button>
+      </div>
+      <div class="right">
+        <button class="chip on" id="scA">A</button>
+        <button class="chip" id="scB">B</button>
+        <button class="chip" id="learnBtn">Learn</button>
+        <div id="conv"><b>—</b><span>bars to align</span></div>
+      </div>
+    </div>
+
+    <div class="mode" id="cloth">
+      <canvas id="loom"></canvas>
+      <div id="tags"></div>
+      <div class="capline">Capture · <b>10 bars</b> · drag cloth to DAW</div>
+      <div class="ann" id="annA">the bell holds the timeline — seven strokes over twelve, and every part hears it as home</div>
+      <div class="ann" id="annB">the kick walks in quarters: a 3:2 cross against the bell’s twelve — watch the red blocks slide against the gold</div>
+      <div class="ann" id="annC">every band meets the gold selvage together — ten bars, one convergence</div>
+      <div class="hintline">click a band to open its strip on the desk</div>
+    </div>
+
+    <div class="mode on" id="desk"></div>
+  </div>
+
+  <script src="host-iface.js"></script>
+  <script src="groove-math.js"></script>
+  <script src="mock-host.js"></script>
+  <script src="plugin-host.js"></script>
+  <script>
+    // The embedded webview defines window.__POLY_EMBEDDED__ before loading
+    // this page; a plain browser gets the mock host (WebAudio engine model).
+    window.PolyHost = window.__POLY_EMBEDDED__ ? window.PolyPluginHost : window.PolyMockHost;
+  </script>
+  <script src="ui.js"></script>
+</body>
+</html>

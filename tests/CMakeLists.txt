@@ -19,6 +19,7 @@ add_executable(poly_tests
     midi_capture_tests.cpp
     plugin_tests.cpp
     preset_tests.cpp
+    sanitize_tests.cpp
     scene_tests.cpp
     smf_writer_tests.cpp
 )
