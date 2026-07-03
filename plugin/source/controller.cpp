@@ -452,4 +452,72 @@ void PolyController::sendNoteMap() {
     }
 }
 
+void PolyController::sendCellSizes(int laneIndex) {
+    if (laneIndex < 0 || laneIndex >= kMaxLanes)
+        return;
+    if (auto* msg = allocateMessage()) {
+        msg->setMessageID("CellSizesUpdate");
+        if (auto* attrs = msg->getAttributes()) {
+            attrs->setInt("lane", laneIndex);
+            const auto& scene = activeScene();
+            attrs->setBinary("sizes", scene.lanes[laneIndex].cellSizes.data(),
+                             static_cast<Steinberg::uint32>(sizeof(scene.lanes[laneIndex].cellSizes)));
+        }
+        sendMessage(msg);
+        msg->release();
+    }
+}
+
+void PolyController::sendTimelinePattern(int laneIndex) {
+    if (laneIndex < 0 || laneIndex >= kMaxLanes)
+        return;
+    if (auto* msg = allocateMessage()) {
+        msg->setMessageID("TimelinePatternUpdate");
+        if (auto* attrs = msg->getAttributes()) {
+            const auto& lane = activeScene().lanes[laneIndex];
+            attrs->setInt("lane", laneIndex);
+            attrs->setInt("patLen", lane.fixedPatternLength);
+            attrs->setBinary("pattern", lane.fixedPattern.data(),
+                             static_cast<Steinberg::uint32>(sizeof(lane.fixedPattern)));
+        }
+        sendMessage(msg);
+        msg->release();
+    }
+}
+
+void PolyController::sendMicroTiming(int laneIndex) {
+    if (laneIndex < 0 || laneIndex >= kMaxLanes)
+        return;
+    if (auto* msg = allocateMessage()) {
+        msg->setMessageID("MicroTimingUpdate");
+        if (auto* attrs = msg->getAttributes()) {
+            attrs->setInt("lane", laneIndex);
+            const auto& scene = activeScene();
+            attrs->setBinary("timing", scene.lanes[laneIndex].microTimingMs.data(),
+                             static_cast<Steinberg::uint32>(sizeof(scene.lanes[laneIndex].microTimingMs)));
+        }
+        sendMessage(msg);
+        msg->release();
+    }
+}
+
+void PolyController::sendEnvelopeUpdate(int laneIndex, int envelopeIndex) {
+    if (laneIndex < 0 || laneIndex >= kMaxLanes)
+        return;
+    if (envelopeIndex < 0 || envelopeIndex >= kMaxEnvelopesPerLane)
+        return;
+    if (auto* msg = allocateMessage()) {
+        msg->setMessageID("EnvelopeUpdate");
+        if (auto* attrs = msg->getAttributes()) {
+            const auto& ea = activeScene().lanes[laneIndex].envelopes[envelopeIndex];
+            attrs->setInt("lane", laneIndex);
+            attrs->setInt("envIdx", envelopeIndex);
+            attrs->setBinary("envelope", &ea.envelope, static_cast<Steinberg::uint32>(sizeof(ea.envelope)));
+            attrs->setInt("active", ea.active ? 1 : 0);
+        }
+        sendMessage(msg);
+        msg->release();
+    }
+}
+
 } // namespace poly

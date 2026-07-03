@@ -325,6 +325,29 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
         sceneState_.noteMap = pendingNoteMap_;
         noteMapReady_.store(false, std::memory_order_release);
     }
+    auto& activeScene = (sceneState_.select == SceneSelect::B) ? sceneState_.sceneB : sceneState_.sceneA;
+    if (cellSizesReady_.load(std::memory_order_acquire)) {
+        auto& lane = activeScene.lanes[pendingCellSizes_.laneIndex];
+        lane.cellSizes = pendingCellSizes_.sizes;
+        cellSizesReady_.store(false, std::memory_order_release);
+    }
+    if (timelineReady_.load(std::memory_order_acquire)) {
+        auto& lane = activeScene.lanes[pendingTimeline_.laneIndex];
+        lane.fixedPattern = pendingTimeline_.pattern;
+        lane.fixedPatternLength = pendingTimeline_.patternLength;
+        timelineReady_.store(false, std::memory_order_release);
+    }
+    if (microTimingReady_.load(std::memory_order_acquire)) {
+        auto& lane = activeScene.lanes[pendingMicroTiming_.laneIndex];
+        lane.microTimingMs = pendingMicroTiming_.timingMs;
+        microTimingReady_.store(false, std::memory_order_release);
+    }
+    if (envelopeReady_.load(std::memory_order_acquire)) {
+        auto& lane = activeScene.lanes[pendingEnvelope_.laneIndex];
+        lane.envelopes[pendingEnvelope_.envelopeIndex].envelope = pendingEnvelope_.envelope;
+        lane.envelopes[pendingEnvelope_.envelopeIndex].active = pendingEnvelope_.active;
+        envelopeReady_.store(false, std::memory_order_release);
+    }
 
     updateTransportContext(data);
 
@@ -345,6 +368,13 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
                 data.outputEvents->addEvent(ev);
             }
             pendingNoteOffs_.clear();
+        }
+        if (exportTriggered_ && !exportReady_.load(std::memory_order_acquire)) {
+            exportTriggered_ = false;
+            exportEventCount_ =
+                captureBuffer_.extractLastBars(captureLengthBars_, exportEvents_.data(), exportEvents_.size());
+            exportTempo_ = tc_.tempo;
+            exportReady_.store(true, std::memory_order_release);
         }
         wasPlaying_ = false;
         return Steinberg::kResultOk;
@@ -629,6 +659,80 @@ Steinberg::tresult PLUGIN_API PolyProcessor::notify(Steinberg::Vst::IMessage* me
             if (attrs->getBinary("map", data, size) == Steinberg::kResultOk && size == sizeof(pendingNoteMap_.map)) {
                 std::memcpy(pendingNoteMap_.map.data(), data, size);
                 noteMapReady_.store(true, std::memory_order_release);
+            }
+        }
+        return Steinberg::kResultOk;
+    }
+
+    if (Steinberg::FIDStringsEqual(message->getMessageID(), "CellSizesUpdate")) {
+        if (auto* attrs = message->getAttributes()) {
+            Steinberg::int64 laneIndex = 0;
+            const void* data = nullptr;
+            Steinberg::uint32 size = 0;
+            if (attrs->getInt("lane", laneIndex) == Steinberg::kResultOk &&
+                attrs->getBinary("sizes", data, size) == Steinberg::kResultOk && laneIndex >= 0 &&
+                laneIndex < kMaxLanes && size == sizeof(pendingCellSizes_.sizes)) {
+                pendingCellSizes_.laneIndex = static_cast<int>(laneIndex);
+                std::memcpy(pendingCellSizes_.sizes.data(), data, size);
+                cellSizesReady_.store(true, std::memory_order_release);
+            }
+        }
+        return Steinberg::kResultOk;
+    }
+
+    if (Steinberg::FIDStringsEqual(message->getMessageID(), "TimelinePatternUpdate")) {
+        if (auto* attrs = message->getAttributes()) {
+            Steinberg::int64 laneIndex = 0;
+            Steinberg::int64 patLen = 0;
+            const void* data = nullptr;
+            Steinberg::uint32 size = 0;
+            if (attrs->getInt("lane", laneIndex) == Steinberg::kResultOk &&
+                attrs->getInt("patLen", patLen) == Steinberg::kResultOk &&
+                attrs->getBinary("pattern", data, size) == Steinberg::kResultOk && laneIndex >= 0 &&
+                laneIndex < kMaxLanes && size == sizeof(pendingTimeline_.pattern)) {
+                pendingTimeline_.laneIndex = static_cast<int>(laneIndex);
+                pendingTimeline_.patternLength = static_cast<int>(patLen);
+                std::memcpy(pendingTimeline_.pattern.data(), data, size);
+                timelineReady_.store(true, std::memory_order_release);
+            }
+        }
+        return Steinberg::kResultOk;
+    }
+
+    if (Steinberg::FIDStringsEqual(message->getMessageID(), "MicroTimingUpdate")) {
+        if (auto* attrs = message->getAttributes()) {
+            Steinberg::int64 laneIndex = 0;
+            const void* data = nullptr;
+            Steinberg::uint32 size = 0;
+            if (attrs->getInt("lane", laneIndex) == Steinberg::kResultOk &&
+                attrs->getBinary("timing", data, size) == Steinberg::kResultOk && laneIndex >= 0 &&
+                laneIndex < kMaxLanes && size == sizeof(pendingMicroTiming_.timingMs)) {
+                pendingMicroTiming_.laneIndex = static_cast<int>(laneIndex);
+                std::memcpy(pendingMicroTiming_.timingMs.data(), data, size);
+                microTimingReady_.store(true, std::memory_order_release);
+            }
+        }
+        return Steinberg::kResultOk;
+    }
+
+    if (Steinberg::FIDStringsEqual(message->getMessageID(), "EnvelopeUpdate")) {
+        if (auto* attrs = message->getAttributes()) {
+            Steinberg::int64 laneIndex = 0;
+            Steinberg::int64 envIdx = 0;
+            Steinberg::int64 activeVal = 1;
+            const void* data = nullptr;
+            Steinberg::uint32 size = 0;
+            if (attrs->getInt("lane", laneIndex) == Steinberg::kResultOk &&
+                attrs->getInt("envIdx", envIdx) == Steinberg::kResultOk &&
+                attrs->getBinary("envelope", data, size) == Steinberg::kResultOk && laneIndex >= 0 &&
+                laneIndex < kMaxLanes && envIdx >= 0 && envIdx < kMaxEnvelopesPerLane &&
+                size == sizeof(pendingEnvelope_.envelope)) {
+                pendingEnvelope_.laneIndex = static_cast<int>(laneIndex);
+                pendingEnvelope_.envelopeIndex = static_cast<int>(envIdx);
+                std::memcpy(&pendingEnvelope_.envelope, data, size);
+                attrs->getInt("active", activeVal);
+                pendingEnvelope_.active = (activeVal != 0);
+                envelopeReady_.store(true, std::memory_order_release);
             }
         }
         return Steinberg::kResultOk;

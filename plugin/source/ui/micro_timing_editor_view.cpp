@@ -61,7 +61,7 @@ CRect MicroTimingEditorView::stepBarRect(int stepIdx, int totalSteps) const {
 
 int MicroTimingEditorView::hitTestStep(const CPoint& where) const {
     int selectedLane = static_cast<int>(std::round(controller_->getParamNormalized(ParamIDs::kSelectedLane) * 7.0));
-    const auto& cfg = controller_->cachedState().sceneA.lanes[selectedLane];
+    const auto& cfg = controller_->activeScene().lanes[selectedLane];
     int steps = cfg.cycle.steps;
     if (steps <= 0)
         return -1;
@@ -93,7 +93,7 @@ void MicroTimingEditorView::draw(CDrawContext* context) {
 
     int selectedLane = static_cast<int>(std::round(controller_->getParamNormalized(ParamIDs::kSelectedLane) * 7.0));
     auto laneColor = kLaneColors[selectedLane];
-    const auto& cfg = controller_->cachedState().sceneA.lanes[selectedLane];
+    const auto& cfg = controller_->activeScene().lanes[selectedLane];
     int steps = cfg.cycle.steps;
 
     auto labelFont = makeOwned<CFontDesc>("Arial", 8.0);
@@ -163,15 +163,16 @@ CMouseEventResult MicroTimingEditorView::onMouseDown(CPoint& where, const CButto
 
     if (buttons & kDoubleClick) {
         int selectedLane = static_cast<int>(std::round(controller_->getParamNormalized(ParamIDs::kSelectedLane) * 7.0));
-        auto& cfg = controller_->mutableCachedState().sceneA.lanes[selectedLane];
+        auto& cfg = controller_->mutableActiveScene().lanes[selectedLane];
         cfg.microTimingMs[step] = 0.0f;
+        controller_->sendMicroTiming(selectedLane);
         invalid();
         return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
     }
 
     dragStep_ = step;
     int selectedLane = static_cast<int>(std::round(controller_->getParamNormalized(ParamIDs::kSelectedLane) * 7.0));
-    auto& cfg = controller_->mutableCachedState().sceneA.lanes[selectedLane];
+    auto& cfg = controller_->mutableActiveScene().lanes[selectedLane];
     cfg.microTimingMs[step] = yToMs(where.y);
     invalid();
     return kMouseEventHandled;
@@ -182,7 +183,7 @@ CMouseEventResult MicroTimingEditorView::onMouseMoved(CPoint& where, const CButt
         return kMouseEventNotHandled;
 
     int selectedLane = static_cast<int>(std::round(controller_->getParamNormalized(ParamIDs::kSelectedLane) * 7.0));
-    auto& cfg = controller_->mutableCachedState().sceneA.lanes[selectedLane];
+    auto& cfg = controller_->mutableActiveScene().lanes[selectedLane];
     cfg.microTimingMs[dragStep_] = yToMs(where.y);
     invalid();
     return kMouseEventHandled;
@@ -191,6 +192,8 @@ CMouseEventResult MicroTimingEditorView::onMouseMoved(CPoint& where, const CButt
 CMouseEventResult MicroTimingEditorView::onMouseUp(CPoint& where, const CButtonState& buttons) {
     if (dragStep_ < 0)
         return kMouseEventNotHandled;
+    int selectedLane = static_cast<int>(std::round(controller_->getParamNormalized(ParamIDs::kSelectedLane) * 7.0));
+    controller_->sendMicroTiming(selectedLane);
     dragStep_ = -1;
     return kMouseEventHandled;
 }

@@ -11,6 +11,8 @@
 #include "../plugids.h"
 #include "poly/envelope.h"
 
+using namespace VSTGUI;
+
 namespace poly {
 
 static constexpr int kCurvePoints = 64;
@@ -44,8 +46,6 @@ bool EnvelopeCurveView::removed(CView* parent) {
 }
 
 void EnvelopeCurveView::draw(VSTGUI::CDrawContext* context) {
-    using namespace VSTGUI;
-
     auto bounds = getViewSize();
 
     context->setFillColor(CColor(0x1E, 0x1E, 0x26, 0xFF));
@@ -74,7 +74,7 @@ void EnvelopeCurveView::draw(VSTGUI::CDrawContext* context) {
     };
 
     int selectedLane = static_cast<int>(std::round(controller_->getParamNormalized(ParamIDs::kSelectedLane) * 7.0));
-    const auto& cachedScene = controller_->cachedState().sceneA;
+    const auto& cachedScene = controller_->activeScene();
 
     for (int lane = 0; lane < kMaxLanes; ++lane) {
         auto activeId = ParamIDs::laneParam(lane, ParamIDs::kActive);
@@ -145,6 +145,53 @@ void EnvelopeCurveView::draw(VSTGUI::CDrawContext* context) {
     context->drawString("Envelope", labelRect, kCenterText);
 
     setDirty(false);
+}
+
+CMouseEventResult EnvelopeCurveView::onMouseDown(CPoint& where, const CButtonState& buttons) {
+    int selectedLane = static_cast<int>(std::round(controller_->getParamNormalized(ParamIDs::kSelectedLane) * 7.0));
+    auto& lane = controller_->mutableActiveScene().lanes[selectedLane];
+
+    if (buttons.isRightButton()) {
+        if (lane.envelopeCount > 0) {
+            lane.envelopes[0].envelope.depth = 1.0f;
+            controller_->sendEnvelopeUpdate(selectedLane, 0);
+        }
+        invalid();
+        return kMouseDownEventHandledButDontNeedMovedOrUpEvents;
+    }
+
+    if (lane.envelopeCount == 0) {
+        lane.envelopeCount = 1;
+        lane.envelopes[0].active = true;
+    }
+
+    dragging_ = true;
+    dragStartY_ = static_cast<float>(where.y);
+    dragStartDepth_ = lane.envelopes[0].envelope.depth;
+    return kMouseEventHandled;
+}
+
+CMouseEventResult EnvelopeCurveView::onMouseMoved(CPoint& where, const CButtonState& buttons) {
+    if (!dragging_)
+        return kMouseEventNotHandled;
+
+    int selectedLane = static_cast<int>(std::round(controller_->getParamNormalized(ParamIDs::kSelectedLane) * 7.0));
+    auto& lane = controller_->mutableActiveScene().lanes[selectedLane];
+
+    float dy = dragStartY_ - static_cast<float>(where.y);
+    float newDepth = std::clamp(dragStartDepth_ + dy * 0.01f, 0.0f, 1.0f);
+    lane.envelopes[0].envelope.depth = newDepth;
+    invalid();
+    return kMouseEventHandled;
+}
+
+CMouseEventResult EnvelopeCurveView::onMouseUp(CPoint& where, const CButtonState& buttons) {
+    if (!dragging_)
+        return kMouseEventNotHandled;
+    dragging_ = false;
+    int selectedLane = static_cast<int>(std::round(controller_->getParamNormalized(ParamIDs::kSelectedLane) * 7.0));
+    controller_->sendEnvelopeUpdate(selectedLane, 0);
+    return kMouseEventHandled;
 }
 
 } // namespace poly

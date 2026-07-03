@@ -62,7 +62,7 @@ const char* NoteMapView::gmDrumName(int16_t note) {
 
 void NoteMapView::buildRows() {
     auto* polyCtrl = static_cast<PolyController*>(controller_);
-    const auto& gs = polyCtrl->cachedState().sceneA;
+    const auto& gs = polyCtrl->activeScene();
     rowCount_ = 0;
     for (int lane = 0; lane < kMaxLanes; ++lane) {
         rows_[static_cast<size_t>(rowCount_)] = {gs.lanes[lane].midiNote, lane};
