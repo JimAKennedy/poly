@@ -5,6 +5,7 @@
 #include <gtest/gtest.h>
 
 #include "poly/engine.h"
+#include "poly/sanitize.h"
 #include "poly/scene.h"
 #include "poly/state_io.h"
 
@@ -849,49 +850,49 @@ TEST(SceneIO, V1BackwardsCompat) {
 TEST(Sanitize, ClampsActiveLaneCount) {
     poly::GrooveState state{};
     state.activeLaneCount = 100;
-    poly::sanitize(state);
+    poly::sanitizeGrooveState(state);
     EXPECT_EQ(state.activeLaneCount, poly::kMaxLanes);
 }
 
 TEST(Sanitize, ClampsNegativeActiveLaneCount) {
     poly::GrooveState state{};
     state.activeLaneCount = -5;
-    poly::sanitize(state);
+    poly::sanitizeGrooveState(state);
     EXPECT_EQ(state.activeLaneCount, 0);
 }
 
 TEST(Sanitize, ClampsCycleSteps) {
     poly::GrooveState state{};
     state.lanes[0].cycle.steps = 200;
-    poly::sanitize(state);
+    poly::sanitizeGrooveState(state);
     EXPECT_EQ(state.lanes[0].cycle.steps, poly::kMaxSteps);
 }
 
 TEST(Sanitize, ClampsCycleStepsMinimum) {
     poly::GrooveState state{};
     state.lanes[0].cycle.steps = 0;
-    poly::sanitize(state);
+    poly::sanitizeGrooveState(state);
     EXPECT_EQ(state.lanes[0].cycle.steps, 1);
 }
 
 TEST(Sanitize, ClampsCellCount) {
     poly::GrooveState state{};
     state.lanes[0].cellCount = 999;
-    poly::sanitize(state);
+    poly::sanitizeGrooveState(state);
     EXPECT_EQ(state.lanes[0].cellCount, poly::kMaxSteps);
 }
 
 TEST(Sanitize, ClampsEnvelopeCount) {
     poly::GrooveState state{};
     state.lanes[0].envelopeCount = 50;
-    poly::sanitize(state);
+    poly::sanitizeGrooveState(state);
     EXPECT_EQ(state.lanes[0].envelopeCount, poly::kMaxEnvelopesPerLane);
 }
 
 TEST(Sanitize, ClampsGlobalEnvelopeCount) {
     poly::GrooveState state{};
     state.globalEnvelopeCount = 99;
-    poly::sanitize(state);
+    poly::sanitizeGrooveState(state);
     EXPECT_EQ(state.globalEnvelopeCount, poly::kMaxGlobalEnvelopes);
 }
 
@@ -899,7 +900,7 @@ TEST(Sanitize, FixesZeroPeriodBars) {
     poly::GrooveState state{};
     state.lanes[0].envelopeCount = 1;
     state.lanes[0].envelopes[0].envelope.periodBars = 0.0f;
-    poly::sanitize(state);
+    poly::sanitizeGrooveState(state);
     EXPECT_GT(state.lanes[0].envelopes[0].envelope.periodBars, 0.0f);
 }
 
@@ -907,21 +908,21 @@ TEST(Sanitize, FixesNegativePeriodBars) {
     poly::GrooveState state{};
     state.lanes[0].envelopeCount = 1;
     state.lanes[0].envelopes[0].envelope.periodBars = -5.0f;
-    poly::sanitize(state);
+    poly::sanitizeGrooveState(state);
     EXPECT_GT(state.lanes[0].envelopes[0].envelope.periodBars, 0.0f);
 }
 
 TEST(Sanitize, ClampsKotekanSourceLane) {
     poly::GrooveState state{};
     state.lanes[0].kotekanSourceLane = 99;
-    poly::sanitize(state);
+    poly::sanitizeGrooveState(state);
     EXPECT_LE(state.lanes[0].kotekanSourceLane, poly::kMaxLanes - 1);
 }
 
 TEST(Sanitize, ClampsTempoMultiplier) {
     poly::GrooveState state{};
     state.lanes[0].tempoMultiplier = 0.0f;
-    poly::sanitize(state);
+    poly::sanitizeGrooveState(state);
     EXPECT_GT(state.lanes[0].tempoMultiplier, 0.0f);
 }
 
@@ -929,7 +930,7 @@ TEST(Sanitize, ClampsMicroTimingMs) {
     poly::GrooveState state{};
     state.lanes[0].microTimingMs[0] = 100.0f;
     state.lanes[0].microTimingMs[1] = -100.0f;
-    poly::sanitize(state);
+    poly::sanitizeGrooveState(state);
     EXPECT_LE(state.lanes[0].microTimingMs[0], 20.0f);
     EXPECT_GE(state.lanes[0].microTimingMs[1], -20.0f);
 }
@@ -947,7 +948,7 @@ TEST(Sanitize, ExtremeValuesRenderWithoutCrash) {
     state.globalEnvelopeCount = 99;
     state.globalEnvelopes[0].periodBars = 0.0f;
 
-    poly::sanitize(state);
+    poly::sanitizeGrooveState(state);
 
     poly::Engine engine;
     poly::NoteEventBuffer buf;

@@ -66,3 +66,41 @@ elseif(UNIX)
 endif()
 
 jk_target_warnings(poly_plugin)
+
+# -----------------------------------------------------------------------------
+# Experimental web UI — OFF by default; the shipping editor remains VSTGUI.
+# See webui/README.md for architecture and bridge-schema.md for the protocol.
+# -----------------------------------------------------------------------------
+option(POLY_WEB_UI "Build the experimental choc-webview web UI editor" OFF)
+if(POLY_WEB_UI)
+    include(FetchContent)
+    FetchContent_Declare(choc
+        GIT_REPOSITORY https://github.com/Tracktion/choc.git
+        GIT_TAG main
+    )
+    FetchContent_MakeAvailable(choc)
+
+    include(${CMAKE_SOURCE_DIR}/cmake/jk_embed_assets.cmake)
+    jk_embed_assets(
+        ${CMAKE_CURRENT_BINARY_DIR}/generated/poly_webui_assets.h
+        webui_assets
+        ${CMAKE_SOURCE_DIR}/webui/index.html
+        ${CMAKE_SOURCE_DIR}/webui/ui.css
+        ${CMAKE_SOURCE_DIR}/webui/ui.js
+        ${CMAKE_SOURCE_DIR}/webui/host-iface.js
+        ${CMAKE_SOURCE_DIR}/webui/groove-math.js
+        ${CMAKE_SOURCE_DIR}/webui/mock-host.js
+        ${CMAKE_SOURCE_DIR}/webui/plugin-host.js
+    )
+
+    target_sources(poly_plugin PRIVATE
+        source/webui/web_ui_view.h
+        source/webui/web_ui_view.cpp
+        source/webui/bridge_params.h
+    )
+    target_include_directories(poly_plugin PRIVATE
+        ${choc_SOURCE_DIR}
+        ${CMAKE_CURRENT_BINARY_DIR}/generated
+    )
+    target_compile_definitions(poly_plugin PRIVATE POLY_WEB_UI=1)
+endif()

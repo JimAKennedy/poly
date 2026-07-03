@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "poly/sanitize.h"
 #include "poly/scene.h"
 #include "poly/types.h"
 
@@ -146,7 +147,7 @@ template <typename ReadFn> [[nodiscard]] bool readGrooveState(ReadFn&& read, Gro
         return false;
     if (!readGrooveStateBody(read, state, version))
         return false;
-    sanitize(state);
+    sanitizeGrooveState(state);
     return true;
 }
 
@@ -199,7 +200,6 @@ template <typename ReadFn> [[nodiscard]] bool readSceneState(ReadFn&& read, Scen
     if (version <= 2) {
         if (!readGrooveStateBody(read, scene.sceneA, version))
             return false;
-        sanitize(scene.sceneA);
         scene.sceneB = scene.sceneA;
         scene.select = SceneSelect::A;
         scene.morphAmount = 0.0f;
@@ -209,8 +209,6 @@ template <typename ReadFn> [[nodiscard]] bool readSceneState(ReadFn&& read, Scen
             return false;
         if (!readGrooveStateBody(read, scene.sceneB, bodyVersion))
             return false;
-        sanitize(scene.sceneA);
-        sanitize(scene.sceneB);
         uint8_t select = 0;
         if (!read(&select, sizeof(select)))
             return false;
@@ -250,6 +248,7 @@ template <typename ReadFn> [[nodiscard]] bool readSceneState(ReadFn&& read, Scen
         scene.chain = SceneChainConfig{};
     }
 
+    sanitizeSceneState(scene);
     return true;
 }
 
