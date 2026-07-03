@@ -224,49 +224,4 @@ struct GrooveState {
     int globalDensityCeiling = 0;
 };
 
-// --- Post-deserialization sanitizer ---
-
-inline void sanitize(GrooveState& state) {
-    state.activeLaneCount = std::clamp(state.activeLaneCount, 0, kMaxLanes);
-    state.globalEnvelopeCount = std::clamp(state.globalEnvelopeCount, 0, kMaxGlobalEnvelopes);
-    state.globalDensityCeiling = std::clamp(state.globalDensityCeiling, 0, kMaxSteps);
-
-    for (int e = 0; e < kMaxGlobalEnvelopes; ++e) {
-        auto& env = state.globalEnvelopes[e];
-        if (env.periodBars <= 0.0f)
-            env.periodBars = 4.0f;
-        env.stepCount = std::clamp(env.stepCount, 0, kMaxStepListEntries);
-    }
-
-    for (int i = 0; i < kMaxLanes; ++i) {
-        auto& lane = state.lanes[i];
-        lane.cycle.steps = std::clamp(lane.cycle.steps, 1, kMaxSteps);
-        lane.cycle.subdivision = std::clamp(lane.cycle.subdivision, 1, 16);
-        lane.hitCount = std::clamp(lane.hitCount, 0, kMaxSteps);
-        lane.rotation = std::clamp(lane.rotation, 0, kMaxSteps - 1);
-        lane.cellCount = std::clamp(lane.cellCount, 0, kMaxSteps);
-        lane.fixedPatternLength = std::clamp(lane.fixedPatternLength, 0, kMaxSteps);
-        lane.envelopeCount = std::clamp(lane.envelopeCount, 0, kMaxEnvelopesPerLane);
-        lane.kotekanSourceLane = std::clamp(lane.kotekanSourceLane, -1, kMaxLanes - 1);
-        lane.probability = std::clamp(lane.probability, 0.0f, 1.0f);
-        lane.mutationRate = std::clamp(lane.mutationRate, 0.0f, 1.0f);
-        lane.timingOffsetMs = std::clamp(lane.timingOffsetMs, -20.0f, 20.0f);
-        if (lane.tempoMultiplier <= 0.0f)
-            lane.tempoMultiplier = 1.0f;
-        lane.tempoMultiplier = std::clamp(lane.tempoMultiplier, 0.25f, 4.0f);
-        lane.midiNote = std::clamp(lane.midiNote, static_cast<int16_t>(0), static_cast<int16_t>(127));
-        lane.midiChannel = std::clamp(lane.midiChannel, static_cast<int16_t>(-1), static_cast<int16_t>(15));
-
-        for (int s = 0; s < kMaxSteps; ++s)
-            lane.microTimingMs[s] = std::clamp(lane.microTimingMs[s], -20.0f, 20.0f);
-
-        for (int e = 0; e < kMaxEnvelopesPerLane; ++e) {
-            auto& env = lane.envelopes[e].envelope;
-            if (env.periodBars <= 0.0f)
-                env.periodBars = 4.0f;
-            env.stepCount = std::clamp(env.stepCount, 0, kMaxStepListEntries);
-        }
-    }
-}
-
 } // namespace poly
