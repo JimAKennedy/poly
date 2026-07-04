@@ -145,4 +145,28 @@
   #cmeter i { position: absolute; left: 0; bottom: 0; width: 100%; background: linear-gradient(var(--accent), #7A5A22); height: 0%; }
   #cmeter span { position: absolute; inset: auto 0 5px; text-align: center; font-size: 8px; letter-spacing: .2em; color: var(--text); text-transform: uppercase; }
 
+  /* ---- morph slider ---- */
+  .morph-slider { display: flex; align-items: center; gap: 6px; }
+  .morph-slider .ml { font-size: 9px; letter-spacing: .1em; color: var(--dim); }
+  .morph-track { width: 100px; height: 14px; background: var(--surface2); border-radius: 3px; position: relative; cursor: ew-resize; touch-action: none; overflow: hidden; }
+  .morph-track i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent); opacity: .7; border-radius: 3px; pointer-events: none; }
+
+  /* ---- chain popover ---- */
+  .chain-popover { display: none; position: absolute; top: 48px; right: 60px; min-width: 280px; background: #1E1A15; border: 1px solid rgba(240,234,223,.16); border-radius: 8px; box-shadow: 0 12px 40px rgba(0,0,0,.6); z-index: 50; padding: 12px 14px; }
+  .chain-popover.open { display: block; }
+  .chain-popover h4 { margin: 0 0 10px; font-size: 10px; letter-spacing: .22em; text-transform: uppercase; color: var(--dim); font-weight: 500; }
+  .chain-row { display: flex; align-items: center; gap: 6px; font-size: 11px; margin-bottom: 8px; }
+  .chain-row label { font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); min-width: 50px; }
+  .chain-modes { display: flex; gap: 4px; }
+  .chain-entry { display: flex; align-items: center; gap: 6px; padding: 4px 0; border-top: 1px solid var(--line); font-size: 11px; }
+  .chain-entry .idx { font-size: 9px; color: var(--dim); min-width: 18px; font-variant-numeric: tabular-nums; }
+  .chain-entry .scene-btns { display: flex; gap: 2px; }
+  .chain-entry .bars-ctl { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+  .chain-entry .bars-ctl span { min-width: 24px; text-align: center; font-variant-numeric: tabular-nums; }
+  .chain-entry .bars-ctl button, .chain-add button, .chain-entry .rm { width: 20px; height: 20px; border-radius: 4px; border: 1px solid var(--line); background: var(--surface2); font-size: 11px; line-height: 1; display: grid; place-items: center; }
+  .chain-entry .rm { margin-left: 4px; color: var(--dim); }
+  .chain-entry .rm:hover { color: #E4604E; border-color: #E4604E; }
+  .chain-add { display: flex; gap: 6px; margin-top: 8px; }
+  .chain-add button:hover { border-color: var(--dim); }
+
   #note { position: fixed; bottom: 6px; left: 0; right: 0; text-align: center; font-size: 9px; letter-spacing: .18em; text-transform: uppercase; color: #57503F; }

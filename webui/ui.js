@@ -44,6 +44,125 @@
   document.getElementById('learnBtn').addEventListener('click', toggleLearn);
   document.getElementById('scA').addEventListener('click', () => host.action('selectScene', { scene: 'A' }));
   document.getElementById('scB').addEventListener('click', () => host.action('selectScene', { scene: 'B' }));
+  document.getElementById('scM').addEventListener('click', () => host.action('selectScene', { scene: 'Morph' }));
+
+  /* --- morph slider --- */
+  const morphSlider = document.getElementById('morphSlider');
+  const morphTrack = morphSlider.querySelector('.morph-track');
+  const morphFill = morphTrack.querySelector('i');
+  (function initMorphSlider() {
+    const calc = (e) => {
+      const r = morphTrack.getBoundingClientRect();
+      return Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+    };
+    const paint = (v) => { morphFill.style.width = `${(v * 100).toFixed(1)}%`; };
+    morphTrack.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      const v = calc(e); paint(v);
+      host.edit('scene.morph', v, 'begin');
+      host.edit('scene.morph', v, 'perform');
+      const mv = (ev) => { const nv = calc(ev); paint(nv); host.edit('scene.morph', nv, 'perform'); };
+      const up = (ev) => {
+        window.removeEventListener('pointermove', mv);
+        const nv = calc(ev); paint(nv); host.edit('scene.morph', nv, 'end');
+      };
+      window.addEventListener('pointermove', mv);
+      window.addEventListener('pointerup', up, { once: true });
+    });
+  })();
+
+  /* --- chain popover --- */
+  const chainBtn = document.getElementById('chainBtn');
+  let chainPopover = null;
+  function buildChainPopover() {
+    if (chainPopover) { chainPopover.remove(); chainPopover = null; }
+    const pop = document.createElement('div');
+    pop.className = 'chain-popover open';
+    pop.id = 'chainPopover';
+    const chain = S.chain || { enabled: false, mode: 0, entryCount: 0, entries: [] };
+    const MODE_NAMES = ['1-Shot', 'Loop', 'Ping-Pong'];
+    const SCENE_NAMES = ['A', 'B', 'Morph'];
+    let html = `<h4>Scene Chain</h4>`;
+    html += `<div class="chain-row"><label>Enable</label><span class="switch"><button class="${chain.enabled ? 'on' : ''}" data-chain-enable aria-label="Enable chain"><i></i></button></span></div>`;
+    html += `<div class="chain-row"><label>Mode</label><div class="chain-modes">${MODE_NAMES.map((n, i) =>
+      `<button class="chip${chain.mode === i ? ' on' : ''}" data-chain-mode="${i}">${n}</button>`).join('')}</div></div>`;
+    for (let ei = 0; ei < chain.entryCount; ei++) {
+      const entry = chain.entries[ei] || { scene: 0, bars: 4 };
+      html += `<div class="chain-entry" data-entry="${ei}">
+        <span class="idx">${ei + 1}.</span>
+        <div class="scene-btns">${SCENE_NAMES.map((n, si) =>
+          `<button class="chip${entry.scene === si ? ' on' : ''}" data-entry-scene="${ei}" data-sv="${si}">${n}</button>`).join('')}</div>
+        <div class="bars-ctl"><button data-bars-dec="${ei}">−</button><span>${entry.bars}</span><button data-bars-inc="${ei}">+</button></div>
+        <button class="rm" data-rm="${ei}" aria-label="Remove entry">×</button>
+      </div>`;
+    }
+    html += `<div class="chain-add"><button data-chain-add aria-label="Add entry">+</button></div>`;
+    pop.innerHTML = html;
+    document.getElementById('chrome').appendChild(pop);
+    chainPopover = pop;
+
+    pop.querySelector('[data-chain-enable]').addEventListener('click', () => {
+      host.edit('chain.enabled', chain.enabled ? 0 : 1, 'begin');
+      host.edit('chain.enabled', chain.enabled ? 0 : 1, 'perform');
+      host.edit('chain.enabled', chain.enabled ? 0 : 1, 'end');
+    });
+    pop.querySelectorAll('[data-chain-mode]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const m = parseInt(b.dataset.chainMode);
+        host.edit('chain.mode', m / 2, 'begin');
+        host.edit('chain.mode', m / 2, 'perform');
+        host.edit('chain.mode', m / 2, 'end');
+      }));
+    pop.querySelectorAll('[data-entry-scene]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const ei = parseInt(b.dataset.entryScene);
+        const sv = parseInt(b.dataset.sv);
+        host.edit(`chain.entry.${ei}.scene`, sv / 2, 'begin');
+        host.edit(`chain.entry.${ei}.scene`, sv / 2, 'perform');
+        host.edit(`chain.entry.${ei}.scene`, sv / 2, 'end');
+      }));
+    pop.querySelectorAll('[data-bars-dec]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const ei = parseInt(b.dataset.barsDec);
+        const entry = chain.entries[ei] || { bars: 4 };
+        const nb = Math.max(1, entry.bars - 1);
+        host.edit(`chain.entry.${ei}.bars`, (nb - 1) / 31, 'begin');
+        host.edit(`chain.entry.${ei}.bars`, (nb - 1) / 31, 'perform');
+        host.edit(`chain.entry.${ei}.bars`, (nb - 1) / 31, 'end');
+      }));
+    pop.querySelectorAll('[data-bars-inc]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const ei = parseInt(b.dataset.barsInc);
+        const entry = chain.entries[ei] || { bars: 4 };
+        const nb = Math.min(32, entry.bars + 1);
+        host.edit(`chain.entry.${ei}.bars`, (nb - 1) / 31, 'begin');
+        host.edit(`chain.entry.${ei}.bars`, (nb - 1) / 31, 'perform');
+        host.edit(`chain.entry.${ei}.bars`, (nb - 1) / 31, 'end');
+      }));
+    pop.querySelectorAll('[data-rm]').forEach((b) =>
+      b.addEventListener('click', () => {
+        host.action('chainRemoveEntry', { index: parseInt(b.dataset.rm) });
+      }));
+    pop.querySelector('[data-chain-add]').addEventListener('click', () => {
+      host.action('chainAddEntry', {});
+    });
+
+    const dismiss = (e) => {
+      if (!pop.contains(e.target) && e.target !== chainBtn) {
+        closeChainPopover();
+        document.removeEventListener('click', dismiss);
+      }
+    };
+    setTimeout(() => document.addEventListener('click', dismiss), 0);
+  }
+  function closeChainPopover() {
+    if (chainPopover) { chainPopover.remove(); chainPopover = null; }
+  }
+  chainBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (chainPopover) closeChainPopover();
+    else buildChainPopover();
+  });
 
   /* --- preset dropdown --- */
   const presetBtn = document.getElementById('presetName');
@@ -502,8 +621,14 @@
     document.getElementById('presetName').textContent = S.preset;
     document.getElementById('seedVal').textContent = S.seed;
     document.getElementById('tempoVal').textContent = S.tempo.toFixed(1);
-    document.getElementById('scA').classList.toggle('on', S.scene !== 'B');
+    document.getElementById('scA').classList.toggle('on', S.scene === 'A');
     document.getElementById('scB').classList.toggle('on', S.scene === 'B');
+    document.getElementById('scM').classList.toggle('on', S.scene === 'Morph');
+    morphSlider.style.display = S.scene === 'Morph' ? 'flex' : 'none';
+    morphFill.style.width = `${((S.morph || 0) * 100).toFixed(1)}%`;
+    const chain = S.chain || { enabled: false };
+    chainBtn.classList.toggle('on', chain.enabled);
+    if (chainPopover) buildChainPopover();
   }
   function refreshAll() {
     renderChrome();

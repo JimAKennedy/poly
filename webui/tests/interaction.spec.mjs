@@ -376,3 +376,143 @@ test.describe('expanded strip — expression tab', () => {
     await expect(velValue).toHaveText('100'); // Sparse Pulse Kick vel=100
   });
 });
+
+test.describe('scene morph', () => {
+  test('morph button dispatches selectScene Morph', async ({ page }) => {
+    await page.click('#scM');
+    const acts = await getActions(page);
+    expect(acts).toContainEqual(
+      expect.objectContaining({ name: 'selectScene', payload: { scene: 'Morph' } })
+    );
+  });
+
+  test('morph button highlights and shows slider', async ({ page }) => {
+    await page.click('#scM');
+    await expect(page.locator('#scM')).toHaveClass(/\bon\b/);
+    await expect(page.locator('#scA')).not.toHaveClass(/\bon\b/);
+    await expect(page.locator('#morphSlider')).toBeVisible();
+  });
+
+  test('morph slider dispatches scene.morph edit', async ({ page }) => {
+    await page.click('#scM');
+    const track = page.locator('.morph-track');
+    const box = await track.boundingBox();
+    await track.click({ position: { x: box.width * 0.75, y: box.height / 2 } });
+
+    const edits = await getEdits(page);
+    const morphEdits = edits.filter(e => e.paramId === 'scene.morph');
+    expect(morphEdits.length).toBeGreaterThanOrEqual(2);
+    expect(morphEdits.some(e => e.gesture === 'begin')).toBe(true);
+    expect(morphEdits.some(e => e.gesture === 'end')).toBe(true);
+  });
+
+  test('morph slider hidden for scene A', async ({ page }) => {
+    await page.click('#scM');
+    await expect(page.locator('#morphSlider')).toBeVisible();
+    await page.click('#scA');
+    await expect(page.locator('#morphSlider')).not.toBeVisible();
+  });
+
+  test('scene A/B/Morph highlighting is exclusive', async ({ page }) => {
+    await page.click('#scB');
+    await expect(page.locator('#scB')).toHaveClass(/\bon\b/);
+    await expect(page.locator('#scA')).not.toHaveClass(/\bon\b/);
+    await expect(page.locator('#scM')).not.toHaveClass(/\bon\b/);
+
+    await page.click('#scM');
+    await expect(page.locator('#scM')).toHaveClass(/\bon\b/);
+    await expect(page.locator('#scA')).not.toHaveClass(/\bon\b/);
+    await expect(page.locator('#scB')).not.toHaveClass(/\bon\b/);
+  });
+});
+
+test.describe('chain popover', () => {
+  test('chain button opens popover', async ({ page }) => {
+    await page.click('#chainBtn');
+    await expect(page.locator('#chainPopover')).toBeVisible();
+    await expect(page.locator('#chainPopover h4')).toHaveText('Scene Chain');
+  });
+
+  test('enable toggle dispatches chain.enabled edit', async ({ page }) => {
+    await page.click('#chainBtn');
+    await page.click('[data-chain-enable]');
+    const edits = await getEdits(page);
+    const enableEdits = edits.filter(e => e.paramId === 'chain.enabled');
+    expect(enableEdits.some(e => e.value === 1)).toBe(true);
+  });
+
+  test('mode buttons dispatch chain.mode edit', async ({ page }) => {
+    await page.click('#chainBtn');
+    await page.click('[data-chain-mode="1"]');
+    const edits = await getEdits(page);
+    const modeEdits = edits.filter(e => e.paramId === 'chain.mode');
+    expect(modeEdits.some(e => e.value === 0.5)).toBe(true);
+  });
+
+  test('add entry creates chain entry row', async ({ page }) => {
+    await page.click('#chainBtn');
+    await page.click('[data-chain-add]');
+    const state = await page.evaluate(() => window.PolyMockHost.getState());
+    expect(state.chain.entryCount).toBe(1);
+    expect(state.chain.entries[0]).toEqual({ scene: 0, bars: 4 });
+    await expect(page.locator('.chain-entry')).toHaveCount(1);
+  });
+
+  test('entry scene button dispatches chain.entry.N.scene edit', async ({ page }) => {
+    await page.evaluate(() => {
+      const s = window.PolyMockHost.getState();
+      s.chain.entries.push({ scene: 0, bars: 4 });
+      s.chain.entryCount = 1;
+      window.PolyMockHost._pushState();
+    });
+    await page.click('#chainBtn');
+    await page.click('[data-entry-scene="0"][data-sv="1"]');
+    const edits = await getEdits(page);
+    expect(edits.some(e => e.paramId === 'chain.entry.0.scene' && e.value === 0.5)).toBe(true);
+  });
+
+  test('entry bars increment dispatches chain.entry.N.bars edit', async ({ page }) => {
+    await page.evaluate(() => {
+      const s = window.PolyMockHost.getState();
+      s.chain.entries.push({ scene: 0, bars: 4 });
+      s.chain.entryCount = 1;
+      window.PolyMockHost._pushState();
+    });
+    await page.click('#chainBtn');
+    await page.click('[data-bars-inc="0"]');
+    const state = await page.evaluate(() => window.PolyMockHost.getState());
+    expect(state.chain.entries[0].bars).toBe(5);
+  });
+
+  test('remove entry removes chain entry', async ({ page }) => {
+    await page.evaluate(() => {
+      const s = window.PolyMockHost.getState();
+      s.chain.entries.push({ scene: 0, bars: 4 }, { scene: 1, bars: 2 });
+      s.chain.entryCount = 2;
+      window.PolyMockHost._pushState();
+    });
+    await page.click('#chainBtn');
+    await expect(page.locator('.chain-entry')).toHaveCount(2);
+    await page.click('[data-rm="0"]');
+    const state = await page.evaluate(() => window.PolyMockHost.getState());
+    expect(state.chain.entryCount).toBe(1);
+    expect(state.chain.entries[0].scene).toBe(1);
+  });
+
+  test('preset load resets chain state', async ({ page }) => {
+    await page.evaluate(() => {
+      const s = window.PolyMockHost.getState();
+      s.chain.enabled = true;
+      s.chain.entries.push({ scene: 0, bars: 4 });
+      s.chain.entryCount = 1;
+      s.scene = 'Morph';
+      window.PolyMockHost._pushState();
+    });
+    await page.evaluate(() => window.PolyMockHost.action('applyPreset', { index: -1 }));
+    await page.waitForTimeout(50);
+    const state = await page.evaluate(() => window.PolyMockHost.getState());
+    expect(state.chain.enabled).toBe(false);
+    expect(state.chain.entryCount).toBe(0);
+    expect(state.scene).toBe('A');
+  });
+});
