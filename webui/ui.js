@@ -453,13 +453,44 @@
     const m = document.createElement('div');
     m.id = 'master';
     const macros = S.macros;
+    const MACRO_PARAMS = [
+      { name: 'Complexity', id: 'macro.complexity', v: macros.complexity },
+      { name: 'Density',    id: 'macro.density',    v: macros.density },
+      { name: 'Syncopation',id: 'macro.syncopation',v: macros.syncopation },
+      { name: 'Swing',      id: 'macro.swing',      v: macros.swing },
+      { name: 'Tension',    id: 'macro.tension',    v: macros.tension },
+      { name: 'Humanize',   id: 'macro.humanize',   v: macros.humanize },
+    ];
     m.innerHTML = `<h3>Master</h3>
-      ${Object.entries({ Complexity: macros.complexity, Density: macros.density, Syncopation: macros.syncopation,
-                         Swing: macros.swing, Tension: macros.tension, Humanize: macros.humanize })
-        .map(([n, v]) => `<div class="macro"><div class="t"><span>${n}</span><b>${Math.round(v * 100)}</b></div>
-          <div class="track"><i style="width:${v * 100}%"></i></div></div>`).join('')}
+      ${MACRO_PARAMS.map(({ name, id, v }) =>
+        `<div class="macro"><div class="t"><span>${name}</span><b>${Math.round(v * 100)}</b></div>
+          <div class="slider-track" data-macro="${id}"><i style="width:${v * 100}%"></i></div></div>`
+      ).join('')}
       <div id="cmeter"><i></i><span>Convergence</span></div>`;
     desk.appendChild(m);
+    m.querySelectorAll('.slider-track').forEach((track) => {
+      const paramId = track.dataset.macro;
+      const fill = track.querySelector('i');
+      const vSpan = track.closest('.macro').querySelector('b');
+      const calc = (e) => {
+        const r = track.getBoundingClientRect();
+        return Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+      };
+      const paint = (v) => { fill.style.width = `${(v * 100).toFixed(1)}%`; vSpan.textContent = Math.round(v * 100); };
+      track.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        const v = calc(e); paint(v);
+        host.edit(paramId, v, 'begin');
+        host.edit(paramId, v, 'perform');
+        const mv = (ev) => { const nv = calc(ev); paint(nv); host.edit(paramId, nv, 'perform'); };
+        const up = (ev) => {
+          window.removeEventListener('pointermove', mv);
+          const nv = calc(ev); paint(nv); host.edit(paramId, nv, 'end');
+        };
+        window.addEventListener('pointermove', mv);
+        window.addEventListener('pointerup', up, { once: true });
+      });
+    });
     desk.style.gridTemplateColumns = `repeat(${S.lanes.length}, 1fr) 196px`;
   }
   function expandStrip(li) {

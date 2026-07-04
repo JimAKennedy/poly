@@ -309,6 +309,34 @@ static std::string grooveStateToJson(const GrooveState& gs, const SceneState& ss
     }
     js += ']';
 
+    // Chain
+    js += ",\"chain\":{\"enabled\":";
+    js += ss.chain.enabled ? "true" : "false";
+    char chainBuf[64];
+    std::snprintf(chainBuf, sizeof(chainBuf), ",\"mode\":%d,\"entryCount\":%d", static_cast<int>(ss.chain.mode),
+                  ss.chain.entryCount);
+    js += chainBuf;
+    js += ",\"entries\":[";
+    for (int i = 0; i < ss.chain.entryCount; ++i) {
+        if (i > 0)
+            js += ',';
+        std::snprintf(chainBuf, sizeof(chainBuf), "{\"scene\":%d,\"bars\":%d}",
+                      static_cast<int>(ss.chain.entries[i].scene), ss.chain.entries[i].bars);
+        js += chainBuf;
+    }
+    js += "]}";
+
+    // NoteMap
+    js += ",\"noteMap\":[";
+    for (int i = 0; i < 128; ++i) {
+        if (i > 0)
+            js += ',';
+        char nmBuf[8];
+        std::snprintf(nmBuf, sizeof(nmBuf), "%d", ss.noteMap.map[i]);
+        js += nmBuf;
+    }
+    js += ']';
+
     js += "}}";
     return js;
 }
@@ -345,6 +373,15 @@ Steinberg::tresult PLUGIN_API WebUIView::attached(void* parent, Steinberg::FIDSt
         choc::ui::WebView::Options::Resource res;
         res.data.assign(asset->data, asset->data + asset->size);
         res.mimeType = std::string(asset->mime);
+        if (path == "/" || path == "/index.html") {
+            static const std::string kEmbedTag = "<head>";
+            static const std::string kInject = "<head><script>window.__POLY_EMBEDDED__=true;</script>";
+            auto html = std::string(res.data.begin(), res.data.end());
+            auto pos = html.find(kEmbedTag);
+            if (pos != std::string::npos)
+                html.replace(pos, kEmbedTag.size(), kInject);
+            res.data.assign(html.begin(), html.end());
+        }
         return res;
     };
     webview_ = std::make_unique<choc::ui::WebView>(options);
@@ -701,6 +738,61 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
         controller_->setParamNormalized(ParamIDs::kExportTrigger, 1.0);
         controller_->performEdit(ParamIDs::kExportTrigger, 1.0);
         controller_->endEdit(ParamIDs::kExportTrigger);
+        return;
+    }
+
+    if (name == "setAccent") {
+        int lane = payload["lane"].getInt32();
+        int step = payload["step"].getInt32();
+        if (lane < 0 || lane >= kMaxLanes || step < 0 || step >= kMaxSteps)
+            return;
+        scene.lanes[lane].accents.steps[step] = static_cast<float>(payload["value"].getFloat64());
+        return;
+    }
+
+    if (name == "chainAddEntry") {
+        auto& chain = controller_->mutableCachedState().chain;
+        if (chain.entryCount < kMaxChainEntries) {
+            chain.entries[chain.entryCount] = {SceneSelect::A, 4};
+            chain.entryCount++;
+            controller_->setParamNormalized(ParamIDs::kChainEntryCount, static_cast<double>(chain.entryCount) /
+                                                                            static_cast<double>(kMaxChainEntries));
+            controller_->performEdit(ParamIDs::kChainEntryCount,
+                                     static_cast<double>(chain.entryCount) / static_cast<double>(kMaxChainEntries));
+        }
+        return;
+    }
+
+    if (name == "chainRemoveEntry") {
+        int index = payload["index"].getInt32();
+        auto& chain = controller_->mutableCachedState().chain;
+        if (index >= 0 && index < chain.entryCount) {
+            for (int i = index; i < chain.entryCount - 1; ++i)
+                chain.entries[i] = chain.entries[i + 1];
+            chain.entryCount--;
+            controller_->setParamNormalized(ParamIDs::kChainEntryCount, static_cast<double>(chain.entryCount) /
+                                                                            static_cast<double>(kMaxChainEntries));
+            controller_->performEdit(ParamIDs::kChainEntryCount,
+                                     static_cast<double>(chain.entryCount) / static_cast<double>(kMaxChainEntries));
+        }
+        return;
+    }
+
+    if (name == "resetNoteMap") {
+        auto& nm = controller_->mutableCachedState().noteMap;
+        for (int i = 0; i < 128; ++i)
+            nm.map[i] = static_cast<int16_t>(i);
+        controller_->sendNoteMap();
+        return;
+    }
+
+    if (name == "setNoteMap") {
+        int note = payload["note"].getInt32();
+        int output = payload["output"].getInt32();
+        if (note < 0 || note > 127 || output < 0 || output > 127)
+            return;
+        controller_->mutableCachedState().noteMap.map[note] = static_cast<int16_t>(output);
+        controller_->sendNoteMap();
         return;
     }
 }
