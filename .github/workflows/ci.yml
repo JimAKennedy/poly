@@ -149,12 +149,29 @@ jobs:
       - name: Install dependencies
         working-directory: webui
         run: npm ci
+      - name: Get Playwright version
+        id: pw-version
+        working-directory: webui
+        run: echo "version=$(npx playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright browsers
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ steps.pw-version.outputs.version }}
       - name: Install Playwright browsers
         working-directory: webui
         run: npx playwright install --with-deps chromium
       - name: Run Playwright tests
         working-directory: webui
         run: npx playwright test
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: webui-html-report
+          path: webui/playwright-report/
+          retention-days: 14
+          if-no-files-found: ignore
       - name: Upload test results
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
