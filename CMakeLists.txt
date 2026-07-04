@@ -66,6 +66,7 @@ add_subdirectory(engine)
 if(NOT POLY_ENGINE_ONLY)
     add_subdirectory(plugin)
     add_subdirectory(tools/harness)
+    add_subdirectory(tools/midi_probe)
 endif()
 
 enable_testing()

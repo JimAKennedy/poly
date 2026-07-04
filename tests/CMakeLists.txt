@@ -114,6 +114,35 @@ if(NOT POLY_ENGINE_ONLY)
     target_compile_features(poly_host_tests PRIVATE cxx_std_20)
     jk_target_warnings(poly_host_tests)
     gtest_discover_tests(poly_host_tests)
+
+    # --- Probe Tests (require VST3 SDK + Poly processor + probe) ---
+    add_executable(poly_probe_tests
+        host/probe_tests.cpp
+        host/poly_test_host.cpp
+        ${CMAKE_SOURCE_DIR}/plugin/source/processor.cpp
+        ${CMAKE_SOURCE_DIR}/tools/midi_probe/source/probe_processor.cpp
+    )
+
+    target_link_libraries(poly_probe_tests PRIVATE
+        poly_engine
+        GTest::gtest_main
+        sdk
+        sdk_hosting
+    )
+
+    if(APPLE)
+        target_link_libraries(poly_probe_tests PRIVATE "-framework CoreFoundation")
+    endif()
+
+    target_include_directories(poly_probe_tests PRIVATE
+        ${CMAKE_SOURCE_DIR}/plugin/source
+        ${CMAKE_SOURCE_DIR}/engine/include
+        ${CMAKE_SOURCE_DIR}/tools/midi_probe/source
+    )
+
+    target_compile_features(poly_probe_tests PRIVATE cxx_std_20)
+    jk_target_warnings(poly_probe_tests)
+    gtest_discover_tests(poly_probe_tests)
 endif()
 
 # --- UI Tests (require VST3 SDK + VSTGUI) ---
