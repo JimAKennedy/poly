@@ -1,25 +1,22 @@
 #pragma once
 
-// M028 Phase B scaffold — experimental web UI editor (build with
-// -DPOLY_WEB_UI=ON). Hosts the webui/ bundle in a choc::ui::WebView and
-// bridges it to the controller per webui/bridge-schema.md. The default
-// build keeps the VSTGUI editor; this file is not compiled unless the flag
-// is set, so the scaffold can evolve without touching the shipping UI.
-//
-// Spike checklist (v3-to-plugin-plan.md Phase B):
-//   [ ] attach/reparent the webview child view (NSView / HWND)
-//   [ ] initial `state` push on `ready`
-//   [ ] `edit` -> beginEdit/performEdit/endEdit via bridge_params.h
-//   [ ] `action` routing (ApplyPreset-style controller messages)
-//   [ ] 30 Hz `frame` push from the feedback param values
-//   [ ] keyboard focus / HiDPI / resize behavior in Cubase mac+win
+// Web UI editor — hosts the webui/ bundle in a choc::ui::WebView and
+// bridges it to the controller per webui/bridge-schema.md. Built with
+// -DPOLY_WEB_UI=ON; the default build keeps the VSTGUI editor.
 
 #include <memory>
+#include <optional>
+#include <string>
 
 #include "public.sdk/source/common/pluginview.h"
 
+#include "choc/gui/choc_MessageLoop.h"
+
 namespace choc::ui {
 class WebView;
+}
+namespace choc::value {
+class ValueView;
 }
 
 namespace poly {
@@ -38,12 +35,20 @@ public:
     Steinberg::tresult PLUGIN_API onSize(Steinberg::ViewRect* newSize) override;
 
 private:
-    void handleHostCall(const std::string& json); // JS -> C++
-    void pushState();                             // C++ -> JS (full snapshot)
-    void pushFrame();                             // C++ -> JS (~30 Hz visuals)
+    void handleHostCall(const std::string& json);
+    void handleAction(const std::string& name, const choc::value::ValueView& payload);
+    void pushState();
+    void pushFrame();
+    void startFrameTimer();
+    void stopFrameTimer();
+    void resizeWebviewToRect(const Steinberg::ViewRect& r);
 
     PolyController* controller_ = nullptr;
     std::unique_ptr<choc::ui::WebView> webview_;
+    std::optional<choc::messageloop::Timer> frameTimer_;
+    uint32_t lastStateGen_ = 0;
+    int editCooldown_ = 0;
+    std::string lastPushedJson_;
 };
 
 } // namespace poly

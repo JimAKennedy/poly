@@ -18,9 +18,17 @@
   let strips = [], rings = [], hands = [], ladders = [], vus = [];
 
   /* ================= chrome ================= */
-  document.getElementById('play').addEventListener('click', () => host.action('togglePlay', {}));
+  const embedded = !!window.__POLY_EMBEDDED__;
+  document.getElementById('play').addEventListener('click', () => { if (!embedded) host.action('togglePlay', {}); });
+  if (embedded) {
+    const pb = document.getElementById('play');
+    pb.style.opacity = '0.35';
+    pb.style.cursor = 'default';
+    pb.title = 'Transport controlled by host DAW';
+  }
   addEventListener('keydown', (e) => {
     if (e.code === 'Space' && !e.repeat) {
+      if (embedded) return;
       e.preventDefault();
       host.action('togglePlay', {});
     }
@@ -196,13 +204,18 @@
           <div class="track"><i style="width:${v * 100}%"></i></div></div>`).join('')}
       <div id="cmeter"><i></i><span>Convergence</span></div>`;
     desk.appendChild(m);
+    desk.style.gridTemplateColumns = `repeat(${S.lanes.length}, 1fr) 196px`;
   }
   function expandStrip(li) {
     expanded = li;
     strips.forEach((s, i) => s.classList.toggle('expanded', i === li));
+    const n = S.lanes.length;
+    const wide = n >= 6 ? '4fr' : '2.9fr';
+    const narrow = n >= 6 ? '.38fr' : '.62fr';
+    const master = n >= 6 ? '160px' : '176px';
     desk.style.gridTemplateColumns = li < 0
-      ? `repeat(${S.lanes.length}, 1fr) 196px`
-      : S.lanes.map((_, i) => (i === li ? '2.9fr' : '.62fr')).join(' ') + ' 176px';
+      ? `repeat(${n}, 1fr) 196px`
+      : S.lanes.map((_, i) => (i === li ? wide : narrow)).join(' ') + ` ${master}`;
     if (li >= 0) buildPanes(li);
   }
   function refreshStrip(li) {
@@ -247,7 +260,11 @@
       b.style.flexBasis = '0';
       if (l.cells || l.pattern[i]) b.classList.add('hit');
       b.setAttribute('aria-label', `${l.name} step ${i + 1}`);
-      if (!l.cells) b.addEventListener('click', () => host.action('toggleStep', { lane: li, step: i }));
+      if (l.timeline) {
+        b.addEventListener('click', () => host.action('toggleStep', { lane: li, step: i }));
+      } else if (!l.cells) {
+        b.style.cursor = 'default';
+      }
       lad.appendChild(b);
     }
   }
@@ -388,13 +405,18 @@
   }
   function boot(state) {
     S = state;
+    _prevStateStr = JSON.stringify(state);
     refreshAll();
     sizeLoom();
   }
 
+  let _prevStateStr = null;
   host.onState((state) => {
     const first = !S;
     S = state;
+    const sig = JSON.stringify(state);
+    if (!first && sig === _prevStateStr) return;
+    _prevStateStr = sig;
     if (first) boot(state);
     else refreshAll();
   });

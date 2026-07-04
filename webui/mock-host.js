@@ -218,5 +218,6 @@
     },
     action,
     onFrame: (cb) => frameSubs.push(cb),
+    _pushState: emitState,
   };
 })();

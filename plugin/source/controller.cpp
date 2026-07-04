@@ -23,6 +23,9 @@
 #include "ui/scene_bar_view.h"
 #include "ui/timeline_step_editor_view.h"
 #include "ui/velocity_view.h"
+#ifdef POLY_WEB_UI
+#include "webui/web_ui_view.h"
+#endif
 
 namespace poly {
 
@@ -224,9 +227,13 @@ void PolyController::registerOutputParameters() {
 
 Steinberg::IPlugView* PLUGIN_API PolyController::createView(Steinberg::FIDString name) {
     if (Steinberg::FIDStringsEqual(name, Steinberg::Vst::ViewType::kEditor)) {
+#ifdef POLY_WEB_UI
+        return new WebUIView(this); // ownership-transfer
+#else
         auto* view = new VSTGUI::VST3Editor(this, "view", "poly.uidesc"); // ownership-transfer
         view->setDelegate(this);
         return view;
+#endif
     }
     return nullptr;
 }
@@ -369,6 +376,8 @@ Steinberg::tresult PLUGIN_API PolyController::setComponentState(Steinberg::IBStr
                            static_cast<double>(entry.bars - 1) / 31.0);
     }
 
+    ++stateGeneration_;
+
     return Steinberg::kResultOk;
 }
 
@@ -417,12 +426,24 @@ Steinberg::tresult PLUGIN_API PolyController::setState(Steinberg::IBStream* stat
         }
     }
 
+    ++stateGeneration_;
+
     return Steinberg::kResultOk;
 }
 
 Steinberg::tresult PLUGIN_API PolyController::notify(Steinberg::Vst::IMessage* message) {
     if (!message)
         return Steinberg::kInvalidArgument;
+
+    if (Steinberg::FIDStringsEqual(message->getMessageID(), "UISnapshotPtr")) {
+        if (auto* attrs = message->getAttributes()) {
+            Steinberg::int64 ptr = 0;
+            if (attrs->getInt("ptr", ptr) == Steinberg::kResultOk && ptr != 0) {
+                uiSnapshot_ = reinterpret_cast<UISnapshot*>(ptr);
+            }
+        }
+        return Steinberg::kResultOk;
+    }
 
     if (Steinberg::FIDStringsEqual(message->getMessageID(), "MidiExportData")) {
         if (auto* attrs = message->getAttributes()) {

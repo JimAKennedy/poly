@@ -35,13 +35,12 @@ test('cloth band click focuses lane on desk', async ({ page }) => {
 });
 
 test('step toggle round-trips through host state', async ({ page }) => {
-  // Kick lane, step 2 (index 1): initially a hit (E(4,4) = all on)
-  const btn = page.locator('.strip[data-lane="1"] .ladder button').nth(1);
-  await expect(btn).toHaveClass(/hit/);
+  // Bell lane (timeline mode), step 2 (index 1): initially off (fixed[1]=0)
+  const btn = page.locator('.strip[data-lane="0"] .ladder button').nth(1);
+  await expect(btn).not.toHaveClass(/hit/);
   await btn.click();
-  // UI re-renders from host state — the rebuilt button must be off
-  await expect(page.locator('.strip[data-lane="1"] .ladder button').nth(1)).not.toHaveClass(/hit/);
-  await expect(page.locator('.strip[data-lane="1"] .feel')).toContainText('E(3,4)');
+  // UI re-renders from host state — the rebuilt button must be on
+  await expect(page.locator('.strip[data-lane="0"] .ladder button').nth(1)).toHaveClass(/hit/);
 });
 
 test('strip expansion exposes deep editors', async ({ page }) => {

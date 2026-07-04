@@ -76,9 +76,9 @@
   .strip .deep { display: none; }
   .strip .body2 { display: contents; }
   .strip.expanded { padding: 12px 14px; }
-  .strip.expanded .body2 { display: grid; grid-template-columns: 108px 1fr; gap: 14px; width: 100%; flex: 1; min-height: 0; }
+  .strip.expanded .body2 { display: grid; grid-template-columns: 88px 1fr; gap: 10px; width: 100%; flex: 1; min-height: 0; }
   .strip.expanded .deep { display: flex; flex-direction: column; gap: 10px; min-width: 0; min-height: 0; }
-  .strip.expanded .core { flex: none; width: 108px; }
+  .strip.expanded .core { flex: none; width: 88px; }
   .strip.expanded .feel, .strip.expanded .stat { display: none; }
   .tabs { display: flex; gap: 4px; flex: none; }
   .tabs button { border: 1px solid var(--line); background: transparent; border-radius: 5px; padding: 4px 9px; font-size: 9px; letter-spacing: .16em; text-transform: uppercase; color: var(--dim); }

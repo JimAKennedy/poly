@@ -76,7 +76,7 @@ if(POLY_WEB_UI)
     include(FetchContent)
     FetchContent_Declare(choc
         GIT_REPOSITORY https://github.com/Tracktion/choc.git
-        GIT_TAG main
+        GIT_TAG 5685fb59db9e60d31a35df7bff0ce7967beaaf25
     )
     FetchContent_MakeAvailable(choc)
 
