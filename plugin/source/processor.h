@@ -94,6 +94,13 @@ private:
     PendingEnvelope pendingEnvelope_{};
     std::atomic<bool> envelopeReady_{false};
 
+    struct PendingAccentMask {
+        int laneIndex = 0;
+        std::array<float, kMaxSteps> steps{};
+    };
+    PendingAccentMask pendingAccentMask_{};
+    std::atomic<bool> accentMaskReady_{false};
+
     SceneState stateSnapshot_{};
     std::atomic<bool> snapshotReady_{false};
 

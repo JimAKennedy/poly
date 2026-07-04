@@ -1,0 +1,107 @@
+{
+  "description": "Golden action messages (JS→C++) for contract validation",
+  "messages": [
+    {
+      "label": "toggle step on lane 1",
+      "type": "action", "v": 1,
+      "name": "toggleStep",
+      "payload": { "lane": 1, "step": 0 }
+    },
+    {
+      "label": "set euclidean parameters",
+      "type": "action", "v": 1,
+      "name": "setEuclid",
+      "payload": { "lane": 1, "steps": 8, "hits": 5, "rotation": 2 }
+    },
+    {
+      "label": "set cells on lane 0",
+      "type": "action", "v": 1,
+      "name": "setCells",
+      "payload": { "lane": 0, "cells": [3, 2, 5, 3] }
+    },
+    {
+      "label": "clear cells (revert to euclidean)",
+      "type": "action", "v": 1,
+      "name": "setCells",
+      "payload": { "lane": 0, "cells": null }
+    },
+    {
+      "label": "set fixed step on timeline lane",
+      "type": "action", "v": 1,
+      "name": "setFixedStep",
+      "payload": { "lane": 0, "step": 3, "on": true }
+    },
+    {
+      "label": "set micro-timing",
+      "type": "action", "v": 1,
+      "name": "setMicroTiming",
+      "payload": { "lane": 0, "step": 0, "ms": 5.5 }
+    },
+    {
+      "label": "set envelope on lane 0",
+      "type": "action", "v": 1,
+      "name": "setEnvelope",
+      "payload": { "lane": 0, "index": 0, "envelope": { "target": "Velocity", "period": 4, "depth": 0.35, "on": true } }
+    },
+    {
+      "label": "remove envelope",
+      "type": "action", "v": 1,
+      "name": "setEnvelope",
+      "payload": { "lane": 0, "index": 0, "envelope": null }
+    },
+    {
+      "label": "select scene B",
+      "type": "action", "v": 1,
+      "name": "selectScene",
+      "payload": { "scene": "B" }
+    },
+    {
+      "label": "apply factory preset (Afrobeat)",
+      "type": "action", "v": 1,
+      "name": "applyPreset",
+      "payload": { "index": 9 }
+    },
+    {
+      "label": "apply Init preset",
+      "type": "action", "v": 1,
+      "name": "applyPreset",
+      "payload": { "index": -1 }
+    },
+    {
+      "label": "set accent",
+      "type": "action", "v": 1,
+      "name": "setAccent",
+      "payload": { "lane": 0, "step": 2, "value": 0.8 }
+    },
+    {
+      "label": "chain add entry",
+      "type": "action", "v": 1,
+      "name": "chainAddEntry",
+      "payload": {}
+    },
+    {
+      "label": "chain remove entry",
+      "type": "action", "v": 1,
+      "name": "chainRemoveEntry",
+      "payload": { "index": 0 }
+    },
+    {
+      "label": "set note map",
+      "type": "action", "v": 1,
+      "name": "setNoteMap",
+      "payload": { "note": 36, "output": 48 }
+    },
+    {
+      "label": "reset note map",
+      "type": "action", "v": 1,
+      "name": "resetNoteMap",
+      "payload": {}
+    },
+    {
+      "label": "export request",
+      "type": "action", "v": 1,
+      "name": "exportRequest",
+      "payload": {}
+    }
+  ]
+}

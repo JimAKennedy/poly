@@ -1,0 +1,201 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "poly-bridge-v1",
+  "description": "Poly Web UI ↔ Native bridge wire format (v1). See bridge-schema.md.",
+
+  "definitions": {
+    "envelope": {
+      "type": "object",
+      "properties": {
+        "target": { "type": "string", "enum": ["Velocity", "Density", "Probability", "AccentBias", "NoteLength", "TimingLooseness", "ActivationWeight", "FillLikelihood"] },
+        "period": { "type": "number", "minimum": 0 },
+        "depth":  { "type": "number" },
+        "on":     { "type": "boolean" },
+        "shape":  { "type": "integer" },
+        "curvature":   { "type": "number" },
+        "phaseOffset": { "type": "number" }
+      },
+      "required": ["target", "period", "depth", "on"]
+    },
+
+    "lane": {
+      "type": "object",
+      "properties": {
+        "name":     { "type": "string" },
+        "hue":      { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+        "role":     { "type": "string", "enum": ["Anchor pulse", "Backbeat", "Shimmer", "Accent", "Ghost", "Ornament", "Fill", "Custom"] },
+        "note":     { "type": "integer", "minimum": 0, "maximum": 127 },
+        "ch":       { "type": "integer", "minimum": 0, "maximum": 16 },
+        "steps":    { "type": "integer", "minimum": 1, "maximum": 64 },
+        "subdivision": { "type": "integer", "enum": [1, 2, 4, 8, 16] },
+        "stepLen":  { "type": "number", "exclusiveMinimum": 0 },
+        "vel":      { "type": "integer", "minimum": 0, "maximum": 127 },
+        "prob":     { "type": "number", "minimum": 0, "maximum": 1 },
+        "spread":   { "type": "number", "minimum": 0 },
+        "ghost":    { "type": "integer", "minimum": 0, "maximum": 127 },
+        "push":     { "type": "number" },
+        "hits":     { "type": "integer", "minimum": 0 },
+        "rot":      { "type": "integer", "minimum": 0 },
+        "timeline": { "type": "boolean" },
+        "active":   { "type": "boolean" },
+        "pattern":  { "type": "array", "items": { "type": "integer", "enum": [0, 1] } },
+        "fixed":    { "oneOf": [{ "type": "null" }, { "type": "array", "items": { "type": "integer", "enum": [0, 1] } }] },
+        "cells":    { "oneOf": [{ "type": "null" }, { "type": "array", "items": { "type": "integer", "minimum": 1 } }] },
+        "cellCount": { "type": "integer", "minimum": 0 },
+        "mt":       { "type": "array", "items": { "type": "number" } },
+        "envs":     { "type": "array", "items": { "$ref": "#/definitions/envelope" } },
+        "accents":  { "type": "array", "items": { "type": "number" } },
+        "humanize":       { "type": "number" },
+        "swing":          { "type": "number" },
+        "duration":       { "type": "number" },
+        "emphasisProb":   { "type": "number" },
+        "timingOffset":   { "type": "number" },
+        "mutationRate":   { "type": "number" },
+        "driftRate":      { "type": "number" },
+        "phraseLength":   { "type": "number" },
+        "phraseGap":      { "type": "number" },
+        "phraseOffset":   { "type": "number" },
+        "tempoMultiplier": { "type": "number" },
+        "kotekanSource":  { "type": "integer" }
+      },
+      "required": ["name", "role", "note", "ch", "steps", "vel", "prob", "hits", "rot", "pattern", "mt", "envs"]
+    },
+
+    "presetInfo": {
+      "type": "object",
+      "properties": {
+        "name":        { "type": "string", "minLength": 1 },
+        "description": { "type": "string" }
+      },
+      "required": ["name", "description"]
+    },
+
+    "chainEntry": {
+      "type": "object",
+      "properties": {
+        "scene": { "type": "integer" },
+        "bars":  { "type": "integer", "minimum": 1 }
+      },
+      "required": ["scene", "bars"]
+    },
+
+    "chain": {
+      "type": "object",
+      "properties": {
+        "enabled":    { "type": "boolean" },
+        "mode":       { "type": "integer" },
+        "entryCount": { "type": "integer", "minimum": 0 },
+        "entries":    { "type": "array", "items": { "$ref": "#/definitions/chainEntry" } }
+      },
+      "required": ["enabled", "mode", "entryCount", "entries"]
+    },
+
+    "macros": {
+      "type": "object",
+      "properties": {
+        "complexity":  { "type": "number", "minimum": 0, "maximum": 1 },
+        "density":     { "type": "number", "minimum": 0, "maximum": 1 },
+        "syncopation": { "type": "number", "minimum": 0, "maximum": 1 },
+        "swing":       { "type": "number", "minimum": 0, "maximum": 1 },
+        "tension":     { "type": "number", "minimum": 0, "maximum": 1 },
+        "humanize":    { "type": "number", "minimum": 0, "maximum": 1 }
+      },
+      "required": ["complexity", "density", "syncopation", "swing", "tension", "humanize"]
+    },
+
+    "state": {
+      "type": "object",
+      "properties": {
+        "preset":  { "type": "string" },
+        "seed":    { "type": "integer", "minimum": 0 },
+        "tempo":   { "type": "number", "minimum": 0 },
+        "scene":   { "type": "string", "enum": ["A", "B", "Morph"] },
+        "morph":   { "type": "number" },
+        "macros":  { "$ref": "#/definitions/macros" },
+        "lanes":   { "type": "array", "items": { "$ref": "#/definitions/lane" }, "minItems": 1, "maxItems": 8 },
+        "presets": { "type": "array", "items": { "$ref": "#/definitions/presetInfo" } },
+        "chain":   { "$ref": "#/definitions/chain" },
+        "noteMap": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 127 }, "minItems": 128, "maxItems": 128 }
+      },
+      "required": ["preset", "seed", "scene", "macros", "lanes", "presets"]
+    },
+
+    "frameLane": {
+      "type": "object",
+      "properties": {
+        "ph":   { "type": "number", "minimum": 0, "maximum": 1 },
+        "step": { "type": "integer", "minimum": 0 }
+      },
+      "required": ["ph", "step"]
+    },
+
+    "frame": {
+      "type": "object",
+      "properties": {
+        "t8":       { "type": "number", "minimum": 0 },
+        "playing":  { "type": "boolean" },
+        "convLeft": { "type": "integer", "minimum": 0 },
+        "lanes":    { "type": "array", "items": { "$ref": "#/definitions/frameLane" } }
+      },
+      "required": ["t8", "playing", "convLeft", "lanes"]
+    },
+
+    "msgReady": {
+      "type": "object",
+      "properties": {
+        "type": { "const": "ready" },
+        "v":    { "type": "integer" }
+      },
+      "required": ["type", "v"]
+    },
+
+    "msgEdit": {
+      "type": "object",
+      "properties": {
+        "type":    { "const": "edit" },
+        "v":       { "type": "integer" },
+        "paramId": { "type": "string", "minLength": 1 },
+        "value":   { "type": "number" },
+        "gesture": { "type": "string", "enum": ["begin", "perform", "end"] }
+      },
+      "required": ["type", "v", "paramId", "value", "gesture"]
+    },
+
+    "msgAction": {
+      "type": "object",
+      "properties": {
+        "type":    { "const": "action" },
+        "v":       { "type": "integer" },
+        "name":    { "type": "string", "minLength": 1 },
+        "payload": { "type": "object" }
+      },
+      "required": ["type", "v", "name", "payload"]
+    },
+
+    "msgState": {
+      "type": "object",
+      "properties": {
+        "type":  { "const": "state" },
+        "state": { "$ref": "#/definitions/state" }
+      },
+      "required": ["type", "state"]
+    },
+
+    "msgFrame": {
+      "type": "object",
+      "properties": {
+        "type":  { "const": "frame" },
+        "frame": { "$ref": "#/definitions/frame" }
+      },
+      "required": ["type", "frame"]
+    }
+  },
+
+  "oneOf": [
+    { "$ref": "#/definitions/msgReady" },
+    { "$ref": "#/definitions/msgEdit" },
+    { "$ref": "#/definitions/msgAction" },
+    { "$ref": "#/definitions/msgState" },
+    { "$ref": "#/definitions/msgFrame" }
+  ]
+}

@@ -104,7 +104,8 @@ Steinberg::tresult PLUGIN_API PolyController::initialize(Steinberg::FUnknown* co
     using namespace Steinberg::Vst;
     using Steinberg::Vst::ParameterInfo;
 
-    addUnit(new Unit(USTRING("Root"), kRootUnitId));
+    addUnit(new Unit(USTRING("Root"), kRootUnitId, // ownership-transfer
+                     Steinberg::Vst::kNoParentUnitId));
     for (int lane = 0; lane < kMaxLanes; ++lane) {
         Steinberg::Vst::String128 unitName;
         char ascii[32];
@@ -535,6 +536,22 @@ void PolyController::sendEnvelopeUpdate(int laneIndex, int envelopeIndex) {
             attrs->setInt("envIdx", envelopeIndex);
             attrs->setBinary("envelope", &ea.envelope, static_cast<Steinberg::uint32>(sizeof(ea.envelope)));
             attrs->setInt("active", ea.active ? 1 : 0);
+        }
+        sendMessage(msg);
+        msg->release();
+    }
+}
+
+void PolyController::sendAccentMask(int laneIndex) {
+    if (laneIndex < 0 || laneIndex >= kMaxLanes)
+        return;
+    if (auto* msg = allocateMessage()) {
+        msg->setMessageID("AccentMaskUpdate");
+        if (auto* attrs = msg->getAttributes()) {
+            attrs->setInt("lane", laneIndex);
+            const auto& scene = activeScene();
+            attrs->setBinary("accents", scene.lanes[laneIndex].accents.steps.data(),
+                             static_cast<Steinberg::uint32>(sizeof(scene.lanes[laneIndex].accents.steps)));
         }
         sendMessage(msg);
         msg->release();

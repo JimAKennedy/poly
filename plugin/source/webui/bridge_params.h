@@ -9,6 +9,7 @@
 #include <optional>
 
 #include "../plugids.h"
+#include "poly/scene.h"
 
 namespace poly::webui {
 
@@ -77,6 +78,21 @@ inline std::optional<Steinberg::Vst::ParamID> resolveParamId(const char* name) {
         return kActiveLaneCount;
     if (std::strcmp(name, "seed") == 0)
         return kSeed;
+
+    if (std::strcmp(name, "chain.enabled") == 0)
+        return kChainEnabled;
+    if (std::strcmp(name, "chain.mode") == 0)
+        return kChainMode;
+
+    int chainEntry = -1;
+    char chainField[32] = {};
+    if (std::sscanf(name, "chain.entry.%d.%31s", &chainEntry, chainField) == 2 && chainEntry >= 0 &&
+        chainEntry < kMaxChainEntries) {
+        if (std::strcmp(chainField, "scene") == 0)
+            return chainEntryParam(chainEntry, kChainEntryScene);
+        if (std::strcmp(chainField, "bars") == 0)
+            return chainEntryParam(chainEntry, kChainEntryBars);
+    }
 
     int lane = -1;
     char field[32] = {};
