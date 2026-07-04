@@ -339,6 +339,7 @@
       s.innerHTML = `
         <div class="head">
           <div class="nm"><b>${l.name}</b>${l.role}</div>
+          <button class="mute${l.active ? '' : ' off'}" data-mute aria-label="Mute ${l.name}" title="Mute">●</button>
           <button class="ex" aria-label="Expand ${l.name} strip" title="Expand">⤢</button>
         </div>
         <div class="body2">
@@ -353,11 +354,13 @@
               <button data-tab="timing">Timing</button>
               <button data-tab="env">Envelopes</button>
               <button data-tab="expr">Expr</button>
+              <button data-tab="adv">Adv</button>
             </div>
             <div class="pane on" data-pane="pattern"></div>
             <div class="pane" data-pane="timing"></div>
             <div class="pane" data-pane="env"></div>
             <div class="pane" data-pane="expr"></div>
+            <div class="pane" data-pane="adv"></div>
           </div>
         </div>
         <div class="feel"></div>
@@ -371,6 +374,12 @@
       ladders.push(s.querySelector('.ladder'));
       vus.push(s.querySelector('.vu i'));
       s.querySelector('.ex').addEventListener('click', () => expandStrip(expanded === li ? -1 : li));
+      s.querySelector('[data-mute]').addEventListener('click', () => {
+        const active = S.lanes[li].active;
+        host.edit(`lane.${li}.active`, active ? 0 : 1, 'begin');
+        host.edit(`lane.${li}.active`, active ? 0 : 1, 'perform');
+        host.edit(`lane.${li}.active`, active ? 0 : 1, 'end');
+      });
       s.querySelectorAll('.tabs button').forEach((tb) =>
         tb.addEventListener('click', () => {
           s.querySelectorAll('.tabs button').forEach((x) => x.classList.toggle('on', x === tb));
@@ -404,6 +413,9 @@
   }
   function refreshStrip(li) {
     const l = S.lanes[li];
+    strips[li].classList.toggle('muted', !l.active);
+    const muteBtn = strips[li].querySelector('[data-mute]');
+    if (muteBtn) muteBtn.classList.toggle('off', !l.active);
     drawRing(li);
     buildLadder(li);
     strips[li].querySelector('.feel').innerHTML = `
@@ -614,6 +626,92 @@
         window.addEventListener('pointerup', up, { once: true });
       });
     });
+
+    /* ADVANCED */
+    const adv = s.querySelector('[data-pane="adv"]');
+    const PHRASE = [
+      { field: 'phraseLength', label: 'Length', norm: l.phraseLength / 64,
+        fmt: (v) => { const b = Math.round(v * 64); return b === 0 ? 'Off' : b + ' bars'; } },
+      { field: 'phraseGap', label: 'Gap', norm: l.phraseGap / 64,
+        fmt: (v) => { const b = Math.round(v * 64); return b === 0 ? 'Off' : b + ' bars'; } },
+      { field: 'phraseOffset', label: 'Offset', norm: l.phraseOffset / 64,
+        fmt: (v) => Math.round(v * 64) + ' bars' },
+    ];
+    const MUTATION = [
+      { field: 'mutationRate', label: 'Mutation', norm: l.mutationRate,
+        fmt: (v) => Math.round(v * 100) + '%' },
+      { field: 'driftRate', label: 'Drift', norm: (l.driftRate + 4) / 8,
+        fmt: (v) => { const d = v * 8 - 4; return (d > 0 ? '+' : '') + d.toFixed(1); } },
+    ];
+    const MORE = [
+      { field: 'emphasisProb', label: 'Emphasis', norm: l.emphasisProb,
+        fmt: (v) => Math.round(v * 100) + '%' },
+      { field: 'timingOffset', label: 'T. Offset', norm: (l.timingOffset + 20) / 40,
+        fmt: (v) => { const ms = v * 40 - 20; return (ms > 0 ? '+' : '') + Math.round(ms) + 'ms'; } },
+    ];
+    const ALL_ADV = [...PHRASE, ...MUTATION, ...MORE];
+    const SUBS = [1, 2, 4, 8, 16];
+    const sliderHtml = (arr) => arr.map((p) =>
+      `<div class="param-slider"><label>${p.label}</label>` +
+      `<div class="slider-track" data-field="${p.field}"><i style="width:${(p.norm * 100).toFixed(1)}%"></i></div>` +
+      `<span class="v">${p.fmt(p.norm)}</span></div>`
+    ).join('');
+
+    adv.innerHTML =
+      `<div class="section-label">Phrase</div>` + sliderHtml(PHRASE) +
+      `<div class="hint">Lane plays for Length bars, rests for Gap. Offset shifts the start.</div>` +
+      `<div class="section-label">Mutation</div>` + sliderHtml(MUTATION) +
+      `<div class="hint">Mutation randomly flips steps; Drift shifts pattern phase over time.</div>` +
+      `<div class="section-label">More</div>` +
+      `<div class="prow"><label>Subdivision</label><div class="chip-row">${SUBS.map((sv) =>
+        `<button class="chip${l.subdivision === sv ? ' on' : ''}" data-sub="${sv}">${sv}</button>`).join('')}</div></div>` +
+      sliderHtml(MORE) +
+      `<div class="prow"><label>Kotekan</label><div class="chip-row">` +
+        `<button class="chip${l.kotekanSource === -1 ? ' on' : ''}" data-kot="-1">None</button>` +
+        S.lanes.map((sl, si) => si !== li
+          ? `<button class="chip${l.kotekanSource === si ? ' on' : ''}" data-kot="${si}">${sl.name}</button>`
+          : '').join('') +
+      `</div></div>`;
+
+    adv.querySelectorAll('.slider-track').forEach((track) => {
+      const field = track.dataset.field;
+      const p = ALL_ADV.find((x) => x.field === field);
+      const paramId = `lane.${li}.${field}`;
+      const fill = track.querySelector('i');
+      const vSpan = track.nextElementSibling;
+      const calc = (e) => {
+        const r = track.getBoundingClientRect();
+        return Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+      };
+      const paint = (v) => { fill.style.width = `${(v * 100).toFixed(1)}%`; vSpan.textContent = p.fmt(v); };
+      track.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        const v = calc(e); paint(v);
+        host.edit(paramId, v, 'begin');
+        host.edit(paramId, v, 'perform');
+        const mv = (ev) => { const nv = calc(ev); paint(nv); host.edit(paramId, nv, 'perform'); };
+        const up = (ev) => {
+          window.removeEventListener('pointermove', mv);
+          const nv = calc(ev); paint(nv); host.edit(paramId, nv, 'end');
+        };
+        window.addEventListener('pointermove', mv);
+        window.addEventListener('pointerup', up, { once: true });
+      });
+    });
+    adv.querySelectorAll('[data-sub]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const norm = SUBS.indexOf(parseInt(b.dataset.sub)) / 4;
+        host.edit(`lane.${li}.subdivision`, norm, 'begin');
+        host.edit(`lane.${li}.subdivision`, norm, 'perform');
+        host.edit(`lane.${li}.subdivision`, norm, 'end');
+      }));
+    adv.querySelectorAll('[data-kot]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const kv = parseInt(b.dataset.kot);
+        host.edit(`lane.${li}.kotekanSource`, (kv + 1) / 8, 'begin');
+        host.edit(`lane.${li}.kotekanSource`, (kv + 1) / 8, 'perform');
+        host.edit(`lane.${li}.kotekanSource`, (kv + 1) / 8, 'end');
+      }));
   }
 
   /* ================= state + frame wiring ================= */

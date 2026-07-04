@@ -516,3 +516,166 @@ test.describe('chain popover', () => {
     expect(state.scene).toBe('A');
   });
 });
+
+/* ================= S05: Phrase, Mutation & Advanced ================= */
+
+test.describe('lane mute toggle', () => {
+  test('mute button dispatches lane.N.active edit', async ({ page }) => {
+    await clearEdits(page);
+    await page.click('.strip[data-lane="0"] [data-mute]');
+    const edits = await getEdits(page);
+    expect(edits.some(e => e.paramId === 'lane.0.active' && e.value === 0)).toBe(true);
+  });
+
+  test('mute button toggles off class and strip muted', async ({ page }) => {
+    await page.click('.strip[data-lane="0"] [data-mute]');
+    await page.waitForTimeout(50);
+    await expect(page.locator('.strip[data-lane="0"]')).toHaveClass(/muted/);
+    await expect(page.locator('.strip[data-lane="0"] [data-mute]')).toHaveClass(/off/);
+  });
+});
+
+test.describe('advanced tab — phrase', () => {
+  test('phrase length slider updates model', async ({ page }) => {
+    await expandStrip(page, 0);
+    await page.click('.strip[data-lane="0"] [data-tab="adv"]');
+    await clearEdits(page);
+    const track = page.locator('.strip[data-lane="0"] [data-pane="adv"] .slider-track[data-field="phraseLength"]');
+    const box = await track.boundingBox();
+    await page.mouse.click(box.x + box.width * 0.5, box.y + box.height / 2);
+    const edits = await getEdits(page);
+    expect(edits.some(e => e.paramId === 'lane.0.phraseLength')).toBe(true);
+    const state = await page.evaluate(() => window.PolyMockHost.getState());
+    expect(state.lanes[0].phraseLength).toBeGreaterThan(0);
+  });
+
+  test('phrase gap slider updates model', async ({ page }) => {
+    await expandStrip(page, 0);
+    await page.click('.strip[data-lane="0"] [data-tab="adv"]');
+    await clearEdits(page);
+    const track = page.locator('.strip[data-lane="0"] [data-pane="adv"] .slider-track[data-field="phraseGap"]');
+    const box = await track.boundingBox();
+    await page.mouse.click(box.x + box.width * 0.5, box.y + box.height / 2);
+    const edits = await getEdits(page);
+    expect(edits.some(e => e.paramId === 'lane.0.phraseGap')).toBe(true);
+    const state = await page.evaluate(() => window.PolyMockHost.getState());
+    expect(state.lanes[0].phraseGap).toBeGreaterThan(0);
+  });
+
+  test('phrase offset slider updates model', async ({ page }) => {
+    await expandStrip(page, 0);
+    await page.click('.strip[data-lane="0"] [data-tab="adv"]');
+    await clearEdits(page);
+    const track = page.locator('.strip[data-lane="0"] [data-pane="adv"] .slider-track[data-field="phraseOffset"]');
+    const box = await track.boundingBox();
+    await page.mouse.click(box.x + box.width * 0.75, box.y + box.height / 2);
+    const edits = await getEdits(page);
+    expect(edits.some(e => e.paramId === 'lane.0.phraseOffset')).toBe(true);
+    const state = await page.evaluate(() => window.PolyMockHost.getState());
+    expect(state.lanes[0].phraseOffset).toBeGreaterThan(0);
+  });
+});
+
+test.describe('advanced tab — mutation', () => {
+  test('mutation rate slider updates model', async ({ page }) => {
+    await expandStrip(page, 0);
+    await page.click('.strip[data-lane="0"] [data-tab="adv"]');
+    await clearEdits(page);
+    const track = page.locator('.strip[data-lane="0"] [data-pane="adv"] .slider-track[data-field="mutationRate"]');
+    const box = await track.boundingBox();
+    await page.mouse.click(box.x + box.width * 0.6, box.y + box.height / 2);
+    const edits = await getEdits(page);
+    expect(edits.some(e => e.paramId === 'lane.0.mutationRate')).toBe(true);
+    const state = await page.evaluate(() => window.PolyMockHost.getState());
+    expect(state.lanes[0].mutationRate).toBeGreaterThan(0);
+  });
+
+  test('drift rate slider updates model', async ({ page }) => {
+    await expandStrip(page, 0);
+    await page.click('.strip[data-lane="0"] [data-tab="adv"]');
+    await clearEdits(page);
+    const track = page.locator('.strip[data-lane="0"] [data-pane="adv"] .slider-track[data-field="driftRate"]');
+    const box = await track.boundingBox();
+    await page.mouse.click(box.x + box.width * 0.75, box.y + box.height / 2);
+    const edits = await getEdits(page);
+    expect(edits.some(e => e.paramId === 'lane.0.driftRate')).toBe(true);
+    const state = await page.evaluate(() => window.PolyMockHost.getState());
+    expect(state.lanes[0].driftRate).not.toBe(0);
+  });
+});
+
+test.describe('advanced tab — more controls', () => {
+  test('subdivision chip dispatches edit', async ({ page }) => {
+    await expandStrip(page, 0);
+    await page.click('.strip[data-lane="0"] [data-tab="adv"]');
+    await clearEdits(page);
+    await page.click('.strip[data-lane="0"] [data-pane="adv"] [data-sub="8"]');
+    const edits = await getEdits(page);
+    expect(edits.some(e => e.paramId === 'lane.0.subdivision' && e.value === 0.75)).toBe(true);
+    const state = await page.evaluate(() => window.PolyMockHost.getState());
+    expect(state.lanes[0].subdivision).toBe(8);
+  });
+
+  test('emphasis slider updates model', async ({ page }) => {
+    await expandStrip(page, 0);
+    await page.click('.strip[data-lane="0"] [data-tab="adv"]');
+    await clearEdits(page);
+    const track = page.locator('.strip[data-lane="0"] [data-pane="adv"] .slider-track[data-field="emphasisProb"]');
+    const box = await track.boundingBox();
+    await page.mouse.click(box.x + box.width * 0.5, box.y + box.height / 2);
+    const edits = await getEdits(page);
+    expect(edits.some(e => e.paramId === 'lane.0.emphasisProb')).toBe(true);
+  });
+
+  test('timing offset slider updates model', async ({ page }) => {
+    await expandStrip(page, 0);
+    await page.click('.strip[data-lane="0"] [data-tab="adv"]');
+    await clearEdits(page);
+    const track = page.locator('.strip[data-lane="0"] [data-pane="adv"] .slider-track[data-field="timingOffset"]');
+    const box = await track.boundingBox();
+    await page.mouse.click(box.x + box.width * 0.8, box.y + box.height / 2);
+    const edits = await getEdits(page);
+    expect(edits.some(e => e.paramId === 'lane.0.timingOffset')).toBe(true);
+  });
+
+  test('kotekan chip dispatches edit', async ({ page }) => {
+    await expandStrip(page, 0);
+    await page.click('.strip[data-lane="0"] [data-tab="adv"]');
+    await clearEdits(page);
+    await page.click('.strip[data-lane="0"] [data-pane="adv"] [data-kot="1"]');
+    const edits = await getEdits(page);
+    expect(edits.some(e => e.paramId === 'lane.0.kotekanSource' && e.value === 0.25)).toBe(true);
+    const state = await page.evaluate(() => window.PolyMockHost.getState());
+    expect(state.lanes[0].kotekanSource).toBe(1);
+  });
+
+  test('kotekan None chip resets source', async ({ page }) => {
+    await page.evaluate(() => {
+      const s = window.PolyMockHost.getState();
+      s.lanes[0].kotekanSource = 2;
+      window.PolyMockHost._pushState();
+    });
+    await expandStrip(page, 0);
+    await page.click('.strip[data-lane="0"] [data-tab="adv"]');
+    await clearEdits(page);
+    await page.click('.strip[data-lane="0"] [data-pane="adv"] [data-kot="-1"]');
+    const state = await page.evaluate(() => window.PolyMockHost.getState());
+    expect(state.lanes[0].kotekanSource).toBe(-1);
+  });
+
+  test('preset load resets advanced params', async ({ page }) => {
+    await page.evaluate(() => {
+      const s = window.PolyMockHost.getState();
+      s.lanes[0].phraseLength = 16;
+      s.lanes[0].mutationRate = 0.5;
+      s.lanes[0].kotekanSource = 2;
+      window.PolyMockHost._pushState();
+    });
+    await page.evaluate(() => window.PolyMockHost.action('applyPreset', { index: -1 }));
+    await page.waitForTimeout(50);
+    const state = await page.evaluate(() => window.PolyMockHost.getState());
+    expect(state.lanes[0].phraseLength).toBe(0);
+    expect(state.lanes[0].mutationRate).toBe(0);
+    expect(state.lanes[0].kotekanSource).toBe(-1);
+  });
+});
