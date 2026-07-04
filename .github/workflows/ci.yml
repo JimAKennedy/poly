@@ -23,11 +23,11 @@ jobs:
       matrix:
         include:
           - os: macos-14
-            cmake-args: -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES=arm64 -DBUILD_VISUAL_TESTS=ON -DBUILD_INTERACTION_TESTS=ON
+            cmake-args: -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES=arm64 -DBUILD_VISUAL_TESTS=ON -DBUILD_INTERACTION_TESTS=ON -DSMTG_RUN_VST_VALIDATOR=ON
           - os: ubuntu-latest
-            cmake-args: -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_INTERACTION_TESTS=ON
+            cmake-args: -G Ninja -DCMAKE_BUILD_TYPE=Release -DBUILD_INTERACTION_TESTS=ON -DSMTG_RUN_VST_VALIDATOR=ON
           - os: windows-2022
-            cmake-args: -G "Visual Studio 17 2022"
+            cmake-args: -G "Visual Studio 17 2022" -DSMTG_RUN_VST_VALIDATOR=ON
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -189,6 +189,60 @@ jobs:
           retention-days: 30
           if-no-files-found: ignore
 
+  pluginval:
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            artifact: plugin-macos-14
+          - os: ubuntu-latest
+            artifact: plugin-ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Download plugin artifact
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e005971372dc801d16 # v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: plugin
+      - name: Find VST3 bundle
+        id: find-vst3
+        run: |
+          VST3_PATH=$(find plugin -name "*.vst3" -type d | head -1)
+          echo "path=$VST3_PATH" >> "$GITHUB_OUTPUT"
+          echo "Found VST3 at: $VST3_PATH"
+      - name: Download pluginval
+        run: |
+          if [[ "${{ runner.os }}" == "macOS" ]]; then
+            curl -fsSL -o pluginval.zip https://github.com/Tracktion/pluginval/releases/latest/download/pluginval_macOS.zip
+          else
+            curl -fsSL -o pluginval.zip https://github.com/Tracktion/pluginval/releases/latest/download/pluginval_Linux.zip
+          fi
+          unzip -q pluginval.zip
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libasound2-dev libfreetype6-dev libx11-dev libxcomposite-dev libxcursor-dev libxext-dev libxinerama-dev libxrandr-dev libxrender-dev
+      - name: Run pluginval
+        run: |
+          if [[ "${{ runner.os }}" == "macOS" ]]; then
+            chmod +x "pluginval.app/Contents/MacOS/pluginval"
+            "pluginval.app/Contents/MacOS/pluginval" \
+              --strictness-level 8 \
+              --skip-gui-tests \
+              --timeout-ms 120000 \
+              --validate "${{ steps.find-vst3.outputs.path }}"
+          else
+            chmod +x pluginval
+            xvfb-run -a ./pluginval \
+              --strictness-level 8 \
+              --skip-gui-tests \
+              --timeout-ms 120000 \
+              --validate "${{ steps.find-vst3.outputs.path }}"
+          fi
+
   site-lint:
     runs-on: ubuntu-latest
     steps:
@@ -197,7 +251,7 @@ jobs:
         run: bash scripts/check-site-assets.sh
 
   ci-complete:
-    needs: [code-quality, build, engine-isolation, secrets-scan, code-coverage, webui-tests, site-lint]
+    needs: [code-quality, build, engine-isolation, secrets-scan, code-coverage, webui-tests, pluginval, site-lint]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -209,6 +263,7 @@ jobs:
              [[ "${{ needs.secrets-scan.result }}" != "success" ]] || \
              [[ "${{ needs.code-coverage.result }}" != "success" ]] || \
              [[ "${{ needs.webui-tests.result }}" != "success" ]] || \
+             [[ "${{ needs.pluginval.result }}" != "success" ]] || \
              [[ "${{ needs.site-lint.result }}" != "success" ]]; then
             echo "One or more CI jobs failed"
             exit 1

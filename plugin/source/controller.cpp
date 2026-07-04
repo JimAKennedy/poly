@@ -104,7 +104,8 @@ Steinberg::tresult PLUGIN_API PolyController::initialize(Steinberg::FUnknown* co
     using namespace Steinberg::Vst;
     using Steinberg::Vst::ParameterInfo;
 
-    addUnit(new Unit(USTRING("Root"), kRootUnitId));
+    addUnit(new Unit(USTRING("Root"), kRootUnitId, // ownership-transfer
+                     Steinberg::Vst::kNoParentUnitId));
     for (int lane = 0; lane < kMaxLanes; ++lane) {
         Steinberg::Vst::String128 unitName;
         char ascii[32];
