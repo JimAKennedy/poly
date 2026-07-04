@@ -346,6 +346,8 @@ static std::string grooveStateToJson(const GrooveState& gs, const SceneState& ss
 WebUIView::WebUIView(PolyController* controller) : CPluginView(nullptr), controller_(controller) {
     Steinberg::ViewRect rect(0, 0, 1160, 760);
     setRect(rect);
+    if (currentPresetName_.empty())
+        currentPresetName_ = "Init";
 }
 
 WebUIView::~WebUIView() {
@@ -462,6 +464,8 @@ void WebUIView::handleHostCall(const std::string& json) {
         auto typeStr = msg["type"].toString();
 
         if (typeStr == "ready") {
+            webviewReady_ = true;
+            lastPushedJson_.clear();
             pushState();
             return;
         }
@@ -480,8 +484,14 @@ void WebUIView::handleHostCall(const std::string& json) {
             } else if (gesture == "perform") {
                 controller_->setParamNormalized(*id, value);
                 controller_->performEdit(*id, value);
+                applyEditToCache(*id, value);
+                editCooldown_ = 20;
+                pushState();
             } else if (gesture == "end") {
                 controller_->endEdit(*id);
+                applyEditToCache(*id, value);
+                editCooldown_ = 20;
+                pushState();
             }
             return;
         }
@@ -490,7 +500,7 @@ void WebUIView::handleHostCall(const std::string& json) {
             auto name = msg["name"].toString();
             auto payload = msg["payload"];
             handleAction(name, payload);
-            editCooldown_ = 6;
+            editCooldown_ = 20;
             pushState();
             return;
         }
@@ -613,10 +623,15 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
     if (name == "selectScene") {
         auto sceneStr = payload["scene"].toString();
         double val = 0.0;
-        if (sceneStr == "B")
+        SceneSelect newSel = SceneSelect::A;
+        if (sceneStr == "B") {
             val = 0.5;
-        else if (sceneStr == "Morph")
+            newSel = SceneSelect::B;
+        } else if (sceneStr == "Morph") {
             val = 1.0;
+            newSel = SceneSelect::Morph;
+        }
+        controller_->mutableCachedState().select = newSel;
         controller_->beginEdit(ParamIDs::kSceneSelect);
         controller_->setParamNormalized(ParamIDs::kSceneSelect, val);
         controller_->performEdit(ParamIDs::kSceneSelect, val);
@@ -730,6 +745,15 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
             pushParam(ParamIDs::kActiveLaneCount, (state.activeLaneCount - 1) / 7.0);
             pushParam(ParamIDs::kSeed, state.seed / 999999.0);
         }
+        for (int lane = 0; lane < kMaxLanes; ++lane) {
+            controller_->sendCellSizes(lane);
+            controller_->sendTimelinePattern(lane);
+            controller_->sendMicroTiming(lane);
+            controller_->sendAccentMask(lane);
+            const auto& cfg = controller_->activeScene().lanes[lane];
+            for (int ei = 0; ei < cfg.envelopeCount && ei < kMaxEnvelopesPerLane; ++ei)
+                controller_->sendEnvelopeUpdate(lane, ei);
+        }
         return;
     }
 
@@ -747,6 +771,7 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
         if (lane < 0 || lane >= kMaxLanes || step < 0 || step >= kMaxSteps)
             return;
         scene.lanes[lane].accents.steps[step] = static_cast<float>(payload["value"].getFloat64());
+        controller_->sendAccentMask(lane);
         return;
     }
 
@@ -797,6 +822,185 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
     }
 }
 
+void WebUIView::applyEditToCache(Steinberg::Vst::ParamID id, double normalized) {
+    using namespace ParamIDs;
+    auto& ss = controller_->mutableCachedState();
+    auto& gs = controller_->mutableActiveScene();
+
+    if (id == kSceneSelect) {
+        int sel = static_cast<int>(std::round(normalized * 2.0));
+        ss.select = static_cast<SceneSelect>(std::clamp(sel, 0, 2));
+        return;
+    }
+    if (id == kSceneMorph) {
+        ss.morphAmount = static_cast<float>(normalized);
+        return;
+    }
+    if (id == kChainEnabled) {
+        ss.chain.enabled = (normalized > 0.5);
+        return;
+    }
+    if (id == kChainMode) {
+        int m = static_cast<int>(std::round(normalized * 2.0));
+        ss.chain.mode = static_cast<ChainMode>(std::clamp(m, 0, 2));
+        return;
+    }
+    if (id == kChainEntryCount) {
+        ss.chain.entryCount = static_cast<int>(std::round(normalized * static_cast<double>(kMaxChainEntries)));
+        return;
+    }
+    if (id >= kChainEntryBase &&
+        id < kChainEntryBase + static_cast<Steinberg::Vst::ParamID>(kMaxChainEntries * kChainParamsPerEntry)) {
+        auto rel = static_cast<int>(id - kChainEntryBase);
+        int entry = rel / kChainParamsPerEntry;
+        int offset = rel % kChainParamsPerEntry;
+        if (entry < kMaxChainEntries) {
+            auto& e = ss.chain.entries[static_cast<size_t>(entry)];
+            if (offset == kChainEntryScene) {
+                int sel = static_cast<int>(std::round(normalized * 2.0));
+                e.scene = static_cast<SceneSelect>(std::clamp(sel, 0, 2));
+            } else if (offset == kChainEntryBars) {
+                e.bars = 1 + static_cast<int>(std::round(normalized * 31.0));
+            }
+        }
+        return;
+    }
+
+    if (id >= kLaneCoreBase &&
+        id < kLaneCoreBase + static_cast<Steinberg::Vst::ParamID>(kMaxLanes * kCoreParamsPerLane)) {
+        auto rel = static_cast<int>(id - kLaneCoreBase);
+        int lane = rel / kCoreParamsPerLane;
+        int offset = rel % kCoreParamsPerLane;
+        auto& cfg = gs.lanes[lane];
+        switch (offset) {
+        case kCoreSteps:
+            cfg.cycle.steps = 1 + static_cast<int>(std::round(normalized * 63.0));
+            break;
+        case kCoreSubdivision: {
+            static constexpr int subdivs[] = {1, 2, 4, 8, 16};
+            int idx = static_cast<int>(std::round(normalized * 4.0));
+            cfg.cycle.subdivision = subdivs[std::clamp(idx, 0, 4)];
+            break;
+        }
+        case kCoreHits:
+            cfg.hitCount = static_cast<int>(std::round(normalized * 64.0));
+            break;
+        case kCoreRotation:
+            cfg.rotation = static_cast<int>(std::round(normalized * 63.0));
+            break;
+        case kCoreMidiNote:
+            cfg.midiNote = static_cast<int16_t>(std::round(normalized * 127.0));
+            break;
+        case kCoreCellCount:
+            cfg.cellCount = static_cast<int>(std::round(normalized * 64.0));
+            break;
+        case kCoreTimeline:
+            cfg.timeline = normalized > 0.5;
+            break;
+        case kCoreFixedPatternLen:
+            cfg.fixedPatternLength = static_cast<int>(std::round(normalized * 64.0));
+            break;
+        case kCoreTempoMult:
+            cfg.tempoMultiplier = static_cast<float>(0.25 + normalized * 3.75);
+            break;
+        case kCoreMidiChannel:
+            cfg.midiChannel = static_cast<int16_t>(std::round(normalized * 16.0)) - 1;
+            break;
+        default:
+            break;
+        }
+        return;
+    }
+
+    if (id < static_cast<Steinberg::Vst::ParamID>(kMaxLanes * kParamsPerLane)) {
+        int lane = static_cast<int>(id) / kParamsPerLane;
+        int offset = static_cast<int>(id) % kParamsPerLane;
+        auto& cfg = gs.lanes[lane];
+        switch (offset) {
+        case kProbability:
+            cfg.probability = static_cast<float>(normalized);
+            break;
+        case kBaseVelocity:
+            cfg.baseVelocity = static_cast<uint8_t>(std::round(normalized * 127.0));
+            break;
+        case kEmphasisProb:
+            cfg.emphasisProb = static_cast<float>(normalized);
+            break;
+        case kGhostFloor:
+            cfg.ghostFloor = static_cast<uint8_t>(std::round(normalized * 127.0));
+            break;
+        case kVelocitySpread:
+            cfg.velocitySpread = static_cast<float>(normalized);
+            break;
+        case kSwingAmount:
+            cfg.swingAmount = static_cast<float>(normalized);
+            break;
+        case kHumanizeMs:
+            cfg.humanizeMs = static_cast<float>(normalized * 50.0);
+            break;
+        case kNoteDuration:
+            cfg.noteDuration = static_cast<float>(normalized * 4.0);
+            break;
+        case kActive:
+            cfg.active = (normalized > 0.5);
+            break;
+        case kPhraseLength:
+            cfg.phraseLength = static_cast<float>(normalized * 64.0);
+            break;
+        case kPhraseGap:
+            cfg.phraseGap = static_cast<float>(normalized * 64.0);
+            break;
+        case kPhraseOffset:
+            cfg.phraseOffset = static_cast<float>(normalized * 64.0);
+            break;
+        case kMutationRate:
+            cfg.mutationRate = static_cast<float>(normalized);
+            break;
+        case kDriftRate:
+            cfg.driftRate = static_cast<float>(normalized * 8.0 - 4.0);
+            break;
+        case kTimingOffset:
+            cfg.timingOffsetMs = static_cast<float>(normalized * 40.0 - 20.0);
+            break;
+        case kKotekanSource:
+            cfg.kotekanSourceLane = static_cast<int>(std::round(normalized * 8.0)) - 1;
+            break;
+        default:
+            break;
+        }
+        return;
+    }
+
+    switch (id) {
+    case kMacroComplexity:
+        gs.macros.complexity = static_cast<float>(normalized);
+        break;
+    case kMacroDensity:
+        gs.macros.density = static_cast<float>(normalized);
+        break;
+    case kMacroSyncopation:
+        gs.macros.syncopation = static_cast<float>(normalized);
+        break;
+    case kMacroSwing:
+        gs.macros.swing = static_cast<float>(normalized);
+        break;
+    case kMacroTension:
+        gs.macros.tension = static_cast<float>(normalized);
+        break;
+    case kMacroHumanize:
+        gs.macros.humanize = static_cast<float>(normalized);
+        break;
+    case kActiveLaneCount:
+        gs.activeLaneCount = 1 + static_cast<int>(std::round(normalized * 7.0));
+        break;
+    case kSeed:
+        gs.seed = static_cast<uint64_t>(std::round(normalized * 999999.0));
+        break;
+    default:
+        break;
+    }
+}
+
 void WebUIView::pushState() {
     if (!webview_ || !controller_)
         return;
@@ -812,6 +1016,9 @@ void WebUIView::pushState() {
 
 void WebUIView::pushFrame() {
     if (!webview_ || !controller_)
+        return;
+
+    if (!webviewReady_)
         return;
 
     auto* snap = controller_->uiSnapshot();

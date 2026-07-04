@@ -541,4 +541,20 @@ void PolyController::sendEnvelopeUpdate(int laneIndex, int envelopeIndex) {
     }
 }
 
+void PolyController::sendAccentMask(int laneIndex) {
+    if (laneIndex < 0 || laneIndex >= kMaxLanes)
+        return;
+    if (auto* msg = allocateMessage()) {
+        msg->setMessageID("AccentMaskUpdate");
+        if (auto* attrs = msg->getAttributes()) {
+            attrs->setInt("lane", laneIndex);
+            const auto& scene = activeScene();
+            attrs->setBinary("accents", scene.lanes[laneIndex].accents.steps.data(),
+                             static_cast<Steinberg::uint32>(sizeof(scene.lanes[laneIndex].accents.steps)));
+        }
+        sendMessage(msg);
+        msg->release();
+    }
+}
+
 } // namespace poly

@@ -41,6 +41,7 @@ public:
     void sendTimelinePattern(int laneIndex);
     void sendMicroTiming(int laneIndex);
     void sendEnvelopeUpdate(int laneIndex, int envelopeIndex);
+    void sendAccentMask(int laneIndex);
 
     bool hasPendingSmf() const { return !pendingSmfData_.empty(); }
     std::vector<uint8_t> consumeSmfData() { return std::move(pendingSmfData_); }
