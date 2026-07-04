@@ -23,6 +23,18 @@
     }
   }
 
+  let _fc = 0, _sc = 0;
+  let _dbg = null;
+  function _updateDbg(extra) {
+    if (!_dbg) {
+      _dbg = document.createElement('div');
+      _dbg.id = '_dbg';
+      _dbg.style.cssText = 'position:fixed;bottom:2px;right:4px;font:10px/1.3 monospace;color:#8f8;background:rgba(0,0,0,.7);padding:2px 6px;z-index:9999;pointer-events:none;border-radius:3px';
+      document.body.appendChild(_dbg);
+    }
+    _dbg.textContent = extra;
+  }
+
   // C++ → JS entry point.
   window.polyHostPush = function (json) {
     let msg;
@@ -33,10 +45,14 @@
       return;
     }
     if (msg.type === 'state') {
+      _sc++;
       lastState = msg.state;
       stateSubs.forEach((cb) => cb(lastState));
+      _updateDbg(`SC:${_sc} FC:${_fc} lanes:${msg.state?.lanes?.length ?? '?'}`);
     } else if (msg.type === 'frame') {
+      _fc++;
       frameSubs.forEach((cb) => cb(msg.frame));
+      if (_fc % 30 === 0) _updateDbg(`SC:${_sc} FC:${_fc} t8:${msg.frame?.t8?.toFixed(1) ?? '?'} P:${msg.frame?.playing ? 'Y' : 'N'}`);
     }
   };
 

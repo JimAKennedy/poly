@@ -32,6 +32,7 @@
  *   //   'setMicroTiming'  {lane, step, ms}
  *   //   'setEnvelope'     {lane, index, envelope | null}
  *   //   'selectScene'     {scene: 'A'|'B'}
+ *   //   'applyPreset'     {index: -1|0..13}  (-1 = Init, 0-13 = factory preset)
  *   //   'togglePlay'      {}            (mock only; native transport is host-owned)
  *   //   'exportRequest'   {}
  *
@@ -43,7 +44,8 @@
  *   preset: string, seed: number, tempo: number,
  *   scene: 'A'|'B'|'Morph', morph: number,
  *   macros: { complexity, density, syncopation, swing, tension, humanize },
- *   lanes: Lane[]            // length = active lanes
+ *   lanes: Lane[],           // length = active lanes
+ *   presets: PresetInfo[]     // [{name, description}] — 14 factory presets
  * }
  * Lane = {
  *   name, role, note, ch, steps, stepLen, vel, prob, spread, ghost, push,

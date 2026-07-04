@@ -72,6 +72,25 @@ Steinberg::tresult PLUGIN_API PolyProcessor::setActive(Steinberg::TBool state) {
     return AudioEffect::setActive(state);
 }
 
+Steinberg::tresult PLUGIN_API PolyProcessor::connect(Steinberg::Vst::IConnectionPoint* other) {
+    auto result = AudioEffect::connect(other);
+    if (result == Steinberg::kResultOk || result == Steinberg::kResultTrue) {
+        sendSnapshotPointer();
+    }
+    return result;
+}
+
+void PolyProcessor::sendSnapshotPointer() {
+    if (auto* msg = allocateMessage()) { // RT-SAFE-OK: connect() runs on message thread
+        msg->setMessageID("UISnapshotPtr");
+        if (auto* attrs = msg->getAttributes()) {
+            attrs->setInt("ptr", reinterpret_cast<Steinberg::int64>(&uiSnapshot_));
+        }
+        sendMessage(msg); // RT-SAFE-OK: connect() runs on message thread
+        msg->release();
+    }
+}
+
 void PolyProcessor::updateTransportContext(const Steinberg::Vst::ProcessData& data) {
     if (!data.processContext)
         return;
@@ -170,7 +189,7 @@ void PolyProcessor::emitMidiOutput(Steinberg::Vst::IEventList* outputEvents, Ste
 }
 
 static void outputLaneVisualization(Steinberg::Vst::IParameterChanges* outParams, const LaneConfig& cfg, int lane,
-                                    double ppqStart) {
+                                    double ppqStart, UISnapshot& snap) {
     auto additive = computeAdditiveCells(cfg);
     double laneTempoScale = (cfg.tempoMultiplier > 0.0f) ? 1.0 / static_cast<double>(cfg.tempoMultiplier) : 1.0;
     double cycleBeats = additive.count > 0 ? additive.totalPpq * laneTempoScale
@@ -196,6 +215,7 @@ static void outputLaneVisualization(Steinberg::Vst::IParameterChanges* outParams
         Steinberg::int32 ptIdx;
         phaseQueue->addPoint(0, lanePhase, ptIdx);
     }
+    snap.lanePhases[lane].store(lanePhase, std::memory_order_relaxed);
 
     double envValue = 0.5;
     if (cfg.envelopeCount > 0) {
@@ -239,13 +259,15 @@ void PolyProcessor::outputParameterFeedback(Steinberg::Vst::ProcessData& data, c
     {
         Steinberg::int32 idx;
         auto* ppqQueue = outParams->addParameterData(ParamIDs::kTransportPpqOutput, idx);
+        double ppqNorm = std::fmod(tc_.ppqStart, 128.0) / 128.0;
+        if (ppqNorm < 0.0)
+            ppqNorm += 1.0;
         if (ppqQueue) {
             Steinberg::int32 ptIdx;
-            double ppqNorm = std::fmod(tc_.ppqStart, 128.0) / 128.0;
-            if (ppqNorm < 0.0)
-                ppqNorm += 1.0;
             ppqQueue->addPoint(0, ppqNorm, ptIdx);
         }
+        uiSnapshot_.ppqNorm.store(ppqNorm, std::memory_order_relaxed);
+        uiSnapshot_.playing.store(true, std::memory_order_release);
     }
 
     if (noteBuffer_.count > 0) {
@@ -268,7 +290,7 @@ void PolyProcessor::outputParameterFeedback(Steinberg::Vst::ProcessData& data, c
 
     for (int lane = 0; lane < kMaxLanes; ++lane) {
         if (resolved.lanes[lane].active)
-            outputLaneVisualization(outParams, resolved.lanes[lane], lane, tc_.ppqStart);
+            outputLaneVisualization(outParams, resolved.lanes[lane], lane, tc_.ppqStart, uiSnapshot_);
     }
 
     {
@@ -352,6 +374,11 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
     updateTransportContext(data);
 
     if (!tc_.playing) {
+        uiSnapshot_.playing.store(false, std::memory_order_relaxed);
+        if (!uiSnapshot_.stateReady.load(std::memory_order_acquire)) {
+            uiSnapshot_.state = sceneState_;
+            uiSnapshot_.stateReady.store(true, std::memory_order_release);
+        }
         if (wasPlaying_ && pendingNoteOffs_.count() > 0 && data.outputEvents) {
             PendingNoteOff allOffs[PendingNoteOffBuffer::kCapacity];
             size_t n = pendingNoteOffs_.flushDue(-1e12, 1e12, allOffs, PendingNoteOffBuffer::kCapacity);
@@ -431,6 +458,11 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
     if (!snapshotReady_.load(std::memory_order_acquire)) {
         stateSnapshot_ = sceneState_;
         snapshotReady_.store(true, std::memory_order_release);
+    }
+
+    if (!uiSnapshot_.stateReady.load(std::memory_order_acquire)) {
+        uiSnapshot_.state = sceneState_;
+        uiSnapshot_.stateReady.store(true, std::memory_order_release);
     }
 
     return Steinberg::kResultOk;

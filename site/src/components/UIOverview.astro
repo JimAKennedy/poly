@@ -1,0 +1,81 @@
+---
+// Annotated Poly plugin interface screenshot with numbered section labels
+---
+
+<figure class="ui-overview">
+  <div class="ui-overview-container">
+    <img
+      src="/poly/screenshots/04-afrobeat.png"
+      alt="Poly VST3 plugin interface — Afrobeat 12/8 preset with all seven sections labeled: header, lane grid, lane editor, macros, velocity, visualization, and cross-rhythm"
+    />
+    <span class="ui-label" style="top: 1.5%">1</span>
+    <span class="ui-label" style="top: 14%">2</span>
+    <span class="ui-label" style="top: 35%">3</span>
+    <span class="ui-label" style="top: 51%">4</span>
+    <span class="ui-label" style="top: 60.5%">5</span>
+    <span class="ui-label" style="top: 73%">6</span>
+    <span class="ui-label" style="top: 91%">7</span>
+  </div>
+  <figcaption>
+    Poly interface (Afrobeat 12/8 preset) &mdash;
+    <b>1</b>&thinsp;Header &middot;
+    <b>2</b>&thinsp;Lane Grid &middot;
+    <b>3</b>&thinsp;Lane Editor &middot;
+    <b>4</b>&thinsp;Macros &middot;
+    <b>5</b>&thinsp;Velocity &middot;
+    <b>6</b>&thinsp;Visualization &middot;
+    <b>7</b>&thinsp;Cross-Rhythm
+  </figcaption>
+</figure>
+
+<style>
+  .ui-overview {
+    margin: 1.5rem 0;
+  }
+
+  .ui-overview-container {
+    position: relative;
+    border: 1px solid var(--sl-color-gray-4);
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--poly-surface);
+  }
+
+  .ui-overview-container img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .ui-label {
+    position: absolute;
+    left: 0.4rem;
+    width: 1.3rem;
+    height: 1.3rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--sl-color-accent, #01696f);
+    color: #fff;
+    font-family: var(--poly-font-sans);
+    font-size: 0.7rem;
+    font-weight: 700;
+    line-height: 1;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+    pointer-events: none;
+  }
+
+  figcaption {
+    font-family: var(--poly-font-sans);
+    font-size: var(--sl-text-xs);
+    color: var(--poly-text-muted);
+    margin-top: 0.4rem;
+    text-align: center;
+    line-height: 1.5;
+  }
+
+  figcaption b {
+    color: var(--sl-color-accent, #01696f);
+  }
+</style>

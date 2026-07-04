@@ -2,29 +2,147 @@
 /**
  * Mock host: browser-standalone PolyHost implementation.
  * Owns the groove model and a WebAudio preview engine so the UI can be
- * developed, demoed, and CI-tested without the plugin. Ships the Afrobeat
- * 12/8 factory preset (presets.cpp makeAfrobeat12_8) as its model.
+ * developed, demoed, and CI-tested without the plugin. Provides all 14
+ * factory presets (matching presets.cpp) with representative lane data
+ * for the most distinct presets.
  */
 (function () {
   const { euclid, rotArr, cyc8, onsets, laneHitAt, hitVelocity } = window.PolyGrooveMath;
 
-  const LANES = [
-    { name: 'Bell', role: 'Anchor pulse', note: 56, ch: 1, steps: 12, stepLen: 1, vel: 90, prob: 1.0, spread: 0, ghost: 0, push: 0, hits: 7, rot: 0, timeline: true,
-      fixed: [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1], pattern: [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1], cells: null,
-      envs: [{ target: 'Velocity', period: 4, depth: 0.35, on: true }], hue: '#F5B54A' },
-    { name: 'Kick', role: 'Backbeat', note: 36, ch: 2, steps: 4, stepLen: 2, vel: 112, prob: 1.0, spread: 0, ghost: 0, push: 3, hits: 4, rot: 0, timeline: false,
-      fixed: null, pattern: euclid(4, 4), cells: null, envs: [], hue: '#E4604E' },
-    { name: 'Snare', role: 'Accent', note: 38, ch: 3, steps: 3, stepLen: 1, vel: 95, prob: 0.9, spread: 0, ghost: 0, push: -2, hits: 2, rot: 0, timeline: false,
-      fixed: null, pattern: euclid(2, 3), cells: null, envs: [{ target: 'Probability', period: 7, depth: 0.5, on: false }], hue: '#5AC8DA' },
-    { name: 'Shaker', role: 'Shimmer', note: 70, ch: 4, steps: 12, stepLen: 1, vel: 55, prob: 0.9, spread: 0.12, ghost: 0, push: 0, hits: 12, rot: 0, timeline: false,
-      fixed: null, pattern: euclid(12, 12), cells: null, envs: [{ target: 'Velocity', period: 7, depth: 0.45, on: true }], hue: '#9BC46B' },
-    { name: 'Conga', role: 'Ghost', note: 63, ch: 5, steps: 5, stepLen: 1, vel: 65, prob: 0.8, spread: 0, ghost: 25, push: 0, hits: 3, rot: 0, timeline: false,
-      fixed: null, pattern: euclid(3, 5), cells: null, envs: [], hue: '#B48AE0' },
+  const HUES = ['#F5B54A', '#E4604E', '#5AC8DA', '#9BC46B', '#B48AE0', '#E8A33D', '#4EBBE0', '#D47AB8'];
+
+  function mkLane(name, role, note, ch, steps, stepLen, hits, vel, opts = {}) {
+    const subdivision = opts.subdivision ?? Math.round(8 / stepLen);
+    const l = {
+      name, role, note, ch, steps, subdivision, stepLen, vel, prob: opts.prob ?? 1.0,
+      spread: opts.spread ?? 0, ghost: opts.ghost ?? 0, push: opts.push ?? 0,
+      hits, rot: opts.rot ?? 0, timeline: opts.timeline ?? false,
+      fixed: opts.fixed ?? null,
+      pattern: opts.fixed ? opts.fixed.slice() : rotArr(euclid(hits, steps), opts.rot ?? 0),
+      cells: opts.cells ?? null, cellCount: opts.cells ? opts.cells.length : 0,
+      mt: new Array(steps).fill(0),
+      envs: opts.envs ?? [], hue: HUES[(ch - 1) % 8],
+      active: opts.active ?? true,
+      humanize: opts.humanize ?? 0, swing: opts.swing ?? 0,
+      duration: opts.duration ?? 0.5, emphasisProb: opts.emphasisProb ?? 0,
+      timingOffset: opts.timingOffset ?? 0,
+      mutationRate: opts.mutationRate ?? 0, driftRate: opts.driftRate ?? 0,
+      phraseLength: opts.phraseLength ?? 0, phraseGap: opts.phraseGap ?? 0,
+      phraseOffset: opts.phraseOffset ?? 0,
+      tempoMultiplier: opts.tempoMultiplier ?? 1.0,
+      kotekanSource: opts.kotekanSource ?? -1,
+      accents: new Array(steps).fill(0),
+    };
+    if (opts.mt) opts.mt.forEach((v, i) => { l.mt[i] = v; });
+    return l;
+  }
+
+  const PRESETS = [
+    { name: 'Four on the Floor', description: 'Classic club groove with straight 8th hats and polymetric open hat' },
+    { name: 'Polymetric Drift', description: 'Prime-number cycles (3, 5, 7, 11) creating evolving phase patterns' },
+    { name: 'Sparse Pulse', description: 'Minimal, spacious groove with wide spacing and gentle ghost notes' },
+    { name: 'Breakbeat', description: 'Syncopated kick with punchy snare, fast hats and ghost toms' },
+    { name: 'Latin Feel', description: 'Clave-inspired pattern with conga, shaker and cowbell ornaments' },
+    { name: 'Afro-House Phrases', description: 'Offset phrase loops — shaker continuous, conga and djembe breathe on staggered cycles' },
+    { name: 'Reich Phasing', description: 'Two identical patterns gradually phase apart creating emergent resultant rhythms' },
+    { name: 'Kotekan Interlock', description: 'Balinese interlocking pair — polos and sangsih fill each other\'s gaps' },
+    { name: 'Pocket Groove', description: 'J Dilla-style micro-timing — kick pushes late, snare pulls early, gentle mutation' },
+    { name: 'Afrobeat 12/8', description: 'Compound-time groove with timeline bell pattern, four-on-the-floor kick and conga ghosts' },
+    { name: 'Balkan Aksak', description: '7/8 aksak [2+2+3] additive cells — davul, rim, zurna and darbuka' },
+    { name: 'Bossa Nova', description: 'Clave timeline with ginga micro-timing — surdo, tamborim, agogo and pandeiro' },
+    { name: 'Carnatic Tala', description: 'Adi tala [4+2+2] additive cells — mridangam, ghatam and kanjira' },
+    { name: 'IDM Glitch', description: 'Irregular additive cells with heavy mutation and erratic micro-timing offsets' },
   ];
-  LANES.forEach((l) => { l.mt = new Array(l.steps).fill(0); });
-  LANES[1].mt = [3, 0, 2, 0];
-  LANES[2].mt = [0, -2, 0];
-  LANES[4].mt = [0, 1, -1, 0, 1];
+
+  const PRESET_NAMES = [
+    ['Kick', 'Snare', 'Hi-Hat', 'Open Hat'],
+    ['Kick', 'Rim', 'Tom', 'Hi-Hat'],
+    ['Kick', 'Rim', 'Ghost'],
+    ['Kick', 'Snare', 'Hi-Hat', 'Ghost Tom'],
+    ['Clave', 'Conga', 'Shaker', 'Cowbell'],
+    ['Kick', 'Shaker', 'Conga', 'Djembe', 'Perc'],
+    ['Fixed', 'Drifting', 'Pulse'],
+    ['Polos', 'Sangsih', 'Gong', 'Shimmer'],
+    ['Kick', 'Snare', 'Hi-Hat', 'Ghost'],
+    ['Bell', 'Kick', 'Snare', 'Shaker', 'Conga'],
+    ['Davul', 'Rim', 'Zurna', 'Darbuka'],
+    ['Surdo', 'Tamborim', 'Agogo', 'Pandeiro'],
+    ['Mrid Bass', 'Mrid Treble', 'Ghatam', 'Kanjira'],
+    ['Kick', 'Snare', 'Hi-Hat', 'Perc', 'Glitch'],
+  ];
+
+  function makePresetLanes(index) {
+    switch (index) {
+      case 0: return [ // Four on the Floor — 4 lanes
+        mkLane('Kick', 'Anchor pulse', 36, 1, 4, 2, 4, 110),
+        mkLane('Snare', 'Backbeat', 38, 2, 4, 2, 2, 100),
+        mkLane('Hi-Hat', 'Shimmer', 42, 3, 8, 1, 8, 80, { prob: 0.95, spread: 0.08 }),
+        mkLane('Open Hat', 'Ghost', 46, 4, 7, 1, 4, 60, { prob: 0.7, ghost: 25, spread: 0.12 }),
+      ];
+      case 2: return [ // Sparse Pulse — 3 lanes
+        mkLane('Kick', 'Anchor pulse', 36, 1, 2, 4, 1, 100),
+        mkLane('Rim', 'Ornament', 37, 2, 3, 1, 2, 70, { prob: 0.8 }),
+        mkLane('Ghost', 'Ghost', 39, 3, 5, 1, 2, 45, { prob: 0.6, ghost: 20, spread: 0.2 }),
+      ];
+      case 6: return [ // Reich Phasing — 3 lanes
+        mkLane('Fixed', 'Anchor pulse', 76, 1, 5, 1, 3, 90),
+        mkLane('Drifting', 'Anchor pulse', 76, 2, 5, 1, 3, 90),
+        mkLane('Pulse', 'Shimmer', 42, 3, 4, 2, 4, 45, { prob: 0.8, spread: 0.05 }),
+      ];
+      case 9: return [ // Afrobeat 12/8 — 5 lanes (default)
+        mkLane('Bell', 'Anchor pulse', 56, 1, 12, 1, 7, 90, {
+          timeline: true, fixed: [1, 0, 1, 0, 1, 1, 0, 1, 0, 1, 0, 1],
+          envs: [{ target: 'Velocity', period: 4, depth: 0.35, on: true }],
+        }),
+        mkLane('Kick', 'Backbeat', 36, 2, 4, 2, 4, 112, { mt: [3, 0, 2, 0] }),
+        mkLane('Snare', 'Accent', 38, 3, 3, 1, 2, 95, {
+          prob: 0.9, mt: [0, -2, 0],
+          envs: [{ target: 'Probability', period: 7, depth: 0.5, on: false }],
+        }),
+        mkLane('Shaker', 'Shimmer', 70, 4, 12, 1, 12, 55, {
+          prob: 0.9, spread: 0.12,
+          envs: [{ target: 'Velocity', period: 7, depth: 0.45, on: true }],
+        }),
+        mkLane('Conga', 'Ghost', 63, 5, 5, 1, 3, 65, { prob: 0.8, ghost: 25, mt: [0, 1, -1, 0, 1] }),
+      ];
+      case 13: return [ // IDM Glitch — 5 lanes with cells
+        mkLane('Kick', 'Anchor pulse', 36, 1, 4, 4, 3, 115, { prob: 0.9, cells: [3, 2, 5, 3] }),
+        mkLane('Snare', 'Backbeat', 38, 2, 5, 1, 2, 100, { prob: 0.75, spread: 0.2 }),
+        mkLane('Hi-Hat', 'Shimmer', 42, 3, 9, 1, 6, 70, { prob: 0.85, spread: 0.18 }),
+        mkLane('Perc', 'Ghost', 45, 4, 7, 1, 3, 55, { prob: 0.6, ghost: 15, spread: 0.25 }),
+        mkLane('Glitch', 'Ornament', 56, 5, 11, 1, 4, 75, { prob: 0.7 }),
+      ];
+      default: {
+        const names = PRESET_NAMES[index] || PRESET_NAMES[0];
+        const roles = ['Anchor pulse', 'Backbeat', 'Shimmer', 'Ghost', 'Ornament', 'Ghost', 'Fill', 'Custom'];
+        const notes = [36, 38, 42, 45, 46, 39, 43, 50];
+        const steps = [4, 4, 8, 5, 7, 3, 6, 9];
+        const hits =  [4, 2, 6, 3, 4, 2, 4, 5];
+        return names.map((n, i) =>
+          mkLane(n, roles[i] || 'Custom', notes[i] || 36, i + 1, steps[i] || 4, 1, hits[i] || 2, 80 + (i === 0 ? 30 : 0), { prob: 0.9 })
+        );
+      }
+    }
+  }
+
+  const PRESET_MACROS = [
+    { complexity: 0.5, density: 0.5, syncopation: 0, swing: 0, tension: 0, humanize: 0 },
+    { complexity: 0.7, density: 0.4, syncopation: 0, swing: 0, tension: 0.3, humanize: 0 },
+    { complexity: 0, density: 0.25, syncopation: 0, swing: 0, tension: 0, humanize: 0.3 },
+    { complexity: 0.6, density: 0, syncopation: 0.5, swing: 0, tension: 0.4, humanize: 0 },
+    { complexity: 0.4, density: 0, syncopation: 0, swing: 0.3, tension: 0, humanize: 0.2 },
+    { complexity: 0, density: 0.45, syncopation: 0, swing: 0.15, tension: 0, humanize: 0.15 },
+    { complexity: 0.2, density: 0.3, syncopation: 0, swing: 0, tension: 0, humanize: 0 },
+    { complexity: 0.3, density: 0.4, syncopation: 0, swing: 0, tension: 0, humanize: 0 },
+    { complexity: 0, density: 0.4, syncopation: 0.3, swing: 0, tension: 0, humanize: 0.25 },
+    { complexity: 0.45, density: 0.5, syncopation: 0.3, swing: 0.1, tension: 0.25, humanize: 0.15 },
+    { complexity: 0.4, density: 0.45, syncopation: 0, swing: 0, tension: 0, humanize: 0 },
+    { complexity: 0.35, density: 0, syncopation: 0, swing: 0.2, tension: 0, humanize: 0.2 },
+    { complexity: 0.5, density: 0.4, syncopation: 0, swing: 0, tension: 0, humanize: 0 },
+    { complexity: 0.8, density: 0.35, syncopation: 0.5, swing: 0, tension: 0.6, humanize: 0 },
+  ];
+
+  const PRESET_SEEDS = [1, 7, 23, 42, 13, 31, 47, 55, 71, 88, 33, 17, 44, 99];
 
   const TEMPO = 126;
   const EIGHTH = 60 / TEMPO / 2;
@@ -34,12 +152,41 @@
     preset: 'Afrobeat 12/8', seed: 88, tempo: TEMPO,
     scene: 'A', morph: 0,
     macros: { complexity: 0.45, density: 0.5, syncopation: 0.3, swing: 0.1, tension: 0.25, humanize: 0.15 },
-    lanes: LANES,
+    lanes: makePresetLanes(9),
+    presets: PRESETS,
   };
 
   const stateSubs = [];
   const frameSubs = [];
-  const emitState = () => stateSubs.forEach((cb) => cb(state));
+  let asyncMode = false;
+  let pendingPush = false;
+
+  const emitState = () => {
+    if (asyncMode) { pendingPush = true; return; }
+    stateSubs.forEach((cb) => cb(state));
+  };
+
+  function flushState() {
+    if (pendingPush) {
+      pendingPush = false;
+      stateSubs.forEach((cb) => cb(state));
+    }
+  }
+
+  function applyPreset(index) {
+    if (index === -1) {
+      state.preset = 'Init';
+      state.seed = 0;
+      state.macros = { complexity: 0, density: 0, syncopation: 0, swing: 0, tension: 0, humanize: 0 };
+      state.lanes = makePresetLanes(0);
+      return;
+    }
+    if (index < 0 || index >= PRESETS.length) return;
+    state.preset = PRESETS[index].name;
+    state.seed = PRESET_SEEDS[index] ?? 0;
+    state.macros = { ...PRESET_MACROS[index] };
+    state.lanes = makePresetLanes(index);
+  }
 
   /* ---------- WebAudio preview voices ---------- */
   let ctx = null, playing = false, startAt = 0, schedTimer = null, nextTick = 0, _nb = null;
@@ -95,7 +242,7 @@
   function schedule() {
     const ahead = ctx.currentTime + 0.14;
     while (startAt + nextTick * EIGHTH < ahead) {
-      LANES.forEach((l, li) => {
+      state.lanes.forEach((l, li) => {
         const hit = laneHitAt(l, nextTick);
         if (!hit) return;
         const vel = hitVelocity(l, li, nextTick, hit);
@@ -131,7 +278,7 @@
       t8,
       playing,
       convLeft,
-      lanes: LANES.map((l) => {
+      lanes: state.lanes.map((l) => {
         const cyc = cyc8(l);
         const tin = Math.floor(t8 % cyc);
         let step;
@@ -194,6 +341,9 @@
       case 'selectScene':
         state.scene = payload.scene === 'B' ? 'B' : 'A';
         break;
+      case 'applyPreset':
+        applyPreset(payload.index ?? -1);
+        break;
       case 'exportRequest':
         console.info('[mock-host] exportRequest — native host runs the SMF export path here');
         break;
@@ -209,14 +359,89 @@
     getState: () => state,
     onState: (cb) => stateSubs.push(cb),
     edit: (paramId, value, gesture) => {
-      // The mock keeps continuous params in the model directly; gestures are
-      // logged so gesture-correctness is visible during development.
-      if (gesture === 'perform' && paramId.startsWith('macro.')) {
+      if (gesture !== 'perform') return;
+
+      if (paramId.startsWith('macro.')) {
         state.macros[paramId.slice(6)] = value;
         emitState();
+        return;
+      }
+
+      if (paramId === 'scene.morph') {
+        state.morph = value;
+        emitState();
+        return;
+      }
+      if (paramId === 'seed') {
+        state.seed = Math.round(value * 999999);
+        emitState();
+        return;
+      }
+
+      const m = paramId.match(/^lane\.(\d+)\.(.+)$/);
+      if (m) {
+        const lane = state.lanes[parseInt(m[1])];
+        if (!lane) return;
+        const field = m[2];
+        const LANE_EDITS = {
+          velocity:     v => { lane.vel = Math.round(v * 127); },
+          probability:  v => { lane.prob = v; },
+          emphasisProb: v => { lane.emphasisProb = v; },
+          ghostFloor:   v => { lane.ghost = Math.round(v * 127); },
+          spread:       v => { lane.spread = v; },
+          swing:        v => { lane.swing = v; },
+          humanize:     v => { lane.humanize = v * 50; },
+          duration:     v => { lane.duration = v * 4; },
+          active:       v => { lane.active = v >= 0.5; },
+          phraseLength: v => { lane.phraseLength = v * 64; },
+          phraseGap:    v => { lane.phraseGap = v * 64; },
+          phraseOffset: v => { lane.phraseOffset = v * 64; },
+          mutationRate: v => { lane.mutationRate = v; },
+          driftRate:    v => { lane.driftRate = v * 8 - 4; },
+          timingOffset: v => { lane.timingOffset = v * 40 - 20; },
+          kotekanSource:v => { lane.kotekanSource = Math.round(v * 8) - 1; },
+          note:         v => { lane.note = Math.round(v * 127); },
+          channel:      v => { lane.ch = Math.round(v * 15) + 1; },
+          steps:        v => {
+            lane.steps = Math.round(v * 63) + 1;
+            lane.hits = Math.min(lane.hits, lane.steps);
+            lane.pattern = rotArr(euclid(lane.hits, lane.steps), lane.rot);
+            lane.mt = new Array(lane.steps).fill(0);
+            lane.accents = new Array(lane.steps).fill(0);
+          },
+          hits:         v => {
+            lane.hits = Math.min(Math.round(v * 64), lane.steps);
+            lane.pattern = rotArr(euclid(lane.hits, lane.steps), lane.rot);
+          },
+          rotation:     v => {
+            lane.rot = Math.round(v * 63) % lane.steps;
+            lane.pattern = rotArr(euclid(lane.hits, lane.steps), lane.rot);
+          },
+          subdivision:  v => {
+            const subs = [1, 2, 4, 8, 16];
+            lane.subdivision = subs[Math.round(v * 4)] || 4;
+            lane.stepLen = 8 / lane.subdivision;
+          },
+          tempoMult:    v => { lane.tempoMultiplier = v; },
+          cellCount:    v => {
+            const count = Math.round(v * 64);
+            if (count > 0 && !lane.cells) lane.cells = new Array(count).fill(2);
+            else if (count === 0) lane.cells = null;
+            lane.cellCount = count;
+          },
+          timeline:     v => { lane.timeline = v >= 0.5; },
+        };
+        if (LANE_EDITS[field]) {
+          LANE_EDITS[field](value);
+          emitState();
+        }
       }
     },
     action,
     onFrame: (cb) => frameSubs.push(cb),
+    _pushState: emitState,
+    setAsyncMode: (enabled) => { asyncMode = !!enabled; pendingPush = false; },
+    flushState,
+    hasPendingPush: () => pendingPush,
   };
 })();

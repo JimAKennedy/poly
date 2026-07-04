@@ -1,6 +1,6 @@
 # Web UI Migration — Status & Remaining Work
 
-Status as of `main@4bc4af8` (2026-07-03). Audience: roadmap/planning session.
+Status as of `webui-integration` branch (2026-07-04). Audience: roadmap/planning session.
 This is the handoff document for completing the migration of the Cubase
 plugin from the VSTGUI editor to the web UI (`webui/` bundle in a native
 webview). Background contracts live in `webui/bridge-schema.md` and
@@ -16,7 +16,8 @@ Everything below is already merged into main:
 | M027 (#41) | Engine/state safety the bridge relies on: `sanitize` on every deserialize, aksak zero-divisor guards, stop-flush, morph field completeness, `sceneState_` race elimination (atomic handshakes), noteMap-before-capture export fix |
 | M028 (#42) | Engine hardening: O(1) scene chain (no unbounded audio-thread loop), dynamic timing bounds, seed-0 fix |
 | M029 (#43) | **The keystone for the bridge**: RT-safe atomic message paths for cellSizes, timeline patterns, micro-timing, and envelopes, all routed through active-scene selection (Scene B now editable). The web bridge's `action` handlers can reuse these paths as-is |
-| #44 | `webui/` bundle (host-agnostic renderer + mock host + Playwright suite, 8 tests) and the native shell scaffold `plugin/source/webui/` behind `-DPOLY_WEB_UI=OFF` |
+| #44 | `webui/` bundle (host-agnostic renderer + mock host + Playwright suite) and the native shell scaffold `plugin/source/webui/` behind `-DPOLY_WEB_UI=OFF` |
+| branch | W1 native shell spike in progress; Playwright suite expanded to 36 tests (interaction, resilience, DOM stability); CI `webui-tests` job active |
 
 What exists in `webui/` today: desk (channel strips with editable step
 ladders, phase dials, VU), cloth (full-bleed interference weave, band-click
@@ -100,9 +101,10 @@ per-lane multitrack SMF.
 
 ### W5 — Testing & CI
 
-- Add a `webui` job to `ci.yml`: `npm ci && npx playwright test` in
-  `webui/` (no VST3 SDK; ~1 min; cache browsers). The 8-test suite exists
-  and passes — it is simply not wired into CI.
+- ~~Add a `webui` job to `ci.yml`~~ ✅ Done — `webui-tests` job runs
+  `npm ci && npx playwright test` in `webui/` on every push/PR. 36 tests
+  covering interaction dispatch, resilience under 60 Hz state pushes, and
+  DOM stability.
 - Screenshot scene set as CI artifacts (cloth / desk / learn /
   expanded × pattern·timing·env) — becomes the site screenshot pipeline
   and PR-review strips.
