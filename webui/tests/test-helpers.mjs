@@ -9,10 +9,16 @@ export async function setupWithActionLog(page) {
   await page.evaluate(() => {
     const host = window.PolyMockHost;
     const origAction = host.action;
+    const origEdit = host.edit;
     window.__actionLog = [];
+    window.__editLog = [];
     host.action = (name, payload) => {
       window.__actionLog.push({ name, payload: JSON.parse(JSON.stringify(payload)) });
       origAction.call(host, name, payload);
+    };
+    host.edit = (paramId, value, gesture) => {
+      window.__editLog.push({ paramId, value, gesture });
+      origEdit.call(host, paramId, value, gesture);
     };
   });
 }
@@ -23,6 +29,14 @@ export async function getActions(page) {
 
 export async function clearActions(page) {
   await page.evaluate(() => { window.__actionLog.length = 0; });
+}
+
+export async function getEdits(page) {
+  return page.evaluate(() => window.__editLog.slice());
+}
+
+export async function clearEdits(page) {
+  await page.evaluate(() => { window.__editLog.length = 0; });
 }
 
 export async function startContinuousPush(page, intervalMs = 33) {

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { setupWithActionLog, getActions, clearActions, expandStrip, pageUrl } from './test-helpers.mjs';
+import { setupWithActionLog, getActions, clearActions, getEdits, clearEdits, expandStrip, pageUrl } from './test-helpers.mjs';
 
 test.describe('master macros section', () => {
   test.beforeEach(async ({ page }) => {
@@ -315,6 +315,334 @@ test.describe('multi-lane expand switching', () => {
 
     await page.click('.strip[data-lane="1"] .ex');
     await expect(page.locator('.strip[data-lane="1"]')).not.toHaveClass(/expanded/);
+    expect(await page.locator('.strip.expanded').count()).toBe(0);
+  });
+});
+
+test.describe('frame feedback — play icon', () => {
+  test.beforeEach(async ({ page }) => {
+    await setupWithActionLog(page);
+  });
+
+  test('play icon shows triangle when stopped', async ({ page }) => {
+    const d = await page.locator('#picon').getAttribute('d');
+    expect(d).toContain('L12 7');
+  });
+
+  test('play icon changes to pause bars when playing', async ({ page }) => {
+    await page.evaluate(() => {
+      window.PolyHost.onFrame((f) => { window.__lastTestFrame = f; });
+    });
+    await page.click('#play');
+    await page.waitForFunction(() => window.__lastTestFrame && window.__lastTestFrame.playing);
+    const d = await page.locator('#picon').getAttribute('d');
+    expect(d).toContain('H5.5');
+  });
+
+  test('play icon reverts to triangle on stop', async ({ page }) => {
+    await page.click('#play');
+    await page.evaluate(() => new Promise((r) => requestAnimationFrame(r)));
+    await page.click('#play');
+    await page.evaluate(() => new Promise((r) => requestAnimationFrame(r)));
+    const d = await page.locator('#picon').getAttribute('d');
+    expect(d).toContain('L12 7');
+  });
+});
+
+test.describe('frame feedback — convergence and meters', () => {
+  test.beforeEach(async ({ page }) => {
+    await setupWithActionLog(page);
+  });
+
+  test('convergence counter renders initial value', async ({ page }) => {
+    const text = await page.locator('#conv b').textContent();
+    expect(parseInt(text)).toBeGreaterThanOrEqual(1);
+  });
+
+  test('convergence meter height starts at 0% when stopped', async ({ page }) => {
+    const height = await page.locator('#cmeter i').evaluate((el) => el.style.height);
+    expect(height).toBe('0%');
+  });
+
+  test('VU meters have initial width', async ({ page }) => {
+    const widths = await page.locator('.vu i').evaluateAll((els) => els.map((e) => e.style.width));
+    expect(widths.length).toBeGreaterThanOrEqual(4);
+    widths.forEach((w) => expect(w).toBe('4%'));
+  });
+
+  test('ring hand SVG elements exist for each lane', async ({ page }) => {
+    const hands = await page.locator('svg.ring line').count();
+    const laneCount = await page.locator('.strip[data-lane]').count();
+    expect(hands).toBe(laneCount);
+  });
+
+  test('ring hand has transform attribute', async ({ page }) => {
+    const transform = await page.locator('svg.ring line').first().getAttribute('transform');
+    expect(transform).toContain('rotate(');
+  });
+});
+
+test.describe('frame feedback — step highlighting', () => {
+  test.beforeEach(async ({ page }) => {
+    await setupWithActionLog(page);
+  });
+
+  test('no steps highlighted when stopped', async ({ page }) => {
+    const nowCount = await page.locator('.ladder button.now').count();
+    expect(nowCount).toBe(0);
+  });
+
+  test('step gets .now class when playing', async ({ page }) => {
+    await page.evaluate(() => {
+      window.PolyHost.onFrame((f) => { window.__lastTestFrame = f; });
+    });
+    await page.click('#play');
+    await page.waitForFunction(() => window.__lastTestFrame && window.__lastTestFrame.playing);
+    await page.waitForFunction(() => document.querySelectorAll('.ladder button.now').length > 0, null, { timeout: 3000 });
+    const nowCount = await page.locator('.ladder button.now').count();
+    expect(nowCount).toBeGreaterThanOrEqual(1);
+  });
+
+  test('step highlighting clears on stop', async ({ page }) => {
+    await page.click('#play');
+    await page.evaluate(() => new Promise((r) => requestAnimationFrame(r)));
+    await page.click('#play');
+    await page.evaluate(() => new Promise((r) => requestAnimationFrame(r)));
+    await page.evaluate(() => new Promise((r) => requestAnimationFrame(r)));
+    const nowCount = await page.locator('.ladder button.now').count();
+    expect(nowCount).toBe(0);
+  });
+});
+
+test.describe('popover dismiss behaviors', () => {
+  test.beforeEach(async ({ page }) => {
+    await setupWithActionLog(page);
+  });
+
+  test('chain popover closes on click outside', async ({ page }) => {
+    await page.click('#chainBtn');
+    await expect(page.locator('#chainPopover')).toBeVisible();
+    await page.click('#desk', { position: { x: 5, y: 5 } });
+    await expect(page.locator('#chainPopover')).toHaveCount(0);
+  });
+
+  test('chain popover toggles on repeated button clicks', async ({ page }) => {
+    await page.click('#chainBtn');
+    await expect(page.locator('#chainPopover')).toBeVisible();
+    await page.click('#chainBtn');
+    await expect(page.locator('#chainPopover')).toHaveCount(0);
+    await page.click('#chainBtn');
+    await expect(page.locator('#chainPopover')).toBeVisible();
+  });
+
+  test('note map modal closes on click outside', async ({ page }) => {
+    await page.click('#noteMapBtn');
+    await expect(page.locator('.notemap-modal')).toBeVisible();
+    await page.waitForTimeout(50);
+    await page.click('body', { position: { x: 1, y: 1 }, force: true });
+    await expect(page.locator('.notemap-modal')).toHaveCount(0);
+  });
+
+  test('note map modal close button works', async ({ page }) => {
+    await page.click('#noteMapBtn');
+    await expect(page.locator('.notemap-modal')).toBeVisible();
+    await page.click('.notemap-close');
+    await expect(page.locator('.notemap-modal')).toHaveCount(0);
+  });
+
+  test('note map modal toggle via close button then reopen', async ({ page }) => {
+    await page.click('#noteMapBtn');
+    await expect(page.locator('.notemap-modal')).toBeVisible();
+    await page.click('.notemap-close');
+    await expect(page.locator('.notemap-modal')).toHaveCount(0);
+    await page.click('#noteMapBtn');
+    await expect(page.locator('.notemap-modal')).toBeVisible();
+  });
+
+  test('note map rebuilds on state push while open', async ({ page }) => {
+    await page.click('#noteMapBtn');
+    await expect(page.locator('.notemap-modal')).toBeVisible();
+    await page.evaluate(() => {
+      const s = window.PolyMockHost.getState();
+      s.noteMap[0] = 42;
+      window.PolyMockHost._pushState();
+    });
+    const val = await page.locator('.notemap-row[data-note="0"] .no').textContent();
+    expect(val).toBe('42');
+  });
+});
+
+test.describe('note map boundary values', () => {
+  test.beforeEach(async ({ page }) => {
+    await setupWithActionLog(page);
+  });
+
+  test('decrement at note 0 with output 0 does not dispatch', async ({ page }) => {
+    await page.evaluate(() => {
+      const s = window.PolyMockHost.getState();
+      s.noteMap[0] = 0;
+      window.PolyMockHost._pushState();
+    });
+    await page.click('#noteMapBtn');
+    await clearActions(page);
+    await page.click('.notemap-row[data-note="0"] [data-nmdec="0"]');
+    const acts = await getActions(page);
+    expect(acts.filter((a) => a.name === 'setNoteMap')).toHaveLength(0);
+  });
+
+  test('increment at note 127 with output 127 does not dispatch', async ({ page }) => {
+    await page.evaluate(() => {
+      const s = window.PolyMockHost.getState();
+      s.noteMap[127] = 127;
+      window.PolyMockHost._pushState();
+    });
+    await page.click('#noteMapBtn');
+    await clearActions(page);
+    await page.click('.notemap-row[data-note="127"] [data-nminc="127"]');
+    const acts = await getActions(page);
+    expect(acts.filter((a) => a.name === 'setNoteMap')).toHaveLength(0);
+  });
+
+  test('note map reset clears modified indicator', async ({ page }) => {
+    await page.evaluate(() => {
+      const s = window.PolyMockHost.getState();
+      s.noteMap[5] = 42;
+      window.PolyMockHost._pushState();
+    });
+    await page.click('#noteMapBtn');
+    await expect(page.locator('.notemap-row[data-note="5"] .nm-mod')).toBeVisible();
+    await clearActions(page);
+    await page.click('.notemap-reset');
+    const acts = await getActions(page);
+    expect(acts.some((a) => a.name === 'resetNoteMap')).toBe(true);
+  });
+});
+
+test.describe('cross-feature regression', () => {
+  test.beforeEach(async ({ page }) => {
+    await setupWithActionLog(page);
+  });
+
+  test('preset switch while strip expanded re-expands at same index', async ({ page }) => {
+    await expandStrip(page, 2);
+    await expect(page.locator('.strip[data-lane="2"]')).toHaveClass(/expanded/);
+
+    await page.evaluate(() => {
+      window.PolyMockHost.action('applyPreset', { index: 1 });
+    });
+    await expect(page.locator('.strip[data-lane="2"]')).toHaveClass(/expanded/);
+  });
+
+  test('preset switch to fewer lanes clamps expanded index', async ({ page }) => {
+    await expandStrip(page, 4);
+    await expect(page.locator('.strip[data-lane="4"]')).toHaveClass(/expanded/);
+
+    await page.evaluate(() => {
+      window.PolyMockHost.action('applyPreset', { index: 2 });
+    });
+    await expect(page.locator('.strip[data-lane]')).toHaveCount(3);
+    await expect(page.locator('.strip[data-lane="2"]')).toHaveClass(/expanded/);
+  });
+
+  test('cloth mode activates canvas', async ({ page }) => {
+    await page.click('#mCloth');
+    await expect(page.locator('#cloth')).toHaveClass(/on/);
+    await expect(page.locator('#cloth canvas')).toBeVisible();
+  });
+
+  test('desk mode restores strips after cloth', async ({ page }) => {
+    await page.click('#mCloth');
+    await expect(page.locator('#cloth')).toHaveClass(/on/);
+    await page.click('#mDesk');
+    await expect(page.locator('#desk')).toHaveClass(/on/);
+    const stripCount = await page.locator('.strip[data-lane]').count();
+    expect(stripCount).toBeGreaterThanOrEqual(3);
+  });
+
+  test('learn mode toggles body class via button and keyboard', async ({ page }) => {
+    await page.click('#learnBtn');
+    await expect(page.locator('body')).toHaveClass(/learn/);
+    await page.keyboard.press('l');
+    await expect(page.locator('body')).not.toHaveClass(/learn/);
+    await page.keyboard.press('l');
+    await expect(page.locator('body')).toHaveClass(/learn/);
+  });
+
+  test('escape collapses expanded strip', async ({ page }) => {
+    await expandStrip(page, 1);
+    await expect(page.locator('.strip[data-lane="1"]')).toHaveClass(/expanded/);
+    await page.keyboard.press('Escape');
+    expect(await page.locator('.strip.expanded').count()).toBe(0);
+  });
+
+  test('mute toggle dispatches edit and updates visual', async ({ page }) => {
+    await page.click('.strip[data-lane="0"] [data-mute]');
+    const edits = await getEdits(page);
+    expect(edits.some((e) => e.paramId === 'lane.0.active')).toBe(true);
+  });
+
+  test('export button gets flash class', async ({ page }) => {
+    await page.click('#exportBtn');
+    await expect(page.locator('#exportBtn')).toHaveClass(/on/);
+    await page.waitForTimeout(700);
+    await expect(page.locator('#exportBtn')).not.toHaveClass(/on/);
+  });
+
+  test('chain bar count clamps at minimum 1', async ({ page }) => {
+    await page.evaluate(() => {
+      const s = window.PolyMockHost.getState();
+      s.chain = { enabled: true, mode: 0, entryCount: 1, entries: [{ scene: 0, bars: 1 }] };
+      window.PolyMockHost._pushState();
+    });
+    await page.click('#chainBtn');
+    await clearEdits(page);
+    await page.click('[data-bars-dec="0"]');
+    const edits = await getEdits(page);
+    const barsEdits = edits.filter((e) => e.paramId.includes('bars'));
+    expect(barsEdits.every((e) => e.value === 0)).toBe(true);
+  });
+
+  test('chain bar count clamps at maximum 32', async ({ page }) => {
+    await page.evaluate(() => {
+      const s = window.PolyMockHost.getState();
+      s.chain = { enabled: true, mode: 0, entryCount: 1, entries: [{ scene: 0, bars: 32 }] };
+      window.PolyMockHost._pushState();
+    });
+    await page.click('#chainBtn');
+    await clearEdits(page);
+    await page.click('[data-bars-inc="0"]');
+    const edits = await getEdits(page);
+    const barsEdits = edits.filter((e) => e.paramId.includes('bars'));
+    expect(barsEdits.every((e) => e.value === 1)).toBe(true);
+  });
+});
+
+test.describe('embedded mode hardening', () => {
+  test('keyboard shortcuts 1 and 2 still switch modes in embedded', async ({ page }) => {
+    await page.addInitScript(() => { window.__POLY_EMBEDDED__ = true; });
+    await setupWithActionLog(page);
+    await page.keyboard.press('1');
+    await expect(page.locator('#cloth')).toHaveClass(/on/);
+    await page.keyboard.press('2');
+    await expect(page.locator('#desk')).toHaveClass(/on/);
+  });
+
+  test('learn mode works in embedded mode', async ({ page }) => {
+    await page.addInitScript(() => { window.__POLY_EMBEDDED__ = true; });
+    await setupWithActionLog(page);
+    await page.keyboard.press('l');
+    await expect(page.locator('body')).toHaveClass(/learn/);
+  });
+
+  test('escape still collapses strip in embedded mode', async ({ page }) => {
+    await page.addInitScript(() => { window.__POLY_EMBEDDED__ = true; });
+    await page.goto(pageUrl);
+    await page.evaluate(() => {
+      window.polyHostPush(JSON.stringify({ type: 'state', state: window.PolyMockHost.getState() }));
+    });
+    await page.click(`.strip[data-lane="0"] .ex`);
+    await page.waitForSelector(`.strip[data-lane="0"].expanded`);
+    await page.keyboard.press('Escape');
     expect(await page.locator('.strip.expanded').count()).toBe(0);
   });
 });

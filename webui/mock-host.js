@@ -148,12 +148,20 @@
   const EIGHTH = 60 / TEMPO / 2;
   const CONV = 120;
 
+  function identityNoteMap() {
+    const m = new Array(128);
+    for (let i = 0; i < 128; i++) m[i] = i;
+    return m;
+  }
+
   const state = {
     preset: 'Afrobeat 12/8', seed: 88, tempo: TEMPO,
     scene: 'A', morph: 0,
+    chain: { enabled: false, mode: 0, entryCount: 0, entries: [] },
     macros: { complexity: 0.45, density: 0.5, syncopation: 0.3, swing: 0.1, tension: 0.25, humanize: 0.15 },
     lanes: makePresetLanes(9),
     presets: PRESETS,
+    noteMap: identityNoteMap(),
   };
 
   const stateSubs = [];
@@ -177,8 +185,12 @@
     if (index === -1) {
       state.preset = 'Init';
       state.seed = 0;
+      state.scene = 'A';
+      state.morph = 0;
+      state.chain = { enabled: false, mode: 0, entryCount: 0, entries: [] };
       state.macros = { complexity: 0, density: 0, syncopation: 0, swing: 0, tension: 0, humanize: 0 };
       state.lanes = makePresetLanes(0);
+      state.noteMap = identityNoteMap();
       return;
     }
     if (index < 0 || index >= PRESETS.length) return;
@@ -339,10 +351,39 @@
         else l.envs[payload.index] = payload.envelope;
         break;
       case 'selectScene':
-        state.scene = payload.scene === 'B' ? 'B' : 'A';
+        state.scene = payload.scene === 'Morph' ? 'Morph' : (payload.scene === 'B' ? 'B' : 'A');
         break;
+      case 'chainAddEntry': {
+        if (state.chain.entryCount < 16) {
+          state.chain.entries.push({ scene: 0, bars: 4 });
+          state.chain.entryCount++;
+        }
+        break;
+      }
+      case 'chainRemoveEntry': {
+        const ci = payload.index;
+        if (ci >= 0 && ci < state.chain.entryCount) {
+          state.chain.entries.splice(ci, 1);
+          state.chain.entryCount--;
+        }
+        break;
+      }
       case 'applyPreset':
         applyPreset(payload.index ?? -1);
+        break;
+      case 'setAccent': {
+        const al = state.lanes[payload.lane];
+        if (al && payload.step >= 0 && payload.step < al.accents.length)
+          al.accents[payload.step] = payload.value;
+        break;
+      }
+      case 'setNoteMap': {
+        const ni = payload.note;
+        if (ni >= 0 && ni < 128) state.noteMap[ni] = Math.max(0, Math.min(127, payload.output));
+        break;
+      }
+      case 'resetNoteMap':
+        state.noteMap = identityNoteMap();
         break;
       case 'exportRequest':
         console.info('[mock-host] exportRequest — native host runs the SMF export path here');
@@ -369,6 +410,28 @@
 
       if (paramId === 'scene.morph') {
         state.morph = value;
+        emitState();
+        return;
+      }
+
+      if (paramId === 'chain.enabled') {
+        state.chain.enabled = value >= 0.5;
+        emitState();
+        return;
+      }
+      if (paramId === 'chain.mode') {
+        state.chain.mode = Math.round(value * 2);
+        emitState();
+        return;
+      }
+
+      const cm = paramId.match(/^chain\.entry\.(\d+)\.(scene|bars)$/);
+      if (cm) {
+        const ei = parseInt(cm[1]);
+        if (ei < state.chain.entryCount) {
+          if (cm[2] === 'scene') state.chain.entries[ei].scene = Math.round(value * 2);
+          else state.chain.entries[ei].bars = Math.round(value * 31) + 1;
+        }
         emitState();
         return;
       }
