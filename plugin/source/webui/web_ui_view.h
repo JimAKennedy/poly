@@ -8,6 +8,7 @@
 #include <optional>
 #include <string>
 
+#include "pluginterfaces/vst/vsttypes.h"
 #include "public.sdk/source/common/pluginview.h"
 
 #include "choc/gui/choc_MessageLoop.h"
@@ -37,6 +38,7 @@ public:
 private:
     void handleHostCall(const std::string& json);
     void handleAction(const std::string& name, const choc::value::ValueView& payload);
+    void applyEditToCache(Steinberg::Vst::ParamID id, double normalized);
     void pushState();
     void pushFrame();
     void startFrameTimer();
@@ -48,6 +50,7 @@ private:
     std::optional<choc::messageloop::Timer> frameTimer_;
     uint32_t lastStateGen_ = 0;
     int editCooldown_ = 0;
+    bool webviewReady_ = false;
     std::string lastPushedJson_;
     std::string currentPresetName_;
 };

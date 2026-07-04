@@ -370,6 +370,11 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
         lane.envelopes[pendingEnvelope_.envelopeIndex].active = pendingEnvelope_.active;
         envelopeReady_.store(false, std::memory_order_release);
     }
+    if (accentMaskReady_.load(std::memory_order_acquire)) {
+        auto& lane = activeScene.lanes[pendingAccentMask_.laneIndex];
+        lane.accents.steps = pendingAccentMask_.steps;
+        accentMaskReady_.store(false, std::memory_order_release);
+    }
 
     updateTransportContext(data);
 
@@ -765,6 +770,22 @@ Steinberg::tresult PLUGIN_API PolyProcessor::notify(Steinberg::Vst::IMessage* me
                 attrs->getInt("active", activeVal);
                 pendingEnvelope_.active = (activeVal != 0);
                 envelopeReady_.store(true, std::memory_order_release);
+            }
+        }
+        return Steinberg::kResultOk;
+    }
+
+    if (Steinberg::FIDStringsEqual(message->getMessageID(), "AccentMaskUpdate")) {
+        if (auto* attrs = message->getAttributes()) {
+            Steinberg::int64 laneIndex = 0;
+            const void* data = nullptr;
+            Steinberg::uint32 size = 0;
+            if (attrs->getInt("lane", laneIndex) == Steinberg::kResultOk &&
+                attrs->getBinary("accents", data, size) == Steinberg::kResultOk && laneIndex >= 0 &&
+                laneIndex < kMaxLanes && size == sizeof(pendingAccentMask_.steps)) {
+                pendingAccentMask_.laneIndex = static_cast<int>(laneIndex);
+                std::memcpy(pendingAccentMask_.steps.data(), data, size);
+                accentMaskReady_.store(true, std::memory_order_release);
             }
         }
         return Steinberg::kResultOk;

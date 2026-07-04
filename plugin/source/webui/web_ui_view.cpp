@@ -12,6 +12,7 @@
 #include "../controller.h"
 #include "../plugids.h"
 #include "bridge_params.h"
+#include "bridge_serialization.h"
 #include "choc/gui/choc_MessageLoop.h"
 #include "choc/gui/choc_WebView.h"
 #include "choc/text/choc_JSON.h"
@@ -25,96 +26,6 @@
 #endif
 
 namespace poly {
-
-// --- State serialization helpers ---
-
-static std::string escapeJsonString(const std::string& s) {
-    std::string out;
-    out.reserve(s.size() + 2);
-    out += '"';
-    for (char c : s) {
-        switch (c) {
-        case '"':
-            out += "\\\"";
-            break;
-        case '\\':
-            out += "\\\\";
-            break;
-        case '\n':
-            out += "\\n";
-            break;
-        case '\r':
-            out += "\\r";
-            break;
-        case '\t':
-            out += "\\t";
-            break;
-        default:
-            out += c;
-        }
-    }
-    out += '"';
-    return out;
-}
-
-static const char* roleToString(Role r) {
-    switch (r) {
-    case Role::AnchorPulse:
-        return "Anchor pulse";
-    case Role::Backbeat:
-        return "Backbeat";
-    case Role::Shimmer:
-        return "Shimmer";
-    case Role::Accent:
-        return "Accent";
-    case Role::Ghost:
-        return "Ghost";
-    case Role::Ornament:
-        return "Ornament";
-    case Role::Fill:
-        return "Fill";
-    case Role::Custom:
-        return "Custom";
-    }
-    return "Custom";
-}
-
-static const char* envTargetToString(EnvTarget t) {
-    switch (t) {
-    case EnvTarget::Velocity:
-        return "Velocity";
-    case EnvTarget::Density:
-        return "Density";
-    case EnvTarget::Probability:
-        return "Probability";
-    case EnvTarget::AccentBias:
-        return "AccentBias";
-    case EnvTarget::NoteLength:
-        return "NoteLength";
-    case EnvTarget::TimingLooseness:
-        return "TimingLooseness";
-    case EnvTarget::ActivationWeight:
-        return "ActivationWeight";
-    case EnvTarget::FillLikelihood:
-        return "FillLikelihood";
-    }
-    return "Velocity";
-}
-
-static const char* sceneSelectToString(SceneSelect s) {
-    switch (s) {
-    case SceneSelect::A:
-        return "A";
-    case SceneSelect::B:
-        return "B";
-    case SceneSelect::Morph:
-        return "Morph";
-    }
-    return "A";
-}
-
-static const char* kLaneHues[] = {"#F5B54A", "#E4604E", "#5AC8DA", "#9BC46B",
-                                  "#B48AE0", "#E8A33D", "#4EBBE0", "#D47AB8"};
 
 static const char* kWebPresetLaneNames[kFactoryPresetCount][kMaxLanes] = {
     {"Kick", "Snare", "Hi-Hat", "Open Hat", "Tom Hi", "Tom Lo", "Ride", "Crash"},
@@ -133,191 +44,13 @@ static const char* kWebPresetLaneNames[kFactoryPresetCount][kMaxLanes] = {
     {"Kick", "Snare", "Hi-Hat", "Perc", "Glitch", "Tom Lo", "Ride", "Crash"},
 };
 
-static std::string laneToJson(const LaneConfig& cfg, const std::string& name, int laneIndex) {
-    std::string js;
-    js.reserve(1024);
-    js += '{';
-
-    js += "\"name\":" + escapeJsonString(name);
-    js += ",\"hue\":\"";
-    js += kLaneHues[laneIndex % 8];
-    js += '"';
-    js += ",\"role\":\"";
-    js += roleToString(cfg.role);
-    js += '"';
-
-    char buf[512];
-    std::snprintf(buf, sizeof(buf),
-                  ",\"note\":%d,\"ch\":%d,\"steps\":%d,\"subdivision\":%d"
-                  ",\"vel\":%u,\"prob\":%.4f,\"spread\":%.4f"
-                  ",\"ghost\":%u,\"push\":%.4f"
-                  ",\"hits\":%d,\"rot\":%d,\"timeline\":%s"
-                  ",\"active\":%s",
-                  cfg.midiNote, cfg.midiChannel, cfg.cycle.steps, cfg.cycle.subdivision,
-                  static_cast<unsigned>(cfg.baseVelocity), static_cast<double>(cfg.probability),
-                  static_cast<double>(cfg.velocitySpread), static_cast<unsigned>(cfg.ghostFloor),
-                  static_cast<double>(cfg.syncopationOffset), cfg.hitCount, cfg.rotation,
-                  cfg.timeline ? "true" : "false", cfg.active ? "true" : "false");
-    js += buf;
-
-    double stepLen = 8.0 / cfg.cycle.subdivision;
-    std::snprintf(buf, sizeof(buf), ",\"stepLen\":%.6g", stepLen);
-    js += buf;
-
-    std::snprintf(buf, sizeof(buf),
-                  ",\"humanize\":%.4f,\"swing\":%.4f,\"duration\":%.4f"
-                  ",\"emphasisProb\":%.4f,\"timingOffset\":%.4f"
-                  ",\"mutationRate\":%.4f,\"driftRate\":%.4f"
-                  ",\"phraseLength\":%.4f,\"phraseGap\":%.4f,\"phraseOffset\":%.4f"
-                  ",\"tempoMultiplier\":%.4f,\"kotekanSource\":%d"
-                  ",\"cellCount\":%d",
-                  static_cast<double>(cfg.humanizeMs), static_cast<double>(cfg.swingAmount),
-                  static_cast<double>(cfg.noteDuration), static_cast<double>(cfg.emphasisProb),
-                  static_cast<double>(cfg.timingOffsetMs), static_cast<double>(cfg.mutationRate),
-                  static_cast<double>(cfg.driftRate), static_cast<double>(cfg.phraseLength),
-                  static_cast<double>(cfg.phraseGap), static_cast<double>(cfg.phraseOffset),
-                  static_cast<double>(cfg.tempoMultiplier), cfg.kotekanSourceLane, cfg.cellCount);
-    js += buf;
-
-    // pattern (computed from Euclidean or fixed)
-    std::array<bool, kMaxSteps> pat{};
-    if (cfg.timeline) {
-        int len = cfg.fixedPatternLength > 0 ? cfg.fixedPatternLength : cfg.cycle.steps;
-        for (int i = 0; i < len && i < kMaxSteps; ++i)
-            pat[i] = cfg.fixedPattern[i];
-    } else {
-        euclidean(cfg.hitCount, cfg.cycle.steps, cfg.rotation, pat);
-    }
-    js += ",\"pattern\":[";
-    for (int i = 0; i < cfg.cycle.steps; ++i) {
-        if (i > 0)
-            js += ',';
-        js += pat[i] ? '1' : '0';
-    }
-    js += ']';
-
-    // fixed pattern
-    if (cfg.timeline) {
-        int len = cfg.fixedPatternLength > 0 ? cfg.fixedPatternLength : cfg.cycle.steps;
-        js += ",\"fixed\":[";
-        for (int i = 0; i < len; ++i) {
-            if (i > 0)
-                js += ',';
-            js += cfg.fixedPattern[i] ? '1' : '0';
-        }
-        js += ']';
-    } else {
-        js += ",\"fixed\":null";
-    }
-
-    // cells
-    if (cfg.cellCount > 0) {
-        js += ",\"cells\":[";
-        for (int i = 0; i < cfg.cellCount; ++i) {
-            if (i > 0)
-                js += ',';
-            std::snprintf(buf, sizeof(buf), "%d", cfg.cellSizes[i]);
-            js += buf;
-        }
-        js += ']';
-    } else {
-        js += ",\"cells\":null";
-    }
-
-    // micro-timing
-    js += ",\"mt\":[";
-    for (int i = 0; i < cfg.cycle.steps; ++i) {
-        if (i > 0)
-            js += ',';
-        std::snprintf(buf, sizeof(buf), "%.2f", static_cast<double>(cfg.microTimingMs[i]));
-        js += buf;
-    }
-    js += ']';
-
-    // envelopes
-    js += ",\"envs\":[";
-    for (int i = 0; i < cfg.envelopeCount && i < kMaxEnvelopesPerLane; ++i) {
-        if (i > 0)
-            js += ',';
-        const auto& ea = cfg.envelopes[i];
-        std::snprintf(buf, sizeof(buf),
-                      "{\"target\":\"%s\",\"period\":%.2f,\"depth\":%.4f,\"on\":%s"
-                      ",\"shape\":%d,\"curvature\":%.4f,\"phaseOffset\":%.4f}",
-                      envTargetToString(ea.envelope.target), static_cast<double>(ea.envelope.periodBars),
-                      static_cast<double>(ea.envelope.depth), ea.active ? "true" : "false",
-                      static_cast<int>(ea.envelope.shape), static_cast<double>(ea.envelope.curvature),
-                      static_cast<double>(ea.envelope.phaseOffset));
-        js += buf;
-    }
-    js += ']';
-
-    // accent mask
-    js += ",\"accents\":[";
-    for (int i = 0; i < cfg.cycle.steps; ++i) {
-        if (i > 0)
-            js += ',';
-        std::snprintf(buf, sizeof(buf), "%.4f", static_cast<double>(cfg.accents.steps[i]));
-        js += buf;
-    }
-    js += ']';
-
-    js += '}';
-    return js;
-}
-
-static std::string grooveStateToJson(const GrooveState& gs, const SceneState& ss, PolyController* ctrl,
-                                     const std::string& presetName) {
-    std::string js;
-    js.reserve(8192);
-    js += "{\"type\":\"state\",\"state\":{";
-
-    js += "\"preset\":" + escapeJsonString(presetName);
-
-    char buf[128];
-    std::snprintf(buf, sizeof(buf), ",\"seed\":%llu,\"tempo\":0", static_cast<unsigned long long>(gs.seed));
-    js += buf;
-
-    js += ",\"scene\":\"";
-    js += sceneSelectToString(ss.select);
-    js += '"';
-    std::snprintf(buf, sizeof(buf), ",\"morph\":%.4f", static_cast<double>(ss.morphAmount));
-    js += buf;
-
-    std::snprintf(buf, sizeof(buf),
-                  ",\"macros\":{\"complexity\":%.4f,\"density\":%.4f,\"syncopation\":%.4f"
-                  ",\"swing\":%.4f,\"tension\":%.4f,\"humanize\":%.4f}",
-                  static_cast<double>(gs.macros.complexity), static_cast<double>(gs.macros.density),
-                  static_cast<double>(gs.macros.syncopation), static_cast<double>(gs.macros.swing),
-                  static_cast<double>(gs.macros.tension), static_cast<double>(gs.macros.humanize));
-    js += buf;
-
-    js += ",\"lanes\":[";
-    for (int i = 0; i < gs.activeLaneCount; ++i) {
-        if (i > 0)
-            js += ',';
-        js += laneToJson(gs.lanes[i], ctrl->laneName(i), i);
-    }
-    js += ']';
-
-    js += ",\"presets\":[";
-    for (int i = 0; i < kFactoryPresetCount; ++i) {
-        if (i > 0)
-            js += ',';
-        const auto& info = getFactoryPresetInfo(i);
-        js += "{\"name\":" + escapeJsonString(info.name);
-        js += ",\"description\":" + escapeJsonString(info.description) + "}";
-    }
-    js += ']';
-
-    js += "}}";
-    return js;
-}
-
 // --- WebUIView implementation ---
 
 WebUIView::WebUIView(PolyController* controller) : CPluginView(nullptr), controller_(controller) {
     Steinberg::ViewRect rect(0, 0, 1160, 760);
     setRect(rect);
+    if (currentPresetName_.empty())
+        currentPresetName_ = "Init";
 }
 
 WebUIView::~WebUIView() {
@@ -345,6 +78,15 @@ Steinberg::tresult PLUGIN_API WebUIView::attached(void* parent, Steinberg::FIDSt
         choc::ui::WebView::Options::Resource res;
         res.data.assign(asset->data, asset->data + asset->size);
         res.mimeType = std::string(asset->mime);
+        if (path == "/" || path == "/index.html") {
+            static const std::string kEmbedTag = "<head>";
+            static const std::string kInject = "<head><script>window.__POLY_EMBEDDED__=true;</script>";
+            auto html = std::string(res.data.begin(), res.data.end());
+            auto pos = html.find(kEmbedTag);
+            if (pos != std::string::npos)
+                html.replace(pos, kEmbedTag.size(), kInject);
+            res.data.assign(html.begin(), html.end());
+        }
         return res;
     };
     webview_ = std::make_unique<choc::ui::WebView>(options);
@@ -425,6 +167,8 @@ void WebUIView::handleHostCall(const std::string& json) {
         auto typeStr = msg["type"].toString();
 
         if (typeStr == "ready") {
+            webviewReady_ = true;
+            lastPushedJson_.clear();
             pushState();
             return;
         }
@@ -443,8 +187,14 @@ void WebUIView::handleHostCall(const std::string& json) {
             } else if (gesture == "perform") {
                 controller_->setParamNormalized(*id, value);
                 controller_->performEdit(*id, value);
+                applyEditToCache(*id, value);
+                editCooldown_ = 20;
+                pushState();
             } else if (gesture == "end") {
                 controller_->endEdit(*id);
+                applyEditToCache(*id, value);
+                editCooldown_ = 20;
+                pushState();
             }
             return;
         }
@@ -453,7 +203,7 @@ void WebUIView::handleHostCall(const std::string& json) {
             auto name = msg["name"].toString();
             auto payload = msg["payload"];
             handleAction(name, payload);
-            editCooldown_ = 6;
+            editCooldown_ = 20;
             pushState();
             return;
         }
@@ -576,10 +326,15 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
     if (name == "selectScene") {
         auto sceneStr = payload["scene"].toString();
         double val = 0.0;
-        if (sceneStr == "B")
+        SceneSelect newSel = SceneSelect::A;
+        if (sceneStr == "B") {
             val = 0.5;
-        else if (sceneStr == "Morph")
+            newSel = SceneSelect::B;
+        } else if (sceneStr == "Morph") {
             val = 1.0;
+            newSel = SceneSelect::Morph;
+        }
+        controller_->mutableCachedState().select = newSel;
         controller_->beginEdit(ParamIDs::kSceneSelect);
         controller_->setParamNormalized(ParamIDs::kSceneSelect, val);
         controller_->performEdit(ParamIDs::kSceneSelect, val);
@@ -693,6 +448,15 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
             pushParam(ParamIDs::kActiveLaneCount, (state.activeLaneCount - 1) / 7.0);
             pushParam(ParamIDs::kSeed, state.seed / 999999.0);
         }
+        for (int lane = 0; lane < kMaxLanes; ++lane) {
+            controller_->sendCellSizes(lane);
+            controller_->sendTimelinePattern(lane);
+            controller_->sendMicroTiming(lane);
+            controller_->sendAccentMask(lane);
+            const auto& cfg = controller_->activeScene().lanes[lane];
+            for (int ei = 0; ei < cfg.envelopeCount && ei < kMaxEnvelopesPerLane; ++ei)
+                controller_->sendEnvelopeUpdate(lane, ei);
+        }
         return;
     }
 
@@ -703,6 +467,241 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
         controller_->endEdit(ParamIDs::kExportTrigger);
         return;
     }
+
+    if (name == "setAccent") {
+        int lane = payload["lane"].getInt32();
+        int step = payload["step"].getInt32();
+        if (lane < 0 || lane >= kMaxLanes || step < 0 || step >= kMaxSteps)
+            return;
+        scene.lanes[lane].accents.steps[step] = static_cast<float>(payload["value"].getFloat64());
+        controller_->sendAccentMask(lane);
+        return;
+    }
+
+    if (name == "chainAddEntry") {
+        auto& chain = controller_->mutableCachedState().chain;
+        if (chain.entryCount < kMaxChainEntries) {
+            chain.entries[chain.entryCount] = {SceneSelect::A, 4};
+            chain.entryCount++;
+            controller_->setParamNormalized(ParamIDs::kChainEntryCount, static_cast<double>(chain.entryCount) /
+                                                                            static_cast<double>(kMaxChainEntries));
+            controller_->performEdit(ParamIDs::kChainEntryCount,
+                                     static_cast<double>(chain.entryCount) / static_cast<double>(kMaxChainEntries));
+        }
+        return;
+    }
+
+    if (name == "chainRemoveEntry") {
+        int index = payload["index"].getInt32();
+        auto& chain = controller_->mutableCachedState().chain;
+        if (index >= 0 && index < chain.entryCount) {
+            for (int i = index; i < chain.entryCount - 1; ++i)
+                chain.entries[i] = chain.entries[i + 1];
+            chain.entryCount--;
+            controller_->setParamNormalized(ParamIDs::kChainEntryCount, static_cast<double>(chain.entryCount) /
+                                                                            static_cast<double>(kMaxChainEntries));
+            controller_->performEdit(ParamIDs::kChainEntryCount,
+                                     static_cast<double>(chain.entryCount) / static_cast<double>(kMaxChainEntries));
+        }
+        return;
+    }
+
+    if (name == "resetNoteMap") {
+        auto& nm = controller_->mutableCachedState().noteMap;
+        for (int i = 0; i < 128; ++i)
+            nm.map[i] = static_cast<int16_t>(i);
+        controller_->sendNoteMap();
+        return;
+    }
+
+    if (name == "setNoteMap") {
+        int note = payload["note"].getInt32();
+        int output = payload["output"].getInt32();
+        if (note < 0 || note > 127 || output < 0 || output > 127)
+            return;
+        controller_->mutableCachedState().noteMap.map[note] = static_cast<int16_t>(output);
+        controller_->sendNoteMap();
+        return;
+    }
+}
+
+void WebUIView::applyEditToCache(Steinberg::Vst::ParamID id, double normalized) {
+    using namespace ParamIDs;
+    auto& ss = controller_->mutableCachedState();
+    auto& gs = controller_->mutableActiveScene();
+
+    if (id == kSceneSelect) {
+        int sel = static_cast<int>(std::round(normalized * 2.0));
+        ss.select = static_cast<SceneSelect>(std::clamp(sel, 0, 2));
+        return;
+    }
+    if (id == kSceneMorph) {
+        ss.morphAmount = static_cast<float>(normalized);
+        return;
+    }
+    if (id == kChainEnabled) {
+        ss.chain.enabled = (normalized > 0.5);
+        return;
+    }
+    if (id == kChainMode) {
+        int m = static_cast<int>(std::round(normalized * 2.0));
+        ss.chain.mode = static_cast<ChainMode>(std::clamp(m, 0, 2));
+        return;
+    }
+    if (id == kChainEntryCount) {
+        ss.chain.entryCount = static_cast<int>(std::round(normalized * static_cast<double>(kMaxChainEntries)));
+        return;
+    }
+    if (id >= kChainEntryBase &&
+        id < kChainEntryBase + static_cast<Steinberg::Vst::ParamID>(kMaxChainEntries * kChainParamsPerEntry)) {
+        auto rel = static_cast<int>(id - kChainEntryBase);
+        int entry = rel / kChainParamsPerEntry;
+        int offset = rel % kChainParamsPerEntry;
+        if (entry < kMaxChainEntries) {
+            auto& e = ss.chain.entries[static_cast<size_t>(entry)];
+            if (offset == kChainEntryScene) {
+                int sel = static_cast<int>(std::round(normalized * 2.0));
+                e.scene = static_cast<SceneSelect>(std::clamp(sel, 0, 2));
+            } else if (offset == kChainEntryBars) {
+                e.bars = 1 + static_cast<int>(std::round(normalized * 31.0));
+            }
+        }
+        return;
+    }
+
+    if (id >= kLaneCoreBase &&
+        id < kLaneCoreBase + static_cast<Steinberg::Vst::ParamID>(kMaxLanes * kCoreParamsPerLane)) {
+        auto rel = static_cast<int>(id - kLaneCoreBase);
+        int lane = rel / kCoreParamsPerLane;
+        int offset = rel % kCoreParamsPerLane;
+        auto& cfg = gs.lanes[lane];
+        switch (offset) {
+        case kCoreSteps:
+            cfg.cycle.steps = 1 + static_cast<int>(std::round(normalized * 63.0));
+            break;
+        case kCoreSubdivision: {
+            static constexpr int subdivs[] = {1, 2, 4, 8, 16};
+            int idx = static_cast<int>(std::round(normalized * 4.0));
+            cfg.cycle.subdivision = subdivs[std::clamp(idx, 0, 4)];
+            break;
+        }
+        case kCoreHits:
+            cfg.hitCount = static_cast<int>(std::round(normalized * 64.0));
+            break;
+        case kCoreRotation:
+            cfg.rotation = static_cast<int>(std::round(normalized * 63.0));
+            break;
+        case kCoreMidiNote:
+            cfg.midiNote = static_cast<int16_t>(std::round(normalized * 127.0));
+            break;
+        case kCoreCellCount:
+            cfg.cellCount = static_cast<int>(std::round(normalized * 64.0));
+            break;
+        case kCoreTimeline:
+            cfg.timeline = normalized > 0.5;
+            break;
+        case kCoreFixedPatternLen:
+            cfg.fixedPatternLength = static_cast<int>(std::round(normalized * 64.0));
+            break;
+        case kCoreTempoMult:
+            cfg.tempoMultiplier = static_cast<float>(0.25 + normalized * 3.75);
+            break;
+        case kCoreMidiChannel:
+            cfg.midiChannel = static_cast<int16_t>(std::round(normalized * 16.0)) - 1;
+            break;
+        default:
+            break;
+        }
+        return;
+    }
+
+    if (id < static_cast<Steinberg::Vst::ParamID>(kMaxLanes * kParamsPerLane)) {
+        int lane = static_cast<int>(id) / kParamsPerLane;
+        int offset = static_cast<int>(id) % kParamsPerLane;
+        auto& cfg = gs.lanes[lane];
+        switch (offset) {
+        case kProbability:
+            cfg.probability = static_cast<float>(normalized);
+            break;
+        case kBaseVelocity:
+            cfg.baseVelocity = static_cast<uint8_t>(std::round(normalized * 127.0));
+            break;
+        case kEmphasisProb:
+            cfg.emphasisProb = static_cast<float>(normalized);
+            break;
+        case kGhostFloor:
+            cfg.ghostFloor = static_cast<uint8_t>(std::round(normalized * 127.0));
+            break;
+        case kVelocitySpread:
+            cfg.velocitySpread = static_cast<float>(normalized);
+            break;
+        case kSwingAmount:
+            cfg.swingAmount = static_cast<float>(normalized);
+            break;
+        case kHumanizeMs:
+            cfg.humanizeMs = static_cast<float>(normalized * 50.0);
+            break;
+        case kNoteDuration:
+            cfg.noteDuration = static_cast<float>(normalized * 4.0);
+            break;
+        case kActive:
+            cfg.active = (normalized > 0.5);
+            break;
+        case kPhraseLength:
+            cfg.phraseLength = static_cast<float>(normalized * 64.0);
+            break;
+        case kPhraseGap:
+            cfg.phraseGap = static_cast<float>(normalized * 64.0);
+            break;
+        case kPhraseOffset:
+            cfg.phraseOffset = static_cast<float>(normalized * 64.0);
+            break;
+        case kMutationRate:
+            cfg.mutationRate = static_cast<float>(normalized);
+            break;
+        case kDriftRate:
+            cfg.driftRate = static_cast<float>(normalized * 8.0 - 4.0);
+            break;
+        case kTimingOffset:
+            cfg.timingOffsetMs = static_cast<float>(normalized * 40.0 - 20.0);
+            break;
+        case kKotekanSource:
+            cfg.kotekanSourceLane = static_cast<int>(std::round(normalized * 8.0)) - 1;
+            break;
+        default:
+            break;
+        }
+        return;
+    }
+
+    switch (id) {
+    case kMacroComplexity:
+        gs.macros.complexity = static_cast<float>(normalized);
+        break;
+    case kMacroDensity:
+        gs.macros.density = static_cast<float>(normalized);
+        break;
+    case kMacroSyncopation:
+        gs.macros.syncopation = static_cast<float>(normalized);
+        break;
+    case kMacroSwing:
+        gs.macros.swing = static_cast<float>(normalized);
+        break;
+    case kMacroTension:
+        gs.macros.tension = static_cast<float>(normalized);
+        break;
+    case kMacroHumanize:
+        gs.macros.humanize = static_cast<float>(normalized);
+        break;
+    case kActiveLaneCount:
+        gs.activeLaneCount = 1 + static_cast<int>(std::round(normalized * 7.0));
+        break;
+    case kSeed:
+        gs.seed = static_cast<uint64_t>(std::round(normalized * 999999.0));
+        break;
+    default:
+        break;
+    }
 }
 
 void WebUIView::pushState() {
@@ -711,7 +710,10 @@ void WebUIView::pushState() {
 
     const auto& ss = controller_->cachedState();
     const auto& gs = controller_->activeScene();
-    std::string json = grooveStateToJson(gs, ss, controller_, currentPresetName_);
+    auto nameFn = [](int lane, void* ctx) -> const std::string& {
+        return static_cast<PolyController*>(ctx)->laneName(lane);
+    };
+    std::string json = grooveStateToJson(gs, ss, nameFn, controller_, currentPresetName_);
     if (json == lastPushedJson_)
         return;
     lastPushedJson_ = json;
@@ -720,6 +722,9 @@ void WebUIView::pushState() {
 
 void WebUIView::pushFrame() {
     if (!webview_ || !controller_)
+        return;
+
+    if (!webviewReady_)
         return;
 
     auto* snap = controller_->uiSnapshot();
