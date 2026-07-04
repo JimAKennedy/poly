@@ -49,6 +49,7 @@ private:
     uint32_t lastStateGen_ = 0;
     int editCooldown_ = 0;
     std::string lastPushedJson_;
+    std::string currentPresetName_;
 };
 
 } // namespace poly

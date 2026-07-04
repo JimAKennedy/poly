@@ -10,11 +10,13 @@
 #include <string>
 
 #include "../controller.h"
+#include "../plugids.h"
 #include "bridge_params.h"
 #include "choc/gui/choc_MessageLoop.h"
 #include "choc/gui/choc_WebView.h"
 #include "choc/text/choc_JSON.h"
 #include "poly/euclidean.h"
+#include "poly/presets.h"
 #include "poly_webui_assets.h" // generated: jk_embed_assets(webui/*)
 
 #ifdef __APPLE__
@@ -113,6 +115,23 @@ static const char* sceneSelectToString(SceneSelect s) {
 
 static const char* kLaneHues[] = {"#F5B54A", "#E4604E", "#5AC8DA", "#9BC46B",
                                   "#B48AE0", "#E8A33D", "#4EBBE0", "#D47AB8"};
+
+static const char* kWebPresetLaneNames[kFactoryPresetCount][kMaxLanes] = {
+    {"Kick", "Snare", "Hi-Hat", "Open Hat", "Tom Hi", "Tom Lo", "Ride", "Crash"},
+    {"Kick", "Rim", "Tom", "Hi-Hat", "Tom Hi", "Tom Lo", "Ride", "Crash"},
+    {"Kick", "Rim", "Ghost", "HH Open", "Tom Hi", "Tom Lo", "Ride", "Crash"},
+    {"Kick", "Snare", "Hi-Hat", "Tom", "Tom Hi", "Tom Lo", "Ride", "Crash"},
+    {"Clave", "Conga", "Shaker", "Cowbell", "Tom Hi", "Tom Lo", "Ride", "Crash"},
+    {"Kick", "Shaker", "Conga", "Djembe", "Perc", "Tom Lo", "Ride", "Crash"},
+    {"Fixed", "Drifting", "Pulse", "HH Open", "Tom Hi", "Tom Lo", "Ride", "Crash"},
+    {"Polos", "Sangsih", "Gong", "Shimmer", "Tom Hi", "Tom Lo", "Ride", "Crash"},
+    {"Kick", "Snare", "Hi-Hat", "Ghost", "Tom Hi", "Tom Lo", "Ride", "Crash"},
+    {"Bell", "Kick", "Snare", "Shaker", "Conga", "Tom Lo", "Ride", "Crash"},
+    {"Davul", "Rim", "Zurna", "Darbuka", "Tom Hi", "Tom Lo", "Ride", "Crash"},
+    {"Surdo", "Tamborim", "Agogo", "Pandeiro", "Tom Hi", "Tom Lo", "Ride", "Crash"},
+    {"Mridangam Lo", "Mridangam Hi", "Ghatam", "Kanjira", "Tom Hi", "Tom Lo", "Ride", "Crash"},
+    {"Kick", "Snare", "Hi-Hat", "Perc", "Glitch", "Tom Lo", "Ride", "Crash"},
+};
 
 static std::string laneToJson(const LaneConfig& cfg, const std::string& name, int laneIndex) {
     std::string js;
@@ -246,12 +265,13 @@ static std::string laneToJson(const LaneConfig& cfg, const std::string& name, in
     return js;
 }
 
-static std::string grooveStateToJson(const GrooveState& gs, const SceneState& ss, PolyController* ctrl) {
+static std::string grooveStateToJson(const GrooveState& gs, const SceneState& ss, PolyController* ctrl,
+                                     const std::string& presetName) {
     std::string js;
     js.reserve(8192);
     js += "{\"type\":\"state\",\"state\":{";
 
-    js += "\"preset\":\"\"";
+    js += "\"preset\":" + escapeJsonString(presetName);
 
     char buf[128];
     std::snprintf(buf, sizeof(buf), ",\"seed\":%llu,\"tempo\":0", static_cast<unsigned long long>(gs.seed));
@@ -276,6 +296,16 @@ static std::string grooveStateToJson(const GrooveState& gs, const SceneState& ss
         if (i > 0)
             js += ',';
         js += laneToJson(gs.lanes[i], ctrl->laneName(i), i);
+    }
+    js += ']';
+
+    js += ",\"presets\":[";
+    for (int i = 0; i < kFactoryPresetCount; ++i) {
+        if (i > 0)
+            js += ',';
+        const auto& info = getFactoryPresetInfo(i);
+        js += "{\"name\":" + escapeJsonString(info.name);
+        js += ",\"description\":" + escapeJsonString(info.description) + "}";
     }
     js += ']';
 
@@ -557,6 +587,115 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
         return;
     }
 
+    if (name == "applyPreset") {
+        int index = payload["index"].getInt32();
+
+        auto pushParam = [this](Steinberg::Vst::ParamID id, double value) {
+            controller_->beginEdit(id);
+            controller_->setParamNormalized(id, value);
+            controller_->performEdit(id, value);
+            controller_->endEdit(id);
+        };
+
+        if (index == -1) {
+            currentPresetName_ = "Init";
+            GrooveState init{};
+            init.activeLaneCount = kMaxLanes;
+            static constexpr int kInitSteps[] = {4, 4, 8, 5, 7, 3, 6, 9};
+            static constexpr int kInitSubs[] = {4, 4, 8, 16, 8, 16, 16, 16};
+            static constexpr int kInitHits[] = {4, 2, 8, 3, 4, 2, 4, 5};
+            static constexpr int kInitNotes[] = {36, 38, 42, 45, 46, 39, 43, 50};
+            for (int lane = 0; lane < kMaxLanes; ++lane) {
+                init.lanes[lane].id = lane;
+                init.lanes[lane].cycle = {kInitSteps[lane], kInitSubs[lane]};
+                init.lanes[lane].hitCount = kInitHits[lane];
+                init.lanes[lane].midiNote = kInitNotes[lane];
+                init.lanes[lane].baseVelocity = 100;
+                init.lanes[lane].probability = 1.0f;
+            }
+            controller_->mutableActiveScene() = init;
+            controller_->resetLaneNames();
+            for (int lane = 0; lane < kMaxLanes; ++lane) {
+                pushParam(ParamIDs::laneParam(lane, ParamIDs::kActive), 1.0);
+                pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreSteps), (kInitSteps[lane] - 1) / 63.0);
+                pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreHits), kInitHits[lane] / 64.0);
+                pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreMidiNote), kInitNotes[lane] / 127.0);
+            }
+            pushParam(ParamIDs::kActiveLaneCount, (kMaxLanes - 1) / 7.0);
+            pushParam(ParamIDs::kSeed, 0.0);
+        } else if (index >= 0 && index < kFactoryPresetCount) {
+            auto state = makeFactoryPreset(index);
+            currentPresetName_ = getFactoryPresetInfo(index).name;
+            controller_->mutableActiveScene() = state;
+            for (int lane = 0; lane < kMaxLanes; ++lane)
+                controller_->setLaneName(lane, kWebPresetLaneNames[index][lane]);
+
+            for (int lane = 0; lane < kMaxLanes; ++lane) {
+                const auto& cfg = state.lanes[lane];
+                pushParam(ParamIDs::laneParam(lane, ParamIDs::kProbability), cfg.probability);
+                pushParam(ParamIDs::laneParam(lane, ParamIDs::kBaseVelocity), cfg.baseVelocity / 127.0);
+                pushParam(ParamIDs::laneParam(lane, ParamIDs::kEmphasisProb), cfg.emphasisProb);
+                pushParam(ParamIDs::laneParam(lane, ParamIDs::kGhostFloor), cfg.ghostFloor / 127.0);
+                pushParam(ParamIDs::laneParam(lane, ParamIDs::kVelocitySpread), cfg.velocitySpread);
+                pushParam(ParamIDs::laneParam(lane, ParamIDs::kSwingAmount), cfg.swingAmount);
+                pushParam(ParamIDs::laneParam(lane, ParamIDs::kHumanizeMs), cfg.humanizeMs / 50.0);
+                pushParam(ParamIDs::laneParam(lane, ParamIDs::kNoteDuration), cfg.noteDuration / 4.0);
+                pushParam(ParamIDs::laneParam(lane, ParamIDs::kActive), (lane < state.activeLaneCount) ? 1.0 : 0.0);
+                pushParam(ParamIDs::laneParam(lane, ParamIDs::kPhraseLength), cfg.phraseLength / 64.0);
+                pushParam(ParamIDs::laneParam(lane, ParamIDs::kPhraseGap), cfg.phraseGap / 64.0);
+                pushParam(ParamIDs::laneParam(lane, ParamIDs::kPhraseOffset), cfg.phraseOffset / 64.0);
+                pushParam(ParamIDs::laneParam(lane, ParamIDs::kMutationRate), cfg.mutationRate);
+                pushParam(ParamIDs::laneParam(lane, ParamIDs::kDriftRate),
+                          static_cast<double>((cfg.driftRate + 4.0f) / 8.0f));
+                pushParam(ParamIDs::laneParam(lane, ParamIDs::kTimingOffset),
+                          static_cast<double>((cfg.timingOffsetMs + 20.0f) / 40.0f));
+                pushParam(ParamIDs::laneParam(lane, ParamIDs::kKotekanSource),
+                          static_cast<double>(cfg.kotekanSourceLane + 1) / 8.0);
+
+                pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreSteps), (cfg.cycle.steps - 1) / 63.0);
+                int subIdx = 0;
+                switch (cfg.cycle.subdivision) {
+                case 1:
+                    subIdx = 0;
+                    break;
+                case 2:
+                    subIdx = 1;
+                    break;
+                case 4:
+                    subIdx = 2;
+                    break;
+                case 8:
+                    subIdx = 3;
+                    break;
+                case 16:
+                    subIdx = 4;
+                    break;
+                default:
+                    subIdx = 2;
+                    break;
+                }
+                pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreSubdivision), subIdx / 4.0);
+                pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreHits), cfg.hitCount / 64.0);
+                pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreRotation), cfg.rotation / 63.0);
+                pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreMidiNote), cfg.midiNote / 127.0);
+                pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreCellCount), cfg.cellCount / 64.0);
+                pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreTimeline), cfg.timeline ? 1.0 : 0.0);
+                pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreFixedPatternLen), cfg.fixedPatternLength / 64.0);
+            }
+
+            pushParam(ParamIDs::kMacroComplexity, state.macros.complexity);
+            pushParam(ParamIDs::kMacroDensity, state.macros.density);
+            pushParam(ParamIDs::kMacroSyncopation, state.macros.syncopation);
+            pushParam(ParamIDs::kMacroSwing, state.macros.swing);
+            pushParam(ParamIDs::kMacroTension, state.macros.tension);
+            pushParam(ParamIDs::kMacroHumanize, state.macros.humanize);
+
+            pushParam(ParamIDs::kActiveLaneCount, (state.activeLaneCount - 1) / 7.0);
+            pushParam(ParamIDs::kSeed, state.seed / 999999.0);
+        }
+        return;
+    }
+
     if (name == "exportRequest") {
         controller_->beginEdit(ParamIDs::kExportTrigger);
         controller_->setParamNormalized(ParamIDs::kExportTrigger, 1.0);
@@ -572,7 +711,7 @@ void WebUIView::pushState() {
 
     const auto& ss = controller_->cachedState();
     const auto& gs = controller_->activeScene();
-    std::string json = grooveStateToJson(gs, ss, controller_);
+    std::string json = grooveStateToJson(gs, ss, controller_, currentPresetName_);
     if (json == lastPushedJson_)
         return;
     lastPushedJson_ = json;
