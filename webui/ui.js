@@ -44,6 +44,188 @@
   document.getElementById('learnBtn').addEventListener('click', toggleLearn);
   document.getElementById('scA').addEventListener('click', () => host.action('selectScene', { scene: 'A' }));
   document.getElementById('scB').addEventListener('click', () => host.action('selectScene', { scene: 'B' }));
+  document.getElementById('scM').addEventListener('click', () => host.action('selectScene', { scene: 'Morph' }));
+
+  /* --- morph slider --- */
+  const morphSlider = document.getElementById('morphSlider');
+  const morphTrack = morphSlider.querySelector('.morph-track');
+  const morphFill = morphTrack.querySelector('i');
+  (function initMorphSlider() {
+    const calc = (e) => {
+      const r = morphTrack.getBoundingClientRect();
+      return Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+    };
+    const paint = (v) => { morphFill.style.width = `${(v * 100).toFixed(1)}%`; };
+    morphTrack.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      const v = calc(e); paint(v);
+      host.edit('scene.morph', v, 'begin');
+      host.edit('scene.morph', v, 'perform');
+      const mv = (ev) => { const nv = calc(ev); paint(nv); host.edit('scene.morph', nv, 'perform'); };
+      const up = (ev) => {
+        window.removeEventListener('pointermove', mv);
+        const nv = calc(ev); paint(nv); host.edit('scene.morph', nv, 'end');
+      };
+      window.addEventListener('pointermove', mv);
+      window.addEventListener('pointerup', up, { once: true });
+    });
+  })();
+
+  /* --- chain popover --- */
+  const chainBtn = document.getElementById('chainBtn');
+  let chainPopover = null;
+  function buildChainPopover() {
+    if (chainPopover) { chainPopover.remove(); chainPopover = null; }
+    const pop = document.createElement('div');
+    pop.className = 'chain-popover open';
+    pop.id = 'chainPopover';
+    const chain = S.chain || { enabled: false, mode: 0, entryCount: 0, entries: [] };
+    const MODE_NAMES = ['1-Shot', 'Loop', 'Ping-Pong'];
+    const SCENE_NAMES = ['A', 'B', 'Morph'];
+    let html = `<h4>Scene Chain</h4>`;
+    html += `<div class="chain-row"><label>Enable</label><span class="switch"><button class="${chain.enabled ? 'on' : ''}" data-chain-enable aria-label="Enable chain"><i></i></button></span></div>`;
+    html += `<div class="chain-row"><label>Mode</label><div class="chain-modes">${MODE_NAMES.map((n, i) =>
+      `<button class="chip${chain.mode === i ? ' on' : ''}" data-chain-mode="${i}">${n}</button>`).join('')}</div></div>`;
+    for (let ei = 0; ei < chain.entryCount; ei++) {
+      const entry = chain.entries[ei] || { scene: 0, bars: 4 };
+      html += `<div class="chain-entry" data-entry="${ei}">
+        <span class="idx">${ei + 1}.</span>
+        <div class="scene-btns">${SCENE_NAMES.map((n, si) =>
+          `<button class="chip${entry.scene === si ? ' on' : ''}" data-entry-scene="${ei}" data-sv="${si}">${n}</button>`).join('')}</div>
+        <div class="bars-ctl"><button data-bars-dec="${ei}">−</button><span>${entry.bars}</span><button data-bars-inc="${ei}">+</button></div>
+        <button class="rm" data-rm="${ei}" aria-label="Remove entry">×</button>
+      </div>`;
+    }
+    html += `<div class="chain-add"><button data-chain-add aria-label="Add entry">+</button></div>`;
+    pop.innerHTML = html;
+    document.getElementById('chrome').appendChild(pop);
+    chainPopover = pop;
+
+    pop.querySelector('[data-chain-enable]').addEventListener('click', () => {
+      host.edit('chain.enabled', chain.enabled ? 0 : 1, 'begin');
+      host.edit('chain.enabled', chain.enabled ? 0 : 1, 'perform');
+      host.edit('chain.enabled', chain.enabled ? 0 : 1, 'end');
+    });
+    pop.querySelectorAll('[data-chain-mode]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const m = parseInt(b.dataset.chainMode);
+        host.edit('chain.mode', m / 2, 'begin');
+        host.edit('chain.mode', m / 2, 'perform');
+        host.edit('chain.mode', m / 2, 'end');
+      }));
+    pop.querySelectorAll('[data-entry-scene]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const ei = parseInt(b.dataset.entryScene);
+        const sv = parseInt(b.dataset.sv);
+        host.edit(`chain.entry.${ei}.scene`, sv / 2, 'begin');
+        host.edit(`chain.entry.${ei}.scene`, sv / 2, 'perform');
+        host.edit(`chain.entry.${ei}.scene`, sv / 2, 'end');
+      }));
+    pop.querySelectorAll('[data-bars-dec]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const ei = parseInt(b.dataset.barsDec);
+        const entry = chain.entries[ei] || { bars: 4 };
+        const nb = Math.max(1, entry.bars - 1);
+        host.edit(`chain.entry.${ei}.bars`, (nb - 1) / 31, 'begin');
+        host.edit(`chain.entry.${ei}.bars`, (nb - 1) / 31, 'perform');
+        host.edit(`chain.entry.${ei}.bars`, (nb - 1) / 31, 'end');
+      }));
+    pop.querySelectorAll('[data-bars-inc]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const ei = parseInt(b.dataset.barsInc);
+        const entry = chain.entries[ei] || { bars: 4 };
+        const nb = Math.min(32, entry.bars + 1);
+        host.edit(`chain.entry.${ei}.bars`, (nb - 1) / 31, 'begin');
+        host.edit(`chain.entry.${ei}.bars`, (nb - 1) / 31, 'perform');
+        host.edit(`chain.entry.${ei}.bars`, (nb - 1) / 31, 'end');
+      }));
+    pop.querySelectorAll('[data-rm]').forEach((b) =>
+      b.addEventListener('click', () => {
+        host.action('chainRemoveEntry', { index: parseInt(b.dataset.rm) });
+      }));
+    pop.querySelector('[data-chain-add]').addEventListener('click', () => {
+      host.action('chainAddEntry', {});
+    });
+
+    const dismiss = (e) => {
+      if (!pop.contains(e.target) && e.target !== chainBtn) {
+        closeChainPopover();
+        document.removeEventListener('click', dismiss);
+      }
+    };
+    setTimeout(() => document.addEventListener('click', dismiss), 0);
+  }
+  function closeChainPopover() {
+    if (chainPopover) { chainPopover.remove(); chainPopover = null; }
+  }
+  chainBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (chainPopover) closeChainPopover();
+    else buildChainPopover();
+  });
+
+  /* --- export button --- */
+  document.getElementById('exportBtn').addEventListener('click', () => {
+    host.action('exportRequest', {});
+    const btn = document.getElementById('exportBtn');
+    btn.classList.add('on');
+    setTimeout(() => btn.classList.remove('on'), 600);
+  });
+
+  /* --- note map modal --- */
+  let noteMapModal = null;
+  function buildNoteMapModal() {
+    if (noteMapModal) { closeNoteMapModal(); return; }
+    const nm = S.noteMap || [];
+    const pop = document.createElement('div');
+    pop.className = 'notemap-modal open';
+    pop.innerHTML = `<div class="notemap-inner">
+      <div class="notemap-header"><h4>Note Map</h4><button class="notemap-reset">Reset</button><button class="notemap-close">✕</button></div>
+      <div class="notemap-grid">${Array.from({ length: 128 }, (_, i) =>
+        `<div class="notemap-row" data-note="${i}">` +
+        `<span class="ni">${i}</span>` +
+        `<button data-nmdec="${i}">−</button>` +
+        `<span class="no">${nm[i] ?? i}</span>` +
+        `<button data-nminc="${i}">+</button>` +
+        `${nm[i] !== i ? '<span class="nm-mod">✦</span>' : ''}` +
+        `</div>`).join('')}
+      </div></div>`;
+    document.getElementById('win').appendChild(pop);
+    noteMapModal = pop;
+
+    pop.querySelector('.notemap-close').addEventListener('click', closeNoteMapModal);
+    pop.querySelector('.notemap-reset').addEventListener('click', () => {
+      host.action('resetNoteMap', {});
+    });
+    pop.querySelectorAll('[data-nmdec]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const ni = parseInt(b.dataset.nmdec);
+        const cur = S.noteMap ? S.noteMap[ni] : ni;
+        if (cur > 0) host.action('setNoteMap', { note: ni, output: cur - 1 });
+      }));
+    pop.querySelectorAll('[data-nminc]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const ni = parseInt(b.dataset.nminc);
+        const cur = S.noteMap ? S.noteMap[ni] : ni;
+        if (cur < 127) host.action('setNoteMap', { note: ni, output: cur + 1 });
+      }));
+
+    const dismiss = (e) => {
+      if (noteMapModal && !noteMapModal.querySelector('.notemap-inner').contains(e.target) &&
+          e.target !== document.getElementById('noteMapBtn')) {
+        closeNoteMapModal();
+        document.removeEventListener('click', dismiss);
+      }
+    };
+    setTimeout(() => document.addEventListener('click', dismiss), 0);
+  }
+  function closeNoteMapModal() {
+    if (noteMapModal) { noteMapModal.remove(); noteMapModal = null; }
+  }
+  document.getElementById('noteMapBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    buildNoteMapModal();
+  });
 
   /* --- preset dropdown --- */
   const presetBtn = document.getElementById('presetName');
@@ -220,6 +402,7 @@
       s.innerHTML = `
         <div class="head">
           <div class="nm"><b>${l.name}</b>${l.role}</div>
+          <button class="mute${l.active ? '' : ' off'}" data-mute aria-label="Mute ${l.name}" title="Mute">●</button>
           <button class="ex" aria-label="Expand ${l.name} strip" title="Expand">⤢</button>
         </div>
         <div class="body2">
@@ -233,10 +416,14 @@
               <button data-tab="pattern" class="on">Pattern</button>
               <button data-tab="timing">Timing</button>
               <button data-tab="env">Envelopes</button>
+              <button data-tab="expr">Expr</button>
+              <button data-tab="adv">Adv</button>
             </div>
             <div class="pane on" data-pane="pattern"></div>
             <div class="pane" data-pane="timing"></div>
             <div class="pane" data-pane="env"></div>
+            <div class="pane" data-pane="expr"></div>
+            <div class="pane" data-pane="adv"></div>
           </div>
         </div>
         <div class="feel"></div>
@@ -250,6 +437,12 @@
       ladders.push(s.querySelector('.ladder'));
       vus.push(s.querySelector('.vu i'));
       s.querySelector('.ex').addEventListener('click', () => expandStrip(expanded === li ? -1 : li));
+      s.querySelector('[data-mute]').addEventListener('click', () => {
+        const active = S.lanes[li].active;
+        host.edit(`lane.${li}.active`, active ? 0 : 1, 'begin');
+        host.edit(`lane.${li}.active`, active ? 0 : 1, 'perform');
+        host.edit(`lane.${li}.active`, active ? 0 : 1, 'end');
+      });
       s.querySelectorAll('.tabs button').forEach((tb) =>
         tb.addEventListener('click', () => {
           s.querySelectorAll('.tabs button').forEach((x) => x.classList.toggle('on', x === tb));
@@ -283,6 +476,9 @@
   }
   function refreshStrip(li) {
     const l = S.lanes[li];
+    strips[li].classList.toggle('muted', !l.active);
+    const muteBtn = strips[li].querySelector('[data-mute]');
+    if (muteBtn) muteBtn.classList.toggle('off', !l.active);
     drawRing(li);
     buildLadder(li);
     strips[li].querySelector('.feel').innerHTML = `
@@ -388,6 +584,20 @@
       }
     }
 
+    /* ACCENTS */
+    const accentSteps = l.cells ? l.cells.length : l.steps;
+    const accentHtml = `<div class="section-label">Accents</div>
+      <div class="accent-row" data-accents>${Array.from({ length: accentSteps }, (_, i) =>
+        `<button class="accent-btn${l.accents[i] > 0 ? ' on' : ''}" data-acc="${i}" aria-label="Accent step ${i + 1}"></button>`).join('')}</div>
+      <div class="hint">Toggle accent emphasis per step</div>`;
+    pat.insertAdjacentHTML('beforeend', accentHtml);
+    pat.querySelectorAll('[data-acc]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const si = parseInt(b.dataset.acc);
+        const cur = l.accents[si] > 0 ? 0 : 1;
+        host.action('setAccent', { lane: li, step: si, value: cur });
+      }));
+
     /* TIMING */
     const items = l.cells ? l.cells.length : l.steps;
     tim.innerHTML = `<div class="prow"><label>Push / pull (lane)</label><span class="v">${l.push > 0 ? '+' : ''}${l.push} ms</span></div>
@@ -449,6 +659,136 @@
         index: l.envs.length,
         envelope: { target: 'Velocity', period: [1, 4, 7, 16][l.envs.length % 4], depth: 0.3, on: true },
       }));
+
+    /* EXPRESSION */
+    const expr = s.querySelector('[data-pane="expr"]');
+    const PARAMS = [
+      { field: 'velocity', label: 'Velocity', norm: l.vel / 127, fmt: (v) => String(Math.round(v * 127)) },
+      { field: 'probability', label: 'Probability', norm: l.prob, fmt: (v) => Math.round(v * 100) + '%' },
+      { field: 'ghostFloor', label: 'Ghost', norm: l.ghost / 127, fmt: (v) => String(Math.round(v * 127)) },
+      { field: 'spread', label: 'Spread', norm: l.spread, fmt: (v) => Math.round(v * 100) + '%' },
+      { field: 'swing', label: 'Swing', norm: l.swing, fmt: (v) => Math.round(v * 100) + '%' },
+      { field: 'humanize', label: 'Humanize', norm: l.humanize / 50, fmt: (v) => Math.round(v * 50) + 'ms' },
+      { field: 'duration', label: 'Duration', norm: l.duration / 4, fmt: (v) => (v * 4).toFixed(1) },
+      { field: 'note', label: 'Note', norm: l.note / 127, fmt: (v) => 'N' + Math.round(v * 127) },
+      { field: 'channel', label: 'Channel', norm: (l.ch - 1) / 15, fmt: (v) => 'CH ' + (Math.round(v * 15) + 1) },
+    ];
+    expr.innerHTML = PARAMS.map((p) =>
+      `<div class="param-slider"><label>${p.label}</label>` +
+      `<div class="slider-track" data-field="${p.field}"><i style="width:${(p.norm * 100).toFixed(1)}%"></i></div>` +
+      `<span class="v">${p.fmt(p.norm)}</span></div>`
+    ).join('');
+    expr.querySelectorAll('.slider-track').forEach((track) => {
+      const field = track.dataset.field;
+      const p = PARAMS.find((x) => x.field === field);
+      const paramId = `lane.${li}.${field}`;
+      const fill = track.querySelector('i');
+      const vSpan = track.nextElementSibling;
+      const calc = (e) => {
+        const r = track.getBoundingClientRect();
+        return Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+      };
+      const paint = (v) => { fill.style.width = `${(v * 100).toFixed(1)}%`; vSpan.textContent = p.fmt(v); };
+      track.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        const v = calc(e); paint(v);
+        host.edit(paramId, v, 'begin');
+        host.edit(paramId, v, 'perform');
+        const mv = (ev) => { const nv = calc(ev); paint(nv); host.edit(paramId, nv, 'perform'); };
+        const up = (ev) => {
+          window.removeEventListener('pointermove', mv);
+          const nv = calc(ev); paint(nv); host.edit(paramId, nv, 'end');
+        };
+        window.addEventListener('pointermove', mv);
+        window.addEventListener('pointerup', up, { once: true });
+      });
+    });
+
+    /* ADVANCED */
+    const adv = s.querySelector('[data-pane="adv"]');
+    const PHRASE = [
+      { field: 'phraseLength', label: 'Length', norm: l.phraseLength / 64,
+        fmt: (v) => { const b = Math.round(v * 64); return b === 0 ? 'Off' : b + ' bars'; } },
+      { field: 'phraseGap', label: 'Gap', norm: l.phraseGap / 64,
+        fmt: (v) => { const b = Math.round(v * 64); return b === 0 ? 'Off' : b + ' bars'; } },
+      { field: 'phraseOffset', label: 'Offset', norm: l.phraseOffset / 64,
+        fmt: (v) => Math.round(v * 64) + ' bars' },
+    ];
+    const MUTATION = [
+      { field: 'mutationRate', label: 'Mutation', norm: l.mutationRate,
+        fmt: (v) => Math.round(v * 100) + '%' },
+      { field: 'driftRate', label: 'Drift', norm: (l.driftRate + 4) / 8,
+        fmt: (v) => { const d = v * 8 - 4; return (d > 0 ? '+' : '') + d.toFixed(1); } },
+    ];
+    const MORE = [
+      { field: 'emphasisProb', label: 'Emphasis', norm: l.emphasisProb,
+        fmt: (v) => Math.round(v * 100) + '%' },
+      { field: 'timingOffset', label: 'T. Offset', norm: (l.timingOffset + 20) / 40,
+        fmt: (v) => { const ms = v * 40 - 20; return (ms > 0 ? '+' : '') + Math.round(ms) + 'ms'; } },
+    ];
+    const ALL_ADV = [...PHRASE, ...MUTATION, ...MORE];
+    const SUBS = [1, 2, 4, 8, 16];
+    const sliderHtml = (arr) => arr.map((p) =>
+      `<div class="param-slider"><label>${p.label}</label>` +
+      `<div class="slider-track" data-field="${p.field}"><i style="width:${(p.norm * 100).toFixed(1)}%"></i></div>` +
+      `<span class="v">${p.fmt(p.norm)}</span></div>`
+    ).join('');
+
+    adv.innerHTML =
+      `<div class="section-label">Phrase</div>` + sliderHtml(PHRASE) +
+      `<div class="hint">Lane plays for Length bars, rests for Gap. Offset shifts the start.</div>` +
+      `<div class="section-label">Mutation</div>` + sliderHtml(MUTATION) +
+      `<div class="hint">Mutation randomly flips steps; Drift shifts pattern phase over time.</div>` +
+      `<div class="section-label">More</div>` +
+      `<div class="prow"><label>Subdivision</label><div class="chip-row">${SUBS.map((sv) =>
+        `<button class="chip${l.subdivision === sv ? ' on' : ''}" data-sub="${sv}">${sv}</button>`).join('')}</div></div>` +
+      sliderHtml(MORE) +
+      `<div class="prow"><label>Kotekan</label><div class="chip-row">` +
+        `<button class="chip${l.kotekanSource === -1 ? ' on' : ''}" data-kot="-1">None</button>` +
+        S.lanes.map((sl, si) => si !== li
+          ? `<button class="chip${l.kotekanSource === si ? ' on' : ''}" data-kot="${si}">${sl.name}</button>`
+          : '').join('') +
+      `</div></div>`;
+
+    adv.querySelectorAll('.slider-track').forEach((track) => {
+      const field = track.dataset.field;
+      const p = ALL_ADV.find((x) => x.field === field);
+      const paramId = `lane.${li}.${field}`;
+      const fill = track.querySelector('i');
+      const vSpan = track.nextElementSibling;
+      const calc = (e) => {
+        const r = track.getBoundingClientRect();
+        return Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+      };
+      const paint = (v) => { fill.style.width = `${(v * 100).toFixed(1)}%`; vSpan.textContent = p.fmt(v); };
+      track.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        const v = calc(e); paint(v);
+        host.edit(paramId, v, 'begin');
+        host.edit(paramId, v, 'perform');
+        const mv = (ev) => { const nv = calc(ev); paint(nv); host.edit(paramId, nv, 'perform'); };
+        const up = (ev) => {
+          window.removeEventListener('pointermove', mv);
+          const nv = calc(ev); paint(nv); host.edit(paramId, nv, 'end');
+        };
+        window.addEventListener('pointermove', mv);
+        window.addEventListener('pointerup', up, { once: true });
+      });
+    });
+    adv.querySelectorAll('[data-sub]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const norm = SUBS.indexOf(parseInt(b.dataset.sub)) / 4;
+        host.edit(`lane.${li}.subdivision`, norm, 'begin');
+        host.edit(`lane.${li}.subdivision`, norm, 'perform');
+        host.edit(`lane.${li}.subdivision`, norm, 'end');
+      }));
+    adv.querySelectorAll('[data-kot]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const kv = parseInt(b.dataset.kot);
+        host.edit(`lane.${li}.kotekanSource`, (kv + 1) / 8, 'begin');
+        host.edit(`lane.${li}.kotekanSource`, (kv + 1) / 8, 'perform');
+        host.edit(`lane.${li}.kotekanSource`, (kv + 1) / 8, 'end');
+      }));
   }
 
   /* ================= state + frame wiring ================= */
@@ -456,8 +796,14 @@
     document.getElementById('presetName').textContent = S.preset;
     document.getElementById('seedVal').textContent = S.seed;
     document.getElementById('tempoVal').textContent = S.tempo.toFixed(1);
-    document.getElementById('scA').classList.toggle('on', S.scene !== 'B');
+    document.getElementById('scA').classList.toggle('on', S.scene === 'A');
     document.getElementById('scB').classList.toggle('on', S.scene === 'B');
+    document.getElementById('scM').classList.toggle('on', S.scene === 'Morph');
+    morphSlider.style.display = S.scene === 'Morph' ? 'flex' : 'none';
+    morphFill.style.width = `${((S.morph || 0) * 100).toFixed(1)}%`;
+    const chain = S.chain || { enabled: false };
+    chainBtn.classList.toggle('on', chain.enabled);
+    if (chainPopover) buildChainPopover();
   }
   function refreshAll() {
     renderChrome();
@@ -465,6 +811,10 @@
     buildDesk();
     if (expanded >= 0) expandStrip(Math.min(expanded, S.lanes.length - 1));
     drawLoom(lastFrame.t8);
+    if (noteMapModal) {
+      closeNoteMapModal();
+      buildNoteMapModal();
+    }
   }
   function boot(state) {
     S = state;
