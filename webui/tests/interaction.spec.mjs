@@ -679,3 +679,111 @@ test.describe('advanced tab — more controls', () => {
     expect(state.lanes[0].kotekanSource).toBe(-1);
   });
 });
+
+test.describe('accent mask', () => {
+  test('accent toggle dispatches setAccent action', async ({ page }) => {
+    await expandStrip(page, 0);
+    await clearActions(page);
+    await page.click('.strip[data-lane="0"] [data-pane="pattern"] [data-acc="0"]');
+    const acts = await getActions(page);
+    expect(acts).toContainEqual(
+      expect.objectContaining({ name: 'setAccent', payload: { lane: 0, step: 0, value: 1 } })
+    );
+  });
+
+  test('accent toggle updates visual state', async ({ page }) => {
+    await expandStrip(page, 0);
+    const btn = page.locator('.strip[data-lane="0"] [data-pane="pattern"] [data-acc="0"]');
+    await expect(btn).not.toHaveClass(/\bon\b/);
+    await btn.click();
+    await page.waitForTimeout(50);
+    const state = await page.evaluate(() => window.PolyMockHost.getState());
+    expect(state.lanes[0].accents[0]).toBe(1);
+  });
+
+  test('accent toggle off removes accent', async ({ page }) => {
+    await page.evaluate(() => {
+      const s = window.PolyMockHost.getState();
+      s.lanes[0].accents[1] = 1;
+      window.PolyMockHost._pushState();
+    });
+    await expandStrip(page, 0);
+    await clearActions(page);
+    await page.click('.strip[data-lane="0"] [data-pane="pattern"] [data-acc="1"]');
+    const acts = await getActions(page);
+    expect(acts).toContainEqual(
+      expect.objectContaining({ name: 'setAccent', payload: { lane: 0, step: 1, value: 0 } })
+    );
+  });
+});
+
+test.describe('note map', () => {
+  test('note map button opens modal', async ({ page }) => {
+    await expect(page.locator('.notemap-modal')).toHaveCount(0);
+    await page.click('#noteMapBtn');
+    await expect(page.locator('.notemap-modal.open')).toBeVisible();
+  });
+
+  test('note map close button dismisses modal', async ({ page }) => {
+    await page.click('#noteMapBtn');
+    await expect(page.locator('.notemap-modal.open')).toBeVisible();
+    await page.click('.notemap-close');
+    await expect(page.locator('.notemap-modal')).toHaveCount(0);
+  });
+
+  test('note map increment dispatches setNoteMap', async ({ page }) => {
+    await page.click('#noteMapBtn');
+    await clearActions(page);
+    await page.click('[data-nminc="60"]');
+    const acts = await getActions(page);
+    expect(acts).toContainEqual(
+      expect.objectContaining({ name: 'setNoteMap', payload: { note: 60, output: 61 } })
+    );
+  });
+
+  test('note map decrement dispatches setNoteMap', async ({ page }) => {
+    await page.evaluate(() => {
+      window.PolyMockHost.action('setNoteMap', { note: 60, output: 62 });
+    });
+    await page.waitForTimeout(50);
+    await page.click('#noteMapBtn');
+    await clearActions(page);
+    await page.click('[data-nmdec="60"]');
+    const acts = await getActions(page);
+    expect(acts).toContainEqual(
+      expect.objectContaining({ name: 'setNoteMap', payload: { note: 60, output: 61 } })
+    );
+  });
+
+  test('note map reset dispatches resetNoteMap', async ({ page }) => {
+    await page.click('#noteMapBtn');
+    await clearActions(page);
+    await page.click('.notemap-reset');
+    const acts = await getActions(page);
+    expect(acts).toContainEqual(
+      expect.objectContaining({ name: 'resetNoteMap', payload: {} })
+    );
+  });
+
+  test('note map shows 128 entries', async ({ page }) => {
+    await page.click('#noteMapBtn');
+    const count = await page.locator('.notemap-row').count();
+    expect(count).toBe(128);
+  });
+});
+
+test.describe('export', () => {
+  test('export button dispatches exportRequest', async ({ page }) => {
+    await clearActions(page);
+    await page.click('#exportBtn');
+    const acts = await getActions(page);
+    expect(acts).toContainEqual(
+      expect.objectContaining({ name: 'exportRequest', payload: {} })
+    );
+  });
+
+  test('export button flashes on class briefly', async ({ page }) => {
+    await page.click('#exportBtn');
+    await expect(page.locator('#exportBtn')).toHaveClass(/on/);
+  });
+});

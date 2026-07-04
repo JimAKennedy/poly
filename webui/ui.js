@@ -164,6 +164,69 @@
     else buildChainPopover();
   });
 
+  /* --- export button --- */
+  document.getElementById('exportBtn').addEventListener('click', () => {
+    host.action('exportRequest', {});
+    const btn = document.getElementById('exportBtn');
+    btn.classList.add('on');
+    setTimeout(() => btn.classList.remove('on'), 600);
+  });
+
+  /* --- note map modal --- */
+  let noteMapModal = null;
+  function buildNoteMapModal() {
+    if (noteMapModal) { closeNoteMapModal(); return; }
+    const nm = S.noteMap || [];
+    const pop = document.createElement('div');
+    pop.className = 'notemap-modal open';
+    pop.innerHTML = `<div class="notemap-inner">
+      <div class="notemap-header"><h4>Note Map</h4><button class="notemap-reset">Reset</button><button class="notemap-close">✕</button></div>
+      <div class="notemap-grid">${Array.from({ length: 128 }, (_, i) =>
+        `<div class="notemap-row" data-note="${i}">` +
+        `<span class="ni">${i}</span>` +
+        `<button data-nmdec="${i}">−</button>` +
+        `<span class="no">${nm[i] ?? i}</span>` +
+        `<button data-nminc="${i}">+</button>` +
+        `${nm[i] !== i ? '<span class="nm-mod">✦</span>' : ''}` +
+        `</div>`).join('')}
+      </div></div>`;
+    document.getElementById('win').appendChild(pop);
+    noteMapModal = pop;
+
+    pop.querySelector('.notemap-close').addEventListener('click', closeNoteMapModal);
+    pop.querySelector('.notemap-reset').addEventListener('click', () => {
+      host.action('resetNoteMap', {});
+    });
+    pop.querySelectorAll('[data-nmdec]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const ni = parseInt(b.dataset.nmdec);
+        const cur = S.noteMap ? S.noteMap[ni] : ni;
+        if (cur > 0) host.action('setNoteMap', { note: ni, output: cur - 1 });
+      }));
+    pop.querySelectorAll('[data-nminc]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const ni = parseInt(b.dataset.nminc);
+        const cur = S.noteMap ? S.noteMap[ni] : ni;
+        if (cur < 127) host.action('setNoteMap', { note: ni, output: cur + 1 });
+      }));
+
+    const dismiss = (e) => {
+      if (noteMapModal && !noteMapModal.querySelector('.notemap-inner').contains(e.target) &&
+          e.target !== document.getElementById('noteMapBtn')) {
+        closeNoteMapModal();
+        document.removeEventListener('click', dismiss);
+      }
+    };
+    setTimeout(() => document.addEventListener('click', dismiss), 0);
+  }
+  function closeNoteMapModal() {
+    if (noteMapModal) { noteMapModal.remove(); noteMapModal = null; }
+  }
+  document.getElementById('noteMapBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    buildNoteMapModal();
+  });
+
   /* --- preset dropdown --- */
   const presetBtn = document.getElementById('presetName');
   const presetMenu = document.getElementById('presetMenu');
@@ -521,6 +584,20 @@
       }
     }
 
+    /* ACCENTS */
+    const accentSteps = l.cells ? l.cells.length : l.steps;
+    const accentHtml = `<div class="section-label">Accents</div>
+      <div class="accent-row" data-accents>${Array.from({ length: accentSteps }, (_, i) =>
+        `<button class="accent-btn${l.accents[i] > 0 ? ' on' : ''}" data-acc="${i}" aria-label="Accent step ${i + 1}"></button>`).join('')}</div>
+      <div class="hint">Toggle accent emphasis per step</div>`;
+    pat.insertAdjacentHTML('beforeend', accentHtml);
+    pat.querySelectorAll('[data-acc]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const si = parseInt(b.dataset.acc);
+        const cur = l.accents[si] > 0 ? 0 : 1;
+        host.action('setAccent', { lane: li, step: si, value: cur });
+      }));
+
     /* TIMING */
     const items = l.cells ? l.cells.length : l.steps;
     tim.innerHTML = `<div class="prow"><label>Push / pull (lane)</label><span class="v">${l.push > 0 ? '+' : ''}${l.push} ms</span></div>
@@ -734,6 +811,10 @@
     buildDesk();
     if (expanded >= 0) expandStrip(Math.min(expanded, S.lanes.length - 1));
     drawLoom(lastFrame.t8);
+    if (noteMapModal) {
+      closeNoteMapModal();
+      buildNoteMapModal();
+    }
   }
   function boot(state) {
     S = state;

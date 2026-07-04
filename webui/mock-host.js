@@ -148,6 +148,12 @@
   const EIGHTH = 60 / TEMPO / 2;
   const CONV = 120;
 
+  function identityNoteMap() {
+    const m = new Array(128);
+    for (let i = 0; i < 128; i++) m[i] = i;
+    return m;
+  }
+
   const state = {
     preset: 'Afrobeat 12/8', seed: 88, tempo: TEMPO,
     scene: 'A', morph: 0,
@@ -155,6 +161,7 @@
     macros: { complexity: 0.45, density: 0.5, syncopation: 0.3, swing: 0.1, tension: 0.25, humanize: 0.15 },
     lanes: makePresetLanes(9),
     presets: PRESETS,
+    noteMap: identityNoteMap(),
   };
 
   const stateSubs = [];
@@ -183,6 +190,7 @@
       state.chain = { enabled: false, mode: 0, entryCount: 0, entries: [] };
       state.macros = { complexity: 0, density: 0, syncopation: 0, swing: 0, tension: 0, humanize: 0 };
       state.lanes = makePresetLanes(0);
+      state.noteMap = identityNoteMap();
       return;
     }
     if (index < 0 || index >= PRESETS.length) return;
@@ -362,6 +370,20 @@
       }
       case 'applyPreset':
         applyPreset(payload.index ?? -1);
+        break;
+      case 'setAccent': {
+        const al = state.lanes[payload.lane];
+        if (al && payload.step >= 0 && payload.step < al.accents.length)
+          al.accents[payload.step] = payload.value;
+        break;
+      }
+      case 'setNoteMap': {
+        const ni = payload.note;
+        if (ni >= 0 && ni < 128) state.noteMap[ni] = Math.max(0, Math.min(127, payload.output));
+        break;
+      }
+      case 'resetNoteMap':
+        state.noteMap = identityNoteMap();
         break;
       case 'exportRequest':
         console.info('[mock-host] exportRequest — native host runs the SMF export path here');
