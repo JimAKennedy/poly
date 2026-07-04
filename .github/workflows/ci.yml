@@ -224,7 +224,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y libasound2-dev libfreetype6-dev libx11-dev libxcomposite-dev libxcursor-dev libxext-dev libxinerama-dev libxrandr-dev libxrender-dev
+          sudo apt-get install -y libasound2-dev libfreetype6-dev libx11-dev libxcomposite-dev libxcursor-dev libxext-dev libxinerama-dev libxrandr-dev libxrender-dev libcairo2-dev libfontconfig1-dev libxcb1-dev libxkbcommon-x11-dev libx11-xcb-dev libxcb-util-dev libxcb-cursor-dev libxcb-keysyms1-dev libxcb-xkb-dev libxkbcommon-dev libgtkmm-3.0-dev libsqlite3-dev libxcb-util0-dev
       - name: Run pluginval
         run: |
           if [[ "${{ runner.os }}" == "macOS" ]]; then
