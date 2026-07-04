@@ -241,13 +241,21 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
         if (payload.hasObjectMember("rotation"))
             cfg.rotation = ((payload["rotation"].getInt32() % cfg.cycle.steps) + cfg.cycle.steps) % cfg.cycle.steps;
 
-        controller_->setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreSteps),
-                                        (cfg.cycle.steps - 1) / 63.0);
-        controller_->performEdit(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreSteps), (cfg.cycle.steps - 1) / 63.0);
-        controller_->setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreHits), cfg.hitCount / 64.0);
-        controller_->performEdit(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreHits), cfg.hitCount / 64.0);
-        controller_->setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreRotation), cfg.rotation / 63.0);
-        controller_->performEdit(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreRotation), cfg.rotation / 63.0);
+        auto stepsId = ParamIDs::laneCoreParam(lane, ParamIDs::kCoreSteps);
+        auto hitsId = ParamIDs::laneCoreParam(lane, ParamIDs::kCoreHits);
+        auto rotId = ParamIDs::laneCoreParam(lane, ParamIDs::kCoreRotation);
+        controller_->beginEdit(stepsId);
+        controller_->beginEdit(hitsId);
+        controller_->beginEdit(rotId);
+        controller_->setParamNormalized(stepsId, (cfg.cycle.steps - 1) / 63.0);
+        controller_->performEdit(stepsId, (cfg.cycle.steps - 1) / 63.0);
+        controller_->setParamNormalized(hitsId, cfg.hitCount / 64.0);
+        controller_->performEdit(hitsId, cfg.hitCount / 64.0);
+        controller_->setParamNormalized(rotId, cfg.rotation / 63.0);
+        controller_->performEdit(rotId, cfg.rotation / 63.0);
+        controller_->endEdit(stepsId);
+        controller_->endEdit(hitsId);
+        controller_->endEdit(rotId);
         return;
     }
 
@@ -264,8 +272,11 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
         } else {
             cfg.cellCount = 0;
         }
-        controller_->setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreCellCount), cfg.cellCount / 64.0);
-        controller_->performEdit(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreCellCount), cfg.cellCount / 64.0);
+        auto cellId = ParamIDs::laneCoreParam(lane, ParamIDs::kCoreCellCount);
+        controller_->beginEdit(cellId);
+        controller_->setParamNormalized(cellId, cfg.cellCount / 64.0);
+        controller_->performEdit(cellId, cfg.cellCount / 64.0);
+        controller_->endEdit(cellId);
         controller_->sendCellSizes(lane);
         return;
     }
@@ -483,10 +494,11 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
         if (chain.entryCount < kMaxChainEntries) {
             chain.entries[chain.entryCount] = {SceneSelect::A, 4};
             chain.entryCount++;
-            controller_->setParamNormalized(ParamIDs::kChainEntryCount, static_cast<double>(chain.entryCount) /
-                                                                            static_cast<double>(kMaxChainEntries));
-            controller_->performEdit(ParamIDs::kChainEntryCount,
-                                     static_cast<double>(chain.entryCount) / static_cast<double>(kMaxChainEntries));
+            double norm = static_cast<double>(chain.entryCount) / static_cast<double>(kMaxChainEntries);
+            controller_->beginEdit(ParamIDs::kChainEntryCount);
+            controller_->setParamNormalized(ParamIDs::kChainEntryCount, norm);
+            controller_->performEdit(ParamIDs::kChainEntryCount, norm);
+            controller_->endEdit(ParamIDs::kChainEntryCount);
         }
         return;
     }
@@ -498,10 +510,11 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
             for (int i = index; i < chain.entryCount - 1; ++i)
                 chain.entries[i] = chain.entries[i + 1];
             chain.entryCount--;
-            controller_->setParamNormalized(ParamIDs::kChainEntryCount, static_cast<double>(chain.entryCount) /
-                                                                            static_cast<double>(kMaxChainEntries));
-            controller_->performEdit(ParamIDs::kChainEntryCount,
-                                     static_cast<double>(chain.entryCount) / static_cast<double>(kMaxChainEntries));
+            double norm = static_cast<double>(chain.entryCount) / static_cast<double>(kMaxChainEntries);
+            controller_->beginEdit(ParamIDs::kChainEntryCount);
+            controller_->setParamNormalized(ParamIDs::kChainEntryCount, norm);
+            controller_->performEdit(ParamIDs::kChainEntryCount, norm);
+            controller_->endEdit(ParamIDs::kChainEntryCount);
         }
         return;
     }
