@@ -209,7 +209,7 @@ jobs:
       - name: Find VST3 bundle
         id: find-vst3
         run: |
-          VST3_PATH=$(find plugin -name "*.vst3" -type d | head -1)
+          VST3_PATH=$(find plugin -name "*.vst3" -not -name "*probe*" -type d | head -1)
           echo "path=$VST3_PATH" >> "$GITHUB_OUTPUT"
           echo "Found VST3 at: $VST3_PATH"
       - name: Download pluginval
