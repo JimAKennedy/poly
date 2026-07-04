@@ -233,10 +233,12 @@
               <button data-tab="pattern" class="on">Pattern</button>
               <button data-tab="timing">Timing</button>
               <button data-tab="env">Envelopes</button>
+              <button data-tab="expr">Expr</button>
             </div>
             <div class="pane on" data-pane="pattern"></div>
             <div class="pane" data-pane="timing"></div>
             <div class="pane" data-pane="env"></div>
+            <div class="pane" data-pane="expr"></div>
           </div>
         </div>
         <div class="feel"></div>
@@ -449,6 +451,50 @@
         index: l.envs.length,
         envelope: { target: 'Velocity', period: [1, 4, 7, 16][l.envs.length % 4], depth: 0.3, on: true },
       }));
+
+    /* EXPRESSION */
+    const expr = s.querySelector('[data-pane="expr"]');
+    const PARAMS = [
+      { field: 'velocity', label: 'Velocity', norm: l.vel / 127, fmt: (v) => String(Math.round(v * 127)) },
+      { field: 'probability', label: 'Probability', norm: l.prob, fmt: (v) => Math.round(v * 100) + '%' },
+      { field: 'ghostFloor', label: 'Ghost', norm: l.ghost / 127, fmt: (v) => String(Math.round(v * 127)) },
+      { field: 'spread', label: 'Spread', norm: l.spread, fmt: (v) => Math.round(v * 100) + '%' },
+      { field: 'swing', label: 'Swing', norm: l.swing, fmt: (v) => Math.round(v * 100) + '%' },
+      { field: 'humanize', label: 'Humanize', norm: l.humanize / 50, fmt: (v) => Math.round(v * 50) + 'ms' },
+      { field: 'duration', label: 'Duration', norm: l.duration / 4, fmt: (v) => (v * 4).toFixed(1) },
+      { field: 'note', label: 'Note', norm: l.note / 127, fmt: (v) => 'N' + Math.round(v * 127) },
+      { field: 'channel', label: 'Channel', norm: (l.ch - 1) / 15, fmt: (v) => 'CH ' + (Math.round(v * 15) + 1) },
+    ];
+    expr.innerHTML = PARAMS.map((p) =>
+      `<div class="param-slider"><label>${p.label}</label>` +
+      `<div class="slider-track" data-field="${p.field}"><i style="width:${(p.norm * 100).toFixed(1)}%"></i></div>` +
+      `<span class="v">${p.fmt(p.norm)}</span></div>`
+    ).join('');
+    expr.querySelectorAll('.slider-track').forEach((track) => {
+      const field = track.dataset.field;
+      const p = PARAMS.find((x) => x.field === field);
+      const paramId = `lane.${li}.${field}`;
+      const fill = track.querySelector('i');
+      const vSpan = track.nextElementSibling;
+      const calc = (e) => {
+        const r = track.getBoundingClientRect();
+        return Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+      };
+      const paint = (v) => { fill.style.width = `${(v * 100).toFixed(1)}%`; vSpan.textContent = p.fmt(v); };
+      track.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        const v = calc(e); paint(v);
+        host.edit(paramId, v, 'begin');
+        host.edit(paramId, v, 'perform');
+        const mv = (ev) => { const nv = calc(ev); paint(nv); host.edit(paramId, nv, 'perform'); };
+        const up = (ev) => {
+          window.removeEventListener('pointermove', mv);
+          const nv = calc(ev); paint(nv); host.edit(paramId, nv, 'end');
+        };
+        window.addEventListener('pointermove', mv);
+        window.addEventListener('pointerup', up, { once: true });
+      });
+    });
   }
 
   /* ================= state + frame wiring ================= */

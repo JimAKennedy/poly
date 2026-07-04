@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { setupWithActionLog, getActions, clearActions, expandStrip } from './test-helpers.mjs';
+import { setupWithActionLog, getActions, clearActions, getEdits, clearEdits, expandStrip } from './test-helpers.mjs';
 
 test.beforeEach(async ({ page }) => {
   await setupWithActionLog(page);
@@ -227,5 +227,152 @@ test.describe('tab switching', () => {
 
     await strip.locator('[data-tab="pattern"]').click();
     await expect(strip.locator('[data-pane="pattern"]')).toHaveClass(/on/);
+  });
+
+  test('expr tab shows expression pane', async ({ page }) => {
+    await expandStrip(page, 0);
+    const strip = page.locator('.strip[data-lane="0"]');
+    await strip.locator('[data-tab="expr"]').click();
+    await expect(strip.locator('[data-pane="expr"]')).toHaveClass(/on/);
+    await expect(strip.locator('[data-pane="pattern"]')).not.toHaveClass(/on/);
+  });
+});
+
+test.describe('expanded strip — expression tab', () => {
+  test('expression tab shows all parameter sliders', async ({ page }) => {
+    await expandStrip(page, 1); // Kick
+    const strip = page.locator('.strip[data-lane="1"]');
+    await strip.locator('[data-tab="expr"]').click();
+
+    const sliders = strip.locator('[data-pane="expr"] .param-slider');
+    await expect(sliders).toHaveCount(9);
+
+    const labels = await sliders.locator('label').allTextContents();
+    expect(labels).toEqual([
+      'Velocity', 'Probability', 'Ghost', 'Spread',
+      'Swing', 'Humanize', 'Duration', 'Note', 'Channel',
+    ]);
+  });
+
+  test('velocity slider shows correct initial value', async ({ page }) => {
+    await expandStrip(page, 1); // Kick: vel=112
+    const strip = page.locator('.strip[data-lane="1"]');
+    await strip.locator('[data-tab="expr"]').click();
+
+    const velValue = strip.locator('[data-pane="expr"] .param-slider').first().locator('.v');
+    await expect(velValue).toHaveText('112');
+  });
+
+  test('dragging velocity slider fires edit with begin/perform/end', async ({ page }) => {
+    await expandStrip(page, 1); // Kick
+    const strip = page.locator('.strip[data-lane="1"]');
+    await strip.locator('[data-tab="expr"]').click();
+
+    const track = strip.locator('.slider-track[data-field="velocity"]');
+    const box = await track.boundingBox();
+
+    // Click at 60% position — fires begin + perform + end
+    await track.click({ position: { x: box.width * 0.6, y: box.height / 2 } });
+
+    const edits = await getEdits(page);
+    const gestures = edits.map((e) => e.gesture);
+    expect(edits[0].paramId).toBe('lane.1.velocity');
+    expect(gestures).toContain('begin');
+    expect(gestures).toContain('perform');
+    expect(gestures).toContain('end');
+    const performs = edits.filter((e) => e.gesture === 'perform');
+    expect(performs[0].value).toBeGreaterThan(0.4);
+    expect(performs[0].value).toBeLessThan(0.8);
+  });
+
+  test('probability slider round-trips through mock-host', async ({ page }) => {
+    await expandStrip(page, 2); // Snare: prob=0.9
+    const strip = page.locator('.strip[data-lane="2"]');
+    await strip.locator('[data-tab="expr"]').click();
+
+    const track = strip.locator('.slider-track[data-field="probability"]');
+    const box = await track.boundingBox();
+
+    // Click at 50% position
+    await track.click({ position: { x: box.width * 0.5, y: box.height / 2 } });
+
+    const state = await page.evaluate(() => window.PolyMockHost.getState());
+    expect(state.lanes[2].prob).toBeCloseTo(0.5, 1);
+  });
+
+  test('ghost floor slider updates model', async ({ page }) => {
+    await expandStrip(page, 4); // Conga: ghost=25
+    const strip = page.locator('.strip[data-lane="4"]');
+    await strip.locator('[data-tab="expr"]').click();
+
+    const track = strip.locator('.slider-track[data-field="ghostFloor"]');
+    const box = await track.boundingBox();
+    await track.click({ position: { x: box.width * 0.5, y: box.height / 2 } });
+
+    const state = await page.evaluate(() => window.PolyMockHost.getState());
+    expect(state.lanes[4].ghost).toBeGreaterThan(50);
+    expect(state.lanes[4].ghost).toBeLessThan(80);
+  });
+
+  test('swing slider updates model', async ({ page }) => {
+    await expandStrip(page, 1); // Kick: swing=0
+    const strip = page.locator('.strip[data-lane="1"]');
+    await strip.locator('[data-tab="expr"]').click();
+
+    const track = strip.locator('.slider-track[data-field="swing"]');
+    const box = await track.boundingBox();
+    await track.click({ position: { x: box.width * 0.3, y: box.height / 2 } });
+
+    const state = await page.evaluate(() => window.PolyMockHost.getState());
+    expect(state.lanes[1].swing).toBeCloseTo(0.3, 1);
+  });
+
+  test('note slider updates model', async ({ page }) => {
+    await expandStrip(page, 1); // Kick: note=36
+    const strip = page.locator('.strip[data-lane="1"]');
+    await strip.locator('[data-tab="expr"]').click();
+
+    const track = strip.locator('.slider-track[data-field="note"]');
+    const box = await track.boundingBox();
+    await track.click({ position: { x: box.width * 0.5, y: box.height / 2 } });
+
+    const state = await page.evaluate(() => window.PolyMockHost.getState());
+    expect(state.lanes[1].note).toBeGreaterThan(50);
+    expect(state.lanes[1].note).toBeLessThan(80);
+  });
+
+  test('channel slider updates model', async ({ page }) => {
+    await expandStrip(page, 1); // Kick: ch=2
+    const strip = page.locator('.strip[data-lane="1"]');
+    await strip.locator('[data-tab="expr"]').click();
+
+    const track = strip.locator('.slider-track[data-field="channel"]');
+    const box = await track.boundingBox();
+    await track.click({ position: { x: box.width * 0.5, y: box.height / 2 } });
+
+    const state = await page.evaluate(() => window.PolyMockHost.getState());
+    expect(state.lanes[1].ch).toBe(8);
+  });
+
+  test('preset load resets expression tab values', async ({ page }) => {
+    await expandStrip(page, 1); // Kick
+    const strip = page.locator('.strip[data-lane="1"]');
+    await strip.locator('[data-tab="expr"]').click();
+
+    // Change velocity to ~50%
+    const track = strip.locator('.slider-track[data-field="velocity"]');
+    const box = await track.boundingBox();
+    await track.click({ position: { x: box.width * 0.5, y: box.height / 2 } });
+
+    // Apply Sparse Pulse preset (index 2)
+    await page.evaluate(() => window.PolyMockHost.action('applyPreset', { index: 2 }));
+    await page.waitForTimeout(50);
+
+    // Re-expand (preset rebuild resets strips)
+    await expandStrip(page, 0);
+    await page.locator('.strip[data-lane="0"]').locator('[data-tab="expr"]').click();
+
+    const velValue = page.locator('.strip[data-lane="0"] [data-pane="expr"] .param-slider').first().locator('.v');
+    await expect(velValue).toHaveText('100'); // Sparse Pulse Kick vel=100
   });
 });
