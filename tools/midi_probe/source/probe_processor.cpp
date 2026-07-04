@@ -12,9 +12,7 @@ using namespace Steinberg::Vst;
 
 namespace probe {
 
-ProbeProcessor::ProbeProcessor() {
-    setControllerClass(FUID());
-}
+ProbeProcessor::ProbeProcessor() = default;
 
 tresult PLUGIN_API ProbeProcessor::initialize(FUnknown* context) {
     tresult result = AudioEffect::initialize(context);
