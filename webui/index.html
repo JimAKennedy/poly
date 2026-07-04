@@ -12,7 +12,12 @@
       <span class="logo">POLY</span>
       <button id="play" aria-label="Play or stop"><svg width="12" height="12" viewBox="0 0 14 14"><path id="picon" d="M3 2 L12 7 L3 12 Z" fill="currentColor"/></svg></button>
       <div class="tempo"><span id="tempoVal">126.0</span><small>BPM · 12/8</small></div>
-      <span class="preset">Preset · <b id="presetName">—</b> · seed <span id="seedVal">—</span></span>
+      <div class="preset" id="presetTrigger">
+        <span class="label">Preset</span>
+        <button id="presetName" aria-haspopup="listbox" aria-expanded="false">—</button>
+        <span class="seed">seed <span id="seedVal">—</span></span>
+      </div>
+      <div id="presetMenu" class="preset-menu" role="listbox" aria-label="Factory presets"></div>
       <div id="modes">
         <button class="chip" id="mCloth">Cloth</button>
         <button class="chip on" id="mDesk">Desk</button>

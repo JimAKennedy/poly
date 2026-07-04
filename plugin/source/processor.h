@@ -9,6 +9,7 @@
 #include "poly/macro.h"
 #include "poly/midi_capture.h"
 #include "poly/scene.h"
+#include "ui_snapshot.h"
 
 namespace poly {
 
@@ -25,6 +26,7 @@ public:
     Steinberg::tresult PLUGIN_API initialize(Steinberg::FUnknown* context) override;
     Steinberg::tresult PLUGIN_API setActive(Steinberg::TBool state) override;
     Steinberg::tresult PLUGIN_API process(Steinberg::Vst::ProcessData& data) override;
+    Steinberg::tresult PLUGIN_API connect(Steinberg::Vst::IConnectionPoint* other) override;
     Steinberg::tresult PLUGIN_API notify(Steinberg::Vst::IMessage* message) override;
     Steinberg::tresult PLUGIN_API getState(Steinberg::IBStream* state) override;
     Steinberg::tresult PLUGIN_API setState(Steinberg::IBStream* state) override;
@@ -35,6 +37,7 @@ private:
     void handleTransportJump(Steinberg::Vst::IEventList* outputEvents);
     void emitMidiOutput(Steinberg::Vst::IEventList* outputEvents, Steinberg::int32 numSamples);
     void outputParameterFeedback(Steinberg::Vst::ProcessData& data, const GrooveState& resolved);
+    void sendSnapshotPointer();
     bool applySceneParameter(Steinberg::Vst::ParamID id, double normalized);
     bool applyLaneParameter(Steinberg::Vst::ParamID id, double normalized, GrooveState& gs);
 
@@ -93,6 +96,8 @@ private:
 
     SceneState stateSnapshot_{};
     std::atomic<bool> snapshotReady_{false};
+
+    UISnapshot uiSnapshot_{};
 };
 
 } // namespace poly

@@ -8,6 +8,7 @@
 #include "vstgui/plugin-bindings/vst3editor.h"
 
 #include "poly/scene.h"
+#include "ui_snapshot.h"
 
 namespace poly {
 
@@ -51,13 +52,18 @@ public:
     void setLaneName(int lane, const std::string& name);
     void resetLaneNames();
 
+    uint32_t stateGeneration() const { return stateGeneration_; }
+    UISnapshot* uiSnapshot() const { return uiSnapshot_; }
+
 private:
     void registerOutputParameters();
     static constexpr int kControllerStateVersion = 1;
     SceneState cachedState_{};
     std::array<std::string, kMaxLanes> laneNames_;
+    uint32_t stateGeneration_ = 0;
     std::vector<uint8_t> pendingSmfData_;
     std::vector<uint8_t> dragSmfCache_;
+    UISnapshot* uiSnapshot_ = nullptr;
 };
 
 } // namespace poly

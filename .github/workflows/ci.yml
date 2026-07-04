@@ -137,6 +137,41 @@ jobs:
           name: coverage-report
           path: coverage-report/
 
+  webui-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: webui/package-lock.json
+      - name: Install dependencies
+        working-directory: webui
+        run: npm ci
+      - name: Install Playwright browsers
+        working-directory: webui
+        run: npx playwright install --with-deps chromium
+      - name: Run Playwright tests
+        working-directory: webui
+        run: npx playwright test
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: webui-test-results
+          path: webui/test-results/
+          retention-days: 14
+          if-no-files-found: ignore
+      - name: Upload UI screenshots
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: webui-screenshots
+          path: webui/test-results/screenshots/
+          retention-days: 30
+          if-no-files-found: ignore
+
   site-lint:
     runs-on: ubuntu-latest
     steps:
@@ -145,7 +180,7 @@ jobs:
         run: bash scripts/check-site-assets.sh
 
   ci-complete:
-    needs: [code-quality, build, engine-isolation, secrets-scan, code-coverage, site-lint]
+    needs: [code-quality, build, engine-isolation, secrets-scan, code-coverage, webui-tests, site-lint]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -156,6 +191,7 @@ jobs:
              [[ "${{ needs.engine-isolation.result }}" != "success" ]] || \
              [[ "${{ needs.secrets-scan.result }}" != "success" ]] || \
              [[ "${{ needs.code-coverage.result }}" != "success" ]] || \
+             [[ "${{ needs.webui-tests.result }}" != "success" ]] || \
              [[ "${{ needs.site-lint.result }}" != "success" ]]; then
             echo "One or more CI jobs failed"
             exit 1

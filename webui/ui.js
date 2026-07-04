@@ -18,14 +18,22 @@
   let strips = [], rings = [], hands = [], ladders = [], vus = [];
 
   /* ================= chrome ================= */
-  document.getElementById('play').addEventListener('click', () => host.action('togglePlay', {}));
+  const embedded = !!window.__POLY_EMBEDDED__;
+  document.getElementById('play').addEventListener('click', () => { if (!embedded) host.action('togglePlay', {}); });
+  if (embedded) {
+    const pb = document.getElementById('play');
+    pb.style.opacity = '0.35';
+    pb.style.cursor = 'default';
+    pb.title = 'Transport controlled by host DAW';
+  }
   addEventListener('keydown', (e) => {
     if (e.code === 'Space' && !e.repeat) {
+      if (embedded) return;
       e.preventDefault();
       host.action('togglePlay', {});
     }
     if (e.key === 'l' || e.key === 'L') toggleLearn();
-    if (e.key === 'Escape') expandStrip(-1);
+    if (e.key === 'Escape') { closePresetMenu(); expandStrip(-1); }
     if (e.key === '1') setMode('cloth');
     if (e.key === '2') setMode('desk');
   });
@@ -36,6 +44,69 @@
   document.getElementById('learnBtn').addEventListener('click', toggleLearn);
   document.getElementById('scA').addEventListener('click', () => host.action('selectScene', { scene: 'A' }));
   document.getElementById('scB').addEventListener('click', () => host.action('selectScene', { scene: 'B' }));
+
+  /* --- preset dropdown --- */
+  const presetBtn = document.getElementById('presetName');
+  const presetMenu = document.getElementById('presetMenu');
+  let presetMenuBuilt = false;
+
+  function buildPresetMenu() {
+    if (!S || !S.presets || presetMenuBuilt) return;
+    presetMenuBuilt = true;
+    presetMenu.innerHTML = '';
+    const init = document.createElement('button');
+    init.setAttribute('role', 'option');
+    init.textContent = 'Init (All Lanes)';
+    init.dataset.index = '-1';
+    presetMenu.appendChild(init);
+    const sep = document.createElement('div');
+    sep.className = 'sep';
+    presetMenu.appendChild(sep);
+    S.presets.forEach((p, i) => {
+      const opt = document.createElement('button');
+      opt.setAttribute('role', 'option');
+      opt.dataset.index = String(i);
+      opt.innerHTML = `${p.name}<small>${p.description}</small>`;
+      presetMenu.appendChild(opt);
+    });
+    presetMenu.addEventListener('click', (e) => {
+      const opt = e.target.closest('[role="option"]');
+      if (!opt) return;
+      host.action('applyPreset', { index: parseInt(opt.dataset.index, 10) });
+      closePresetMenu();
+    });
+  }
+
+  function openPresetMenu() {
+    buildPresetMenu();
+    const r = presetBtn.getBoundingClientRect();
+    presetMenu.style.left = `${r.left}px`;
+    presetMenu.classList.add('open');
+    presetBtn.setAttribute('aria-expanded', 'true');
+    markActivePreset();
+  }
+
+  function closePresetMenu() {
+    presetMenu.classList.remove('open');
+    presetBtn.setAttribute('aria-expanded', 'false');
+  }
+
+  function markActivePreset() {
+    presetMenu.querySelectorAll('[role="option"]').forEach((opt) => {
+      const idx = parseInt(opt.dataset.index, 10);
+      const name = idx === -1 ? 'Init' : (S.presets && S.presets[idx] ? S.presets[idx].name : '');
+      opt.classList.toggle('active', S.preset === name);
+    });
+  }
+
+  presetBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (presetMenu.classList.contains('open')) closePresetMenu();
+    else openPresetMenu();
+  });
+  document.addEventListener('click', (e) => {
+    if (!presetMenu.contains(e.target) && e.target !== presetBtn) closePresetMenu();
+  });
   document.getElementById('mCloth').addEventListener('click', () => setMode('cloth'));
   document.getElementById('mDesk').addEventListener('click', () => setMode('desk'));
 
@@ -196,13 +267,18 @@
           <div class="track"><i style="width:${v * 100}%"></i></div></div>`).join('')}
       <div id="cmeter"><i></i><span>Convergence</span></div>`;
     desk.appendChild(m);
+    desk.style.gridTemplateColumns = `repeat(${S.lanes.length}, 1fr) 196px`;
   }
   function expandStrip(li) {
     expanded = li;
     strips.forEach((s, i) => s.classList.toggle('expanded', i === li));
+    const n = S.lanes.length;
+    const wide = n >= 6 ? '4fr' : '2.9fr';
+    const narrow = n >= 6 ? '.38fr' : '.62fr';
+    const master = n >= 6 ? '160px' : '176px';
     desk.style.gridTemplateColumns = li < 0
-      ? `repeat(${S.lanes.length}, 1fr) 196px`
-      : S.lanes.map((_, i) => (i === li ? '2.9fr' : '.62fr')).join(' ') + ' 176px';
+      ? `repeat(${n}, 1fr) 196px`
+      : S.lanes.map((_, i) => (i === li ? wide : narrow)).join(' ') + ` ${master}`;
     if (li >= 0) buildPanes(li);
   }
   function refreshStrip(li) {
@@ -247,7 +323,11 @@
       b.style.flexBasis = '0';
       if (l.cells || l.pattern[i]) b.classList.add('hit');
       b.setAttribute('aria-label', `${l.name} step ${i + 1}`);
-      if (!l.cells) b.addEventListener('click', () => host.action('toggleStep', { lane: li, step: i }));
+      if (l.timeline) {
+        b.addEventListener('click', () => host.action('toggleStep', { lane: li, step: i }));
+      } else if (!l.cells) {
+        b.style.cursor = 'default';
+      }
       lad.appendChild(b);
     }
   }
@@ -388,13 +468,18 @@
   }
   function boot(state) {
     S = state;
+    _prevStateStr = JSON.stringify(state);
     refreshAll();
     sizeLoom();
   }
 
+  let _prevStateStr = null;
   host.onState((state) => {
     const first = !S;
     S = state;
+    const sig = JSON.stringify(state);
+    if (!first && sig === _prevStateStr) return;
+    _prevStateStr = sig;
     if (first) boot(state);
     else refreshAll();
   });
