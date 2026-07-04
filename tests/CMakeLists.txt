@@ -83,6 +83,39 @@ if(NOT POLY_ENGINE_ONLY)
     gtest_discover_tests(poly_bridge_tests)
 endif()
 
+# --- Host Integration Tests (require VST3 SDK) ---
+if(NOT POLY_ENGINE_ONLY)
+    add_executable(poly_host_tests
+        host/host_tests.cpp
+        host/poly_test_host.cpp
+        ${CMAKE_SOURCE_DIR}/plugin/source/processor.cpp
+    )
+
+    target_link_libraries(poly_host_tests PRIVATE
+        poly_engine
+        GTest::gtest_main
+        sdk
+        sdk_hosting
+    )
+
+    if(APPLE)
+        target_link_libraries(poly_host_tests PRIVATE "-framework CoreFoundation")
+    endif()
+
+    target_include_directories(poly_host_tests PRIVATE
+        ${CMAKE_SOURCE_DIR}/plugin/source
+        ${CMAKE_SOURCE_DIR}/engine/include
+    )
+
+    target_compile_definitions(poly_host_tests PRIVATE
+        GOLDEN_DIR="${CMAKE_SOURCE_DIR}/tests/golden"
+    )
+
+    target_compile_features(poly_host_tests PRIVATE cxx_std_20)
+    jk_target_warnings(poly_host_tests)
+    gtest_discover_tests(poly_host_tests)
+endif()
+
 # --- UI Tests (require VST3 SDK + VSTGUI) ---
 if(NOT POLY_ENGINE_ONLY)
     include(${CMAKE_SOURCE_DIR}/cmake/jk_ui_test_harness.cmake)
