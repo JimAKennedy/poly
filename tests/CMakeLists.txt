@@ -43,6 +43,46 @@ if(BUILD_FUZZ_TESTS)
     jk_target_warnings(fuzz_state_io)
 endif()
 
+# --- Bridge Contract Tests (require VST3 SDK for ParamID types) ---
+if(NOT POLY_ENGINE_ONLY)
+    FetchContent_Declare(nlohmann_json
+        GIT_REPOSITORY https://github.com/nlohmann/json.git
+        GIT_TAG        v3.11.3
+    )
+    set(JSON_BuildTests OFF CACHE BOOL "" FORCE)
+    FetchContent_MakeAvailable(nlohmann_json)
+
+    add_executable(poly_bridge_tests
+        bridge_contract_tests.cpp
+        ${CMAKE_SOURCE_DIR}/plugin/source/webui/bridge_serialization.cpp
+    )
+
+    target_link_libraries(poly_bridge_tests PRIVATE
+        poly_engine
+        GTest::gtest_main
+        sdk
+        nlohmann_json::nlohmann_json
+    )
+
+    if(APPLE)
+        target_link_libraries(poly_bridge_tests PRIVATE "-framework CoreFoundation")
+    endif()
+
+    target_include_directories(poly_bridge_tests PRIVATE
+        ${CMAKE_SOURCE_DIR}/plugin/source
+        ${CMAKE_SOURCE_DIR}/engine/include
+    )
+
+    target_compile_definitions(poly_bridge_tests PRIVATE
+        FIXTURE_DIR="${CMAKE_SOURCE_DIR}/webui/tests/fixtures"
+        SCHEMA_DIR="${CMAKE_SOURCE_DIR}/webui"
+    )
+
+    target_compile_features(poly_bridge_tests PRIVATE cxx_std_20)
+    jk_target_warnings(poly_bridge_tests)
+    gtest_discover_tests(poly_bridge_tests)
+endif()
+
 # --- UI Tests (require VST3 SDK + VSTGUI) ---
 if(NOT POLY_ENGINE_ONLY)
     include(${CMAKE_SOURCE_DIR}/cmake/jk_ui_test_harness.cmake)

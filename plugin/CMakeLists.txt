@@ -97,6 +97,8 @@ if(POLY_WEB_UI)
         source/webui/web_ui_view.h
         source/webui/web_ui_view.cpp
         source/webui/bridge_params.h
+        source/webui/bridge_serialization.h
+        source/webui/bridge_serialization.cpp
     )
     target_include_directories(poly_plugin PRIVATE
         ${choc_SOURCE_DIR}
