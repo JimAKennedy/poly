@@ -1,0 +1,54 @@
+{
+  "description": "Golden edit messages (JS→C++) for contract validation",
+  "messages": [
+    {
+      "label": "macro complexity slider drag",
+      "type": "edit", "v": 1,
+      "paramId": "macro.complexity",
+      "value": 0.75,
+      "gesture": "perform"
+    },
+    {
+      "label": "macro density begin gesture",
+      "type": "edit", "v": 1,
+      "paramId": "macro.density",
+      "value": 0.5,
+      "gesture": "begin"
+    },
+    {
+      "label": "lane 0 velocity edit",
+      "type": "edit", "v": 1,
+      "paramId": "lane.0.velocity",
+      "value": 0.75,
+      "gesture": "perform"
+    },
+    {
+      "label": "lane 2 probability edit",
+      "type": "edit", "v": 1,
+      "paramId": "lane.2.probability",
+      "value": 0.6,
+      "gesture": "perform"
+    },
+    {
+      "label": "scene morph slider",
+      "type": "edit", "v": 1,
+      "paramId": "scene.morph",
+      "value": 0.5,
+      "gesture": "perform"
+    },
+    {
+      "label": "chain enabled toggle",
+      "type": "edit", "v": 1,
+      "paramId": "chain.enabled",
+      "value": 1.0,
+      "gesture": "perform"
+    },
+    {
+      "label": "seed edit",
+      "type": "edit", "v": 1,
+      "paramId": "seed",
+      "value": 0.5,
+      "gesture": "perform"
+    }
+  ]
+}

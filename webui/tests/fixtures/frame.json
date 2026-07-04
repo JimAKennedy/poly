@@ -1,0 +1,16 @@
+{
+  "description": "Golden frame message (C++→JS) for contract validation",
+  "type": "frame",
+  "frame": {
+    "t8": 24.5,
+    "playing": true,
+    "convLeft": 96,
+    "lanes": [
+      { "ph": 0.3, "step": 3 },
+      { "ph": 0.6, "step": 2 },
+      { "ph": 0.15, "step": 1 },
+      { "ph": 0.8, "step": 4 },
+      { "ph": 0.42, "step": 2 }
+    ]
+  }
+}
