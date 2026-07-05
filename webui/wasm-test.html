@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Poly WASM Test</title>
+  <style>
+    body { font-family: monospace; background: #1a1a2e; color: #e0e0e0; padding: 2rem; }
+    .pass { color: #4caf50; }
+    .fail { color: #f44336; }
+    .info { color: #64b5f6; }
+    pre { background: #0d0d1a; padding: 1rem; border-radius: 4px; overflow-x: auto; }
+    button { background: #3f51b5; color: #fff; border: none; padding: 0.5rem 1rem;
+             border-radius: 4px; cursor: pointer; font-size: 1rem; margin: 0.5rem 0; }
+    button:hover { background: #5c6bc0; }
+  </style>
+</head>
+<body>
+  <h1>Poly Engine WASM Test</h1>
+  <div id="output"></div>
+  <button id="run" disabled>Run Tests</button>
+  <pre id="log"></pre>
+
+  <script type="module">
+    const logEl = document.getElementById('log');
+    const outEl = document.getElementById('output');
+    const runBtn = document.getElementById('run');
+
+    function log(msg, cls = '') {
+      const span = document.createElement('span');
+      span.className = cls;
+      span.textContent = msg + '\n';
+      logEl.appendChild(span);
+    }
+
+    function result(label, ok, detail = '') {
+      const div = document.createElement('div');
+      div.className = ok ? 'pass' : 'fail';
+      div.textContent = `${ok ? '✓' : '✗'} ${label}${detail ? ': ' + detail : ''}`;
+      outEl.appendChild(div);
+      log(`${ok ? 'PASS' : 'FAIL'}: ${label} ${detail}`, ok ? 'pass' : 'fail');
+      return ok;
+    }
+
+    let Module = null;
+
+    async function loadWasm() {
+      log('Loading WASM module...', 'info');
+      try {
+        const factory = (await import('./wasm/poly_engine.js')).default;
+        Module = await factory();
+        log('WASM module loaded', 'pass');
+        return true;
+      } catch (e) {
+        log(`Failed to load WASM: ${e.message}`, 'fail');
+        result('WASM load', false, e.message);
+        return false;
+      }
+    }
+
+    function runTests() {
+      const { ccall, cwrap, getValue, UTF8ToString } = Module;
+
+      const poly_create = cwrap('poly_create', 'number', []);
+      const poly_destroy = cwrap('poly_destroy', null, ['number']);
+      const poly_preset_count = cwrap('poly_preset_count', 'number', []);
+      const poly_preset_name = cwrap('poly_preset_name', 'string', ['number']);
+      const poly_preset_description = cwrap('poly_preset_description', 'string', ['number']);
+      const poly_load_preset = cwrap('poly_load_preset', null, ['number', 'number']);
+      const poly_render = cwrap('poly_render', 'number', [
+        'number', 'number', 'number', 'number', 'number',
+        'number', 'number', 'number', 'number', 'number', 'number',
+      ]);
+      const poly_event_count = cwrap('poly_event_count', 'number', ['number']);
+      const poly_event_buffer = cwrap('poly_event_buffer', 'number', ['number']);
+      const poly_active_lane_count = cwrap('poly_active_lane_count', 'number', ['number']);
+      const poly_macro_value = cwrap('poly_macro_value', 'number', ['number', 'number']);
+      const poly_set_macro = cwrap('poly_set_macro', null, ['number', 'number', 'number']);
+      const poly_seed = cwrap('poly_seed', 'number', ['number']);
+
+      let allPass = true;
+
+      // Test 1: Create context
+      const ctx = poly_create();
+      allPass &= result('Create context', ctx !== 0, `ptr=${ctx}`);
+
+      // Test 2: Preset count
+      const count = poly_preset_count();
+      allPass &= result('Preset count', count === 14, `count=${count}`);
+
+      // Test 3: Preset names
+      const names = [];
+      for (let i = 0; i < count; i++) names.push(poly_preset_name(i));
+      allPass &= result('Preset names', names[0] === 'Four on the Floor',
+        names.slice(0, 3).join(', '));
+
+      // Test 4: Active lane count (default preset = Four on the Floor = 4 lanes)
+      const lanes = poly_active_lane_count(ctx);
+      allPass &= result('Active lane count', lanes === 4, `lanes=${lanes}`);
+
+      // Test 5: Render produces events
+      const ppqPerBlock = 0.5;
+      const eventCount = poly_render(ctx,
+        0.0, ppqPerBlock,  // ppqStart, ppqEnd
+        120.0, 44100.0, 512,  // tempo, sampleRate, blockSize
+        1, 0,  // playing, looping
+        0.0, 0.0, 0  // loopStart, loopEnd, jumped
+      );
+      allPass &= result('Render produces events', eventCount > 0, `events=${eventCount}`);
+
+      // Test 6: Read event buffer
+      if (eventCount > 0) {
+        const bufPtr = poly_event_buffer(ctx);
+        const ppq = getValue(bufPtr, 'double');
+        const pitch = getValue(bufPtr + 8, 'double');
+        const vel = getValue(bufPtr + 16, 'double');
+        allPass &= result('Event data readable',
+          ppq >= 0 && pitch >= 0 && pitch <= 127 && vel > 0,
+          `ppq=${ppq.toFixed(3)} pitch=${pitch} vel=${vel.toFixed(2)}`);
+      }
+
+      // Test 7: Load different preset
+      poly_load_preset(ctx, 9); // Afrobeat 12/8
+      const newLanes = poly_active_lane_count(ctx);
+      allPass &= result('Load preset changes state', newLanes === 5, `lanes=${newLanes}`);
+
+      // Test 8: Macro values
+      const complexity = poly_macro_value(ctx, 0);
+      allPass &= result('Read macro value', complexity >= 0 && complexity <= 1,
+        `complexity=${complexity.toFixed(3)}`);
+
+      // Test 9: Set macro
+      poly_set_macro(ctx, 0, 0.75);
+      const newComplexity = poly_macro_value(ctx, 0);
+      allPass &= result('Set macro value', Math.abs(newComplexity - 0.75) < 0.001,
+        `set=0.75 got=${newComplexity.toFixed(3)}`);
+
+      // Test 10: Determinism — same inputs produce same output
+      poly_load_preset(ctx, 0);
+      const run1 = poly_render(ctx, 0.0, 1.0, 120.0, 44100.0, 512, 1, 0, 0, 0, 0);
+      const buf1Ptr = poly_event_buffer(ctx);
+      const run1Events = [];
+      for (let i = 0; i < run1; i++) {
+        run1Events.push(getValue(buf1Ptr + i * 48, 'double'));
+      }
+
+      poly_load_preset(ctx, 0);
+      const run2 = poly_render(ctx, 0.0, 1.0, 120.0, 44100.0, 512, 1, 0, 0, 0, 0);
+      const buf2Ptr = poly_event_buffer(ctx);
+      let deterministic = run1 === run2;
+      for (let i = 0; i < Math.min(run1, run2) && deterministic; i++) {
+        deterministic = getValue(buf2Ptr + i * 48, 'double') === run1Events[i];
+      }
+      allPass &= result('Deterministic output', deterministic,
+        `run1=${run1} events, run2=${run2} events`);
+
+      // Cleanup
+      poly_destroy(ctx);
+      result('Destroy context', true);
+
+      log('');
+      log(allPass ? 'All tests passed!' : 'Some tests failed!', allPass ? 'pass' : 'fail');
+    }
+
+    (async () => {
+      if (await loadWasm()) {
+        runBtn.disabled = false;
+        runBtn.addEventListener('click', runTests);
+        log('Ready. Click "Run Tests" to execute.', 'info');
+      }
+    })();
+  </script>
+</body>
+</html>

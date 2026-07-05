@@ -16,6 +16,10 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # --- Build options ---
 option(POLY_ENGINE_ONLY "Build only the engine library and tests (no VST3 SDK)" OFF)
+
+if(EMSCRIPTEN)
+    set(POLY_ENGINE_ONLY ON CACHE BOOL "" FORCE)
+endif()
 option(ENABLE_ASAN "Enable AddressSanitizer" OFF)
 option(ENABLE_UBSAN "Enable UndefinedBehaviorSanitizer" OFF)
 option(ENABLE_TSAN "Enable ThreadSanitizer" OFF)
@@ -67,6 +71,55 @@ if(NOT POLY_ENGINE_ONLY)
     add_subdirectory(plugin)
     add_subdirectory(tools/harness)
     add_subdirectory(tools/midi_probe)
+endif()
+
+# --- WASM build (Emscripten) ---
+if(EMSCRIPTEN)
+    add_executable(poly_wasm engine/src/wasm_api.cpp)
+    target_link_libraries(poly_wasm PRIVATE poly_engine)
+    target_include_directories(poly_wasm PRIVATE engine/include)
+
+    set(POLY_EXPORTED_FUNCTIONS
+        "_poly_create"
+        "_poly_destroy"
+        "_poly_preset_count"
+        "_poly_preset_name"
+        "_poly_preset_description"
+        "_poly_load_preset"
+        "_poly_render"
+        "_poly_event_count"
+        "_poly_event_buffer"
+        "_poly_active_lane_count"
+        "_poly_macro_value"
+        "_poly_set_macro"
+        "_poly_edit_lane_int"
+        "_poly_edit_lane_float"
+        "_poly_action_set_euclid"
+        "_poly_action_toggle_step"
+        "_poly_action_apply_preset"
+        "_poly_seed"
+        "_poly_set_seed"
+        "_malloc"
+        "_free"
+    )
+    list(JOIN POLY_EXPORTED_FUNCTIONS "," POLY_EXPORTED_FUNCTIONS_STR)
+
+    target_link_options(poly_wasm PRIVATE
+        "SHELL:-s MODULARIZE=1"
+        "SHELL:-s EXPORT_ES6=1"
+        "SHELL:-s EXPORTED_FUNCTIONS=[${POLY_EXPORTED_FUNCTIONS_STR}]"
+        "SHELL:-s EXPORTED_RUNTIME_METHODS=[ccall,cwrap,getValue,UTF8ToString]"
+        "SHELL:-s ALLOW_MEMORY_GROWTH=1"
+        "SHELL:-s INITIAL_MEMORY=4194304"
+        "SHELL:-s NO_EXIT_RUNTIME=1"
+        "SHELL:-s ENVIRONMENT=web"
+        -O2
+    )
+
+    set_target_properties(poly_wasm PROPERTIES
+        OUTPUT_NAME "poly_engine"
+        SUFFIX ".js"
+    )
 endif()
 
 enable_testing()

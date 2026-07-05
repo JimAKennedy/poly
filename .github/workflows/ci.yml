@@ -243,6 +243,34 @@ jobs:
               --validate "${{ steps.find-vst3.outputs.path }}"
           fi
 
+  wasm-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Setup Emscripten
+        uses: mymindstorm/setup-emsdk@6ab9eb1bda2574c4ddb79809fc9247783eaf9021 # v14
+        with:
+          version: 3.1.61
+      - name: Configure WASM build
+        run: emcmake cmake -S . -B build-wasm -DPOLY_ENGINE_ONLY=ON
+      - name: Build WASM
+        run: cmake --build build-wasm --target poly_wasm --parallel
+      - name: Report artifact sizes
+        run: |
+          WASM_SIZE=$(wc -c < build-wasm/poly_engine.wasm)
+          JS_SIZE=$(wc -c < build-wasm/poly_engine.js)
+          echo "### WASM Build" >> "$GITHUB_STEP_SUMMARY"
+          echo "- \`poly_engine.wasm\`: ${WASM_SIZE} bytes" >> "$GITHUB_STEP_SUMMARY"
+          echo "- \`poly_engine.js\`: ${JS_SIZE} bytes" >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload WASM artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: wasm-build
+          path: |
+            build-wasm/poly_engine.wasm
+            build-wasm/poly_engine.js
+          retention-days: 14
+
   site-lint:
     runs-on: ubuntu-latest
     steps:
@@ -251,7 +279,7 @@ jobs:
         run: bash scripts/check-site-assets.sh
 
   ci-complete:
-    needs: [code-quality, build, engine-isolation, secrets-scan, code-coverage, webui-tests, pluginval, site-lint]
+    needs: [code-quality, build, engine-isolation, secrets-scan, code-coverage, webui-tests, pluginval, wasm-build, site-lint]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -264,6 +292,7 @@ jobs:
              [[ "${{ needs.code-coverage.result }}" != "success" ]] || \
              [[ "${{ needs.webui-tests.result }}" != "success" ]] || \
              [[ "${{ needs.pluginval.result }}" != "success" ]] || \
+             [[ "${{ needs.wasm-build.result }}" != "success" ]] || \
              [[ "${{ needs.site-lint.result }}" != "success" ]]; then
             echo "One or more CI jobs failed"
             exit 1
