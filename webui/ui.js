@@ -165,13 +165,17 @@
     else buildChainPopover();
   });
 
-  /* --- export button --- */
-  document.getElementById('exportBtn').addEventListener('click', () => {
-    host.action('exportRequest', {});
-    const btn = document.getElementById('exportBtn');
-    btn.classList.add('on');
-    setTimeout(() => btn.classList.remove('on'), 600);
-  });
+  /* --- export button (plugin-only) --- */
+  if (host.capabilities && host.capabilities.canExport) {
+    document.getElementById('exportBtn').addEventListener('click', () => {
+      host.action('exportRequest', {});
+      const btn = document.getElementById('exportBtn');
+      btn.classList.add('on');
+      setTimeout(() => btn.classList.remove('on'), 600);
+    });
+  } else {
+    document.getElementById('exportBtn').style.display = 'none';
+  }
 
   /* --- note map modal --- */
   let noteMapModal = null;

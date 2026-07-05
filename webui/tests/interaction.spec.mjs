@@ -845,17 +845,7 @@ test.describe('note map', () => {
 });
 
 test.describe('export', () => {
-  test('export button dispatches exportRequest', async ({ page }) => {
-    await clearActions(page);
-    await page.click('#exportBtn');
-    const acts = await getActions(page);
-    expect(acts).toContainEqual(
-      expect.objectContaining({ name: 'exportRequest', payload: {} })
-    );
-  });
-
-  test('export button flashes on class briefly', async ({ page }) => {
-    await page.click('#exportBtn');
-    await expect(page.locator('#exportBtn')).toHaveClass(/on/);
+  test('export button hidden in web mode (mock-host)', async ({ page }) => {
+    await expect(page.locator('#exportBtn')).toBeHidden();
   });
 });

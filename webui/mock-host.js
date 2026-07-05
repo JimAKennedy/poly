@@ -397,6 +397,7 @@
 
   window.PolyMockHost = {
     schemaVersion: window.POLY_SCHEMA_VERSION,
+    capabilities: { canExport: false },
     getState: () => state,
     onState: (cb) => stateSubs.push(cb),
     edit: (paramId, value, gesture) => {
