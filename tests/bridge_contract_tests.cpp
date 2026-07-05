@@ -1,12 +1,14 @@
 #include <algorithm>
 #include <array>
 #include <fstream>
+#include <set>
 #include <string>
 #include <vector>
 
 #include <gtest/gtest.h>
 #include <nlohmann/json.hpp>
 
+#include "choc/text/choc_JSON.h"
 #include "poly/presets.h"
 #include "poly/scene.h"
 #include "webui/bridge_params.h"
@@ -343,4 +345,172 @@ TEST(BridgeContract, EscapeJsonStringSpecialChars) {
     EXPECT_EQ(poly::escapeJsonString("a\\b"), "\"a\\\\b\"");
     EXPECT_EQ(poly::escapeJsonString("a\nb"), "\"a\\nb\"");
     EXPECT_EQ(poly::escapeJsonString(""), "\"\"");
+}
+
+// ---------------------------------------------------------------------------
+// T04: Action Payload Roundtrip Tests (choc JSON parser → value extraction)
+// ---------------------------------------------------------------------------
+// These verify that JSON payloads produced by JavaScript's JSON.stringify
+// round-trip correctly through choc's parser using the same accessor pattern
+// as handleAction(). Catches the bug class where choc stores integers as
+// int64 but C++ extraction used strict type accessors that throw on mismatch.
+
+TEST(BridgeActionContract, ChocInt64ToInt32Conversion) {
+    auto v = choc::json::parse(R"({"x": 42})");
+    EXPECT_EQ(v["x"].get<int32_t>(), 42);
+}
+
+TEST(BridgeActionContract, ChocInt64ToDoubleConversion) {
+    auto v = choc::json::parse(R"({"x": 0})");
+    EXPECT_DOUBLE_EQ(v["x"].get<double>(), 0.0);
+}
+
+TEST(BridgeActionContract, ToggleStepPayload) {
+    auto msg = choc::json::parse(R"({"type":"action","v":1,"name":"toggleStep","payload":{"lane":2,"step":7}})");
+    auto p = msg["payload"];
+    EXPECT_EQ(p["lane"].get<int32_t>(), 2);
+    EXPECT_EQ(p["step"].get<int32_t>(), 7);
+}
+
+TEST(BridgeActionContract, SetEuclidPayloadAllFields) {
+    auto msg = choc::json::parse(
+        R"({"type":"action","v":1,"name":"setEuclid","payload":{"lane":1,"steps":8,"hits":5,"rotation":2}})");
+    auto p = msg["payload"];
+    EXPECT_EQ(p["lane"].get<int32_t>(), 1);
+    EXPECT_EQ(p["steps"].get<int32_t>(), 8);
+    EXPECT_EQ(p["hits"].get<int32_t>(), 5);
+    EXPECT_EQ(p["rotation"].get<int32_t>(), 2);
+}
+
+TEST(BridgeActionContract, SetEuclidPayloadPartial) {
+    auto msg = choc::json::parse(R"({"type":"action","v":1,"name":"setEuclid","payload":{"lane":0,"steps":16}})");
+    auto p = msg["payload"];
+    EXPECT_EQ(p["lane"].get<int32_t>(), 0);
+    EXPECT_TRUE(p.hasObjectMember("steps"));
+    EXPECT_FALSE(p.hasObjectMember("hits"));
+    EXPECT_FALSE(p.hasObjectMember("rotation"));
+    EXPECT_EQ(p["steps"].get<int32_t>(), 16);
+}
+
+TEST(BridgeActionContract, SetCellsPayloadWithArray) {
+    auto msg = choc::json::parse(R"({"type":"action","v":1,"name":"setCells","payload":{"lane":3,"cells":[2,3,2]}})");
+    auto p = msg["payload"];
+    EXPECT_EQ(p["lane"].get<int32_t>(), 3);
+    EXPECT_TRUE(p.hasObjectMember("cells"));
+    EXPECT_FALSE(p["cells"].isVoid());
+    EXPECT_EQ(static_cast<int>(p["cells"].size()), 3);
+    EXPECT_EQ(p["cells"][static_cast<uint32_t>(0)].get<int32_t>(), 2);
+    EXPECT_EQ(p["cells"][static_cast<uint32_t>(1)].get<int32_t>(), 3);
+    EXPECT_EQ(p["cells"][static_cast<uint32_t>(2)].get<int32_t>(), 2);
+}
+
+TEST(BridgeActionContract, SetCellsPayloadNull) {
+    auto msg = choc::json::parse(R"({"type":"action","v":1,"name":"setCells","payload":{"lane":0,"cells":null}})");
+    auto p = msg["payload"];
+    EXPECT_EQ(p["lane"].get<int32_t>(), 0);
+    EXPECT_TRUE(p["cells"].isVoid());
+}
+
+TEST(BridgeActionContract, SetFixedStepPayload) {
+    auto msg =
+        choc::json::parse(R"({"type":"action","v":1,"name":"setFixedStep","payload":{"lane":1,"step":3,"on":true}})");
+    auto p = msg["payload"];
+    EXPECT_EQ(p["lane"].get<int32_t>(), 1);
+    EXPECT_EQ(p["step"].get<int32_t>(), 3);
+    EXPECT_TRUE(p["on"].getBool());
+}
+
+TEST(BridgeActionContract, SetMicroTimingPayload) {
+    auto msg =
+        choc::json::parse(R"({"type":"action","v":1,"name":"setMicroTiming","payload":{"lane":0,"step":5,"ms":-10}})");
+    auto p = msg["payload"];
+    EXPECT_EQ(p["lane"].get<int32_t>(), 0);
+    EXPECT_EQ(p["step"].get<int32_t>(), 5);
+    EXPECT_DOUBLE_EQ(p["ms"].get<double>(), -10.0);
+}
+
+TEST(BridgeActionContract, SetEnvelopePayload) {
+    auto msg = choc::json::parse(
+        R"({"type":"action","v":1,"name":"setEnvelope","payload":{"lane":2,"index":0,"envelope":{"target":"Velocity","period":4.0,"depth":0.3,"on":true}}})");
+    auto p = msg["payload"];
+    EXPECT_EQ(p["lane"].get<int32_t>(), 2);
+    EXPECT_EQ(p["index"].get<int32_t>(), 0);
+    auto env = p["envelope"];
+    EXPECT_FALSE(env.isVoid());
+    EXPECT_EQ(std::string(env["target"].toString()), "Velocity");
+    EXPECT_DOUBLE_EQ(env["period"].get<double>(), 4.0);
+    EXPECT_DOUBLE_EQ(env["depth"].get<double>(), 0.3);
+    EXPECT_TRUE(env["on"].getBool());
+}
+
+TEST(BridgeActionContract, SetEnvelopePayloadNull) {
+    auto msg = choc::json::parse(
+        R"({"type":"action","v":1,"name":"setEnvelope","payload":{"lane":1,"index":0,"envelope":null}})");
+    auto p = msg["payload"];
+    EXPECT_EQ(p["lane"].get<int32_t>(), 1);
+    EXPECT_EQ(p["index"].get<int32_t>(), 0);
+    EXPECT_TRUE(p["envelope"].isVoid());
+}
+
+TEST(BridgeActionContract, SelectScenePayload) {
+    auto msg = choc::json::parse(R"({"type":"action","v":1,"name":"selectScene","payload":{"scene":"B"}})");
+    EXPECT_EQ(std::string(msg["payload"]["scene"].toString()), "B");
+}
+
+TEST(BridgeActionContract, ApplyPresetPayload) {
+    auto msg = choc::json::parse(R"({"type":"action","v":1,"name":"applyPreset","payload":{"index":3}})");
+    EXPECT_EQ(msg["payload"]["index"].get<int32_t>(), 3);
+}
+
+TEST(BridgeActionContract, ApplyPresetPayloadInit) {
+    auto msg = choc::json::parse(R"({"type":"action","v":1,"name":"applyPreset","payload":{"index":-1}})");
+    EXPECT_EQ(msg["payload"]["index"].get<int32_t>(), -1);
+}
+
+TEST(BridgeActionContract, ChainRemoveEntryPayload) {
+    auto msg = choc::json::parse(R"({"type":"action","v":1,"name":"chainRemoveEntry","payload":{"index":2}})");
+    EXPECT_EQ(msg["payload"]["index"].get<int32_t>(), 2);
+}
+
+TEST(BridgeActionContract, SetNoteMapPayload) {
+    auto msg = choc::json::parse(R"({"type":"action","v":1,"name":"setNoteMap","payload":{"note":60,"output":62}})");
+    auto p = msg["payload"];
+    EXPECT_EQ(p["note"].get<int32_t>(), 60);
+    EXPECT_EQ(p["output"].get<int32_t>(), 62);
+}
+
+TEST(BridgeActionContract, SetAccentPayload) {
+    auto msg =
+        choc::json::parse(R"({"type":"action","v":1,"name":"setAccent","payload":{"lane":0,"step":3,"value":1}})");
+    auto p = msg["payload"];
+    EXPECT_EQ(p["lane"].get<int32_t>(), 0);
+    EXPECT_EQ(p["step"].get<int32_t>(), 3);
+    EXPECT_DOUBLE_EQ(p["value"].get<double>(), 1.0);
+}
+
+TEST(BridgeActionContract, EmptyPayloadActions) {
+    for (const char* action : {"togglePlay", "exportRequest", "chainAddEntry", "resetNoteMap"}) {
+        std::string j = std::string(R"({"type":"action","v":1,"name":")") + action + R"(","payload":{}})";
+        auto msg = choc::json::parse(j);
+        EXPECT_EQ(std::string(msg["type"].toString()), "action");
+        EXPECT_EQ(std::string(msg["name"].toString()), action);
+    }
+}
+
+TEST(BridgeActionContract, AllSchemaActionsHaveCppHandler) {
+    auto schema = loadSchema();
+    auto actionNames = schema["definitions"]["msgAction"]["properties"]["name"]["enum"];
+
+    std::set<std::string> cppHandlers = {
+        "toggleStep",  "setEuclid",     "setCells",  "setFixedStep",  "setMicroTiming",   "setEnvelope",  "selectScene",
+        "applyPreset", "exportRequest", "setAccent", "chainAddEntry", "chainRemoveEntry", "resetNoteMap", "setNoteMap",
+    };
+    std::set<std::string> mockOnly = {"togglePlay"};
+
+    for (const auto& name : actionNames) {
+        std::string n = name.get<std::string>();
+        if (mockOnly.count(n))
+            continue;
+        EXPECT_TRUE(cppHandlers.count(n) > 0) << "Schema action '" << n << "' has no C++ handler in handleAction()";
+    }
 }
