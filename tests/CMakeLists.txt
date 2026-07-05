@@ -52,6 +52,12 @@ if(NOT POLY_ENGINE_ONLY)
     set(JSON_BuildTests OFF CACHE BOOL "" FORCE)
     FetchContent_MakeAvailable(nlohmann_json)
 
+    FetchContent_Declare(choc
+        GIT_REPOSITORY https://github.com/Tracktion/choc.git
+        GIT_TAG 5685fb59db9e60d31a35df7bff0ce7967beaaf25
+    )
+    FetchContent_MakeAvailable(choc)
+
     add_executable(poly_bridge_tests
         bridge_contract_tests.cpp
         ${CMAKE_SOURCE_DIR}/plugin/source/webui/bridge_serialization.cpp
@@ -71,6 +77,7 @@ if(NOT POLY_ENGINE_ONLY)
     target_include_directories(poly_bridge_tests PRIVATE
         ${CMAKE_SOURCE_DIR}/plugin/source
         ${CMAKE_SOURCE_DIR}/engine/include
+        ${choc_SOURCE_DIR}
     )
 
     target_compile_definitions(poly_bridge_tests PRIVATE
