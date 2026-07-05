@@ -82,3 +82,46 @@ test('transport toggles from keyboard', async ({ page }) => {
     .poll(async () => picon.getAttribute('d'))
     .not.toBe(before); // play icon became stop bars (frame-driven)
 });
+
+/* ================= web mode feature gating ================= */
+test.describe('feature gating', () => {
+  test('export button hidden in mock-host (web mode)', async ({ page }) => {
+    await expect(page.locator('#exportBtn')).toBeHidden();
+  });
+
+  test('play button enabled in standalone web mode', async ({ page }) => {
+    const pb = page.locator('#play');
+    await expect(pb).toBeVisible();
+    const opacity = await pb.evaluate(el => getComputedStyle(el).opacity);
+    expect(opacity).toBe('1');
+  });
+
+  test('mock-host capabilities.canExport is false', async ({ page }) => {
+    const can = await page.evaluate(() => window.PolyHost.capabilities.canExport);
+    expect(can).toBe(false);
+  });
+
+  test('plugin-host capabilities.canExport is true', async ({ page }) => {
+    const can = await page.evaluate(() => window.PolyPluginHost.capabilities.canExport);
+    expect(can).toBe(true);
+  });
+
+  test('export button visible in plugin mode', async ({ page, browser }) => {
+    const ctx = await browser.newContext();
+    const p = await ctx.newPage();
+    await p.addInitScript(() => { window.__POLY_EMBEDDED__ = true; });
+    await p.goto(pageUrl);
+    await expect(p.locator('#exportBtn')).toBeVisible();
+    await ctx.close();
+  });
+
+  test('play button disabled in embedded mode', async ({ page, browser }) => {
+    const ctx = await browser.newContext();
+    const p = await ctx.newPage();
+    await p.addInitScript(() => { window.__POLY_EMBEDDED__ = true; });
+    await p.goto(pageUrl);
+    const opacity = await p.locator('#play').evaluate(el => getComputedStyle(el).opacity);
+    expect(opacity).toBe('0.35');
+    await ctx.close();
+  });
+});

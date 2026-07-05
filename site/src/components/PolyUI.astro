@@ -1,0 +1,61 @@
+---
+interface Props {
+  preset?: string;
+  host?: 'mock' | 'wasm';
+  height?: string;
+}
+
+const { preset, host = 'mock', height = '520px' } = Astro.props;
+
+const params = new URLSearchParams();
+if (host === 'wasm') params.set('host', 'wasm');
+if (preset) params.set('preset', preset);
+const query = params.toString();
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const src = `${base}webui/index.html${query ? '?' + query : ''}`;
+---
+
+<div class="poly-ui-wrap">
+  <div class="poly-ui-loading" aria-hidden="true">Loading Poly&hellip;</div>
+  <iframe
+    class="poly-ui-frame"
+    src={src}
+    title={preset ? `Poly — ${preset}` : 'Poly — Interactive UI'}
+    style={`height: ${height}`}
+    allow="autoplay"
+    loading="lazy"
+    sandbox="allow-scripts allow-same-origin"
+  ></iframe>
+</div>
+
+<style>
+  .poly-ui-wrap {
+    position: relative;
+    margin: 1.5rem 0;
+    border: 2px solid var(--poly-primary);
+    border-radius: 8px;
+    overflow: hidden;
+    background: #1c1b19;
+  }
+
+  .poly-ui-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #8a8886;
+    font-family: var(--poly-font-sans);
+    font-size: var(--sl-text-sm);
+    pointer-events: none;
+  }
+
+  .poly-ui-frame {
+    display: block;
+    width: 100%;
+    border: none;
+    position: relative;
+    z-index: 1;
+    background: transparent;
+  }
+</style>

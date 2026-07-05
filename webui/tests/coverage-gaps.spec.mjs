@@ -581,11 +581,8 @@ test.describe('cross-feature regression', () => {
     expect(edits.some((e) => e.paramId === 'lane.0.active')).toBe(true);
   });
 
-  test('export button gets flash class', async ({ page }) => {
-    await page.click('#exportBtn');
-    await expect(page.locator('#exportBtn')).toHaveClass(/on/);
-    await page.waitForTimeout(700);
-    await expect(page.locator('#exportBtn')).not.toHaveClass(/on/);
+  test('export button hidden in web mode', async ({ page }) => {
+    await expect(page.locator('#exportBtn')).toBeHidden();
   });
 
   test('chain bar count clamps at minimum 1', async ({ page }) => {

@@ -497,6 +497,97 @@ TEST(BridgeActionContract, EmptyPayloadActions) {
     }
 }
 
+// ---------------------------------------------------------------------------
+// T05: Edit Message Roundtrip Tests (choc JSON parser → paramId + value + gesture)
+// ---------------------------------------------------------------------------
+
+TEST(BridgeEditContract, MacroEditBeginGesture) {
+    auto msg =
+        choc::json::parse(R"({"type":"edit","v":1,"paramId":"macro.complexity","value":0.75,"gesture":"begin"})");
+    EXPECT_EQ(std::string(msg["type"].toString()), "edit");
+    EXPECT_EQ(std::string(msg["paramId"].toString()), "macro.complexity");
+    EXPECT_DOUBLE_EQ(msg["value"].get<double>(), 0.75);
+    EXPECT_EQ(std::string(msg["gesture"].toString()), "begin");
+    auto id = poly::webui::resolveParamId(msg["paramId"].toString().data());
+    ASSERT_TRUE(id.has_value());
+    EXPECT_EQ(*id, poly::ParamIDs::kMacroComplexity);
+}
+
+TEST(BridgeEditContract, MacroEditPerformGesture) {
+    auto msg = choc::json::parse(R"({"type":"edit","v":1,"paramId":"macro.density","value":0.42,"gesture":"perform"})");
+    EXPECT_DOUBLE_EQ(msg["value"].get<double>(), 0.42);
+    EXPECT_EQ(std::string(msg["gesture"].toString()), "perform");
+    auto id = poly::webui::resolveParamId(msg["paramId"].toString().data());
+    ASSERT_TRUE(id.has_value());
+    EXPECT_EQ(*id, poly::ParamIDs::kMacroDensity);
+}
+
+TEST(BridgeEditContract, MacroEditEndGesture) {
+    auto msg = choc::json::parse(R"({"type":"edit","v":1,"paramId":"macro.swing","value":0.0,"gesture":"end"})");
+    EXPECT_DOUBLE_EQ(msg["value"].get<double>(), 0.0);
+    EXPECT_EQ(std::string(msg["gesture"].toString()), "end");
+    auto id = poly::webui::resolveParamId(msg["paramId"].toString().data());
+    ASSERT_TRUE(id.has_value());
+    EXPECT_EQ(*id, poly::ParamIDs::kMacroSwing);
+}
+
+TEST(BridgeEditContract, IntegerValueConvertsToDouble) {
+    auto msg = choc::json::parse(R"({"type":"edit","v":1,"paramId":"macro.tension","value":0,"gesture":"perform"})");
+    EXPECT_DOUBLE_EQ(msg["value"].get<double>(), 0.0);
+}
+
+TEST(BridgeEditContract, IntegerOneConvertsToDouble) {
+    auto msg = choc::json::parse(R"({"type":"edit","v":1,"paramId":"macro.humanize","value":1,"gesture":"perform"})");
+    EXPECT_DOUBLE_EQ(msg["value"].get<double>(), 1.0);
+}
+
+TEST(BridgeEditContract, LaneExprEditRoundtrip) {
+    auto msg =
+        choc::json::parse(R"({"type":"edit","v":1,"paramId":"lane.3.velocity","value":0.88,"gesture":"perform"})");
+    auto id = poly::webui::resolveParamId(msg["paramId"].toString().data());
+    ASSERT_TRUE(id.has_value());
+    EXPECT_EQ(*id, poly::ParamIDs::laneParam(3, poly::ParamIDs::kBaseVelocity));
+    EXPECT_DOUBLE_EQ(msg["value"].get<double>(), 0.88);
+}
+
+TEST(BridgeEditContract, SceneMorphEditRoundtrip) {
+    auto msg = choc::json::parse(R"({"type":"edit","v":1,"paramId":"scene.morph","value":0.5,"gesture":"perform"})");
+    auto id = poly::webui::resolveParamId(msg["paramId"].toString().data());
+    ASSERT_TRUE(id.has_value());
+    EXPECT_EQ(*id, poly::ParamIDs::kSceneMorph);
+}
+
+TEST(BridgeEditContract, ChainParamEditRoundtrip) {
+    auto msg =
+        choc::json::parse(R"({"type":"edit","v":1,"paramId":"chain.entry.0.scene","value":0.5,"gesture":"perform"})");
+    auto id = poly::webui::resolveParamId(msg["paramId"].toString().data());
+    ASSERT_TRUE(id.has_value());
+    EXPECT_EQ(*id, poly::ParamIDs::chainEntryParam(0, poly::ParamIDs::kChainEntryScene));
+}
+
+TEST(BridgeEditContract, AllMacroParamIdsResolveFromEditJson) {
+    const char* macros[] = {"complexity", "density", "syncopation", "swing", "tension", "humanize"};
+    for (auto* name : macros) {
+        std::string json =
+            R"({"type":"edit","v":1,"paramId":"macro.)" + std::string(name) + R"(","value":0.5,"gesture":"perform"})";
+        auto msg = choc::json::parse(json);
+        auto id = poly::webui::resolveParamId(msg["paramId"].toString().data());
+        EXPECT_TRUE(id.has_value()) << "Failed to resolve macro edit paramId: macro." << name;
+    }
+}
+
+TEST(BridgeEditContract, EditFixtureMessagesAllResolve) {
+    auto fixture = loadFixture("edits.json");
+    for (const auto& msg : fixture["messages"]) {
+        std::string paramId = msg["paramId"];
+        auto id = poly::webui::resolveParamId(paramId.c_str());
+        EXPECT_TRUE(id.has_value()) << "Edit fixture paramId unresolved: " << paramId;
+        std::string gesture = msg["gesture"];
+        EXPECT_TRUE(gesture == "begin" || gesture == "perform" || gesture == "end")
+            << "Invalid gesture in fixture: " << gesture << " for " << paramId;
+    }
+}
+
 TEST(BridgeActionContract, AllSchemaActionsHaveCppHandler) {
     auto schema = loadSchema();
     auto actionNames = schema["definitions"]["msgAction"]["properties"]["name"]["enum"];

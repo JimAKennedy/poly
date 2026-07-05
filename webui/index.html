@@ -51,12 +51,54 @@
   <script src="host-iface.js"></script>
   <script src="groove-math.js"></script>
   <script src="mock-host.js"></script>
+  <script src="wasm-host.js"></script>
   <script src="plugin-host.js"></script>
   <script>
-    // The embedded webview defines window.__POLY_EMBEDDED__ before loading
-    // this page; a plain browser gets the mock host (WebAudio engine model).
-    window.PolyHost = window.__POLY_EMBEDDED__ ? window.PolyPluginHost : window.PolyMockHost;
+    const params = new URLSearchParams(location.search);
+    const hostParam = params.get('host');
+    const presetParam = params.get('preset');
+
+    function applyPresetFromParam() {
+      if (!presetParam) return;
+      const needle = presetParam.toLowerCase().replace(/[-_]/g, ' ');
+      let attempts = 0;
+      (function tryApply() {
+        const state = window.PolyHost && window.PolyHost.getState();
+        if (state && state.presets) {
+          const idx = state.presets.findIndex(
+            p => p.name.toLowerCase() === needle
+          );
+          if (idx >= 0) {
+            window.PolyHost.action('applyPreset', { index: idx });
+            return;
+          }
+        }
+        if (++attempts < 40) setTimeout(tryApply, 50);
+      })();
+    }
+
+    if (hostParam === 'wasm') {
+      (async function loadWasmHost() {
+        try {
+          const wasmUrl = params.get('wasm_url') || './poly_engine.js';
+          const { default: createModule } = await import(wasmUrl);
+          const Module = await createModule();
+          window.PolyHost = await window.initPolyWasmHost(Module);
+          console.info('[poly] Using WASM host');
+        } catch (e) {
+          console.warn('[poly] WASM host failed, falling back to mock-host:', e.message);
+          window.PolyHost = window.PolyMockHost;
+        }
+        const s = document.createElement('script');
+        s.src = 'ui.js';
+        s.onload = applyPresetFromParam;
+        document.body.appendChild(s);
+      })();
+    } else {
+      window.PolyHost = window.__POLY_EMBEDDED__ ? window.PolyPluginHost : window.PolyMockHost;
+      document.write('<scr' + 'ipt src="ui.js"></scr' + 'ipt>');
+      window.addEventListener('DOMContentLoaded', applyPresetFromParam);
+    }
   </script>
-  <script src="ui.js"></script>
 </body>
 </html>
