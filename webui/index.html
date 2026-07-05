@@ -56,6 +56,26 @@
   <script>
     const params = new URLSearchParams(location.search);
     const hostParam = params.get('host');
+    const presetParam = params.get('preset');
+
+    function applyPresetFromParam() {
+      if (!presetParam) return;
+      const needle = presetParam.toLowerCase().replace(/[-_]/g, ' ');
+      let attempts = 0;
+      (function tryApply() {
+        const state = window.PolyHost && window.PolyHost.getState();
+        if (state && state.presets) {
+          const idx = state.presets.findIndex(
+            p => p.name.toLowerCase() === needle
+          );
+          if (idx >= 0) {
+            window.PolyHost.action('applyPreset', { index: idx });
+            return;
+          }
+        }
+        if (++attempts < 40) setTimeout(tryApply, 50);
+      })();
+    }
 
     if (hostParam === 'wasm') {
       (async function loadWasmHost() {
@@ -71,11 +91,13 @@
         }
         const s = document.createElement('script');
         s.src = 'ui.js';
+        s.onload = applyPresetFromParam;
         document.body.appendChild(s);
       })();
     } else {
       window.PolyHost = window.__POLY_EMBEDDED__ ? window.PolyPluginHost : window.PolyMockHost;
       document.write('<scr' + 'ipt src="ui.js"></scr' + 'ipt>');
+      window.addEventListener('DOMContentLoaded', applyPresetFromParam);
     }
   </script>
 </body>
