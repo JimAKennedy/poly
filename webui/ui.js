@@ -59,13 +59,13 @@
     const paint = (v) => { morphFill.style.width = `${(v * 100).toFixed(1)}%`; };
     morphTrack.addEventListener('pointerdown', (e) => {
       e.preventDefault();
-      const v = calc(e); paint(v);
-      host.edit('scene.morph', v, 'begin');
-      host.edit('scene.morph', v, 'perform');
-      const mv = (ev) => { const nv = calc(ev); paint(nv); host.edit('scene.morph', nv, 'perform'); };
-      const up = (ev) => {
+      let lastV = calc(e); paint(lastV);
+      host.edit('scene.morph', lastV, 'begin');
+      host.edit('scene.morph', lastV, 'perform');
+      const mv = (ev) => { lastV = calc(ev); paint(lastV); host.edit('scene.morph', lastV, 'perform'); };
+      const up = () => {
         window.removeEventListener('pointermove', mv);
-        const nv = calc(ev); paint(nv); host.edit('scene.morph', nv, 'end');
+        host.edit('scene.morph', lastV, 'end');
       };
       window.addEventListener('pointermove', mv);
       window.addEventListener('pointerup', up, { once: true });
@@ -165,13 +165,17 @@
     else buildChainPopover();
   });
 
-  /* --- export button --- */
-  document.getElementById('exportBtn').addEventListener('click', () => {
-    host.action('exportRequest', {});
-    const btn = document.getElementById('exportBtn');
-    btn.classList.add('on');
-    setTimeout(() => btn.classList.remove('on'), 600);
-  });
+  /* --- export button (plugin-only) --- */
+  if (host.capabilities && host.capabilities.canExport) {
+    document.getElementById('exportBtn').addEventListener('click', () => {
+      host.action('exportRequest', {});
+      const btn = document.getElementById('exportBtn');
+      btn.classList.add('on');
+      setTimeout(() => btn.classList.remove('on'), 600);
+    });
+  } else {
+    document.getElementById('exportBtn').style.display = 'none';
+  }
 
   /* --- note map modal --- */
   let noteMapModal = null;
@@ -486,13 +490,13 @@
       const paint = (v) => { fill.style.width = `${(v * 100).toFixed(1)}%`; vSpan.textContent = Math.round(v * 100); };
       track.addEventListener('pointerdown', (e) => {
         e.preventDefault();
-        const v = calc(e); paint(v);
-        host.edit(paramId, v, 'begin');
-        host.edit(paramId, v, 'perform');
-        const mv = (ev) => { const nv = calc(ev); paint(nv); host.edit(paramId, nv, 'perform'); };
-        const up = (ev) => {
+        let lastV = calc(e); paint(lastV);
+        host.edit(paramId, lastV, 'begin');
+        host.edit(paramId, lastV, 'perform');
+        const mv = (ev) => { lastV = calc(ev); paint(lastV); host.edit(paramId, lastV, 'perform'); };
+        const up = () => {
           window.removeEventListener('pointermove', mv);
-          const nv = calc(ev); paint(nv); host.edit(paramId, nv, 'end');
+          host.edit(paramId, lastV, 'end');
         };
         window.addEventListener('pointermove', mv);
         window.addEventListener('pointerup', up, { once: true });
@@ -729,13 +733,13 @@
       const paint = (v) => { fill.style.width = `${(v * 100).toFixed(1)}%`; vSpan.textContent = p.fmt(v); };
       track.addEventListener('pointerdown', (e) => {
         e.preventDefault();
-        const v = calc(e); paint(v);
-        host.edit(paramId, v, 'begin');
-        host.edit(paramId, v, 'perform');
-        const mv = (ev) => { const nv = calc(ev); paint(nv); host.edit(paramId, nv, 'perform'); };
-        const up = (ev) => {
+        let lastV = calc(e); paint(lastV);
+        host.edit(paramId, lastV, 'begin');
+        host.edit(paramId, lastV, 'perform');
+        const mv = (ev) => { lastV = calc(ev); paint(lastV); host.edit(paramId, lastV, 'perform'); };
+        const up = () => {
           window.removeEventListener('pointermove', mv);
-          const nv = calc(ev); paint(nv); host.edit(paramId, nv, 'end');
+          host.edit(paramId, lastV, 'end');
         };
         window.addEventListener('pointermove', mv);
         window.addEventListener('pointerup', up, { once: true });
@@ -801,13 +805,13 @@
       const paint = (v) => { fill.style.width = `${(v * 100).toFixed(1)}%`; vSpan.textContent = p.fmt(v); };
       track.addEventListener('pointerdown', (e) => {
         e.preventDefault();
-        const v = calc(e); paint(v);
-        host.edit(paramId, v, 'begin');
-        host.edit(paramId, v, 'perform');
-        const mv = (ev) => { const nv = calc(ev); paint(nv); host.edit(paramId, nv, 'perform'); };
-        const up = (ev) => {
+        let lastV = calc(e); paint(lastV);
+        host.edit(paramId, lastV, 'begin');
+        host.edit(paramId, lastV, 'perform');
+        const mv = (ev) => { lastV = calc(ev); paint(lastV); host.edit(paramId, lastV, 'perform'); };
+        const up = () => {
           window.removeEventListener('pointermove', mv);
-          const nv = calc(ev); paint(nv); host.edit(paramId, nv, 'end');
+          host.edit(paramId, lastV, 'end');
         };
         window.addEventListener('pointermove', mv);
         window.addEventListener('pointerup', up, { once: true });

@@ -58,6 +58,7 @@
 
   window.PolyPluginHost = {
     schemaVersion: window.POLY_SCHEMA_VERSION,
+    capabilities: { canExport: true },
     getState: () => lastState, // null until the first native push arrives
     onState: (cb) => {
       stateSubs.push(cb);

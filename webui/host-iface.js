@@ -36,6 +36,11 @@
  *   //   'togglePlay'      {}            (mock only; native transport is host-owned)
  *   //   'exportRequest'   {}
  *
+ *   // --- capabilities ---
+ *   capabilities: {
+ *     canExport: boolean,          // true only in plugin mode (MIDI/SMF export)
+ *   }
+ *
  *   // --- feedback (~30-60 Hz visual frame; never authoritative) ---
  *   onFrame(cb: (Frame) => void): void
  * }

@@ -5,6 +5,10 @@ on:
     branches: [main]
     paths:
       - 'site/**'
+      - 'engine/**'
+      - 'webui/**'
+      - 'CMakeLists.txt'
+      - 'scripts/build-wasm.sh'
       - '.github/workflows/deploy-site.yml'
   workflow_dispatch:
 
@@ -24,6 +28,14 @@ jobs:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: Check site asset references
         run: bash scripts/check-site-assets.sh
+      - name: Setup Emscripten
+        uses: mymindstorm/setup-emsdk@6ab9eb1bda2574c4ddb79809fc9247783eaf9021 # v14
+        with:
+          version: 3.1.61
+      - name: Build WASM
+        run: bash scripts/build-wasm.sh
+      - name: Copy WASM artifacts to site
+        run: cp build-wasm/poly_engine.js build-wasm/poly_engine.wasm site/public/webui/
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22

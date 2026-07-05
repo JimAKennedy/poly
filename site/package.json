@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "build": "astro build",
+    "copy-webui": "mkdir -p public/webui && cp ../webui/index.html ../webui/ui.js ../webui/ui.css ../webui/host-iface.js ../webui/groove-math.js ../webui/mock-host.js ../webui/wasm-host.js public/webui/",
+    "build": "npm run copy-webui && astro build",
     "preview": "astro preview",
     "astro": "astro"
   },

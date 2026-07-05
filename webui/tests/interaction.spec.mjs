@@ -51,6 +51,78 @@ test.describe('chrome controls', () => {
   });
 });
 
+test.describe('macro sliders', () => {
+  test('clicking macro slider fires begin/perform/end gestures', async ({ page }) => {
+    await clearEdits(page);
+    const track = page.locator('#master .slider-track[data-macro="macro.complexity"]');
+    const box = await track.boundingBox();
+    await track.click({ position: { x: box.width * 0.6, y: box.height / 2 } });
+
+    const edits = await getEdits(page);
+    const gestures = edits.map((e) => e.gesture);
+    expect(edits[0].paramId).toBe('macro.complexity');
+    expect(gestures).toContain('begin');
+    expect(gestures).toContain('perform');
+    expect(gestures).toContain('end');
+  });
+
+  test('dragging macro slider fires multiple perform events', async ({ page }) => {
+    await clearEdits(page);
+    const track = page.locator('#master .slider-track[data-macro="macro.density"]');
+    const box = await track.boundingBox();
+
+    await page.mouse.move(box.x + box.width * 0.2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width * 0.5, box.y + box.height / 2, { steps: 5 });
+    await page.mouse.move(box.x + box.width * 0.8, box.y + box.height / 2, { steps: 5 });
+    await page.mouse.up();
+
+    const edits = await getEdits(page);
+    expect(edits[0].gesture).toBe('begin');
+    expect(edits[edits.length - 1].gesture).toBe('end');
+    const performs = edits.filter((e) => e.gesture === 'perform');
+    expect(performs.length).toBeGreaterThanOrEqual(2);
+    expect(performs[performs.length - 1].value).toBeGreaterThan(performs[0].value);
+  });
+
+  test('macro value persists in state after gesture end', async ({ page }) => {
+    const track = page.locator('#master .slider-track[data-macro="macro.swing"]');
+    const box = await track.boundingBox();
+    await track.click({ position: { x: box.width * 0.7, y: box.height / 2 } });
+
+    const state = await page.evaluate(() => window.PolyMockHost.getState());
+    expect(state.macros.swing).toBeGreaterThan(0.5);
+    expect(state.macros.swing).toBeLessThan(0.9);
+  });
+
+  test('macro slider UI text updates on drag', async ({ page }) => {
+    const macro = page.locator('.macro', { has: page.locator('.t span', { hasText: 'Syncopation' }) });
+    await expect(macro.locator('.t b')).toHaveText('30');
+
+    const track = macro.locator('.slider-track');
+    const box = await track.boundingBox();
+    await track.click({ position: { x: box.width * 0.8, y: box.height / 2 } });
+
+    const text = await macro.locator('.t b').textContent();
+    expect(parseInt(text)).toBeGreaterThanOrEqual(70);
+    expect(parseInt(text)).toBeLessThanOrEqual(90);
+  });
+
+  test('all six macro sliders resolve to valid paramIds', async ({ page }) => {
+    await clearEdits(page);
+    const macros = ['complexity', 'density', 'syncopation', 'swing', 'tension', 'humanize'];
+    for (const name of macros) {
+      const track = page.locator(`#master .slider-track[data-macro="macro.${name}"]`);
+      await expect(track).toBeVisible();
+    }
+    const track = page.locator('#master .slider-track[data-macro="macro.complexity"]');
+    const box = await track.boundingBox();
+    await track.click({ position: { x: box.width * 0.5, y: box.height / 2 } });
+    const edits = await getEdits(page);
+    expect(edits.some((e) => e.paramId === 'macro.complexity')).toBe(true);
+  });
+});
+
 test.describe('collapsed strip', () => {
   test('timeline lane ladder buttons dispatch toggleStep', async ({ page }) => {
     const btn = page.locator('.strip[data-lane="0"] .ladder button').nth(2);
@@ -773,17 +845,7 @@ test.describe('note map', () => {
 });
 
 test.describe('export', () => {
-  test('export button dispatches exportRequest', async ({ page }) => {
-    await clearActions(page);
-    await page.click('#exportBtn');
-    const acts = await getActions(page);
-    expect(acts).toContainEqual(
-      expect.objectContaining({ name: 'exportRequest', payload: {} })
-    );
-  });
-
-  test('export button flashes on class briefly', async ({ page }) => {
-    await page.click('#exportBtn');
-    await expect(page.locator('#exportBtn')).toHaveClass(/on/);
+  test('export button hidden in web mode (mock-host)', async ({ page }) => {
+    await expect(page.locator('#exportBtn')).toBeHidden();
   });
 });
