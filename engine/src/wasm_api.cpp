@@ -286,6 +286,164 @@ void poly_edit_lane_float(PolyContext ctx, int lane, int field, double value) {
     poly::sanitizeGrooveState(c->state);
 }
 
+int poly_lane_int(PolyContext ctx, int lane, int field) {
+    auto* c = static_cast<Context*>(ctx);
+    if (lane < 0 || lane >= poly::kMaxLanes)
+        return 0;
+    const auto& cfg = c->state.lanes[static_cast<size_t>(lane)];
+
+    switch (static_cast<LaneFieldInt>(field)) {
+    case LaneFieldInt::MidiNote:
+        return cfg.midiNote;
+    case LaneFieldInt::MidiChannel:
+        return cfg.midiChannel;
+    case LaneFieldInt::HitCount:
+        return cfg.hitCount;
+    case LaneFieldInt::Rotation:
+        return cfg.rotation;
+    case LaneFieldInt::BaseVelocity:
+        return cfg.baseVelocity;
+    case LaneFieldInt::GhostFloor:
+        return cfg.ghostFloor;
+    case LaneFieldInt::Active:
+        return cfg.active ? 1 : 0;
+    case LaneFieldInt::Subdivision:
+        return cfg.cycle.subdivision;
+    case LaneFieldInt::CycleSteps:
+        return cfg.cycle.steps;
+    case LaneFieldInt::KotekanSource:
+        return cfg.kotekanSourceLane;
+    case LaneFieldInt::Timeline:
+        return cfg.timeline ? 1 : 0;
+    case LaneFieldInt::EnvelopeCount:
+        return cfg.envelopeCount;
+    case LaneFieldInt::CellCount:
+        return cfg.cellCount;
+    }
+    return 0;
+}
+
+double poly_lane_float(PolyContext ctx, int lane, int field) {
+    auto* c = static_cast<Context*>(ctx);
+    if (lane < 0 || lane >= poly::kMaxLanes)
+        return 0.0;
+    const auto& cfg = c->state.lanes[static_cast<size_t>(lane)];
+
+    switch (static_cast<LaneFieldFloat>(field)) {
+    case LaneFieldFloat::Probability:
+        return static_cast<double>(cfg.probability);
+    case LaneFieldFloat::VelocitySpread:
+        return static_cast<double>(cfg.velocitySpread);
+    case LaneFieldFloat::HumanizeMs:
+        return static_cast<double>(cfg.humanizeMs);
+    case LaneFieldFloat::SwingAmount:
+        return static_cast<double>(cfg.swingAmount);
+    case LaneFieldFloat::NoteDuration:
+        return static_cast<double>(cfg.noteDuration);
+    case LaneFieldFloat::PhraseLength:
+        return static_cast<double>(cfg.phraseLength);
+    case LaneFieldFloat::PhraseGap:
+        return static_cast<double>(cfg.phraseGap);
+    case LaneFieldFloat::PhraseOffset:
+        return static_cast<double>(cfg.phraseOffset);
+    case LaneFieldFloat::MutationRate:
+        return static_cast<double>(cfg.mutationRate);
+    case LaneFieldFloat::DriftRate:
+        return static_cast<double>(cfg.driftRate);
+    case LaneFieldFloat::TimingOffsetMs:
+        return static_cast<double>(cfg.timingOffsetMs);
+    case LaneFieldFloat::SyncopationOffset:
+        return static_cast<double>(cfg.syncopationOffset);
+    case LaneFieldFloat::TempoMultiplier:
+        return static_cast<double>(cfg.tempoMultiplier);
+    case LaneFieldFloat::EmphasisProb:
+        return static_cast<double>(cfg.emphasisProb);
+    }
+    return 0.0;
+}
+
+int poly_lane_pattern(PolyContext ctx, int lane, int* out, int maxLen) {
+    auto* c = static_cast<Context*>(ctx);
+    if (lane < 0 || lane >= poly::kMaxLanes || !out || maxLen <= 0)
+        return 0;
+    const auto& cfg = c->state.lanes[static_cast<size_t>(lane)];
+    std::array<bool, poly::kMaxSteps> pattern{};
+    poly::euclidean(cfg.hitCount, cfg.cycle.steps, cfg.rotation, pattern);
+    int len = std::min(cfg.cycle.steps, maxLen);
+    for (int i = 0; i < len; ++i)
+        out[i] = pattern[static_cast<size_t>(i)] ? 1 : 0;
+    return len;
+}
+
+float* poly_lane_micro_timing_ptr(PolyContext ctx, int lane) {
+    auto* c = static_cast<Context*>(ctx);
+    if (lane < 0 || lane >= poly::kMaxLanes)
+        return nullptr;
+    return c->state.lanes[static_cast<size_t>(lane)].microTimingMs.data();
+}
+
+float* poly_lane_accents_ptr(PolyContext ctx, int lane) {
+    auto* c = static_cast<Context*>(ctx);
+    if (lane < 0 || lane >= poly::kMaxLanes)
+        return nullptr;
+    return c->state.lanes[static_cast<size_t>(lane)].accents.steps.data();
+}
+
+int* poly_lane_cells_ptr(PolyContext ctx, int lane) {
+    auto* c = static_cast<Context*>(ctx);
+    if (lane < 0 || lane >= poly::kMaxLanes)
+        return nullptr;
+    return c->state.lanes[static_cast<size_t>(lane)].cellSizes.data();
+}
+
+int poly_lane_fixed_pattern(PolyContext ctx, int lane, int* out, int maxLen) {
+    auto* c = static_cast<Context*>(ctx);
+    if (lane < 0 || lane >= poly::kMaxLanes || !out || maxLen <= 0)
+        return 0;
+    const auto& cfg = c->state.lanes[static_cast<size_t>(lane)];
+    int len = cfg.fixedPatternLength > 0 ? cfg.fixedPatternLength : cfg.cycle.steps;
+    len = std::min(len, maxLen);
+    for (int i = 0; i < len; ++i)
+        out[i] = cfg.fixedPattern[static_cast<size_t>(i)] ? 1 : 0;
+    return len;
+}
+
+int poly_lane_envelope_count(PolyContext ctx, int lane) {
+    auto* c = static_cast<Context*>(ctx);
+    if (lane < 0 || lane >= poly::kMaxLanes)
+        return 0;
+    return c->state.lanes[static_cast<size_t>(lane)].envelopeCount;
+}
+
+int poly_lane_envelope_active(PolyContext ctx, int lane, int index) {
+    auto* c = static_cast<Context*>(ctx);
+    if (lane < 0 || lane >= poly::kMaxLanes || index < 0 || index >= poly::kMaxEnvelopesPerLane)
+        return 0;
+    return c->state.lanes[static_cast<size_t>(lane)].envelopes[static_cast<size_t>(index)].active ? 1 : 0;
+}
+
+int poly_lane_envelope_target(PolyContext ctx, int lane, int index) {
+    auto* c = static_cast<Context*>(ctx);
+    if (lane < 0 || lane >= poly::kMaxLanes || index < 0 || index >= poly::kMaxEnvelopesPerLane)
+        return 0;
+    return static_cast<int>(
+        c->state.lanes[static_cast<size_t>(lane)].envelopes[static_cast<size_t>(index)].envelope.target);
+}
+
+float poly_lane_envelope_period(PolyContext ctx, int lane, int index) {
+    auto* c = static_cast<Context*>(ctx);
+    if (lane < 0 || lane >= poly::kMaxLanes || index < 0 || index >= poly::kMaxEnvelopesPerLane)
+        return 0.0f;
+    return c->state.lanes[static_cast<size_t>(lane)].envelopes[static_cast<size_t>(index)].envelope.periodBars;
+}
+
+float poly_lane_envelope_depth(PolyContext ctx, int lane, int index) {
+    auto* c = static_cast<Context*>(ctx);
+    if (lane < 0 || lane >= poly::kMaxLanes || index < 0 || index >= poly::kMaxEnvelopesPerLane)
+        return 0.0f;
+    return c->state.lanes[static_cast<size_t>(lane)].envelopes[static_cast<size_t>(index)].envelope.depth;
+}
+
 void poly_action_set_euclid(PolyContext ctx, int lane, int steps, int hits, int rotation) {
     auto* c = static_cast<Context*>(ctx);
     if (lane < 0 || lane >= poly::kMaxLanes)
@@ -311,6 +469,84 @@ void poly_action_toggle_step(PolyContext ctx, int lane, int step) {
 
 void poly_action_apply_preset(PolyContext ctx, int index) {
     poly_load_preset(ctx, index);
+}
+
+void poly_action_set_fixed_step(PolyContext ctx, int lane, int step, int on) {
+    auto* c = static_cast<Context*>(ctx);
+    if (lane < 0 || lane >= poly::kMaxLanes)
+        return;
+    auto& cfg = c->state.lanes[static_cast<size_t>(lane)];
+    if (step < 0 || step >= poly::kMaxSteps)
+        return;
+    cfg.fixedPattern[static_cast<size_t>(step)] = (on != 0);
+}
+
+void poly_action_set_micro_timing(PolyContext ctx, int lane, int step, float ms) {
+    auto* c = static_cast<Context*>(ctx);
+    if (lane < 0 || lane >= poly::kMaxLanes)
+        return;
+    auto& cfg = c->state.lanes[static_cast<size_t>(lane)];
+    if (step < 0 || step >= poly::kMaxSteps)
+        return;
+    cfg.microTimingMs[static_cast<size_t>(step)] = std::clamp(ms, -20.0f, 20.0f);
+}
+
+void poly_action_set_accent(PolyContext ctx, int lane, int step, float value) {
+    auto* c = static_cast<Context*>(ctx);
+    if (lane < 0 || lane >= poly::kMaxLanes)
+        return;
+    auto& cfg = c->state.lanes[static_cast<size_t>(lane)];
+    if (step < 0 || step >= poly::kMaxSteps)
+        return;
+    cfg.accents.steps[static_cast<size_t>(step)] = std::clamp(value, 0.0f, 1.0f);
+}
+
+void poly_action_set_cells(PolyContext ctx, int lane, const int* cells, int count) {
+    auto* c = static_cast<Context*>(ctx);
+    if (lane < 0 || lane >= poly::kMaxLanes)
+        return;
+    auto& cfg = c->state.lanes[static_cast<size_t>(lane)];
+    cfg.cellCount = std::clamp(count, 0, poly::kMaxSteps);
+    for (int i = 0; i < cfg.cellCount; ++i)
+        cfg.cellSizes[static_cast<size_t>(i)] = std::clamp(cells[i], 1, 4);
+    poly::sanitizeGrooveState(c->state);
+}
+
+void poly_action_clear_cells(PolyContext ctx, int lane) {
+    auto* c = static_cast<Context*>(ctx);
+    if (lane < 0 || lane >= poly::kMaxLanes)
+        return;
+    c->state.lanes[static_cast<size_t>(lane)].cellCount = 0;
+    poly::sanitizeGrooveState(c->state);
+}
+
+void poly_action_set_envelope(PolyContext ctx, int lane, int index, int target, float period, float depth, int active) {
+    auto* c = static_cast<Context*>(ctx);
+    if (lane < 0 || lane >= poly::kMaxLanes)
+        return;
+    auto& cfg = c->state.lanes[static_cast<size_t>(lane)];
+    if (index < 0 || index >= poly::kMaxEnvelopesPerLane)
+        return;
+    auto& ea = cfg.envelopes[static_cast<size_t>(index)];
+    ea.envelope.target = static_cast<poly::EnvTarget>(std::clamp(target, 0, 7));
+    ea.envelope.periodBars = std::max(0.25f, period);
+    ea.envelope.depth = std::clamp(depth, 0.0f, 1.0f);
+    ea.active = (active != 0);
+    if (index >= cfg.envelopeCount)
+        cfg.envelopeCount = index + 1;
+}
+
+void poly_action_remove_envelope(PolyContext ctx, int lane, int index) {
+    auto* c = static_cast<Context*>(ctx);
+    if (lane < 0 || lane >= poly::kMaxLanes)
+        return;
+    auto& cfg = c->state.lanes[static_cast<size_t>(lane)];
+    if (index < 0 || index >= cfg.envelopeCount)
+        return;
+    for (int i = index; i < cfg.envelopeCount - 1; ++i)
+        cfg.envelopes[static_cast<size_t>(i)] = cfg.envelopes[static_cast<size_t>(i + 1)];
+    cfg.envelopes[static_cast<size_t>(cfg.envelopeCount - 1)] = {};
+    cfg.envelopeCount--;
 }
 
 uint64_t poly_seed(PolyContext ctx) {
