@@ -16,6 +16,7 @@
   let mode = 'desk';
   let expanded = -1;
   let strips = [], rings = [], hands = [], ladders = [], vus = [];
+  const tabState = {};
 
   /* ================= chrome ================= */
   const embedded = !!window.__POLY_EMBEDDED__;
@@ -445,9 +446,15 @@
       });
       s.querySelectorAll('.tabs button').forEach((tb) =>
         tb.addEventListener('click', () => {
+          tabState[li] = tb.dataset.tab;
           s.querySelectorAll('.tabs button').forEach((x) => x.classList.toggle('on', x === tb));
           s.querySelectorAll('.pane').forEach((p) => p.classList.toggle('on', p.dataset.pane === tb.dataset.tab));
         }));
+      const saved = tabState[li];
+      if (saved && saved !== 'pattern') {
+        s.querySelectorAll('.tabs button').forEach((tb) => tb.classList.toggle('on', tb.dataset.tab === saved));
+        s.querySelectorAll('.pane').forEach((p) => p.classList.toggle('on', p.dataset.pane === saved));
+      }
       refreshStrip(li);
     });
     const m = document.createElement('div');

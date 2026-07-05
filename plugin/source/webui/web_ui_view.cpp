@@ -175,7 +175,7 @@ void WebUIView::handleHostCall(const std::string& json) {
 
         if (typeStr == "edit") {
             auto paramId = msg["paramId"].toString();
-            auto value = msg["value"].getFloat64();
+            auto value = msg["value"].get<double>();
             auto gesture = msg["gesture"].toString();
 
             auto id = webui::resolveParamId(paramId.c_str());
@@ -217,8 +217,8 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
     auto& scene = controller_->mutableActiveScene();
 
     if (name == "toggleStep") {
-        int lane = payload["lane"].getInt32();
-        int step = payload["step"].getInt32();
+        int lane = payload["lane"].get<int32_t>();
+        int step = payload["step"].get<int32_t>();
         if (lane < 0 || lane >= kMaxLanes || step < 0 || step >= kMaxSteps)
             return;
         auto& cfg = scene.lanes[lane];
@@ -230,29 +230,37 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
     }
 
     if (name == "setEuclid") {
-        int lane = payload["lane"].getInt32();
+        int lane = payload["lane"].get<int32_t>();
         if (lane < 0 || lane >= kMaxLanes)
             return;
         auto& cfg = scene.lanes[lane];
         if (payload.hasObjectMember("steps"))
-            cfg.cycle.steps = std::clamp(payload["steps"].getInt32(), 1, kMaxSteps);
+            cfg.cycle.steps = std::clamp(payload["steps"].get<int32_t>(), 1, kMaxSteps);
         if (payload.hasObjectMember("hits"))
-            cfg.hitCount = std::clamp(payload["hits"].getInt32(), 0, cfg.cycle.steps);
+            cfg.hitCount = std::clamp(payload["hits"].get<int32_t>(), 0, cfg.cycle.steps);
         if (payload.hasObjectMember("rotation"))
-            cfg.rotation = ((payload["rotation"].getInt32() % cfg.cycle.steps) + cfg.cycle.steps) % cfg.cycle.steps;
+            cfg.rotation = ((payload["rotation"].get<int32_t>() % cfg.cycle.steps) + cfg.cycle.steps) % cfg.cycle.steps;
 
-        controller_->setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreSteps),
-                                        (cfg.cycle.steps - 1) / 63.0);
-        controller_->performEdit(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreSteps), (cfg.cycle.steps - 1) / 63.0);
-        controller_->setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreHits), cfg.hitCount / 64.0);
-        controller_->performEdit(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreHits), cfg.hitCount / 64.0);
-        controller_->setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreRotation), cfg.rotation / 63.0);
-        controller_->performEdit(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreRotation), cfg.rotation / 63.0);
+        auto stepsId = ParamIDs::laneCoreParam(lane, ParamIDs::kCoreSteps);
+        auto hitsId = ParamIDs::laneCoreParam(lane, ParamIDs::kCoreHits);
+        auto rotId = ParamIDs::laneCoreParam(lane, ParamIDs::kCoreRotation);
+        controller_->beginEdit(stepsId);
+        controller_->beginEdit(hitsId);
+        controller_->beginEdit(rotId);
+        controller_->setParamNormalized(stepsId, (cfg.cycle.steps - 1) / 63.0);
+        controller_->performEdit(stepsId, (cfg.cycle.steps - 1) / 63.0);
+        controller_->setParamNormalized(hitsId, cfg.hitCount / 64.0);
+        controller_->performEdit(hitsId, cfg.hitCount / 64.0);
+        controller_->setParamNormalized(rotId, cfg.rotation / 63.0);
+        controller_->performEdit(rotId, cfg.rotation / 63.0);
+        controller_->endEdit(stepsId);
+        controller_->endEdit(hitsId);
+        controller_->endEdit(rotId);
         return;
     }
 
     if (name == "setCells") {
-        int lane = payload["lane"].getInt32();
+        int lane = payload["lane"].get<int32_t>();
         if (lane < 0 || lane >= kMaxLanes)
             return;
         auto& cfg = scene.lanes[lane];
@@ -260,19 +268,22 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
             auto cells = payload["cells"];
             cfg.cellCount = std::min(static_cast<int>(cells.size()), kMaxSteps);
             for (int i = 0; i < cfg.cellCount; ++i)
-                cfg.cellSizes[i] = std::clamp(cells[static_cast<uint32_t>(i)].getInt32(), 1, 16);
+                cfg.cellSizes[i] = std::clamp(cells[static_cast<uint32_t>(i)].get<int32_t>(), 1, 16);
         } else {
             cfg.cellCount = 0;
         }
-        controller_->setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreCellCount), cfg.cellCount / 64.0);
-        controller_->performEdit(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreCellCount), cfg.cellCount / 64.0);
+        auto cellId = ParamIDs::laneCoreParam(lane, ParamIDs::kCoreCellCount);
+        controller_->beginEdit(cellId);
+        controller_->setParamNormalized(cellId, cfg.cellCount / 64.0);
+        controller_->performEdit(cellId, cfg.cellCount / 64.0);
+        controller_->endEdit(cellId);
         controller_->sendCellSizes(lane);
         return;
     }
 
     if (name == "setFixedStep") {
-        int lane = payload["lane"].getInt32();
-        int step = payload["step"].getInt32();
+        int lane = payload["lane"].get<int32_t>();
+        int step = payload["step"].get<int32_t>();
         bool on = payload["on"].getBool();
         if (lane < 0 || lane >= kMaxLanes || step < 0 || step >= kMaxSteps)
             return;
@@ -282,19 +293,19 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
     }
 
     if (name == "setMicroTiming") {
-        int lane = payload["lane"].getInt32();
-        int step = payload["step"].getInt32();
+        int lane = payload["lane"].get<int32_t>();
+        int step = payload["step"].get<int32_t>();
         if (lane < 0 || lane >= kMaxLanes || step < 0 || step >= kMaxSteps)
             return;
-        auto ms = static_cast<float>(payload["ms"].getFloat64());
+        auto ms = static_cast<float>(payload["ms"].get<double>());
         scene.lanes[lane].microTimingMs[step] = std::clamp(ms, -20.0f, 20.0f);
         controller_->sendMicroTiming(lane);
         return;
     }
 
     if (name == "setEnvelope") {
-        int lane = payload["lane"].getInt32();
-        int index = payload["index"].getInt32();
+        int lane = payload["lane"].get<int32_t>();
+        int index = payload["index"].get<int32_t>();
         if (lane < 0 || lane >= kMaxLanes || index < 0 || index >= kMaxEnvelopesPerLane)
             return;
         auto& ea = scene.lanes[lane].envelopes[index];
@@ -310,9 +321,9 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
                     ea.envelope.target = EnvTarget::Probability;
             }
             if (env.hasObjectMember("period"))
-                ea.envelope.periodBars = static_cast<float>(env["period"].getFloat64());
+                ea.envelope.periodBars = static_cast<float>(env["period"].get<double>());
             if (env.hasObjectMember("depth"))
-                ea.envelope.depth = static_cast<float>(env["depth"].getFloat64());
+                ea.envelope.depth = static_cast<float>(env["depth"].get<double>());
             if (env.hasObjectMember("on"))
                 ea.active = env["on"].getBool();
         } else {
@@ -343,7 +354,7 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
     }
 
     if (name == "applyPreset") {
-        int index = payload["index"].getInt32();
+        int index = payload["index"].get<int32_t>();
 
         auto pushParam = [this](Steinberg::Vst::ParamID id, double value) {
             controller_->beginEdit(id);
@@ -469,11 +480,11 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
     }
 
     if (name == "setAccent") {
-        int lane = payload["lane"].getInt32();
-        int step = payload["step"].getInt32();
+        int lane = payload["lane"].get<int32_t>();
+        int step = payload["step"].get<int32_t>();
         if (lane < 0 || lane >= kMaxLanes || step < 0 || step >= kMaxSteps)
             return;
-        scene.lanes[lane].accents.steps[step] = static_cast<float>(payload["value"].getFloat64());
+        scene.lanes[lane].accents.steps[step] = static_cast<float>(payload["value"].get<double>());
         controller_->sendAccentMask(lane);
         return;
     }
@@ -483,25 +494,27 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
         if (chain.entryCount < kMaxChainEntries) {
             chain.entries[chain.entryCount] = {SceneSelect::A, 4};
             chain.entryCount++;
-            controller_->setParamNormalized(ParamIDs::kChainEntryCount, static_cast<double>(chain.entryCount) /
-                                                                            static_cast<double>(kMaxChainEntries));
-            controller_->performEdit(ParamIDs::kChainEntryCount,
-                                     static_cast<double>(chain.entryCount) / static_cast<double>(kMaxChainEntries));
+            double norm = static_cast<double>(chain.entryCount) / static_cast<double>(kMaxChainEntries);
+            controller_->beginEdit(ParamIDs::kChainEntryCount);
+            controller_->setParamNormalized(ParamIDs::kChainEntryCount, norm);
+            controller_->performEdit(ParamIDs::kChainEntryCount, norm);
+            controller_->endEdit(ParamIDs::kChainEntryCount);
         }
         return;
     }
 
     if (name == "chainRemoveEntry") {
-        int index = payload["index"].getInt32();
+        int index = payload["index"].get<int32_t>();
         auto& chain = controller_->mutableCachedState().chain;
         if (index >= 0 && index < chain.entryCount) {
             for (int i = index; i < chain.entryCount - 1; ++i)
                 chain.entries[i] = chain.entries[i + 1];
             chain.entryCount--;
-            controller_->setParamNormalized(ParamIDs::kChainEntryCount, static_cast<double>(chain.entryCount) /
-                                                                            static_cast<double>(kMaxChainEntries));
-            controller_->performEdit(ParamIDs::kChainEntryCount,
-                                     static_cast<double>(chain.entryCount) / static_cast<double>(kMaxChainEntries));
+            double norm = static_cast<double>(chain.entryCount) / static_cast<double>(kMaxChainEntries);
+            controller_->beginEdit(ParamIDs::kChainEntryCount);
+            controller_->setParamNormalized(ParamIDs::kChainEntryCount, norm);
+            controller_->performEdit(ParamIDs::kChainEntryCount, norm);
+            controller_->endEdit(ParamIDs::kChainEntryCount);
         }
         return;
     }
@@ -515,8 +528,8 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
     }
 
     if (name == "setNoteMap") {
-        int note = payload["note"].getInt32();
-        int output = payload["output"].getInt32();
+        int note = payload["note"].get<int32_t>();
+        int output = payload["output"].get<int32_t>();
         if (note < 0 || note > 127 || output < 0 || output > 127)
             return;
         controller_->mutableCachedState().noteMap.map[note] = static_cast<int16_t>(output);
