@@ -261,3 +261,60 @@ start immediately; items 1+4 are half-day wins.
 - The probe plugin, scenario DSL, MIDI Remote script, and mido driver are
   all plugin-agnostic: candidates for `audio-meta` once a second plugin
   needs them.
+
+## Appendix A — The Windows Cubase runner: hardware selection & hardening
+
+The L4 suite needs one Windows machine with a real interactive desktop,
+Cubase activated, and a GitHub self-hosted runner. The choice is dominated
+by one constraint, not by compute:
+
+> **Steinberg Licensing binds activations to a machine fingerprint and does
+> not officially support virtual environments.** A persistent machine keeps
+> its activation indefinitely; anything re-imaged or re-provisioned burns
+> an activation per rebuild (allowance is small; recovery means support
+> tickets). Choose the most boring, most persistent machine available.
+
+### A.1 Options compared
+
+| Option | Up-front | Running cost | Licensing risk | Verdict |
+|---|---|---|---|---|
+| **Mini PC** (refurb Beelink/Minisforum/NUC, Ryzen 5/i5, 16 GB, 500 GB NVMe) | ~£200–350 | ~£20–30/yr power (10–15 W idle) | None — stable fingerprint | **Recommended.** Lowest TCO past ~6 months; native audio + MIDI kernel drivers |
+| **Spare Intel Mac via Boot Camp** | £0 | power only | None — it's physical | **Recommended if one exists** — same as above for free |
+| **Cloud VM, persistent + scheduled start/stop** (~1 h/day around the nightly) | £0 | ~$15–25/mo ($5–10 compute + $10–15 persistent disk) | Moderate — stable while never rebuilt; snapshot ≠ license backup | Acceptable if hardware-averse |
+| Cloud VM, 24/7 | £0 | ~$60–70/mo | Moderate | No reason — nightly needs ~1 h/day |
+| **VM on Apple Silicon Mac** (Parallels/UTM → Windows-on-ARM) | licence cost | host Mac power | High | **Avoid.** Cubase is x64-only (runs, if at all, under unsupported emulation) and x64 kernel drivers cannot be emulated — loopMIDI won't install. Win11 MIDI Services' native loopback could substitute, but the stack is fragility on fragility |
+| Ephemeral cloud images / fresh-VM-per-run | — | — | Fatal | Ruled out — every image is a new machine to Steinberg |
+
+Two properties of our design make virtualisation *timing* a non-issue
+either way: `poly_midi_probe` timestamps events from the host's own
+`ProcessContext` PPQ (immune to VM clock jitter), and assertions are
+golden-event comparisons, not latency measurements. The licensing and
+kernel-driver constraints are what rule options out — never performance.
+
+### A.2 Hardening checklist (applies to physical and cloud)
+
+1. **Auto-logon into a console session**; BIOS/UEFI set to power-on after
+   power loss (physical).
+2. **Runner as a logon scheduled task, NOT a Windows service** — services
+   get no interactive desktop; Cubase, UI automation, and CDP all need one.
+3. **Keep a display alive**: dummy HDMI plug (physical) / persistent
+   virtual display (cloud). Access via VNC, not RDP — a disconnected RDP
+   session tears down the interactive display; if RDP is unavoidable, use
+   the `tscon`-redirect-to-console trick on disconnect.
+4. **Audio endpoint**: onboard audio (physical) or VB-CABLE (cloud) so
+   Cubase's Generic Low Latency ASIO driver has a device.
+5. **MIDI loopback**: loopMIDI (x64) — or Windows 11 MIDI Services
+   loopback once we trust it.
+6. Disable sleep/hibernate; move Windows Update to a weekly maintenance
+   window with controlled reboot; pin the Cubase version (updates are a
+   deliberate fixture-upgrade event, per §6).
+7. **Security**: the runner executes repository code — gate its workflows
+   to `schedule` + `workflow_dispatch` on main only, never `pull_request`;
+   keep it on the LAN with no inbound exposure; repo-scoped runner
+   registration with the `cubase` label.
+8. **Disaster recovery**: full disk image after golden setup — for
+   restoring the *same* machine. Restoring onto different hardware costs a
+   Steinberg activation; plan seat usage accordingly (activations are also
+   shared with your studio machines).
+9. Cubase prefs seeded: Hub disabled, no first-run dialogs, key commands +
+   MIDI Remote script installed, fixture projects read-only.
