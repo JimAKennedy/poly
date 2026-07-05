@@ -7,8 +7,7 @@ extern "C" {
 #endif
 
 #ifdef __EMSCRIPTEN__
-#include <emscripten/emscripten.h>
-#define POLY_EXPORT EMSCRIPTEN_KEEPALIVE
+#define POLY_EXPORT __attribute__((used))
 #else
 #define POLY_EXPORT
 #endif

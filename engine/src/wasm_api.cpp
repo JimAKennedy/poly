@@ -59,7 +59,7 @@ enum class LaneFieldFloat {
 extern "C" {
 
 PolyContext poly_create() {
-    auto* c = new Context();
+    auto* c = new Context(); // ownership-transfer
     c->state = poly::makeFactoryPreset(0);
     return c;
 }
