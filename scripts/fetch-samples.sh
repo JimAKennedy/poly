@@ -31,6 +31,15 @@ readonly FREEPATS_SHA="e54eb2912a0d6d4444ab205d52f778e27da0fc96"
 readonly BOOCHI44_URL="https://github.com/Boochi44/free-drum-samples"
 readonly BOOCHI44_SHA="77ba31428a079dd8f17c8e144c1e649ea0a198b3"
 
+readonly MULDJORD_URL="https://github.com/freepats/MuldjordKit"
+readonly MULDJORD_SHA="719fe72bc6693b94f1229674e202881145ab44ed"
+
+readonly DRSKIT_URL="https://github.com/sfzinstruments/DrumGizmo.DRSKit"
+readonly DRSKIT_SHA="b01448990a31f722542f1812e56159a97a6a2a82"
+
+readonly DIMCABASA_URL="https://github.com/sfzinstruments/kinwie.dim-cabasa"
+readonly DIMCABASA_SHA="016457e51a3e6558ab49676789260b54ff52ff1b"
+
 # -----------------------------------------------------------------------------
 # Paths
 # -----------------------------------------------------------------------------
@@ -262,13 +271,27 @@ fetch_fischer808() {
 }
 
 fetch_freepats() {
-    # DEVIATION FROM PLAN: the upstream Conga folder is FLAC-only; design call
-    # 1 (WAV-as-is, no ffmpeg dep) rules out flac->wav conversion. FreePats
-    # ships WAV only in EggShaker / Maracas / Tambourine — EggShaker fills a
-    # shaker-role sample distinct from Fischer's maraca and VCSL's cabasa.
-    # Conga coverage is still provided by VCSL's HitN sample.
-    local target="${SAMPLES_DIR}/shaker/freepats-egg.wav"
-    if [ -f "${target}" ]; then
+    # Format policy: WAV and FLAC are both accepted (browser Web Audio
+    # decodeAudioData() decodes both natively; the plugin itself never touches
+    # these files). FreePats ships FLAC and WAV in every folder. S02 landed
+    # shaker/freepats-egg.wav; S04 backfills 7 FLAC picks (Bongos, CajonFlamenco,
+    # Castanets, Claves, Conga, Darbuka, HandClap) plus the Tambourine WAV.
+    local -a targets=(
+        "${SAMPLES_DIR}/shaker/freepats-egg.wav"
+        "${SAMPLES_DIR}/bongo/freepats-bongo-hi.flac"
+        "${SAMPLES_DIR}/cajon/freepats-cajon.flac"
+        "${SAMPLES_DIR}/castanets/freepats-castanets.flac"
+        "${SAMPLES_DIR}/clave/freepats-claves.flac"
+        "${SAMPLES_DIR}/conga/freepats-conga-open.flac"
+        "${SAMPLES_DIR}/darbuka/freepats-darbuka.flac"
+        "${SAMPLES_DIR}/handclap/freepats-clap.flac"
+        "${SAMPLES_DIR}/tambourine/freepats-tambourine.wav"
+    )
+    local missing=0
+    for t in "${targets[@]}"; do
+        [ -f "${t}" ] || missing=$((missing + 1))
+    done
+    if [ "${missing}" -eq 0 ]; then
         log "[fetch] repo=freepats sha=${FREEPATS_SHA:0:7} mode=full files=0"
         return 0
     fi
@@ -277,10 +300,124 @@ fetch_freepats() {
     fetch_git_full freepats "${FREEPATS_URL}" "${FREEPATS_SHA}" "${workdir}"
     local before="${COPIED}"
 
-    copy_if_missing "${workdir}/samples/EggShaker/slow_01.wav" "${target}"
+    copy_if_missing "${workdir}/samples/EggShaker/slow_01.wav" \
+                    "${SAMPLES_DIR}/shaker/freepats-egg.wav"
+    copy_if_missing "${workdir}/samples/Bongos/1_01.flac" \
+                    "${SAMPLES_DIR}/bongo/freepats-bongo-hi.flac"
+    copy_if_missing "${workdir}/samples/CajonFlamenco/101.flac" \
+                    "${SAMPLES_DIR}/cajon/freepats-cajon.flac"
+    copy_if_missing "${workdir}/samples/Castanets/01.flac" \
+                    "${SAMPLES_DIR}/castanets/freepats-castanets.flac"
+    copy_if_missing "${workdir}/samples/Claves/01.flac" \
+                    "${SAMPLES_DIR}/clave/freepats-claves.flac"
+    copy_if_missing "${workdir}/samples/Conga/v2_01_01.flac" \
+                    "${SAMPLES_DIR}/conga/freepats-conga-open.flac"
+    copy_if_missing "${workdir}/samples/Darbuka/doom_01_01.flac" \
+                    "${SAMPLES_DIR}/darbuka/freepats-darbuka.flac"
+    copy_if_missing "${workdir}/samples/HandClap/01_02.flac" \
+                    "${SAMPLES_DIR}/handclap/freepats-clap.flac"
+    copy_if_missing "${workdir}/samples/Tambourine/fast_03.wav" \
+                    "${SAMPLES_DIR}/tambourine/freepats-tambourine.wav"
 
     local added=$((COPIED - before))
     log "[fetch] repo=freepats sha=${FREEPATS_SHA:0:7} mode=full files=${added}"
+    rm -rf "${workdir}"
+}
+
+fetch_muldjord() {
+    local -a targets=(
+        "${SAMPLES_DIR}/kick/muldjord-kick.flac"
+        "${SAMPLES_DIR}/snare/muldjord-snare.flac"
+        "${SAMPLES_DIR}/hat/muldjord-hat.flac"
+        "${SAMPLES_DIR}/tom/muldjord-tom-hi.flac"
+        "${SAMPLES_DIR}/tom/muldjord-tom-mid.flac"
+        "${SAMPLES_DIR}/tom/muldjord-tom-lo.flac"
+    )
+    local missing=0
+    for t in "${targets[@]}"; do
+        [ -f "${t}" ] || missing=$((missing + 1))
+    done
+    if [ "${missing}" -eq 0 ]; then
+        log "[fetch] repo=muldjord sha=${MULDJORD_SHA:0:7} mode=full files=0"
+        return 0
+    fi
+
+    local workdir="${CACHE_DIR}/muldjord"
+    fetch_git_full muldjord "${MULDJORD_URL}" "${MULDJORD_SHA}" "${workdir}"
+    local before="${COPIED}"
+
+    # MuldjordKit velocity layers are numbered <n>-<name>.flac, with higher
+    # numbers = louder velocities. Pick the top layer per drum for a full-hit
+    # single-shot suitable for a demo. Toms: Tom1=highest pitch, Tom4=lowest
+    # (floor); Tom2 fills the middle. Skip Tom3 to widen the spread.
+    copy_if_missing "${workdir}/samples/KdrumL/25-KdrumL.flac" \
+                    "${SAMPLES_DIR}/kick/muldjord-kick.flac"
+    copy_if_missing "${workdir}/samples/Snare1/56-Snare.flac" \
+                    "${SAMPLES_DIR}/snare/muldjord-snare.flac"
+    copy_if_missing "${workdir}/samples/HihatClosed/29-HihatClosed.flac" \
+                    "${SAMPLES_DIR}/hat/muldjord-hat.flac"
+    copy_if_missing "${workdir}/samples/Tom1/11-Tom1.flac" \
+                    "${SAMPLES_DIR}/tom/muldjord-tom-hi.flac"
+    copy_if_missing "${workdir}/samples/Tom2/13-Tom2.flac" \
+                    "${SAMPLES_DIR}/tom/muldjord-tom-mid.flac"
+    copy_if_missing "${workdir}/samples/Tom4/20-Tom4.flac" \
+                    "${SAMPLES_DIR}/tom/muldjord-tom-lo.flac"
+
+    local added=$((COPIED - before))
+    log "[fetch] repo=muldjord sha=${MULDJORD_SHA:0:7} mode=full files=${added}"
+    rm -rf "${workdir}"
+}
+
+fetch_drskit() {
+    local -a targets=(
+        "${SAMPLES_DIR}/kick/drskit-kick.flac"
+        "${SAMPLES_DIR}/snare/drskit-snare.flac"
+    )
+    local missing=0
+    for t in "${targets[@]}"; do
+        [ -f "${t}" ] || missing=$((missing + 1))
+    done
+    if [ "${missing}" -eq 0 ]; then
+        log "[fetch] repo=drskit sha=${DRSKIT_SHA:0:7} mode=full files=0"
+        return 0
+    fi
+
+    local workdir="${CACHE_DIR}/drskit"
+    fetch_git_full drskit "${DRSKIT_URL}" "${DRSKIT_SHA}" "${workdir}"
+    local before="${COPIED}"
+
+    # DRSKit is a multi-mic recording — each hit produces AmbL/AmbR/OHL/OHR
+    # plus per-drum close mics and bleed. Pick the close mic for the played
+    # drum at the top velocity layer. Kdrum has 22 layers, Snare has 49.
+    local samples="${workdir}/DrumGizmo/DRSKit/Samples"
+    copy_if_missing "${samples}/Kdrum_with_contact/22-Kdrum_with_contact-Kdrum_front.flac" \
+                    "${SAMPLES_DIR}/kick/drskit-kick.flac"
+    copy_if_missing "${samples}/Snare/49-Snare-Snare_top.flac" \
+                    "${SAMPLES_DIR}/snare/drskit-snare.flac"
+
+    local added=$((COPIED - before))
+    log "[fetch] repo=drskit sha=${DRSKIT_SHA:0:7} mode=full files=${added}"
+    rm -rf "${workdir}"
+}
+
+fetch_dimcabasa() {
+    local target="${SAMPLES_DIR}/shaker/dimcabasa-cabasa.flac"
+    if [ -f "${target}" ]; then
+        log "[fetch] repo=dimcabasa sha=${DIMCABASA_SHA:0:7} mode=full files=0"
+        return 0
+    fi
+
+    local workdir="${CACHE_DIR}/dimcabasa"
+    fetch_git_full dimcabasa "${DIMCABASA_URL}" "${DIMCABASA_SHA}" "${workdir}"
+    local before="${COPIED}"
+
+    # Kinwie's Dim Cabasa: `Dim Cabasa Samples/bw_<velocity>_<round-robin>.flac`.
+    # rr1_01 = velocity layer 1, round-robin 1 — smallest deterministic pick.
+    copy_if_missing "${workdir}/Dim Cabasa Samples/bw_rr1_01.flac" \
+                    "${SAMPLES_DIR}/shaker/dimcabasa-cabasa.flac"
+
+    local added=$((COPIED - before))
+    log "[fetch] repo=dimcabasa sha=${DIMCABASA_SHA:0:7} mode=full files=${added}"
     rm -rf "${workdir}"
 }
 
@@ -338,7 +475,7 @@ Options:
                   Values: cc0 | ccby | all.
   --only=REPO     Restrict to a single upstream repo. Useful for CI matrix and
                   local iteration. Values: vcsl | fischer808 | freepats |
-                  boochi44 | all. Default: all.
+                  boochi44 | muldjord | drskit | dimcabasa | all. Default: all.
   --help          Show this message and exit 0.
 
 Exit codes:
@@ -381,7 +518,7 @@ case "${SOURCES}" in
 esac
 
 case "${ONLY}" in
-    all|vcsl|fischer808|freepats|boochi44) ;;
+    all|vcsl|fischer808|freepats|boochi44|muldjord|drskit|dimcabasa) ;;
     *)
         usage >&2
         die 1 "invalid --only value: ${ONLY}"
@@ -406,7 +543,9 @@ if [ "${SOURCES}" = "cc0" ] || [ "${SOURCES}" = "all" ]; then
 fi
 
 if [ "${SOURCES}" = "ccby" ] || [ "${SOURCES}" = "all" ]; then
-    log "[sources=ccby] not yet implemented"
+    should_run muldjord  && fetch_muldjord
+    should_run drskit    && fetch_drskit
+    should_run dimcabasa && fetch_dimcabasa
 fi
 
 # Report the CURRENT total (not the per-run newly-copied count) so CI can grep
@@ -416,9 +555,11 @@ fi
 TOTAL_FILES=0
 ROLE_DIRS=0
 if [ -d "${SAMPLES_DIR}" ]; then
-    TOTAL_FILES="$(find "${SAMPLES_DIR}" -mindepth 2 -name '*.wav' -type f \
+    TOTAL_FILES="$(find "${SAMPLES_DIR}" -mindepth 2 -type f \
+        \( -name '*.wav' -o -name '*.flac' \) \
         | wc -l | tr -d ' ')"
-    ROLE_DIRS="$(find "${SAMPLES_DIR}" -mindepth 2 -name '*.wav' -type f \
+    ROLE_DIRS="$(find "${SAMPLES_DIR}" -mindepth 2 -type f \
+        \( -name '*.wav' -o -name '*.flac' \) \
         -exec dirname {} \; | sort -u | wc -l | tr -d ' ')"
 fi
 

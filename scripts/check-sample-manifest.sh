@@ -56,7 +56,7 @@ const ALLOWED_SPDX = new Set([
 const ATTRIBUTION_REQUIRED = new Set([
   'CC-BY-4.0', 'CC-BY-3.0', 'Artistic-2.0', 'MIT',
 ]);
-const AUDIO_EXT = new Set(['.ogg', '.mp3', '.wav']);
+const AUDIO_EXT = new Set(['.ogg', '.mp3', '.wav', '.flac']);
 
 let manifest;
 try {
