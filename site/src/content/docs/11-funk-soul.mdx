@@ -7,6 +7,7 @@ import PolyPatch from '../../components/PolyPatch.astro';
 import ListenFor from '../../components/ListenFor.astro';
 import CodeSnippet from '../../components/CodeSnippet.astro';
 import EuclideanDiagram from '../../components/EuclideanDiagram.astro';
+import PolyPreviewCard from '../../components/PolyPreviewCard.astro';
 
 In 1965, James Brown recorded "Papa's Got a Brand New Bag" and changed the function of rhythm in American music. Before Brown, the rhythm section supported the melody. After Brown, the rhythm section *was* the music. Every instrument became a drum, every note locked to a groove, and the downbeat — "The One" — became the gravitational centre around which everything else orbited.
 
@@ -39,6 +40,8 @@ Poly's per-lane Timing Offset parameter (plus or minus 20 milliseconds) lets you
 
 </PolyPatch>
 
+<PolyPreviewCard preset="Classic Funk" caption="JB-style pocket — kick pushes late, snare pulls early, dense ghost layer" />
+
 Notice that the snare accent and snare ghost are separate lanes mapped to the same MIDI note (38). This is how you model a real drummer's two dynamics on one drum — the accent lane hits hard on 2 and 4 (E(2,8) rotated to land on the backbeat), while the ghost lane fills almost every remaining sixteenth with quiet taps. The ghost lane's high Spread (65%) ensures no two bars sound identical.
 
 <ListenFor>
@@ -63,6 +66,8 @@ In Poly, you model this by pushing Humanize higher than you would for classic fu
 | 4 | Rim click | 12 | 5 | 2 | 1/8 | 37 | 55 | 30 | 50% | -1ms |
 
 </PolyPatch>
+
+<PolyPreviewCard preset="Neo-Soul Pocket" caption="Loose, warm groove with heavy humanize and polymetric rim click" />
 
 Lane 4 introduces a 12-step rim click against the 16-step and 8-step grid. This polymetric element — a technique more common in jazz than in soul — creates the unpredictable accent pattern that neo-soul borrows from jazz harmony. The rim click's five hits wander across the bar, never landing in the same place twice relative to the kick and snare, generating the conversational quality that defines the genre.
 

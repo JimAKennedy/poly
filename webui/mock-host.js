@@ -2,7 +2,7 @@
 /**
  * Mock host: browser-standalone PolyHost implementation.
  * Owns the groove model and a WebAudio preview engine so the UI can be
- * developed, demoed, and CI-tested without the plugin. Provides all 14
+ * developed, demoed, and CI-tested without the plugin. Provides all 43
  * factory presets (matching presets.cpp) with representative lane data
  * for the most distinct presets.
  */
@@ -52,6 +52,35 @@
     { name: 'Bossa Nova', description: 'Clave timeline with ginga micro-timing — surdo, tamborim, agogo and pandeiro' },
     { name: 'Carnatic Tala', description: 'Adi tala [4+2+2] additive cells — mridangam, ghatam and kanjira' },
     { name: 'IDM Glitch', description: 'Irregular additive cells with heavy mutation and erratic micro-timing offsets' },
+    { name: 'Sub-Saharan: Agbekor', description: 'Ewe-inspired polymetric ensemble — gankogui bell timeline, kidi, sogo and lead drum' },
+    { name: 'Gamelan: Colotomic', description: 'Javanese colotomic nesting — ketuk, kempul, kenong and gong ageng at 4:8:16:32 ratios' },
+    { name: 'Polymetric Foundation', description: 'Two-lane polymetric demonstration — 12-step bell against 7-step counter pattern' },
+    { name: 'Ewe Polymetric Ensemble', description: 'Gankogui bell timeline with support, responding, and interlocking lead drums' },
+    { name: 'Manding Djembe', description: 'Three-lane djembe ensemble — dunun, sangban, and lead sharing an 8-step cycle' },
+    { name: 'Cuban Son Montuno', description: 'Clave matrix with cascara, tumbao bass, conga, and shaker layers' },
+    { name: 'Afrobeat Lagos', description: 'Extended Afrobeat groove — bell timeline with staggered phrase gating' },
+    { name: 'Balinese Kotekan', description: 'Polos and sangsih interlocking with jegogan bass and reyong accents' },
+    { name: 'Javanese Colotomic', description: 'Nested colotomic hierarchy — ketuk, kempul, kenong, and gong at 4:8:16:32' },
+    { name: 'Tintal Groove', description: 'Hindustani 16-beat cycle with sam, theka, dugun, and tigun layakari layers' },
+    { name: 'Rupak Tal', description: '7-beat Hindustani cycle — sam marker, theka, and counter rhythm' },
+    { name: 'Rachenitsa 7/8', description: 'Bulgarian rachenitsa — tupan, kaval, and gadulka in seven-beat cycle' },
+    { name: 'Kopanitsa 11/8', description: 'Fast Bulgarian kopanitsa — kick, snare, hat, and bell in eleven-beat cycle' },
+    { name: 'Reich Phase Process', description: 'Gradual phase-shifting — two identical 12-step patterns drifting apart' },
+    { name: 'Riley Layered Entry', description: 'Staggered voice entries with phrase gating — foundation plus four gated layers' },
+    { name: 'Nancarrow Tempi', description: 'Independent tempo multipliers — anchor, double-time, half-time, and hemiola voices' },
+    { name: 'Minimal Techno', description: 'Four-on-the-floor kick with polymetric 7-step ghost percussion and sparse clap' },
+    { name: 'Deep House', description: 'Swung house groove — open hat, shaker, and rim with moderate swing and humanize' },
+    { name: 'Samba Batucada', description: 'Full batucada ensemble — surdo, tamborim, agogo, repinique, and caixa' },
+    { name: 'Bossa Nova Trio', description: 'Intimate bossa — E(5,16) bass, ride cymbal, and ghost brush' },
+    { name: 'Classic Funk', description: 'JB-style pocket — kick pushes late, snare pulls early, dense ghost layer' },
+    { name: 'Neo-Soul Pocket', description: 'Loose, warm groove with heavy humanize and polymetric 12-step rim click' },
+    { name: 'Jazz Bop Ride', description: 'Bop timekeeping — ride and hi-hat foot with mutating kick and snare comp' },
+    { name: 'Elvin Jones Cascade', description: 'Polyrhythmic cascade — 4, 3, 5, and 7-step cycles with swing and mutation' },
+    { name: 'Jungle Break', description: 'Syncopated chopped break — dense ghost layer with rolling undertow' },
+    { name: 'Liquid Drum and Bass', description: 'Clean two-step kick with steady hat and warm ride cymbal wash' },
+    { name: 'Afro-Electronic Fusion', description: 'Cuban clave meets techno kick and gamelan-inspired kotekan shimmer' },
+    { name: 'Balkan Funk', description: '7/8 aksak with funk ghost notes and micro-timing on the hi-hat' },
+    { name: 'Compositional Arc', description: 'Six-lane layered build — three continuous lanes plus three gated ornamental voices' },
   ];
 
   const PRESET_NAMES = [
@@ -69,6 +98,35 @@
     ['Surdo', 'Tamborim', 'Agogo', 'Pandeiro'],
     ['Mrid Bass', 'Mrid Treble', 'Ghatam', 'Kanjira'],
     ['Kick', 'Snare', 'Hi-Hat', 'Perc', 'Glitch'],
+    ['Bell', 'Kidi', 'Sogo', 'Lead'],  // 14: Agbekor
+    ['Ketuk', 'Kempul', 'Kenong', 'Gong'],  // 15: Gamelan Colotomic
+    ['Bell', 'Counter'],  // 16: Polymetric Foundation
+    ['Bell', 'Support', 'Responding', 'Lead'],  // 17: Ewe Ensemble
+    ['Dunun', 'Sangban', 'Djembe'],  // 18: Manding
+    ['Clave', 'Cascara', 'Tumbao', 'Conga', 'Shaker'],  // 19: Cuban Son
+    ['Bell', 'Hi-Hat', 'Kick', 'Snare', 'Shaker', 'Conga'],  // 20: Afrobeat Lagos
+    ['Polos', 'Sangsih', 'Jegogan', 'Reyong'],  // 21: Balinese Kotekan
+    ['Ketuk', 'Kempul', 'Kenong', 'Gong'],  // 22: Javanese Colotomic
+    ['Sam', 'Theka', 'Dugun', 'Tigun'],  // 23: Tintal
+    ['Sam', 'Theka', 'Counter'],  // 24: Rupak Tal
+    ['Tupan Bass', 'Tupan Rim', 'Kaval', 'Gadulka'],  // 25: Rachenitsa
+    ['Kick', 'Snare', 'Hi-Hat', 'Bell'],  // 26: Kopanitsa
+    ['Fixed', 'Drifting', 'Anchor'],  // 27: Reich Process
+    ['Foundation', 'Voice A', 'Voice B', 'Voice C', 'Voice D'],  // 28: Riley
+    ['Anchor', 'Double', 'Half', 'Hemiola'],  // 29: Nancarrow
+    ['Kick', 'Hi-Hat', 'Ghost', 'Clap'],  // 30: Minimal Techno
+    ['Kick', 'Open Hat', 'Shaker', 'Rim'],  // 31: Deep House
+    ['Surdo', 'Tamborim', 'Agogo', 'Repinique', 'Caixa'],  // 32: Batucada
+    ['Bass', 'Ride', 'Brush'],  // 33: Bossa Trio
+    ['Kick', 'Snare Accent', 'Snare Ghost', 'Hi-Hat'],  // 34: Classic Funk
+    ['Kick', 'Snare', 'Hi-Hat', 'Rim Click'],  // 35: Neo-Soul
+    ['Ride', 'HH Foot', 'Kick', 'Snare Comp'],  // 36: Jazz Bop
+    ['Ride', 'Snare', 'Tom', 'Bass Drum'],  // 37: Elvin
+    ['Kick', 'Snare', 'Hi-Hat', 'Ghost'],  // 38: Jungle
+    ['Kick', 'Snare', 'Hi-Hat', 'Ride'],  // 39: Liquid DnB
+    ['Clave', 'Kick', 'Polos', 'Sangsih', 'Shaker'],  // 40: Afro-Electronic
+    ['Kick', 'Snare', 'Ghost Hat', 'Rim'],  // 41: Balkan Funk
+    ['Kick', 'Bell', 'Ghost Hat', 'Conga', 'Rim', 'Lead'],  // 42: Comp Arc
   ];
 
   function makePresetLanes(index) {
@@ -112,6 +170,182 @@
         mkLane('Perc', 'Ghost', 45, 4, 7, 1, 3, 55, { prob: 0.6, ghost: 15, spread: 0.25 }),
         mkLane('Glitch', 'Ornament', 56, 5, 11, 1, 4, 75, { prob: 0.7 }),
       ];
+      case 14: return [ // Sub-Saharan: Agbekor — 4 lanes
+        mkLane('Bell', 'Anchor pulse', 56, 1, 12, 1, 7, 95, { timeline: true, fixed: [1,0,1,0,1,1,0,1,0,1,0,1] }),
+        mkLane('Kidi', 'Accent', 63, 2, 5, 1, 5, 85, { prob: 0.95, spread: 0.08, humanize: 1.5 }),
+        mkLane('Sogo', 'Ghost', 43, 3, 3, 1, 3, 75, { prob: 0.9, ghost: 30, spread: 0.1, humanize: 2 }),
+        mkLane('Lead', 'Ornament', 38, 4, 7, 1, 4, 70, { prob: 0.8, spread: 0.12, humanize: 2.5 }),
+      ];
+      case 15: return [ // Gamelan: Colotomic — 4 lanes
+        mkLane('Ketuk', 'Shimmer', 76, 1, 4, 2, 1, 70, { duration: 0.15 }),
+        mkLane('Kempul', 'Accent', 67, 2, 8, 2, 1, 80, { duration: 0.3 }),
+        mkLane('Kenong', 'Backbeat', 56, 3, 16, 2, 1, 90, { duration: 0.5 }),
+        mkLane('Gong', 'Anchor pulse', 36, 4, 32, 2, 1, 110, { duration: 0.8 }),
+      ];
+      case 16: return [ // Polymetric Foundation — 2 lanes
+        mkLane('Bell', 'Anchor pulse', 56, 1, 12, 1, 7, 90, { duration: 0.1 }),
+        mkLane('Counter', 'Accent', 42, 2, 7, 1, 5, 80),
+      ];
+      case 17: return [ // Ewe Polymetric Ensemble — 4 lanes
+        mkLane('Bell', 'Anchor pulse', 56, 1, 12, 1, 7, 110, { duration: 0.1 }),
+        mkLane('Support', 'Accent', 43, 2, 12, 1, 3, 90, { ghost: 40 }),
+        mkLane('Responding', 'Ghost', 45, 3, 5, 1, 3, 85, { prob: 0.9, ghost: 50 }),
+        mkLane('Lead', 'Ornament', 47, 4, 7, 1, 5, 75, { prob: 0.85, ghost: 60, rot: 2, kotekanSource: 0 }),
+      ];
+      case 18: return [ // Manding Djembe — 3 lanes
+        mkLane('Dunun', 'Anchor pulse', 36, 1, 8, 1, 3, 100),
+        mkLane('Sangban', 'Accent', 43, 2, 8, 1, 5, 85, { prob: 0.95, ghost: 45, rot: 1 }),
+        mkLane('Djembe', 'Shimmer', 50, 3, 8, 1, 7, 95, { prob: 0.9, ghost: 55 }),
+      ];
+      case 19: return [ // Cuban Son Montuno — 5 lanes
+        mkLane('Clave', 'Anchor pulse', 75, 1, 16, 0.5, 5, 100, { swing: 0.25 }),
+        mkLane('Cascara', 'Accent', 37, 2, 8, 1, 5, 80, { prob: 0.95, ghost: 45, rot: 1, swing: 0.25 }),
+        mkLane('Tumbao', 'Backbeat', 36, 3, 8, 1, 3, 95, { swing: 0.2 }),
+        mkLane('Conga', 'Ghost', 63, 4, 16, 0.5, 7, 85, { prob: 0.9, ghost: 55, rot: 2, swing: 0.3 }),
+        mkLane('Shaker', 'Shimmer', 70, 5, 8, 1, 7, 50, { prob: 0.85, ghost: 30, swing: 0.2 }),
+      ];
+      case 20: return [ // Afrobeat Lagos — 6 lanes
+        mkLane('Bell', 'Anchor pulse', 56, 1, 12, 1, 7, 105, { timeline: true, fixed: [1,0,1,0,1,1,0,1,0,1,0,1], duration: 0.1 }),
+        mkLane('Hi-Hat', 'Shimmer', 42, 2, 16, 0.5, 13, 70, { prob: 0.9, ghost: 50, mutationRate: 0.05 }),
+        mkLane('Kick', 'Backbeat', 36, 3, 16, 0.5, 3, 110, { duration: 0.25 }),
+        mkLane('Snare', 'Accent', 38, 4, 16, 0.5, 5, 90, { prob: 0.9, ghost: 40, rot: 3, phraseLength: 8, phraseGap: 4, mutationRate: 0.2 }),
+        mkLane('Shaker', 'Ornament', 70, 5, 12, 1, 9, 55, { prob: 0.85, ghost: 35, rot: 2, phraseLength: 12, phraseGap: 4, phraseOffset: 4, mutationRate: 0.1 }),
+        mkLane('Conga', 'Ghost', 63, 6, 8, 1, 3, 80, { prob: 0.8, ghost: 50, rot: 1, phraseLength: 6, phraseGap: 6, phraseOffset: 8, mutationRate: 0.25 }),
+      ];
+      case 21: return [ // Balinese Kotekan — 4 lanes
+        mkLane('Polos', 'Anchor pulse', 72, 1, 8, 0.5, 5, 90, { ghost: 40, duration: 0.12 }),
+        mkLane('Sangsih', 'Accent', 74, 2, 8, 0.5, 5, 85, { prob: 0.95, ghost: 40, kotekanSource: 0, duration: 0.12 }),
+        mkLane('Jegogan', 'Backbeat', 48, 3, 8, 2, 2, 100, { duration: 0.5 }),
+        mkLane('Reyong', 'Ghost', 67, 4, 16, 0.5, 5, 75, { prob: 0.85, ghost: 50, rot: 3 }),
+      ];
+      case 22: return [ // Javanese Colotomic — 4 lanes
+        mkLane('Ketuk', 'Shimmer', 76, 1, 4, 2, 1, 70, { duration: 0.15 }),
+        mkLane('Kempul', 'Accent', 60, 2, 8, 2, 1, 85, { duration: 0.3 }),
+        mkLane('Kenong', 'Backbeat', 55, 3, 16, 2, 1, 95, { duration: 0.5 }),
+        mkLane('Gong', 'Anchor pulse', 48, 4, 32, 2, 1, 110, { duration: 0.8 }),
+      ];
+      case 23: return [ // Tintal Groove — 4 lanes
+        mkLane('Sam', 'Anchor pulse', 36, 1, 16, 2, 4, 110, { duration: 0.3 }),
+        mkLane('Theka', 'Accent', 38, 2, 16, 1, 7, 90, { prob: 0.95 }),
+        mkLane('Dugun', 'Shimmer', 42, 3, 16, 1, 9, 70, { prob: 0.9, rot: 2 }),
+        mkLane('Tigun', 'Ghost', 46, 4, 16, 0.5, 5, 55, { prob: 0.8, rot: 4 }),
+      ];
+      case 24: return [ // Rupak Tal — 3 lanes
+        mkLane('Sam', 'Anchor pulse', 36, 1, 7, 2, 3, 120, { ghost: 50 }),
+        mkLane('Theka', 'Accent', 38, 2, 7, 1, 4, 85, { prob: 0.9, ghost: 40, rot: 1 }),
+        mkLane('Counter', 'Shimmer', 42, 3, 7, 1, 5, 70, { prob: 0.85, ghost: 35, rot: 3 }),
+      ];
+      case 25: return [ // Rachenitsa 7/8 — 4 lanes
+        mkLane('Tupan Bass', 'Anchor pulse', 36, 1, 7, 1, 3, 110, { duration: 0.2 }),
+        mkLane('Tupan Rim', 'Backbeat', 37, 2, 7, 1, 4, 85, { rot: 2 }),
+        mkLane('Kaval', 'Ornament', 76, 3, 7, 1, 2, 75, { prob: 0.9, rot: 1 }),
+        mkLane('Gadulka', 'Shimmer', 42, 4, 7, 0.5, 5, 65, { prob: 0.85 }),
+      ];
+      case 26: return [ // Kopanitsa 11/8 — 4 lanes
+        mkLane('Kick', 'Anchor pulse', 36, 1, 11, 1, 4, 115, { humanize: 2 }),
+        mkLane('Snare', 'Backbeat', 38, 2, 11, 1, 5, 90, { prob: 0.95, rot: 3, humanize: 3 }),
+        mkLane('Hi-Hat', 'Shimmer', 42, 3, 11, 0.5, 7, 70, { prob: 0.9, humanize: 2 }),
+        mkLane('Bell', 'Ornament', 56, 4, 11, 1, 3, 80, { prob: 0.9, rot: 2, humanize: 2 }),
+      ];
+      case 27: return [ // Reich Phase Process — 3 lanes
+        mkLane('Fixed', 'Anchor pulse', 76, 1, 12, 1, 5, 90, { duration: 0.15 }),
+        mkLane('Drifting', 'Anchor pulse', 76, 2, 12, 1, 5, 85, { duration: 0.15, driftRate: 0.25 }),
+        mkLane('Anchor', 'Shimmer', 42, 3, 4, 2, 4, 70),
+      ];
+      case 28: return [ // Riley Layered Entry — 5 lanes
+        mkLane('Foundation', 'Anchor pulse', 36, 1, 8, 1, 5, 95),
+        mkLane('Voice A', 'Accent', 42, 2, 12, 1, 7, 80, { prob: 0.9, phraseLength: 16, phraseGap: 8, phraseOffset: 4 }),
+        mkLane('Voice B', 'Shimmer', 45, 3, 10, 1, 6, 75, { prob: 0.85, phraseLength: 12, phraseGap: 12, phraseOffset: 12 }),
+        mkLane('Voice C', 'Ghost', 47, 4, 7, 1, 4, 70, { prob: 0.8, phraseLength: 8, phraseGap: 16, phraseOffset: 20 }),
+        mkLane('Voice D', 'Ornament', 50, 5, 9, 2, 3, 65, { prob: 0.75, phraseLength: 24, phraseGap: 8, phraseOffset: 32 }),
+      ];
+      case 29: return [ // Nancarrow Tempi — 4 lanes
+        mkLane('Anchor', 'Anchor pulse', 36, 1, 4, 2, 4, 100, { tempoMultiplier: 1.0 }),
+        mkLane('Double', 'Shimmer', 42, 2, 8, 1, 5, 70, { prob: 0.9, tempoMultiplier: 2.0 }),
+        mkLane('Half', 'Accent', 56, 3, 3, 2, 2, 85, { tempoMultiplier: 0.5 }),
+        mkLane('Hemiola', 'Ghost', 45, 4, 6, 1, 4, 75, { prob: 0.85, tempoMultiplier: 1.5 }),
+      ];
+      case 30: return [ // Minimal Techno — 4 lanes
+        mkLane('Kick', 'Anchor pulse', 36, 1, 4, 2, 4, 120, { duration: 0.2 }),
+        mkLane('Hi-Hat', 'Shimmer', 42, 2, 16, 0.5, 8, 75, { prob: 0.95 }),
+        mkLane('Ghost', 'Ghost', 39, 3, 7, 1, 5, 55, { prob: 0.8, rot: 2 }),
+        mkLane('Clap', 'Backbeat', 38, 4, 16, 0.5, 2, 100, { rot: 4 }),
+      ];
+      case 31: return [ // Deep House — 4 lanes
+        mkLane('Kick', 'Anchor pulse', 36, 1, 4, 2, 4, 115, { duration: 0.25, humanize: 2 }),
+        mkLane('Open Hat', 'Shimmer', 46, 2, 16, 0.5, 6, 70, { prob: 0.9, rot: 3, swing: 0.4, humanize: 4 }),
+        mkLane('Shaker', 'Ghost', 70, 3, 16, 0.5, 10, 50, { prob: 0.85, swing: 0.45, humanize: 5 }),
+        mkLane('Rim', 'Accent', 37, 4, 8, 1, 3, 90, { prob: 0.9, rot: 1, swing: 0.35, humanize: 4 }),
+      ];
+      case 32: return [ // Samba Batucada — 5 lanes
+        mkLane('Surdo', 'Anchor pulse', 36, 1, 4, 2, 2, 110, { rot: 1, duration: 0.4, swing: 0.2 }),
+        mkLane('Tamborim', 'Accent', 50, 2, 16, 0.5, 7, 90, { prob: 0.95, ghost: 50, rot: 2, swing: 0.25 }),
+        mkLane('Agogo', 'Ornament', 56, 3, 16, 0.5, 5, 85, { prob: 0.9, ghost: 40, swing: 0.2 }),
+        mkLane('Repinique', 'Backbeat', 47, 4, 8, 1, 3, 100, { ghost: 30, rot: 1, swing: 0.15 }),
+        mkLane('Caixa', 'Shimmer', 38, 5, 16, 0.5, 13, 70, { prob: 0.9, ghost: 55, swing: 0.25 }),
+      ];
+      case 33: return [ // Bossa Nova Trio — 3 lanes
+        mkLane('Bass', 'Anchor pulse', 36, 1, 16, 0.5, 5, 95, { duration: 0.3, swing: 0.15 }),
+        mkLane('Ride', 'Shimmer', 51, 2, 8, 1, 4, 65, { prob: 0.9, ghost: 30, swing: 0.1 }),
+        mkLane('Brush', 'Ghost', 38, 3, 16, 0.5, 9, 40, { prob: 0.8, ghost: 25, rot: 3, swing: 0.2 }),
+      ];
+      case 34: return [ // Classic Funk — 4 lanes
+        mkLane('Kick', 'Anchor pulse', 36, 1, 16, 0.5, 3, 110, { duration: 0.2, spread: 0.2, timingOffset: 3 }),
+        mkLane('Snare Accent', 'Backbeat', 38, 2, 8, 1, 2, 105, { spread: 0.15, rot: 4, timingOffset: -2 }),
+        mkLane('Snare Ghost', 'Ghost', 38, 3, 16, 0.5, 11, 40, { prob: 0.85, ghost: 30, spread: 0.65, timingOffset: 1 }),
+        mkLane('Hi-Hat', 'Shimmer', 42, 4, 16, 0.5, 14, 75, { prob: 0.9, ghost: 45, spread: 0.4 }),
+      ];
+      case 35: return [ // Neo-Soul Pocket — 4 lanes
+        mkLane('Kick', 'Anchor pulse', 36, 1, 16, 0.5, 4, 95, { spread: 0.3, timingOffset: 4 }),
+        mkLane('Snare', 'Backbeat', 38, 2, 8, 1, 2, 90, { prob: 0.95, ghost: 35, spread: 0.45, rot: 4, timingOffset: -3 }),
+        mkLane('Hi-Hat', 'Shimmer', 42, 3, 16, 0.5, 10, 60, { prob: 0.85, ghost: 40, spread: 0.55, timingOffset: 1 }),
+        mkLane('Rim Click', 'Ornament', 37, 4, 12, 1, 5, 55, { prob: 0.8, ghost: 30, spread: 0.5, rot: 2, timingOffset: -1 }),
+      ];
+      case 36: return [ // Jazz Bop Ride — 4 lanes
+        mkLane('Ride', 'Anchor pulse', 51, 1, 4, 2, 4, 85, { swing: 0.45 }),
+        mkLane('HH Foot', 'Backbeat', 44, 2, 4, 2, 2, 70, { rot: 1, swing: 0.4 }),
+        mkLane('Kick', 'Ghost', 36, 3, 8, 1, 3, 80, { prob: 0.9, ghost: 30, swing: 0.35, mutationRate: 0.15 }),
+        mkLane('Snare Comp', 'Ornament', 38, 4, 16, 0.5, 5, 65, { prob: 0.8, ghost: 40, rot: 2, swing: 0.3, mutationRate: 0.25 }),
+      ];
+      case 37: return [ // Elvin Jones Cascade — 4 lanes
+        mkLane('Ride', 'Anchor pulse', 51, 1, 4, 2, 3, 90, { swing: 0.4, mutationRate: 0.1 }),
+        mkLane('Snare', 'Accent', 38, 2, 3, 2, 2, 75, { prob: 0.9, ghost: 45, swing: 0.35, mutationRate: 0.2 }),
+        mkLane('Tom', 'Ghost', 45, 3, 5, 2, 3, 70, { prob: 0.85, ghost: 40, rot: 1, swing: 0.3, mutationRate: 0.2 }),
+        mkLane('Bass Drum', 'Ornament', 36, 4, 7, 2, 4, 85, { prob: 0.9, ghost: 30, rot: 2, swing: 0.35, mutationRate: 0.15 }),
+      ];
+      case 38: return [ // Jungle Break — 4 lanes
+        mkLane('Kick', 'Anchor pulse', 36, 1, 16, 0.5, 5, 110, { duration: 0.15, spread: 0.25, rot: 3, mutationRate: 0.15 }),
+        mkLane('Snare', 'Backbeat', 38, 2, 4, 2, 2, 105, { spread: 0.15, rot: 1, mutationRate: 0.1 }),
+        mkLane('Hi-Hat', 'Shimmer', 42, 3, 16, 0.5, 7, 80, { prob: 0.9, ghost: 45, spread: 0.4, mutationRate: 0.15 }),
+        mkLane('Ghost', 'Ghost', 38, 4, 16, 0.5, 11, 35, { prob: 0.75, ghost: 25, spread: 0.6, rot: 2, mutationRate: 0.2 }),
+      ];
+      case 39: return [ // Liquid Drum and Bass — 4 lanes
+        mkLane('Kick', 'Anchor pulse', 36, 1, 8, 1, 2, 100, { duration: 0.25, spread: 0.15, mutationRate: 0.05 }),
+        mkLane('Snare', 'Backbeat', 38, 2, 4, 2, 2, 95, { spread: 0.1, rot: 1, mutationRate: 0.05 }),
+        mkLane('Hi-Hat', 'Shimmer', 42, 3, 16, 0.5, 9, 65, { prob: 0.9, ghost: 35, spread: 0.3, mutationRate: 0.1 }),
+        mkLane('Ride', 'Ghost', 51, 4, 8, 1, 5, 55, { prob: 0.85, ghost: 30, spread: 0.25, rot: 2, mutationRate: 0.1 }),
+      ];
+      case 40: return [ // Afro-Electronic Fusion — 5 lanes
+        mkLane('Clave', 'Anchor pulse', 75, 1, 8, 1, 3, 100, { swing: 0.2 }),
+        mkLane('Kick', 'Backbeat', 36, 2, 4, 2, 4, 110, { duration: 0.2 }),
+        mkLane('Polos', 'Shimmer', 62, 3, 12, 1, 7, 70, { prob: 0.9, ghost: 45, swing: 0.1 }),
+        mkLane('Sangsih', 'Accent', 64, 4, 12, 1, 5, 65, { prob: 0.85, ghost: 40, rot: 2, kotekanSource: 0, swing: 0.1 }),
+        mkLane('Shaker', 'Ghost', 70, 5, 16, 0.5, 9, 50, { prob: 0.8, ghost: 30, rot: 3, swing: 0.15 }),
+      ];
+      case 41: return [ // Balkan Funk — 4 lanes
+        mkLane('Kick', 'Anchor pulse', 36, 1, 7, 1, 3, 105, { duration: 0.2 }),
+        mkLane('Snare', 'Backbeat', 38, 2, 7, 1, 5, 85, { prob: 0.9, ghost: 60, spread: 0.35, rot: 1 }),
+        mkLane('Ghost Hat', 'Shimmer', 42, 3, 14, 0.5, 9, 55, { prob: 0.85, ghost: 40, spread: 0.2, swing: 0.15 }),
+        mkLane('Rim', 'Accent', 37, 4, 7, 1, 2, 90, { rot: 3 }),
+      ];
+      case 42: return [ // Compositional Arc — 6 lanes
+        mkLane('Kick', 'Anchor pulse', 36, 1, 4, 2, 4, 110, { duration: 0.25 }),
+        mkLane('Bell', 'Accent', 56, 2, 12, 1, 7, 90, { duration: 0.1 }),
+        mkLane('Ghost Hat', 'Shimmer', 42, 3, 16, 0.5, 11, 55, { prob: 0.85, ghost: 50, spread: 0.25, rot: 2 }),
+        mkLane('Conga', 'Ghost', 63, 4, 8, 1, 5, 75, { prob: 0.85, ghost: 40, spread: 0.15, rot: 1, phraseLength: 12, phraseGap: 4 }),
+        mkLane('Rim', 'Ornament', 37, 5, 7, 1, 3, 85, { prob: 0.8, phraseLength: 8, phraseGap: 8 }),
+        mkLane('Lead', 'Ghost', 47, 6, 5, 1, 3, 80, { prob: 0.75, ghost: 55, spread: 0.3, rot: 2, phraseLength: 6, phraseGap: 6 }),
+      ];
       default: {
         const names = PRESET_NAMES[index] || PRESET_NAMES[0];
         const roles = ['Anchor pulse', 'Backbeat', 'Shimmer', 'Ghost', 'Ornament', 'Ghost', 'Fill', 'Custom'];
@@ -140,9 +374,38 @@
     { complexity: 0.35, density: 0, syncopation: 0, swing: 0.2, tension: 0, humanize: 0.2 },
     { complexity: 0.5, density: 0.4, syncopation: 0, swing: 0, tension: 0, humanize: 0 },
     { complexity: 0.8, density: 0.35, syncopation: 0.5, swing: 0, tension: 0.6, humanize: 0 },
+    { complexity: 0.4, density: 0.5, syncopation: 0, swing: 0, tension: 0, humanize: 0.15 },  // 14: Agbekor
+    { complexity: 0.2, density: 0.3, syncopation: 0, swing: 0, tension: 0, humanize: 0 },  // 15: Gamelan Colotomic
+    { complexity: 0, density: 0, syncopation: 0, swing: 0, tension: 0, humanize: 0 },  // 16: Foundation
+    { complexity: 0, density: 0, syncopation: 0, swing: 0, tension: 0, humanize: 0.15 },  // 17: Ewe
+    { complexity: 0, density: 0, syncopation: 0, swing: 0, tension: 0, humanize: 0.15 },  // 18: Manding
+    { complexity: 0, density: 0, syncopation: 0.4, swing: 0.25, tension: 0, humanize: 0 },  // 19: Cuban Son
+    { complexity: 0, density: 0.5, syncopation: 0, swing: 0, tension: 0, humanize: 0.15 },  // 20: Afrobeat Lagos
+    { complexity: 0.3, density: 0, syncopation: 0, swing: 0, tension: 0, humanize: 0 },  // 21: Bali Kotekan
+    { complexity: 0.2, density: 0.3, syncopation: 0, swing: 0, tension: 0, humanize: 0 },  // 22: Java Colotomic
+    { complexity: 0.4, density: 0, syncopation: 0, swing: 0, tension: 0, humanize: 0 },  // 23: Tintal
+    { complexity: 0.4, density: 0, syncopation: 0, swing: 0, tension: 0, humanize: 0 },  // 24: Rupak
+    { complexity: 0.4, density: 0.45, syncopation: 0, swing: 0, tension: 0, humanize: 0 },  // 25: Rachenitsa
+    { complexity: 0.4, density: 0, syncopation: 0, swing: 0, tension: 0, humanize: 0 },  // 26: Kopanitsa
+    { complexity: 0.2, density: 0, syncopation: 0, swing: 0, tension: 0, humanize: 0 },  // 27: Reich
+    { complexity: 0.3, density: 0, syncopation: 0, swing: 0, tension: 0, humanize: 0 },  // 28: Riley
+    { complexity: 0.5, density: 0, syncopation: 0, swing: 0, tension: 0, humanize: 0 },  // 29: Nancarrow
+    { complexity: 0, density: 0.4, syncopation: 0, swing: 0, tension: 0, humanize: 0 },  // 30: Techno
+    { complexity: 0, density: 0, syncopation: 0, swing: 0.35, tension: 0, humanize: 0.1 },  // 31: House
+    { complexity: 0, density: 0, syncopation: 0, swing: 0.2, tension: 0, humanize: 0.25 },  // 32: Batucada
+    { complexity: 0, density: 0, syncopation: 0, swing: 0.15, tension: 0, humanize: 0.15 },  // 33: Bossa Trio
+    { complexity: 0, density: 0, syncopation: 0.3, swing: 0, tension: 0.6, humanize: 0 },  // 34: Funk
+    { complexity: 0, density: 0, syncopation: 0, swing: 0, tension: 0.4, humanize: 0.4 },  // 35: Neo-Soul
+    { complexity: 0, density: 0, syncopation: 0, swing: 0.4, tension: 0, humanize: 0.2 },  // 36: Jazz Bop
+    { complexity: 0.6, density: 0, syncopation: 0, swing: 0.35, tension: 0, humanize: 0.2 },  // 37: Elvin
+    { complexity: 0, density: 0, syncopation: 0.5, swing: 0, tension: 0.6, humanize: 0 },  // 38: Jungle
+    { complexity: 0, density: 0.35, syncopation: 0, swing: 0, tension: 0, humanize: 0.1 },  // 39: Liquid
+    { complexity: 0.5, density: 0, syncopation: 0, swing: 0.15, tension: 0, humanize: 0 },  // 40: Afro-Electronic
+    { complexity: 0, density: 0, syncopation: 0.3, swing: 0, tension: 0.4, humanize: 0 },  // 41: Balkan Funk
+    { complexity: 0.4, density: 0.5, syncopation: 0, swing: 0, tension: 0, humanize: 0 },  // 42: Comp Arc
   ];
 
-  const PRESET_SEEDS = [1, 7, 23, 42, 13, 31, 47, 55, 71, 88, 33, 17, 44, 99];
+  const PRESET_SEEDS = [1, 7, 23, 42, 13, 31, 47, 55, 71, 88, 33, 17, 44, 99, 77, 63, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127];
 
   const TEMPO = 126;
   const EIGHTH = 60 / TEMPO / 2;
