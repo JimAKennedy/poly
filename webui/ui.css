@@ -169,11 +169,21 @@
   .chain-add { display: flex; gap: 6px; margin-top: 8px; }
   .chain-add button:hover { border-color: var(--dim); }
 
-  /* ---- mute button ---- */
+  /* ---- mute button + muted-lane state ---- */
   .strip .mute { border: 1px solid var(--line); background: transparent; border-radius: 5px; width: 22px; height: 22px; font-size: 9px; color: var(--c, var(--accent)); flex: none; line-height: 1; }
   .strip .mute:hover { border-color: var(--dim); }
-  .strip .mute.off { color: var(--dim); opacity: .5; }
-  .strip.muted { opacity: .45; }
+  /* Off state: clearly reads as disabled — filled dim background, dim border, strike. */
+  .strip .mute.off { color: transparent; background: #2A2620; border-color: #4A4238; opacity: 1; position: relative; }
+  .strip .mute.off::after { content: ''; position: absolute; inset: 5px; border: 1px solid var(--dim); border-radius: 50%; opacity: .55; }
+  .strip .mute.off::before { content: ''; position: absolute; left: 3px; right: 3px; top: 50%; height: 1px; background: var(--dim); transform: translateY(-50%) rotate(-24deg); opacity: .85; }
+  /* Muted strip: heavier dim + desaturated ring, needle frozen (see ui.js). */
+  .strip.muted { opacity: .38; filter: saturate(.15); }
+  .strip.muted svg.ring line { opacity: 0 !important; }
+  .strip.muted svg.ring circle { fill: #4A4238 !important; }
+  .strip.muted .ladder button.hit { background: #3A342C; border-color: #3A342C; }
+  .strip.muted .ladder button.now { box-shadow: none; }
+  .strip.muted .vu > i { background: #3A342C !important; }
+  .strip.muted .feel b { color: var(--dim); }
 
   /* ---- section labels ---- */
   .section-label { font-size: 9px; letter-spacing: .22em; text-transform: uppercase; color: var(--dim); font-weight: 600; margin-top: 4px; padding-bottom: 2px; border-bottom: 1px solid var(--line); }

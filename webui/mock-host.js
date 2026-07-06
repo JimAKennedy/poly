@@ -566,6 +566,7 @@
     const ahead = ctx.currentTime + 0.14;
     while (startAt + nextTick * EIGHTH < ahead) {
       state.lanes.forEach((l, li) => {
+        if (!l.active) return;
         const hit = laneHitAt(l, nextTick);
         if (!hit) return;
         const vel = hitVelocity(l, li, nextTick, hit);
