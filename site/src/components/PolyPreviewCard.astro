@@ -9,10 +9,12 @@ const { preset, caption } = Astro.props;
 
 <div class="poly-preview" data-poly-preset={preset} data-state="stopped">
   <div class="poly-preview-body">
-    <svg class="poly-preview-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="10" />
-      <polygon points="10 8 16 12 10 16 10 8" />
-    </svg>
+    <button class="poly-preview-icon-btn" type="button" data-role="play-icon" aria-label={`Play preview of ${preset}`}>
+      <svg class="poly-preview-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="10" />
+        <polygon points="10 8 16 12 10 16 10 8" />
+      </svg>
+    </button>
     <div class="poly-preview-text">
       <span class="poly-preview-preset">{preset}</span>
       {caption && <span class="poly-preview-caption">{caption}</span>}
@@ -196,19 +198,25 @@ const { preset, caption } = Astro.props;
   document.querySelectorAll<HTMLElement>('.poly-preview').forEach((card) => {
     const preset = card.dataset.polyPreset ?? '';
     const playBtn = card.querySelector<HTMLButtonElement>('.poly-preview-play')!;
+    const iconBtn = card.querySelector<HTMLButtonElement>('.poly-preview-icon-btn')!;
     const tryBtn = card.querySelector<HTMLButtonElement>('.poly-preview-btn')!;
     const pattern = getPatternForPreset(preset);
+
+    const triggerPlay = () => {
+      startCard(card, preset).catch((err) => {
+        console.error('[PolyPreviewCard] play failed', err);
+        stopActive();
+      });
+    };
 
     if (!pattern) {
       playBtn.disabled = true;
       playBtn.title = 'Audio preview coming soon';
+      iconBtn.disabled = true;
+      iconBtn.title = 'Audio preview coming soon';
     } else {
-      playBtn.addEventListener('click', () => {
-        startCard(card, preset).catch((err) => {
-          console.error('[PolyPreviewCard] play failed', err);
-          stopActive();
-        });
-      });
+      playBtn.addEventListener('click', triggerPlay);
+      iconBtn.addEventListener('click', triggerPlay);
       if (pattern.lanes && pattern.lanes.length > 0) {
         renderLaneChips(card, pattern.lanes);
       }
@@ -241,9 +249,45 @@ const { preset, caption } = Astro.props;
     border-radius: 8px;
   }
 
-  .poly-preview-icon {
+  .poly-preview-icon-btn {
     flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px;
+    background: transparent;
+    border: none;
+    border-radius: 999px;
     color: var(--poly-primary);
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s, transform 0.1s;
+  }
+
+  .poly-preview-icon-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--poly-primary-dark, var(--poly-primary));
+  }
+
+  .poly-preview-icon-btn:active:not(:disabled) {
+    transform: scale(0.94);
+  }
+
+  .poly-preview-icon-btn:focus-visible {
+    outline: 2px solid var(--poly-primary);
+    outline-offset: 2px;
+  }
+
+  .poly-preview-icon-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+  }
+
+  .poly-preview[data-state='playing'] .poly-preview-icon-btn {
+    color: var(--poly-primary);
+  }
+
+  .poly-preview-icon {
+    display: block;
   }
 
   .poly-preview-text {
@@ -316,9 +360,11 @@ const { preset, caption } = Astro.props;
   .poly-preview-lanes {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.35rem;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem 0.5rem;
     margin: 0.4rem 0 0;
-    padding: 0.5rem 0.75rem 0.55rem;
+    padding: 0.55rem 0.75rem 0.6rem;
     background: #1c1b19;
     border: 1px solid var(--sl-color-gray-4);
     border-top: none;
@@ -331,17 +377,20 @@ const { preset, caption } = Astro.props;
      Astro's per-component scoping doesn't reach them. Keep these global. */
   .poly-lane-chip {
     --lane-color: #8a8886;
+    box-sizing: border-box;
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    padding: 0.3rem 0.65rem;
+    height: 1.85rem;
+    padding: 0 0.7rem;
     background: #232220;
     border: 1px solid #3a3937;
     border-radius: 999px;
     font-family: var(--poly-font-sans);
     font-size: var(--sl-text-xs);
     color: #e0ddd8;
-    line-height: 1.1;
+    line-height: 1;
+    white-space: nowrap;
     cursor: pointer;
     transition: background 0.12s, border-color 0.12s, color 0.12s, opacity 0.12s;
   }
