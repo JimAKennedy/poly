@@ -6,11 +6,17 @@ interface LaneSpec {
   role: string;
   color?: string;
   note: number;
+  // Tick base is the 16th note: stepLen 4 = quarter, 2 = eighth, 1 = sixteenth.
   steps: number;
   stepLen: number;
   hits: number;
   velocity: number;
   rot?: number;
+}
+
+interface PatternSpec {
+  bpm: number;
+  lanes: LaneSpec[];
 }
 
 function laneEvents(
@@ -21,11 +27,11 @@ function laneEvents(
   const pattern = rotArr(euclid(lane.hits, lane.steps), lane.rot ?? 0);
   const events: MidiEvent[] = [];
   for (let tick = 0; tick < compositeTicks; tick += lane.stepLen) {
-    const stepIdx = ((tick / lane.stepLen) % lane.steps + lane.steps) % lane.steps;
+    const stepIdx = (tick / lane.stepLen) % lane.steps;
     if (pattern[stepIdx]) {
-      // One tick = one 8th note. Convert to quarter-note beats: beat = tick / 2.
+      // Four ticks per quarter-note beat.
       events.push({
-        beat: tick / 2,
+        beat: tick / 4,
         note: lane.note,
         velocity: lane.velocity,
         lane: laneIdx,
@@ -44,42 +50,213 @@ function toLaneMeta(specs: LaneSpec[]): LaneMeta[] {
   }));
 }
 
-function buildReichPhaseProcess(): Pattern {
-  // Mirrors mock-host case 27 (Reich Phase Process), but a 3-second static
-  // preview cannot audibly demonstrate driftRate. Instead, lane 2 is rotated
-  // by 3 eighth-note steps so it locks against lane 1 at a distinctive
-  // polyrhythmic offset — the "arrived" phase state Reich phasing produces
-  // over time. Deterministic; keeps E2E assertions cheap.
-  const lanes: LaneSpec[] = [
-    { label: 'Anchor pulse', role: 'woodblock', color: '#e07a3f', note: 76, steps: 12, stepLen: 1, hits: 5, velocity: 95 },
-    { label: 'Drifting pulse', role: 'woodblock', color: '#d3a12b', note: 76, steps: 12, stepLen: 1, hits: 5, velocity: 90, rot: 3 },
-    { label: 'Shimmer', role: 'hat', color: '#7fb37a', note: 42, steps: 4, stepLen: 2, hits: 4, velocity: 65 },
-  ];
-
-  // Composite loop = LCM of lane cycs (in tick units where 1 tick = 1 eighth).
-  // 12 * 1 = 12, 4 * 2 = 8, LCM(12, 8) = 24 ticks = 12 quarter-note beats.
-  const compositeTicks = lanes.reduce(
+function buildFromSpec(spec: PatternSpec): Pattern {
+  const compositeTicks = spec.lanes.reduce(
     (acc, l) => lcm(acc, l.steps * l.stepLen),
     1,
   );
-
-  const events = lanes
+  const events = spec.lanes
     .flatMap((l, i) => laneEvents(i, l, compositeTicks))
     .sort((a, b) => a.beat - b.beat);
-
   return {
-    bpm: 100,
-    loopBeats: compositeTicks / 2,
+    bpm: spec.bpm,
+    loopBeats: compositeTicks / 4,
     events,
-    lanes: toLaneMeta(lanes),
+    lanes: toLaneMeta(spec.lanes),
   };
 }
 
-const PATTERNS: Record<string, () => Pattern> = {
-  'Reich Phase Process': buildReichPhaseProcess,
+// Lane hue palette — distinct per role class so preview lane chips read cleanly.
+const HUE = {
+  kick: '#e07a3f',
+  snare: '#d3a12b',
+  hat: '#7fb37a',
+  perc: '#8fb0d6',
+  ghost: '#6a5c8c',
+  bell: '#c4915d',
+  clave: '#e0c26e',
+} as const;
+
+// Tick-length shortcuts in 16th-note units.
+const QTR = 4;
+const EIGHTH = 2;
+const SIXTEENTH = 1;
+
+// All appendix-preset parameter tables (steps/hits/rotation/subdivision/note/velocity)
+// mirror site/src/content/docs/appendix-presets.mdx. Notes not covered by the sample
+// manifest are remapped to the nearest covered percussion voice.
+//   47 (Low Tom)         -> 45 (Low Floor Tom)
+//   58 (Vibraslap)       -> 56 (Cowbell)  -- Reich Pattern B uses same voice as A
+//   62 (Mute Hi Conga)   -> 76 (Hi Woodblock)  -- Kotekan Polos
+//   64 (Low Conga)       -> 77 (Low Woodblock) -- Kotekan Sangsih
+// Additive-cell rhythms ([2+2+3], [4+2+2]) are approximated as uniform Euclidean
+// patterns over the total cell length (7 for aksak, 8 for adi tala).
+const PATTERN_SPECS: Record<string, PatternSpec> = {
+  // Preview for chapter 8 (minimalism). Mirrors mock-host case 27. A 3-second
+  // preview cannot audibly demonstrate drift, so lane 2 uses a static rotation
+  // to lock at a distinctive polyrhythmic offset — Reich's "arrived" phase.
+  'Reich Phase Process': {
+    bpm: 100,
+    lanes: [
+      { label: 'Anchor pulse',   role: 'woodblock', color: HUE.kick,  note: 76, steps: 12, stepLen: EIGHTH, hits: 5, velocity: 95 },
+      { label: 'Drifting pulse', role: 'woodblock', color: HUE.snare, note: 76, steps: 12, stepLen: EIGHTH, hits: 5, velocity: 90, rot: 3 },
+      { label: 'Shimmer',        role: 'hat',       color: HUE.hat,   note: 42, steps: 4,  stepLen: QTR,    hits: 4, velocity: 65 },
+    ],
+  },
+
+  'Factory: Four on the Floor': {
+    bpm: 120,
+    lanes: [
+      { label: 'Kick',   role: 'kick',  color: HUE.kick,  note: 36, steps: 4,  stepLen: QTR,       hits: 4, velocity: 110 },
+      { label: 'Snare',  role: 'snare', color: HUE.snare, note: 38, steps: 4,  stepLen: QTR,       hits: 2, velocity: 95, rot: 1 },
+      { label: 'Hi-hat', role: 'hat',   color: HUE.hat,   note: 42, steps: 16, stepLen: SIXTEENTH, hits: 8, velocity: 70 },
+      { label: 'Ghost',  role: 'hat',   color: HUE.ghost, note: 42, steps: 16, stepLen: SIXTEENTH, hits: 7, velocity: 45, rot: 3 },
+    ],
+  },
+
+  'Factory: Polymetric Drift': {
+    bpm: 110,
+    lanes: [
+      { label: 'Kick pulse',  role: 'kick', color: HUE.kick,  note: 36, steps: 3,  stepLen: QTR,    hits: 2, velocity: 105 },
+      { label: 'Rim pattern', role: 'rim',  color: HUE.snare, note: 37, steps: 5,  stepLen: EIGHTH, hits: 3, velocity: 80,  rot: 1 },
+      { label: 'Tom accent',  role: 'tom',  color: HUE.perc,  note: 45, steps: 7,  stepLen: EIGHTH, hits: 4, velocity: 85 },
+      { label: 'Hat shimmer', role: 'hat',  color: HUE.hat,   note: 42, steps: 11, stepLen: EIGHTH, hits: 7, velocity: 60,  rot: 2 },
+    ],
+  },
+
+  'Factory: Sparse Pulse': {
+    bpm: 90,
+    lanes: [
+      { label: 'Kick',  role: 'kick',   color: HUE.kick,  note: 36, steps: 8,  stepLen: EIGHTH,    hits: 2, velocity: 95 },
+      { label: 'Hat',   role: 'hat',    color: HUE.hat,   note: 42, steps: 8,  stepLen: EIGHTH,    hits: 3, velocity: 50, rot: 2 },
+      { label: 'Ghost', role: 'shaker', color: HUE.ghost, note: 70, steps: 16, stepLen: SIXTEENTH, hits: 5, velocity: 35, rot: 1 },
+    ],
+  },
+
+  'Factory: Breakbeat': {
+    bpm: 140,
+    lanes: [
+      { label: 'Kick',  role: 'kick',  color: HUE.kick,  note: 36, steps: 16, stepLen: SIXTEENTH, hits: 3, velocity: 110 },
+      { label: 'Snare', role: 'snare', color: HUE.snare, note: 38, steps: 8,  stepLen: EIGHTH,    hits: 2, velocity: 100, rot: 1 },
+      { label: 'Hat',   role: 'hat',   color: HUE.hat,   note: 42, steps: 16, stepLen: SIXTEENTH, hits: 9, velocity: 65,  rot: 2 },
+      { label: 'Ghost', role: 'tom',   color: HUE.ghost, note: 45, steps: 16, stepLen: SIXTEENTH, hits: 5, velocity: 45,  rot: 4 },
+    ],
+  },
+
+  'Factory: Latin Feel': {
+    bpm: 100,
+    lanes: [
+      { label: 'Clave',   role: 'clave',   color: HUE.clave, note: 75, steps: 8,  stepLen: EIGHTH,    hits: 3,  velocity: 100 },
+      { label: 'Conga',   role: 'conga',   color: HUE.perc,  note: 63, steps: 16, stepLen: SIXTEENTH, hits: 7,  velocity: 80, rot: 2 },
+      { label: 'Shaker',  role: 'shaker',  color: HUE.hat,   note: 70, steps: 16, stepLen: SIXTEENTH, hits: 11, velocity: 50 },
+      { label: 'Cowbell', role: 'cowbell', color: HUE.bell,  note: 56, steps: 8,  stepLen: EIGHTH,    hits: 4,  velocity: 75, rot: 1 },
+    ],
+  },
+
+  'Factory: Afro-House Phrases': {
+    bpm: 122,
+    lanes: [
+      { label: 'Kick',   role: 'kick',    color: HUE.kick,  note: 36, steps: 4,  stepLen: QTR,       hits: 4, velocity: 110 },
+      { label: 'Perc A', role: 'conga',   color: HUE.perc,  note: 63, steps: 12, stepLen: EIGHTH,    hits: 5, velocity: 80 },
+      { label: 'Perc B', role: 'cowbell', color: HUE.bell,  note: 56, steps: 8,  stepLen: EIGHTH,    hits: 3, velocity: 75, rot: 1 },
+      { label: 'Shaker', role: 'shaker',  color: HUE.hat,   note: 70, steps: 16, stepLen: SIXTEENTH, hits: 9, velocity: 50, rot: 2 },
+      { label: 'Ghost',  role: 'hat',     color: HUE.ghost, note: 42, steps: 12, stepLen: EIGHTH,    hits: 7, velocity: 45, rot: 3 },
+    ],
+  },
+
+  // Reich phasing needs identical voices on Pattern A and Pattern B; note 58
+  // (Vibraslap) is not in the manifest so both lanes use 56 (Cowbell) and a
+  // static rotation stands in for drift.
+  'Factory: Reich Phasing': {
+    bpm: 108,
+    lanes: [
+      { label: 'Pattern A',    role: 'cowbell', color: HUE.kick,  note: 56, steps: 12, stepLen: EIGHTH, hits: 5, velocity: 85 },
+      { label: 'Pattern B',    role: 'cowbell', color: HUE.snare, note: 56, steps: 12, stepLen: EIGHTH, hits: 5, velocity: 80, rot: 2 },
+      { label: 'Anchor pulse', role: 'kick',    color: HUE.bell,  note: 36, steps: 4,  stepLen: QTR,    hits: 2, velocity: 95 },
+    ],
+  },
+
+  'Factory: Kotekan Interlock': {
+    bpm: 120,
+    lanes: [
+      { label: 'Polos',      role: 'woodblock', color: HUE.perc,  note: 76, steps: 8,  stepLen: EIGHTH,    hits: 5, velocity: 85 },
+      { label: 'Sangsih',    role: 'woodblock', color: HUE.snare, note: 77, steps: 8,  stepLen: EIGHTH,    hits: 3, velocity: 80, rot: 1 },
+      { label: 'Gong cycle', role: 'kick',      color: HUE.kick,  note: 36, steps: 4,  stepLen: QTR,       hits: 3, velocity: 100 },
+      { label: 'Shimmer',    role: 'shaker',    color: HUE.hat,   note: 70, steps: 16, stepLen: SIXTEENTH, hits: 9, velocity: 50, rot: 2 },
+    ],
+  },
+
+  'Factory: Pocket Groove': {
+    bpm: 92,
+    lanes: [
+      { label: 'Kick',  role: 'kick',  color: HUE.kick,  note: 36, steps: 8,  stepLen: EIGHTH,    hits: 3, velocity: 105 },
+      { label: 'Snare', role: 'snare', color: HUE.snare, note: 38, steps: 8,  stepLen: EIGHTH,    hits: 2, velocity: 95, rot: 1 },
+      { label: 'Hat',   role: 'hat',   color: HUE.hat,   note: 42, steps: 16, stepLen: SIXTEENTH, hits: 9, velocity: 60 },
+      { label: 'Ghost', role: 'tom',   color: HUE.ghost, note: 45, steps: 16, stepLen: SIXTEENTH, hits: 7, velocity: 40, rot: 3 },
+    ],
+  },
+
+  'Factory: Afrobeat 12/8': {
+    bpm: 96,
+    lanes: [
+      { label: 'Bell timeline', role: 'cowbell', color: HUE.bell,  note: 56, steps: 12, stepLen: EIGHTH, hits: 7,  velocity: 90 },
+      { label: 'Kick',          role: 'kick',    color: HUE.kick,  note: 36, steps: 4,  stepLen: QTR,    hits: 4,  velocity: 112 },
+      { label: 'Snare',         role: 'snare',   color: HUE.snare, note: 38, steps: 3,  stepLen: EIGHTH, hits: 2,  velocity: 95 },
+      { label: 'Shaker',        role: 'shaker',  color: HUE.hat,   note: 70, steps: 12, stepLen: EIGHTH, hits: 12, velocity: 55 },
+      { label: 'Conga',         role: 'conga',   color: HUE.perc,  note: 63, steps: 5,  stepLen: EIGHTH, hits: 3,  velocity: 65 },
+    ],
+  },
+
+  // Balkan aksak — 7/8 [2+2+3] rendered as steps=7 at 1/8. The uniform-step
+  // engine can't do additive cells; total cell length preserves the 7/8 feel.
+  'Factory: Balkan Aksak': {
+    bpm: 140,
+    lanes: [
+      { label: 'Davul',   role: 'kick',      color: HUE.kick,  note: 36, steps: 7, stepLen: EIGHTH, hits: 2, velocity: 110 },
+      { label: 'Rim',     role: 'rim',       color: HUE.snare, note: 37, steps: 7, stepLen: EIGHTH, hits: 1, velocity: 95 },
+      { label: 'Zurna',   role: 'woodblock', color: HUE.bell,  note: 76, steps: 7, stepLen: EIGHTH, hits: 4, velocity: 80 },
+      { label: 'Darbuka', role: 'tom',       color: HUE.perc,  note: 43, steps: 7, stepLen: EIGHTH, hits: 3, velocity: 60 },
+    ],
+  },
+
+  'Factory: Bossa Nova': {
+    bpm: 130,
+    lanes: [
+      { label: 'Surdo',            role: 'kick',      color: HUE.kick,  note: 36, steps: 4,  stepLen: QTR,       hits: 2,  velocity: 100 },
+      { label: 'Tamborim (clave)', role: 'woodblock', color: HUE.clave, note: 76, steps: 16, stepLen: SIXTEENTH, hits: 5,  velocity: 85 },
+      { label: 'Agogo',            role: 'agogo',     color: HUE.bell,  note: 67, steps: 8,  stepLen: EIGHTH,    hits: 5,  velocity: 70 },
+      { label: 'Pandeiro',         role: 'shaker',    color: HUE.hat,   note: 70, steps: 16, stepLen: SIXTEENTH, hits: 12, velocity: 50 },
+    ],
+  },
+
+  // Adi tala — 8-beat [4+2+2] rendered as steps=8 at 1/8.
+  'Factory: Carnatic Tala': {
+    bpm: 100,
+    lanes: [
+      { label: 'Mridangam bass',   role: 'kick', color: HUE.kick,  note: 36, steps: 8, stepLen: EIGHTH, hits: 3, velocity: 105 },
+      { label: 'Mridangam treble', role: 'tom',  color: HUE.perc,  note: 43, steps: 8, stepLen: EIGHTH, hits: 5, velocity: 90 },
+      { label: 'Ghatam',           role: 'hat',  color: HUE.hat,   note: 42, steps: 8, stepLen: EIGHTH, hits: 5, velocity: 65, rot: 2 },
+      { label: 'Kanjira',          role: 'clap', color: HUE.ghost, note: 39, steps: 5, stepLen: EIGHTH, hits: 3, velocity: 50 },
+    ],
+  },
+
+  'Factory: IDM Glitch': {
+    bpm: 100,
+    lanes: [
+      { label: 'Kick',   role: 'kick',    color: HUE.kick,  note: 36, steps: 4,  stepLen: SIXTEENTH, hits: 3, velocity: 115 },
+      { label: 'Snare',  role: 'snare',   color: HUE.snare, note: 38, steps: 5,  stepLen: SIXTEENTH, hits: 2, velocity: 100 },
+      { label: 'Hat',    role: 'hat',     color: HUE.hat,   note: 42, steps: 9,  stepLen: SIXTEENTH, hits: 6, velocity: 70 },
+      { label: 'Perc',   role: 'tom',     color: HUE.perc,  note: 45, steps: 7,  stepLen: SIXTEENTH, hits: 3, velocity: 55 },
+      { label: 'Glitch', role: 'cowbell', color: HUE.ghost, note: 56, steps: 11, stepLen: SIXTEENTH, hits: 4, velocity: 75 },
+    ],
+  },
 };
 
 export function getPatternForPreset(name: string): Pattern | null {
-  const build = PATTERNS[name];
-  return build ? build() : null;
+  const spec = PATTERN_SPECS[name];
+  return spec ? buildFromSpec(spec) : null;
+}
+
+export function listPresetNames(): string[] {
+  return Object.keys(PATTERN_SPECS);
 }

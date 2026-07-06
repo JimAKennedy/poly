@@ -4,7 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
-import { getPatternForPreset } from '../src/audio/preset-patterns.ts';
+import { getPatternForPreset, listPresetNames } from '../src/audio/preset-patterns.ts';
 import { euclid, lcm, gcd, rotArr } from '../src/audio/groove-math.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -71,4 +71,41 @@ test('Reich Phase Process uses only notes present in manifest.json', async () =>
 
 test('getPatternForPreset returns null for unknown preset', () => {
   assert.equal(getPatternForPreset('Not A Real Preset'), null);
+});
+
+test('every registered preset returns a well-formed pattern', async () => {
+  const covered = await coveredNotes();
+  const names = listPresetNames();
+  // Reich Phase Process (chapter 8 preview) + 14 Factory presets from the appendix.
+  assert.ok(names.length >= 15, `expected >= 15 presets, got ${names.length}`);
+
+  for (const name of names) {
+    const pattern = getPatternForPreset(name);
+    assert.ok(pattern, `expected a Pattern object for ${name}`);
+    assert.ok(pattern.bpm > 0, `${name}: bpm must be positive`);
+    assert.ok(pattern.loopBeats > 0, `${name}: loopBeats must be positive`);
+    assert.ok(pattern.events.length > 0, `${name}: must have at least one event`);
+    assert.ok(pattern.lanes && pattern.lanes.length > 0, `${name}: must define lanes`);
+
+    for (let i = 1; i < pattern.events.length; i++) {
+      assert.ok(
+        pattern.events[i].beat >= pattern.events[i - 1].beat,
+        `${name}: events must be sorted by beat`,
+      );
+    }
+    for (const e of pattern.events) {
+      assert.ok(
+        e.beat >= 0 && e.beat < pattern.loopBeats,
+        `${name}: event beat ${e.beat} outside [0, ${pattern.loopBeats})`,
+      );
+      assert.ok(
+        e.velocity >= 1 && e.velocity <= 127,
+        `${name}: MIDI velocity ${e.velocity} out of range`,
+      );
+      assert.ok(
+        covered.has(e.note),
+        `${name}: note ${e.note} referenced but not in manifest`,
+      );
+    }
+  }
 });
