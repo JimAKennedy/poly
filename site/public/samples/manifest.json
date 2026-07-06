@@ -1,4 +1,161 @@
 {
   "version": 1,
-  "samples": []
+  "samples": [
+    {
+      "file": "agogo/vcsl-hi.wav",
+      "spdx": "CC0-1.0",
+      "source": "VCSL",
+      "sourceUrl": "https://github.com/sgossner/VCSL",
+      "midiNotes": [67, 50],
+      "role": "agogo",
+      "tags": ["fallback:high-tom"]
+    },
+    {
+      "file": "agogo/vcsl-lo.wav",
+      "spdx": "CC0-1.0",
+      "source": "VCSL",
+      "sourceUrl": "https://github.com/sgossner/VCSL",
+      "midiNotes": [67],
+      "role": "agogo"
+    },
+    {
+      "file": "clave/fischer808-clave.wav",
+      "spdx": "CC0-1.0",
+      "source": "Fischer TR-808",
+      "sourceUrl": "https://github.com/tidalcycles/sounds-tr808-fischer",
+      "midiNotes": [75, 37],
+      "role": "clave",
+      "tags": ["fallback:sidestick"]
+    },
+    {
+      "file": "clave/vcsl-claves.wav",
+      "spdx": "CC0-1.0",
+      "source": "VCSL",
+      "sourceUrl": "https://github.com/sgossner/VCSL",
+      "midiNotes": [75],
+      "role": "clave"
+    },
+    {
+      "file": "conga/vcsl-conga-open.wav",
+      "spdx": "CC0-1.0",
+      "source": "VCSL",
+      "sourceUrl": "https://github.com/sgossner/VCSL",
+      "midiNotes": [63, 43, 45],
+      "role": "conga",
+      "tags": ["fallback:tom"]
+    },
+    {
+      "file": "cowbell/fischer808-cowbell.wav",
+      "spdx": "CC0-1.0",
+      "source": "Fischer TR-808",
+      "sourceUrl": "https://github.com/tidalcycles/sounds-tr808-fischer",
+      "midiNotes": [56],
+      "role": "cowbell"
+    },
+    {
+      "file": "cowbell/vcsl-cowbell.wav",
+      "spdx": "CC0-1.0",
+      "source": "VCSL",
+      "sourceUrl": "https://github.com/sgossner/VCSL",
+      "midiNotes": [56],
+      "role": "cowbell"
+    },
+    {
+      "file": "hat/boochi44-hat.wav",
+      "spdx": "CC0-1.0",
+      "source": "Boochi44 Free Drums",
+      "sourceUrl": "https://github.com/Boochi44/free-drum-samples",
+      "midiNotes": [42],
+      "role": "hat"
+    },
+    {
+      "file": "hat/fischer808-ch.wav",
+      "spdx": "CC0-1.0",
+      "source": "Fischer TR-808",
+      "sourceUrl": "https://github.com/tidalcycles/sounds-tr808-fischer",
+      "midiNotes": [42],
+      "role": "hat"
+    },
+    {
+      "file": "hat/fischer808-oh.wav",
+      "spdx": "CC0-1.0",
+      "source": "Fischer TR-808",
+      "sourceUrl": "https://github.com/tidalcycles/sounds-tr808-fischer",
+      "midiNotes": [46],
+      "role": "hat"
+    },
+    {
+      "file": "kick/boochi44-kick.wav",
+      "spdx": "CC0-1.0",
+      "source": "Boochi44 Free Drums",
+      "sourceUrl": "https://github.com/Boochi44/free-drum-samples",
+      "midiNotes": [36],
+      "role": "kick"
+    },
+    {
+      "file": "kick/fischer808-bd.wav",
+      "spdx": "CC0-1.0",
+      "source": "Fischer TR-808",
+      "sourceUrl": "https://github.com/tidalcycles/sounds-tr808-fischer",
+      "midiNotes": [36],
+      "role": "kick"
+    },
+    {
+      "file": "shaker/fischer808-maraca.wav",
+      "spdx": "CC0-1.0",
+      "source": "Fischer TR-808",
+      "sourceUrl": "https://github.com/tidalcycles/sounds-tr808-fischer",
+      "midiNotes": [70],
+      "role": "shaker"
+    },
+    {
+      "file": "shaker/freepats-egg.wav",
+      "spdx": "CC0-1.0",
+      "source": "FreePats World Percussion",
+      "sourceUrl": "https://github.com/freepats/world-percussion",
+      "midiNotes": [70],
+      "role": "shaker"
+    },
+    {
+      "file": "shaker/vcsl-cabasa.wav",
+      "spdx": "CC0-1.0",
+      "source": "VCSL",
+      "sourceUrl": "https://github.com/sgossner/VCSL",
+      "midiNotes": [70],
+      "role": "shaker"
+    },
+    {
+      "file": "snare/fischer808-sd.wav",
+      "spdx": "CC0-1.0",
+      "source": "Fischer TR-808",
+      "sourceUrl": "https://github.com/tidalcycles/sounds-tr808-fischer",
+      "midiNotes": [38, 39],
+      "role": "snare",
+      "tags": ["fallback:handclap"]
+    },
+    {
+      "file": "snare/vcsl-snare.wav",
+      "spdx": "CC0-1.0",
+      "source": "VCSL",
+      "sourceUrl": "https://github.com/sgossner/VCSL",
+      "midiNotes": [38],
+      "role": "snare"
+    },
+    {
+      "file": "woodblock/vcsl-hi.wav",
+      "spdx": "CC0-1.0",
+      "source": "VCSL",
+      "sourceUrl": "https://github.com/sgossner/VCSL",
+      "midiNotes": [76],
+      "role": "woodblock"
+    },
+    {
+      "file": "woodblock/vcsl-lo.wav",
+      "spdx": "CC0-1.0",
+      "source": "VCSL",
+      "sourceUrl": "https://github.com/sgossner/VCSL",
+      "midiNotes": [77],
+      "role": "woodblock"
+    }
+  ]
 }
