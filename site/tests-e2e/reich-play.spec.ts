@@ -45,3 +45,17 @@ test('Reich Phase Process play button drives the AudioContext and fires >= 6 sou
   await playBtn.click();
   await expect(card).toHaveAttribute('data-state', 'stopped');
 });
+
+test('chapter alias card ("Jungle Break") resolves to a factory pattern and enables Play', async ({
+  page,
+}) => {
+  // Jungle Break is a chapter-only preset name — resolved via CHAPTER_ALIASES
+  // to Factory: Breakbeat. If the alias map is missing an entry, the Play
+  // button stays disabled with "Audio preview coming soon".
+  await page.goto('/poly/13-drum-and-bass/');
+  const card = page.locator('.poly-preview[data-poly-preset="Jungle Break"]');
+  await expect(card).toBeVisible();
+  const playBtn = card.locator('.poly-preview-play');
+  await expect(playBtn).toBeEnabled();
+  await expect(playBtn).not.toHaveAttribute('title', 'Audio preview coming soon');
+});

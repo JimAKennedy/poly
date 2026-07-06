@@ -1,14 +1,30 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
-import { getPatternForPreset, listPresetNames } from '../src/audio/preset-patterns.ts';
+import {
+  getPatternForPreset,
+  listPresetNames,
+  listChapterAliases,
+} from '../src/audio/preset-patterns.ts';
 import { euclid, lcm, gcd, rotArr } from '../src/audio/groove-math.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const MANIFEST_PATH = join(HERE, '..', 'public', 'samples', 'manifest.json');
+const CHAPTERS_DIR = join(HERE, '..', 'src', 'content', 'docs');
+const PREVIEW_CARD_RE = /<PolyPreviewCard\s+preset="([^"]+)"/g;
+
+async function chapterCardPresetNames() {
+  const files = (await readdir(CHAPTERS_DIR)).filter((f) => /^\d\d-.*\.mdx$/.test(f));
+  const names = new Set();
+  for (const f of files) {
+    const src = await readFile(join(CHAPTERS_DIR, f), 'utf8');
+    for (const m of src.matchAll(PREVIEW_CARD_RE)) names.add(m[1]);
+  }
+  return { files, names };
+}
 
 async function coveredNotes() {
   const raw = await readFile(MANIFEST_PATH, 'utf8');
@@ -111,6 +127,42 @@ test('Reich Phase Process uses only notes present in manifest.json', async () =>
 
 test('getPatternForPreset returns null for unknown preset', () => {
   assert.equal(getPatternForPreset('Not A Real Preset'), null);
+});
+
+test('every chapter PolyPreviewCard preset resolves to a pattern', async () => {
+  const { files, names } = await chapterCardPresetNames();
+  assert.ok(files.length >= 15, `expected >= 15 chapter files, got ${files.length}`);
+  assert.ok(names.size >= 15, `expected >= 15 unique chapter presets, got ${names.size}`);
+
+  const aliases = new Set(listChapterAliases());
+  const direct = new Set(listPresetNames());
+  const unresolved = [];
+  for (const name of names) {
+    const pattern = getPatternForPreset(name);
+    if (!pattern) unresolved.push(name);
+    // Aliased chapters must not collide with a direct-registered name.
+    if (aliases.has(name) && direct.has(name)) {
+      assert.fail(`${name} is both a direct preset and an alias — pick one`);
+    }
+  }
+  assert.deepEqual(
+    unresolved,
+    [],
+    `chapter presets that do not resolve to a pattern: ${JSON.stringify(unresolved)}`,
+  );
+});
+
+test('every chapter alias points at a registered factory preset', () => {
+  const registered = new Set(listPresetNames());
+  const missing = [];
+  for (const alias of listChapterAliases()) {
+    const pattern = getPatternForPreset(alias);
+    if (!pattern) missing.push(alias);
+  }
+  assert.deepEqual(missing, [], `aliases without a target pattern: ${JSON.stringify(missing)}`);
+  // Sanity: at least one alias exists — otherwise chapter play buttons will all no-op.
+  assert.ok(listChapterAliases().length > 0, 'expected chapter aliases to be populated');
+  assert.ok(registered.size > 0);
 });
 
 test('every registered preset returns a well-formed pattern', async () => {

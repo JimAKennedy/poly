@@ -290,11 +290,51 @@ const PATTERN_SPECS: Record<string, PatternSpec> = {
   },
 };
 
+// Chapter cards use display-friendly names ("Jungle Break", "Cuban Son
+// Montuno", ...) instead of "Factory: X". Each entry maps a chapter card's
+// preset= value to the closest factory pattern by musical feel — same
+// timeline / clave / meter / lane count where possible. The alias is a
+// preview approximation, not a full recreation; the "Try it" button loads
+// the corresponding plugin patch for the real thing.
+const CHAPTER_ALIASES: Record<string, string> = {
+  'Polymetric Foundation':  'Factory: Polymetric Drift',
+  'Ewe Polymetric Ensemble':'Factory: Afrobeat 12/8',
+  'Manding Djembe':         'Factory: Afrobeat 12/8',
+  'Cuban Son Montuno':      'Factory: Latin Feel',
+  'Afrobeat Lagos':         'Factory: Afrobeat 12/8',
+  'Balinese Kotekan':       'Factory: Kotekan Interlock',
+  'Javanese Colotomic':     'Factory: Kotekan Interlock',
+  'Rupak Tal':              'Factory: Balkan Aksak',
+  'Tintal Groove':          'Factory: Carnatic Tala',
+  'Kopanitsa 11/8':         'Factory: Balkan Aksak',
+  'Rachenitsa 7/8':         'Factory: Balkan Aksak',
+  'Nancarrow Tempi':        'Factory: Polymetric Drift',
+  'Riley Layered Entry':    'Factory: Afro-House Phrases',
+  'Deep House':             'Factory: Four on the Floor',
+  'Minimal Techno':         'Factory: Four on the Floor',
+  'Bossa Nova Trio':        'Factory: Bossa Nova',
+  'Samba Batucada':         'Factory: Bossa Nova',
+  'Classic Funk':           'Factory: Pocket Groove',
+  'Neo-Soul Pocket':        'Factory: Pocket Groove',
+  'Elvin Jones Cascade':    'Factory: Polymetric Drift',
+  'Jazz Bop Ride':          'Factory: Pocket Groove',
+  'Jungle Break':           'Factory: Breakbeat',
+  'Liquid Drum and Bass':   'Factory: Breakbeat',
+  'Afro-Electronic Fusion': 'Factory: Afro-House Phrases',
+  'Balkan Funk':            'Factory: Balkan Aksak',
+  'Compositional Arc':      'Factory: Afro-House Phrases',
+};
+
 export function getPatternForPreset(name: string): Pattern | null {
-  const spec = PATTERN_SPECS[name];
+  const target = PATTERN_SPECS[name] ? name : CHAPTER_ALIASES[name];
+  const spec = target ? PATTERN_SPECS[target] : undefined;
   return spec ? buildFromSpec(spec) : null;
 }
 
 export function listPresetNames(): string[] {
   return Object.keys(PATTERN_SPECS);
+}
+
+export function listChapterAliases(): string[] {
+  return Object.keys(CHAPTER_ALIASES);
 }
