@@ -21,9 +21,15 @@ Restart your DAW so it rescans for new plugins.
 
 ### Load Poly
 
-Add an instrument track with Poly as the instrument. In Cubase: **Project > Add Track > Instrument**, then select **Poly** from the plugin list.
+Add an instrument track with Poly as the instrument:
 
-Poly generates MIDI only — it produces no audio on its own. You need a drum sound source (Groove Agent, Battery, Kontakt, or any GM-compatible drum plugin) to hear the output.
+- **Cubase:** Project > Add Track > Instrument > select Poly
+- **Logic Pro:** Track > New Software Instrument Track > select Poly from AU Instruments
+- **Ableton Live:** Drop Poly onto a MIDI track from the Plug-ins browser
+- **Studio One:** Add Instrument Track > select Poly from the instrument list
+- **FL Studio:** Channel Rack > Add Plugin > select Poly (VST3)
+
+Poly generates MIDI only — it produces no audio on its own. You need a drum sound source (Groove Agent, Battery, Kontakt, Drum Rack, or any GM-compatible drum plugin) to hear the output.
 
 ### Route MIDI to a Drum Instrument
 
@@ -80,7 +86,7 @@ The plugin window is 600 x 870 pixels, laid out as six horizontal sections from 
 
 ### Header
 
-Displays the plugin name **POLY** (blue), a **preset selector dropdown** in the center, and the version number (gray) on the right. Click the preset dropdown to access Init (All Lanes) and all 14 factory presets. Selecting any entry immediately loads all parameters.
+Displays the plugin name **POLY** (blue), a **preset selector dropdown** in the center, and the version number (gray) on the right. Click the preset dropdown to access Init (All Lanes) and all 16 factory presets. Selecting any entry immediately loads all parameters.
 
 ### Lane Grid
 
@@ -182,12 +188,31 @@ Assign lanes to different MIDI channels to drive separate instruments from a sin
 
 With separate instruments on separate channels, you get independent mixing, processing, and spatial positioning for each timbral layer.
 
-### Multi-Channel Routing in Cubase
+### Multi-Channel Routing by DAW
 
+**Cubase:**
 1. Set Poly's MIDI output to **All MIDI Channels** in the instrument track's output routing
 2. Create instrument tracks for each target (Groove Agent, Battery, Kontakt, etc.)
 3. Set each target track's MIDI input to **Poly** with channel filtering matching the lanes you want
-4. Each track receives only its assigned lanes' notes — no cross-talk between instruments
+
+**Logic Pro:**
+1. Create an External Instrument or Software Instrument for each target
+2. Use the MIDI Environment or MIDI FX to split channels from Poly's output to separate instruments
+
+**Ableton Live:**
+1. Place Poly on a MIDI track
+2. Create additional MIDI tracks, each with **MIDI From** set to the Poly track
+3. Set the channel filter on each receiving track to match Poly's lane channels
+
+**Studio One:**
+1. Use Note FX or MIDI channel routing on Poly's instrument track
+2. Create instrument tracks for each target and route by channel
+
+**FL Studio:**
+1. Set Poly's MIDI output port in the plugin wrapper
+2. Link receiving instruments to the same port with channel filtering
+
+In all DAWs, each target track receives only its assigned lanes' notes — no cross-talk between instruments.
 
 ### Note Map
 
@@ -273,16 +298,16 @@ Start with simple ratios: **2.0x against 1.0x** creates a 2:1 tempo relationship
 
 ### Loop Recording
 
-Cubase's loop recording modes work with Poly:
+Most DAWs support loop recording with Poly:
 
-- **Mix** — each pass adds to the same part (layered takes)
-- **Replace** — each pass overwrites the previous
+- **Mix / Overdub** — each pass adds to the same region (layered takes). Called Mix in Cubase, Overdub in Logic, and Overdub in Ableton.
+- **Replace** — each pass overwrites the previous take.
 
 Since Poly is deterministic, Replace mode produces identical content each pass unless you change parameters between passes.
 
 ### Editing Recorded MIDI
 
-After recording, the MIDI part is standard Cubase data: open in the Key Editor or Drum Editor, quantize, transpose, or process with any MIDI function. The recorded MIDI is fully independent of Poly.
+After recording, the MIDI region is standard data: open it in your DAW's piano roll or drum editor, quantize, transpose, or process with any MIDI function. The recorded MIDI is fully independent of Poly.
 
 ## MIDI Capture and Export
 
@@ -324,6 +349,8 @@ Poly exposes all macro knobs, scene controls, chain parameters, per-lane setting
 | 12 | Bossa Nova | Clave timeline with ginga micro-timing | 4 |
 | 13 | Carnatic Tala | Adi tala [4+2+2] | 4 |
 | 14 | IDM Glitch | Irregular additive cells | 5 |
+| 15 | Sub-Saharan: Agbekor | Ewe polymetric ensemble with bell timeline | 4 |
+| 16 | Gamelan: Colotomic | Javanese colotomic nesting at 4:8:16:32 | 4 |
 
 ### Save and Load
 
