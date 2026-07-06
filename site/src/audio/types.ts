@@ -37,3 +37,39 @@ export interface LoaderOptions {
 export interface SampleLoader {
   loadNotes(midiNotes: number[]): Promise<Map<number, AudioBuffer>>;
 }
+
+export interface MidiEvent {
+  beat: number;
+  note: number;
+  velocity: number;
+  durationBeats?: number;
+}
+
+export interface Pattern {
+  bpm: number;
+  loopBeats: number;
+  events: MidiEvent[];
+}
+
+export interface SchedulerContext {
+  readonly currentTime: number;
+  readonly destination: AudioNode;
+  createBufferSource(): AudioBufferSourceNode;
+  createGain(): GainNode;
+}
+
+export interface SchedulerOptions {
+  context: SchedulerContext;
+  loader: SampleLoader;
+  pattern: Pattern;
+  lookAheadMs?: number;
+  scheduleTickMs?: number;
+  batchDurationSec?: number;
+}
+
+export interface Scheduler {
+  start(): Promise<void>;
+  stop(): void;
+  readonly currentTime: number;
+  readonly nodesStarted: number;
+}

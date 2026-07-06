@@ -7,7 +7,7 @@ interface Props {
 const { preset, caption } = Astro.props;
 ---
 
-<div class="poly-preview" data-poly-preset={preset}>
+<div class="poly-preview" data-poly-preset={preset} data-state="stopped">
   <div class="poly-preview-body">
     <svg class="poly-preview-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
       <circle cx="12" cy="12" r="10" />
@@ -17,11 +17,17 @@ const { preset, caption } = Astro.props;
       <span class="poly-preview-preset">{preset}</span>
       {caption && <span class="poly-preview-caption">{caption}</span>}
     </div>
-    <button class="poly-preview-btn" type="button">Try it</button>
+    <button class="poly-preview-play" type="button" data-role="play" aria-label={`Play preview of ${preset}`}>Play</button>
+    <button class="poly-preview-btn" type="button" data-role="tryit">Try it</button>
   </div>
 </div>
 
 <script>
+  import { createSampleLoader } from '../audio/sample-loader.ts';
+  import { createScheduler } from '../audio/midi-scheduler.ts';
+  import { getPatternForPreset } from '../audio/preset-patterns.ts';
+  import type { Manifest } from '../audio/types.ts';
+
   let dialog: HTMLDialogElement | null = null;
   let frame: HTMLIFrameElement | null = null;
 
@@ -47,14 +53,107 @@ const { preset, caption } = Astro.props;
     });
   }
 
-  document.querySelectorAll<HTMLElement>('.poly-preview').forEach(card => {
-    card.querySelector('.poly-preview-btn')!.addEventListener('click', () => {
+  // Shared per-page audio state. Only one card plays at a time.
+  const baseUrl = (import.meta.env.BASE_URL || '/').replace(/\/?$/, '/');
+  const samplesBaseUrl = `${baseUrl}samples/`;
+  let audioContext: AudioContext | null = null;
+  let manifestPromise: Promise<Manifest> | null = null;
+  let activeScheduler: ReturnType<typeof createScheduler> | null = null;
+  let activeCard: HTMLElement | null = null;
+
+  function getAudioContext(): AudioContext {
+    if (!audioContext) {
+      const Ctor = (window.AudioContext || (window as any).webkitAudioContext);
+      audioContext = new Ctor();
+    }
+    return audioContext;
+  }
+
+  function loadManifest(): Promise<Manifest> {
+    if (!manifestPromise) {
+      manifestPromise = fetch(`${samplesBaseUrl}manifest.json`).then((r) => {
+        if (!r.ok) throw new Error(`manifest fetch ${r.status}`);
+        return r.json();
+      });
+    }
+    return manifestPromise;
+  }
+
+  function browserFetcher(url: string): Promise<ArrayBuffer> {
+    return fetch(url).then((r) => {
+      if (!r.ok) throw new Error(`fetch ${url} -> ${r.status}`);
+      return r.arrayBuffer();
+    });
+  }
+
+  function stopActive() {
+    if (activeScheduler) {
+      activeScheduler.stop();
+      activeScheduler = null;
+    }
+    if (activeCard) {
+      activeCard.dataset.state = 'stopped';
+      const btn = activeCard.querySelector<HTMLButtonElement>('.poly-preview-play');
+      if (btn) btn.textContent = 'Play';
+      activeCard = null;
+    }
+  }
+
+  async function startCard(card: HTMLElement, preset: string) {
+    const pattern = getPatternForPreset(preset);
+    if (!pattern) return;
+    if (activeCard === card) {
+      stopActive();
+      return;
+    }
+    stopActive();
+    const ctx = getAudioContext();
+    if (ctx.state === 'suspended') await ctx.resume();
+    const manifest = await loadManifest();
+    const loader = createSampleLoader({
+      manifest,
+      context: ctx,
+      fetcher: browserFetcher,
+      baseUrl: samplesBaseUrl,
+    });
+    const scheduler = createScheduler({
+      context: ctx,
+      loader,
+      pattern,
+    });
+    activeScheduler = scheduler;
+    activeCard = card;
+    card.dataset.state = 'playing';
+    const btn = card.querySelector<HTMLButtonElement>('.poly-preview-play');
+    if (btn) btn.textContent = 'Stop';
+    // Expose a probe so E2E tests can read AudioContext.currentTime and
+    // scheduler.nodesStarted without touching internal state.
+    (window as any).__polyAudioProbe = { context: ctx, scheduler };
+    await scheduler.start();
+  }
+
+  document.querySelectorAll<HTMLElement>('.poly-preview').forEach((card) => {
+    const preset = card.dataset.polyPreset ?? '';
+    const playBtn = card.querySelector<HTMLButtonElement>('.poly-preview-play')!;
+    const tryBtn = card.querySelector<HTMLButtonElement>('.poly-preview-btn')!;
+
+    if (!getPatternForPreset(preset)) {
+      playBtn.disabled = true;
+      playBtn.title = 'Audio preview coming soon';
+    } else {
+      playBtn.addEventListener('click', () => {
+        startCard(card, preset).catch((err) => {
+          console.error('[PolyPreviewCard] play failed', err);
+          stopActive();
+        });
+      });
+    }
+
+    tryBtn.addEventListener('click', () => {
       ensureModal();
-      const preset = card.dataset.polyPreset;
-      const base = (import.meta.env.BASE_URL || '/').replace(/\/?$/, '/');
       const params = new URLSearchParams();
       if (preset) params.set('preset', preset);
-      frame!.src = `${base}webui/index.html?${params}`;
+      frame!.src = `${baseUrl}webui/index.html?${params}`;
       frame!.title = preset ? `Poly — ${preset}` : 'Poly — Interactive UI';
       dialog!.querySelector('.poly-modal-title')!.textContent = preset || 'Poly';
       dialog!.showModal();
@@ -70,7 +169,7 @@ const { preset, caption } = Astro.props;
   .poly-preview-body {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.5rem;
     padding: 0.75rem 1rem;
     background: #1c1b19;
     border: 1px solid var(--sl-color-gray-4);
@@ -106,10 +205,10 @@ const { preset, caption } = Astro.props;
     text-overflow: ellipsis;
   }
 
+  .poly-preview-play,
   .poly-preview-btn {
     flex-shrink: 0;
     padding: 0.35rem 0.9rem;
-    background: var(--poly-primary);
     color: #fff;
     border: none;
     border-radius: 4px;
@@ -118,6 +217,31 @@ const { preset, caption } = Astro.props;
     font-weight: 600;
     cursor: pointer;
     transition: background 0.15s;
+  }
+
+  .poly-preview-play {
+    background: #2a2927;
+    border: 1px solid var(--sl-color-gray-4);
+    color: #e0ddd8;
+  }
+
+  .poly-preview-play:hover:not(:disabled) {
+    background: #3a3937;
+  }
+
+  .poly-preview-play:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+  }
+
+  .poly-preview[data-state='playing'] .poly-preview-play {
+    background: var(--poly-primary);
+    border-color: var(--poly-primary);
+    color: #fff;
+  }
+
+  .poly-preview-btn {
+    background: var(--poly-primary);
   }
 
   .poly-preview-btn:hover {
