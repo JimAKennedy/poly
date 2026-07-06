@@ -367,9 +367,9 @@ test.describe('state field completeness', () => {
     expect(mismatches).toEqual([]);
   });
 
-  test('presets array has 14 factory presets', async ({ page }) => {
+  test('presets array has 43 factory presets', async ({ page }) => {
     const presets = await page.evaluate(() => window.PolyHost.getState().presets);
-    expect(presets).toHaveLength(14);
+    expect(presets).toHaveLength(43);
     for (const p of presets) {
       expect(typeof p.name).toBe('string');
       expect(p.name.length).toBeGreaterThan(0);
