@@ -20,13 +20,14 @@ const { preset, caption } = Astro.props;
     <button class="poly-preview-play" type="button" data-role="play" aria-label={`Play preview of ${preset}`}>Play</button>
     <button class="poly-preview-btn" type="button" data-role="tryit">Try it</button>
   </div>
+  <div class="poly-preview-lanes" role="group" aria-label="Lane mute toggles" hidden></div>
 </div>
 
 <script>
   import { createSampleLoader } from '../audio/sample-loader.ts';
   import { createScheduler } from '../audio/midi-scheduler.ts';
   import { getPatternForPreset } from '../audio/preset-patterns.ts';
-  import type { Manifest } from '../audio/types.ts';
+  import type { LaneMeta, Manifest } from '../audio/types.ts';
 
   let dialog: HTMLDialogElement | null = null;
   let frame: HTMLIFrameElement | null = null;
@@ -99,6 +100,62 @@ const { preset, caption } = Astro.props;
     }
   }
 
+  // Per-card mute state persists across Stop/Play so a listener's isolation
+  // choices survive restarting the loop.
+  const mutedByCard = new WeakMap<HTMLElement, Set<number>>();
+
+  function getMutedSet(card: HTMLElement): Set<number> {
+    let set = mutedByCard.get(card);
+    if (!set) {
+      set = new Set();
+      mutedByCard.set(card, set);
+    }
+    return set;
+  }
+
+  function renderLaneChips(card: HTMLElement, lanes: LaneMeta[]) {
+    const container = card.querySelector<HTMLDivElement>('.poly-preview-lanes');
+    if (!container) return;
+    container.hidden = false;
+    container.innerHTML = '';
+    const muted = getMutedSet(card);
+    lanes.forEach((lane, idx) => {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'poly-lane-chip';
+      chip.dataset.laneIndex = String(idx);
+      chip.setAttribute('aria-pressed', muted.has(idx) ? 'true' : 'false');
+      chip.title = muted.has(idx) ? `Unmute ${lane.label}` : `Mute ${lane.label}`;
+      if (lane.color) chip.style.setProperty('--lane-color', lane.color);
+      chip.innerHTML = `
+        <span class="poly-lane-chip-dot" aria-hidden="true"></span>
+        <span class="poly-lane-chip-label">${escapeHtml(lane.label)}</span>
+        <span class="poly-lane-chip-role">${escapeHtml(lane.role)}</span>
+      `;
+      chip.addEventListener('click', () => {
+        const isMuted = muted.has(idx);
+        const nowMuted = !isMuted;
+        if (nowMuted) muted.add(idx); else muted.delete(idx);
+        chip.setAttribute('aria-pressed', nowMuted ? 'true' : 'false');
+        chip.title = nowMuted ? `Unmute ${lane.label}` : `Mute ${lane.label}`;
+        if (activeCard === card && activeScheduler) {
+          activeScheduler.setLaneMuted(idx, nowMuted);
+        }
+      });
+      container.appendChild(chip);
+    });
+  }
+
+  function escapeHtml(s: string): string {
+    return s.replace(/[&<>"']/g, (c) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+    }[c] as string));
+  }
+
   async function startCard(card: HTMLElement, preset: string) {
     const pattern = getPatternForPreset(preset);
     if (!pattern) return;
@@ -129,6 +186,10 @@ const { preset, caption } = Astro.props;
     // Expose a probe so E2E tests can read AudioContext.currentTime and
     // scheduler.nodesStarted without touching internal state.
     (window as any).__polyAudioProbe = { context: ctx, scheduler };
+    // Apply the card's persisted mute state before the first tick fires so
+    // muted lanes never schedule.
+    const muted = getMutedSet(card);
+    for (const idx of muted) scheduler.setLaneMuted(idx, true);
     await scheduler.start();
   }
 
@@ -136,8 +197,9 @@ const { preset, caption } = Astro.props;
     const preset = card.dataset.polyPreset ?? '';
     const playBtn = card.querySelector<HTMLButtonElement>('.poly-preview-play')!;
     const tryBtn = card.querySelector<HTMLButtonElement>('.poly-preview-btn')!;
+    const pattern = getPatternForPreset(preset);
 
-    if (!getPatternForPreset(preset)) {
+    if (!pattern) {
       playBtn.disabled = true;
       playBtn.title = 'Audio preview coming soon';
     } else {
@@ -147,6 +209,9 @@ const { preset, caption } = Astro.props;
           stopActive();
         });
       });
+      if (pattern.lanes && pattern.lanes.length > 0) {
+        renderLaneChips(card, pattern.lanes);
+      }
     }
 
     tryBtn.addEventListener('click', () => {
@@ -246,5 +311,87 @@ const { preset, caption } = Astro.props;
 
   .poly-preview-btn:hover {
     background: var(--poly-primary-dark);
+  }
+
+  .poly-preview-lanes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin: 0.4rem 0 0;
+    padding: 0.5rem 0.75rem 0.55rem;
+    background: #1c1b19;
+    border: 1px solid var(--sl-color-gray-4);
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+  }
+</style>
+
+<style is:global>
+  /* Lane chips are created client-side in the PolyPreviewCard script, so
+     Astro's per-component scoping doesn't reach them. Keep these global. */
+  .poly-lane-chip {
+    --lane-color: #8a8886;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.65rem;
+    background: #232220;
+    border: 1px solid #3a3937;
+    border-radius: 999px;
+    font-family: var(--poly-font-sans);
+    font-size: var(--sl-text-xs);
+    color: #e0ddd8;
+    line-height: 1.1;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s, color 0.12s, opacity 0.12s;
+  }
+
+  .poly-lane-chip:hover {
+    background: #2c2b29;
+    border-color: #4a4947;
+  }
+
+  .poly-lane-chip:focus-visible {
+    outline: 2px solid var(--poly-primary);
+    outline-offset: 2px;
+  }
+
+  .poly-lane-chip-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--lane-color);
+    box-shadow: 0 0 0 2px #1c1b19;
+    flex-shrink: 0;
+    transition: background 0.12s, box-shadow 0.12s;
+  }
+
+  .poly-lane-chip-label {
+    font-weight: 600;
+  }
+
+  .poly-lane-chip-role {
+    font-size: 0.7rem;
+    color: #9a9896;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .poly-lane-chip[aria-pressed='true'] {
+    background: #131211;
+    border-color: #2a2927;
+    color: #6c6a68;
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+    text-decoration-color: #6c6a68;
+  }
+
+  .poly-lane-chip[aria-pressed='true'] .poly-lane-chip-dot {
+    background: #3a3937;
+    box-shadow: 0 0 0 2px #1c1b19;
+  }
+
+  .poly-lane-chip[aria-pressed='true'] .poly-lane-chip-role {
+    color: #4a4947;
   }
 </style>

@@ -1,7 +1,10 @@
-import type { MidiEvent, Pattern } from './types.js';
+import type { LaneMeta, MidiEvent, Pattern } from './types.js';
 import { euclid, lcm, rotArr } from './groove-math.ts';
 
 interface LaneSpec {
+  label: string;
+  role: string;
+  color?: string;
   note: number;
   steps: number;
   stepLen: number;
@@ -10,7 +13,11 @@ interface LaneSpec {
   rot?: number;
 }
 
-function laneEvents(lane: LaneSpec, compositeTicks: number): MidiEvent[] {
+function laneEvents(
+  laneIdx: number,
+  lane: LaneSpec,
+  compositeTicks: number,
+): MidiEvent[] {
   const pattern = rotArr(euclid(lane.hits, lane.steps), lane.rot ?? 0);
   const events: MidiEvent[] = [];
   for (let tick = 0; tick < compositeTicks; tick += lane.stepLen) {
@@ -21,20 +28,32 @@ function laneEvents(lane: LaneSpec, compositeTicks: number): MidiEvent[] {
         beat: tick / 2,
         note: lane.note,
         velocity: lane.velocity,
+        lane: laneIdx,
       });
     }
   }
   return events;
 }
 
+function toLaneMeta(specs: LaneSpec[]): LaneMeta[] {
+  return specs.map((l) => ({
+    label: l.label,
+    role: l.role,
+    note: l.note,
+    color: l.color,
+  }));
+}
+
 function buildReichPhaseProcess(): Pattern {
-  // Mirrors mock-host case 27 (Reich Phase Process).
-  // Static preview: driftRate ignored — a 3-second demo can't audibly phase
-  // and we want a deterministic pattern for E2E assertions.
+  // Mirrors mock-host case 27 (Reich Phase Process), but a 3-second static
+  // preview cannot audibly demonstrate driftRate. Instead, lane 2 is rotated
+  // by 3 eighth-note steps so it locks against lane 1 at a distinctive
+  // polyrhythmic offset — the "arrived" phase state Reich phasing produces
+  // over time. Deterministic; keeps E2E assertions cheap.
   const lanes: LaneSpec[] = [
-    { note: 76, steps: 12, stepLen: 1, hits: 5, velocity: 90 },
-    { note: 76, steps: 12, stepLen: 1, hits: 5, velocity: 85 },
-    { note: 42, steps: 4, stepLen: 2, hits: 4, velocity: 70 },
+    { label: 'Anchor pulse', role: 'woodblock', color: '#e07a3f', note: 76, steps: 12, stepLen: 1, hits: 5, velocity: 95 },
+    { label: 'Drifting pulse', role: 'woodblock', color: '#d3a12b', note: 76, steps: 12, stepLen: 1, hits: 5, velocity: 90, rot: 3 },
+    { label: 'Shimmer', role: 'hat', color: '#7fb37a', note: 42, steps: 4, stepLen: 2, hits: 4, velocity: 65 },
   ];
 
   // Composite loop = LCM of lane cycs (in tick units where 1 tick = 1 eighth).
@@ -45,13 +64,14 @@ function buildReichPhaseProcess(): Pattern {
   );
 
   const events = lanes
-    .flatMap((l) => laneEvents(l, compositeTicks))
+    .flatMap((l, i) => laneEvents(i, l, compositeTicks))
     .sort((a, b) => a.beat - b.beat);
 
   return {
     bpm: 100,
     loopBeats: compositeTicks / 2,
     events,
+    lanes: toLaneMeta(lanes),
   };
 }
 

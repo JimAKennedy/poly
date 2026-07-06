@@ -87,6 +87,99 @@ test('scheduler renders scheduled notes into an OfflineAudioContext', async () =
   );
 });
 
+test('setLaneMuted skips events tagged with the muted lane', async () => {
+  const manifest = await readManifest();
+  const sampleRate = 48000;
+  const durationSec = 2;
+  const context = new OfflineAudioContext(2, sampleRate * durationSec, sampleRate);
+  const loader = createSampleLoader({
+    manifest,
+    context,
+    fetcher: filesystemFetcher(SAMPLES_ROOT),
+  });
+
+  // Two lanes with 4 events each. Muting lane 1 should drop half the sources.
+  const pattern = {
+    bpm: 120,
+    loopBeats: 4,
+    events: [
+      { beat: 0.0, note: 36, velocity: 100, lane: 0 },
+      { beat: 0.5, note: 42, velocity: 80, lane: 1 },
+      { beat: 1.0, note: 36, velocity: 100, lane: 0 },
+      { beat: 1.5, note: 42, velocity: 80, lane: 1 },
+      { beat: 2.0, note: 36, velocity: 100, lane: 0 },
+      { beat: 2.5, note: 42, velocity: 80, lane: 1 },
+      { beat: 3.0, note: 36, velocity: 100, lane: 0 },
+      { beat: 3.5, note: 42, velocity: 80, lane: 1 },
+    ],
+    lanes: [
+      { label: 'Kick', role: 'kick', note: 36 },
+      { label: 'Hat',  role: 'hat',  note: 42 },
+    ],
+  };
+
+  const scheduler = createScheduler({
+    context,
+    loader,
+    pattern,
+    batchDurationSec: durationSec,
+  });
+
+  // Mute lane 1 before start — batch scheduling should skip all 4 of its events.
+  scheduler.setLaneMuted(1, true);
+  await scheduler.start();
+
+  // 4 kick events fire in loop 0 (beats 0, 1, 2, 3 -> t=0, 0.5, 1, 1.5s).
+  // Loop 1 wraps at absBeat=4 -> t=2.0s == untilTime, which is <= boundary
+  // and also schedules. Hat lane is fully muted so contributes zero.
+  assert.equal(
+    scheduler.nodesStarted,
+    5,
+    `expected 5 sources fired (lane 0 only, incl. loop-wrap), got ${scheduler.nodesStarted}`,
+  );
+  assert.ok(scheduler.mutedLanes.has(1), 'lane 1 should still be muted after start');
+});
+
+test('setLaneMuted(idx, false) restores scheduling after unmute', async () => {
+  const manifest = await readManifest();
+  const sampleRate = 48000;
+  const durationSec = 2;
+  const context = new OfflineAudioContext(2, sampleRate * durationSec, sampleRate);
+  const loader = createSampleLoader({
+    manifest,
+    context,
+    fetcher: filesystemFetcher(SAMPLES_ROOT),
+  });
+
+  const pattern = {
+    bpm: 120,
+    loopBeats: 4,
+    events: [
+      { beat: 0.0, note: 36, velocity: 100, lane: 0 },
+      { beat: 1.0, note: 36, velocity: 100, lane: 0 },
+      { beat: 2.0, note: 36, velocity: 100, lane: 0 },
+      { beat: 3.0, note: 36, velocity: 100, lane: 0 },
+    ],
+    lanes: [{ label: 'Kick', role: 'kick', note: 36 }],
+  };
+
+  const scheduler = createScheduler({
+    context,
+    loader,
+    pattern,
+    batchDurationSec: durationSec,
+  });
+
+  scheduler.setLaneMuted(0, true);
+  scheduler.setLaneMuted(0, false);
+  await scheduler.start();
+  assert.ok(
+    scheduler.nodesStarted >= 3,
+    `after unmute, expected at least 3 sources fired, got ${scheduler.nodesStarted}`,
+  );
+  assert.ok(!scheduler.mutedLanes.has(0), 'lane 0 should be unmuted');
+});
+
 test('scheduler stop() is safe to call before and after start', async () => {
   const manifest = await readManifest();
   const sampleRate = 48000;

@@ -43,12 +43,21 @@ export interface MidiEvent {
   note: number;
   velocity: number;
   durationBeats?: number;
+  lane?: number;
+}
+
+export interface LaneMeta {
+  label: string;
+  role: string;
+  note: number;
+  color?: string;
 }
 
 export interface Pattern {
   bpm: number;
   loopBeats: number;
   events: MidiEvent[];
+  lanes?: LaneMeta[];
 }
 
 export interface SchedulerContext {
@@ -70,6 +79,8 @@ export interface SchedulerOptions {
 export interface Scheduler {
   start(): Promise<void>;
   stop(): void;
+  setLaneMuted(laneIndex: number, muted: boolean): void;
   readonly currentTime: number;
   readonly nodesStarted: number;
+  readonly mutedLanes: ReadonlySet<number>;
 }
