@@ -7,8 +7,7 @@ import PolyPatch from '../../components/PolyPatch.astro';
 import ListenFor from '../../components/ListenFor.astro';
 import CodeSnippet from '../../components/CodeSnippet.astro';
 import EuclideanDiagram from '../../components/EuclideanDiagram.astro';
-import PolyScreenshot from '../../components/PolyScreenshot.astro';
-import PolyUI from '../../components/PolyUI.astro';
+import PolyPreviewCard from '../../components/PolyPreviewCard.astro';
 
 In the gamelan traditions of Bali and Java, time is not a line — it is a circle. A gong stroke marks a point on that circle, and when the cycle completes, the gong returns. Within the circle, smaller cycles nest inside larger ones: a kenong divides the gong cycle in half, a ketuk divides the kenong, and the rapid interlocking patterns of the gangsa metallophones fill every remaining space. The result is a temporal architecture of extraordinary depth, built entirely from the nesting and interlocking of simple periodic patterns.
 
@@ -41,9 +40,7 @@ This is precisely what Poly's Kotekan parameter automates. When you set Lane 2's
 
 </PolyPatch>
 
-<PolyScreenshot src="/poly/screenshots/05-gamelan.png" caption="Balinese kotekan interlocking — polos and sangsih with colotomic bass punctuation" />
-
-<PolyUI preset="Kotekan Interlock" height="520px" />
+<PolyPreviewCard preset="Balinese Kotekan" caption="Balinese kotekan interlocking — polos and sangsih with colotomic bass punctuation" />
 
 Lane 2's hit count and pattern content are overridden by the Kotekan `L1` setting — the engine generates whatever complement Lane 1 requires. Lanes 3 and 4 provide bass punctuation and a reyong-style accent pattern that weaves around the interlocking pair.
 
@@ -77,6 +74,8 @@ In Poly, you model colotomic structure by setting lanes to different step counts
 | 4 | Gong ageng | 32 | 1 | 0 | 1/4 | 48 | 110 | 0 |
 
 </PolyPatch>
+
+<PolyPreviewCard preset="Javanese Colotomic" caption="Javanese colotomic nesting — ketuk, kempul, kenong, and gong at 4:8:16:32 cycle ratios" />
 
 Each lane plays exactly one hit per cycle, but the cycles are nested 4:8:16:32. The ketuk strikes every beat. The kempul strikes every other ketuk. The kenong every fourth. The gong every eighth. The hierarchy is audible immediately — each deeper gong carries more weight because it coincides with all the shallower cycles.
 

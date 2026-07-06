@@ -54,43 +54,19 @@ Hit play in your DAW. The lane phase indicators animate and you hear the groove 
 
 ## The Plugin Interface
 
-The plugin window is 600 x 870 pixels, laid out as six horizontal sections from top to bottom.
+The interface has a header bar across the top, lane columns filling the main area, and a master panel on the right.
 
-```
-+-----------------------------------------------+
-|  POLY    [ Select Preset...  v ]        1.0.0  |  Header
-+-----------------------------------------------+
-|  LANES                                         |
-|  Kick       ██████████████████████████  ● L1   |
-|  Snare      ████████████████████        ● L2   |  Lane Grid
-|  HH Closed  ██████████████████████████  ● L3   |  (interactive)
-|  ...                                           |
-+-----------------------------------------------+
-|  [A] [B] [Morph]  ═══════▓════════   [CHAIN]   |  Scene Bar
-+-----------------------------------------------+
-|  MACROS                                        |
-|  (o)   (o)   (o)   (o)   (o)   (o)             |  Macro Knobs
-|  Cmplx Dens Sync Swing Tens Human              |
-+-----------------------------------------------+
-|  VELOCITY                                      |
-|  ██  ██  ██  ██                                |  Velocity Bars
-|  L1  L2  L3  L4  L5  L6  L7  L8               |  (read-only)
-+-----------------------------------------------+
-|  VISUALIZATION                                 |
-|  +------------------+  +-----------+           |
-|  | Envelope curves  |  | Phase     |           |  Visualizations
-|  | with markers     |  | circles   |           |  (read-only)
-|  +------------------+  +-----------+           |
-+-----------------------------------------------+
-```
+![Poly web UI showing the Afrobeat 12/8 preset in Desk mode — header bar, five lane columns with Euclidean circles and step cells, and the master panel with macro sliders and convergence display](/poly/screenshots/ui-overview.png)
 
 ### Header
 
-Displays the plugin name **POLY** (blue), a **preset selector dropdown** in the center, and the version number (gray) on the right. Click the preset dropdown to access Init (All Lanes) and all 16 factory presets. Selecting any entry immediately loads all parameters.
+Displays the plugin name **POLY**, a play button, BPM and time signature, and a **preset selector dropdown**. To the right: **Cloth/Desk** mode toggle (Cloth shows lanes as horizontal rows, Desk as vertical columns), **A/B/Morph/Chain** scene controls, **Note Map** and **Learn** buttons, and the bars-to-align counter. Click the preset dropdown to access Init (All Lanes) and all factory presets. Selecting any entry immediately loads all parameters.
 
-### Lane Grid
+**Scene controls** are in the header: **A/B** select which scene is active, **Morph** enables crossfading between them (a slider appears to blend A and B), and **Chain** opens the chain configuration popover (see [Scene Chaining](#scene-chaining)).
 
-Eight drum lanes, each representing an independent rhythmic voice. This is the primary interactive area.
+### Lane Columns
+
+Up to eight drum lanes, each representing an independent rhythmic voice. In **Desk** mode (shown above), each lane is a vertical column. In **Cloth** mode, lanes are horizontal rows. Both modes show the same controls.
 
 **Default MIDI note assignments:**
 
@@ -105,46 +81,32 @@ Eight drum lanes, each representing an independent rhythmic voice. This is the p
 | L7 | Ride | G1 (43) |
 | L8 | Crash | D2 (50) |
 
-**Controls per lane:**
+**Each lane shows:**
 
-- **Active toggle** — click the lane name to enable or disable it. Active lanes show a blue-tinted background; inactive lanes are dark gray.
-- **Probability slider** — click or drag the horizontal blue bar to set the probability (0–100%) that each note triggers. Full bar = always plays; shorter bar = notes are randomly skipped.
-- **Phase indicator** — the colored circle on the right (L1–L8) shows a rotating dot indicating the lane's current position within its rhythmic cycle. Each lane can have a different cycle length, so they rotate at different speeds.
+- **Name and role** — the lane name (e.g., "BELL") and its rhythmic role (e.g., "ANCHOR PULSE"). Click the lane name to toggle it on/off.
+- **Euclidean circle** — a ring of dots showing the rhythm pattern. Filled dots are active hits; the rotating marker shows the current playback position. Each lane can have a different cycle length, so they rotate at different speeds.
+- **Step cells** — colored blocks representing each beat in the pattern. The color matches the lane's accent color. Brighter cells are active hits; darker cells are rests.
+- **Lane parameters** — at the bottom of each column: **VEL** (velocity), **PROB** (probability that each note triggers, 0–100%), **PUSH** (timing offset in ms), and **MODE** (Euclidean distribution or timeline).
+- **Channel and note** — MIDI channel and note number assignment for the lane.
 
-### Scene Bar
+### Master Panel
 
-A horizontal control strip between the lane grid and macros.
+The right-hand panel contains global controls.
 
-- **A / B / Morph buttons** — select which scene is active. Click A or B for a fixed scene, or Morph to enable crossfading between the two. The active button shows a blue highlight.
-- **Morph slider** — when Morph is selected, drag to blend between Scene A (left) and Scene B (right). Disabled when A or B is selected directly.
-- **CHAIN button** — opens the chain configuration popover (see [Scene Chaining](#scene-chaining)).
+**Macro sliders** shape the overall groove character — six horizontal sliders that influence multiple engine parameters at once:
 
-### Macro Knobs
+| Macro | Default | Effect |
+|-------|---------|--------|
+| Complexity | 50 | Increases rhythmic intricacy across all lanes |
+| Density | 50 | Controls how many hits are active in the pattern |
+| Syncopation | 0 | Shifts emphasis away from strong beats |
+| Swing | 0 | Applies swing feel globally |
+| Tension | 0 | Increases rhythmic unpredictability and conflict |
+| Humanize | 0 | Adds timing and velocity imperfections globally |
 
-Six rotary knobs that shape the overall groove character. These are high-level controls that influence multiple engine parameters at once.
+Click and drag any slider to adjust. Start with **Density** and **Swing** — they have the most immediate impact on the feel.
 
-| Knob | Default | Effect |
-|------|---------|--------|
-| Complexity | 50% | Increases rhythmic intricacy across all lanes |
-| Density | 50% | Controls how many hits are active in the pattern |
-| Syncopation | 0% | Shifts emphasis away from strong beats |
-| Swing | 0% | Applies swing feel globally |
-| Tension | 0% | Increases rhythmic unpredictability and conflict |
-| Humanize | 0% | Adds timing and velocity imperfections globally |
-
-Click and drag up/down on any knob to adjust. Start with **Density** and **Swing** — they have the most immediate impact on the feel.
-
-### Velocity Display
-
-Eight vertical bar graphs (one per lane, L1–L8) showing the real-time velocity of the most recent note triggered. Green bars pulse when notes fire during playback. This section is read-only.
-
-### Visualization
-
-Two real-time displays at the bottom of the plugin window.
-
-**Envelope Panel (left):** Shows envelope and automation curves for all active lanes overlaid in a single plot. Each lane uses a distinct color (L1 blue, L2 orange, L3 green, L4 red, L5 purple, L6 teal, L7 dark orange, L8 light blue). A vertical line moves across the plot showing the current phase position, with a colored dot following along each curve.
-
-**Phase Alignment Panel (right):** Concentric rings, one per active lane. A colored dot orbits each ring at the lane's cycle rate. When dots align vertically (top), those lanes are "in phase" — their downbeats coincide. When dots scatter, the polymetric pattern is at maximum divergence. This is the key visualization for Poly's core concept: independent rhythmic cycles drifting in and out of alignment.
+**Convergence display** — below the macro sliders, a visualization showing how the independent lane cycles relate. When lanes align (converge), downbeats coincide and the groove locks in. When they diverge, the polymetric pattern reaches maximum complexity. This is the key visualization for Poly's core concept: independent rhythmic cycles drifting in and out of alignment.
 
 ### Hidden Parameters
 

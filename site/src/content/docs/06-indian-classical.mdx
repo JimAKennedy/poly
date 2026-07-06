@@ -7,7 +7,7 @@ import PolyPatch from '../../components/PolyPatch.astro';
 import ListenFor from '../../components/ListenFor.astro';
 import CodeSnippet from '../../components/CodeSnippet.astro';
 import EuclideanDiagram from '../../components/EuclideanDiagram.astro';
-import PolyScreenshot from '../../components/PolyScreenshot.astro';
+import PolyPreviewCard from '../../components/PolyPreviewCard.astro';
 
 Indian classical music thinks about rhythm differently from almost every other tradition in this guide. Where West African drumming layers multiple independent cycles and Cuban music anchors everything to a clave, the tala system treats the rhythmic cycle itself as an architectural space<sup>[21](/poly/appendix-references/#ref-21)</sup> — a canvas with named landmarks, internal subdivisions, and a gravitational centre that every performer feels pulling them home.
 
@@ -50,6 +50,8 @@ Set Lane 1 to subdivision 1/4 for the basic pulse. Set Lane 2 to 1/8 for dugun. 
 
 </PolyPatch>
 
+<PolyPreviewCard preset="Tintal Groove" caption="Tintal-inspired groove — sam accent with theka, dugun, and tigun layakari layers" />
+
 Lane 1 marks the four strong beats of tintal's 4+4+4+4 structure. Lane 2 provides the mid-density theka skeleton. Lanes 3 and 4 add layakari-style density at higher subdivisions, creating the effect of rhythmic acceleration without changing the tempo.
 
 ## Tihai: Landing on Sam
@@ -67,6 +69,8 @@ Poly's phrase gating parameters model this directly. Set a lane's phrase Length 
 | 3 | Counter rhythm | 7 | 5 | 3 | 1/8 | 70 | 35 |
 
 </PolyPatch>
+
+<PolyPreviewCard preset="Rupak Tal" caption="Rupak tal — 7-beat cycle with sam marker, theka, and counter rhythm" />
 
 <EuclideanDiagram steps={7} hits={3} />
 
