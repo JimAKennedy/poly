@@ -9,7 +9,7 @@ import PolyPatch from '../../components/PolyPatch.astro';
 import ListenFor from '../../components/ListenFor.astro';
 import CodeSnippet from '../../components/CodeSnippet.astro';
 import EuclideanDiagram from '../../components/EuclideanDiagram.astro';
-import PolyScreenshot from '../../components/PolyScreenshot.astro';
+import PolyPreviewCard from '../../components/PolyPreviewCard.astro';
 
 ## PolyPatch
 
@@ -54,9 +54,9 @@ With rotation — E(5,12) rotated by 3:
 
 <EuclideanDiagram steps={12} hits={5} rotation={3} />
 
-## PolyScreenshot
+## PolyPreviewCard
 
-<PolyScreenshot
-  src="/poly/screenshots/nonexistent.png"
-  caption="This image doesn't exist yet — placeholder should appear"
+<PolyPreviewCard
+  preset="Afrobeat 12/8"
+  caption="Interactive preview card — click Try it to open the modal"
 />

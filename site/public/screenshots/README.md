@@ -1,20 +1,11 @@
 # Poly Guide Screenshots
 
-Screenshots of the Poly VST3 UI with chapter-specific patches loaded.
+DAW-specific screenshots that cannot be replaced by the interactive web UI embed.
 
-## Naming Convention
+Plugin UI screenshots have been replaced with `PolyPreviewCard` components that open the
+live web UI in a modal overlay.
 
-Files match the chapter filename: `01-foundations.png`, `02-sub-saharan-africa.png`, etc.
+## Remaining Files
 
-## How to Capture
-
-1. Open Poly in Cubase
-2. Load the preset/patch described in the chapter's PolyPatch component
-3. Screenshot the plugin window (Cmd+Shift+4 on macOS, drag over the UI)
-4. Save as PNG at native resolution to this directory
-
-## Referenced By
-
-`<PolyScreenshot src="/screenshots/01-foundations.png" caption="..." />`
-
-The component shows a "Screenshot pending" placeholder when the image is missing.
+- `02-cubase-routing.png` — Cubase MIDI channel routing setup
+- `15-cubase-automation.png` — Cubase Density macro automation lane
