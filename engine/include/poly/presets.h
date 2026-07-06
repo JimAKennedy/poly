@@ -9,7 +9,7 @@ struct PresetInfo {
     const char* description;
 };
 
-static constexpr int kFactoryPresetCount = 14;
+static constexpr int kFactoryPresetCount = 16;
 
 GrooveState makeFourOnTheFloor();
 GrooveState makePolymetricDrift();
@@ -25,6 +25,8 @@ GrooveState makeBalkanAksak();
 GrooveState makeBossaNova();
 GrooveState makeCarnaticTala();
 GrooveState makeIDMGlitch();
+GrooveState makeEweAgbekor();
+GrooveState makeGamelanColotomic();
 
 GrooveState makeFactoryPreset(int index);
 const PresetInfo& getFactoryPresetInfo(int index);

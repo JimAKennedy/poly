@@ -820,6 +820,114 @@ GrooveState makeIDMGlitch() {
     return s;
 }
 
+GrooveState makeEweAgbekor() {
+    GrooveState s{};
+    s.activeLaneCount = 4;
+    s.seed = 77;
+
+    auto& bell = s.lanes[0];
+    bell.id = 0;
+    bell.role = Role::AnchorPulse;
+    bell.midiNote = 56;
+    bell.cycle = {12, 8};
+    bell.hitCount = 7;
+    bell.baseVelocity = 95;
+    bell.probability = 1.0f;
+    bell.noteDuration = 0.1f;
+    bell.timeline = true;
+    bell.fixedPatternLength = 12;
+    bell.fixedPattern = {true, false, true, false, true, true, false, true, false, true, false, true};
+
+    auto& kidi = s.lanes[1];
+    kidi.id = 1;
+    kidi.role = Role::Accent;
+    kidi.midiNote = 63;
+    kidi.cycle = {5, 12};
+    kidi.hitCount = 5;
+    kidi.baseVelocity = 85;
+    kidi.probability = 0.95f;
+    kidi.velocitySpread = 0.08f;
+    kidi.humanizeMs = 1.5f;
+
+    auto& sogo = s.lanes[2];
+    sogo.id = 2;
+    sogo.role = Role::Ghost;
+    sogo.midiNote = 43;
+    sogo.cycle = {3, 12};
+    sogo.hitCount = 3;
+    sogo.baseVelocity = 75;
+    sogo.probability = 0.9f;
+    sogo.ghostFloor = 30;
+    sogo.velocitySpread = 0.1f;
+    sogo.humanizeMs = 2.0f;
+
+    auto& lead = s.lanes[3];
+    lead.id = 3;
+    lead.role = Role::Ornament;
+    lead.midiNote = 38;
+    lead.cycle = {7, 12};
+    lead.hitCount = 4;
+    lead.baseVelocity = 70;
+    lead.probability = 0.8f;
+    lead.velocitySpread = 0.12f;
+    lead.humanizeMs = 2.5f;
+
+    s.macros.humanize = 0.15f;
+    s.macros.density = 0.5f;
+    s.macros.complexity = 0.4f;
+    return s;
+}
+
+GrooveState makeGamelanColotomic() {
+    GrooveState s{};
+    s.activeLaneCount = 4;
+    s.seed = 63;
+
+    auto& ketuk = s.lanes[0];
+    ketuk.id = 0;
+    ketuk.role = Role::Shimmer;
+    ketuk.midiNote = 76;
+    ketuk.cycle = {4, 4};
+    ketuk.hitCount = 1;
+    ketuk.baseVelocity = 70;
+    ketuk.probability = 1.0f;
+    ketuk.noteDuration = 0.15f;
+
+    auto& kempul = s.lanes[1];
+    kempul.id = 1;
+    kempul.role = Role::Accent;
+    kempul.midiNote = 67;
+    kempul.cycle = {8, 4};
+    kempul.hitCount = 1;
+    kempul.baseVelocity = 80;
+    kempul.probability = 1.0f;
+    kempul.noteDuration = 0.3f;
+
+    auto& kenong = s.lanes[2];
+    kenong.id = 2;
+    kenong.role = Role::Backbeat;
+    kenong.midiNote = 56;
+    kenong.cycle = {16, 4};
+    kenong.hitCount = 1;
+    kenong.baseVelocity = 90;
+    kenong.probability = 1.0f;
+    kenong.noteDuration = 0.5f;
+
+    auto& gong = s.lanes[3];
+    gong.id = 3;
+    gong.role = Role::AnchorPulse;
+    gong.midiNote = 36;
+    gong.cycle = {32, 4};
+    gong.hitCount = 1;
+    gong.baseVelocity = 110;
+    gong.probability = 1.0f;
+    gong.noteDuration = 0.8f;
+
+    s.macros.density = 0.3f;
+    s.macros.complexity = 0.2f;
+    return s;
+}
+
 GrooveState makeFactoryPreset(int index) {
     switch (index) {
     case 0:
@@ -850,6 +958,10 @@ GrooveState makeFactoryPreset(int index) {
         return makeCarnaticTala();
     case 13:
         return makeIDMGlitch();
+    case 14:
+        return makeEweAgbekor();
+    case 15:
+        return makeGamelanColotomic();
     default:
         return GrooveState{};
     }
@@ -871,6 +983,8 @@ const PresetInfo& getFactoryPresetInfo(int index) {
         {"Bossa Nova", "Clave timeline with ginga micro-timing — surdo, tamborim, agogo and pandeiro"},
         {"Carnatic Tala", "Adi tala [4+2+2] additive cells — mridangam, ghatam and kanjira"},
         {"IDM Glitch", "Irregular additive cells with heavy mutation and erratic micro-timing offsets"},
+        {"Sub-Saharan: Agbekor", "Ewe-inspired polymetric ensemble — gankogui bell timeline, kidi, sogo and lead drum"},
+        {"Gamelan: Colotomic", "Javanese colotomic nesting — ketuk, kempul, kenong and gong ageng at 4:8:16:32 ratios"},
     };
     static constexpr PresetInfo kEmpty{"", ""};
     if (index >= 0 && index < kFactoryPresetCount)
