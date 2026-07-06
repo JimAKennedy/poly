@@ -12,6 +12,10 @@ interface LaneSpec {
   hits: number;
   velocity: number;
   rot?: number;
+  // Steps per 4-beat bar; matches poly_engine driftRate. floor(barPos * drift)
+  // adds to the cycle step index at each raw step, so the pattern rotates over
+  // time and preview loop length extends to hold a full drift rotation.
+  driftStepsPerBar?: number;
 }
 
 interface PatternSpec {
@@ -19,19 +23,41 @@ interface PatternSpec {
   lanes: LaneSpec[];
 }
 
+const TICKS_PER_BEAT = 4;
+const TICKS_PER_BAR = TICKS_PER_BEAT * 4;
+const MAX_DRIFT_BARS = 256;
+
+// Smallest positive N such that floor(N * |drift|) is a positive multiple of
+// steps. That's the number of 4-beat bars needed for drift to return the lane
+// to its original rotation. Capped so an ill-chosen drift can't unroll forever.
+function driftPeriodBars(steps: number, drift: number): number {
+  if (drift === 0) return 1;
+  const abs = Math.abs(drift);
+  for (let n = 1; n <= MAX_DRIFT_BARS; n++) {
+    const shift = Math.floor(n * abs);
+    if (shift > 0 && shift % steps === 0) return n;
+  }
+  return MAX_DRIFT_BARS;
+}
+
 function laneEvents(
   laneIdx: number,
   lane: LaneSpec,
-  compositeTicks: number,
+  totalTicks: number,
 ): MidiEvent[] {
-  const pattern = rotArr(euclid(lane.hits, lane.steps), lane.rot ?? 0);
+  const hitsArr = euclid(lane.hits, lane.steps);
+  const staticRot = lane.rot ?? 0;
+  const drift = lane.driftStepsPerBar ?? 0;
+  const steps = lane.steps;
   const events: MidiEvent[] = [];
-  for (let tick = 0; tick < compositeTicks; tick += lane.stepLen) {
-    const stepIdx = (tick / lane.stepLen) % lane.steps;
-    if (pattern[stepIdx]) {
-      // Four ticks per quarter-note beat.
+  for (let tick = 0; tick < totalTicks; tick += lane.stepLen) {
+    const rawStep = (tick / lane.stepLen) % steps;
+    const driftSteps =
+      drift === 0 ? 0 : Math.floor((tick / TICKS_PER_BAR) * drift);
+    const idx = (((rawStep + staticRot + driftSteps) % steps) + steps) % steps;
+    if (hitsArr[idx]) {
       events.push({
-        beat: tick / 4,
+        beat: tick / TICKS_PER_BEAT,
         note: lane.note,
         velocity: lane.velocity,
         lane: laneIdx,
@@ -51,16 +77,25 @@ function toLaneMeta(specs: LaneSpec[]): LaneMeta[] {
 }
 
 function buildFromSpec(spec: PatternSpec): Pattern {
-  const compositeTicks = spec.lanes.reduce(
+  // Base composite: LCM of each lane's own step-cycle length in ticks.
+  const baseCompositeTicks = spec.lanes.reduce(
     (acc, l) => lcm(acc, l.steps * l.stepLen),
     1,
   );
+  // Drift composite: LCM of each drifting lane's rotation-return period, so
+  // the composite loop lands on driftSteps=0 for every lane simultaneously.
+  const driftCompositeTicks = spec.lanes.reduce((acc, l) => {
+    const drift = l.driftStepsPerBar ?? 0;
+    if (drift === 0) return acc;
+    return lcm(acc, driftPeriodBars(l.steps, drift) * TICKS_PER_BAR);
+  }, 1);
+  const totalTicks = lcm(baseCompositeTicks, driftCompositeTicks);
   const events = spec.lanes
-    .flatMap((l, i) => laneEvents(i, l, compositeTicks))
+    .flatMap((l, i) => laneEvents(i, l, totalTicks))
     .sort((a, b) => a.beat - b.beat);
   return {
     bpm: spec.bpm,
-    loopBeats: compositeTicks / 4,
+    loopBeats: totalTicks / TICKS_PER_BEAT,
     events,
     lanes: toLaneMeta(spec.lanes),
   };
@@ -92,14 +127,17 @@ const SIXTEENTH = 1;
 // Additive-cell rhythms ([2+2+3], [4+2+2]) are approximated as uniform Euclidean
 // patterns over the total cell length (7 for aksak, 8 for adi tala).
 const PATTERN_SPECS: Record<string, PatternSpec> = {
-  // Preview for chapter 8 (minimalism). Mirrors mock-host case 27. A 3-second
-  // preview cannot audibly demonstrate drift, so lane 2 uses a static rotation
-  // to lock at a distinctive polyrhythmic offset — Reich's "arrived" phase.
+  // Preview for chapter 8 (minimalism). Lane 2 drifts against the anchor at
+  // +2 steps/bar — an accelerated rate so a full 12-step rotation completes
+  // every 6 bars (14.4 s at 100 BPM) and the composite loop passes through
+  // all six phase relationships. The plugin uses +0.25 steps/bar as the
+  // aesthetic reference (~2 minutes for a full rotation); the preview trades
+  // faithfulness to that rate for something audible in a short listen.
   'Reich Phase Process': {
     bpm: 100,
     lanes: [
       { label: 'Anchor pulse',   role: 'woodblock', color: HUE.kick,  note: 76, steps: 12, stepLen: EIGHTH, hits: 5, velocity: 95 },
-      { label: 'Drifting pulse', role: 'woodblock', color: HUE.snare, note: 76, steps: 12, stepLen: EIGHTH, hits: 5, velocity: 90, rot: 3 },
+      { label: 'Drifting pulse', role: 'woodblock', color: HUE.snare, note: 76, steps: 12, stepLen: EIGHTH, hits: 5, velocity: 90, driftStepsPerBar: 2 },
       { label: 'Shimmer',        role: 'hat',       color: HUE.hat,   note: 42, steps: 4,  stepLen: QTR,    hits: 4, velocity: 65 },
     ],
   },

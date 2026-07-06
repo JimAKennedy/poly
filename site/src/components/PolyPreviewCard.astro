@@ -241,7 +241,7 @@ const { preset, caption } = Astro.props;
 
   .poly-preview-body {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 0.5rem;
     padding: 0.75rem 1rem;
     background: #1c1b19;
@@ -309,9 +309,8 @@ const { preset, caption } = Astro.props;
     font-family: var(--poly-font-sans);
     font-size: var(--sl-text-xs);
     color: #8a8886;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
   }
 
   .poly-preview-play,

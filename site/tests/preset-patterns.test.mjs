@@ -42,7 +42,8 @@ test('getPatternForPreset("Reich Phase Process") returns a well-formed pattern',
   const pattern = getPatternForPreset('Reich Phase Process');
   assert.ok(pattern, 'expected a Pattern object');
   assert.equal(pattern.bpm, 100);
-  assert.equal(pattern.loopBeats, 12);
+  // Drift on lane 2 (+2 steps/bar) unrolls the composite to 6 bars = 24 beats.
+  assert.equal(pattern.loopBeats, 24);
   assert.ok(
     pattern.events.length >= 12,
     `expected >= 12 events per loop, got ${pattern.events.length}`,
@@ -57,6 +58,45 @@ test('getPatternForPreset("Reich Phase Process") returns a well-formed pattern',
   for (const e of pattern.events) {
     assert.ok(e.beat >= 0 && e.beat < pattern.loopBeats);
     assert.ok(e.velocity >= 1 && e.velocity <= 127);
+  }
+});
+
+test('Reich Phase Process drift: lane 1 rotates over bars, lane 0 anchor holds', () => {
+  const pattern = getPatternForPreset('Reich Phase Process');
+  // Lanes 0 (anchor) and 1 (drifter) share note 76; only the lane index
+  // distinguishes them at the event level. Collect offsets inside a window.
+  const beatsIn = (lane, start, end) =>
+    pattern.events
+      .filter((e) => e.lane === lane && e.beat >= start && e.beat < end)
+      .map((e) => e.beat - start)
+      .sort((a, b) => a - b);
+  // Anchor's own cycle is 6 beats (12 steps at 1/8), not 4 — with no drift,
+  // every 6-beat window replays the same offsets.
+  assert.deepEqual(beatsIn(0, 0, 6), beatsIn(0, 6, 12));
+  assert.deepEqual(beatsIn(0, 0, 6), beatsIn(0, 18, 24));
+  // Drifter shares that 6-beat cycle. With +2 steps/bar the effective step
+  // index differs from the anchor's, so its 6-beat windows must diverge.
+  const cycle0 = beatsIn(1, 0, 6);
+  const cycle1 = beatsIn(1, 6, 12);
+  assert.notDeepEqual(
+    cycle0,
+    cycle1,
+    `drifter cycle 0 and cycle 1 should differ; got ${JSON.stringify(cycle0)} vs ${JSON.stringify(cycle1)}`,
+  );
+  // And it must not be locked to the anchor either — the whole point of drift.
+  assert.notDeepEqual(
+    beatsIn(0, 0, 24),
+    beatsIn(1, 0, 24),
+    'drifter events must diverge from anchor across the loop',
+  );
+});
+
+test('getPatternForPreset is deterministic — same call, same output', () => {
+  const a = getPatternForPreset('Reich Phase Process');
+  const b = getPatternForPreset('Reich Phase Process');
+  assert.equal(a.events.length, b.events.length);
+  for (let i = 0; i < a.events.length; i++) {
+    assert.deepEqual(a.events[i], b.events[i]);
   }
 });
 
