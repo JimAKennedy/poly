@@ -88,9 +88,3 @@ You can model this in Poly by keeping all lanes at the same step count but varyi
 Traditional lead drumming is never fully random — it follows shared vocabulary and responds to dancers and other musicians. In Poly, you approximate this not by cranking mutation to 100%, but by combining moderate mutation (15-30%) with phrase gating. Set a phrase length of 4-8 beats with a gap of 2-4 beats on the lead lane, and the pattern will breathe — playing for a phrase, resting, then re-entering with variation. The timeline and support lanes, ungated, continue without interruption.
 
 This call-and-response structure is fundamental to West African music. The bell calls. The support responds. The lead converses with both. In Poly, that conversation emerges from the interaction of independent Euclidean cycles, and no two bars are quite the same.
-
-## DAW Routing: Poly in Cubase
-
-Each of Poly's lanes outputs MIDI on a separate channel. In Cubase, you route these to individual instrument tracks — one per drum voice — so each lane gets its own sound, EQ, and mix position. The screenshot below shows the Ewe ensemble routed to four Cubase tracks: Gankogu (bell), Kidi (support), Responding Drum, and Lead Complement. The channel settings dialog highlights the MIDI input routing — set each track's input to "Poly" and select the corresponding MIDI channel.
-
-<PolyScreenshot src="/poly/screenshots/02-cubase-routing.png" caption="Cubase 14 routing — Poly's MIDI output split across four instrument tracks, each receiving a different lane's MIDI channel" />
