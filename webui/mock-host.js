@@ -125,8 +125,8 @@
     ['Kick', 'Snare', 'Hi-Hat', 'Ghost'],  // 38: Jungle
     ['Kick', 'Snare', 'Hi-Hat', 'Ride'],  // 39: Liquid DnB
     ['Clave', 'Kick', 'Polos', 'Sangsih', 'Shaker'],  // 40: Afro-Electronic
-    ['Kick', 'Snare', 'Ghost Hat', 'Rim'],  // 41: Balkan Funk
-    ['Kick', 'Bell', 'Ghost Hat', 'Conga', 'Rim', 'Lead'],  // 42: Comp Arc
+    ['Kick', 'Snare', 'Hi-Hat', 'Rim'],  // 41: Balkan Funk
+    ['Kick', 'Bell', 'Hi-Hat', 'Conga', 'Rim', 'Lead'],  // 42: Comp Arc
   ];
 
   function makePresetLanes(index) {
@@ -335,13 +335,13 @@
       case 41: return [ // Balkan Funk — 4 lanes
         mkLane('Kick', 'Anchor pulse', 36, 1, 7, 1, 3, 105, { duration: 0.2 }),
         mkLane('Snare', 'Backbeat', 38, 2, 7, 1, 5, 85, { prob: 0.9, ghost: 60, spread: 0.35, rot: 1 }),
-        mkLane('Ghost Hat', 'Shimmer', 42, 3, 14, 0.5, 9, 55, { prob: 0.85, ghost: 40, spread: 0.2, swing: 0.15 }),
+        mkLane('Hi-Hat', 'Shimmer', 42, 3, 14, 0.5, 9, 55, { prob: 0.85, ghost: 40, spread: 0.2, swing: 0.15 }),
         mkLane('Rim', 'Accent', 37, 4, 7, 1, 2, 90, { rot: 3 }),
       ];
       case 42: return [ // Compositional Arc — 6 lanes
         mkLane('Kick', 'Anchor pulse', 36, 1, 4, 2, 4, 110, { duration: 0.25 }),
         mkLane('Bell', 'Accent', 56, 2, 12, 1, 7, 90, { duration: 0.1 }),
-        mkLane('Ghost Hat', 'Shimmer', 42, 3, 16, 0.5, 11, 55, { prob: 0.85, ghost: 50, spread: 0.25, rot: 2 }),
+        mkLane('Hi-Hat', 'Shimmer', 42, 3, 16, 0.5, 11, 55, { prob: 0.85, ghost: 50, spread: 0.25, rot: 2 }),
         mkLane('Conga', 'Ghost', 63, 4, 8, 1, 5, 75, { prob: 0.85, ghost: 40, spread: 0.15, rot: 1, phraseLength: 12, phraseGap: 4 }),
         mkLane('Rim', 'Ornament', 37, 5, 7, 1, 3, 85, { prob: 0.8, phraseLength: 8, phraseGap: 8 }),
         mkLane('Lead', 'Ghost', 47, 6, 5, 1, 3, 80, { prob: 0.75, ghost: 55, spread: 0.3, rot: 2, phraseLength: 6, phraseGap: 6 }),
@@ -417,6 +417,32 @@
     return m;
   }
 
+  function cloneLanes(lanes) {
+    return lanes.map(l => ({
+      ...l,
+      pattern: l.pattern.slice(),
+      mt: l.mt.slice(),
+      accents: l.accents.slice(),
+      envs: l.envs.map(e => ({ ...e })),
+      fixed: l.fixed ? l.fixed.slice() : null,
+      cells: l.cells ? l.cells.slice() : null,
+    }));
+  }
+
+  function makeSceneData(presetIndex) {
+    return {
+      preset: PRESETS[presetIndex] ? PRESETS[presetIndex].name : 'Init',
+      seed: PRESET_SEEDS[presetIndex] ?? 0,
+      macros: { ...PRESET_MACROS[presetIndex] },
+      lanes: makePresetLanes(presetIndex),
+    };
+  }
+
+  const sceneStore = {
+    A: makeSceneData(9),
+    B: makeSceneData(9),
+  };
+
   const state = {
     preset: 'Afrobeat 12/8', seed: 88, tempo: TEMPO,
     scene: 'A', morph: 0,
@@ -426,6 +452,24 @@
     presets: PRESETS,
     noteMap: identityNoteMap(),
   };
+
+  function saveCurrentScene() {
+    const key = state.scene === 'B' ? 'B' : 'A';
+    sceneStore[key] = {
+      preset: state.preset,
+      seed: state.seed,
+      macros: { ...state.macros },
+      lanes: cloneLanes(state.lanes),
+    };
+  }
+
+  function loadScene(key) {
+    const data = sceneStore[key];
+    state.preset = data.preset;
+    state.seed = data.seed;
+    state.macros = { ...data.macros };
+    state.lanes = cloneLanes(data.lanes);
+  }
 
   const stateSubs = [];
   const frameSubs = [];
@@ -454,6 +498,9 @@
       state.macros = { complexity: 0, density: 0, syncopation: 0, swing: 0, tension: 0, humanize: 0 };
       state.lanes = makePresetLanes(0);
       state.noteMap = identityNoteMap();
+      const initData = { preset: 'Init', seed: 0, macros: { ...state.macros }, lanes: cloneLanes(state.lanes) };
+      sceneStore.A = initData;
+      sceneStore.B = { preset: 'Init', seed: 0, macros: { ...state.macros }, lanes: cloneLanes(state.lanes) };
       return;
     }
     if (index < 0 || index >= PRESETS.length) return;
@@ -461,6 +508,7 @@
     state.seed = PRESET_SEEDS[index] ?? 0;
     state.macros = { ...PRESET_MACROS[index] };
     state.lanes = makePresetLanes(index);
+    saveCurrentScene();
   }
 
   /* ---------- WebAudio preview voices ---------- */
@@ -613,9 +661,13 @@
         else if (payload.index >= l.envs.length) l.envs.push(payload.envelope);
         else l.envs[payload.index] = payload.envelope;
         break;
-      case 'selectScene':
-        state.scene = payload.scene === 'Morph' ? 'Morph' : (payload.scene === 'B' ? 'B' : 'A');
+      case 'selectScene': {
+        const target = payload.scene === 'Morph' ? 'Morph' : (payload.scene === 'B' ? 'B' : 'A');
+        if (target !== 'Morph' && state.scene !== 'Morph') saveCurrentScene();
+        state.scene = target;
+        if (target !== 'Morph') loadScene(target);
         break;
+      }
       case 'chainAddEntry': {
         if (state.chain.entryCount < 16) {
           state.chain.entries.push({ scene: 0, bars: 4 });
