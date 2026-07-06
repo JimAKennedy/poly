@@ -7,7 +7,7 @@ import PolyPatch from '../../components/PolyPatch.astro';
 import ListenFor from '../../components/ListenFor.astro';
 import CodeSnippet from '../../components/CodeSnippet.astro';
 import EuclideanDiagram from '../../components/EuclideanDiagram.astro';
-import PolyScreenshot from '../../components/PolyScreenshot.astro';
+import PolyPreviewCard from '../../components/PolyPreviewCard.astro';
 
 Electronic dance music begins where this guide's other traditions end: with the machine. A drum machine does not swing unless you tell it to, does not drift unless you program it to, does not vary unless you give it rules for variation. The grid is absolute. And from that absolute grid, techno and house producers have built some of the most physically compelling rhythmic music ever made — not in spite of the machine's rigidity but because of it.
 
@@ -36,7 +36,7 @@ The critical technique is combining a kick cycle with layers that have *differen
 
 </PolyPatch>
 
-<PolyScreenshot src="/poly/screenshots/09-electronic.png" caption="Minimal techno — four-on-the-floor kick with polymetric ghost percussion" />
+<PolyPreviewCard preset="Minimal Techno" caption="Minimal techno — four-on-the-floor kick with polymetric ghost percussion" />
 
 Lane 1 is the immovable grid. Lane 2 fills the space with eighth-note hats. Lane 3 introduces the polymetric element — its 7-step cycle against the 4-step kick ensures the groove never literally repeats within a single 4-bar phrase. Lane 4 places two claps in the 16-step space, typically on beats 2 and 4 (rotation 4 shifts them into position).
 
@@ -56,6 +56,8 @@ In Poly, the Swing macro controls this globally. At 0.0, all subdivisions are ev
 | 4 | Rim shot | 8 | 3 | 1 | 1/8 | 90 | 35 | 0.1 |
 
 </PolyPatch>
+
+<PolyPreviewCard preset="Deep House" caption="Swung house groove — open hat, shaker, and rim with moderate swing and humanize" />
 
 The kick stays unswung — swing on the downbeat destabilises the foundation. The hat, shaker, and rim all carry moderate swing values (35-45%), pushing their off-beat onsets late. Humanize adds a small random timing variation on top, preventing the swing from feeling too mechanical. The result is a groove that sits between the precision of a machine and the looseness of a live drummer.
 

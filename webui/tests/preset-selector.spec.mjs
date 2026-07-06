@@ -19,13 +19,13 @@ test.describe('preset dropdown', () => {
     await expect(page.locator('#presetName')).toHaveAttribute('aria-expanded', 'true');
   });
 
-  test('menu lists Init plus 14 factory presets', async ({ page }) => {
+  test('menu lists Init plus 43 factory presets', async ({ page }) => {
     await page.click('#presetName');
     const options = page.locator('#presetMenu [role="option"]');
-    await expect(options).toHaveCount(15);
+    await expect(options).toHaveCount(44);
     await expect(options.first()).toHaveText('Init (All Lanes)');
     await expect(options.nth(1)).toContainText('Four on the Floor');
-    await expect(options.last()).toContainText('IDM Glitch');
+    await expect(options.last()).toContainText('Compositional Arc');
   });
 
   test('separator exists between Init and factory presets', async ({ page }) => {

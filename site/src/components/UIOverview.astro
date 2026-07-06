@@ -1,13 +1,18 @@
 ---
-// Annotated Poly plugin interface screenshot with numbered section labels
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const src = `${base}webui/index.html?preset=Afrobeat%2012%2F8`;
 ---
 
 <figure class="ui-overview">
   <div class="ui-overview-container">
-    <img
-      src="/poly/screenshots/04-afrobeat.png"
-      alt="Poly VST3 plugin interface — Afrobeat 12/8 preset with all seven sections labeled: header, lane grid, lane editor, macros, velocity, visualization, and cross-rhythm"
-    />
+    <iframe
+      class="ui-overview-frame"
+      src={src}
+      title="Poly — Afrobeat 12/8 preset with section labels"
+      loading="lazy"
+      sandbox="allow-scripts allow-same-origin"
+      allow="autoplay"
+    ></iframe>
     <span class="ui-label" style="top: 1.5%">1</span>
     <span class="ui-label" style="top: 14%">2</span>
     <span class="ui-label" style="top: 35%">3</span>
@@ -35,16 +40,18 @@
 
   .ui-overview-container {
     position: relative;
-    border: 1px solid var(--sl-color-gray-4);
-    border-radius: 6px;
+    border: 2px solid var(--poly-primary);
+    border-radius: 8px;
     overflow: hidden;
-    background: var(--poly-surface);
+    background: #1c1b19;
   }
 
-  .ui-overview-container img {
+  .ui-overview-frame {
     display: block;
     width: 100%;
-    height: auto;
+    height: 520px;
+    border: none;
+    background: transparent;
   }
 
   .ui-label {
@@ -64,6 +71,7 @@
     line-height: 1;
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
     pointer-events: none;
+    z-index: 2;
   }
 
   figcaption {
