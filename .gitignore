@@ -262,3 +262,6 @@ docs/internal/
 webui/node_modules/
 webui/test-results/
 webui/playwright-report/
+
+# Sample-fetch scratch dir
+.cache/
