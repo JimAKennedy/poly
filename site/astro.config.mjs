@@ -97,6 +97,10 @@ export default defineConfig({
 							label: 'References',
 							slug: 'appendix-references',
 						},
+						{
+							label: 'Credits & Licenses',
+							slug: 'credits',
+						},
 					],
 				},
 			],
