@@ -68,7 +68,7 @@
   .strip { background: linear-gradient(var(--surface), #191512); border: 1px solid #2B251E; border-radius: 8px; padding: 12px 10px; display: flex; flex-direction: column; align-items: center; gap: 9px; min-height: 0; min-width: 0; overflow: hidden; }
   .strip .head { display: flex; align-items: center; gap: 6px; width: 100%; flex: none; }
   .strip .nm { text-transform: uppercase; letter-spacing: .14em; font-size: 9px; color: #B7AE9D; text-align: center; min-width: 0; flex: 1; overflow: hidden; }
-  .strip .nm b { display: block; font-size: 12px; letter-spacing: .1em; color: var(--text); margin-bottom: 2px; white-space: nowrap; }
+  .strip .nm b { display: block; font-size: 12px; letter-spacing: .1em; color: var(--text); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .strip .ex { border: 1px solid var(--line); background: transparent; border-radius: 5px; width: 22px; height: 22px; font-size: 11px; color: var(--dim); flex: none; line-height: 1; }
   .strip .ex:hover { color: var(--text); border-color: var(--dim); }
   .strip .core { display: flex; flex-direction: column; align-items: center; gap: 9px; flex: 1; min-height: 0; width: 100%; }
@@ -80,9 +80,9 @@
   .vu { width: 100%; height: 5px; background: var(--surface2); border-radius: 3px; overflow: hidden; flex: none; }
   .vu i { display: block; height: 100%; width: 4%; background: linear-gradient(90deg, #6E5F41, var(--accent)); transition: width .08s linear; }
   .feel { width: 100%; font-size: 9.5px; color: var(--dim); letter-spacing: .1em; font-variant-numeric: tabular-nums; display: flex; flex-direction: column; gap: 2px; flex: none; }
-  .feel div { display: flex; justify-content: space-between; }
+  .feel div { display: flex; justify-content: space-between; overflow: hidden; white-space: nowrap; }
   .feel b { color: #C9C0B2; font-weight: 500; }
-  .stat { font-size: 9px; color: var(--dim); letter-spacing: .1em; font-variant-numeric: tabular-nums; flex: none; }
+  .stat { font-size: 9px; color: var(--dim); letter-spacing: .1em; font-variant-numeric: tabular-nums; flex: none; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 
   /* expanded strip */
   .strip .deep { display: none; }
