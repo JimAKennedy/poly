@@ -46,43 +46,33 @@
     return m;
   }
 
-  const PRESET_NAMES = [
-    ['Kick', 'Snare', 'Hi-Hat', 'Open Hat'],
-    ['Kick', 'Rim', 'Tom', 'Hi-Hat'],
-    ['Kick', 'Rim', 'Ghost'],
-    ['Kick', 'Snare', 'Hi-Hat', 'Ghost Tom'],
-    ['Clave', 'Conga', 'Shaker', 'Cowbell'],
-    ['Kick', 'Shaker', 'Conga', 'Djembe', 'Perc'],
-    ['Fixed', 'Drifting', 'Pulse'],
-    ['Polos', 'Sangsih', 'Gong', 'Shimmer'],
-    ['Kick', 'Snare', 'Hi-Hat', 'Ghost'],
-    ['Bell', 'Kick', 'Snare', 'Shaker', 'Conga'],
-    ['Davul', 'Rim', 'Zurna', 'Darbuka'],
-    ['Surdo', 'Tamborim', 'Agogo', 'Pandeiro'],
-    ['Mrid Bass', 'Mrid Treble', 'Ghatam', 'Kanjira'],
-    ['Kick', 'Snare', 'Hi-Hat', 'Perc', 'Glitch'],
-  ];
+  // Engine-emitted preset lane metadata (M043 S11). Populated at boot from
+  // /poly/webui/presets.json — same file the site card consumes — so lane
+  // labels, MIDI notes, and role hints never drift from the C++ engine.
+  // presetsById[index] = { name, lanes: [{ noteNumber, roleLabel, ... }] }.
+  let presetsById = null;
 
-  const PRESET_ROLES = [
-    ['Anchor pulse', 'Backbeat', 'Shimmer', 'Ghost'],
-    ['Anchor pulse', 'Backbeat', 'Ghost', 'Shimmer'],
-    ['Anchor pulse', 'Ornament', 'Ghost'],
-    ['Anchor pulse', 'Backbeat', 'Shimmer', 'Ghost'],
-    ['Anchor pulse', 'Ghost', 'Shimmer', 'Ornament'],
-    ['Anchor pulse', 'Shimmer', 'Ghost', 'Ornament', 'Ghost'],
-    ['Anchor pulse', 'Anchor pulse', 'Shimmer'],
-    ['Anchor pulse', 'Anchor pulse', 'Accent', 'Shimmer'],
-    ['Anchor pulse', 'Backbeat', 'Shimmer', 'Ghost'],
-    ['Anchor pulse', 'Backbeat', 'Accent', 'Shimmer', 'Ghost'],
-    ['Anchor pulse', 'Ornament', 'Accent', 'Shimmer'],
-    ['Anchor pulse', 'Ornament', 'Accent', 'Shimmer'],
-    ['Anchor pulse', 'Accent', 'Ornament', 'Shimmer'],
-    ['Anchor pulse', 'Backbeat', 'Shimmer', 'Ghost', 'Ornament'],
-  ];
+  // Human-readable per-lane labels derived from GM role: what the modal
+  // shows above each strip. Falls back to "Lane N" until presets.json loads.
+  const ROLE_LABEL_TO_NAME = {
+    kick: 'Kick', snare: 'Snare', hat: 'Hi-hat', openhat: 'Open Hat',
+    clap: 'Clap', ghost: 'Ghost', clave: 'Clave', woodblock: 'Woodblock',
+    cowbell: 'Cowbell', tom: 'Tom', shaker: 'Shaker', tambourine: 'Tambourine',
+    conga: 'Conga', bongo: 'Bongo', cajon: 'Cajon', darbuka: 'Darbuka',
+    handclap: 'Handclap', castanets: 'Castanets', agogo: 'Agogo',
+  };
+  const ENGINE_ROLE_TO_UI = {
+    AnchorPulse: 'Anchor pulse', Backbeat: 'Backbeat',
+    Shimmer: 'Shimmer', Accent: 'Accent', Ghost: 'Ghost',
+    Ornament: 'Ornament', Fill: 'Fill', Custom: 'Custom',
+  };
 
   let currentPresetIndex = 9;
-  let laneNames = PRESET_NAMES[9].slice();
-  let laneRoles = PRESET_ROLES[9].slice();
+  let laneNames = ['Lane 1', 'Lane 2', 'Lane 3', 'Lane 4'];
+  let laneRoles = ['Anchor pulse', 'Backbeat', 'Shimmer', 'Ghost'];
+  // Role hint per lane, sourced from presets.json for sample resolution.
+  // Cleared on init/apply of -1 so unknown lanes fall through to NAME_TO_ROLE.
+  let laneRoleLabels = [];
 
   const state = {
     preset: '', seed: 0, tempo: TEMPO,
@@ -216,12 +206,26 @@
     }
   }
 
+  function labelsFromPresetEntry(entry) {
+    const names = [];
+    const roles = [];
+    const labels = [];
+    for (const lane of entry.lanes || []) {
+      const roleLabel = (lane.roleLabel || '').toLowerCase();
+      names.push(ROLE_LABEL_TO_NAME[roleLabel] || roleLabel.replace(/^./, (c) => c.toUpperCase()) || 'Lane');
+      roles.push(ENGINE_ROLE_TO_UI[lane.role] || 'Custom');
+      labels.push(roleLabel);
+    }
+    return { names, roles, labels };
+  }
+
   function applyPreset(index) {
     if (index === -1) {
       Module._poly_action_apply_preset(engineCtx, 0);
       currentPresetIndex = -1;
       laneNames = ['Lane 1', 'Lane 2', 'Lane 3', 'Lane 4'];
       laneRoles = ['Anchor pulse', 'Backbeat', 'Shimmer', 'Ghost'];
+      laneRoleLabels = [];
       state.preset = 'Init';
       state.scene = 'A';
       state.morph = 0;
@@ -230,11 +234,26 @@
     } else if (index >= 0 && index < Module._poly_preset_count()) {
       Module._poly_action_apply_preset(engineCtx, index);
       currentPresetIndex = index;
-      laneNames = (PRESET_NAMES[index] || PRESET_NAMES[0]).slice();
-      laneRoles = (PRESET_ROLES[index] || PRESET_ROLES[0]).slice();
-      state.preset = Module.UTF8ToString(Module._poly_preset_name(index));
+      const engineName = Module.UTF8ToString(Module._poly_preset_name(index));
+      const entry = presetsById && presetsById[index];
+      if (entry) {
+        const meta = labelsFromPresetEntry(entry);
+        laneNames = meta.names;
+        laneRoles = meta.roles;
+        laneRoleLabels = meta.labels;
+      } else {
+        // presets.json missing or index out of range: keep engine-driven state,
+        // fall back to generic labels so the modal still renders.
+        const laneCount = Module._poly_active_lane_count(engineCtx);
+        laneNames = Array.from({ length: laneCount }, (_, i) => `Lane ${i + 1}`);
+        laneRoles = laneNames.map(() => 'Custom');
+        laneRoleLabels = [];
+      }
+      state.preset = engineName;
+      console.info(`[wasm-host] applied ${engineName} (${laneNames.length} lanes)`);
     }
     probe.currentPreset = state.preset;
+    probe.laneRoleLabels = laneRoleLabels.slice();
     syncStateFromWasm();
   }
 
@@ -262,7 +281,13 @@
   };
   const DEFAULT_ROLE = 'hat';
 
-  function roleForLaneName(name) {
+  function roleForLaneName(name, laneIdx) {
+    // Prefer the engine's per-lane roleLabel (from presets.json) when available.
+    // Falls back to the name→role table for synthetic/init lanes that never
+    // came from a preset entry.
+    if (typeof laneIdx === 'number' && laneRoleLabels[laneIdx]) {
+      return laneRoleLabels[laneIdx];
+    }
     return NAME_TO_ROLE[(name || '').toLowerCase().trim()] || DEFAULT_ROLE;
   }
 
@@ -326,11 +351,10 @@
     const src = ctx.createBufferSource();
     const g = ctx.createGain();
     src.buffer = buf;
-    // Sample bodies vary wildly in loudness; scale by role to keep the mix
-    // roughly balanced without touching source files.
-    const roleGain = role === 'kick' ? 0.9 : role === 'snare' ? 0.8
-      : role === 'hat' ? 0.55 : role === 'shaker' ? 0.55 : 0.75;
-    g.gain.setValueAtTime(v * roleGain, when);
+    // Unified gain staging with the site card scheduler (M043 S11 T03):
+    // both surfaces play sample buffers at raw velocity/127 with no per-role
+    // trim. Keeps RMS delta between card and Try It within ±3 dB.
+    g.gain.setValueAtTime(Math.max(0, Math.min(1, v)), when);
     src.connect(g); g.connect(ctx.destination);
     src.start(when);
     probe.nodesStarted++;
@@ -379,9 +403,10 @@
     probe.nodesStarted++;
   }
 
-  function voice(l, when, v) {
-    v *= 0.5;
-    const role = roleForLaneName(l.name);
+  function voice(l, li, when, v) {
+    // v is the shaped velocity from hitVelocity() in [0,1]; the card scheduler
+    // uses raw velocity/127 with no attenuation. Match its staging.
+    const role = roleForLaneName(l.name, li);
     if (sampleVoice(role, when, v)) return;
     synthVoice(l, when, v);
   }
@@ -396,7 +421,7 @@
         const vel = hitVelocity(l, li, nextTick, hit);
         const mtMs = (l.mt && l.mt[hit.step]) || 0;
         const t = startAt + nextTick * step + (l.push + mtMs) / 1000;
-        voice(l, Math.max(ctx.currentTime + 0.001, t), vel);
+        voice(l, li, Math.max(ctx.currentTime + 0.001, t), vel);
       });
       nextTick++;
     }
@@ -641,10 +666,32 @@
     if (name !== 'togglePlay') emitState();
   }
 
+  async function loadPresetsJson() {
+    // Same file the site card scheduler consumes — served from
+    // site/public/webui/presets.json (dev) and copied there by copy-webui
+    // (build). Fetch relative to the current document so a mounted /poly base
+    // path resolves correctly.
+    try {
+      const url = new URL('./presets.json', location.href).href;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const parsed = await res.json();
+      if (!Array.isArray(parsed.presets)) throw new Error('presets array missing');
+      presetsById = {};
+      for (const p of parsed.presets) presetsById[p.index] = p;
+      console.info(`[wasm-host] loaded ${parsed.presets.length} presets (schemaVersion ${parsed.schemaVersion})`);
+    } catch (e) {
+      console.warn('[wasm-host] presets.json load failed; falling back to engine-only lane labels:', e.message);
+      presetsById = null;
+    }
+  }
+
   /* ---------- initialization ---------- */
   async function initWasmHost(wasmModule) {
     Module = wasmModule;
     engineCtx = Module._poly_create();
+
+    await loadPresetsJson();
 
     const presetCount = Module._poly_preset_count();
     state.presets = [];
