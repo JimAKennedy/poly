@@ -134,63 +134,35 @@ const FUNCTIONAL_ROLE_LABELS: Record<string, string> = {
   Accent: 'Accent',
 };
 
-// Display names accepted by the card. Everything here must correspond to a real
-// engine preset name after stripping any 'Factory: ' prefix. Kept as a curated
-// set so we can (a) reject typos in chapter MDX files, and (b) return them from
-// listPresetNames() for the existing site test suite. T04 audits the CHAPTER_
-// ALIASES table against this list.
-const FACTORY_DISPLAY_NAMES = [
-  'Factory: Four on the Floor',
-  'Factory: Polymetric Drift',
-  'Factory: Sparse Pulse',
-  'Factory: Breakbeat',
-  'Factory: Latin Feel',
-  'Factory: Afro-House Phrases',
-  'Factory: Reich Phasing',
-  'Factory: Kotekan Interlock',
-  'Factory: Pocket Groove',
-  'Factory: Afrobeat 12/8',
-  'Factory: Balkan Aksak',
-  'Factory: Bossa Nova',
-  'Factory: Carnatic Tala',
-  'Factory: IDM Glitch',
-] as const;
-
-const BARE_DISPLAY_NAMES = ['Reich Phase Process'] as const;
-
-const DISPLAY_NAMES: string[] = [...BARE_DISPLAY_NAMES, ...FACTORY_DISPLAY_NAMES];
-const DISPLAY_NAME_SET = new Set<string>(DISPLAY_NAMES);
-
-// Chapter cards use display-friendly names ('Jungle Break', 'Cuban Son
-// Montuno', ...). Each entry maps a chapter card's preset= value to a factory
-// display name. Preserved verbatim from the pre-T02 map; T04 audits every
-// entry against the engine ground truth and fixes drift.
+// Card fallback for chapter presets whose native engine preset references MIDI
+// notes not yet in site/public/samples/manifest.json. Without a redirect these
+// cards would trip the fail-loud scheduler on missing samples. Each key IS a
+// real engine preset — the alias exists purely to substitute a manifest-safe
+// pattern until sample coverage catches up. Uncovered notes are noted per row
+// so a future manifest extension can retire the alias.
+//   Ewe Polymetric Ensemble    → uses note 47 (mid tom variant)
+//   Balinese Kotekan           → 72, 74 (long guiro), 48 (hi-mid tom)
+//   Javanese Colotomic         → 55 (splash), 48 (hi-mid tom)
+//   Riley Layered Entry        → 47
+//   Bossa Nova Trio            → 51 (ride)
+//   Samba Batucada             → 47
+//   Elvin Jones Cascade        → 51
+//   Jazz Bop Ride              → 51, 44 (foot hat)
+//   Liquid Drum and Bass       → 51
+//   Afro-Electronic Fusion     → 62, 64 (mute conga, low conga)
+//   Compositional Arc          → 47
+// See M043 S11 T04 follow-up task for the sample-coverage plan.
 const CHAPTER_ALIASES: Record<string, string> = {
-  'Polymetric Foundation': 'Factory: Polymetric Drift',
   'Ewe Polymetric Ensemble': 'Factory: Afrobeat 12/8',
-  'Manding Djembe': 'Factory: Afrobeat 12/8',
-  'Cuban Son Montuno': 'Factory: Latin Feel',
-  'Afrobeat Lagos': 'Factory: Afrobeat 12/8',
   'Balinese Kotekan': 'Factory: Kotekan Interlock',
   'Javanese Colotomic': 'Factory: Kotekan Interlock',
-  'Rupak Tal': 'Factory: Balkan Aksak',
-  'Tintal Groove': 'Factory: Carnatic Tala',
-  'Kopanitsa 11/8': 'Factory: Balkan Aksak',
-  'Rachenitsa 7/8': 'Factory: Balkan Aksak',
-  'Nancarrow Tempi': 'Factory: Polymetric Drift',
   'Riley Layered Entry': 'Factory: Afro-House Phrases',
-  'Deep House': 'Factory: Four on the Floor',
-  'Minimal Techno': 'Factory: Four on the Floor',
   'Bossa Nova Trio': 'Factory: Bossa Nova',
   'Samba Batucada': 'Factory: Bossa Nova',
-  'Classic Funk': 'Factory: Pocket Groove',
-  'Neo-Soul Pocket': 'Factory: Pocket Groove',
   'Elvin Jones Cascade': 'Factory: Polymetric Drift',
   'Jazz Bop Ride': 'Factory: Pocket Groove',
-  'Jungle Break': 'Factory: Breakbeat',
   'Liquid Drum and Bass': 'Factory: Breakbeat',
   'Afro-Electronic Fusion': 'Factory: Afro-House Phrases',
-  'Balkan Funk': 'Factory: Balkan Aksak',
   'Compositional Arc': 'Factory: Afro-House Phrases',
 };
 
@@ -389,18 +361,22 @@ export function getPatternForPreset(name: string): Pattern | null {
   return buildPattern(jsonPresetToSpec(preset, engineName));
 }
 
-// Resolve a name into its canonical display name (with 'Factory: ' preserved
-// when the input goes through the alias map). Returns null when the name is
-// neither a known display name nor a chapter alias.
+// Resolve a name into its canonical display name. Aliases run first so a
+// chapter can be redirected to a manifest-safe fallback even when its own
+// engine preset exists. Otherwise any real engine name (bare or 'Factory: '
+// prefixed) resolves to itself. Returns null when the name is neither a
+// known engine preset nor a chapter alias.
 export function resolvePresetName(name: string): string | null {
-  if (DISPLAY_NAME_SET.has(name)) return name;
   const aliased = CHAPTER_ALIASES[name];
-  if (aliased && DISPLAY_NAME_SET.has(aliased)) return aliased;
-  return null;
+  if (aliased) return engineNameFor(aliased) ? aliased : null;
+  return engineNameFor(name) ? name : null;
 }
 
+// All engine preset names, in emitter order. Names alone don't tell you which
+// presets are manifest-safe — for that, pass each name through getPatternForPreset
+// and cross-check event notes against the manifest (see preset-patterns.test).
 export function listPresetNames(): string[] {
-  return [...DISPLAY_NAMES];
+  return PRESETS.presets.map((p) => p.name);
 }
 
 export function listChapterAliases(): string[] {

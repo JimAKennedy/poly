@@ -212,6 +212,7 @@ test('preferredRoles: pattern-lane resolution snapshot covers all factory preset
     '42:hat':       'hat/boochi44-hat.wav',
     '43:tom':       'tom/muldjord-tom-lo.flac',         // was darbuka before fix
     '45:tom':       'tom/muldjord-tom-mid.flac',
+    '50:tom':       'tom/muldjord-tom-hi.flac',         // Manding Djembe hi-tom lane
     '46:openhat':   'hat/fischer808-oh.wav',            // manifest role is 'hat'; falls back to only 46 entry
     '56:cowbell':   'cowbell/fischer808-cowbell.wav',
     '63:conga':     'conga/freepats-conga-open.flac',
