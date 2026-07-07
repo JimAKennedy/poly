@@ -17,3 +17,7 @@ target_include_directories(poly_engine
 )
 
 jk_target_warnings(poly_engine)
+
+if(NOT EMSCRIPTEN)
+    add_subdirectory(tools)
+endif()
