@@ -6,6 +6,10 @@ import { dirname, join } from 'node:path';
 import { OfflineAudioContext } from 'node-web-audio-api';
 
 import { createSampleLoader } from '../src/audio/sample-loader.ts';
+import {
+  getPatternForPreset,
+  listPresetNames,
+} from '../src/audio/preset-patterns.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const SAMPLES_ROOT = join(HERE, '..', 'public', 'samples');
@@ -79,4 +83,175 @@ test('loadNotes rejects with note number in message for uncovered notes', async 
     () => loader.loadNotes([999]),
     (err) => err instanceof Error && err.message.includes('999'),
   );
+});
+
+// Website-preview role disambiguation. The shared sample manifest has cross-role
+// note collisions (36 = cajon + kick, 43 = darbuka + tom) that alphabetical
+// find-first resolves to the wrong voice for every factory pattern using a kick
+// or tom lane. preferredRoles hints the loader per-note; the plugin path
+// resolves samples independently and is unaffected.
+//
+// If these fixtures ever change (new collisions, roles renamed, manifest
+// reordered), fix the underlying wiring — do not silently update the snapshot.
+
+test('preferredRoles: note 36 resolves to a kick when preferred role is kick', async () => {
+  const manifest = await readManifest();
+  const context = new OfflineAudioContext(2, 48000, 48000);
+
+  const requested = [];
+  const fetcher = async (url) => {
+    requested.push(url);
+    return filesystemFetcher(SAMPLES_ROOT)(url);
+  };
+  const loader = createSampleLoader({
+    manifest,
+    context,
+    fetcher,
+    preferredRoles: new Map([[36, 'kick']]),
+  });
+
+  await loader.loadNotes([36]);
+  assert.equal(requested.length, 1, 'expected exactly one file fetched');
+  assert.match(
+    requested[0],
+    /\/samples\/kick\//,
+    `note 36 with role=kick must resolve inside kick/, got ${requested[0]}`,
+  );
+});
+
+test('preferredRoles: note 36 without hint hits the alphabetical-first collision (cajon)', async () => {
+  const manifest = await readManifest();
+  const context = new OfflineAudioContext(2, 48000, 48000);
+
+  const requested = [];
+  const fetcher = async (url) => {
+    requested.push(url);
+    return filesystemFetcher(SAMPLES_ROOT)(url);
+  };
+  const loader = createSampleLoader({ manifest, context, fetcher });
+
+  await loader.loadNotes([36]);
+  assert.equal(requested.length, 1);
+  assert.match(
+    requested[0],
+    /\/samples\/cajon\//,
+    'without preferredRoles, first-match still wins — confirms the fix is needed',
+  );
+});
+
+test('preferredRoles: unknown role falls back to first-match', async () => {
+  const manifest = await readManifest();
+  const context = new OfflineAudioContext(2, 48000, 48000);
+
+  const requested = [];
+  const fetcher = async (url) => {
+    requested.push(url);
+    return filesystemFetcher(SAMPLES_ROOT)(url);
+  };
+  const loader = createSampleLoader({
+    manifest,
+    context,
+    fetcher,
+    preferredRoles: new Map([[36, 'not-a-real-role']]),
+  });
+
+  await loader.loadNotes([36]);
+  assert.equal(requested.length, 1);
+  assert.match(
+    requested[0],
+    /\/samples\/cajon\//,
+    'unknown role must fall back to the first note-36 entry',
+  );
+});
+
+test('preferredRoles: note 43 with role=tom picks tom (not darbuka)', async () => {
+  const manifest = await readManifest();
+  const context = new OfflineAudioContext(2, 48000, 48000);
+
+  const requested = [];
+  const fetcher = async (url) => {
+    requested.push(url);
+    return filesystemFetcher(SAMPLES_ROOT)(url);
+  };
+  const loader = createSampleLoader({
+    manifest,
+    context,
+    fetcher,
+    preferredRoles: new Map([[43, 'tom']]),
+  });
+
+  await loader.loadNotes([43]);
+  assert.equal(requested.length, 1);
+  assert.match(requested[0], /\/samples\/tom\//, `got ${requested[0]}`);
+});
+
+// Snapshot: exercise every (note, role) pair used across all factory patterns
+// and lock the resolved file. This is the "spot mismatches" gate — a new
+// preset, a new manifest entry, or a rename that changes any resolution here
+// must be a conscious edit to this table, not a silent behavior change.
+test('preferredRoles: pattern-lane resolution snapshot covers all factory presets', async () => {
+  const manifest = await readManifest();
+  const context = new OfflineAudioContext(2, 48000, 48000);
+
+  const pairs = new Map(); // key = `${note}:${role}` -> {note, role}
+  for (const name of listPresetNames()) {
+    const pattern = getPatternForPreset(name);
+    assert.ok(pattern, `getPatternForPreset('${name}') returned null`);
+    for (const lane of pattern.lanes ?? []) {
+      pairs.set(`${lane.note}:${lane.role}`, { note: lane.note, role: lane.role });
+    }
+  }
+
+  // Expected file per (note, role). Roles with no matching manifest entry
+  // fall back through first-note-match; those fallbacks are called out below
+  // so a manifest edit that shadows them fails loudly instead of silently
+  // switching voices.
+  const expected = {
+    '36:kick':      'kick/boochi44-kick.wav',           // was cajon before fix
+    '38:snare':     'snare/drskit-snare.flac',
+    '42:hat':       'hat/boochi44-hat.wav',
+    '43:tom':       'tom/muldjord-tom-lo.flac',         // was darbuka before fix
+    '45:tom':       'tom/muldjord-tom-mid.flac',
+    '56:cowbell':   'cowbell/fischer808-cowbell.wav',
+    '63:conga':     'conga/freepats-conga-open.flac',
+    '67:agogo':     'agogo/vcsl-hi.wav',
+    '70:shaker':    'shaker/dimcabasa-cabasa.flac',
+    '75:clave':     'clave/fischer808-clave.wav',
+    '76:woodblock': 'woodblock/vcsl-hi.wav',
+    '77:woodblock': 'woodblock/vcsl-lo.wav',
+    // Fallbacks — no manifest entry matches the requested role. These land on
+    // the alphabetical first-match. If a future manifest edit adds a matching
+    // role, this test will flag it; either add the entry to the table (with the
+    // new file) or reconcile the pattern's role name.
+    '37:rim':       'clave/fischer808-clave.wav',       // clave has fallback:sidestick tag
+    '39:clap':      'handclap/freepats-clap.flac',      // manifest role is 'handclap'
+  };
+
+  const missing = [];
+  for (const key of pairs.keys()) {
+    if (!(key in expected)) missing.push(key);
+  }
+  assert.deepEqual(
+    missing,
+    [],
+    `pattern uses new (note, role) pair not in snapshot: ${missing.join(', ')} — add it to expected{} above`,
+  );
+
+  for (const [key, { note, role }] of pairs) {
+    const requested = [];
+    const fetcher = async (url) => {
+      requested.push(url);
+      return filesystemFetcher(SAMPLES_ROOT)(url);
+    };
+    const loader = createSampleLoader({
+      manifest,
+      context,
+      fetcher,
+      preferredRoles: new Map([[note, role]]),
+    });
+    await loader.loadNotes([note]);
+    assert.equal(requested.length, 1, `${key}: expected 1 fetch, got ${requested.length}`);
+    const rel = requested[0].replace(/^\/samples\//, '');
+    assert.equal(rel, expected[key], `${key}: expected ${expected[key]}, got ${rel}`);
+  }
 });

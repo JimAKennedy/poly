@@ -72,23 +72,29 @@ export function createScheduler(options: SchedulerOptions): Scheduler {
       const laneIdx = event.lane ?? -1;
       if (!(laneIdx >= 0 && mutedLanes.has(laneIdx))) {
         const buf = buffers.get(event.note);
-        if (buf) {
-          const source = context.createBufferSource();
-          source.buffer = buf;
-          const gain = context.createGain();
-          gain.gain.value = Math.max(0, Math.min(1, event.velocity / 127));
-          source.connect(gain);
-          gain.connect(context.destination);
-          source.start(fireTime);
-          source.onended = () => {
-            liveSources.delete(source);
-            untrackSource(laneIdx, source);
-          };
-          liveSources.add(source);
-          trackSource(laneIdx, source);
-          nodesStarted += 1;
-          if (onNoteScheduled) onNoteScheduled(fireTime, event);
+        if (!buf) {
+          // Loader is contracted to populate every unique note or throw at
+          // start(). A missing buffer here is a broken contract — fail loudly
+          // instead of silently playing a partial pattern.
+          throw new Error(
+            `midi-scheduler: no buffer loaded for MIDI note ${event.note}`,
+          );
         }
+        const source = context.createBufferSource();
+        source.buffer = buf;
+        const gain = context.createGain();
+        gain.gain.value = Math.max(0, Math.min(1, event.velocity / 127));
+        source.connect(gain);
+        gain.connect(context.destination);
+        source.start(fireTime);
+        source.onended = () => {
+          liveSources.delete(source);
+          untrackSource(laneIdx, source);
+        };
+        liveSources.add(source);
+        trackSource(laneIdx, source);
+        nodesStarted += 1;
+        if (onNoteScheduled) onNoteScheduled(fireTime, event);
       }
       nextEventIdx += 1;
       if (nextEventIdx >= events.length) {

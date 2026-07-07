@@ -180,6 +180,68 @@ test('setLaneMuted(idx, false) restores scheduling after unmute', async () => {
   assert.ok(!scheduler.mutedLanes.has(0), 'lane 0 should be unmuted');
 });
 
+test('scheduler.start() throws when a required note has no manifest entry (no silent fallback)', async () => {
+  const manifest = await readManifest();
+  const sampleRate = 48000;
+  const context = new OfflineAudioContext(2, sampleRate, sampleRate);
+  const loader = createSampleLoader({
+    manifest,
+    context,
+    fetcher: filesystemFetcher(SAMPLES_ROOT),
+  });
+
+  // Note 200 is deliberately out of range — no entry in the manifest.
+  const pattern = {
+    bpm: 120,
+    loopBeats: 4,
+    events: [{ beat: 0.0, note: 200, velocity: 100 }],
+  };
+
+  const scheduler = createScheduler({
+    context,
+    loader,
+    pattern,
+    batchDurationSec: 1,
+  });
+
+  await assert.rejects(
+    () => scheduler.start(),
+    /no sample for MIDI note 200/,
+    'scheduler.start must reject rather than silently skip the missing note',
+  );
+});
+
+test('scheduler throws (not silently skips) when a scheduled note lacks a buffer', async () => {
+  // Loader stub returns an empty buffer map, forcing the scheduler tick loop
+  // to encounter a missing buffer. Prior behavior: silent skip. New contract:
+  // throw with the note number so the failure surfaces to the caller.
+  const sampleRate = 48000;
+  const context = new OfflineAudioContext(2, sampleRate, sampleRate);
+  const emptyLoader = {
+    async loadNotes() {
+      return new Map();
+    },
+  };
+  const pattern = {
+    bpm: 120,
+    loopBeats: 4,
+    events: [{ beat: 0.0, note: 42, velocity: 100 }],
+  };
+
+  const scheduler = createScheduler({
+    context,
+    loader: emptyLoader,
+    pattern,
+    batchDurationSec: 1,
+  });
+
+  await assert.rejects(
+    () => scheduler.start(),
+    /no buffer loaded for MIDI note 42/,
+    'scheduler must throw when tick-time buffer lookup misses (contract broken)',
+  );
+});
+
 test('scheduler stop() is safe to call before and after start', async () => {
   const manifest = await readManifest();
   const sampleRate = 48000;

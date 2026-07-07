@@ -23,6 +23,7 @@ const { preset, caption } = Astro.props;
     <button class="poly-preview-btn" type="button" data-role="tryit">Try it</button>
   </div>
   <div class="poly-preview-lanes" role="group" aria-label="Lane mute toggles" hidden></div>
+  <div class="poly-preview-error" role="alert" hidden></div>
 </div>
 
 <script>
@@ -44,6 +45,7 @@ const { preset, caption } = Astro.props;
     currentPreset: string;
     activeBpm: number;
     fallbackActive: boolean;
+    lastError: string | null;
   }
 
   function resetProbe(probe: PolyAudioProbe): void {
@@ -53,6 +55,7 @@ const { preset, caption } = Astro.props;
     probe.currentPreset = '';
     probe.activeBpm = 0;
     probe.fallbackActive = false;
+    probe.lastError = null;
   }
 
   const audioProbe: PolyAudioProbe = {
@@ -62,6 +65,7 @@ const { preset, caption } = Astro.props;
     currentPreset: '',
     activeBpm: 0,
     fallbackActive: false,
+    lastError: null,
   };
   (window as unknown as { __polyAudioProbe: PolyAudioProbe }).__polyAudioProbe = audioProbe;
 
@@ -112,6 +116,8 @@ const { preset, caption } = Astro.props;
         if (!r.ok) throw new Error(`manifest fetch ${r.status}`);
         return r.json();
       });
+      // Clear the cache on failure so retry after a transient error can succeed.
+      manifestPromise.catch(() => { manifestPromise = null; });
     }
     return manifestPromise;
   }
@@ -133,6 +139,31 @@ const { preset, caption } = Astro.props;
       const btn = activeCard.querySelector<HTMLButtonElement>('.poly-preview-play');
       if (btn) btn.textContent = 'Play';
       activeCard = null;
+    }
+  }
+
+  function clearErrorState(card: HTMLElement): void {
+    if (card.dataset.state === 'error') {
+      card.dataset.state = 'stopped';
+      const btn = card.querySelector<HTMLButtonElement>('.poly-preview-play');
+      if (btn) btn.textContent = 'Play';
+      const banner = card.querySelector<HTMLElement>('.poly-preview-error');
+      if (banner) banner.hidden = true;
+    }
+  }
+
+  function showErrorState(card: HTMLElement, preset: string, err: unknown): void {
+    stopActive();
+    const msg = err instanceof Error ? err.message : String(err);
+    audioProbe.lastError = `${preset}: ${msg}`;
+    console.error(`[PolyPreviewCard] "${preset}" sample playback failed:`, err);
+    card.dataset.state = 'error';
+    const btn = card.querySelector<HTMLButtonElement>('.poly-preview-play');
+    if (btn) btn.textContent = 'Failed';
+    const banner = card.querySelector<HTMLElement>('.poly-preview-error');
+    if (banner) {
+      banner.hidden = false;
+      banner.textContent = `Sample playback failed — ${msg} (check console). Click Play to retry.`;
     }
   }
 
@@ -200,6 +231,7 @@ const { preset, caption } = Astro.props;
       return;
     }
     stopActive();
+    clearErrorState(card);
     resetProbe(audioProbe);
     audioProbe.currentPreset = resolvePresetName(preset) ?? '';
     audioProbe.activeBpm = pattern.bpm;
@@ -212,12 +244,23 @@ const { preset, caption } = Astro.props;
       audioProbe.fallbackActive = true;
       throw err;
     }
+    // Disambiguate manifest note collisions (e.g. note 36 = cajon + kick,
+    // note 43 = darbuka + tom) by hinting the intended role per note from the
+    // pattern's lane definitions. Site-only concern — the plugin path picks
+    // samples independently.
+    const preferredRoles = new Map<number, string>();
+    for (const lane of pattern.lanes ?? []) {
+      if (!preferredRoles.has(lane.note)) {
+        preferredRoles.set(lane.note, lane.role);
+      }
+    }
     const loader = createSampleLoader({
       manifest,
       context: ctx,
       fetcher: browserFetcher,
       baseUrl: samplesBaseUrl,
       onDecoded: () => { audioProbe.sampleBuffersDecoded += 1; },
+      preferredRoles,
     });
     const scheduler = createScheduler({
       context: ctx,
@@ -251,8 +294,7 @@ const { preset, caption } = Astro.props;
 
     const triggerPlay = () => {
       startCard(card, preset).catch((err) => {
-        console.error('[PolyPreviewCard] play failed', err);
-        stopActive();
+        showErrorState(card, preset, err);
       });
     };
 
@@ -417,6 +459,28 @@ const { preset, caption } = Astro.props;
     border: 1px solid var(--sl-color-gray-4);
     border-top: none;
     border-radius: 0 0 8px 8px;
+  }
+
+  .poly-preview[data-state='error'] .poly-preview-body {
+    border-color: #a4373a;
+  }
+
+  .poly-preview[data-state='error'] .poly-preview-play {
+    background: #4a1f21;
+    border-color: #a4373a;
+    color: #f2c8ca;
+  }
+
+  .poly-preview-error {
+    margin: 0.4rem 0 0;
+    padding: 0.5rem 0.75rem;
+    background: #2a1a1b;
+    border: 1px solid #a4373a;
+    border-radius: 0 0 8px 8px;
+    color: #f2c8ca;
+    font-family: var(--poly-font-sans);
+    font-size: var(--sl-text-xs);
+    line-height: 1.4;
   }
 </style>
 

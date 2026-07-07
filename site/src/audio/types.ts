@@ -33,6 +33,12 @@ export interface LoaderOptions {
   fetcher: Fetcher;
   baseUrl?: string;
   onDecoded?: (file: string) => void;
+  // Per-note role hint used to disambiguate collisions in the shared sample
+  // manifest — e.g. note 36 has both `cajon` and `kick` entries, note 43 has
+  // both `darbuka` and `tom`. When the requested role matches an entry's
+  // `role`, that entry wins over the first-found fallback. Site-only concern;
+  // the plugin resolves samples independently.
+  preferredRoles?: ReadonlyMap<number, string>;
 }
 
 export interface SampleLoader {

@@ -11,7 +11,15 @@ const DEFAULT_BASE_URL = '/samples/';
 function pickEntryForNote(
   manifest: Manifest,
   note: number,
+  preferredRole?: string,
 ): SampleEntry | undefined {
+  if (preferredRole) {
+    const roleMatch = manifest.samples.find(
+      (entry) =>
+        entry.role === preferredRole && entry.midiNotes.includes(note),
+    );
+    if (roleMatch) return roleMatch;
+  }
   return manifest.samples.find((entry) => entry.midiNotes.includes(note));
 }
 
@@ -52,6 +60,7 @@ export function createSampleLoader(options: LoaderOptions): SampleLoader {
     fetcher,
     baseUrl = DEFAULT_BASE_URL,
     onDecoded,
+    preferredRoles,
   } = options;
   const bufferCache = new Map<string, Promise<AudioBuffer>>();
 
@@ -73,7 +82,11 @@ export function createSampleLoader(options: LoaderOptions): SampleLoader {
       const unique = Array.from(new Set(midiNotes));
       await Promise.all(
         unique.map(async (note) => {
-          const entry = pickEntryForNote(manifest, note);
+          const entry = pickEntryForNote(
+            manifest,
+            note,
+            preferredRoles?.get(note),
+          );
           if (!entry) {
             throw new Error(`no sample for MIDI note ${note}`);
           }
