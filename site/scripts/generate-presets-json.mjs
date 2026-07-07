@@ -1,0 +1,96 @@
+#!/usr/bin/env node
+// Runs the C++ `poly_presets_emit` binary and writes its JSON output to
+// site/src/generated/presets.json. Invoked as the site's prebuild step so the
+// card runtime, chapter docs, and WASM host all consume engine-authored lane
+// data from the same file instead of drifting hand-copies.
+//
+// Contract with the emitter (engine/tools/emit_presets.cpp):
+//   { schemaVersion, presetCount, presets: [{ index, name, notesInBar, lanes: [...] }] }
+//
+// If the emitter binary is missing, we configure (only if needed) and build it.
+// A native build failure exits non-zero and fails the site build — that is
+// intentional: a stale presets.json is a silent correctness bug we already
+// paid for in S11's motivating incident.
+
+import { execFileSync, execSync } from 'node:child_process';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = resolve(HERE, '..', '..');
+const BUILD_DIR = resolve(REPO_ROOT, 'build');
+const EMITTER = resolve(BUILD_DIR, 'engine', 'tools', 'poly_presets_emit');
+const OUT_PATH = resolve(REPO_ROOT, 'site', 'src', 'generated', 'presets.json');
+
+function log(msg) {
+  process.stdout.write(`[generate-presets] ${msg}\n`);
+}
+
+function fail(msg) {
+  process.stderr.write(`[generate-presets] ${msg}\n`);
+  process.exit(1);
+}
+
+function ensureEmitter() {
+  if (existsSync(EMITTER)) return;
+  if (!existsSync(resolve(BUILD_DIR, 'CMakeCache.txt'))) {
+    log('configuring cmake build/ (first run)');
+    execSync(`cmake -S "${REPO_ROOT}" -B "${BUILD_DIR}"`, { stdio: 'inherit' });
+  }
+  log('building poly_presets_emit');
+  execSync(`cmake --build "${BUILD_DIR}" --target poly_presets_emit`, {
+    stdio: 'inherit',
+  });
+  if (!existsSync(EMITTER)) {
+    fail(`emitter not produced at ${EMITTER} after build`);
+  }
+}
+
+function runEmitter() {
+  return execFileSync(EMITTER, { encoding: 'utf8', maxBuffer: 8 * 1024 * 1024 });
+}
+
+function validate(parsed) {
+  if (typeof parsed.schemaVersion !== 'number') {
+    fail('missing schemaVersion');
+  }
+  if (parsed.schemaVersion !== 1) {
+    fail(`unexpected schemaVersion ${parsed.schemaVersion} — regenerate/update consumers`);
+  }
+  if (!Array.isArray(parsed.presets)) {
+    fail('presets array missing');
+  }
+  if (parsed.presets.length !== parsed.presetCount) {
+    fail(
+      `presetCount (${parsed.presetCount}) disagrees with presets.length (${parsed.presets.length})`,
+    );
+  }
+  for (const p of parsed.presets) {
+    if (typeof p.name !== 'string' || !p.name.length) {
+      fail(`preset index ${p.index}: missing name`);
+    }
+    if (!Array.isArray(p.lanes) || p.lanes.length === 0) {
+      fail(`preset "${p.name}": no lanes`);
+    }
+    for (const lane of p.lanes) {
+      if (typeof lane.roleLabel !== 'string' || !lane.roleLabel.length) {
+        fail(`preset "${p.name}" lane ${lane.laneIndex}: missing roleLabel`);
+      }
+    }
+  }
+}
+
+ensureEmitter();
+const raw = runEmitter();
+let parsed;
+try {
+  parsed = JSON.parse(raw);
+} catch (err) {
+  fail(`emitter output is not valid JSON: ${err.message}`);
+}
+validate(parsed);
+
+mkdirSync(dirname(OUT_PATH), { recursive: true });
+writeFileSync(OUT_PATH, `${JSON.stringify(parsed, null, 2)}\n`);
+log(`wrote ${parsed.presetCount} presets → ${OUT_PATH}`);
