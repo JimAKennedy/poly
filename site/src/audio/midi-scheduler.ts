@@ -24,6 +24,7 @@ export function createScheduler(options: SchedulerOptions): Scheduler {
     lookAheadMs = DEFAULT_LOOK_AHEAD_MS,
     scheduleTickMs = DEFAULT_SCHEDULE_TICK_MS,
     batchDurationSec,
+    onNoteScheduled,
   } = options;
 
   const events = sortByBeat(pattern.events);
@@ -86,6 +87,7 @@ export function createScheduler(options: SchedulerOptions): Scheduler {
           liveSources.add(source);
           trackSource(laneIdx, source);
           nodesStarted += 1;
+          if (onNoteScheduled) onNoteScheduled(fireTime, event);
         }
       }
       nextEventIdx += 1;

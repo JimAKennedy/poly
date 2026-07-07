@@ -31,8 +31,8 @@
   let Module = null;
   let engineCtx = null;
 
-  const TEMPO = 126;
-  const EIGHTH = 60 / TEMPO / 2;
+  let TEMPO = 126;
+  const eighthSec = () => 60 / TEMPO / 2;
   const CONV = 120;
 
   const stateSubs = [];
@@ -234,12 +234,83 @@
       laneRoles = (PRESET_ROLES[index] || PRESET_ROLES[0]).slice();
       state.preset = Module.UTF8ToString(Module._poly_preset_name(index));
     }
+    probe.currentPreset = state.preset;
     syncStateFromWasm();
   }
 
   /* ---------- WebAudio preview voices ---------- */
   let ctx = null, playing = false, startAt = 0, schedTimer = null, nextTick = 0, _nb = null;
-  const now8 = () => (playing && ctx ? (ctx.currentTime - startAt) / EIGHTH : 0);
+  const now8 = () => (playing && ctx ? (ctx.currentTime - startAt) / eighthSec() : 0);
+
+  // Sample-backed playback (M043 S09). Manifest lookup is by role, so we map
+  // each lane's display name to a manifest role. Unmapped names get a benign
+  // default so unusual lane sets still play something; a full manifest failure
+  // flips fallbackActive so E2E can tell "sample path" from "synth rescue".
+  const NAME_TO_ROLE = {
+    'kick': 'kick', 'bass': 'kick', 'davul': 'kick', 'surdo': 'kick',
+    'mrid bass': 'kick', 'fixed': 'kick',
+    'snare': 'snare', 'rim': 'snare', 'tamborim': 'snare', 'mrid treble': 'snare',
+    'hi-hat': 'hat', 'open hat': 'hat', 'pandeiro': 'hat', 'shimmer': 'hat',
+    'kanjira': 'hat', 'glitch': 'hat', 'pulse': 'hat',
+    'tom': 'tom', 'ghost tom': 'tom', 'ghost': 'tom', 'gong': 'tom', 'drifting': 'tom',
+    'shaker': 'shaker', 'perc': 'shaker',
+    'clave': 'clave',
+    'conga': 'conga', 'djembe': 'conga',
+    'darbuka': 'darbuka',
+    'cowbell': 'cowbell', 'bell': 'cowbell', 'ghatam': 'cowbell', 'sangsih': 'cowbell',
+    'agogo': 'agogo', 'polos': 'agogo', 'zurna': 'agogo',
+  };
+  const DEFAULT_ROLE = 'hat';
+
+  function roleForLaneName(name) {
+    return NAME_TO_ROLE[(name || '').toLowerCase().trim()] || DEFAULT_ROLE;
+  }
+
+  const buffersByRole = new Map();
+  const probe = { nodesStarted: 0, samplesLoaded: 0, currentPreset: '', fallbackActive: false };
+  window.__polyAudioProbe = probe;
+  let samplesPromise = null;
+
+  function samplesBasePath() {
+    return new URL('../samples/', location.href).href;
+  }
+
+  async function ensureSamplesLoaded() {
+    if (samplesPromise) return samplesPromise;
+    if (!ctx) return; // deferred until first togglePlay creates ctx
+    samplesPromise = (async () => {
+      const base = samplesBasePath();
+      try {
+        const res = await fetch(base + 'manifest.json');
+        if (!res.ok) throw new Error(`manifest ${res.status}`);
+        const manifest = await res.json();
+
+        // One sample per role — first-hit wins the slot.
+        const roleToFile = {};
+        for (const s of manifest.samples || []) {
+          if (s.role && !roleToFile[s.role]) roleToFile[s.role] = s.file;
+        }
+        await Promise.all(Object.entries(roleToFile).map(async ([role, file]) => {
+          try {
+            const buf = await fetch(base + file).then((r) => {
+              if (!r.ok) throw new Error(`fetch ${file} -> ${r.status}`);
+              return r.arrayBuffer();
+            });
+            const audio = await ctx.decodeAudioData(buf);
+            buffersByRole.set(role, audio);
+            probe.samplesLoaded++;
+          } catch (e) {
+            console.warn('[wasm-host] sample skipped:', file, e.message);
+          }
+        }));
+        if (buffersByRole.size === 0) throw new Error('no samples decoded');
+      } catch (e) {
+        console.warn('[wasm-host] manifest load failed, synth fallback active:', e.message);
+        probe.fallbackActive = true;
+      }
+    })();
+    return samplesPromise;
+  }
 
   function noiseBuf() {
     if (_nb) return _nb;
@@ -249,8 +320,24 @@
     return _nb;
   }
 
-  function voice(l, when, v) {
-    v *= 0.5;
+  function sampleVoice(role, when, v) {
+    const buf = buffersByRole.get(role);
+    if (!buf) return false;
+    const src = ctx.createBufferSource();
+    const g = ctx.createGain();
+    src.buffer = buf;
+    // Sample bodies vary wildly in loudness; scale by role to keep the mix
+    // roughly balanced without touching source files.
+    const roleGain = role === 'kick' ? 0.9 : role === 'snare' ? 0.8
+      : role === 'hat' ? 0.55 : role === 'shaker' ? 0.55 : 0.75;
+    g.gain.setValueAtTime(v * roleGain, when);
+    src.connect(g); g.connect(ctx.destination);
+    src.start(when);
+    probe.nodesStarted++;
+    return true;
+  }
+
+  function synthVoice(l, when, v) {
     if (l.name === 'Kick') {
       const o = ctx.createOscillator(), g = ctx.createGain();
       o.type = 'sine';
@@ -289,17 +376,26 @@
       g.gain.exponentialRampToValueAtTime(0.001, when + 0.12);
       o.connect(g); g.connect(ctx.destination); o.start(when); o.stop(when + 0.13);
     }
+    probe.nodesStarted++;
+  }
+
+  function voice(l, when, v) {
+    v *= 0.5;
+    const role = roleForLaneName(l.name);
+    if (sampleVoice(role, when, v)) return;
+    synthVoice(l, when, v);
   }
 
   function schedule() {
     const ahead = ctx.currentTime + 0.14;
-    while (startAt + nextTick * EIGHTH < ahead) {
+    const step = eighthSec();
+    while (startAt + nextTick * step < ahead) {
       state.lanes.forEach((l, li) => {
         const hit = laneHitAt(l, nextTick);
         if (!hit) return;
         const vel = hitVelocity(l, li, nextTick, hit);
         const mtMs = (l.mt && l.mt[hit.step]) || 0;
-        const t = startAt + nextTick * EIGHTH + (l.push + mtMs) / 1000;
+        const t = startAt + nextTick * step + (l.push + mtMs) / 1000;
         voice(l, Math.max(ctx.currentTime + 0.001, t), vel);
       });
       nextTick++;
@@ -313,6 +409,9 @@
     } catch (e) {
       ctx = null;
     }
+    // Fire-and-forget: schedule() falls back to synth voices until buffers
+    // land, so nothing is silent while the first fetch is in flight.
+    if (ctx) ensureSamplesLoaded();
     playing = !playing;
     if (playing) {
       startAt = ctx ? ctx.currentTime + 0.06 : 0;
@@ -512,6 +611,14 @@
       case 'applyPreset':
         applyPreset(payload.index ?? -1);
         break;
+      case 'setTempo': {
+        const bpm = Number(payload.bpm);
+        if (Number.isFinite(bpm) && bpm >= 20 && bpm <= 300) {
+          TEMPO = bpm;
+          state.tempo = bpm;
+        }
+        break;
+      }
       case 'setAccent':
         Module._poly_action_set_accent(engineCtx, payload.lane, payload.step, payload.value);
         break;

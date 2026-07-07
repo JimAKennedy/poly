@@ -28,8 +28,36 @@ const { preset, caption } = Astro.props;
 <script>
   import { createSampleLoader } from '../audio/sample-loader.ts';
   import { createScheduler } from '../audio/midi-scheduler.ts';
-  import { getPatternForPreset } from '../audio/preset-patterns.ts';
+  import { getPatternForPreset, resolvePresetName } from '../audio/preset-patterns.ts';
   import type { LaneMeta, Manifest } from '../audio/types.ts';
+
+  interface PolyAudioProbe {
+    sampleBuffersDecoded: number;
+    oscillatorsCreated: number;
+    scheduledNoteTimes: number[];
+    currentPreset: string;
+    activeBpm: number;
+    fallbackActive: boolean;
+  }
+
+  function resetProbe(probe: PolyAudioProbe): void {
+    probe.sampleBuffersDecoded = 0;
+    probe.oscillatorsCreated = 0;
+    probe.scheduledNoteTimes = [];
+    probe.currentPreset = '';
+    probe.activeBpm = 0;
+    probe.fallbackActive = false;
+  }
+
+  const audioProbe: PolyAudioProbe = {
+    sampleBuffersDecoded: 0,
+    oscillatorsCreated: 0,
+    scheduledNoteTimes: [],
+    currentPreset: '',
+    activeBpm: 0,
+    fallbackActive: false,
+  };
+  (window as unknown as { __polyAudioProbe: PolyAudioProbe }).__polyAudioProbe = audioProbe;
 
   let dialog: HTMLDialogElement | null = null;
   let frame: HTMLIFrameElement | null = null;
@@ -166,33 +194,46 @@ const { preset, caption } = Astro.props;
       return;
     }
     stopActive();
+    resetProbe(audioProbe);
+    audioProbe.currentPreset = resolvePresetName(preset) ?? '';
+    audioProbe.activeBpm = pattern.bpm;
     const ctx = getAudioContext();
     if (ctx.state === 'suspended') await ctx.resume();
-    const manifest = await loadManifest();
+    let manifest: Manifest;
+    try {
+      manifest = await loadManifest();
+    } catch (err) {
+      audioProbe.fallbackActive = true;
+      throw err;
+    }
     const loader = createSampleLoader({
       manifest,
       context: ctx,
       fetcher: browserFetcher,
       baseUrl: samplesBaseUrl,
+      onDecoded: () => { audioProbe.sampleBuffersDecoded += 1; },
     });
     const scheduler = createScheduler({
       context: ctx,
       loader,
       pattern,
+      onNoteScheduled: (fireTime) => { audioProbe.scheduledNoteTimes.push(fireTime); },
     });
     activeScheduler = scheduler;
     activeCard = card;
     card.dataset.state = 'playing';
     const btn = card.querySelector<HTMLButtonElement>('.poly-preview-play');
     if (btn) btn.textContent = 'Stop';
-    // Expose a probe so E2E tests can read AudioContext.currentTime and
-    // scheduler.nodesStarted without touching internal state.
-    (window as any).__polyAudioProbe = { context: ctx, scheduler };
     // Apply the card's persisted mute state before the first tick fires so
     // muted lanes never schedule.
     const muted = getMutedSet(card);
     for (const idx of muted) scheduler.setLaneMuted(idx, true);
-    await scheduler.start();
+    try {
+      await scheduler.start();
+    } catch (err) {
+      audioProbe.fallbackActive = true;
+      throw err;
+    }
   }
 
   document.querySelectorAll<HTMLElement>('.poly-preview').forEach((card) => {
@@ -225,7 +266,9 @@ const { preset, caption } = Astro.props;
     tryBtn.addEventListener('click', () => {
       ensureModal();
       const params = new URLSearchParams();
+      params.set('host', 'wasm');
       if (preset) params.set('preset', preset);
+      if (pattern?.bpm) params.set('tempo', String(pattern.bpm));
       frame!.src = `${baseUrl}webui/index.html?${params}`;
       frame!.title = preset ? `Poly — ${preset}` : 'Poly — Interactive UI';
       dialog!.querySelector('.poly-modal-title')!.textContent = preset || 'Poly';

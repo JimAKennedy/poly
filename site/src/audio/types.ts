@@ -32,6 +32,7 @@ export interface LoaderOptions {
   context: AudioContextLike;
   fetcher: Fetcher;
   baseUrl?: string;
+  onDecoded?: (file: string) => void;
 }
 
 export interface SampleLoader {
@@ -74,6 +75,7 @@ export interface SchedulerOptions {
   lookAheadMs?: number;
   scheduleTickMs?: number;
   batchDurationSec?: number;
+  onNoteScheduled?: (fireTime: number, event: MidiEvent) => void;
 }
 
 export interface Scheduler {

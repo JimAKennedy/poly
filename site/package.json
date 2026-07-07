@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
-    "copy-webui": "mkdir -p public/webui && cp ../webui/index.html ../webui/ui.js ../webui/ui.css ../webui/host-iface.js ../webui/groove-math.js ../webui/mock-host.js ../webui/wasm-host.js public/webui/",
+    "copy-webui": "mkdir -p public/webui && cp ../webui/index.html ../webui/ui.js ../webui/ui.css ../webui/host-iface.js ../webui/groove-math.js ../webui/mock-host.js ../webui/wasm-host.js ../webui/plugin-host.js public/webui/ && (cp ../webui/poly_engine.js ../webui/poly_engine.wasm public/webui/ 2>/dev/null || true)",
     "build": "npm run copy-webui && astro build",
     "preview": "astro preview",
     "astro": "astro",

@@ -331,6 +331,12 @@ export function getPatternForPreset(name: string): Pattern | null {
   return spec ? buildFromSpec(spec) : null;
 }
 
+export function resolvePresetName(name: string): string | null {
+  if (PATTERN_SPECS[name]) return name;
+  const target = CHAPTER_ALIASES[name];
+  return target && PATTERN_SPECS[target] ? target : null;
+}
+
 export function listPresetNames(): string[] {
   return Object.keys(PATTERN_SPECS);
 }
