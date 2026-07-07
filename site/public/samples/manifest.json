@@ -67,6 +67,14 @@
       "role": "clave"
     },
     {
+      "file": "conga/freepats-conga-low.flac",
+      "spdx": "CC0-1.0",
+      "source": "FreePats World Percussion",
+      "sourceUrl": "https://github.com/freepats/world-percussion",
+      "midiNotes": [64],
+      "role": "conga"
+    },
+    {
       "file": "conga/freepats-conga-open.flac",
       "spdx": "CC0-1.0",
       "source": "FreePats World Percussion",
@@ -83,6 +91,25 @@
       "midiNotes": [63, 62],
       "role": "conga",
       "tags": ["fallback:mute-hi-conga"]
+    },
+    {
+      "file": "cymbal/muldjord-china.flac",
+      "spdx": "CC-BY-4.0",
+      "attribution": "MuldjordKit by DrumGizmo team (https://github.com/freepats/MuldjordKit), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)",
+      "source": "FreePats MuldjordKit",
+      "sourceUrl": "https://github.com/freepats/MuldjordKit",
+      "midiNotes": [55],
+      "role": "cymbal",
+      "tags": ["fallback:china"]
+    },
+    {
+      "file": "cymbal/muldjord-ride.flac",
+      "spdx": "CC-BY-4.0",
+      "attribution": "MuldjordKit by DrumGizmo team (https://github.com/freepats/MuldjordKit), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)",
+      "source": "FreePats MuldjordKit",
+      "sourceUrl": "https://github.com/freepats/MuldjordKit",
+      "midiNotes": [51],
+      "role": "cymbal"
     },
     {
       "file": "cowbell/fischer808-cowbell.wav",
@@ -107,6 +134,14 @@
       "sourceUrl": "https://github.com/freepats/world-percussion",
       "midiNotes": [43],
       "role": "darbuka"
+    },
+    {
+      "file": "guiro/vcsl-guiro-long.wav",
+      "spdx": "CC0-1.0",
+      "source": "VCSL",
+      "sourceUrl": "https://github.com/sgossner/VCSL",
+      "midiNotes": [74],
+      "role": "guiro"
     },
     {
       "file": "handclap/freepats-clap.flac",

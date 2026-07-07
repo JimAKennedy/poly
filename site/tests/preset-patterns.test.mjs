@@ -146,17 +146,19 @@ test('every chapter PolyPreviewCard preset resolves to a pattern', async () => {
   );
 });
 
-test('every chapter alias points at a registered factory preset', () => {
+test('any chapter alias points at a registered factory preset', () => {
+  // After T06 the CHAPTER_ALIASES map is empty — every chapter preset resolves
+  // to its native engine preset. This test still runs to guard against a
+  // future alias that points nowhere. Empty aliases is legitimate; a broken
+  // alias is not.
   const registered = new Set(listPresetNames());
+  assert.ok(registered.size > 0);
   const missing = [];
   for (const alias of listChapterAliases()) {
     const pattern = getPatternForPreset(alias);
     if (!pattern) missing.push(alias);
   }
   assert.deepEqual(missing, [], `aliases without a target pattern: ${JSON.stringify(missing)}`);
-  // Sanity: at least one alias exists — otherwise chapter play buttons will all no-op.
-  assert.ok(listChapterAliases().length > 0, 'expected chapter aliases to be populated');
-  assert.ok(registered.size > 0);
 });
 
 test('every registered preset returns a well-formed pattern', async () => {

@@ -214,11 +214,20 @@ test('preferredRoles: pattern-lane resolution snapshot covers all factory preset
     '45:tom':       'tom/muldjord-tom-mid.flac',
     '47:tom':       'tom/muldjord-tom-mid.flac',        // T05: mid tom widened to cover 47 (low-mid tom)
     '50:tom':       'tom/muldjord-tom-hi.flac',         // Manding Djembe hi-tom lane
+    '44:hat':       'hat/boochi44-hat.wav',             // T06: alias-retired presets use foot-hat (fallback:pedal-hat)
     '46:openhat':   'hat/fischer808-oh.wav',            // manifest role is 'hat'; falls back to only 46 entry
+    '48:tom':       'tom/muldjord-tom-hi.flac',         // T06: hi-mid tom (fallback:hi-mid-tom, T05 widened)
+    '51:cymbal':    'cymbal/muldjord-ride.flac',        // T06: Muldjord ride, GM note 51
+    '55:cymbal':    'cymbal/muldjord-china.flac',       // T06: Muldjord china tagged fallback:china for splash
     '56:cowbell':   'cowbell/fischer808-cowbell.wav',
+    '60:bongo':     'bongo/freepats-bongo-hi.flac',     // T06: only 60-carrying entry
+    '62:conga':     'conga/freepats-conga-open.flac',   // T06: open conga (fallback:mute-hi-conga, T05 widened)
     '63:conga':     'conga/freepats-conga-open.flac',
+    '64:conga':     'conga/freepats-conga-low.flac',    // T06: FreePats LowConga, GM note 64
     '67:agogo':     'agogo/vcsl-hi.wav',
     '70:shaker':    'shaker/dimcabasa-cabasa.flac',
+    '72:shaker':    'shaker/dimcabasa-cabasa.flac',     // T06: same file covers 70+72 (fallback:long-shaker, T05 widened)
+    '74:guiro':     'guiro/vcsl-guiro-long.wav',        // T06: VCSL Guiro_Slow, GM note 74 (Long Guiro)
     '75:clave':     'clave/fischer808-clave.wav',
     '76:woodblock': 'woodblock/vcsl-hi.wav',
     '77:woodblock': 'woodblock/vcsl-lo.wav',

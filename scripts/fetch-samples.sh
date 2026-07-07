@@ -174,6 +174,7 @@ fetch_vcsl() {
         "${SAMPLES_DIR}/woodblock/vcsl-lo.wav"
         "${SAMPLES_DIR}/conga/vcsl-conga-open.wav"
         "${SAMPLES_DIR}/snare/vcsl-snare.wav"
+        "${SAMPLES_DIR}/guiro/vcsl-guiro-long.wav"
     )
     local missing=0
     for t in "${targets[@]}"; do
@@ -191,6 +192,7 @@ fetch_vcsl() {
         "/Idiophones/Struck Idiophones/Cabasa/*.wav"
         "/Idiophones/Struck Idiophones/Claves/*.wav"
         "/Idiophones/Struck Idiophones/Woodblock/*.wav"
+        "/Idiophones/Struck Idiophones/Guiro/*.wav"
         "/Membranophones/Struck Membranophones/Conga/*.wav"
         "/Membranophones/Struck Membranophones/Snare Drum, Modern 1/*.wav"
     )
@@ -218,6 +220,10 @@ fetch_vcsl() {
                     "${SAMPLES_DIR}/conga/vcsl-conga-open.wav"
     copy_if_missing "${mb}/Snare Drum, Modern 1/Snare2_HitNS_v2_rr1_Mid.wav" \
                     "${SAMPLES_DIR}/snare/vcsl-snare.wav"
+    # Guiro_Slow is the longest scrape variant (~430KB @ 44.1kHz); maps to
+    # GM note 74 (Long Guiro).
+    copy_if_missing "${ib}/Guiro/Guiro_Slow_rr2_Mid.wav" \
+                    "${SAMPLES_DIR}/guiro/vcsl-guiro-long.wav"
 
     local added=$((COPIED - before))
     log "[fetch] repo=vcsl sha=${VCSL_SHA:0:7} mode=sparse files=${added}"
@@ -286,6 +292,7 @@ fetch_freepats() {
         "${SAMPLES_DIR}/darbuka/freepats-darbuka.flac"
         "${SAMPLES_DIR}/handclap/freepats-clap.flac"
         "${SAMPLES_DIR}/tambourine/freepats-tambourine.wav"
+        "${SAMPLES_DIR}/conga/freepats-conga-low.flac"
     )
     local missing=0
     for t in "${targets[@]}"; do
@@ -318,6 +325,11 @@ fetch_freepats() {
                     "${SAMPLES_DIR}/handclap/freepats-clap.flac"
     copy_if_missing "${workdir}/samples/Tambourine/fast_03.wav" \
                     "${SAMPLES_DIR}/tambourine/freepats-tambourine.wav"
+    # LowConga ships v3 (softer) and v4 (louder) velocity layers with 2 RRs
+    # each. Pick v3_01_01 to mirror the existing open-conga selection
+    # (v2_01_01 from a v2/v3 folder — lower layer, first RR).
+    copy_if_missing "${workdir}/samples/LowConga/v3_01_01.flac" \
+                    "${SAMPLES_DIR}/conga/freepats-conga-low.flac"
 
     local added=$((COPIED - before))
     log "[fetch] repo=freepats sha=${FREEPATS_SHA:0:7} mode=full files=${added}"
@@ -332,6 +344,8 @@ fetch_muldjord() {
         "${SAMPLES_DIR}/tom/muldjord-tom-hi.flac"
         "${SAMPLES_DIR}/tom/muldjord-tom-mid.flac"
         "${SAMPLES_DIR}/tom/muldjord-tom-lo.flac"
+        "${SAMPLES_DIR}/cymbal/muldjord-ride.flac"
+        "${SAMPLES_DIR}/cymbal/muldjord-china.flac"
     )
     local missing=0
     for t in "${targets[@]}"; do
@@ -362,6 +376,13 @@ fetch_muldjord() {
                     "${SAMPLES_DIR}/tom/muldjord-tom-mid.flac"
     copy_if_missing "${workdir}/samples/Tom4/20-Tom4.flac" \
                     "${SAMPLES_DIR}/tom/muldjord-tom-lo.flac"
+    # Top velocity ride (10 layers) and china (12 layers). Ride maps directly
+    # to GM note 51; china is a `fallback:china` substitution for splash (55)
+    # — the only bright accent cymbal in this kit.
+    copy_if_missing "${workdir}/samples/RideR/10-RideR.flac" \
+                    "${SAMPLES_DIR}/cymbal/muldjord-ride.flac"
+    copy_if_missing "${workdir}/samples/China/12-China.flac" \
+                    "${SAMPLES_DIR}/cymbal/muldjord-china.flac"
 
     local added=$((COPIED - before))
     log "[fetch] repo=muldjord sha=${MULDJORD_SHA:0:7} mode=full files=${added}"

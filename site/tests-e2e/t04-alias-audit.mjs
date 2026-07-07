@@ -1,14 +1,15 @@
-// M043 S11 T04 verification probe. Walks the 3 chapter pages whose cards
-// changed after the alias pruning + one that still routes through an alias +
-// component-demo (was Category-C blindspot). For each: locates the card,
-// resolves its preset via __polyPatterns.resolvePresetName in the page context,
-// and asserts the resolved display name matches expectation.
+// M043 S11 T04/T05/T06 verification probe. Walks the chapter pages whose cards
+// changed across the alias pruning + manifest widening. After T06 every
+// chapter preset resolves natively — the "aliased" path no longer exists.
+// This probe still asserts native resolution for the presets that were once
+// aliased so a future regression (someone re-adds an alias, or a preset gets
+// renamed) fails loudly.
 import { chromium } from '@playwright/test';
 
 const BASE = 'http://localhost:4321/poly';
 
 const CASES = [
-  // T04 pruned aliases — card should now play the native chapter engine preset.
+  // T04 pruned aliases — card plays its native chapter engine preset.
   {
     page: '/01-foundations/',
     cardPreset: 'Polymetric Foundation',
@@ -34,8 +35,8 @@ const CASES = [
     cardPreset: 'Deep House',
     expectedResolved: 'Deep House',
   },
-  // T05 pruned aliases — manifest widened to cover their notes (47, 44/48/62/72
-  // via close-pitch same-role reuse), so these now play their native preset.
+  // T05 pruned aliases — manifest widened to cover 44/47/48/62/72 via
+  // close-pitch same-role reuse.
   {
     page: '/02-sub-saharan-africa/',
     cardPreset: 'Ewe Polymetric Ensemble',
@@ -56,16 +57,42 @@ const CASES = [
     cardPreset: 'Compositional Arc',
     expectedResolved: 'Compositional Arc',
   },
-  // Kept aliases — still awaiting cymbal / low conga / long guiro samples.
+  // T06 pruned aliases — cymbal (51 ride, 55 china-as-splash-fallback), low
+  // conga (64), and long guiro (74) now shipped in the manifest.
   {
     page: '/10-brazilian/',
     cardPreset: 'Bossa Nova Trio',
-    expectedResolved: 'Factory: Bossa Nova',
+    expectedResolved: 'Bossa Nova Trio',
   },
   {
     page: '/12-jazz/',
     cardPreset: 'Jazz Bop Ride',
-    expectedResolved: 'Factory: Pocket Groove',
+    expectedResolved: 'Jazz Bop Ride',
+  },
+  {
+    page: '/12-jazz/',
+    cardPreset: 'Elvin Jones Cascade',
+    expectedResolved: 'Elvin Jones Cascade',
+  },
+  {
+    page: '/13-drum-and-bass/',
+    cardPreset: 'Liquid Drum and Bass',
+    expectedResolved: 'Liquid Drum and Bass',
+  },
+  {
+    page: '/05-gamelan/',
+    cardPreset: 'Balinese Kotekan',
+    expectedResolved: 'Balinese Kotekan',
+  },
+  {
+    page: '/05-gamelan/',
+    cardPreset: 'Javanese Colotomic',
+    expectedResolved: 'Javanese Colotomic',
+  },
+  {
+    page: '/14-synthesis/',
+    cardPreset: 'Afro-Electronic Fusion',
+    expectedResolved: 'Afro-Electronic Fusion',
   },
   // Category-C blindspot fix — bare engine name.
   {
