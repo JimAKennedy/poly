@@ -317,10 +317,9 @@
         }
         await Promise.all(Object.entries(roleToFile).map(async ([role, file]) => {
           try {
-            const buf = await fetch(base + file).then((r) => {
-              if (!r.ok) throw new Error(`fetch ${file} -> ${r.status}`);
-              return r.arrayBuffer();
-            });
+            const r = await fetch(base + file);
+            if (!r.ok) throw new Error(`fetch ${file} -> ${r.status}`);
+            const buf = await r.arrayBuffer();
             const audio = await ctx.decodeAudioData(buf);
             buffersByRole.set(role, audio);
             probe.samplesLoaded++;
