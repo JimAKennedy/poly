@@ -140,30 +140,26 @@ const FUNCTIONAL_ROLE_LABELS: Record<string, string> = {
 // real engine preset — the alias exists purely to substitute a manifest-safe
 // pattern until sample coverage catches up. Uncovered notes are noted per row
 // so a future manifest extension can retire the alias.
-//   Ewe Polymetric Ensemble    → uses note 47 (mid tom variant)
-//   Balinese Kotekan           → 72, 74 (long guiro), 48 (hi-mid tom)
-//   Javanese Colotomic         → 55 (splash), 48 (hi-mid tom)
-//   Riley Layered Entry        → 47
-//   Bossa Nova Trio            → 51 (ride)
-//   Samba Batucada             → 47
-//   Elvin Jones Cascade        → 51
-//   Jazz Bop Ride              → 51, 44 (foot hat)
-//   Liquid Drum and Bass       → 51
-//   Afro-Electronic Fusion     → 62, 64 (mute conga, low conga)
-//   Compositional Arc          → 47
-// See M043 S11 T04 follow-up task for the sample-coverage plan.
+//   Balinese Kotekan           → 74 (long guiro)
+//   Javanese Colotomic         → 55 (splash cymbal)
+//   Bossa Nova Trio            → 51 (ride cymbal)
+//   Elvin Jones Cascade        → 51 (ride cymbal)
+//   Jazz Bop Ride              → 51 (ride cymbal)
+//   Liquid Drum and Bass       → 51 (ride cymbal)
+//   Afro-Electronic Fusion     → 64 (low conga)
+// M043 S11 T05 (in progress): widened manifest to cover 44/47/48/62/72 via
+// honest same-role, close-pitch reuse. Retired Ewe Polymetric Ensemble, Riley
+// Layered Entry, Samba Batucada, Compositional Arc from this table. The seven
+// entries above still need genuine cymbal (51, 55), low conga (64), and long
+// guiro (74) sources before they can be dropped.
 const CHAPTER_ALIASES: Record<string, string> = {
-  'Ewe Polymetric Ensemble': 'Factory: Afrobeat 12/8',
   'Balinese Kotekan': 'Factory: Kotekan Interlock',
   'Javanese Colotomic': 'Factory: Kotekan Interlock',
-  'Riley Layered Entry': 'Factory: Afro-House Phrases',
   'Bossa Nova Trio': 'Factory: Bossa Nova',
-  'Samba Batucada': 'Factory: Bossa Nova',
   'Elvin Jones Cascade': 'Factory: Polymetric Drift',
   'Jazz Bop Ride': 'Factory: Pocket Groove',
   'Liquid Drum and Bass': 'Factory: Breakbeat',
   'Afro-Electronic Fusion': 'Factory: Afro-House Phrases',
-  'Compositional Arc': 'Factory: Afro-House Phrases',
 };
 
 // --- Rendering primitives (unchanged shape; now fed by JSON) ---

@@ -71,16 +71,18 @@
       "spdx": "CC0-1.0",
       "source": "FreePats World Percussion",
       "sourceUrl": "https://github.com/freepats/world-percussion",
-      "midiNotes": [63],
-      "role": "conga"
+      "midiNotes": [63, 62],
+      "role": "conga",
+      "tags": ["fallback:mute-hi-conga"]
     },
     {
       "file": "conga/vcsl-conga-open.wav",
       "spdx": "CC0-1.0",
       "source": "VCSL",
       "sourceUrl": "https://github.com/sgossner/VCSL",
-      "midiNotes": [63],
-      "role": "conga"
+      "midiNotes": [63, 62],
+      "role": "conga",
+      "tags": ["fallback:mute-hi-conga"]
     },
     {
       "file": "cowbell/fischer808-cowbell.wav",
@@ -119,16 +121,18 @@
       "spdx": "CC0-1.0",
       "source": "Boochi44 Free Drums",
       "sourceUrl": "https://github.com/Boochi44/free-drum-samples",
-      "midiNotes": [42],
-      "role": "hat"
+      "midiNotes": [42, 44],
+      "role": "hat",
+      "tags": ["fallback:pedal-hat"]
     },
     {
       "file": "hat/fischer808-ch.wav",
       "spdx": "CC0-1.0",
       "source": "Fischer TR-808",
       "sourceUrl": "https://github.com/tidalcycles/sounds-tr808-fischer",
-      "midiNotes": [42],
-      "role": "hat"
+      "midiNotes": [42, 44],
+      "role": "hat",
+      "tags": ["fallback:pedal-hat"]
     },
     {
       "file": "hat/fischer808-oh.wav",
@@ -144,8 +148,9 @@
       "attribution": "MuldjordKit by DrumGizmo team (https://github.com/freepats/MuldjordKit), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)",
       "source": "FreePats MuldjordKit",
       "sourceUrl": "https://github.com/freepats/MuldjordKit",
-      "midiNotes": [42],
-      "role": "hat"
+      "midiNotes": [42, 44],
+      "role": "hat",
+      "tags": ["fallback:pedal-hat"]
     },
     {
       "file": "kick/boochi44-kick.wav",
@@ -187,32 +192,36 @@
       "attribution": "Dim Cabasa by Kinwie (https://github.com/sfzinstruments/kinwie.dim-cabasa), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)",
       "source": "Dim Cabasa",
       "sourceUrl": "https://github.com/sfzinstruments/kinwie.dim-cabasa",
-      "midiNotes": [70],
-      "role": "shaker"
+      "midiNotes": [70, 72],
+      "role": "shaker",
+      "tags": ["fallback:long-shaker"]
     },
     {
       "file": "shaker/fischer808-maraca.wav",
       "spdx": "CC0-1.0",
       "source": "Fischer TR-808",
       "sourceUrl": "https://github.com/tidalcycles/sounds-tr808-fischer",
-      "midiNotes": [70],
-      "role": "shaker"
+      "midiNotes": [70, 72],
+      "role": "shaker",
+      "tags": ["fallback:long-shaker"]
     },
     {
       "file": "shaker/freepats-egg.wav",
       "spdx": "CC0-1.0",
       "source": "FreePats World Percussion",
       "sourceUrl": "https://github.com/freepats/world-percussion",
-      "midiNotes": [70],
-      "role": "shaker"
+      "midiNotes": [70, 72],
+      "role": "shaker",
+      "tags": ["fallback:long-shaker"]
     },
     {
       "file": "shaker/vcsl-cabasa.wav",
       "spdx": "CC0-1.0",
       "source": "VCSL",
       "sourceUrl": "https://github.com/sgossner/VCSL",
-      "midiNotes": [70],
-      "role": "shaker"
+      "midiNotes": [70, 72],
+      "role": "shaker",
+      "tags": ["fallback:long-shaker"]
     },
     {
       "file": "snare/drskit-snare.flac",
@@ -262,8 +271,9 @@
       "attribution": "MuldjordKit by DrumGizmo team (https://github.com/freepats/MuldjordKit), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)",
       "source": "FreePats MuldjordKit",
       "sourceUrl": "https://github.com/freepats/MuldjordKit",
-      "midiNotes": [50],
-      "role": "tom"
+      "midiNotes": [50, 48],
+      "role": "tom",
+      "tags": ["fallback:hi-mid-tom"]
     },
     {
       "file": "tom/muldjord-tom-lo.flac",
@@ -280,8 +290,9 @@
       "attribution": "MuldjordKit by DrumGizmo team (https://github.com/freepats/MuldjordKit), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)",
       "source": "FreePats MuldjordKit",
       "sourceUrl": "https://github.com/freepats/MuldjordKit",
-      "midiNotes": [45],
-      "role": "tom"
+      "midiNotes": [45, 47],
+      "role": "tom",
+      "tags": ["fallback:low-mid-tom"]
     },
     {
       "file": "woodblock/vcsl-hi.wav",
