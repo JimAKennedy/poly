@@ -31,6 +31,12 @@ const { preset, caption } = Astro.props;
   import { getPatternForPreset, resolvePresetName } from '../audio/preset-patterns.ts';
   import type { LaneMeta, Manifest } from '../audio/types.ts';
 
+  // Exposed for the S10 site-audio-gate spec so it can compute observed BPM
+  // from scheduledNoteTimes without duplicating pattern-shape knowledge.
+  (window as unknown as {
+    __polyPatterns: { getPatternForPreset: typeof getPatternForPreset; resolvePresetName: typeof resolvePresetName };
+  }).__polyPatterns = { getPatternForPreset, resolvePresetName };
+
   interface PolyAudioProbe {
     sampleBuffersDecoded: number;
     oscillatorsCreated: number;

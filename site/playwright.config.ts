@@ -1,12 +1,17 @@
 import { defineConfig, devices } from '@playwright/test';
 
+// POLY_SITE_URL overrides baseURL so the same spec runs against local preview
+// (default http://localhost:4321) and any deployed URL passed by the
+// site-verify-remote.sh script (e.g. https://user.github.io/poly/).
+const baseURL = process.env.POLY_SITE_URL || 'http://localhost:4321';
+
 export default defineConfig({
   testDir: './tests-e2e',
   timeout: 60_000,
   fullyParallel: false,
   reporter: 'list',
   use: {
-    baseURL: 'http://localhost:4321',
+    baseURL,
     trace: 'off',
     // Chromium normally requires a user gesture before AudioContext can start.
     // Playwright's page.click() counts as one, but the flag below removes the
