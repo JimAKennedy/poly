@@ -62,7 +62,11 @@
     function applyParamsToHost() {
       const tempoBpm = tempoParam ? parseFloat(tempoParam) : NaN;
       const applyTempo = Number.isFinite(tempoBpm) && tempoBpm >= 20 && tempoBpm <= 300;
-      const needle = presetParam ? presetParam.toLowerCase().replace(/[-_]/g, ' ') : '';
+      // Normalize hyphens/underscores to spaces so chapter presets containing
+      // '-' (Neo-Soul Pocket, Afro-Electronic Fusion) match regardless of
+      // whether the URL uses the space or the hyphen form.
+      const normalize = (s) => s.toLowerCase().replace(/[-_]/g, ' ');
+      const needle = presetParam ? normalize(presetParam) : '';
       let tempoApplied = false;
       let attempts = 0;
       (function tryApply() {
@@ -76,7 +80,7 @@
           if (!needle) return;
           if (state.presets && state.presets.length > 0) {
             const idx = state.presets.findIndex(
-              p => p.name.toLowerCase() === needle
+              p => normalize(p.name) === needle
             );
             if (idx >= 0) {
               host.action('applyPreset', { index: idx });
