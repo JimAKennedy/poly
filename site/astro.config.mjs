@@ -19,6 +19,7 @@ export default defineConfig({
 			],
 			components: {
 				Banner: './src/components/Banner.astro',
+				Footer: './src/components/Footer.astro',
 			},
 			head: [
 				{
@@ -96,6 +97,10 @@ export default defineConfig({
 						{
 							label: 'References',
 							slug: 'appendix-references',
+						},
+						{
+							label: 'Credits & Licenses',
+							slug: 'credits',
 						},
 					],
 				},

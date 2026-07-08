@@ -888,10 +888,13 @@
       S.lanes.forEach((l, li) => {
         const fl = frame.lanes[li];
         if (!fl || !hands[li]) return;
-        hands[li].setAttribute('transform', `rotate(${fl.ph * 360} 32 32)`);
+        // Freeze needle + step highlight when the lane is muted so disabled
+        // reads as no motion, not just dimmer motion.
+        const laneOn = !!l.active;
+        hands[li].setAttribute('transform', `rotate(${laneOn ? fl.ph * 360 : 0} 32 32)`);
         ladders[li].querySelectorAll('button').forEach((b, i) =>
-          b.classList.toggle('now', frame.playing && i === fl.step));
-        const active = frame.playing && (l.cells ? true : !!l.pattern[fl.step]) && frame.t8 % 1 < 0.5;
+          b.classList.toggle('now', laneOn && frame.playing && i === fl.step));
+        const active = laneOn && frame.playing && (l.cells ? true : !!l.pattern[fl.step]) && frame.t8 % 1 < 0.5;
         vus[li].style.width = active ? `${(l.vel / 127) * 100}%` : '4%';
         if (expanded === li) {
           strips[li].querySelectorAll('[data-envph]').forEach((ln, i) => {

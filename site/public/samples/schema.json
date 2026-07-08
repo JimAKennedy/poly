@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Poly Sample Manifest",
+  "description": "Maps every sample file to its license, attribution, and MIDI role for the poly.jk.digital site.",
+  "type": "object",
+  "required": ["version", "samples"],
+  "properties": {
+    "version": {
+      "type": "integer",
+      "const": 1
+    },
+    "samples": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["file", "spdx", "source", "midiNotes"],
+        "properties": {
+          "file": {
+            "type": "string",
+            "description": "Path relative to site/public/samples/, e.g. kick/fischer-808-kick.ogg"
+          },
+          "spdx": {
+            "type": "string",
+            "enum": ["CC0-1.0", "CC-BY-4.0", "CC-BY-3.0", "Artistic-2.0", "MIT"],
+            "description": "SPDX license identifier"
+          },
+          "attribution": {
+            "type": "string",
+            "description": "TASL attribution string. Required for CC-BY and Artistic-2.0; omit for CC0."
+          },
+          "source": {
+            "type": "string",
+            "description": "Short source name, e.g. 'Fischer TR-808', 'VCSL', 'MuldjordKit'"
+          },
+          "sourceUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL to the source repository or page"
+          },
+          "midiNotes": {
+            "type": "array",
+            "items": { "type": "integer", "minimum": 0, "maximum": 127 },
+            "minItems": 1,
+            "description": "GM MIDI note numbers this sample covers"
+          },
+          "role": {
+            "type": "string",
+            "description": "Instrument role, e.g. 'kick', 'snare', 'hi-hat-closed', 'djembe-tone'"
+          },
+          "tags": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Searchable tags: genre, character, variant"
+          }
+        },
+        "if": {
+          "properties": {
+            "spdx": { "enum": ["CC-BY-4.0", "CC-BY-3.0", "Artistic-2.0", "MIT"] }
+          }
+        },
+        "then": {
+          "required": ["attribution"]
+        }
+      }
+    }
+  }
+}

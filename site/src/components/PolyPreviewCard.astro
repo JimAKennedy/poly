@@ -7,21 +7,84 @@ interface Props {
 const { preset, caption } = Astro.props;
 ---
 
-<div class="poly-preview" data-poly-preset={preset}>
+<div class="poly-preview" data-poly-preset={preset} data-state="stopped">
   <div class="poly-preview-body">
-    <svg class="poly-preview-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="10" />
-      <polygon points="10 8 16 12 10 16 10 8" />
-    </svg>
+    <button class="poly-preview-icon-btn" type="button" data-role="play-icon" aria-label={`Play preview of ${preset}`}>
+      <svg class="poly-preview-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="10" />
+        <polygon points="10 8 16 12 10 16 10 8" />
+      </svg>
+    </button>
     <div class="poly-preview-text">
       <span class="poly-preview-preset">{preset}</span>
       {caption && <span class="poly-preview-caption">{caption}</span>}
     </div>
-    <button class="poly-preview-btn" type="button">Try it</button>
+    <button class="poly-preview-play" type="button" data-role="play" aria-label={`Play preview of ${preset}`}>Play</button>
+    <button class="poly-preview-btn" type="button" data-role="tryit">Try it</button>
   </div>
+  <div class="poly-preview-lanes" role="group" aria-label="Lane mute toggles" hidden></div>
+  <div class="poly-preview-error" role="alert" hidden></div>
 </div>
 
 <script>
+  import { createSampleLoader } from '../audio/sample-loader.ts';
+  import { createScheduler } from '../audio/midi-scheduler.ts';
+  import {
+    getPatternForPreset,
+    resolvePreset,
+    resolvePresetName,
+  } from '../audio/preset-patterns.ts';
+  import type { LaneMeta, Manifest } from '../audio/types.ts';
+
+  // Exposed for the S10 site-audio-gate spec so it can compute observed BPM
+  // from scheduledNoteTimes without duplicating pattern-shape knowledge. S11
+  // T06 adds resolvePreset so the cross-surface consistency gate can compare
+  // {engineName, lanes[]} against the WASM host's own accessor.
+  (window as unknown as {
+    __polyPatterns: {
+      getPatternForPreset: typeof getPatternForPreset;
+      resolvePreset: typeof resolvePreset;
+      resolvePresetName: typeof resolvePresetName;
+    };
+  }).__polyPatterns = { getPatternForPreset, resolvePreset, resolvePresetName };
+
+  interface PolyAudioProbe {
+    sampleBuffersDecoded: number;
+    oscillatorsCreated: number;
+    scheduledNoteTimes: number[];
+    currentPreset: string;
+    activeBpm: number;
+    fallbackActive: boolean;
+    lastError: string | null;
+    // S11 T06: rolling RMS (dBFS) of the shared voice bus. -Infinity when
+    // silent; sampled after Play stabilises for cross-surface loudness parity
+    // checks. Reset on Stop.
+    measuredRmsDb: number;
+  }
+
+  function resetProbe(probe: PolyAudioProbe): void {
+    probe.sampleBuffersDecoded = 0;
+    probe.oscillatorsCreated = 0;
+    probe.scheduledNoteTimes = [];
+    probe.currentPreset = '';
+    probe.activeBpm = 0;
+    probe.fallbackActive = false;
+    probe.lastError = null;
+    probe.measuredRmsDb = -Infinity;
+  }
+
+  const audioProbe: PolyAudioProbe = {
+    sampleBuffersDecoded: 0,
+    oscillatorsCreated: 0,
+    scheduledNoteTimes: [],
+    currentPreset: '',
+    activeBpm: 0,
+    fallbackActive: false,
+    lastError: null,
+    measuredRmsDb: -Infinity,
+  };
+  (window as unknown as { __polyAudioProbe: PolyAudioProbe }).__polyAudioProbe = audioProbe;
+
   let dialog: HTMLDialogElement | null = null;
   let frame: HTMLIFrameElement | null = null;
 
@@ -47,14 +110,273 @@ const { preset, caption } = Astro.props;
     });
   }
 
-  document.querySelectorAll<HTMLElement>('.poly-preview').forEach(card => {
-    card.querySelector('.poly-preview-btn')!.addEventListener('click', () => {
+  // Shared per-page audio state. Only one card plays at a time.
+  const baseUrl = (import.meta.env.BASE_URL || '/').replace(/\/?$/, '/');
+  const samplesBaseUrl = `${baseUrl}samples/`;
+  let audioContext: AudioContext | null = null;
+  // S11 T06: shared voice-bus + analyser tap for RMS parity checks.
+  let voiceBus: GainNode | null = null;
+  let analyser: AnalyserNode | null = null;
+  let rmsFrame: number | null = null;
+  let manifestPromise: Promise<Manifest> | null = null;
+  let activeScheduler: ReturnType<typeof createScheduler> | null = null;
+  let activeCard: HTMLElement | null = null;
+
+  function getAudioContext(): AudioContext {
+    if (!audioContext) {
+      const Ctor = (window.AudioContext || (window as any).webkitAudioContext);
+      audioContext = new Ctor();
+      // Insert a shared voice-bus that feeds an AnalyserNode → destination.
+      // The scheduler routes every per-voice gain into `voiceBus` (via its
+      // `destination` option), so windowed RMS on the analyser reflects the
+      // total mix — the same signal a listener hears.
+      voiceBus = audioContext.createGain();
+      voiceBus.gain.value = 1;
+      analyser = audioContext.createAnalyser();
+      analyser.fftSize = 2048;
+      analyser.smoothingTimeConstant = 0;
+      voiceBus.connect(analyser);
+      analyser.connect(audioContext.destination);
+    }
+    return audioContext;
+  }
+
+  function startRmsSampler(): void {
+    if (rmsFrame !== null || !analyser) return;
+    const buf = new Float32Array(analyser.fftSize);
+    const tick = (): void => {
+      if (!analyser) return;
+      analyser.getFloatTimeDomainData(buf);
+      let sum = 0;
+      for (let i = 0; i < buf.length; i++) sum += buf[i] * buf[i];
+      const rms = Math.sqrt(sum / buf.length);
+      audioProbe.measuredRmsDb = rms > 0 ? 20 * Math.log10(rms) : -Infinity;
+      rmsFrame = requestAnimationFrame(tick);
+    };
+    rmsFrame = requestAnimationFrame(tick);
+  }
+
+  function stopRmsSampler(): void {
+    if (rmsFrame !== null) {
+      cancelAnimationFrame(rmsFrame);
+      rmsFrame = null;
+    }
+    audioProbe.measuredRmsDb = -Infinity;
+  }
+
+  function loadManifest(): Promise<Manifest> {
+    if (!manifestPromise) {
+      manifestPromise = fetch(`${samplesBaseUrl}manifest.json`).then((r) => {
+        if (!r.ok) throw new Error(`manifest fetch ${r.status}`);
+        return r.json();
+      });
+      // Clear the cache on failure so retry after a transient error can succeed.
+      manifestPromise.catch(() => { manifestPromise = null; });
+    }
+    return manifestPromise;
+  }
+
+  function browserFetcher(url: string): Promise<ArrayBuffer> {
+    return fetch(url).then((r) => {
+      if (!r.ok) throw new Error(`fetch ${url} -> ${r.status}`);
+      return r.arrayBuffer();
+    });
+  }
+
+  function stopActive() {
+    if (activeScheduler) {
+      activeScheduler.stop();
+      activeScheduler = null;
+    }
+    if (activeCard) {
+      activeCard.dataset.state = 'stopped';
+      const btn = activeCard.querySelector<HTMLButtonElement>('.poly-preview-play');
+      if (btn) btn.textContent = 'Play';
+      activeCard = null;
+    }
+    stopRmsSampler();
+  }
+
+  function clearErrorState(card: HTMLElement): void {
+    if (card.dataset.state === 'error') {
+      card.dataset.state = 'stopped';
+      const btn = card.querySelector<HTMLButtonElement>('.poly-preview-play');
+      if (btn) btn.textContent = 'Play';
+      const banner = card.querySelector<HTMLElement>('.poly-preview-error');
+      if (banner) banner.hidden = true;
+    }
+  }
+
+  function showErrorState(card: HTMLElement, preset: string, err: unknown): void {
+    stopActive();
+    const msg = err instanceof Error ? err.message : String(err);
+    audioProbe.lastError = `${preset}: ${msg}`;
+    console.error(`[PolyPreviewCard] "${preset}" sample playback failed:`, err);
+    card.dataset.state = 'error';
+    const btn = card.querySelector<HTMLButtonElement>('.poly-preview-play');
+    if (btn) btn.textContent = 'Failed';
+    const banner = card.querySelector<HTMLElement>('.poly-preview-error');
+    if (banner) {
+      banner.hidden = false;
+      banner.textContent = `Sample playback failed — ${msg} (check console). Click Play to retry.`;
+    }
+  }
+
+  // Per-card mute state persists across Stop/Play so a listener's isolation
+  // choices survive restarting the loop.
+  const mutedByCard = new WeakMap<HTMLElement, Set<number>>();
+
+  function getMutedSet(card: HTMLElement): Set<number> {
+    let set = mutedByCard.get(card);
+    if (!set) {
+      set = new Set();
+      mutedByCard.set(card, set);
+    }
+    return set;
+  }
+
+  function renderLaneChips(card: HTMLElement, lanes: LaneMeta[]) {
+    const container = card.querySelector<HTMLDivElement>('.poly-preview-lanes');
+    if (!container) return;
+    container.hidden = false;
+    container.innerHTML = '';
+    const muted = getMutedSet(card);
+    lanes.forEach((lane, idx) => {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'poly-lane-chip';
+      chip.dataset.laneIndex = String(idx);
+      chip.setAttribute('aria-pressed', muted.has(idx) ? 'true' : 'false');
+      chip.title = muted.has(idx) ? `Unmute ${lane.label}` : `Mute ${lane.label}`;
+      if (lane.color) chip.style.setProperty('--lane-color', lane.color);
+      chip.innerHTML = `
+        <span class="poly-lane-chip-dot" aria-hidden="true"></span>
+        <span class="poly-lane-chip-label">${escapeHtml(lane.label)}</span>
+        <span class="poly-lane-chip-role">${escapeHtml(lane.role)}</span>
+      `;
+      chip.addEventListener('click', () => {
+        const isMuted = muted.has(idx);
+        const nowMuted = !isMuted;
+        if (nowMuted) muted.add(idx); else muted.delete(idx);
+        chip.setAttribute('aria-pressed', nowMuted ? 'true' : 'false');
+        chip.title = nowMuted ? `Unmute ${lane.label}` : `Mute ${lane.label}`;
+        if (activeCard === card && activeScheduler) {
+          activeScheduler.setLaneMuted(idx, nowMuted);
+        }
+      });
+      container.appendChild(chip);
+    });
+  }
+
+  function escapeHtml(s: string): string {
+    return s.replace(/[&<>"']/g, (c) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+    }[c] as string));
+  }
+
+  async function startCard(card: HTMLElement, preset: string) {
+    const pattern = getPatternForPreset(preset);
+    if (!pattern) return;
+    if (activeCard === card) {
+      stopActive();
+      return;
+    }
+    stopActive();
+    clearErrorState(card);
+    resetProbe(audioProbe);
+    audioProbe.currentPreset = resolvePresetName(preset) ?? '';
+    audioProbe.activeBpm = pattern.bpm;
+    const ctx = getAudioContext();
+    if (ctx.state === 'suspended') await ctx.resume();
+    let manifest: Manifest;
+    try {
+      manifest = await loadManifest();
+    } catch (err) {
+      audioProbe.fallbackActive = true;
+      throw err;
+    }
+    // Disambiguate manifest note collisions (e.g. note 36 = cajon + kick,
+    // note 43 = darbuka + tom) by hinting the intended role per note from the
+    // pattern's lane definitions. Site-only concern — the plugin path picks
+    // samples independently.
+    const preferredRoles = new Map<number, string>();
+    for (const lane of pattern.lanes ?? []) {
+      if (!preferredRoles.has(lane.note)) {
+        preferredRoles.set(lane.note, lane.role);
+      }
+    }
+    const loader = createSampleLoader({
+      manifest,
+      context: ctx,
+      fetcher: browserFetcher,
+      baseUrl: samplesBaseUrl,
+      onDecoded: () => { audioProbe.sampleBuffersDecoded += 1; },
+      preferredRoles,
+    });
+    const scheduler = createScheduler({
+      context: ctx,
+      loader,
+      pattern,
+      onNoteScheduled: (fireTime) => { audioProbe.scheduledNoteTimes.push(fireTime); },
+      // S11 T06: route through the shared voice-bus so the analyser tap sees
+      // the same signal the destination hears.
+      destination: voiceBus ?? ctx.destination,
+    });
+    activeScheduler = scheduler;
+    activeCard = card;
+    card.dataset.state = 'playing';
+    const btn = card.querySelector<HTMLButtonElement>('.poly-preview-play');
+    if (btn) btn.textContent = 'Stop';
+    // Apply the card's persisted mute state before the first tick fires so
+    // muted lanes never schedule.
+    const muted = getMutedSet(card);
+    for (const idx of muted) scheduler.setLaneMuted(idx, true);
+    try {
+      await scheduler.start();
+    } catch (err) {
+      audioProbe.fallbackActive = true;
+      throw err;
+    }
+    startRmsSampler();
+  }
+
+  document.querySelectorAll<HTMLElement>('.poly-preview').forEach((card) => {
+    const preset = card.dataset.polyPreset ?? '';
+    const playBtn = card.querySelector<HTMLButtonElement>('.poly-preview-play')!;
+    const iconBtn = card.querySelector<HTMLButtonElement>('.poly-preview-icon-btn')!;
+    const tryBtn = card.querySelector<HTMLButtonElement>('.poly-preview-btn')!;
+    const pattern = getPatternForPreset(preset);
+
+    const triggerPlay = () => {
+      startCard(card, preset).catch((err) => {
+        showErrorState(card, preset, err);
+      });
+    };
+
+    if (!pattern) {
+      playBtn.disabled = true;
+      playBtn.title = 'Audio preview coming soon';
+      iconBtn.disabled = true;
+      iconBtn.title = 'Audio preview coming soon';
+    } else {
+      playBtn.addEventListener('click', triggerPlay);
+      iconBtn.addEventListener('click', triggerPlay);
+      if (pattern.lanes && pattern.lanes.length > 0) {
+        renderLaneChips(card, pattern.lanes);
+      }
+    }
+
+    tryBtn.addEventListener('click', () => {
       ensureModal();
-      const preset = card.dataset.polyPreset;
-      const base = (import.meta.env.BASE_URL || '/').replace(/\/?$/, '/');
       const params = new URLSearchParams();
+      params.set('host', 'wasm');
       if (preset) params.set('preset', preset);
-      frame!.src = `${base}webui/index.html?${params}`;
+      if (pattern?.bpm) params.set('tempo', String(pattern.bpm));
+      frame!.src = `${baseUrl}webui/index.html?${params}`;
       frame!.title = preset ? `Poly — ${preset}` : 'Poly — Interactive UI';
       dialog!.querySelector('.poly-modal-title')!.textContent = preset || 'Poly';
       dialog!.showModal();
@@ -69,17 +391,53 @@ const { preset, caption } = Astro.props;
 
   .poly-preview-body {
     display: flex;
-    align-items: center;
-    gap: 0.75rem;
+    align-items: flex-start;
+    gap: 0.5rem;
     padding: 0.75rem 1rem;
     background: #1c1b19;
     border: 1px solid var(--sl-color-gray-4);
     border-radius: 8px;
   }
 
-  .poly-preview-icon {
+  .poly-preview-icon-btn {
     flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2px;
+    background: transparent;
+    border: none;
+    border-radius: 999px;
     color: var(--poly-primary);
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s, transform 0.1s;
+  }
+
+  .poly-preview-icon-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.04);
+    color: var(--poly-primary-dark, var(--poly-primary));
+  }
+
+  .poly-preview-icon-btn:active:not(:disabled) {
+    transform: scale(0.94);
+  }
+
+  .poly-preview-icon-btn:focus-visible {
+    outline: 2px solid var(--poly-primary);
+    outline-offset: 2px;
+  }
+
+  .poly-preview-icon-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+  }
+
+  .poly-preview[data-state='playing'] .poly-preview-icon-btn {
+    color: var(--poly-primary);
+  }
+
+  .poly-preview-icon {
+    display: block;
   }
 
   .poly-preview-text {
@@ -101,15 +459,14 @@ const { preset, caption } = Astro.props;
     font-family: var(--poly-font-sans);
     font-size: var(--sl-text-xs);
     color: #8a8886;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
   }
 
+  .poly-preview-play,
   .poly-preview-btn {
     flex-shrink: 0;
     padding: 0.35rem 0.9rem;
-    background: var(--poly-primary);
     color: #fff;
     border: none;
     border-radius: 4px;
@@ -120,7 +477,142 @@ const { preset, caption } = Astro.props;
     transition: background 0.15s;
   }
 
+  .poly-preview-play {
+    background: #2a2927;
+    border: 1px solid var(--sl-color-gray-4);
+    color: #e0ddd8;
+  }
+
+  .poly-preview-play:hover:not(:disabled) {
+    background: #3a3937;
+  }
+
+  .poly-preview-play:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+  }
+
+  .poly-preview[data-state='playing'] .poly-preview-play {
+    background: var(--poly-primary);
+    border-color: var(--poly-primary);
+    color: #fff;
+  }
+
+  .poly-preview-btn {
+    background: var(--poly-primary);
+  }
+
   .poly-preview-btn:hover {
     background: var(--poly-primary-dark);
+  }
+
+  .poly-preview-lanes {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem 0.5rem;
+    margin: 0.4rem 0 0;
+    padding: 0.55rem 0.75rem 0.6rem;
+    background: #1c1b19;
+    border: 1px solid var(--sl-color-gray-4);
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+  }
+
+  .poly-preview[data-state='error'] .poly-preview-body {
+    border-color: #a4373a;
+  }
+
+  .poly-preview[data-state='error'] .poly-preview-play {
+    background: #4a1f21;
+    border-color: #a4373a;
+    color: #f2c8ca;
+  }
+
+  .poly-preview-error {
+    margin: 0.4rem 0 0;
+    padding: 0.5rem 0.75rem;
+    background: #2a1a1b;
+    border: 1px solid #a4373a;
+    border-radius: 0 0 8px 8px;
+    color: #f2c8ca;
+    font-family: var(--poly-font-sans);
+    font-size: var(--sl-text-xs);
+    line-height: 1.4;
+  }
+</style>
+
+<style is:global>
+  /* Lane chips are created client-side in the PolyPreviewCard script, so
+     Astro's per-component scoping doesn't reach them. Keep these global. */
+  .poly-lane-chip {
+    --lane-color: #8a8886;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    height: 1.85rem;
+    margin: 0;
+    padding: 0 0.7rem;
+    background: #232220;
+    border: 1px solid #3a3937;
+    border-radius: 999px;
+    font-family: var(--poly-font-sans);
+    font-size: var(--sl-text-xs);
+    color: #e0ddd8;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s, color 0.12s, opacity 0.12s;
+  }
+
+  .poly-lane-chip:hover {
+    background: #2c2b29;
+    border-color: #4a4947;
+  }
+
+  .poly-lane-chip:focus-visible {
+    outline: 2px solid var(--poly-primary);
+    outline-offset: 2px;
+  }
+
+  .poly-lane-chip-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--lane-color);
+    box-shadow: 0 0 0 2px #1c1b19;
+    flex-shrink: 0;
+    transition: background 0.12s, box-shadow 0.12s;
+  }
+
+  .poly-lane-chip-label {
+    font-weight: 600;
+  }
+
+  .poly-lane-chip-role {
+    font-size: 0.7rem;
+    color: #9a9896;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .poly-lane-chip[aria-pressed='true'] {
+    background: #131211;
+    border-color: #2a2927;
+    color: #6c6a68;
+    text-decoration: line-through;
+    text-decoration-thickness: 1px;
+    text-decoration-color: #6c6a68;
+  }
+
+  .poly-lane-chip[aria-pressed='true'] .poly-lane-chip-dot {
+    background: #3a3937;
+    box-shadow: 0 0 0 2px #1c1b19;
+  }
+
+  .poly-lane-chip[aria-pressed='true'] .poly-lane-chip-role {
+    color: #4a4947;
   }
 </style>

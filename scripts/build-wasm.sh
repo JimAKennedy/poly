@@ -5,14 +5,8 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 BUILD_DIR="${PROJECT_DIR}/build-wasm"
 
-if ! command -v emcc &>/dev/null; then
-    if [ -f "${EMSDK:-$HOME/emsdk}/emsdk_env.sh" ]; then
-        source "${EMSDK:-$HOME/emsdk}/emsdk_env.sh" 2>/dev/null
-    else
-        echo "Error: emcc not found. Install emsdk or set EMSDK env var." >&2
-        exit 1
-    fi
-fi
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/lib/ensure-emsdk.sh"
 
 echo "=== Configuring WASM build ==="
 emcmake cmake -B "$BUILD_DIR" -DPOLY_ENGINE_ONLY=ON "$PROJECT_DIR"

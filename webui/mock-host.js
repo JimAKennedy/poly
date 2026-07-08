@@ -407,8 +407,8 @@
 
   const PRESET_SEEDS = [1, 7, 23, 42, 13, 31, 47, 55, 71, 88, 33, 17, 44, 99, 77, 63, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127];
 
-  const TEMPO = 126;
-  const EIGHTH = 60 / TEMPO / 2;
+  let TEMPO = 126;
+  const eighthSec = () => 60 / TEMPO / 2;
   const CONV = 120;
 
   function identityNoteMap() {
@@ -513,7 +513,7 @@
 
   /* ---------- WebAudio preview voices ---------- */
   let ctx = null, playing = false, startAt = 0, schedTimer = null, nextTick = 0, _nb = null;
-  const now8 = () => (playing && ctx ? (ctx.currentTime - startAt) / EIGHTH : 0);
+  const now8 = () => (playing && ctx ? (ctx.currentTime - startAt) / eighthSec() : 0);
   function noiseBuf() {
     if (_nb) return _nb;
     _nb = ctx.createBuffer(1, ctx.sampleRate * 0.2, ctx.sampleRate);
@@ -564,13 +564,15 @@
   }
   function schedule() {
     const ahead = ctx.currentTime + 0.14;
-    while (startAt + nextTick * EIGHTH < ahead) {
+    const step = eighthSec();
+    while (startAt + nextTick * step < ahead) {
       state.lanes.forEach((l, li) => {
+        if (!l.active) return;
         const hit = laneHitAt(l, nextTick);
         if (!hit) return;
         const vel = hitVelocity(l, li, nextTick, hit);
         const mtMs = (l.mt && l.mt[hit.step]) || 0;
-        const t = startAt + nextTick * EIGHTH + (l.push + mtMs) / 1000;
+        const t = startAt + nextTick * step + (l.push + mtMs) / 1000;
         voice(l, Math.max(ctx.currentTime + 0.001, t), vel);
       });
       nextTick++;
@@ -686,6 +688,14 @@
       case 'applyPreset':
         applyPreset(payload.index ?? -1);
         break;
+      case 'setTempo': {
+        const bpm = Number(payload.bpm);
+        if (Number.isFinite(bpm) && bpm >= 20 && bpm <= 300) {
+          TEMPO = bpm;
+          state.tempo = bpm;
+        }
+        break;
+      }
       case 'setAccent': {
         const al = state.lanes[payload.lane];
         if (al && payload.step >= 0 && payload.step < al.accents.length)
