@@ -46,7 +46,7 @@ lead needs one page-load before use.
 |---|---|---|---|---|
 | VCSL (Versilian Community Sample Library) | github.com/sgossner/VCSL | CC0-1.0 | none (courtesy: "VCSL — Versilian Studios LLC, CC0") | Agogô bells (hi/lo), 2 cowbells, cabasa, shakers, claves, güiro, woodblock (pp–ff), congas (conga/quinto/tumba, 48 WAV, v1–v4 × rr), bongos (48 WAV, open/muted), **darbuka**, frame drum, 2 gongs, balafon, cajón, 3 tambourines, finger cymbals, slit drum, bass drums, snares, toms |
 | VSCO-2 CE | github.com/sgossner/VSCO-2-CE | CC0-1.0 | none | Second timbre for conga/quinto, claves, cowbell, güiro; orchestral perc (concert BD, snares, timpani, mallets) |
-| FreePats World Percussion | github.com/freepats/world-percussion | CC0-1.0 | none (credits courtesy: Xavimart/FreePats) | Cajón flamenco, bongos, darbuka, conga, claves, castanets, maracas, egg shaker, tambourine, hand clap (24 one-shots, SFZ-mapped) |
+| FreePats World Percussion | github.com/freepats/world-percussion | CC0-1.0 | none (credits courtesy: Xavimart/FreePats) | Cajón flamenco, bongos, darbuka, conga, claves, castanets, maracas, egg shaker, tambourine, hand clap (24 one-shots, SFZ-mapped). Format: FLAC in Bongos/Cajon/Castanets/Claves/Congas/Darbuka/HandClap; WAV in EggShaker/Maracas/Tambourine. |
 | Fischer TR-808 set (1994) | github.com/tidalcycles/sounds-tr808-fischer | CC0-1.0 (LICENSE fetched) | none (courtesy: "808 samples by Michael Fischer, 1994") | 116 WAV: 25 kicks, 25 snares, toms/congas, rimshot, claves, clap, maracas, cowbell, cymbals, open/closed hats. Direct-from-hardware provenance stated |
 | Boochi44 free-drum-samples | github.com/Boochi44/free-drum-samples | CC0-1.0 (README; standalone LICENSE not confirmed — minor asterisk) | none | 3 processed kits (kicks/subs/snares/claps/hats/perc/FX) — IDM glitch character |
 | FreePats MuldjordKit | github.com/freepats/MuldjordKit | CC-BY 4.0 | **"Drum samples provided by DrumGizmo.org"** (repo-specified) | Full rock kit: 2 kicks, snare, 4 toms, hi-hat, 2 crashes, 2 rides, china (SFZ+WAV) |
@@ -124,6 +124,16 @@ CrocellKit/Aasimonster (CC-BY per snippets), U. Iowa terms.
 
 ## 6. Licensing policy & workflow
 
+- **Format policy:** WAV and FLAC are both accepted as-is. The runtime
+  consumer is the browser's Web Audio `decodeAudioData()`, which decodes
+  both formats natively on all evergreen browsers (Chrome ≥88, Firefox
+  ≥51, Safari ≥11). No build-time transcode step; no runtime FLAC
+  decoder shim; no ffmpeg dep. FLAC saves ~50% on payload for large
+  velocity-layered kits, so it's actively preferred where upstream ships
+  it (MuldjordKit, DRSKit, Dim Cabasa, most FreePats folders). This
+  supersedes S02's "WAV-as-is, no ffmpeg dep" call — the concern was a
+  build-time transcoder, and FLAC as a shipping format bypasses that
+  concern entirely.
 - **Allowlist:** `CC0-1.0`, `CC-BY-4.0` (+ `CC-BY-3.0` legacy). Exclude
   NC (public repo → downstream commercial reuse you can't police), ND, SA
   (SA note: playback of an unmodified sample = "collection", fine; mixing

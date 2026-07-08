@@ -277,6 +277,10 @@ jobs:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
       - name: Check site asset references
         run: bash scripts/check-site-assets.sh
+      - name: Validate sample manifest (strict)
+        run: bash scripts/check-sample-manifest.sh --strict
+      - name: Validate sample manifest (GM coverage)
+        run: bash scripts/check-sample-manifest.sh --coverage
 
   ci-complete:
     needs: [code-quality, build, engine-isolation, secrets-scan, code-coverage, webui-tests, pluginval, wasm-build, site-lint]

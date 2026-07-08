@@ -3,12 +3,15 @@
   "type": "module",
   "version": "0.0.1",
   "scripts": {
-    "dev": "astro dev",
-    "start": "astro dev",
-    "copy-webui": "mkdir -p public/webui && cp ../webui/index.html ../webui/ui.js ../webui/ui.css ../webui/host-iface.js ../webui/groove-math.js ../webui/mock-host.js ../webui/wasm-host.js public/webui/",
-    "build": "npm run copy-webui && astro build",
+    "copy-webui": "mkdir -p public/webui && cp ../webui/index.html ../webui/ui.js ../webui/ui.css ../webui/host-iface.js ../webui/groove-math.js ../webui/mock-host.js ../webui/wasm-host.js ../webui/plugin-host.js public/webui/ && (cp ../webui/poly_engine.js ../webui/poly_engine.wasm public/webui/ 2>/dev/null || true)",
+    "generate-presets": "node scripts/generate-presets-json.mjs",
+    "dev": "npm run generate-presets && astro dev",
+    "start": "npm run generate-presets && astro dev",
+    "build": "npm run generate-presets && npm run copy-webui && astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "test": "node --test tests/**/*.test.mjs",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@astrojs/starlight": "^0.41.0",
@@ -17,5 +20,9 @@
     "@fontsource-variable/source-serif-4": "^5.2.9",
     "astro": "^7.0.2",
     "sharp": "^0.34.5"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.1",
+    "node-web-audio-api": "^2.0.0"
   }
 }

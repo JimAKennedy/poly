@@ -1,0 +1,349 @@
+{
+  "version": 1,
+  "samples": [
+    {
+      "file": "agogo/vcsl-hi.wav",
+      "spdx": "CC0-1.0",
+      "source": "VCSL",
+      "sourceUrl": "https://github.com/sgossner/VCSL",
+      "midiNotes": [67],
+      "role": "agogo"
+    },
+    {
+      "file": "agogo/vcsl-lo.wav",
+      "spdx": "CC0-1.0",
+      "source": "VCSL",
+      "sourceUrl": "https://github.com/sgossner/VCSL",
+      "midiNotes": [67],
+      "role": "agogo"
+    },
+    {
+      "file": "bongo/freepats-bongo-hi.flac",
+      "spdx": "CC0-1.0",
+      "source": "FreePats World Percussion",
+      "sourceUrl": "https://github.com/freepats/world-percussion",
+      "midiNotes": [60],
+      "role": "bongo"
+    },
+    {
+      "file": "cajon/freepats-cajon.flac",
+      "spdx": "CC0-1.0",
+      "source": "FreePats World Percussion",
+      "sourceUrl": "https://github.com/freepats/world-percussion",
+      "midiNotes": [36],
+      "role": "cajon"
+    },
+    {
+      "file": "castanets/freepats-castanets.flac",
+      "spdx": "CC0-1.0",
+      "source": "FreePats World Percussion",
+      "sourceUrl": "https://github.com/freepats/world-percussion",
+      "midiNotes": [85],
+      "role": "castanets"
+    },
+    {
+      "file": "clave/fischer808-clave.wav",
+      "spdx": "CC0-1.0",
+      "source": "Fischer TR-808",
+      "sourceUrl": "https://github.com/tidalcycles/sounds-tr808-fischer",
+      "midiNotes": [75, 37],
+      "role": "clave",
+      "tags": ["fallback:sidestick"]
+    },
+    {
+      "file": "clave/freepats-claves.flac",
+      "spdx": "CC0-1.0",
+      "source": "FreePats World Percussion",
+      "sourceUrl": "https://github.com/freepats/world-percussion",
+      "midiNotes": [75],
+      "role": "clave"
+    },
+    {
+      "file": "clave/vcsl-claves.wav",
+      "spdx": "CC0-1.0",
+      "source": "VCSL",
+      "sourceUrl": "https://github.com/sgossner/VCSL",
+      "midiNotes": [75],
+      "role": "clave"
+    },
+    {
+      "file": "conga/freepats-conga-low.flac",
+      "spdx": "CC0-1.0",
+      "source": "FreePats World Percussion",
+      "sourceUrl": "https://github.com/freepats/world-percussion",
+      "midiNotes": [64],
+      "role": "conga"
+    },
+    {
+      "file": "conga/freepats-conga-open.flac",
+      "spdx": "CC0-1.0",
+      "source": "FreePats World Percussion",
+      "sourceUrl": "https://github.com/freepats/world-percussion",
+      "midiNotes": [63, 62],
+      "role": "conga",
+      "tags": ["fallback:mute-hi-conga"]
+    },
+    {
+      "file": "conga/vcsl-conga-open.wav",
+      "spdx": "CC0-1.0",
+      "source": "VCSL",
+      "sourceUrl": "https://github.com/sgossner/VCSL",
+      "midiNotes": [63, 62],
+      "role": "conga",
+      "tags": ["fallback:mute-hi-conga"]
+    },
+    {
+      "file": "cymbal/muldjord-china.flac",
+      "spdx": "CC-BY-4.0",
+      "attribution": "MuldjordKit by DrumGizmo team (https://github.com/freepats/MuldjordKit), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)",
+      "source": "FreePats MuldjordKit",
+      "sourceUrl": "https://github.com/freepats/MuldjordKit",
+      "midiNotes": [55],
+      "role": "cymbal",
+      "tags": ["fallback:china"]
+    },
+    {
+      "file": "cymbal/muldjord-ride.flac",
+      "spdx": "CC-BY-4.0",
+      "attribution": "MuldjordKit by DrumGizmo team (https://github.com/freepats/MuldjordKit), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)",
+      "source": "FreePats MuldjordKit",
+      "sourceUrl": "https://github.com/freepats/MuldjordKit",
+      "midiNotes": [51],
+      "role": "cymbal"
+    },
+    {
+      "file": "cowbell/fischer808-cowbell.wav",
+      "spdx": "CC0-1.0",
+      "source": "Fischer TR-808",
+      "sourceUrl": "https://github.com/tidalcycles/sounds-tr808-fischer",
+      "midiNotes": [56],
+      "role": "cowbell"
+    },
+    {
+      "file": "cowbell/vcsl-cowbell.wav",
+      "spdx": "CC0-1.0",
+      "source": "VCSL",
+      "sourceUrl": "https://github.com/sgossner/VCSL",
+      "midiNotes": [56],
+      "role": "cowbell"
+    },
+    {
+      "file": "darbuka/freepats-darbuka.flac",
+      "spdx": "CC0-1.0",
+      "source": "FreePats World Percussion",
+      "sourceUrl": "https://github.com/freepats/world-percussion",
+      "midiNotes": [43],
+      "role": "darbuka"
+    },
+    {
+      "file": "guiro/vcsl-guiro-long.wav",
+      "spdx": "CC0-1.0",
+      "source": "VCSL",
+      "sourceUrl": "https://github.com/sgossner/VCSL",
+      "midiNotes": [74],
+      "role": "guiro"
+    },
+    {
+      "file": "handclap/freepats-clap.flac",
+      "spdx": "CC0-1.0",
+      "source": "FreePats World Percussion",
+      "sourceUrl": "https://github.com/freepats/world-percussion",
+      "midiNotes": [39],
+      "role": "handclap"
+    },
+    {
+      "file": "hat/boochi44-hat.wav",
+      "spdx": "CC0-1.0",
+      "source": "Boochi44 Free Drums",
+      "sourceUrl": "https://github.com/Boochi44/free-drum-samples",
+      "midiNotes": [42, 44],
+      "role": "hat",
+      "tags": ["fallback:pedal-hat"]
+    },
+    {
+      "file": "hat/fischer808-ch.wav",
+      "spdx": "CC0-1.0",
+      "source": "Fischer TR-808",
+      "sourceUrl": "https://github.com/tidalcycles/sounds-tr808-fischer",
+      "midiNotes": [42, 44],
+      "role": "hat",
+      "tags": ["fallback:pedal-hat"]
+    },
+    {
+      "file": "hat/fischer808-oh.wav",
+      "spdx": "CC0-1.0",
+      "source": "Fischer TR-808",
+      "sourceUrl": "https://github.com/tidalcycles/sounds-tr808-fischer",
+      "midiNotes": [46],
+      "role": "hat"
+    },
+    {
+      "file": "hat/muldjord-hat.flac",
+      "spdx": "CC-BY-4.0",
+      "attribution": "MuldjordKit by DrumGizmo team (https://github.com/freepats/MuldjordKit), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)",
+      "source": "FreePats MuldjordKit",
+      "sourceUrl": "https://github.com/freepats/MuldjordKit",
+      "midiNotes": [42, 44],
+      "role": "hat",
+      "tags": ["fallback:pedal-hat"]
+    },
+    {
+      "file": "kick/boochi44-kick.wav",
+      "spdx": "CC0-1.0",
+      "source": "Boochi44 Free Drums",
+      "sourceUrl": "https://github.com/Boochi44/free-drum-samples",
+      "midiNotes": [36],
+      "role": "kick"
+    },
+    {
+      "file": "kick/drskit-kick.flac",
+      "spdx": "CC-BY-4.0",
+      "attribution": "DRSKit by Jes Eiler (DRSDrums) and the DrumGizmo team (https://github.com/sfzinstruments/DrumGizmo.DRSKit), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)",
+      "source": "DrumGizmo DRSKit",
+      "sourceUrl": "https://github.com/sfzinstruments/DrumGizmo.DRSKit",
+      "midiNotes": [36],
+      "role": "kick"
+    },
+    {
+      "file": "kick/fischer808-bd.wav",
+      "spdx": "CC0-1.0",
+      "source": "Fischer TR-808",
+      "sourceUrl": "https://github.com/tidalcycles/sounds-tr808-fischer",
+      "midiNotes": [36],
+      "role": "kick"
+    },
+    {
+      "file": "kick/muldjord-kick.flac",
+      "spdx": "CC-BY-4.0",
+      "attribution": "MuldjordKit by DrumGizmo team (https://github.com/freepats/MuldjordKit), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)",
+      "source": "FreePats MuldjordKit",
+      "sourceUrl": "https://github.com/freepats/MuldjordKit",
+      "midiNotes": [36],
+      "role": "kick"
+    },
+    {
+      "file": "shaker/dimcabasa-cabasa.flac",
+      "spdx": "CC-BY-4.0",
+      "attribution": "Dim Cabasa by Kinwie (https://github.com/sfzinstruments/kinwie.dim-cabasa), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)",
+      "source": "Dim Cabasa",
+      "sourceUrl": "https://github.com/sfzinstruments/kinwie.dim-cabasa",
+      "midiNotes": [70, 72],
+      "role": "shaker",
+      "tags": ["fallback:long-shaker"]
+    },
+    {
+      "file": "shaker/fischer808-maraca.wav",
+      "spdx": "CC0-1.0",
+      "source": "Fischer TR-808",
+      "sourceUrl": "https://github.com/tidalcycles/sounds-tr808-fischer",
+      "midiNotes": [70, 72],
+      "role": "shaker",
+      "tags": ["fallback:long-shaker"]
+    },
+    {
+      "file": "shaker/freepats-egg.wav",
+      "spdx": "CC0-1.0",
+      "source": "FreePats World Percussion",
+      "sourceUrl": "https://github.com/freepats/world-percussion",
+      "midiNotes": [70, 72],
+      "role": "shaker",
+      "tags": ["fallback:long-shaker"]
+    },
+    {
+      "file": "shaker/vcsl-cabasa.wav",
+      "spdx": "CC0-1.0",
+      "source": "VCSL",
+      "sourceUrl": "https://github.com/sgossner/VCSL",
+      "midiNotes": [70, 72],
+      "role": "shaker",
+      "tags": ["fallback:long-shaker"]
+    },
+    {
+      "file": "snare/drskit-snare.flac",
+      "spdx": "CC-BY-4.0",
+      "attribution": "DRSKit by Jes Eiler (DRSDrums) and the DrumGizmo team (https://github.com/sfzinstruments/DrumGizmo.DRSKit), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)",
+      "source": "DrumGizmo DRSKit",
+      "sourceUrl": "https://github.com/sfzinstruments/DrumGizmo.DRSKit",
+      "midiNotes": [38],
+      "role": "snare"
+    },
+    {
+      "file": "snare/fischer808-sd.wav",
+      "spdx": "CC0-1.0",
+      "source": "Fischer TR-808",
+      "sourceUrl": "https://github.com/tidalcycles/sounds-tr808-fischer",
+      "midiNotes": [38],
+      "role": "snare"
+    },
+    {
+      "file": "snare/muldjord-snare.flac",
+      "spdx": "CC-BY-4.0",
+      "attribution": "MuldjordKit by DrumGizmo team (https://github.com/freepats/MuldjordKit), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)",
+      "source": "FreePats MuldjordKit",
+      "sourceUrl": "https://github.com/freepats/MuldjordKit",
+      "midiNotes": [38],
+      "role": "snare"
+    },
+    {
+      "file": "snare/vcsl-snare.wav",
+      "spdx": "CC0-1.0",
+      "source": "VCSL",
+      "sourceUrl": "https://github.com/sgossner/VCSL",
+      "midiNotes": [38],
+      "role": "snare"
+    },
+    {
+      "file": "tambourine/freepats-tambourine.wav",
+      "spdx": "CC0-1.0",
+      "source": "FreePats World Percussion",
+      "sourceUrl": "https://github.com/freepats/world-percussion",
+      "midiNotes": [54],
+      "role": "tambourine"
+    },
+    {
+      "file": "tom/muldjord-tom-hi.flac",
+      "spdx": "CC-BY-4.0",
+      "attribution": "MuldjordKit by DrumGizmo team (https://github.com/freepats/MuldjordKit), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)",
+      "source": "FreePats MuldjordKit",
+      "sourceUrl": "https://github.com/freepats/MuldjordKit",
+      "midiNotes": [50, 48],
+      "role": "tom",
+      "tags": ["fallback:hi-mid-tom"]
+    },
+    {
+      "file": "tom/muldjord-tom-lo.flac",
+      "spdx": "CC-BY-4.0",
+      "attribution": "MuldjordKit by DrumGizmo team (https://github.com/freepats/MuldjordKit), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)",
+      "source": "FreePats MuldjordKit",
+      "sourceUrl": "https://github.com/freepats/MuldjordKit",
+      "midiNotes": [43],
+      "role": "tom"
+    },
+    {
+      "file": "tom/muldjord-tom-mid.flac",
+      "spdx": "CC-BY-4.0",
+      "attribution": "MuldjordKit by DrumGizmo team (https://github.com/freepats/MuldjordKit), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)",
+      "source": "FreePats MuldjordKit",
+      "sourceUrl": "https://github.com/freepats/MuldjordKit",
+      "midiNotes": [45, 47],
+      "role": "tom",
+      "tags": ["fallback:low-mid-tom"]
+    },
+    {
+      "file": "woodblock/vcsl-hi.wav",
+      "spdx": "CC0-1.0",
+      "source": "VCSL",
+      "sourceUrl": "https://github.com/sgossner/VCSL",
+      "midiNotes": [76],
+      "role": "woodblock"
+    },
+    {
+      "file": "woodblock/vcsl-lo.wav",
+      "spdx": "CC0-1.0",
+      "source": "VCSL",
+      "sourceUrl": "https://github.com/sgossner/VCSL",
+      "midiNotes": [77],
+      "role": "woodblock"
+    }
+  ]
+}
