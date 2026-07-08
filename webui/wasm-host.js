@@ -281,6 +281,18 @@
   };
   const DEFAULT_ROLE = 'hat';
 
+  // Role aliases for presets whose roleLabel doesn't have a matching manifest
+  // entry. Mirrors the card runtime's note-based fallback (createSampleLoader
+  // falls back to any entry whose midiNotes includes the requested note, which
+  // implicitly resolves clap→handclap etc.). Without this the WASM host would
+  // silently synth-fallback for every clap/openhat/rim lane while the card is
+  // audibly playing samples for the same chapter.
+  const ROLE_ALIASES = {
+    clap: 'handclap',
+    openhat: 'hat',
+    rim: 'snare',
+  };
+
   function roleForLaneName(name, laneIdx) {
     // Prefer the engine's per-lane roleLabel (from presets.json) when available.
     // Falls back to the name→role table for synthetic/init lanes that never
@@ -292,9 +304,78 @@
   }
 
   const buffersByRole = new Map();
-  const probe = { nodesStarted: 0, samplesLoaded: 0, currentPreset: '', fallbackActive: false };
+  // S11 T06 extends the probe with:
+  //   - missingRoles / missingRolesFired / lastError: first CI-observable
+  //     signal that sampleVoice() fell through to synthVoice(); only populated
+  //     when !fallbackActive so single-role misses don't get double-attributed
+  //     to the manifest-total-failure branch.
+  //   - measuredRmsDb: rolling RMS (dBFS) of the shared voice bus for
+  //     cross-surface loudness parity with the card scheduler.
+  const probe = {
+    nodesStarted: 0,
+    samplesLoaded: 0,
+    currentPreset: '',
+    fallbackActive: false,
+    laneRoleLabels: [],
+    missingRoles: [],
+    missingRolesFired: false,
+    lastError: null,
+    measuredRmsDb: -Infinity,
+  };
   window.__polyAudioProbe = probe;
   let samplesPromise = null;
+  // True once samplesPromise has resolved (successfully or not). Gates
+  // missingRoles population so cold-start voices — which fire before decode
+  // completes — don't get double-attributed as manifest gaps.
+  let samplesReady = false;
+  // Shared voice bus + analyser tap (S11 T06). Created lazily inside
+  // togglePlay() the first time ctx exists so tests always see them by the
+  // time nodesStarted > 0.
+  let voiceBus = null;
+  let analyser = null;
+  let rmsFrame = null;
+
+  function ensureAnalyserTap() {
+    if (!ctx || voiceBus) return;
+    voiceBus = ctx.createGain();
+    voiceBus.gain.value = 1;
+    analyser = ctx.createAnalyser();
+    analyser.fftSize = 2048;
+    analyser.smoothingTimeConstant = 0;
+    voiceBus.connect(analyser);
+    analyser.connect(ctx.destination);
+  }
+
+  function voiceOut() {
+    // Preserves the pre-S11-T06 topology (direct ctx.destination) when the
+    // analyser tap hasn't been created yet (e.g. cold ctx). Once ensureAnalyserTap
+    // runs, all voices flow through the shared bus and the analyser sees the
+    // real mix.
+    return voiceBus || ctx.destination;
+  }
+
+  function startRmsSampler() {
+    if (rmsFrame !== null || !analyser) return;
+    const buf = new Float32Array(analyser.fftSize);
+    const tick = () => {
+      if (!analyser) return;
+      analyser.getFloatTimeDomainData(buf);
+      let sum = 0;
+      for (let i = 0; i < buf.length; i++) sum += buf[i] * buf[i];
+      const rms = Math.sqrt(sum / buf.length);
+      probe.measuredRmsDb = rms > 0 ? 20 * Math.log10(rms) : -Infinity;
+      rmsFrame = requestAnimationFrame(tick);
+    };
+    rmsFrame = requestAnimationFrame(tick);
+  }
+
+  function stopRmsSampler() {
+    if (rmsFrame !== null) {
+      cancelAnimationFrame(rmsFrame);
+      rmsFrame = null;
+    }
+    probe.measuredRmsDb = -Infinity;
+  }
 
   function samplesBasePath() {
     return new URL('../samples/', location.href).href;
@@ -331,6 +412,8 @@
       } catch (e) {
         console.warn('[wasm-host] manifest load failed, synth fallback active:', e.message);
         probe.fallbackActive = true;
+      } finally {
+        samplesReady = true;
       }
     })();
     return samplesPromise;
@@ -345,8 +428,23 @@
   }
 
   function sampleVoice(role, when, v) {
-    const buf = buffersByRole.get(role);
-    if (!buf) return false;
+    let buf = buffersByRole.get(role);
+    if (!buf && role && ROLE_ALIASES[role]) {
+      buf = buffersByRole.get(ROLE_ALIASES[role]);
+    }
+    if (!buf) {
+      // S11 T06: only populate missing-role probe fields when samples have
+      // finished loading (samplesReady) AND we're NOT in the manifest-total-
+      // failure branch (fallbackActive). Guard 1 avoids double-attributing
+      // cold-start races; guard 2 avoids double-attributing the fallback that
+      // the S10 gate already catches.
+      if (samplesReady && !probe.fallbackActive && role) {
+        if (!probe.missingRoles.includes(role)) probe.missingRoles.push(role);
+        probe.missingRolesFired = true;
+        probe.lastError = `no sample for role "${role}"`;
+      }
+      return false;
+    }
     const src = ctx.createBufferSource();
     const g = ctx.createGain();
     src.buffer = buf;
@@ -354,7 +452,7 @@
     // both surfaces play sample buffers at raw velocity/127 with no per-role
     // trim. Keeps RMS delta between card and Try It within ±3 dB.
     g.gain.setValueAtTime(Math.max(0, Math.min(1, v)), when);
-    src.connect(g); g.connect(ctx.destination);
+    src.connect(g); g.connect(voiceOut());
     src.start(when);
     probe.nodesStarted++;
     return true;
@@ -368,7 +466,7 @@
       o.frequency.exponentialRampToValueAtTime(44, when + 0.11);
       g.gain.setValueAtTime(v, when);
       g.gain.exponentialRampToValueAtTime(0.001, when + 0.24);
-      o.connect(g); g.connect(ctx.destination); o.start(when); o.stop(when + 0.26);
+      o.connect(g); g.connect(voiceOut()); o.start(when); o.stop(when + 0.26);
     } else if (l.name === 'Bell') {
       [562, 845].forEach((f, i) => {
         const o = ctx.createOscillator(), g = ctx.createGain(), bp = ctx.createBiquadFilter();
@@ -376,20 +474,20 @@
         bp.type = 'bandpass'; bp.frequency.value = f; bp.Q.value = 4;
         g.gain.setValueAtTime(v * (i ? 0.4 : 0.62), when);
         g.gain.exponentialRampToValueAtTime(0.001, when + 0.12);
-        o.connect(bp); bp.connect(g); g.connect(ctx.destination); o.start(when); o.stop(when + 0.14);
+        o.connect(bp); bp.connect(g); g.connect(voiceOut()); o.start(when); o.stop(when + 0.14);
       });
     } else if (l.name === 'Snare') {
       const s = ctx.createBufferSource(), g = ctx.createGain(), hp = ctx.createBiquadFilter();
       s.buffer = noiseBuf(); hp.type = 'highpass'; hp.frequency.value = 1400;
       g.gain.setValueAtTime(v * 0.8, when);
       g.gain.exponentialRampToValueAtTime(0.001, when + 0.14);
-      s.connect(hp); hp.connect(g); g.connect(ctx.destination); s.start(when); s.stop(when + 0.15);
+      s.connect(hp); hp.connect(g); g.connect(voiceOut()); s.start(when); s.stop(when + 0.15);
     } else if (l.name === 'Shaker') {
       const s = ctx.createBufferSource(), g = ctx.createGain(), hp = ctx.createBiquadFilter();
       s.buffer = noiseBuf(); hp.type = 'highpass'; hp.frequency.value = 6200;
       g.gain.setValueAtTime(v * 0.55, when);
       g.gain.exponentialRampToValueAtTime(0.001, when + 0.055);
-      s.connect(hp); hp.connect(g); g.connect(ctx.destination); s.start(when); s.stop(when + 0.06);
+      s.connect(hp); hp.connect(g); g.connect(voiceOut()); s.start(when); s.stop(when + 0.06);
     } else {
       const o = ctx.createOscillator(), g = ctx.createGain();
       o.type = 'sine';
@@ -397,7 +495,7 @@
       o.frequency.exponentialRampToValueAtTime(255, when + 0.07);
       g.gain.setValueAtTime(v * 0.6, when);
       g.gain.exponentialRampToValueAtTime(0.001, when + 0.12);
-      o.connect(g); g.connect(ctx.destination); o.start(when); o.stop(when + 0.13);
+      o.connect(g); g.connect(voiceOut()); o.start(when); o.stop(when + 0.13);
     }
     probe.nodesStarted++;
   }
@@ -433,16 +531,26 @@
     } catch (e) {
       ctx = null;
     }
+    if (ctx) ensureAnalyserTap();
     // Fire-and-forget: schedule() falls back to synth voices until buffers
     // land, so nothing is silent while the first fetch is in flight.
     if (ctx) ensureSamplesLoaded();
     playing = !playing;
     if (playing) {
+      // Reset per-run probe fields (missing-role, RMS). fallbackActive is
+      // NOT reset — it's a one-way sticky flag set by ensureSamplesLoaded.
+      probe.missingRoles = [];
+      probe.missingRolesFired = false;
+      probe.lastError = null;
       startAt = ctx ? ctx.currentTime + 0.06 : 0;
       nextTick = 0;
-      if (ctx) schedTimer = setInterval(schedule, 30);
+      if (ctx) {
+        schedTimer = setInterval(schedule, 30);
+        startRmsSampler();
+      }
     } else {
       clearInterval(schedTimer);
+      stopRmsSampler();
     }
   }
 
@@ -716,6 +824,24 @@
       setAsyncMode: (enabled) => { asyncMode = !!enabled; pendingPush = false; },
       flushState,
       hasPendingPush: () => pendingPush,
+      // S11 T06: cross-surface consistency accessor. Returns the same shape
+      // the site card exposes via __polyPatterns.resolvePreset — engine name
+      // plus per-lane {noteNumber, roleLabel}. Sourced from presetsById (the
+      // shared presets.json) so both surfaces agree on structure by definition.
+      getResolvedPreset: () => {
+        if (currentPresetIndex === -1 || !presetsById) {
+          return { engineName: '', lanes: [] };
+        }
+        const entry = presetsById[currentPresetIndex];
+        if (!entry) return { engineName: '', lanes: [] };
+        return {
+          engineName: entry.name || state.preset || '',
+          lanes: (entry.lanes || []).map((l) => ({
+            noteNumber: l.noteNumber,
+            roleLabel: l.roleLabel,
+          })),
+        };
+      },
     };
 
     return window.PolyWasmHost;

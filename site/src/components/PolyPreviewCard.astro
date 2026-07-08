@@ -29,14 +29,24 @@ const { preset, caption } = Astro.props;
 <script>
   import { createSampleLoader } from '../audio/sample-loader.ts';
   import { createScheduler } from '../audio/midi-scheduler.ts';
-  import { getPatternForPreset, resolvePresetName } from '../audio/preset-patterns.ts';
+  import {
+    getPatternForPreset,
+    resolvePreset,
+    resolvePresetName,
+  } from '../audio/preset-patterns.ts';
   import type { LaneMeta, Manifest } from '../audio/types.ts';
 
   // Exposed for the S10 site-audio-gate spec so it can compute observed BPM
-  // from scheduledNoteTimes without duplicating pattern-shape knowledge.
+  // from scheduledNoteTimes without duplicating pattern-shape knowledge. S11
+  // T06 adds resolvePreset so the cross-surface consistency gate can compare
+  // {engineName, lanes[]} against the WASM host's own accessor.
   (window as unknown as {
-    __polyPatterns: { getPatternForPreset: typeof getPatternForPreset; resolvePresetName: typeof resolvePresetName };
-  }).__polyPatterns = { getPatternForPreset, resolvePresetName };
+    __polyPatterns: {
+      getPatternForPreset: typeof getPatternForPreset;
+      resolvePreset: typeof resolvePreset;
+      resolvePresetName: typeof resolvePresetName;
+    };
+  }).__polyPatterns = { getPatternForPreset, resolvePreset, resolvePresetName };
 
   interface PolyAudioProbe {
     sampleBuffersDecoded: number;
@@ -46,6 +56,10 @@ const { preset, caption } = Astro.props;
     activeBpm: number;
     fallbackActive: boolean;
     lastError: string | null;
+    // S11 T06: rolling RMS (dBFS) of the shared voice bus. -Infinity when
+    // silent; sampled after Play stabilises for cross-surface loudness parity
+    // checks. Reset on Stop.
+    measuredRmsDb: number;
   }
 
   function resetProbe(probe: PolyAudioProbe): void {
@@ -56,6 +70,7 @@ const { preset, caption } = Astro.props;
     probe.activeBpm = 0;
     probe.fallbackActive = false;
     probe.lastError = null;
+    probe.measuredRmsDb = -Infinity;
   }
 
   const audioProbe: PolyAudioProbe = {
@@ -66,6 +81,7 @@ const { preset, caption } = Astro.props;
     activeBpm: 0,
     fallbackActive: false,
     lastError: null,
+    measuredRmsDb: -Infinity,
   };
   (window as unknown as { __polyAudioProbe: PolyAudioProbe }).__polyAudioProbe = audioProbe;
 
@@ -98,6 +114,10 @@ const { preset, caption } = Astro.props;
   const baseUrl = (import.meta.env.BASE_URL || '/').replace(/\/?$/, '/');
   const samplesBaseUrl = `${baseUrl}samples/`;
   let audioContext: AudioContext | null = null;
+  // S11 T06: shared voice-bus + analyser tap for RMS parity checks.
+  let voiceBus: GainNode | null = null;
+  let analyser: AnalyserNode | null = null;
+  let rmsFrame: number | null = null;
   let manifestPromise: Promise<Manifest> | null = null;
   let activeScheduler: ReturnType<typeof createScheduler> | null = null;
   let activeCard: HTMLElement | null = null;
@@ -106,8 +126,42 @@ const { preset, caption } = Astro.props;
     if (!audioContext) {
       const Ctor = (window.AudioContext || (window as any).webkitAudioContext);
       audioContext = new Ctor();
+      // Insert a shared voice-bus that feeds an AnalyserNode → destination.
+      // The scheduler routes every per-voice gain into `voiceBus` (via its
+      // `destination` option), so windowed RMS on the analyser reflects the
+      // total mix — the same signal a listener hears.
+      voiceBus = audioContext.createGain();
+      voiceBus.gain.value = 1;
+      analyser = audioContext.createAnalyser();
+      analyser.fftSize = 2048;
+      analyser.smoothingTimeConstant = 0;
+      voiceBus.connect(analyser);
+      analyser.connect(audioContext.destination);
     }
     return audioContext;
+  }
+
+  function startRmsSampler(): void {
+    if (rmsFrame !== null || !analyser) return;
+    const buf = new Float32Array(analyser.fftSize);
+    const tick = (): void => {
+      if (!analyser) return;
+      analyser.getFloatTimeDomainData(buf);
+      let sum = 0;
+      for (let i = 0; i < buf.length; i++) sum += buf[i] * buf[i];
+      const rms = Math.sqrt(sum / buf.length);
+      audioProbe.measuredRmsDb = rms > 0 ? 20 * Math.log10(rms) : -Infinity;
+      rmsFrame = requestAnimationFrame(tick);
+    };
+    rmsFrame = requestAnimationFrame(tick);
+  }
+
+  function stopRmsSampler(): void {
+    if (rmsFrame !== null) {
+      cancelAnimationFrame(rmsFrame);
+      rmsFrame = null;
+    }
+    audioProbe.measuredRmsDb = -Infinity;
   }
 
   function loadManifest(): Promise<Manifest> {
@@ -140,6 +194,7 @@ const { preset, caption } = Astro.props;
       if (btn) btn.textContent = 'Play';
       activeCard = null;
     }
+    stopRmsSampler();
   }
 
   function clearErrorState(card: HTMLElement): void {
@@ -267,6 +322,9 @@ const { preset, caption } = Astro.props;
       loader,
       pattern,
       onNoteScheduled: (fireTime) => { audioProbe.scheduledNoteTimes.push(fireTime); },
+      // S11 T06: route through the shared voice-bus so the analyser tap sees
+      // the same signal the destination hears.
+      destination: voiceBus ?? ctx.destination,
     });
     activeScheduler = scheduler;
     activeCard = card;
@@ -283,6 +341,7 @@ const { preset, caption } = Astro.props;
       audioProbe.fallbackActive = true;
       throw err;
     }
+    startRmsSampler();
   }
 
   document.querySelectorAll<HTMLElement>('.poly-preview').forEach((card) => {

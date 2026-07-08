@@ -59,9 +59,11 @@ const PRESET_BPM: Record<string, number> = {
   'Afrobeat 12/8': 96,
   'Balkan Aksak': 140,
   'Bossa Nova': 130,
+  'Bossa Nova Trio': 130,
   'Carnatic Tala': 100,
   'IDM Glitch': 100,
   'Reich Phase Process': 100,
+  'Jungle Break': 140,
 };
 
 // Card-preview drift accelerator. Engine reaches full phase over ~2 minutes via

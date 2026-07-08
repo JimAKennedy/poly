@@ -33,26 +33,45 @@ EOF
 fi
 
 echo "=== Running S10 audio gate against ${URL} ==="
-GATE_EXIT=0
+S10_EXIT=0
 (cd "${SITE_DIR}" \
     && POLY_SITE_URL="${URL}" \
        npx playwright test tests-e2e/site-audio-gate.spec.ts --project=chromium) \
-    || GATE_EXIT=$?
+    || S10_EXIT=$?
 
-echo "=== Capturing summary artifact ==="
+echo "=== Running S11 preset-consistency gate against ${URL} ==="
+S11_EXIT=0
+(cd "${SITE_DIR}" \
+    && POLY_SITE_URL="${URL}" \
+       npx playwright test tests-e2e/preset-consistency.spec.ts --project=chromium) \
+    || S11_EXIT=$?
+
+echo "=== Capturing summary artifacts ==="
 mkdir -p "${ARTIFACTS_DIR}"
-SUMMARY_SRC="${SITE_DIR}/test-results/audio-gate-summary.json"
-SUMMARY_DST="${ARTIFACTS_DIR}/S10-remote-verify.json"
-if [ -f "${SUMMARY_SRC}" ]; then
-    cp "${SUMMARY_SRC}" "${SUMMARY_DST}"
-    echo "    wrote ${SUMMARY_DST}"
+
+S10_SRC="${SITE_DIR}/test-results/audio-gate-summary.json"
+S10_DST="${ARTIFACTS_DIR}/S10-remote-verify.json"
+if [ -f "${S10_SRC}" ]; then
+    cp "${S10_SRC}" "${S10_DST}"
+    echo "    wrote ${S10_DST}"
 else
-    echo "    (no summary file produced — spec may have crashed before writing it)" >&2
+    echo "    (no S10 summary produced — spec may have crashed before writing it)" >&2
 fi
 
-if [ "${GATE_EXIT}" = "0" ]; then
-    echo "=== PASS: remote audio gate ==="
+S11_SRC="${SITE_DIR}/test-results/preset-consistency-summary.json"
+S11_DST="${ARTIFACTS_DIR}/S11-remote-verify.json"
+if [ -f "${S11_SRC}" ]; then
+    cp "${S11_SRC}" "${S11_DST}"
+    echo "    wrote ${S11_DST}"
 else
-    echo "=== FAIL: remote audio gate (exit ${GATE_EXIT}) ==="
+    echo "    (no S11 summary produced — spec may have crashed before writing it)" >&2
+fi
+
+GATE_EXIT=$(( S10_EXIT | S11_EXIT ))
+
+if [ "${GATE_EXIT}" = "0" ]; then
+    echo "=== PASS: remote audio + preset-consistency gates ==="
+else
+    echo "=== FAIL: remote gates (S10 exit ${S10_EXIT}, S11 exit ${S11_EXIT}) ==="
 fi
 exit "${GATE_EXIT}"

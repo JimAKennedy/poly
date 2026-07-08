@@ -25,7 +25,9 @@ export function createScheduler(options: SchedulerOptions): Scheduler {
     scheduleTickMs = DEFAULT_SCHEDULE_TICK_MS,
     batchDurationSec,
     onNoteScheduled,
+    destination,
   } = options;
+  const output: AudioNode = destination ?? context.destination;
 
   const events = sortByBeat(pattern.events);
   const beatSec = 60 / pattern.bpm;
@@ -85,7 +87,7 @@ export function createScheduler(options: SchedulerOptions): Scheduler {
         const gain = context.createGain();
         gain.gain.value = Math.max(0, Math.min(1, event.velocity / 127));
         source.connect(gain);
-        gain.connect(context.destination);
+        gain.connect(output);
         source.start(fireTime);
         source.onended = () => {
           liveSources.delete(source);

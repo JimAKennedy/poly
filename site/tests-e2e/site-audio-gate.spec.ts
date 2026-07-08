@@ -28,16 +28,16 @@ const CHAPTERS: Chapter[] = [
   {
     preset: 'Jungle Break',
     path: '/poly/13-drum-and-bass/',
-    expectedFactoryName: 'Factory: Breakbeat',
+    expectedFactoryName: 'Jungle Break',
     expectedBpm: 140,
-    resolutionPath: 'alias',
+    resolutionPath: 'direct',
   },
   {
     preset: 'Bossa Nova Trio',
     path: '/poly/10-brazilian/',
-    expectedFactoryName: 'Factory: Bossa Nova',
+    expectedFactoryName: 'Bossa Nova Trio',
     expectedBpm: 130,
-    resolutionPath: 'alias',
+    resolutionPath: 'direct',
   },
 ];
 

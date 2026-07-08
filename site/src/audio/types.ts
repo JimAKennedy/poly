@@ -82,6 +82,11 @@ export interface SchedulerOptions {
   scheduleTickMs?: number;
   batchDurationSec?: number;
   onNoteScheduled?: (fireTime: number, event: MidiEvent) => void;
+  // Optional override for the per-voice gain's destination. Defaults to
+  // `context.destination`. Used by the site card runtime to interpose a
+  // shared voice bus + AnalyserNode tap for the S11 T06 cross-surface RMS
+  // parity check without changing scheduler internals.
+  destination?: AudioNode;
 }
 
 export interface Scheduler {
