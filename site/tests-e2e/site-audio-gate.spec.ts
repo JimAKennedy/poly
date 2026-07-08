@@ -17,28 +17,39 @@ interface Chapter {
   resolutionPath: 'direct' | 'alias' | 'drift';
 }
 
+// All PolyPreviewCard chapters. Every display name is now a real engine preset
+// (S11 T06 retired all chapter aliases), so expectedFactoryName === preset for
+// every row. expectedBpm comes from PRESET_BPM in preset-patterns.ts (fallback
+// 120 for presets without an override). resolutionPath is informational: mark
+// 'drift' when DRIFT_OVERRIDES applies, 'direct' otherwise.
 const CHAPTERS: Chapter[] = [
-  {
-    preset: 'Reich Phase Process',
-    path: '/poly/08-minimalism/',
-    expectedFactoryName: 'Reich Phase Process',
-    expectedBpm: 100,
-    resolutionPath: 'drift', // direct PATTERN_SPECS hit + driftStepsPerBar=2
-  },
-  {
-    preset: 'Jungle Break',
-    path: '/poly/13-drum-and-bass/',
-    expectedFactoryName: 'Jungle Break',
-    expectedBpm: 140,
-    resolutionPath: 'direct',
-  },
-  {
-    preset: 'Bossa Nova Trio',
-    path: '/poly/10-brazilian/',
-    expectedFactoryName: 'Bossa Nova Trio',
-    expectedBpm: 130,
-    resolutionPath: 'direct',
-  },
+  { preset: 'Polymetric Foundation', path: '/poly/01-foundations/', expectedFactoryName: 'Polymetric Foundation', expectedBpm: 120, resolutionPath: 'direct' },
+  { preset: 'Ewe Polymetric Ensemble', path: '/poly/02-sub-saharan-africa/', expectedFactoryName: 'Ewe Polymetric Ensemble', expectedBpm: 120, resolutionPath: 'direct' },
+  { preset: 'Manding Djembe', path: '/poly/02-sub-saharan-africa/', expectedFactoryName: 'Manding Djembe', expectedBpm: 120, resolutionPath: 'direct' },
+  { preset: 'Cuban Son Montuno', path: '/poly/03-afro-cuban/', expectedFactoryName: 'Cuban Son Montuno', expectedBpm: 120, resolutionPath: 'direct' },
+  { preset: 'Afrobeat Lagos', path: '/poly/04-afrobeat/', expectedFactoryName: 'Afrobeat Lagos', expectedBpm: 120, resolutionPath: 'direct' },
+  { preset: 'Balinese Kotekan', path: '/poly/05-gamelan/', expectedFactoryName: 'Balinese Kotekan', expectedBpm: 120, resolutionPath: 'direct' },
+  { preset: 'Javanese Colotomic', path: '/poly/05-gamelan/', expectedFactoryName: 'Javanese Colotomic', expectedBpm: 120, resolutionPath: 'direct' },
+  { preset: 'Tintal Groove', path: '/poly/06-indian-classical/', expectedFactoryName: 'Tintal Groove', expectedBpm: 120, resolutionPath: 'direct' },
+  { preset: 'Rupak Tal', path: '/poly/06-indian-classical/', expectedFactoryName: 'Rupak Tal', expectedBpm: 120, resolutionPath: 'direct' },
+  { preset: 'Rachenitsa 7/8', path: '/poly/07-balkan/', expectedFactoryName: 'Rachenitsa 7/8', expectedBpm: 120, resolutionPath: 'direct' },
+  { preset: 'Kopanitsa 11/8', path: '/poly/07-balkan/', expectedFactoryName: 'Kopanitsa 11/8', expectedBpm: 120, resolutionPath: 'direct' },
+  { preset: 'Reich Phase Process', path: '/poly/08-minimalism/', expectedFactoryName: 'Reich Phase Process', expectedBpm: 100, resolutionPath: 'drift' },
+  { preset: 'Riley Layered Entry', path: '/poly/08-minimalism/', expectedFactoryName: 'Riley Layered Entry', expectedBpm: 120, resolutionPath: 'direct' },
+  { preset: 'Nancarrow Tempi', path: '/poly/08-minimalism/', expectedFactoryName: 'Nancarrow Tempi', expectedBpm: 120, resolutionPath: 'direct' },
+  { preset: 'Minimal Techno', path: '/poly/09-electronic/', expectedFactoryName: 'Minimal Techno', expectedBpm: 120, resolutionPath: 'direct' },
+  { preset: 'Deep House', path: '/poly/09-electronic/', expectedFactoryName: 'Deep House', expectedBpm: 120, resolutionPath: 'direct' },
+  { preset: 'Samba Batucada', path: '/poly/10-brazilian/', expectedFactoryName: 'Samba Batucada', expectedBpm: 120, resolutionPath: 'direct' },
+  { preset: 'Bossa Nova Trio', path: '/poly/10-brazilian/', expectedFactoryName: 'Bossa Nova Trio', expectedBpm: 130, resolutionPath: 'direct' },
+  { preset: 'Classic Funk', path: '/poly/11-funk-soul/', expectedFactoryName: 'Classic Funk', expectedBpm: 120, resolutionPath: 'direct' },
+  { preset: 'Neo-Soul Pocket', path: '/poly/11-funk-soul/', expectedFactoryName: 'Neo-Soul Pocket', expectedBpm: 120, resolutionPath: 'direct' },
+  { preset: 'Jazz Bop Ride', path: '/poly/12-jazz/', expectedFactoryName: 'Jazz Bop Ride', expectedBpm: 120, resolutionPath: 'direct' },
+  { preset: 'Elvin Jones Cascade', path: '/poly/12-jazz/', expectedFactoryName: 'Elvin Jones Cascade', expectedBpm: 120, resolutionPath: 'direct' },
+  { preset: 'Jungle Break', path: '/poly/13-drum-and-bass/', expectedFactoryName: 'Jungle Break', expectedBpm: 140, resolutionPath: 'direct' },
+  { preset: 'Liquid Drum and Bass', path: '/poly/13-drum-and-bass/', expectedFactoryName: 'Liquid Drum and Bass', expectedBpm: 120, resolutionPath: 'direct' },
+  { preset: 'Afro-Electronic Fusion', path: '/poly/14-synthesis/', expectedFactoryName: 'Afro-Electronic Fusion', expectedBpm: 120, resolutionPath: 'direct' },
+  { preset: 'Balkan Funk', path: '/poly/14-synthesis/', expectedFactoryName: 'Balkan Funk', expectedBpm: 120, resolutionPath: 'direct' },
+  { preset: 'Compositional Arc', path: '/poly/15-compositional-grammar/', expectedFactoryName: 'Compositional Arc', expectedBpm: 120, resolutionPath: 'direct' },
 ];
 
 interface CardMetrics {
@@ -138,19 +149,25 @@ for (const chapter of CHAPTERS) {
     // rethrows, which flips the card back to "stopped". Letting the probe
     // assertions run first surfaces the specific metric that broke.
 
-    // Wait up to 3s for at least 4 scheduled notes.
+    // Wait up to 5s for a stable observation window: ≥ 4 scheduled notes AND
+    // the first-to-last fire span ≥ 1s. The time-span gate prevents co-fired
+    // downbeat stacks (Javanese Colotomic: 4 lanes strike at beat 0 together)
+    // from satisfying the count-only gate with all events at the same beat,
+    // which would degenerate beatSpan to 0 in the observedBpm derivation.
     await page.waitForFunction(
       () => {
         const p = (window as unknown as { __polyAudioProbe: { scheduledNoteTimes: number[] } })
           .__polyAudioProbe;
-        return p && p.scheduledNoteTimes.length >= 4;
+        const times = p?.scheduledNoteTimes;
+        if (!times || times.length < 4) return false;
+        return times[times.length - 1] - times[0] >= 1.0;
       },
       null,
-      { timeout: 3000 },
+      { timeout: 5000 },
     ).catch(() => { /* fall through to assertion for a chapter-scoped failure */ });
 
-    // Give ~1.5s more so the observed rate stabilises before we measure.
-    await page.waitForTimeout(1500);
+    // Give ~500ms more so the observed rate stabilises before we measure.
+    await page.waitForTimeout(500);
 
     const cardProbe = await page.evaluate(() => {
       const p = (window as unknown as {
