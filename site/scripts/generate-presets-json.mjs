@@ -19,7 +19,11 @@ import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(HERE, '..', '..');
-const BUILD_DIR = resolve(REPO_ROOT, 'build');
+// Dedicated engine-only build tree. The emitter depends only on poly_engine
+// (see engine/tools/CMakeLists.txt), so we configure with -DPOLY_ENGINE_ONLY=ON.
+// This avoids VST3 SDK / X11 requirements on Linux CI and keeps the shared
+// `build/` cache untouched so a plugin build later isn't poisoned.
+const BUILD_DIR = resolve(REPO_ROOT, 'build-presets');
 const EMITTER = resolve(BUILD_DIR, 'engine', 'tools', 'poly_presets_emit');
 const OUT_PATH = resolve(REPO_ROOT, 'site', 'src', 'generated', 'presets.json');
 // The WASM Try It modal fetches this file at boot from /poly/webui/presets.json.
@@ -39,8 +43,10 @@ function fail(msg) {
 function ensureEmitter() {
   if (existsSync(EMITTER)) return;
   if (!existsSync(resolve(BUILD_DIR, 'CMakeCache.txt'))) {
-    log('configuring cmake build/ (first run)');
-    execSync(`cmake -S "${REPO_ROOT}" -B "${BUILD_DIR}"`, { stdio: 'inherit' });
+    log('configuring cmake build-presets/ (first run, engine-only)');
+    execSync(`cmake -S "${REPO_ROOT}" -B "${BUILD_DIR}" -DPOLY_ENGINE_ONLY=ON`, {
+      stdio: 'inherit',
+    });
   }
   log('building poly_presets_emit');
   execSync(`cmake --build "${BUILD_DIR}" --target poly_presets_emit`, {
