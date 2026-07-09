@@ -60,13 +60,6 @@ export interface LaneMeta {
   color?: string;
 }
 
-export interface Pattern {
-  bpm: number;
-  loopBeats: number;
-  events: MidiEvent[];
-  lanes?: LaneMeta[];
-}
-
 export interface SchedulerContext {
   readonly currentTime: number;
   readonly destination: AudioNode;
@@ -74,19 +67,17 @@ export interface SchedulerContext {
   createGain(): GainNode;
 }
 
-export interface SchedulerOptions {
-  context: SchedulerContext;
-  loader: SampleLoader;
-  pattern: Pattern;
-  lookAheadMs?: number;
-  scheduleTickMs?: number;
-  batchDurationSec?: number;
-  onNoteScheduled?: (fireTime: number, event: MidiEvent) => void;
-  // Optional override for the per-voice gain's destination. Defaults to
-  // `context.destination`. Used by the site card runtime to interpose a
-  // shared voice bus + AnalyserNode tap for the S11 T06 cross-surface RMS
-  // parity check without changing scheduler internals.
-  destination?: AudioNode;
+export interface SchedulerDumpMode {
+  presetSlug: string;
+  // Force-enable capture regardless of URL. Used by tests to exercise the
+  // capture path without setting window.location. When undefined the scheduler
+  // consults isDumpModeEnabled().
+  enabledForTest?: boolean;
+  // Override the downloadSMF sink. Tests replace this to inspect the emitted
+  // byte stream and filename without touching the DOM.
+  sinkForTest?: (bytes: Uint8Array, filename: string) => void;
+  // Override Date.now() for deterministic filenames in tests.
+  nowForTest?: () => number;
 }
 
 export interface Scheduler {

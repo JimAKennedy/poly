@@ -23,22 +23,27 @@ test('Reich Phase Process play button drives the AudioContext and fires >= 6 sou
   const probe = await page.evaluate(() => {
     const p = (window as any).__polyAudioProbe;
     if (!p) return null;
+    const times: number[] = p.scheduledNoteTimes ?? [];
     return {
-      currentTime: p.context.currentTime as number,
-      nodesStarted: p.scheduler.nodesStarted as number,
-      state: p.context.state as string,
+      lastFireTime: times.length ? times[times.length - 1] : 0,
+      scheduledNoteCount: times.length,
+      fallbackActive: !!p.fallbackActive,
+      lastError: p.lastError ?? null,
     };
   });
 
   expect(probe, 'window.__polyAudioProbe was never set').not.toBeNull();
-  expect(probe!.state).toBe('running');
   expect(
-    probe!.currentTime,
-    `AudioContext.currentTime = ${probe!.currentTime}, expected > 2.5`,
+    probe!.fallbackActive,
+    `Reich fell into fallback: ${probe!.lastError ?? '(no error message)'}`,
+  ).toBe(false);
+  expect(
+    probe!.lastFireTime,
+    `latest scheduled fireTime = ${probe!.lastFireTime}, expected > 2.5 (scheduler stalled?)`,
   ).toBeGreaterThan(2.5);
   expect(
-    probe!.nodesStarted,
-    `nodesStarted = ${probe!.nodesStarted}, expected >= 6`,
+    probe!.scheduledNoteCount,
+    `scheduledNoteCount = ${probe!.scheduledNoteCount}, expected >= 6`,
   ).toBeGreaterThanOrEqual(6);
 
   // Second click stops.
