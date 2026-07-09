@@ -70,19 +70,26 @@ if [ "${READY}" != "1" ]; then
 fi
 echo "    preview ready at ${PREVIEW_URL}/poly/"
 
-echo "=== [5/6] Running S10 audio gate ==="
+echo "=== [5/7] Running S10 audio gate ==="
 S10_EXIT=0
 (cd "${SITE_DIR}" \
     && POLY_SITE_URL="${PREVIEW_URL}" \
        npx playwright test tests-e2e/site-audio-gate.spec.ts --project=chromium) \
     || S10_EXIT=$?
 
-echo "=== [6/6] Running S11 preset-consistency gate ==="
+echo "=== [6/7] Running S11 preset-consistency gate ==="
 S11_EXIT=0
 (cd "${SITE_DIR}" \
     && POLY_SITE_URL="${PREVIEW_URL}" \
        npx playwright test tests-e2e/preset-consistency.spec.ts --project=chromium) \
     || S11_EXIT=$?
+
+echo "=== [7/7] Running S13 Play↔Try It equivalence gate ==="
+S13_EXIT=0
+(cd "${SITE_DIR}" \
+    && POLY_SITE_URL="${PREVIEW_URL}" \
+       npx playwright test tests-e2e/dump-mode.spec.ts tests-e2e/equivalence.spec.ts --project=chromium) \
+    || S13_EXIT=$?
 
 echo "=== Capturing summary artifacts ==="
 mkdir -p "${ARTIFACTS_DIR}"
@@ -105,12 +112,12 @@ else
     echo "    (no S11 summary produced — spec may have crashed before writing it)" >&2
 fi
 
-# Combine exit codes so either gate failing fails the script.
-GATE_EXIT=$(( S10_EXIT | S11_EXIT ))
+# Combine exit codes so any gate failing fails the script.
+GATE_EXIT=$(( S10_EXIT | S11_EXIT | S13_EXIT ))
 
 if [ "${GATE_EXIT}" = "0" ]; then
-    echo "=== PASS: local audio + preset-consistency gates ==="
+    echo "=== PASS: local audio + preset-consistency + equivalence gates ==="
 else
-    echo "=== FAIL: local gates (S10 exit ${S10_EXIT}, S11 exit ${S11_EXIT}) ==="
+    echo "=== FAIL: local gates (S10 exit ${S10_EXIT}, S11 exit ${S11_EXIT}, S13 exit ${S13_EXIT}) ==="
 fi
 exit "${GATE_EXIT}"
