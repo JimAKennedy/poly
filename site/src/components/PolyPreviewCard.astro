@@ -36,7 +36,6 @@ const { preset, caption } = Astro.props;
     buildEngineParams,
   } from '../audio/engine-dump.ts';
   import {
-    getPatternForPreset,
     resolvePreset,
     resolvePresetName,
   } from '../audio/preset-patterns.ts';
@@ -49,17 +48,15 @@ const { preset, caption } = Astro.props;
   import { downloadSMF } from '../audio/smf-writer.ts';
   import type { LaneMeta, Manifest } from '../audio/types.ts';
 
-  // Exposed for the S10 site-audio-gate spec so it can compute observed BPM
-  // from scheduledNoteTimes without duplicating pattern-shape knowledge. S11
-  // T06 adds resolvePreset so the cross-surface consistency gate can compare
-  // {engineName, lanes[]} against the WASM host's own accessor.
+  // Exposed for the S10 site-audio-gate diagnostic probe and the cross-surface
+  // consistency gate so they can look up chapter → engine metadata (bpm,
+  // lanes, index) without duplicating the resolver.
   (window as unknown as {
     __polyPatterns: {
-      getPatternForPreset: typeof getPatternForPreset;
       resolvePreset: typeof resolvePreset;
       resolvePresetName: typeof resolvePresetName;
     };
-  }).__polyPatterns = { getPatternForPreset, resolvePreset, resolvePresetName };
+  }).__polyPatterns = { resolvePreset, resolvePresetName };
 
   interface PolyAudioProbe {
     sampleBuffersDecoded: number;

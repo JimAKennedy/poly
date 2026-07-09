@@ -21,7 +21,7 @@ interface Chapter {
 // (S11 T06 retired all chapter aliases), so expectedFactoryName === preset for
 // every row. expectedBpm comes from PRESET_BPM in preset-patterns.ts (fallback
 // 120 for presets without an override). resolutionPath is informational: mark
-// 'drift' when DRIFT_OVERRIDES applies, 'direct' otherwise.
+// 'drift' when the engine preset ships lane-level DriftRate, 'direct' otherwise.
 const CHAPTERS: Chapter[] = [
   { preset: 'Polymetric Foundation', path: '/poly/01-foundations/', expectedFactoryName: 'Polymetric Foundation', expectedBpm: 120, resolutionPath: 'direct' },
   { preset: 'Ewe Polymetric Ensemble', path: '/poly/02-sub-saharan-africa/', expectedFactoryName: 'Ewe Polymetric Ensemble', expectedBpm: 120, resolutionPath: 'direct' },
@@ -64,7 +64,7 @@ interface CardMetrics {
   activeBpm: number;
   fallbackActive: boolean;
   observedBpm: number;
-  patternMeta: { bpm: number; loopBeats: number; eventCount: number } | null;
+  patternMeta: { bpm: number; laneCount: number; notesInBar: number } | null;
 }
 
 interface ModalMetrics {
@@ -202,16 +202,20 @@ for (const chapter of CHAPTERS) {
     const patternMeta = await page.evaluate((presetName: string) => {
       const pp = (window as unknown as {
         __polyPatterns?: {
-          getPatternForPreset: (name: string) => { bpm: number; loopBeats: number; events: { beat: number }[] } | null;
+          resolvePreset: (name: string) => {
+            bpm: number;
+            lanes: Array<{ note: number }>;
+            notesInBar: number;
+          } | null;
         };
       }).__polyPatterns;
       if (!pp) return null;
-      const pat = pp.getPatternForPreset(presetName);
-      if (!pat) return null;
+      const resolved = pp.resolvePreset(presetName);
+      if (!resolved) return null;
       return {
-        bpm: pat.bpm,
-        loopBeats: pat.loopBeats,
-        eventCount: pat.events.length,
+        bpm: resolved.bpm,
+        laneCount: resolved.lanes.length,
+        notesInBar: resolved.notesInBar,
       };
     }, chapter.preset);
 
@@ -260,7 +264,7 @@ for (const chapter of CHAPTERS) {
       ).toBe(chapter.expectedBpm);
       expect(
         patternMeta,
-        `[${chapter.preset}] card: __polyPatterns.getPatternForPreset("${chapter.preset}") returned null — probe helper missing`,
+        `[${chapter.preset}] card: __polyPatterns.resolvePreset("${chapter.preset}") returned null — probe helper missing`,
       ).not.toBeNull();
       const bpmTolerance = chapter.expectedBpm * 0.02;
       expect(

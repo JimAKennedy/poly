@@ -5,10 +5,10 @@
 //
 // The Play↔Try It equivalence spec relies on a second companion download per
 // dump: a `.params.json` snapshot capturing what each surface *thinks* the
-// preset says. The Play surface dumps its site-view of the JSON preset (the
-// fields the JS euclidean scheduler consumes); the Try It surface dumps its
-// post-applyPreset engine state. The spec diffs the intersection to catch
-// silent mis-interpretation of the shared presets.json.
+// preset says. Both surfaces snapshot the post-applyPreset engine state
+// (buildEngineParams in engine-dump.ts / buildTryItParams in wasm-host.js) so
+// the spec can diff the intersection field-by-field and catch silent
+// mis-interpretation of the shared presets.json.
 
 export function isDumpModeEnabled(searchOverride?: string): boolean {
   const search =

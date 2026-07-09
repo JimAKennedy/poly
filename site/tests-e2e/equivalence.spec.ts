@@ -278,37 +278,17 @@ function pushIfDiff(
   if (a !== b) out.push({ path, play: a, tryIt: b });
 }
 
-interface PlayParams {
+// Both surfaces now emit the same EngineParams shape (buildEngineParams on the
+// Play side, buildTryItParams on the Try It side) since Play was refactored to
+// render through _poly_render. The lane fields the two produce are structurally
+// identical — the diff below compares the fields both agree on.
+interface EngineDumpParams {
   source: string;
   displayName: string;
   engineName: string;
   bpm: number;
   seed: number;
-  notesInBar: number;
-  activeLaneCount: number;
-  lanes: Array<{
-    laneIndex: number;
-    noteNumber: number;
-    roleLabel: string;
-    role: string;
-    cycleSteps: number;
-    subdivision: number;
-    stepLen: number;
-    hits: number;
-    rotation: number;
-    velocity: number;
-    probability: number;
-    driftStepsPerBar: number;
-  }>;
-}
-
-interface TryItParams {
-  source: string;
-  displayName: string;
-  engineName: string;
-  bpm: number;
-  seed: number;
-  macros: Record<string, number>;
+  macros?: Record<string, number>;
   lanes: Array<{
     laneIndex: number;
     noteNumber: number;
@@ -332,7 +312,7 @@ interface TryItParams {
   }>;
 }
 
-function diffParams(play: PlayParams, tryIt: TryItParams): ParamDiffField[] {
+function diffParams(play: EngineDumpParams, tryIt: EngineDumpParams): ParamDiffField[] {
   const out: ParamDiffField[] = [];
   pushIfDiff(out, 'engineName', play.engineName, tryIt.engineName);
   pushIfDiff(out, 'bpm', play.bpm, tryIt.bpm);
@@ -350,11 +330,10 @@ function diffParams(play: PlayParams, tryIt: TryItParams): ParamDiffField[] {
     pushIfDiff(out, `lanes[${i}].roleLabel`, p.roleLabel, t.roleLabel);
     pushIfDiff(out, `lanes[${i}].cycleSteps`, p.cycleSteps, t.cycleSteps);
     pushIfDiff(out, `lanes[${i}].subdivision`, p.subdivision, t.subdivision);
-    // stepLen intentionally NOT compared: each surface derives it in its own
-    // local unit (JSON emitter reports 16-tick-per-bar units; wasm-host derives
-    // `8 / subdivision` in eighth-note units). Same physical timing, different
-    // representation. Real equivalence is proven by matching note-on ticks
-    // downstream, not by matching this derived cache.
+    // stepLen intentionally NOT compared here even though both surfaces derive
+    // it from `subdivision` the same way — the cache is redundant with the
+    // subdivision check above, and skipping it keeps the diff focused on the
+    // primary field.
     pushIfDiff(out, `lanes[${i}].hits`, p.hits, t.hits);
     pushIfDiff(out, `lanes[${i}].rotation`, p.rotation, t.rotation);
     pushIfDiff(out, `lanes[${i}].velocity`, p.velocity, t.velocity);
@@ -579,7 +558,7 @@ test.describe('Play ↔ Try It equivalence — every website preview card', () =
         const playMidi = b64ToBytes(pickCapture(playCaptures, '.mid').base64);
         const playParams = jsonFromCapture(
           pickCapture(playCaptures, '.params.json'),
-        ) as PlayParams;
+        ) as EngineDumpParams;
 
         // Stop the card so audio doesn't keep running during Try It boot.
         await playBtn.click();
@@ -638,7 +617,7 @@ test.describe('Play ↔ Try It equivalence — every website preview card', () =
         const tryItMidi = b64ToBytes(pickCapture(tryItCaptures, '.mid').base64);
         const tryItParams = jsonFromCapture(
           pickCapture(tryItCaptures, '.params.json'),
-        ) as TryItParams;
+        ) as EngineDumpParams;
 
         // ---------- SMF COMPARISON ----------
         const bytesIdentical =

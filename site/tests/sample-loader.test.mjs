@@ -7,8 +7,8 @@ import { OfflineAudioContext } from 'node-web-audio-api';
 
 import { createSampleLoader } from '../src/audio/sample-loader.ts';
 import {
-  getPatternForPreset,
   listPresetNames,
+  resolvePreset,
 } from '../src/audio/preset-patterns.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -195,9 +195,9 @@ test('preferredRoles: pattern-lane resolution snapshot covers all factory preset
 
   const pairs = new Map(); // key = `${note}:${role}` -> {note, role}
   for (const name of listPresetNames()) {
-    const pattern = getPatternForPreset(name);
-    assert.ok(pattern, `getPatternForPreset('${name}') returned null`);
-    for (const lane of pattern.lanes ?? []) {
+    const resolved = resolvePreset(name);
+    assert.ok(resolved, `resolvePreset('${name}') returned null`);
+    for (const lane of resolved.lanes) {
       pairs.set(`${lane.note}:${lane.role}`, { note: lane.note, role: lane.role });
     }
   }
