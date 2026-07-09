@@ -58,6 +58,11 @@ POLY_EXPORT void poly_action_apply_preset(PolyContext ctx, int index);
 POLY_EXPORT void poly_action_apply_preset_to_scene(PolyContext ctx, int index, int targetScene);
 POLY_EXPORT void poly_action_select_scene(PolyContext ctx, int sceneSelect);
 POLY_EXPORT int poly_scene_select(PolyContext ctx);
+// M043 S14 T02: morph amount push/pull and scene-state snapshot for
+// audible Morph playback. See wasm_api.cpp for rationale.
+POLY_EXPORT void poly_set_morph(PolyContext ctx, double amount);
+POLY_EXPORT double poly_morph_amount(PolyContext ctx);
+POLY_EXPORT void poly_copy_scenes(PolyContext dst, PolyContext src);
 POLY_EXPORT void poly_action_set_fixed_step(PolyContext ctx, int lane, int step, int on);
 POLY_EXPORT void poly_action_set_micro_timing(PolyContext ctx, int lane, int step, float ms);
 POLY_EXPORT void poly_action_set_accent(PolyContext ctx, int lane, int step, float value);

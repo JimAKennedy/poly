@@ -346,6 +346,9 @@
     // loading a preset into B does not disturb the preset name held in A.
     sceneAPreset: 'Init',
     sceneBPreset: 'Init',
+    // M043 S14 T02: mirror the morph amount pushed to the engine so tests can
+    // observe the value the audible playback is interpolating against.
+    morphAmount: 0,
     fallbackActive: false,
     laneRoleLabels: [],
     missingRoles: [],
@@ -757,15 +760,17 @@
       probe.missingRolesFired = false;
       probe.lastError = null;
       startAt = ctx ? ctx.currentTime + 0.06 : 0;
-      // Allocate a fresh scratch context and load the CURRENT preset so
-      // RNG/phrase/drift state starts from the preset's canonical seed.
-      // Falling back to engineCtx would leak edit-time counters into the
-      // audible playback and diverge from the dump path (which also uses a
-      // scratch ctx).
-      if (Module && currentPresetIndex >= 0) {
+      // Allocate a fresh scratch context so Engine RNG/phrase/drift state
+      // starts from the preset's canonical seed on every Play click. Then
+      // snapshot the full SceneState (both scenes + select + morph amount)
+      // from engineCtx into playbackCtx via _poly_copy_scenes. This gives
+      // us Morph-mode audible playback (both scenes present, blend follows
+      // the UI value) without leaking Engine edit-time counters — those
+      // live on Context, not on scenes.
+      if (Module) {
         if (playbackCtx) Module._poly_destroy(playbackCtx);
         playbackCtx = Module._poly_create();
-        Module._poly_load_preset(playbackCtx, currentPresetIndex);
+        Module._poly_copy_scenes(playbackCtx, engineCtx);
       }
       playbackNextPpq = 0.0;
       playbackRenderIter = 0;
@@ -830,7 +835,15 @@
     }
 
     if (paramId === 'scene.morph') {
-      state.morph = value;
+      // M043 S14 T02: push morph amount into the engine so Morph-mode renders
+      // interpolate against the current UI value. Push to the Play scratch too
+      // when it exists so audible playback is live-editable, not frozen at
+      // whatever value was present at Play time.
+      const clamped = Math.max(0, Math.min(1, value));
+      state.morph = clamped;
+      Module._poly_set_morph(engineCtx, clamped);
+      if (playbackCtx) Module._poly_set_morph(playbackCtx, clamped);
+      probe.morphAmount = clamped;
       emitState();
       return;
     }
@@ -965,6 +978,10 @@
         state.scene = payload.scene === 'Morph' ? 'Morph' : (payload.scene === 'B' ? 'B' : 'A');
         const sceneOrdinal = state.scene === 'B' ? 1 : (state.scene === 'Morph' ? 2 : 0);
         Module._poly_action_select_scene(engineCtx, sceneOrdinal);
+        // M043 S14 T02: mirror selection into the Play scratch so switching
+        // scenes while Play is active flips the audible source without
+        // needing to stop/start playback.
+        if (playbackCtx) Module._poly_action_select_scene(playbackCtx, sceneOrdinal);
         if (state.scene === 'A') {
           state.preset = probe.sceneAPreset;
           probe.currentPreset = probe.sceneAPreset;
@@ -1046,6 +1063,13 @@
   async function initWasmHost(wasmModule) {
     Module = wasmModule;
     engineCtx = Module._poly_create();
+    // M043 S14 T02 spec hook. The scene-morph and control-audit tests need
+    // to reach the raw WASM handles to render short scratch windows and
+    // inspect engine-side state directly; this is the only place they're
+    // available. Not part of the public host contract — do not consume from
+    // ui.js or bridge code.
+    window.__polyModule = Module;
+    window.__polyEngineCtx = engineCtx;
 
     await loadPresetsJson();
 

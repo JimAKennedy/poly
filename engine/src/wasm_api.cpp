@@ -133,7 +133,17 @@ int poly_render(PolyContext ctx, double ppqStart, double ppqEnd, double tempo, d
     tc.loopStartPpq = loopStartPpq;
     tc.loopEndPpq = loopEndPpq;
 
-    c->engine.renderRange(tc, c->state(), c->eventBuffer);
+    // M043 S14 T02: when Morph is selected, render an interpolated snapshot of
+    // both scenes rather than falling back to scene A. Mirrors the plugin's
+    // process() path (processor.cpp:425-431) so the audible playback and the
+    // eventual VST render agree on what Morph means.
+    if (c->scenes.select == poly::SceneSelect::Morph) {
+        poly::GrooveState morphed =
+            poly::interpolateGrooveState(c->scenes.sceneA, c->scenes.sceneB, c->scenes.morphAmount);
+        c->engine.renderRange(tc, morphed, c->eventBuffer);
+    } else {
+        c->engine.renderRange(tc, c->state(), c->eventBuffer);
+    }
 
     for (size_t i = 0; i < c->eventBuffer.count; ++i) {
         const auto& e = c->eventBuffer.events[i];
@@ -521,6 +531,34 @@ void poly_action_select_scene(PolyContext ctx, int sceneSelect) {
 
 int poly_scene_select(PolyContext ctx) {
     return static_cast<int>(static_cast<Context*>(ctx)->scenes.select);
+}
+
+// M043 S14 T02: morph amount push/pull. The plugin exposes this as
+// kSceneMorph (processor.cpp:484); the web bridge routes `scene.morph` edits
+// here so Morph-mode playback and dumps interpolate against the current UI
+// value, not a stale default.
+void poly_set_morph(PolyContext ctx, double amount) {
+    auto* c = static_cast<Context*>(ctx);
+    c->scenes.morphAmount = std::clamp(static_cast<float>(amount), 0.0f, 1.0f);
+}
+
+double poly_morph_amount(PolyContext ctx) {
+    return static_cast<double>(static_cast<Context*>(ctx)->scenes.morphAmount);
+}
+
+// M043 S14 T02: snapshot the full scene state (both grooves + select + morph
+// amount + noteMap + chain config) from src into dst. Used by the JS host to
+// seed the Play scratch context from engineCtx so playback renders both
+// scenes under Morph while keeping its own fresh Engine RNG state (Engine
+// lives on Context, not on scenes, so a fresh Context always starts
+// deterministically). Chain runtime state stays with each Context's own
+// Engine and is not copied here.
+void poly_copy_scenes(PolyContext dst, PolyContext src) {
+    if (!dst || !src)
+        return;
+    auto* d = static_cast<Context*>(dst);
+    auto* s = static_cast<Context*>(src);
+    d->scenes = s->scenes;
 }
 
 void poly_action_set_fixed_step(PolyContext ctx, int lane, int step, int on) {
