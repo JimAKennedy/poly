@@ -8,6 +8,7 @@
 #include "poly/euclidean.h"
 #include "poly/presets.h"
 #include "poly/sanitize.h"
+#include "poly/scene.h"
 #include "poly/types.h"
 
 namespace {
@@ -16,10 +17,29 @@ static constexpr int kFieldsPerEvent = 6;
 
 struct Context {
     poly::Engine engine;
-    poly::GrooveState state{};
+    poly::SceneState scenes{};
     poly::NoteEventBuffer eventBuffer{};
     std::array<double, poly::kMaxEventsPerBlock * kFieldsPerEvent> flatEvents{};
+
+    // All lane/macro/edit accessors route through the currently-selected scene.
+    // Morph interpolation lives in poly_render (see below); edits always target
+    // A or B directly, matching the VST plugin's behavior (processor.cpp:646).
+    poly::GrooveState& state() { return scenes.select == poly::SceneSelect::B ? scenes.sceneB : scenes.sceneA; }
+    const poly::GrooveState& state() const {
+        return scenes.select == poly::SceneSelect::B ? scenes.sceneB : scenes.sceneA;
+    }
 };
+
+poly::SceneSelect sceneFromInt(int v) {
+    switch (v) {
+    case 1:
+        return poly::SceneSelect::B;
+    case 2:
+        return poly::SceneSelect::Morph;
+    default:
+        return poly::SceneSelect::A;
+    }
+}
 
 enum class LaneFieldInt {
     MidiNote,
@@ -60,7 +80,12 @@ extern "C" {
 
 PolyContext poly_create() {
     auto* c = new Context(); // ownership-transfer
-    c->state = poly::makeFactoryPreset(0);
+    // Both scenes seeded to the default init preset. Independent so that a
+    // preset applied to one scene never spills into the other. Selection
+    // starts at A to match legacy single-scene behavior.
+    c->scenes.sceneA = poly::makeFactoryPreset(0);
+    c->scenes.sceneB = poly::makeFactoryPreset(0);
+    c->scenes.select = poly::SceneSelect::A;
     return c;
 }
 
@@ -88,7 +113,7 @@ void poly_load_preset(PolyContext ctx, int index) {
     auto* c = static_cast<Context*>(ctx);
     if (index < 0 || index >= poly::kFactoryPresetCount)
         return;
-    c->state = poly::makeFactoryPreset(index);
+    c->state() = poly::makeFactoryPreset(index);
 }
 
 int poly_render(PolyContext ctx, double ppqStart, double ppqEnd, double tempo, double sampleRate, int blockSize,
@@ -108,7 +133,7 @@ int poly_render(PolyContext ctx, double ppqStart, double ppqEnd, double tempo, d
     tc.loopStartPpq = loopStartPpq;
     tc.loopEndPpq = loopEndPpq;
 
-    c->engine.renderRange(tc, c->state, c->eventBuffer);
+    c->engine.renderRange(tc, c->state(), c->eventBuffer);
 
     for (size_t i = 0; i < c->eventBuffer.count; ++i) {
         const auto& e = c->eventBuffer.events[i];
@@ -133,24 +158,24 @@ double* poly_event_buffer(PolyContext ctx) {
 }
 
 int poly_active_lane_count(PolyContext ctx) {
-    return static_cast<Context*>(ctx)->state.activeLaneCount;
+    return static_cast<Context*>(ctx)->state().activeLaneCount;
 }
 
 double poly_macro_value(PolyContext ctx, int index) {
     auto* c = static_cast<Context*>(ctx);
     switch (index) {
     case 0:
-        return static_cast<double>(c->state.macros.complexity);
+        return static_cast<double>(c->state().macros.complexity);
     case 1:
-        return static_cast<double>(c->state.macros.density);
+        return static_cast<double>(c->state().macros.density);
     case 2:
-        return static_cast<double>(c->state.macros.syncopation);
+        return static_cast<double>(c->state().macros.syncopation);
     case 3:
-        return static_cast<double>(c->state.macros.swing);
+        return static_cast<double>(c->state().macros.swing);
     case 4:
-        return static_cast<double>(c->state.macros.tension);
+        return static_cast<double>(c->state().macros.tension);
     case 5:
-        return static_cast<double>(c->state.macros.humanize);
+        return static_cast<double>(c->state().macros.humanize);
     default:
         return 0.0;
     }
@@ -161,22 +186,22 @@ void poly_set_macro(PolyContext ctx, int index, double value) {
     auto v = static_cast<float>(value);
     switch (index) {
     case 0:
-        c->state.macros.complexity = v;
+        c->state().macros.complexity = v;
         break;
     case 1:
-        c->state.macros.density = v;
+        c->state().macros.density = v;
         break;
     case 2:
-        c->state.macros.syncopation = v;
+        c->state().macros.syncopation = v;
         break;
     case 3:
-        c->state.macros.swing = v;
+        c->state().macros.swing = v;
         break;
     case 4:
-        c->state.macros.tension = v;
+        c->state().macros.tension = v;
         break;
     case 5:
-        c->state.macros.humanize = v;
+        c->state().macros.humanize = v;
         break;
     }
 }
@@ -185,7 +210,7 @@ void poly_edit_lane_int(PolyContext ctx, int lane, int field, int value) {
     auto* c = static_cast<Context*>(ctx);
     if (lane < 0 || lane >= poly::kMaxLanes)
         return;
-    auto& cfg = c->state.lanes[static_cast<size_t>(lane)];
+    auto& cfg = c->state().lanes[static_cast<size_t>(lane)];
 
     switch (static_cast<LaneFieldInt>(field)) {
     case LaneFieldInt::MidiNote:
@@ -229,14 +254,14 @@ void poly_edit_lane_int(PolyContext ctx, int lane, int field, int value) {
         cfg.cellCount = std::clamp(value, 0, poly::kMaxSteps);
         break;
     }
-    poly::sanitizeGrooveState(c->state);
+    poly::sanitizeGrooveState(c->state());
 }
 
 void poly_edit_lane_float(PolyContext ctx, int lane, int field, double value) {
     auto* c = static_cast<Context*>(ctx);
     if (lane < 0 || lane >= poly::kMaxLanes)
         return;
-    auto& cfg = c->state.lanes[static_cast<size_t>(lane)];
+    auto& cfg = c->state().lanes[static_cast<size_t>(lane)];
     auto v = static_cast<float>(value);
 
     switch (static_cast<LaneFieldFloat>(field)) {
@@ -283,14 +308,14 @@ void poly_edit_lane_float(PolyContext ctx, int lane, int field, double value) {
         cfg.emphasisProb = std::clamp(v, 0.0f, 1.0f);
         break;
     }
-    poly::sanitizeGrooveState(c->state);
+    poly::sanitizeGrooveState(c->state());
 }
 
 int poly_lane_int(PolyContext ctx, int lane, int field) {
     auto* c = static_cast<Context*>(ctx);
     if (lane < 0 || lane >= poly::kMaxLanes)
         return 0;
-    const auto& cfg = c->state.lanes[static_cast<size_t>(lane)];
+    const auto& cfg = c->state().lanes[static_cast<size_t>(lane)];
 
     switch (static_cast<LaneFieldInt>(field)) {
     case LaneFieldInt::MidiNote:
@@ -327,7 +352,7 @@ double poly_lane_float(PolyContext ctx, int lane, int field) {
     auto* c = static_cast<Context*>(ctx);
     if (lane < 0 || lane >= poly::kMaxLanes)
         return 0.0;
-    const auto& cfg = c->state.lanes[static_cast<size_t>(lane)];
+    const auto& cfg = c->state().lanes[static_cast<size_t>(lane)];
 
     switch (static_cast<LaneFieldFloat>(field)) {
     case LaneFieldFloat::Probability:
@@ -366,7 +391,7 @@ int poly_lane_pattern(PolyContext ctx, int lane, int* out, int maxLen) {
     auto* c = static_cast<Context*>(ctx);
     if (lane < 0 || lane >= poly::kMaxLanes || !out || maxLen <= 0)
         return 0;
-    const auto& cfg = c->state.lanes[static_cast<size_t>(lane)];
+    const auto& cfg = c->state().lanes[static_cast<size_t>(lane)];
     std::array<bool, poly::kMaxSteps> pattern{};
     poly::euclidean(cfg.hitCount, cfg.cycle.steps, cfg.rotation, pattern);
     int len = std::min(cfg.cycle.steps, maxLen);
@@ -379,28 +404,28 @@ float* poly_lane_micro_timing_ptr(PolyContext ctx, int lane) {
     auto* c = static_cast<Context*>(ctx);
     if (lane < 0 || lane >= poly::kMaxLanes)
         return nullptr;
-    return c->state.lanes[static_cast<size_t>(lane)].microTimingMs.data();
+    return c->state().lanes[static_cast<size_t>(lane)].microTimingMs.data();
 }
 
 float* poly_lane_accents_ptr(PolyContext ctx, int lane) {
     auto* c = static_cast<Context*>(ctx);
     if (lane < 0 || lane >= poly::kMaxLanes)
         return nullptr;
-    return c->state.lanes[static_cast<size_t>(lane)].accents.steps.data();
+    return c->state().lanes[static_cast<size_t>(lane)].accents.steps.data();
 }
 
 int* poly_lane_cells_ptr(PolyContext ctx, int lane) {
     auto* c = static_cast<Context*>(ctx);
     if (lane < 0 || lane >= poly::kMaxLanes)
         return nullptr;
-    return c->state.lanes[static_cast<size_t>(lane)].cellSizes.data();
+    return c->state().lanes[static_cast<size_t>(lane)].cellSizes.data();
 }
 
 int poly_lane_fixed_pattern(PolyContext ctx, int lane, int* out, int maxLen) {
     auto* c = static_cast<Context*>(ctx);
     if (lane < 0 || lane >= poly::kMaxLanes || !out || maxLen <= 0)
         return 0;
-    const auto& cfg = c->state.lanes[static_cast<size_t>(lane)];
+    const auto& cfg = c->state().lanes[static_cast<size_t>(lane)];
     int len = cfg.fixedPatternLength > 0 ? cfg.fixedPatternLength : cfg.cycle.steps;
     len = std::min(len, maxLen);
     for (int i = 0; i < len; ++i)
@@ -412,14 +437,14 @@ int poly_lane_envelope_count(PolyContext ctx, int lane) {
     auto* c = static_cast<Context*>(ctx);
     if (lane < 0 || lane >= poly::kMaxLanes)
         return 0;
-    return c->state.lanes[static_cast<size_t>(lane)].envelopeCount;
+    return c->state().lanes[static_cast<size_t>(lane)].envelopeCount;
 }
 
 int poly_lane_envelope_active(PolyContext ctx, int lane, int index) {
     auto* c = static_cast<Context*>(ctx);
     if (lane < 0 || lane >= poly::kMaxLanes || index < 0 || index >= poly::kMaxEnvelopesPerLane)
         return 0;
-    return c->state.lanes[static_cast<size_t>(lane)].envelopes[static_cast<size_t>(index)].active ? 1 : 0;
+    return c->state().lanes[static_cast<size_t>(lane)].envelopes[static_cast<size_t>(index)].active ? 1 : 0;
 }
 
 int poly_lane_envelope_target(PolyContext ctx, int lane, int index) {
@@ -427,41 +452,41 @@ int poly_lane_envelope_target(PolyContext ctx, int lane, int index) {
     if (lane < 0 || lane >= poly::kMaxLanes || index < 0 || index >= poly::kMaxEnvelopesPerLane)
         return 0;
     return static_cast<int>(
-        c->state.lanes[static_cast<size_t>(lane)].envelopes[static_cast<size_t>(index)].envelope.target);
+        c->state().lanes[static_cast<size_t>(lane)].envelopes[static_cast<size_t>(index)].envelope.target);
 }
 
 float poly_lane_envelope_period(PolyContext ctx, int lane, int index) {
     auto* c = static_cast<Context*>(ctx);
     if (lane < 0 || lane >= poly::kMaxLanes || index < 0 || index >= poly::kMaxEnvelopesPerLane)
         return 0.0f;
-    return c->state.lanes[static_cast<size_t>(lane)].envelopes[static_cast<size_t>(index)].envelope.periodBars;
+    return c->state().lanes[static_cast<size_t>(lane)].envelopes[static_cast<size_t>(index)].envelope.periodBars;
 }
 
 float poly_lane_envelope_depth(PolyContext ctx, int lane, int index) {
     auto* c = static_cast<Context*>(ctx);
     if (lane < 0 || lane >= poly::kMaxLanes || index < 0 || index >= poly::kMaxEnvelopesPerLane)
         return 0.0f;
-    return c->state.lanes[static_cast<size_t>(lane)].envelopes[static_cast<size_t>(index)].envelope.depth;
+    return c->state().lanes[static_cast<size_t>(lane)].envelopes[static_cast<size_t>(index)].envelope.depth;
 }
 
 void poly_action_set_euclid(PolyContext ctx, int lane, int steps, int hits, int rotation) {
     auto* c = static_cast<Context*>(ctx);
     if (lane < 0 || lane >= poly::kMaxLanes)
         return;
-    auto& cfg = c->state.lanes[static_cast<size_t>(lane)];
+    auto& cfg = c->state().lanes[static_cast<size_t>(lane)];
     if (steps > 0)
         cfg.cycle.steps = std::clamp(steps, 1, poly::kMaxSteps);
     if (hits >= 0)
         cfg.hitCount = std::clamp(hits, 0, cfg.cycle.steps);
     cfg.rotation = ((rotation % cfg.cycle.steps) + cfg.cycle.steps) % cfg.cycle.steps;
-    poly::sanitizeGrooveState(c->state);
+    poly::sanitizeGrooveState(c->state());
 }
 
 void poly_action_toggle_step(PolyContext ctx, int lane, int step) {
     auto* c = static_cast<Context*>(ctx);
     if (lane < 0 || lane >= poly::kMaxLanes)
         return;
-    auto& cfg = c->state.lanes[static_cast<size_t>(lane)];
+    auto& cfg = c->state().lanes[static_cast<size_t>(lane)];
     if (!cfg.timeline || step < 0 || step >= poly::kMaxSteps)
         return;
     cfg.fixedPattern[static_cast<size_t>(step)] = !cfg.fixedPattern[static_cast<size_t>(step)];
@@ -471,11 +496,38 @@ void poly_action_apply_preset(PolyContext ctx, int index) {
     poly_load_preset(ctx, index);
 }
 
+// M043 S14 T01: scene-aware preset apply. Writes the preset to the requested
+// scene (0 = A, 1 = B) without disturbing the other scene or the current
+// selection. `targetScene` values other than 0/1 fall back to the currently
+// selected scene, and Morph selection is treated as A (Morph is a render-time
+// blend, not a writable scene).
+void poly_action_apply_preset_to_scene(PolyContext ctx, int index, int targetScene) {
+    auto* c = static_cast<Context*>(ctx);
+    if (index < 0 || index >= poly::kFactoryPresetCount)
+        return;
+    poly::GrooveState& dest = (targetScene == 1)   ? c->scenes.sceneB
+                              : (targetScene == 0) ? c->scenes.sceneA
+                                                   : c->state();
+    dest = poly::makeFactoryPreset(index);
+}
+
+// M043 S14 T01: JS-side scene selection reaches the engine so subsequent
+// edits, renders and preset loads target the correct scene. Accepts the
+// SceneSelect ordinal (0 = A, 1 = B, 2 = Morph).
+void poly_action_select_scene(PolyContext ctx, int sceneSelect) {
+    auto* c = static_cast<Context*>(ctx);
+    c->scenes.select = sceneFromInt(sceneSelect);
+}
+
+int poly_scene_select(PolyContext ctx) {
+    return static_cast<int>(static_cast<Context*>(ctx)->scenes.select);
+}
+
 void poly_action_set_fixed_step(PolyContext ctx, int lane, int step, int on) {
     auto* c = static_cast<Context*>(ctx);
     if (lane < 0 || lane >= poly::kMaxLanes)
         return;
-    auto& cfg = c->state.lanes[static_cast<size_t>(lane)];
+    auto& cfg = c->state().lanes[static_cast<size_t>(lane)];
     if (step < 0 || step >= poly::kMaxSteps)
         return;
     cfg.fixedPattern[static_cast<size_t>(step)] = (on != 0);
@@ -485,7 +537,7 @@ void poly_action_set_micro_timing(PolyContext ctx, int lane, int step, float ms)
     auto* c = static_cast<Context*>(ctx);
     if (lane < 0 || lane >= poly::kMaxLanes)
         return;
-    auto& cfg = c->state.lanes[static_cast<size_t>(lane)];
+    auto& cfg = c->state().lanes[static_cast<size_t>(lane)];
     if (step < 0 || step >= poly::kMaxSteps)
         return;
     cfg.microTimingMs[static_cast<size_t>(step)] = std::clamp(ms, -20.0f, 20.0f);
@@ -495,7 +547,7 @@ void poly_action_set_accent(PolyContext ctx, int lane, int step, float value) {
     auto* c = static_cast<Context*>(ctx);
     if (lane < 0 || lane >= poly::kMaxLanes)
         return;
-    auto& cfg = c->state.lanes[static_cast<size_t>(lane)];
+    auto& cfg = c->state().lanes[static_cast<size_t>(lane)];
     if (step < 0 || step >= poly::kMaxSteps)
         return;
     cfg.accents.steps[static_cast<size_t>(step)] = std::clamp(value, 0.0f, 1.0f);
@@ -505,26 +557,26 @@ void poly_action_set_cells(PolyContext ctx, int lane, const int* cells, int coun
     auto* c = static_cast<Context*>(ctx);
     if (lane < 0 || lane >= poly::kMaxLanes)
         return;
-    auto& cfg = c->state.lanes[static_cast<size_t>(lane)];
+    auto& cfg = c->state().lanes[static_cast<size_t>(lane)];
     cfg.cellCount = std::clamp(count, 0, poly::kMaxSteps);
     for (int i = 0; i < cfg.cellCount; ++i)
         cfg.cellSizes[static_cast<size_t>(i)] = std::clamp(cells[i], 1, 4);
-    poly::sanitizeGrooveState(c->state);
+    poly::sanitizeGrooveState(c->state());
 }
 
 void poly_action_clear_cells(PolyContext ctx, int lane) {
     auto* c = static_cast<Context*>(ctx);
     if (lane < 0 || lane >= poly::kMaxLanes)
         return;
-    c->state.lanes[static_cast<size_t>(lane)].cellCount = 0;
-    poly::sanitizeGrooveState(c->state);
+    c->state().lanes[static_cast<size_t>(lane)].cellCount = 0;
+    poly::sanitizeGrooveState(c->state());
 }
 
 void poly_action_set_envelope(PolyContext ctx, int lane, int index, int target, float period, float depth, int active) {
     auto* c = static_cast<Context*>(ctx);
     if (lane < 0 || lane >= poly::kMaxLanes)
         return;
-    auto& cfg = c->state.lanes[static_cast<size_t>(lane)];
+    auto& cfg = c->state().lanes[static_cast<size_t>(lane)];
     if (index < 0 || index >= poly::kMaxEnvelopesPerLane)
         return;
     auto& ea = cfg.envelopes[static_cast<size_t>(index)];
@@ -540,7 +592,7 @@ void poly_action_remove_envelope(PolyContext ctx, int lane, int index) {
     auto* c = static_cast<Context*>(ctx);
     if (lane < 0 || lane >= poly::kMaxLanes)
         return;
-    auto& cfg = c->state.lanes[static_cast<size_t>(lane)];
+    auto& cfg = c->state().lanes[static_cast<size_t>(lane)];
     if (index < 0 || index >= cfg.envelopeCount)
         return;
     for (int i = index; i < cfg.envelopeCount - 1; ++i)
@@ -550,11 +602,11 @@ void poly_action_remove_envelope(PolyContext ctx, int lane, int index) {
 }
 
 uint64_t poly_seed(PolyContext ctx) {
-    return static_cast<Context*>(ctx)->state.seed;
+    return static_cast<Context*>(ctx)->state().seed;
 }
 
 void poly_set_seed(PolyContext ctx, uint64_t seed) {
-    static_cast<Context*>(ctx)->state.seed = seed;
+    static_cast<Context*>(ctx)->state().seed = seed;
 }
 
 } // extern "C"

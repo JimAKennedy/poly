@@ -52,6 +52,12 @@ POLY_EXPORT float poly_lane_envelope_depth(PolyContext ctx, int lane, int index)
 POLY_EXPORT void poly_action_set_euclid(PolyContext ctx, int lane, int steps, int hits, int rotation);
 POLY_EXPORT void poly_action_toggle_step(PolyContext ctx, int lane, int step);
 POLY_EXPORT void poly_action_apply_preset(PolyContext ctx, int index);
+// M043 S14 T01: scene-aware preset apply. `targetScene` is 0 = A, 1 = B; any
+// other value falls back to the current selection. Morph selection routes to
+// A because Morph is a render-time blend, not a writable slot.
+POLY_EXPORT void poly_action_apply_preset_to_scene(PolyContext ctx, int index, int targetScene);
+POLY_EXPORT void poly_action_select_scene(PolyContext ctx, int sceneSelect);
+POLY_EXPORT int poly_scene_select(PolyContext ctx);
 POLY_EXPORT void poly_action_set_fixed_step(PolyContext ctx, int lane, int step, int on);
 POLY_EXPORT void poly_action_set_micro_timing(PolyContext ctx, int lane, int step, float ms);
 POLY_EXPORT void poly_action_set_accent(PolyContext ctx, int lane, int step, float value);

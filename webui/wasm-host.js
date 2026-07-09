@@ -219,20 +219,32 @@
     return { names, roles, labels };
   }
 
+  // M043 S14 T01: A/B scene isolation regression fix. Before this change,
+  // applyPreset called _poly_action_apply_preset which overwrote the engine's
+  // single GrooveState regardless of state.scene, so loading a preset into B
+  // clobbered A. The engine now holds a full SceneState (SceneSelect::A|B|Morph
+  // + sceneA + sceneB, mirroring plugin/source/processor.cpp), and this
+  // routes through _poly_action_apply_preset_to_scene which writes only into
+  // the target scene. Morph selection routes to A because Morph is a
+  // render-time blend, not a writable slot.
+  function sceneTargetFromState() {
+    return state.scene === 'B' ? 1 : 0;
+  }
+
   function applyPreset(index) {
+    const targetScene = sceneTargetFromState();
     if (index === -1) {
-      Module._poly_action_apply_preset(engineCtx, 0);
+      Module._poly_action_apply_preset_to_scene(engineCtx, 0, targetScene);
       currentPresetIndex = -1;
       laneNames = ['Lane 1', 'Lane 2', 'Lane 3', 'Lane 4'];
       laneRoles = ['Anchor pulse', 'Backbeat', 'Shimmer', 'Ghost'];
       laneRoleLabels = [];
       state.preset = 'Init';
-      state.scene = 'A';
       state.morph = 0;
       state.chain = { enabled: false, mode: 0, entryCount: 0, entries: [] };
       state.noteMap = identityNoteMap();
     } else if (index >= 0 && index < Module._poly_preset_count()) {
-      Module._poly_action_apply_preset(engineCtx, index);
+      Module._poly_action_apply_preset_to_scene(engineCtx, index, targetScene);
       currentPresetIndex = index;
       const engineName = Module.UTF8ToString(Module._poly_preset_name(index));
       const entry = presetsById && presetsById[index];
@@ -250,8 +262,12 @@
         laneRoleLabels = [];
       }
       state.preset = engineName;
-      console.info(`[wasm-host] applied ${engineName} (${laneNames.length} lanes)`);
+      console.info(
+        `[wasm-host] applied ${engineName} to scene ${targetScene === 1 ? 'B' : 'A'} (${laneNames.length} lanes)`
+      );
     }
+    if (targetScene === 1) probe.sceneBPreset = state.preset;
+    else probe.sceneAPreset = state.preset;
     probe.currentPreset = state.preset;
     probe.laneRoleLabels = laneRoleLabels.slice();
     syncStateFromWasm();
@@ -326,6 +342,10 @@
     nodesStarted: 0,
     samplesLoaded: 0,
     currentPreset: '',
+    // M043 S14 T01: per-scene tracking so control-audit spec can assert that
+    // loading a preset into B does not disturb the preset name held in A.
+    sceneAPreset: 'Init',
+    sceneBPreset: 'Init',
     fallbackActive: false,
     laneRoleLabels: [],
     missingRoles: [],
@@ -937,9 +957,24 @@
           );
         }
         break;
-      case 'selectScene':
+      case 'selectScene': {
+        // M043 S14 T01: push selection into the engine so subsequent renders
+        // and edits act on the correct scene. 0 = A, 1 = B, 2 = Morph (matches
+        // poly::SceneSelect ordinal). probe.currentPreset flips to the
+        // newly-active scene so control-audit can observe the switch.
         state.scene = payload.scene === 'Morph' ? 'Morph' : (payload.scene === 'B' ? 'B' : 'A');
+        const sceneOrdinal = state.scene === 'B' ? 1 : (state.scene === 'Morph' ? 2 : 0);
+        Module._poly_action_select_scene(engineCtx, sceneOrdinal);
+        if (state.scene === 'A') {
+          state.preset = probe.sceneAPreset;
+          probe.currentPreset = probe.sceneAPreset;
+        } else if (state.scene === 'B') {
+          state.preset = probe.sceneBPreset;
+          probe.currentPreset = probe.sceneBPreset;
+        }
+        console.info(`[wasm-host] scene → ${state.scene}`);
         break;
+      }
       case 'chainAddEntry':
         if (state.chain.entryCount < 16) {
           state.chain.entries.push({ scene: 0, bars: 4 });
