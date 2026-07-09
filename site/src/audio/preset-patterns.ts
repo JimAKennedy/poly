@@ -314,6 +314,14 @@ export interface ResolvedPreset {
   notesInBar: number;
   bpm: number;
   lanes: LaneMeta[];
+  // Emitter-assigned engine index — used by the card runtime to feed
+  // _poly_load_preset(ctx, index). Kept alongside engineName so the WASM
+  // scheduler and dump paths never re-derive it from a name lookup.
+  index: number;
+  // Per-lane roleLabel + role strings copied from presets.json. The engine
+  // exposes neither via _poly_lane_int/float, so we pass them into
+  // buildEngineParams() to keep the params.json snapshot self-describing.
+  laneRoleMeta: Array<{ roleLabel: string; role: string }>;
 }
 
 // Look up a chapter/factory name and return the engine-resolved preset. Used
@@ -333,6 +341,11 @@ export function resolvePreset(name: string): ResolvedPreset | null {
     notesInBar: preset.notesInBar,
     bpm: spec.bpm,
     lanes: toLaneMeta(spec.lanes),
+    index: preset.index,
+    laneRoleMeta: preset.lanes.map((l) => ({
+      roleLabel: l.roleLabel,
+      role: l.role,
+    })),
   };
 }
 
@@ -366,4 +379,67 @@ export function listPresetNames(): string[] {
 
 export function listChapterAliases(): string[] {
   return Object.keys(CHAPTER_ALIASES);
+}
+
+// Play↔Try It equivalence dump. Returns the raw JSON preset the site scheduler
+// derives its Pattern from, plus the resolved BPM and driftStepsPerBar override
+// applied by the card runtime. Consumed by dump-mode.ts to write .params.json
+// alongside the SMF. Shape is engine-agnostic — the WASM host writes an
+// equivalent snapshot from its post-applyPreset engine state so the two can be
+// diffed field-by-field.
+export interface DumpPresetLaneParams {
+  laneIndex: number;
+  noteNumber: number;
+  roleLabel: string;
+  role: string;
+  cycleSteps: number;
+  subdivision: number;
+  stepLen: number;
+  hits: number;
+  rotation: number;
+  velocity: number;
+  probability: number;
+  driftStepsPerBar: number;
+}
+export interface DumpPresetParams {
+  source: 'site-play';
+  displayName: string;
+  engineName: string;
+  bpm: number;
+  seed: number;
+  notesInBar: number;
+  activeLaneCount: number;
+  lanes: DumpPresetLaneParams[];
+}
+export function getDumpParams(name: string): DumpPresetParams | null {
+  const displayName = resolvePresetName(name);
+  if (!displayName) return null;
+  const engineName = engineNameFor(displayName);
+  if (!engineName) return null;
+  const preset = PRESETS_BY_ENGINE_NAME.get(engineName);
+  if (!preset) return null;
+  const drifts = DRIFT_OVERRIDES[engineName];
+  return {
+    source: 'site-play',
+    displayName,
+    engineName,
+    bpm: PRESET_BPM[engineName] ?? 120,
+    seed: preset.seed,
+    notesInBar: preset.notesInBar,
+    activeLaneCount: preset.activeLaneCount,
+    lanes: preset.lanes.map((l) => ({
+      laneIndex: l.laneIndex,
+      noteNumber: l.noteNumber,
+      roleLabel: l.roleLabel,
+      role: l.role,
+      cycleSteps: l.cycleSteps,
+      subdivision: l.subdivision,
+      stepLen: l.stepLen,
+      hits: l.hits,
+      rotation: l.rotation,
+      velocity: l.velocity,
+      probability: l.probability,
+      driftStepsPerBar: drifts?.[l.laneIndex] ?? 0,
+    })),
+  };
 }

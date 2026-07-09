@@ -258,7 +258,18 @@
   }
 
   /* ---------- WebAudio preview voices ---------- */
-  let ctx = null, playing = false, startAt = 0, schedTimer = null, nextTick = 0, _nb = null;
+  // playbackCtx is a dedicated scratch engine context used for real-time
+  // audible playback. Kept separate from engineCtx (which owns UI/edit state)
+  // so param edits and Play state stay independent — and so a fresh Play
+  // click re-seeds phrase/drift/RNG deterministically from the current preset.
+  let ctx = null, playing = false, startAt = 0, schedTimer = null, _nb = null;
+  let playbackCtx = 0;
+  let playbackNextPpq = 0.0;
+  let playbackRenderIter = 0;
+  const PLAYBACK_CHUNK_QUARTERS = 1;
+  const PLAYBACK_SAMPLE_RATE = 44100;
+  const PLAYBACK_BLOCK_SIZE = 512;
+  const PLAYBACK_LOOKAHEAD_SEC = 0.14;
   const now8 = () => (playing && ctx ? (ctx.currentTime - startAt) / eighthSec() : 0);
 
   // Sample-backed playback (M043 S09). Manifest lookup is by role, so we map
@@ -357,13 +368,22 @@
   function startRmsSampler() {
     if (rmsFrame !== null || !analyser) return;
     const buf = new Float32Array(analyser.fftSize);
+    // Peak-hold: RAF sampling at 60 Hz can miss short hits between silent gaps
+    // in sparse presets (Reich, Nancarrow). The audible-floor check wants
+    // "was signal ever seen since Play started" — expose the peak, reset on
+    // stopRmsSampler().
+    let peakDb = -Infinity;
     const tick = () => {
       if (!analyser) return;
       analyser.getFloatTimeDomainData(buf);
       let sum = 0;
       for (let i = 0; i < buf.length; i++) sum += buf[i] * buf[i];
       const rms = Math.sqrt(sum / buf.length);
-      probe.measuredRmsDb = rms > 0 ? 20 * Math.log10(rms) : -Infinity;
+      if (rms > 0) {
+        const db = 20 * Math.log10(rms);
+        if (db > peakDb) peakDb = db;
+      }
+      probe.measuredRmsDb = peakDb;
       rmsFrame = requestAnimationFrame(tick);
     };
     rmsFrame = requestAnimationFrame(tick);
@@ -501,26 +521,200 @@
   }
 
   function voice(l, li, when, v) {
-    // v is the shaped velocity from hitVelocity() in [0,1]; the card scheduler
-    // uses raw velocity/127 with no attenuation. Match its staging.
+    // v is the shaped velocity in [0,1]; the card scheduler uses raw
+    // velocity/127 with no attenuation. Match its staging.
     const role = roleForLaneName(l.name, li);
     if (sampleVoice(role, when, v)) return;
     synthVoice(l, when, v);
   }
 
+  // Audible playback driven by _poly_render on a per-Play scratch context.
+  // This replaces the earlier laneHitAt/hitVelocity JS re-derivation so what
+  // the user hears IS what the plugin plays — probability, mutation, drift,
+  // humanize, and timing offsets all flow through the same C++ code the
+  // dump path uses. Byte-equivalent with the site card by construction.
   function schedule() {
-    const ahead = ctx.currentTime + 0.14;
-    const step = eighthSec();
-    while (startAt + nextTick * step < ahead) {
-      state.lanes.forEach((l, li) => {
-        const hit = laneHitAt(l, nextTick);
-        if (!hit) return;
-        const vel = hitVelocity(l, li, nextTick, hit);
-        const mtMs = (l.mt && l.mt[hit.step]) || 0;
-        const t = startAt + nextTick * step + (l.push + mtMs) / 1000;
-        voice(l, li, Math.max(ctx.currentTime + 0.001, t), vel);
-      });
-      nextTick++;
+    if (!playbackCtx || !Module) return;
+    const secPerBeat = 60 / TEMPO;
+    const deadlinePpq =
+      (ctx.currentTime - startAt + PLAYBACK_LOOKAHEAD_SEC) / secPerBeat;
+    let safety = 0;
+    while (playbackNextPpq < deadlinePpq && safety++ < 256) {
+      const end = playbackNextPpq + PLAYBACK_CHUNK_QUARTERS;
+      const jumped = playbackRenderIter === 0 ? 1 : 0;
+      const count = Module._poly_render(
+        playbackCtx,
+        playbackNextPpq, end,
+        TEMPO, PLAYBACK_SAMPLE_RATE, PLAYBACK_BLOCK_SIZE,
+        1, // playing
+        0, // looping
+        0.0, 0.0,
+        jumped,
+      );
+      if (count > 0) {
+        const bufPtr = Module._poly_event_buffer(playbackCtx);
+        const base64 = bufPtr >> 3;
+        for (let i = 0; i < count; i++) {
+          const off = base64 + i * 6;
+          const eppq = Module.HEAPF64[off + 0];
+          const note = Module.HEAPF64[off + 1] | 0;
+          const vel = Module.HEAPF64[off + 2]; // [0, 1] float
+          const laneIdx = Module.HEAPF64[off + 5] | 0;
+          const lane = state.lanes[laneIdx];
+          if (!lane) continue;
+          const when = Math.max(
+            ctx.currentTime + 0.001,
+            startAt + eppq * secPerBeat,
+          );
+          voice(lane, laneIdx, when, Math.max(0, Math.min(1, vel)));
+        }
+      }
+      playbackNextPpq = end;
+      playbackRenderIter += 1;
+    }
+  }
+
+  // S12 T03 dump gate. Runs a scratch-context 8-bar render, converts events to
+  // NormalizedEvent[], and downloads an SMF. Guarded by dumpFiredThisPage so a
+  // debug session with ?dump=1 doesn't spam downloads on repeated Play clicks.
+  let dumpFiredThisPage = false;
+
+  // Companion to the SMF dump. Builds a param snapshot from state.lanes (which
+  // syncStateFromWasm() has already populated from the C++ engine after
+  // applyPreset) so the equivalence spec can compare "what the engine believes
+  // this preset says" against the site scheduler's view of the same JSON.
+  function buildTryItParams(presetName, presetIdx) {
+    const entry = presetsById && presetsById[presetIdx];
+    const laneMeta = entry && entry.lanes ? entry.lanes : [];
+    return {
+      source: 'try-it-engine',
+      displayName: presetName,
+      engineName: presetName,
+      bpm: TEMPO,
+      seed: state.seed,
+      macros: { ...state.macros },
+      lanes: state.lanes.map((l, i) => {
+        const meta = laneMeta[i] || {};
+        return {
+          laneIndex: i,
+          noteNumber: l.note,
+          roleLabel: (meta.roleLabel || '').toString(),
+          role: (meta.role || l.role || '').toString(),
+          cycleSteps: l.steps,
+          subdivision: l.subdivision,
+          stepLen: l.stepLen,
+          hits: l.hits,
+          rotation: l.rot,
+          velocity: l.vel,
+          probability: l.prob,
+          velocitySpread: l.spread,
+          humanizeMs: l.humanize,
+          swing: l.swing,
+          noteDuration: l.duration,
+          driftRate: l.driftRate,
+          timingOffsetMs: l.timingOffset,
+          mutationRate: l.mutationRate,
+          phraseLength: l.phraseLength,
+          phraseGap: l.phraseGap,
+          phraseOffset: l.phraseOffset,
+          tempoMultiplier: l.tempoMultiplier,
+          emphasisProb: l.emphasisProb,
+          ghostFloor: l.ghost,
+          active: !!l.active,
+          kotekanSource: l.kotekanSource,
+          timeline: !!l.timeline,
+        };
+      }),
+    };
+  }
+
+  function fireDumpTryIt() {
+    if (dumpFiredThisPage) return;
+    if (!Module || !window.PolyDumpMode || !window.PolySmfWriter) return;
+    if (!window.PolyDumpMode.isDumpModeEnabled()) return;
+    dumpFiredThisPage = true;
+
+    const smf = window.PolySmfWriter;
+    const presetIdx = currentPresetIndex >= 0 ? currentPresetIndex : 0;
+    const presetName = state.preset || Module.UTF8ToString(Module._poly_preset_name(presetIdx));
+
+    const scratch = Module._poly_create();
+    try {
+      Module._poly_load_preset(scratch, presetIdx);
+
+      // 8 bars in 4/4 = 32 quarter notes (poly_render's ppq axis is quarter
+      // notes). Render in 1-bar chunks so we never exceed the engine's
+      // per-block cap (kMaxEventsPerBlock = 256). The equivalence spec sets
+      // `?dumpBeats=N` to override the window; both surfaces then dump over
+      // the same interval regardless of the preset's loopBeats.
+      const events = [];
+      const dumpBeatsOverride =
+        (window.PolyDumpMode && window.PolyDumpMode.dumpBeatsOverride
+          ? window.PolyDumpMode.dumpBeatsOverride()
+          : undefined);
+      const totalQuarters = dumpBeatsOverride !== undefined ? dumpBeatsOverride : 32.0;
+      const chunkQuarters = 4.0;
+      let ppq = 0.0;
+      let iter = 0;
+      while (ppq < totalQuarters && iter < 64) {
+        const end = Math.min(ppq + chunkQuarters, totalQuarters);
+        const jumped = iter === 0 ? 1 : 0;
+        const count = Module._poly_render(
+          scratch,
+          ppq, end,
+          TEMPO, 44100, 512,
+          1,   // playing
+          0,   // looping
+          0.0, 0.0,
+          jumped,
+        );
+        if (count > 0) {
+          const bufPtr = Module._poly_event_buffer(scratch);
+          const base64 = bufPtr >> 3; // HEAPF64 index for doubles
+          for (let i = 0; i < count; i++) {
+            const off = base64 + i * 6;
+            const eppq = Module.HEAPF64[off + 0];
+            const note = Module.HEAPF64[off + 1];
+            const vel = Module.HEAPF64[off + 2];
+            const dur = Module.HEAPF64[off + 3];
+            const ch = Module.HEAPF64[off + 4];
+            // laneIndex at +5 unused for SMF.
+            const onTick = Math.round(eppq * smf.TICKS_PER_QUARTER);
+            const offTick = Math.round((eppq + dur) * smf.TICKS_PER_QUARTER);
+            const clampedNote = Math.max(0, Math.min(127, note | 0));
+            // Engine emits NoteEvent.velocity as float in [0, 1] (see
+            // engine/include/poly/types.h:38). The C++ SMF writer multiplies
+            // by 127 before clamping (smf_writer.cpp:93); mirror that here so
+            // Try It dumps are byte-comparable with the site scheduler and
+            // don't collapse every note-on into vel=0 note-offs.
+            const clampedVel = Math.max(0, Math.min(127, Math.round(vel * 127)));
+            const clampedCh = Math.max(0, Math.min(15, ch | 0));
+            events.push({ tick: onTick, note: clampedNote, velocity: clampedVel, channel: clampedCh, isOn: true });
+            events.push({ tick: offTick, note: clampedNote, velocity: 0, channel: clampedCh, isOn: false });
+          }
+        }
+        ppq = end;
+        iter++;
+      }
+
+      const bytes = smf.writeSMF(events, TEMPO);
+      const slug = window.PolyDumpMode.slugifyPresetName(presetName || 'preset');
+      const ts = Date.now();
+      smf.downloadSMF(bytes, `dump-tryit-${slug}-${ts}.mid`);
+      // Companion params snapshot for the equivalence spec — one .params.json
+      // per SMF, same slug/timestamp so the pair is trivially matchable.
+      try {
+        const params = buildTryItParams(presetName || 'preset', presetIdx);
+        window.PolyDumpMode.downloadJson(
+          params,
+          `dump-tryit-${slug}-${ts}.params.json`,
+        );
+      } catch (e) {
+        console.warn('[wasm-host] params dump failed:', e && e.message);
+      }
+      console.info(`[wasm-host] dumped ${events.length / 2} events for preset ${presetName}`);
+    } finally {
+      Module._poly_destroy(scratch);
     }
   }
 
@@ -543,14 +737,34 @@
       probe.missingRolesFired = false;
       probe.lastError = null;
       startAt = ctx ? ctx.currentTime + 0.06 : 0;
-      nextTick = 0;
+      // Allocate a fresh scratch context and load the CURRENT preset so
+      // RNG/phrase/drift state starts from the preset's canonical seed.
+      // Falling back to engineCtx would leak edit-time counters into the
+      // audible playback and diverge from the dump path (which also uses a
+      // scratch ctx).
+      if (Module && currentPresetIndex >= 0) {
+        if (playbackCtx) Module._poly_destroy(playbackCtx);
+        playbackCtx = Module._poly_create();
+        Module._poly_load_preset(playbackCtx, currentPresetIndex);
+      }
+      playbackNextPpq = 0.0;
+      playbackRenderIter = 0;
       if (ctx) {
         schedTimer = setInterval(schedule, 30);
         startRmsSampler();
       }
+      try {
+        fireDumpTryIt();
+      } catch (e) {
+        console.warn('[wasm-host] dump failed:', e && e.message);
+      }
     } else {
       clearInterval(schedTimer);
       stopRmsSampler();
+      if (Module && playbackCtx) {
+        Module._poly_destroy(playbackCtx);
+        playbackCtx = 0;
+      }
     }
   }
 

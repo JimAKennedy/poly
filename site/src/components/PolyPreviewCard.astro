@@ -28,12 +28,25 @@ const { preset, caption } = Astro.props;
 
 <script>
   import { createSampleLoader } from '../audio/sample-loader.ts';
-  import { createScheduler } from '../audio/midi-scheduler.ts';
+  import { createEngineScheduler } from '../audio/engine-scheduler.ts';
+  import { getSharedEngine } from '../audio/engine-host.ts';
+  import type { EngineModule } from '../audio/engine-host.ts';
+  import {
+    dumpPresetAsSmf,
+    buildEngineParams,
+  } from '../audio/engine-dump.ts';
   import {
     getPatternForPreset,
     resolvePreset,
     resolvePresetName,
   } from '../audio/preset-patterns.ts';
+  import {
+    downloadJson,
+    dumpBeatsOverride,
+    isDumpModeEnabled,
+    slugifyPresetName,
+  } from '../audio/dump-mode.ts';
+  import { downloadSMF } from '../audio/smf-writer.ts';
   import type { LaneMeta, Manifest } from '../audio/types.ts';
 
   // Exposed for the S10 site-audio-gate spec so it can compute observed BPM
@@ -52,6 +65,12 @@ const { preset, caption } = Astro.props;
     sampleBuffersDecoded: number;
     oscillatorsCreated: number;
     scheduledNoteTimes: number[];
+    // Engine PPQ (quarter-note position) of each scheduled note, parallel to
+    // scheduledNoteTimes. Populated by the engine scheduler now that events
+    // no longer follow the TS-derived pattern.events order; the S10 gate
+    // reads this to compute observedBpm directly (beatSpan/timeSpan) without
+    // reconstructing beat positions from a stale pattern shape.
+    scheduledNoteBeats: number[];
     currentPreset: string;
     activeBpm: number;
     fallbackActive: boolean;
@@ -66,6 +85,7 @@ const { preset, caption } = Astro.props;
     probe.sampleBuffersDecoded = 0;
     probe.oscillatorsCreated = 0;
     probe.scheduledNoteTimes = [];
+    probe.scheduledNoteBeats = [];
     probe.currentPreset = '';
     probe.activeBpm = 0;
     probe.fallbackActive = false;
@@ -77,6 +97,7 @@ const { preset, caption } = Astro.props;
     sampleBuffersDecoded: 0,
     oscillatorsCreated: 0,
     scheduledNoteTimes: [],
+    scheduledNoteBeats: [],
     currentPreset: '',
     activeBpm: 0,
     fallbackActive: false,
@@ -119,7 +140,7 @@ const { preset, caption } = Astro.props;
   let analyser: AnalyserNode | null = null;
   let rmsFrame: number | null = null;
   let manifestPromise: Promise<Manifest> | null = null;
-  let activeScheduler: ReturnType<typeof createScheduler> | null = null;
+  let activeScheduler: ReturnType<typeof createEngineScheduler> | null = null;
   let activeCard: HTMLElement | null = null;
 
   function getAudioContext(): AudioContext {
@@ -144,13 +165,23 @@ const { preset, caption } = Astro.props;
   function startRmsSampler(): void {
     if (rmsFrame !== null || !analyser) return;
     const buf = new Float32Array(analyser.fftSize);
+    // Peak-hold since Play started. Each RAF frame reads the analyser's last
+    // ~43ms; sparse presets (Reich, Nancarrow) can land the RAF between hits
+    // and read -Infinity even though earlier frames caught real signal. Since
+    // the "measure" the audible-floor gate cares about is "was signal ever
+    // seen", track the peak dB and expose that. Reset on stopRmsSampler().
+    let peakDb = -Infinity;
     const tick = (): void => {
       if (!analyser) return;
       analyser.getFloatTimeDomainData(buf);
       let sum = 0;
       for (let i = 0; i < buf.length; i++) sum += buf[i] * buf[i];
       const rms = Math.sqrt(sum / buf.length);
-      audioProbe.measuredRmsDb = rms > 0 ? 20 * Math.log10(rms) : -Infinity;
+      if (rms > 0) {
+        const db = 20 * Math.log10(rms);
+        if (db > peakDb) peakDb = db;
+      }
+      audioProbe.measuredRmsDb = peakDb;
       rmsFrame = requestAnimationFrame(tick);
     };
     rmsFrame = requestAnimationFrame(tick);
@@ -279,8 +310,8 @@ const { preset, caption } = Astro.props;
   }
 
   async function startCard(card: HTMLElement, preset: string) {
-    const pattern = getPatternForPreset(preset);
-    if (!pattern) return;
+    const resolved = resolvePreset(preset);
+    if (!resolved) return;
     if (activeCard === card) {
       stopActive();
       return;
@@ -288,10 +319,22 @@ const { preset, caption } = Astro.props;
     stopActive();
     clearErrorState(card);
     resetProbe(audioProbe);
-    audioProbe.currentPreset = resolvePresetName(preset) ?? '';
-    audioProbe.activeBpm = pattern.bpm;
+    audioProbe.currentPreset = resolved.displayName;
+    audioProbe.activeBpm = resolved.bpm;
     const ctx = getAudioContext();
     if (ctx.state === 'suspended') await ctx.resume();
+
+    // Load the WASM engine on the first Play click of the page. Cached
+    // afterward, so subsequent cards mount instantly.
+    let engineModule: EngineModule;
+    try {
+      const engine = await getSharedEngine(baseUrl);
+      engineModule = engine.Module;
+    } catch (err) {
+      audioProbe.fallbackActive = true;
+      throw err;
+    }
+
     let manifest: Manifest;
     try {
       manifest = await loadManifest();
@@ -301,10 +344,10 @@ const { preset, caption } = Astro.props;
     }
     // Disambiguate manifest note collisions (e.g. note 36 = cajon + kick,
     // note 43 = darbuka + tom) by hinting the intended role per note from the
-    // pattern's lane definitions. Site-only concern — the plugin path picks
+    // preset's lane definitions. Site-only concern — the plugin path picks
     // samples independently.
     const preferredRoles = new Map<number, string>();
-    for (const lane of pattern.lanes ?? []) {
+    for (const lane of resolved.lanes) {
       if (!preferredRoles.has(lane.note)) {
         preferredRoles.set(lane.note, lane.role);
       }
@@ -317,17 +360,54 @@ const { preset, caption } = Astro.props;
       onDecoded: () => { audioProbe.sampleBuffersDecoded += 1; },
       preferredRoles,
     });
-    const scheduler = createScheduler({
+    const laneNotes = resolved.lanes.map((l) => l.note);
+    const scheduler = createEngineScheduler({
+      Module: engineModule,
+      presetIndex: resolved.index,
+      bpm: resolved.bpm,
       context: ctx,
       loader,
-      pattern,
-      onNoteScheduled: (fireTime) => { audioProbe.scheduledNoteTimes.push(fireTime); },
-      // S11 T06: route through the shared voice-bus so the analyser tap sees
-      // the same signal the destination hears.
+      laneNotes,
       destination: voiceBus ?? ctx.destination,
+      onNoteScheduled: (fireTime, event) => {
+        audioProbe.scheduledNoteTimes.push(fireTime);
+        audioProbe.scheduledNoteBeats.push(event.beat);
+      },
     });
     activeScheduler = scheduler;
     activeCard = card;
+    // Equivalence-spec dump path. Runs synchronously on Play click so the
+    // 32-quarter SMF + params snapshot land before real-time audio starts.
+    // Both files are produced from a per-call scratch engine context (see
+    // engine-dump.ts), so they're byte-identical to the Try It companion
+    // dumps by construction — no timing or ordering assumption to breed
+    // drift.
+    if (isDumpModeEnabled()) {
+      const dumpBeats = dumpBeatsOverride() ?? 32;
+      const slug = slugifyPresetName(resolved.displayName);
+      const ts = Date.now();
+      try {
+        const bytes = dumpPresetAsSmf(
+          engineModule,
+          resolved.index,
+          resolved.bpm,
+          dumpBeats,
+        );
+        downloadSMF(bytes, `dump-play-${slug}-${ts}.mid`);
+        const params = buildEngineParams(
+          engineModule,
+          resolved.index,
+          resolved.bpm,
+          'site-play',
+          resolved.displayName,
+          resolved.engineName,
+          resolved.laneRoleMeta,
+        );
+        downloadJson(params, `dump-play-${slug}-${ts}.params.json`);
+      } catch (err) {
+        console.warn('[PolyPreviewCard] dump failed:', err);
+      }
+    }
     card.dataset.state = 'playing';
     const btn = card.querySelector<HTMLButtonElement>('.poly-preview-play');
     if (btn) btn.textContent = 'Stop';
@@ -349,7 +429,7 @@ const { preset, caption } = Astro.props;
     const playBtn = card.querySelector<HTMLButtonElement>('.poly-preview-play')!;
     const iconBtn = card.querySelector<HTMLButtonElement>('.poly-preview-icon-btn')!;
     const tryBtn = card.querySelector<HTMLButtonElement>('.poly-preview-btn')!;
-    const pattern = getPatternForPreset(preset);
+    const resolved = resolvePreset(preset);
 
     const triggerPlay = () => {
       startCard(card, preset).catch((err) => {
@@ -357,7 +437,7 @@ const { preset, caption } = Astro.props;
       });
     };
 
-    if (!pattern) {
+    if (!resolved) {
       playBtn.disabled = true;
       playBtn.title = 'Audio preview coming soon';
       iconBtn.disabled = true;
@@ -365,8 +445,8 @@ const { preset, caption } = Astro.props;
     } else {
       playBtn.addEventListener('click', triggerPlay);
       iconBtn.addEventListener('click', triggerPlay);
-      if (pattern.lanes && pattern.lanes.length > 0) {
-        renderLaneChips(card, pattern.lanes);
+      if (resolved.lanes && resolved.lanes.length > 0) {
+        renderLaneChips(card, resolved.lanes);
       }
     }
 
@@ -375,7 +455,12 @@ const { preset, caption } = Astro.props;
       const params = new URLSearchParams();
       params.set('host', 'wasm');
       if (preset) params.set('preset', preset);
-      if (pattern?.bpm) params.set('tempo', String(pattern.bpm));
+      if (resolved?.bpm) params.set('tempo', String(resolved.bpm));
+      // Forward the S12 dump flag so the WASM Try It host inside the sandboxed
+      // iframe can see it without reaching across origins.
+      const parentParams = new URLSearchParams(window.location.search);
+      if (parentParams.get('dump') === '1') params.set('dump', '1');
+      if (parentParams.get('diag') === '1') params.set('diag', '1');
       frame!.src = `${baseUrl}webui/index.html?${params}`;
       frame!.title = preset ? `Poly — ${preset}` : 'Poly — Interactive UI';
       dialog!.querySelector('.poly-modal-title')!.textContent = preset || 'Poly';

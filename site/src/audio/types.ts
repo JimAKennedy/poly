@@ -74,6 +74,19 @@ export interface SchedulerContext {
   createGain(): GainNode;
 }
 
+export interface SchedulerDumpMode {
+  presetSlug: string;
+  // Force-enable capture regardless of URL. Used by tests to exercise the
+  // capture path without setting window.location. When undefined the scheduler
+  // consults isDumpModeEnabled().
+  enabledForTest?: boolean;
+  // Override the downloadSMF sink. Tests replace this to inspect the emitted
+  // byte stream and filename without touching the DOM.
+  sinkForTest?: (bytes: Uint8Array, filename: string) => void;
+  // Override Date.now() for deterministic filenames in tests.
+  nowForTest?: () => number;
+}
+
 export interface SchedulerOptions {
   context: SchedulerContext;
   loader: SampleLoader;
@@ -87,6 +100,11 @@ export interface SchedulerOptions {
   // shared voice bus + AnalyserNode tap for the S11 T06 cross-surface RMS
   // parity check without changing scheduler internals.
   destination?: AudioNode;
+  // S12 T02 dump-mode capture. When present and the URL opts in via ?dump=1
+  // or ?diag=1, the scheduler mirrors every scheduled note-on into an SMF
+  // buffer and auto-downloads after 8 loops of the pattern. Absent =>
+  // capture path is dead code and never touches the per-note branch.
+  dumpMode?: SchedulerDumpMode;
 }
 
 export interface Scheduler {

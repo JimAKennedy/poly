@@ -58,11 +58,13 @@ interface CardMetrics {
   scheduledNoteCount: number;
   firstFireTime: number;
   lastFireTime: number;
+  firstFireBeat: number;
+  lastFireBeat: number;
   currentPreset: string;
   activeBpm: number;
   fallbackActive: boolean;
   observedBpm: number;
-  patternMeta: { bpm: number; loopBeats: number; eventCount: number; eventBeats: number[] } | null;
+  patternMeta: { bpm: number; loopBeats: number; eventCount: number } | null;
 }
 
 interface ModalMetrics {
@@ -175,18 +177,22 @@ for (const chapter of CHAPTERS) {
           sampleBuffersDecoded: number;
           oscillatorsCreated: number;
           scheduledNoteTimes: number[];
+          scheduledNoteBeats: number[];
           currentPreset: string;
           activeBpm: number;
           fallbackActive: boolean;
         };
       }).__polyAudioProbe;
       const times = p.scheduledNoteTimes;
+      const beats = p.scheduledNoteBeats ?? [];
       return {
         sampleBuffersDecoded: p.sampleBuffersDecoded,
         oscillatorsCreated: p.oscillatorsCreated,
         scheduledNoteCount: times.length,
         firstFireTime: times[0] ?? 0,
         lastFireTime: times[times.length - 1] ?? 0,
+        firstFireBeat: beats[0] ?? 0,
+        lastFireBeat: beats[beats.length - 1] ?? 0,
         currentPreset: p.currentPreset,
         activeBpm: p.activeBpm,
         fallbackActive: p.fallbackActive,
@@ -202,36 +208,26 @@ for (const chapter of CHAPTERS) {
       if (!pp) return null;
       const pat = pp.getPatternForPreset(presetName);
       if (!pat) return null;
-      // midi-scheduler.ts sorts events by beat, so this ordering matches the
-      // order in which fireTimes land in scheduledNoteTimes.
-      const sortedBeats = pat.events.map((e) => e.beat).sort((a, b) => a - b);
       return {
         bpm: pat.bpm,
         loopBeats: pat.loopBeats,
-        eventCount: sortedBeats.length,
-        eventBeats: sortedBeats,
+        eventCount: pat.events.length,
       };
     }, chapter.preset);
 
-    // The scheduler emits fireTime = startTime + absBeat * (60/bpm) in beat order,
-    // repeating each loop. Reconstruct the beat-span the N observed fireTimes cover
-    // and derive observedBpm from beat-span / time-span. Average-rate approximation
-    // fails when the observation window is a small fraction of the loop.
+    // Post-1b: Play is engine-driven. Every scheduled note carries its own PPQ
+    // (recorded into scheduledNoteBeats by the engine scheduler), so observed
+    // BPM is a direct beatSpan / timeSpan calculation — no need to reconstruct
+    // TS-scheduler event ordering.
     let observedBpm = 0;
     if (
-      patternMeta &&
-      patternMeta.eventBeats.length > 0 &&
       cardProbe.scheduledNoteCount >= 2 &&
-      cardProbe.lastFireTime > cardProbe.firstFireTime
+      cardProbe.lastFireTime > cardProbe.firstFireTime &&
+      cardProbe.lastFireBeat > cardProbe.firstFireBeat
     ) {
-      const beatAt = (idx: number): number => {
-        const cyc = patternMeta.eventBeats.length;
-        const loop = Math.floor(idx / cyc);
-        return patternMeta.eventBeats[idx % cyc] + loop * patternMeta.loopBeats;
-      };
-      const beatSpan = beatAt(cardProbe.scheduledNoteCount - 1) - beatAt(0);
+      const beatSpan = cardProbe.lastFireBeat - cardProbe.firstFireBeat;
       const timeSpan = cardProbe.lastFireTime - cardProbe.firstFireTime;
-      if (beatSpan > 0) observedBpm = (beatSpan * 60) / timeSpan;
+      observedBpm = (beatSpan * 60) / timeSpan;
     }
 
     const cardMetrics: CardMetrics = { ...cardProbe, observedBpm, patternMeta };
