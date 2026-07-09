@@ -46,6 +46,13 @@ S11_EXIT=0
        npx playwright test tests-e2e/preset-consistency.spec.ts --project=chromium) \
     || S11_EXIT=$?
 
+echo "=== Running S13 Play↔Try It equivalence gate against ${URL} ==="
+S13_EXIT=0
+(cd "${SITE_DIR}" \
+    && POLY_SITE_URL="${URL}" \
+       npx playwright test tests-e2e/dump-mode.spec.ts tests-e2e/equivalence.spec.ts --project=chromium) \
+    || S13_EXIT=$?
+
 echo "=== Capturing summary artifacts ==="
 mkdir -p "${ARTIFACTS_DIR}"
 
@@ -67,11 +74,11 @@ else
     echo "    (no S11 summary produced — spec may have crashed before writing it)" >&2
 fi
 
-GATE_EXIT=$(( S10_EXIT | S11_EXIT ))
+GATE_EXIT=$(( S10_EXIT | S11_EXIT | S13_EXIT ))
 
 if [ "${GATE_EXIT}" = "0" ]; then
-    echo "=== PASS: remote audio + preset-consistency gates ==="
+    echo "=== PASS: remote audio + preset-consistency + equivalence gates ==="
 else
-    echo "=== FAIL: remote gates (S10 exit ${S10_EXIT}, S11 exit ${S11_EXIT}) ==="
+    echo "=== FAIL: remote gates (S10 exit ${S10_EXIT}, S11 exit ${S11_EXIT}, S13 exit ${S13_EXIT}) ==="
 fi
 exit "${GATE_EXIT}"

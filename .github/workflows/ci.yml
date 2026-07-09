@@ -282,8 +282,63 @@ jobs:
       - name: Validate sample manifest (GM coverage)
         run: bash scripts/check-sample-manifest.sh --coverage
 
+  site-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Setup Emscripten
+        uses: mymindstorm/setup-emsdk@6ab9eb1bda2574c4ddb79809fc9247783eaf9021 # v14
+        with:
+          version: 3.1.61
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: site/package-lock.json
+      - name: Install site dependencies
+        working-directory: site
+        run: npm ci
+      - name: Get Playwright version
+        id: pw-version
+        working-directory: site
+        run: echo "version=$(npx playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright browsers
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ steps.pw-version.outputs.version }}
+      - name: Install Playwright browsers
+        working-directory: site
+        run: npx playwright install --with-deps chromium
+      - name: Run local site-verify pipeline (S10 + S11 + S13 gates)
+        run: bash scripts/site-verify-local.sh
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: site-local-verify-report
+          path: site/playwright-report/
+          retention-days: 14
+          if-no-files-found: ignore
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: site-local-verify-test-results
+          path: site/test-results/
+          retention-days: 14
+          if-no-files-found: ignore
+      - name: Upload local-verify summary artifacts
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: site-local-verify-summaries
+          path: .gsd/artifacts/
+          retention-days: 14
+          if-no-files-found: ignore
+
   ci-complete:
-    needs: [code-quality, build, engine-isolation, secrets-scan, code-coverage, webui-tests, pluginval, wasm-build, site-lint]
+    needs: [code-quality, build, engine-isolation, secrets-scan, code-coverage, webui-tests, pluginval, wasm-build, site-lint, site-e2e]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -297,7 +352,8 @@ jobs:
              [[ "${{ needs.webui-tests.result }}" != "success" ]] || \
              [[ "${{ needs.pluginval.result }}" != "success" ]] || \
              [[ "${{ needs.wasm-build.result }}" != "success" ]] || \
-             [[ "${{ needs.site-lint.result }}" != "success" ]]; then
+             [[ "${{ needs.site-lint.result }}" != "success" ]] || \
+             [[ "${{ needs.site-e2e.result }}" != "success" ]]; then
             echo "One or more CI jobs failed"
             exit 1
           fi
