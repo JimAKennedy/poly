@@ -288,6 +288,11 @@ const { preset, caption } = Astro.props;
         if (nowMuted) muted.add(idx); else muted.delete(idx);
         chip.setAttribute('aria-pressed', nowMuted ? 'true' : 'false');
         chip.title = nowMuted ? `Unmute ${lane.label}` : `Mute ${lane.label}`;
+        // M043 S14 T03: parity-trace log. Matches wasm-host's
+        // "[wasm-host] lane N active=X" line so a Playwright equivalence spec
+        // that toggles mute on both surfaces sees identical transitions in
+        // the console log stream.
+        console.info(`[PolyPreviewCard] lane ${idx} active=${nowMuted ? 0 : 1}`);
         if (activeCard === card && activeScheduler) {
           activeScheduler.setLaneMuted(idx, nowMuted);
         }
@@ -384,11 +389,17 @@ const { preset, caption } = Astro.props;
       const slug = slugifyPresetName(resolved.displayName);
       const ts = Date.now();
       try {
+        // M043 S14 T03: forward the card's current mute set into both dump
+        // artifacts. Snapshot to Array so the two helpers iterate the same
+        // deterministic order (Sets iterate insertion order — fine — but the
+        // snapshot rules out any surprise if a chip click races the dump).
+        const mutedSnapshot = Array.from(getMutedSet(card));
         const bytes = dumpPresetAsSmf(
           engineModule,
           resolved.index,
           resolved.bpm,
           dumpBeats,
+          mutedSnapshot,
         );
         downloadSMF(bytes, `dump-play-${slug}-${ts}.mid`);
         const params = buildEngineParams(
@@ -399,6 +410,7 @@ const { preset, caption } = Astro.props;
           resolved.displayName,
           resolved.engineName,
           resolved.laneRoleMeta,
+          mutedSnapshot,
         );
         downloadJson(params, `dump-play-${slug}-${ts}.params.json`);
       } catch (err) {

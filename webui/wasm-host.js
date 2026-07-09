@@ -664,6 +664,13 @@
     const scratch = Module._poly_create();
     try {
       Module._poly_load_preset(scratch, presetIdx);
+      // M043 S14 T03: mirror engineCtx scene state (both grooves + morph +
+      // per-lane active) into the scratch so any UI edits — including lane
+      // mutes — reach the dump. Same _poly_copy_scenes pattern T02 uses when
+      // seeding playbackCtx on Play click. Engine RNG stays fresh (lives on
+      // Context, not scenes) so the dump remains deterministic against the
+      // preset seed.
+      Module._poly_copy_scenes(scratch, engineCtx);
 
       // 8 bars in 4/4 = 32 quarter notes (poly_render's ppq axis is quarter
       // notes). Render in 1-bar chunks so we never exceed the engine's
@@ -887,7 +894,16 @@
       channel:      v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.MidiChannel, Math.round(v * 15)),
       velocity:     v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.BaseVelocity, Math.round(v * 127)),
       ghostFloor:   v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.GhostFloor, Math.round(v * 127)),
-      active:       v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.Active, v >= 0.5 ? 1 : 0),
+      active:       v => {
+        const iv = v >= 0.5 ? 1 : 0;
+        Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.Active, iv);
+        // M043 S14 T03: mirror into playbackCtx so mid-play mutes stop audio
+        // immediately. Without this, the engine keeps rendering events on the
+        // muted lane because playbackCtx is a separate ctx seeded from
+        // engineCtx at Play-click time (see _poly_copy_scenes in togglePlay).
+        if (playbackCtx) Module._poly_edit_lane_int(playbackCtx, laneIdx, LaneFieldInt.Active, iv);
+        console.info(`[wasm-host] lane ${laneIdx} active=${iv}`);
+      },
       steps:        v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.CycleSteps, Math.round(v * 63) + 1),
       hits:         v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.HitCount, Math.round(v * 64)),
       rotation:     v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.Rotation, Math.round(v * 63)),
