@@ -140,7 +140,11 @@ h4 {
   border-radius: 10px;
   padding: 0;
   background: #1c1b19;
-  width: min(960px, 95vw);
+  /* WASM UI's #win is width: min(1160px, 100%). A 960px modal artificially
+     narrows the plugin; widen to the plugin's own design width so lane
+     content doesn't get squished + clipped. box-sizing means the 96vw cap
+     already leaves a 2vw gutter on each side. */
+  width: min(1200px, 96vw);
   max-height: 90vh;
   overflow: hidden;
   box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
