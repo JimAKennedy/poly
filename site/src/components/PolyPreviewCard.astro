@@ -562,7 +562,10 @@ const { preset, caption } = Astro.props;
     flex-shrink: 0;
     padding: 0.35rem 0.9rem;
     color: #fff;
-    border: none;
+    /* 1px transparent border on the shared rule so height/box-sizing match
+       .poly-preview-play (which has a visible border). Without this the two
+       buttons render at different heights; T04 parity probe fails. */
+    border: 1px solid transparent;
     border-radius: 4px;
     font-family: var(--poly-font-sans);
     font-size: var(--sl-text-xs);
@@ -573,7 +576,7 @@ const { preset, caption } = Astro.props;
 
   .poly-preview-play {
     background: #2a2927;
-    border: 1px solid var(--sl-color-gray-4);
+    border-color: var(--sl-color-gray-4);
     color: #e0ddd8;
   }
 

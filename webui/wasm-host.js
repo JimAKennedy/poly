@@ -349,6 +349,10 @@
     // M043 S14 T02: mirror the morph amount pushed to the engine so tests can
     // observe the value the audible playback is interpolating against.
     morphAmount: 0,
+    // M043 S14 T05: playing flag mirrored from the closed-over `playing` local
+    // so control-audit can read a stable observable for Play/Stop without
+    // guessing at internal state via nodesStarted deltas.
+    playing: false,
     fallbackActive: false,
     laneRoleLabels: [],
     missingRoles: [],
@@ -760,6 +764,7 @@
     // land, so nothing is silent while the first fetch is in flight.
     if (ctx) ensureSamplesLoaded();
     playing = !playing;
+    probe.playing = playing;
     if (playing) {
       // Reset per-run probe fields (missing-role, RMS). fallbackActive is
       // NOT reset — it's a one-way sticky flag set by ensureSamplesLoaded.

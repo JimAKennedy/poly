@@ -70,26 +70,40 @@ if [ "${READY}" != "1" ]; then
 fi
 echo "    preview ready at ${PREVIEW_URL}/poly/"
 
-echo "=== [5/7] Running S10 audio gate ==="
+echo "=== [5/8] Running S10 audio gate ==="
 S10_EXIT=0
 (cd "${SITE_DIR}" \
     && POLY_SITE_URL="${PREVIEW_URL}" \
        npx playwright test tests-e2e/site-audio-gate.spec.ts --project=chromium) \
     || S10_EXIT=$?
 
-echo "=== [6/7] Running S11 preset-consistency gate ==="
+echo "=== [6/8] Running S11 preset-consistency gate ==="
 S11_EXIT=0
 (cd "${SITE_DIR}" \
     && POLY_SITE_URL="${PREVIEW_URL}" \
        npx playwright test tests-e2e/preset-consistency.spec.ts --project=chromium) \
     || S11_EXIT=$?
 
-echo "=== [7/7] Running S13 Play↔Try It equivalence gate ==="
+echo "=== [7/8] Running S13 Play↔Try It equivalence gate ==="
 S13_EXIT=0
 (cd "${SITE_DIR}" \
     && POLY_SITE_URL="${PREVIEW_URL}" \
        npx playwright test tests-e2e/dump-mode.spec.ts tests-e2e/equivalence.spec.ts --project=chromium) \
     || S13_EXIT=$?
+
+echo "=== [8/9] Running S14 lane-mute gate ==="
+S14_EXIT=0
+(cd "${SITE_DIR}" \
+    && POLY_SITE_URL="${PREVIEW_URL}" \
+       npx playwright test tests-e2e/lane-mute.spec.ts --project=chromium) \
+    || S14_EXIT=$?
+
+echo "=== [9/9] Running S14 T04+T05 layout + control-audit gate ==="
+S14_CTRL_EXIT=0
+(cd "${SITE_DIR}" \
+    && POLY_SITE_URL="${PREVIEW_URL}" \
+       npx playwright test tests-e2e/control-audit.spec.ts --project=chromium) \
+    || S14_CTRL_EXIT=$?
 
 echo "=== Capturing summary artifacts ==="
 mkdir -p "${ARTIFACTS_DIR}"
@@ -113,11 +127,11 @@ else
 fi
 
 # Combine exit codes so any gate failing fails the script.
-GATE_EXIT=$(( S10_EXIT | S11_EXIT | S13_EXIT ))
+GATE_EXIT=$(( S10_EXIT | S11_EXIT | S13_EXIT | S14_EXIT | S14_CTRL_EXIT ))
 
 if [ "${GATE_EXIT}" = "0" ]; then
-    echo "=== PASS: local audio + preset-consistency + equivalence gates ==="
+    echo "=== PASS: local audio + preset-consistency + equivalence + lane-mute + control-audit gates ==="
 else
-    echo "=== FAIL: local gates (S10 exit ${S10_EXIT}, S11 exit ${S11_EXIT}, S13 exit ${S13_EXIT}) ==="
+    echo "=== FAIL: local gates (S10 exit ${S10_EXIT}, S11 exit ${S11_EXIT}, S13 exit ${S13_EXIT}, S14 lane-mute exit ${S14_EXIT}, S14 control-audit exit ${S14_CTRL_EXIT}) ==="
 fi
 exit "${GATE_EXIT}"
