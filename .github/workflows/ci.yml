@@ -310,7 +310,7 @@ jobs:
       - name: Install Playwright browsers
         working-directory: site
         run: npx playwright install --with-deps chromium
-      - name: Run local site-verify pipeline (S10 + S11 + S13 + S14 gates)
+      - name: Run local site-verify pipeline (S10 + S11 + S13 + S14 + S18 gates)
         run: bash scripts/site-verify-local.sh
       - name: Upload Playwright report
         if: always()
