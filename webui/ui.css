@@ -65,6 +65,19 @@
 
   /* ---- DESK ---- */
   #desk { padding: 14px 16px 16px; display: grid; grid-template-columns: repeat(5, 1fr) 196px; gap: 11px; transition: grid-template-columns .25s ease-out; }
+  /* M043 S14 T04: narrow-iframe responsiveness. Below the 900px design
+     midline the 5+master grid can't split 320-ish px five ways without
+     clipping the ring diagrams and macro sliders — swap to horizontal
+     scroll so nothing gets truncated at the right edge (the user-visible
+     symptom). Above 900px the original grid stays intact. */
+  @media (max-width: 900px) {
+    #desk { grid-template-columns: repeat(5, minmax(150px, 1fr)) 190px; overflow-x: auto; overflow-y: hidden; }
+  }
+  @media (max-width: 620px) {
+    #chrome { flex-wrap: wrap; row-gap: 6px; padding: 6px 12px; height: auto; }
+    #win { grid-template-rows: auto 1fr; height: min(760px, 92vh); }
+    #desk { grid-template-columns: repeat(5, minmax(140px, 1fr)) 180px; }
+  }
   .strip { background: linear-gradient(var(--surface), #191512); border: 1px solid #2B251E; border-radius: 8px; padding: 12px 10px; display: flex; flex-direction: column; align-items: center; gap: 9px; min-height: 0; min-width: 0; overflow: hidden; }
   .strip .head { display: flex; align-items: center; gap: 6px; width: 100%; flex: none; }
   .strip .nm { text-transform: uppercase; letter-spacing: .14em; font-size: 9px; color: #B7AE9D; text-align: center; min-width: 0; flex: 1; overflow: hidden; }

@@ -219,20 +219,32 @@
     return { names, roles, labels };
   }
 
+  // M043 S14 T01: A/B scene isolation regression fix. Before this change,
+  // applyPreset called _poly_action_apply_preset which overwrote the engine's
+  // single GrooveState regardless of state.scene, so loading a preset into B
+  // clobbered A. The engine now holds a full SceneState (SceneSelect::A|B|Morph
+  // + sceneA + sceneB, mirroring plugin/source/processor.cpp), and this
+  // routes through _poly_action_apply_preset_to_scene which writes only into
+  // the target scene. Morph selection routes to A because Morph is a
+  // render-time blend, not a writable slot.
+  function sceneTargetFromState() {
+    return state.scene === 'B' ? 1 : 0;
+  }
+
   function applyPreset(index) {
+    const targetScene = sceneTargetFromState();
     if (index === -1) {
-      Module._poly_action_apply_preset(engineCtx, 0);
+      Module._poly_action_apply_preset_to_scene(engineCtx, 0, targetScene);
       currentPresetIndex = -1;
       laneNames = ['Lane 1', 'Lane 2', 'Lane 3', 'Lane 4'];
       laneRoles = ['Anchor pulse', 'Backbeat', 'Shimmer', 'Ghost'];
       laneRoleLabels = [];
       state.preset = 'Init';
-      state.scene = 'A';
       state.morph = 0;
       state.chain = { enabled: false, mode: 0, entryCount: 0, entries: [] };
       state.noteMap = identityNoteMap();
     } else if (index >= 0 && index < Module._poly_preset_count()) {
-      Module._poly_action_apply_preset(engineCtx, index);
+      Module._poly_action_apply_preset_to_scene(engineCtx, index, targetScene);
       currentPresetIndex = index;
       const engineName = Module.UTF8ToString(Module._poly_preset_name(index));
       const entry = presetsById && presetsById[index];
@@ -250,8 +262,12 @@
         laneRoleLabels = [];
       }
       state.preset = engineName;
-      console.info(`[wasm-host] applied ${engineName} (${laneNames.length} lanes)`);
+      console.info(
+        `[wasm-host] applied ${engineName} to scene ${targetScene === 1 ? 'B' : 'A'} (${laneNames.length} lanes)`
+      );
     }
+    if (targetScene === 1) probe.sceneBPreset = state.preset;
+    else probe.sceneAPreset = state.preset;
     probe.currentPreset = state.preset;
     probe.laneRoleLabels = laneRoleLabels.slice();
     syncStateFromWasm();
@@ -326,6 +342,17 @@
     nodesStarted: 0,
     samplesLoaded: 0,
     currentPreset: '',
+    // M043 S14 T01: per-scene tracking so control-audit spec can assert that
+    // loading a preset into B does not disturb the preset name held in A.
+    sceneAPreset: 'Init',
+    sceneBPreset: 'Init',
+    // M043 S14 T02: mirror the morph amount pushed to the engine so tests can
+    // observe the value the audible playback is interpolating against.
+    morphAmount: 0,
+    // M043 S14 T05: playing flag mirrored from the closed-over `playing` local
+    // so control-audit can read a stable observable for Play/Stop without
+    // guessing at internal state via nodesStarted deltas.
+    playing: false,
     fallbackActive: false,
     laneRoleLabels: [],
     missingRoles: [],
@@ -641,6 +668,13 @@
     const scratch = Module._poly_create();
     try {
       Module._poly_load_preset(scratch, presetIdx);
+      // M043 S14 T03: mirror engineCtx scene state (both grooves + morph +
+      // per-lane active) into the scratch so any UI edits — including lane
+      // mutes — reach the dump. Same _poly_copy_scenes pattern T02 uses when
+      // seeding playbackCtx on Play click. Engine RNG stays fresh (lives on
+      // Context, not scenes) so the dump remains deterministic against the
+      // preset seed.
+      Module._poly_copy_scenes(scratch, engineCtx);
 
       // 8 bars in 4/4 = 32 quarter notes (poly_render's ppq axis is quarter
       // notes). Render in 1-bar chunks so we never exceed the engine's
@@ -730,6 +764,7 @@
     // land, so nothing is silent while the first fetch is in flight.
     if (ctx) ensureSamplesLoaded();
     playing = !playing;
+    probe.playing = playing;
     if (playing) {
       // Reset per-run probe fields (missing-role, RMS). fallbackActive is
       // NOT reset — it's a one-way sticky flag set by ensureSamplesLoaded.
@@ -737,15 +772,17 @@
       probe.missingRolesFired = false;
       probe.lastError = null;
       startAt = ctx ? ctx.currentTime + 0.06 : 0;
-      // Allocate a fresh scratch context and load the CURRENT preset so
-      // RNG/phrase/drift state starts from the preset's canonical seed.
-      // Falling back to engineCtx would leak edit-time counters into the
-      // audible playback and diverge from the dump path (which also uses a
-      // scratch ctx).
-      if (Module && currentPresetIndex >= 0) {
+      // Allocate a fresh scratch context so Engine RNG/phrase/drift state
+      // starts from the preset's canonical seed on every Play click. Then
+      // snapshot the full SceneState (both scenes + select + morph amount)
+      // from engineCtx into playbackCtx via _poly_copy_scenes. This gives
+      // us Morph-mode audible playback (both scenes present, blend follows
+      // the UI value) without leaking Engine edit-time counters — those
+      // live on Context, not on scenes.
+      if (Module) {
         if (playbackCtx) Module._poly_destroy(playbackCtx);
         playbackCtx = Module._poly_create();
-        Module._poly_load_preset(playbackCtx, currentPresetIndex);
+        Module._poly_copy_scenes(playbackCtx, engineCtx);
       }
       playbackNextPpq = 0.0;
       playbackRenderIter = 0;
@@ -810,7 +847,15 @@
     }
 
     if (paramId === 'scene.morph') {
-      state.morph = value;
+      // M043 S14 T02: push morph amount into the engine so Morph-mode renders
+      // interpolate against the current UI value. Push to the Play scratch too
+      // when it exists so audible playback is live-editable, not frozen at
+      // whatever value was present at Play time.
+      const clamped = Math.max(0, Math.min(1, value));
+      state.morph = clamped;
+      Module._poly_set_morph(engineCtx, clamped);
+      if (playbackCtx) Module._poly_set_morph(playbackCtx, clamped);
+      probe.morphAmount = clamped;
       emitState();
       return;
     }
@@ -854,7 +899,16 @@
       channel:      v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.MidiChannel, Math.round(v * 15)),
       velocity:     v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.BaseVelocity, Math.round(v * 127)),
       ghostFloor:   v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.GhostFloor, Math.round(v * 127)),
-      active:       v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.Active, v >= 0.5 ? 1 : 0),
+      active:       v => {
+        const iv = v >= 0.5 ? 1 : 0;
+        Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.Active, iv);
+        // M043 S14 T03: mirror into playbackCtx so mid-play mutes stop audio
+        // immediately. Without this, the engine keeps rendering events on the
+        // muted lane because playbackCtx is a separate ctx seeded from
+        // engineCtx at Play-click time (see _poly_copy_scenes in togglePlay).
+        if (playbackCtx) Module._poly_edit_lane_int(playbackCtx, laneIdx, LaneFieldInt.Active, iv);
+        console.info(`[wasm-host] lane ${laneIdx} active=${iv}`);
+      },
       steps:        v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.CycleSteps, Math.round(v * 63) + 1),
       hits:         v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.HitCount, Math.round(v * 64)),
       rotation:     v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.Rotation, Math.round(v * 63)),
@@ -937,9 +991,28 @@
           );
         }
         break;
-      case 'selectScene':
+      case 'selectScene': {
+        // M043 S14 T01: push selection into the engine so subsequent renders
+        // and edits act on the correct scene. 0 = A, 1 = B, 2 = Morph (matches
+        // poly::SceneSelect ordinal). probe.currentPreset flips to the
+        // newly-active scene so control-audit can observe the switch.
         state.scene = payload.scene === 'Morph' ? 'Morph' : (payload.scene === 'B' ? 'B' : 'A');
+        const sceneOrdinal = state.scene === 'B' ? 1 : (state.scene === 'Morph' ? 2 : 0);
+        Module._poly_action_select_scene(engineCtx, sceneOrdinal);
+        // M043 S14 T02: mirror selection into the Play scratch so switching
+        // scenes while Play is active flips the audible source without
+        // needing to stop/start playback.
+        if (playbackCtx) Module._poly_action_select_scene(playbackCtx, sceneOrdinal);
+        if (state.scene === 'A') {
+          state.preset = probe.sceneAPreset;
+          probe.currentPreset = probe.sceneAPreset;
+        } else if (state.scene === 'B') {
+          state.preset = probe.sceneBPreset;
+          probe.currentPreset = probe.sceneBPreset;
+        }
+        console.info(`[wasm-host] scene → ${state.scene}`);
         break;
+      }
       case 'chainAddEntry':
         if (state.chain.entryCount < 16) {
           state.chain.entries.push({ scene: 0, bars: 4 });
@@ -1011,6 +1084,13 @@
   async function initWasmHost(wasmModule) {
     Module = wasmModule;
     engineCtx = Module._poly_create();
+    // M043 S14 T02 spec hook. The scene-morph and control-audit tests need
+    // to reach the raw WASM handles to render short scratch windows and
+    // inspect engine-side state directly; this is the only place they're
+    // available. Not part of the public host contract — do not consume from
+    // ui.js or bridge code.
+    window.__polyModule = Module;
+    window.__polyEngineCtx = engineCtx;
 
     await loadPresetsJson();
 

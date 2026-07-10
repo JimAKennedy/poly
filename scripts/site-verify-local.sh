@@ -70,26 +70,47 @@ if [ "${READY}" != "1" ]; then
 fi
 echo "    preview ready at ${PREVIEW_URL}/poly/"
 
-echo "=== [5/7] Running S10 audio gate ==="
+echo "=== [5/10] Running S10 audio gate ==="
 S10_EXIT=0
 (cd "${SITE_DIR}" \
     && POLY_SITE_URL="${PREVIEW_URL}" \
        npx playwright test tests-e2e/site-audio-gate.spec.ts --project=chromium) \
     || S10_EXIT=$?
 
-echo "=== [6/7] Running S11 preset-consistency gate ==="
+echo "=== [6/10] Running S11 preset-consistency gate ==="
 S11_EXIT=0
 (cd "${SITE_DIR}" \
     && POLY_SITE_URL="${PREVIEW_URL}" \
        npx playwright test tests-e2e/preset-consistency.spec.ts --project=chromium) \
     || S11_EXIT=$?
 
-echo "=== [7/7] Running S13 Play↔Try It equivalence gate ==="
+echo "=== [7/10] Running S13 Play↔Try It equivalence gate ==="
 S13_EXIT=0
 (cd "${SITE_DIR}" \
     && POLY_SITE_URL="${PREVIEW_URL}" \
        npx playwright test tests-e2e/dump-mode.spec.ts tests-e2e/equivalence.spec.ts --project=chromium) \
     || S13_EXIT=$?
+
+echo "=== [8/10] Running S14 lane-mute gate ==="
+S14_EXIT=0
+(cd "${SITE_DIR}" \
+    && POLY_SITE_URL="${PREVIEW_URL}" \
+       npx playwright test tests-e2e/lane-mute.spec.ts --project=chromium) \
+    || S14_EXIT=$?
+
+echo "=== [9/10] Running S18 control-audit gate ==="
+S18_CTRL_EXIT=0
+(cd "${SITE_DIR}" \
+    && POLY_SITE_URL="${PREVIEW_URL}" \
+       npx playwright test tests-e2e/control-audit.spec.ts --project=chromium) \
+    || S18_CTRL_EXIT=$?
+
+echo "=== [10/10] Running S18 console-error gate ==="
+S18_CONSOLE_EXIT=0
+(cd "${SITE_DIR}" \
+    && POLY_SITE_URL="${PREVIEW_URL}" \
+       npx playwright test tests-e2e/console-error-gate.spec.ts --project=chromium) \
+    || S18_CONSOLE_EXIT=$?
 
 echo "=== Capturing summary artifacts ==="
 mkdir -p "${ARTIFACTS_DIR}"
@@ -112,12 +133,59 @@ else
     echo "    (no S11 summary produced — spec may have crashed before writing it)" >&2
 fi
 
+# Local mirror of S18-remote-verify.json — same gate, local preview URL. If
+# control-audit.spec.ts starts emitting its own summary we prefer that;
+# otherwise synthesize a minimal exit-code stub so an artifact always exists.
+S18_SRC="${SITE_DIR}/test-results/control-audit-summary.json"
+S18_DST="${ARTIFACTS_DIR}/S18-local-verify.json"
+if [ -f "${S18_SRC}" ]; then
+    cp "${S18_SRC}" "${S18_DST}"
+    echo "    wrote ${S18_DST}"
+else
+    S18_VERDICT="fail"
+    [ "${S18_CTRL_EXIT}" = "0" ] && S18_VERDICT="pass"
+    cat > "${S18_DST}" <<EOF
+{
+  "gate": "S18-control-audit",
+  "url": "${PREVIEW_URL}",
+  "exitCode": ${S18_CTRL_EXIT},
+  "verdict": "${S18_VERDICT}",
+  "spec": "site/tests-e2e/control-audit.spec.ts",
+  "note": "synthesized: control-audit spec did not emit test-results/control-audit-summary.json"
+}
+EOF
+    echo "    synthesized ${S18_DST} (no spec summary; verdict=${S18_VERDICT})"
+fi
+
+# Mirror control-audit summary handling for console-error: prefer the spec's
+# JSON; synthesize an exit-code stub if it's missing so an artifact always exists.
+S18_CE_SRC="${SITE_DIR}/test-results/console-error-summary.json"
+S18_CE_DST="${ARTIFACTS_DIR}/S18-console-error-local-verify.json"
+if [ -f "${S18_CE_SRC}" ]; then
+    cp "${S18_CE_SRC}" "${S18_CE_DST}"
+    echo "    wrote ${S18_CE_DST}"
+else
+    S18_CE_VERDICT="fail"
+    [ "${S18_CONSOLE_EXIT}" = "0" ] && S18_CE_VERDICT="pass"
+    cat > "${S18_CE_DST}" <<EOF
+{
+  "gate": "S18-console-error",
+  "url": "${PREVIEW_URL}",
+  "exitCode": ${S18_CONSOLE_EXIT},
+  "verdict": "${S18_CE_VERDICT}",
+  "spec": "site/tests-e2e/console-error-gate.spec.ts",
+  "note": "synthesized: console-error-gate spec did not emit test-results/console-error-summary.json"
+}
+EOF
+    echo "    synthesized ${S18_CE_DST} (no spec summary; verdict=${S18_CE_VERDICT})"
+fi
+
 # Combine exit codes so any gate failing fails the script.
-GATE_EXIT=$(( S10_EXIT | S11_EXIT | S13_EXIT ))
+GATE_EXIT=$(( S10_EXIT | S11_EXIT | S13_EXIT | S14_EXIT | S18_CTRL_EXIT | S18_CONSOLE_EXIT ))
 
 if [ "${GATE_EXIT}" = "0" ]; then
-    echo "=== PASS: local audio + preset-consistency + equivalence gates ==="
+    echo "=== PASS: local audio + preset-consistency + equivalence + lane-mute + S18 control-audit + console-error gates ==="
 else
-    echo "=== FAIL: local gates (S10 exit ${S10_EXIT}, S11 exit ${S11_EXIT}, S13 exit ${S13_EXIT}) ==="
+    echo "=== FAIL: local gates (S10 exit ${S10_EXIT}, S11 exit ${S11_EXIT}, S13 exit ${S13_EXIT}, S14 lane-mute exit ${S14_EXIT}, S18 control-audit exit ${S18_CTRL_EXIT}, S18 console-error exit ${S18_CONSOLE_EXIT}) ==="
 fi
 exit "${GATE_EXIT}"

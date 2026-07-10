@@ -29,6 +29,7 @@ export interface EngineModule {
   _poly_active_lane_count(ctx: number): number;
   _poly_lane_int(ctx: number, lane: number, field: number): number;
   _poly_lane_float(ctx: number, lane: number, field: number): number;
+  _poly_edit_lane_int(ctx: number, lane: number, field: number, value: number): void;
   _poly_macro_value(ctx: number, index: number): number;
   _poly_seed(ctx: number): bigint | number;
   HEAPF64: Float64Array;

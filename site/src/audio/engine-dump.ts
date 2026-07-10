@@ -106,11 +106,21 @@ export function renderEngineEvents(
   presetIndex: number,
   bpm: number,
   dumpBeats: number,
+  mutedLanes?: Iterable<number>,
 ): NormalizedEvent[] {
   const ctx = Module._poly_create();
   const events: NormalizedEvent[] = [];
   try {
     Module._poly_load_preset(ctx, presetIndex);
+    // M043 S14 T03: fold UI mute state into the scratch so the dump reflects
+    // what the user hears on Play, not the preset's untouched defaults. The
+    // engine render loop skips inactive lanes (engine.cpp:359), so a
+    // mute-then-dump produces zero note-ons for the muted lane's MIDI note.
+    if (mutedLanes) {
+      for (const laneIdx of mutedLanes) {
+        Module._poly_edit_lane_int(ctx, laneIdx, LaneFieldInt.Active, 0);
+      }
+    }
     let ppq = 0.0;
     let iter = 0;
     while (ppq < dumpBeats && iter < MAX_ITERATIONS) {
@@ -169,8 +179,9 @@ export function dumpPresetAsSmf(
   presetIndex: number,
   bpm: number,
   dumpBeats: number,
+  mutedLanes?: Iterable<number>,
 ): Uint8Array {
-  const events = renderEngineEvents(Module, presetIndex, bpm, dumpBeats);
+  const events = renderEngineEvents(Module, presetIndex, bpm, dumpBeats, mutedLanes);
   return writeSMF(events, bpm);
 }
 
@@ -186,10 +197,16 @@ export function buildEngineParams(
   displayName: string,
   engineName: string,
   laneMeta: Array<{ roleLabel: string; role: string }>,
+  mutedLanes?: Iterable<number>,
 ): EngineParams {
   const ctx = Module._poly_create();
   try {
     Module._poly_load_preset(ctx, presetIndex);
+    if (mutedLanes) {
+      for (const laneIdx of mutedLanes) {
+        Module._poly_edit_lane_int(ctx, laneIdx, LaneFieldInt.Active, 0);
+      }
+    }
     const laneCount = Module._poly_active_lane_count(ctx);
     const lanes: EngineParamsLane[] = [];
     for (let i = 0; i < laneCount; i++) {
