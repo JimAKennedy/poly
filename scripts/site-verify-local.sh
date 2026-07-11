@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# site-verify-local.sh — end-to-end audio gate against a locally-built site.
+# site-verify-local.sh — end-to-end audio + UI gates against a locally-built site.
 #
 # Steps:
 #   1. Guarantee emcc 3.1.61 on PATH (ensure-emsdk.sh — installs on first run).
@@ -10,9 +10,11 @@ set -euo pipefail
 #   4. Build the Astro site (npm run copy-webui + npm run build).
 #   5. Start `npx astro preview` in the background on POLY_PREVIEW_PORT (4322).
 #   6. Poll until the preview URL responds.
-#   7. Run the S10 audio gate against the local URL.
-#   8. Capture test-results/audio-gate-summary.json into .gsd/artifacts/.
-#   9. Tear down the preview server. Exit with the spec's exit code.
+#   7. Run each Playwright gate in turn, capturing its summary JSON into
+#      .gsd/artifacts/ immediately after — Playwright clears test-results/ at
+#      the start of every invocation, so late captures would clobber earlier
+#      ones.
+#   8. Tear down the preview server. Exit with the OR'd exit codes.
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
@@ -70,19 +72,61 @@ if [ "${READY}" != "1" ]; then
 fi
 echo "    preview ready at ${PREVIEW_URL}/poly/"
 
-echo "=== [5/10] Running S10 audio gate ==="
+mkdir -p "${ARTIFACTS_DIR}"
+
+# Each `npx playwright test` clears test-results/ at start, so each gate's
+# summary must be copied into .gsd/artifacts/ before the next spec runs.
+capture_summary() {
+    local src="$1" dst="$2"
+    if [ -f "${src}" ]; then
+        cp "${src}" "${dst}"
+        echo "    wrote ${dst}"
+    else
+        echo "    (no summary at ${src} — spec may have crashed before writing it)" >&2
+    fi
+}
+
+capture_or_synthesize() {
+    local src="$1" dst="$2" gate="$3" url="$4" exit_code="$5" spec="$6"
+    if [ -f "${src}" ]; then
+        cp "${src}" "${dst}"
+        echo "    wrote ${dst}"
+    else
+        local verdict="fail"
+        [ "${exit_code}" = "0" ] && verdict="pass"
+        cat > "${dst}" <<EOF
+{
+  "gate": "${gate}",
+  "url": "${url}",
+  "exitCode": ${exit_code},
+  "verdict": "${verdict}",
+  "spec": "${spec}",
+  "note": "synthesized: spec did not emit $(basename "${src}")"
+}
+EOF
+        echo "    synthesized ${dst} (no spec summary; verdict=${verdict})"
+    fi
+}
+
+echo "=== [5/11] Running S10 audio gate ==="
 S10_EXIT=0
 (cd "${SITE_DIR}" \
     && POLY_SITE_URL="${PREVIEW_URL}" \
        npx playwright test tests-e2e/site-audio-gate.spec.ts --project=chromium) \
     || S10_EXIT=$?
+capture_summary \
+    "${SITE_DIR}/test-results/audio-gate-summary.json" \
+    "${ARTIFACTS_DIR}/S10-local-verify.json"
 
-echo "=== [6/10] Running S11 preset-consistency gate ==="
+echo "=== [6/11] Running S11 preset-consistency gate ==="
 S11_EXIT=0
 (cd "${SITE_DIR}" \
     && POLY_SITE_URL="${PREVIEW_URL}" \
        npx playwright test tests-e2e/preset-consistency.spec.ts --project=chromium) \
     || S11_EXIT=$?
+capture_summary \
+    "${SITE_DIR}/test-results/preset-consistency-summary.json" \
+    "${ARTIFACTS_DIR}/S11-local-verify.json"
 
 echo "=== [7/11] Running S13 Play↔Try It equivalence gate ==="
 S13_EXIT=0
@@ -97,6 +141,11 @@ S15_EXIT=0
     && POLY_SITE_URL="${PREVIEW_URL}" \
        npx playwright test tests-e2e/macro-diff.spec.ts --project=chromium) \
     || S15_EXIT=$?
+capture_or_synthesize \
+    "${SITE_DIR}/test-results/macro-diff-summary.json" \
+    "${ARTIFACTS_DIR}/S15-macro-diff-local-verify.json" \
+    "S15-macro-diff" "${PREVIEW_URL}" "${S15_EXIT}" \
+    "site/tests-e2e/macro-diff.spec.ts"
 
 echo "=== [9/11] Running S14 lane-mute gate ==="
 S14_EXIT=0
@@ -111,6 +160,11 @@ S18_CTRL_EXIT=0
     && POLY_SITE_URL="${PREVIEW_URL}" \
        npx playwright test tests-e2e/control-audit.spec.ts --project=chromium) \
     || S18_CTRL_EXIT=$?
+capture_or_synthesize \
+    "${SITE_DIR}/test-results/control-audit-summary.json" \
+    "${ARTIFACTS_DIR}/S18-local-verify.json" \
+    "S18-control-audit" "${PREVIEW_URL}" "${S18_CTRL_EXIT}" \
+    "site/tests-e2e/control-audit.spec.ts"
 
 echo "=== [11/11] Running S18 console-error gate ==="
 S18_CONSOLE_EXIT=0
@@ -118,97 +172,11 @@ S18_CONSOLE_EXIT=0
     && POLY_SITE_URL="${PREVIEW_URL}" \
        npx playwright test tests-e2e/console-error-gate.spec.ts --project=chromium) \
     || S18_CONSOLE_EXIT=$?
-
-echo "=== Capturing summary artifacts ==="
-mkdir -p "${ARTIFACTS_DIR}"
-
-S10_SRC="${SITE_DIR}/test-results/audio-gate-summary.json"
-S10_DST="${ARTIFACTS_DIR}/S10-local-verify.json"
-if [ -f "${S10_SRC}" ]; then
-    cp "${S10_SRC}" "${S10_DST}"
-    echo "    wrote ${S10_DST}"
-else
-    echo "    (no S10 summary produced — spec may have crashed before writing it)" >&2
-fi
-
-S11_SRC="${SITE_DIR}/test-results/preset-consistency-summary.json"
-S11_DST="${ARTIFACTS_DIR}/S11-local-verify.json"
-if [ -f "${S11_SRC}" ]; then
-    cp "${S11_SRC}" "${S11_DST}"
-    echo "    wrote ${S11_DST}"
-else
-    echo "    (no S11 summary produced — spec may have crashed before writing it)" >&2
-fi
-
-# S15 macro-diff: prefer the spec's own summary; synthesize a stub from exit
-# code otherwise, so an artifact always exists for a CI reviewer.
-S15_SRC="${SITE_DIR}/test-results/macro-diff-summary.json"
-S15_DST="${ARTIFACTS_DIR}/S15-macro-diff-local-verify.json"
-if [ -f "${S15_SRC}" ]; then
-    cp "${S15_SRC}" "${S15_DST}"
-    echo "    wrote ${S15_DST}"
-else
-    S15_VERDICT="fail"
-    [ "${S15_EXIT}" = "0" ] && S15_VERDICT="pass"
-    cat > "${S15_DST}" <<EOF
-{
-  "gate": "S15-macro-diff",
-  "url": "${PREVIEW_URL}",
-  "exitCode": ${S15_EXIT},
-  "verdict": "${S15_VERDICT}",
-  "spec": "site/tests-e2e/macro-diff.spec.ts",
-  "note": "synthesized: macro-diff spec did not emit test-results/macro-diff-summary.json"
-}
-EOF
-    echo "    synthesized ${S15_DST} (no spec summary; verdict=${S15_VERDICT})"
-fi
-
-# Local mirror of S18-remote-verify.json — same gate, local preview URL. If
-# control-audit.spec.ts starts emitting its own summary we prefer that;
-# otherwise synthesize a minimal exit-code stub so an artifact always exists.
-S18_SRC="${SITE_DIR}/test-results/control-audit-summary.json"
-S18_DST="${ARTIFACTS_DIR}/S18-local-verify.json"
-if [ -f "${S18_SRC}" ]; then
-    cp "${S18_SRC}" "${S18_DST}"
-    echo "    wrote ${S18_DST}"
-else
-    S18_VERDICT="fail"
-    [ "${S18_CTRL_EXIT}" = "0" ] && S18_VERDICT="pass"
-    cat > "${S18_DST}" <<EOF
-{
-  "gate": "S18-control-audit",
-  "url": "${PREVIEW_URL}",
-  "exitCode": ${S18_CTRL_EXIT},
-  "verdict": "${S18_VERDICT}",
-  "spec": "site/tests-e2e/control-audit.spec.ts",
-  "note": "synthesized: control-audit spec did not emit test-results/control-audit-summary.json"
-}
-EOF
-    echo "    synthesized ${S18_DST} (no spec summary; verdict=${S18_VERDICT})"
-fi
-
-# Mirror control-audit summary handling for console-error: prefer the spec's
-# JSON; synthesize an exit-code stub if it's missing so an artifact always exists.
-S18_CE_SRC="${SITE_DIR}/test-results/console-error-summary.json"
-S18_CE_DST="${ARTIFACTS_DIR}/S18-console-error-local-verify.json"
-if [ -f "${S18_CE_SRC}" ]; then
-    cp "${S18_CE_SRC}" "${S18_CE_DST}"
-    echo "    wrote ${S18_CE_DST}"
-else
-    S18_CE_VERDICT="fail"
-    [ "${S18_CONSOLE_EXIT}" = "0" ] && S18_CE_VERDICT="pass"
-    cat > "${S18_CE_DST}" <<EOF
-{
-  "gate": "S18-console-error",
-  "url": "${PREVIEW_URL}",
-  "exitCode": ${S18_CONSOLE_EXIT},
-  "verdict": "${S18_CE_VERDICT}",
-  "spec": "site/tests-e2e/console-error-gate.spec.ts",
-  "note": "synthesized: console-error-gate spec did not emit test-results/console-error-summary.json"
-}
-EOF
-    echo "    synthesized ${S18_CE_DST} (no spec summary; verdict=${S18_CE_VERDICT})"
-fi
+capture_or_synthesize \
+    "${SITE_DIR}/test-results/console-error-summary.json" \
+    "${ARTIFACTS_DIR}/S18-console-error-local-verify.json" \
+    "S18-console-error" "${PREVIEW_URL}" "${S18_CONSOLE_EXIT}" \
+    "site/tests-e2e/console-error-gate.spec.ts"
 
 # Combine exit codes so any gate failing fails the script.
 GATE_EXIT=$(( S10_EXIT | S11_EXIT | S13_EXIT | S15_EXIT | S14_EXIT | S18_CTRL_EXIT | S18_CONSOLE_EXIT ))
