@@ -53,6 +53,7 @@ const PRESET_BPM: Record<string, number> = {
   'Pocket Groove': 92,
   'Afrobeat 12/8': 96,
   'Balkan Aksak': 140,
+  'Kopanitsa 11/8': 200,
   'Bossa Nova': 130,
   'Bossa Nova Trio': 130,
   'Carnatic Tala': 100,

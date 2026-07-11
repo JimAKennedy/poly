@@ -1761,8 +1761,8 @@
         },
         {
           "laneIndex": 2,
-          "noteNumber": 45,
-          "roleLabel": "tom",
+          "noteNumber": 56,
+          "roleLabel": "cowbell",
           "role": "Shimmer",
           "cycleSteps": 10,
           "subdivision": 8,
@@ -1774,8 +1774,8 @@
         },
         {
           "laneIndex": 3,
-          "noteNumber": 47,
-          "roleLabel": "tom",
+          "noteNumber": 60,
+          "roleLabel": "bongo",
           "role": "Ghost",
           "cycleSteps": 7,
           "subdivision": 8,
@@ -1787,8 +1787,8 @@
         },
         {
           "laneIndex": 4,
-          "noteNumber": 50,
-          "roleLabel": "tom",
+          "noteNumber": 76,
+          "roleLabel": "woodblock",
           "role": "Ornament",
           "cycleSteps": 9,
           "subdivision": 4,
