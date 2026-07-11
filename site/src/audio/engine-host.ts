@@ -76,6 +76,7 @@ async function importEngineFactory(url: string): Promise<ModuleFactory> {
   }
 }
 
+// region:shared-engine
 export function loadEngineModule(baseUrl: string): Promise<EngineModule> {
   if (modulePromise) return modulePromise;
   const url = resolveEngineJsUrl(baseUrl);
@@ -99,6 +100,7 @@ export async function getSharedEngine(
   if (sharedCtx === null) sharedCtx = Module._poly_create();
   return { Module, ctx: sharedCtx };
 }
+// endregion:shared-engine
 
 // _poly_event_buffer returns a pointer to 6 doubles per event:
 //   (ppqPosition, midiPitch, velocity, duration, channel, laneIndex)

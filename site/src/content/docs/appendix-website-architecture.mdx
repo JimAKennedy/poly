@@ -1,6 +1,101 @@
 ---
 title: "Website Architecture"
-description: "Astro + Starlight site layout, MDX content collections, sample manifest pipeline, preset-JSON generation, WebAudio playback stack, and the PolyPatch / PolyPreviewCard component family."
+description: "Astro + Starlight foundation, MDX content collections, preset JSON generation pipeline, sample manifest + loader, WebAudio playback stack, and the PolyPatch / PolyPreviewCard component family behind every audible example on this site."
 ---
 
-Coming in M044 S04 — this appendix will cover the Astro + Starlight foundation, MDX content collections, the sample manifest and preset-JSON pipelines, the WebAudio playback stack under `site/src/audio/`, and the `PolyPatch` / `PolyPreviewCard` component pattern, with build-time code snippets pulled from the tree.
+import CodeSnippet from '../../components/CodeSnippet.astro';
+
+The guide site is an Astro + Starlight docs project that ships as a static bundle to GitHub Pages. Every page is Markdown-with-JSX (`.mdx`); every audio example is a client-side WebAudio playback stack that drives the same C++ engine used by the plugin — compiled to WebAssembly and loaded lazily on the first Play click. Site infrastructure is deliberately thin: the interesting complexity lives in the shared code paths with the plugin, not in the docs framework.
+
+## Astro + Starlight Foundation
+
+The whole site is one `astro.config.mjs`. `defineConfig` sets the deploy origin and base path, then hands off to the Starlight integration which supplies the docs UI, sidebar, search index, and content-collection wiring.
+
+<CodeSnippet file="site/astro.config.mjs" region="astro-base-config" caption="Site origin, base path, and one legacy redirect — the whole non-Starlight surface" />
+
+`base: '/poly'` is the first thing that has to be right on this project: GitHub Pages serves the site under `https://jimakennedy.github.io/poly/`, and every asset URL (samples, WASM, presets JSON) resolves against `import.meta.env.BASE_URL` so nothing 404s under the subpath.
+
+The sidebar is fully hand-authored — chapters in reading order, appendices in reference order — so the reader isn't dependent on file-tree alphabetical accidents.
+
+<CodeSnippet file="site/astro.config.mjs" region="starlight-appendix-sidebar" caption="Appendices sidebar — reference material, cross-cutting concerns, and this file" />
+
+## MDX Content Collections
+
+Content is loaded through Starlight's content-collection loader. This one declaration wires every `site/src/content/docs/*.mdx` file into Astro's content pipeline with the Starlight schema (frontmatter fields like `title`, `description`, table-of-contents behavior).
+
+<CodeSnippet file="site/src/content.config.ts" region="docs-collection" caption="The whole content-collection wiring — one loader, one schema, all pages" />
+
+Each chapter or appendix is a plain `.mdx` file that imports a small set of Astro components — `PolyPatch` for parameter tables, `PolyPreviewCard` for audible examples, `CodeSnippet` for the build-time source excerpts you're reading right now, `EuclideanDiagram` for rhythm visualizations. Frontmatter carries the page title and description; everything else is prose.
+
+## Preset JSON Generation Pipeline
+
+Preset data — lane counts, note assignments, BPMs, macro values, the readable name of each preset — is authored in C++ (`engine/src/presets.cpp`) and consumed by three surfaces: the site preview cards, the WASM Try It modal, and the chapter MDX pages. A single source of truth avoids the class of bug where a rename in C++ silently drifts from a hand-copied JS table.
+
+`site/scripts/generate-presets-json.mjs` builds a small engine-only CMake tree (`build-presets/`), runs the emitter, validates the JSON shape, and writes the output alongside both consumer locations. It runs as the site's prebuild step so a stale JSON can't ship.
+
+<CodeSnippet file="site/scripts/generate-presets-json.mjs" region="presets-emitter-flow" caption="Prebuild step — emit, parse, validate, and write to both the module-graph and public webui locations" />
+
+The emitter binary depends only on `poly_engine`, so a Linux CI runner never needs the VST3 SDK to regenerate presets. When the emitter changes shape, the `validate()` helper (upstream in the same file) rejects unknown `schemaVersion` values so the failure is a build error rather than a silent card breakage.
+
+## Sample Manifest + Loader
+
+Sample audio is served from `site/public/samples/` — WAV/FLAC files organized by percussion role (`kick/`, `snare/`, `hat/`, ...). A single `manifest.json` lists every sample with its file path, role label, license, and the MIDI notes it should trigger on.
+
+The sample loader picks a buffer for a MIDI note using a two-step fallback: prefer a sample whose declared role matches the calling lane's role, then fall back to any sample that lists the note. This resolves manifest note collisions (e.g. note 36 = kick and cajon, note 43 = darbuka and tom) by using the preset's own lane role as a tiebreaker.
+
+<CodeSnippet file="site/src/audio/sample-loader.ts" region="pick-entry-for-note" caption="Role-first, note-fallback sample selection — how a jazz cymbal lane picks ride vs china for note 51" />
+
+This is the exact algorithm the WASM Try It modal now mirrors (see the plugin-side `wasm-host.js`), so card Play and Try It Play both pick the same sample file for a given `(role, note)` pair — not just the same MIDI events.
+
+## WebAudio Playback Stack
+
+The playback stack is deliberately small: a shared WASM engine module loaded lazily on the first Play click, a scratch engine context per playback session, and a WebAudio scheduler that runs a ~140ms lookahead loop against the engine's output.
+
+### Shared WASM Engine
+
+`getSharedEngine()` guarantees one Module load per page. Emscripten resolves `poly_engine.wasm` via `import.meta.url` on the JS module; since the JS is imported through a Blob URL to sidestep Vite's module resolver, `locateFile` is overridden to point back at the real static asset path.
+
+<CodeSnippet file="site/src/audio/engine-host.ts" region="shared-engine" caption="Lazy-load the WASM engine once per page, cache the Module + a shared context" />
+
+Real playback allocates a *fresh* engine context in `createEngineScheduler.start()` — the shared context is reserved for dump-mode snapshots that must not perturb playback state.
+
+### Scheduler Lookahead
+
+The scheduler is a WebAudio-scheduler-pattern loop: on each tick (~30ms), advance the engine forward until its output covers the next ~140ms of wall time, then schedule every emitted note against `AudioContext.currentTime`.
+
+<CodeSnippet file="site/src/audio/engine-scheduler.ts" region="scheduler-lookahead" caption="~140ms lookahead — pump() drives renderChunk() which drives _poly_render() one quarter at a time" />
+
+Each `_poly_render` call covers one quarter-note (`CHUNK_QUARTERS = 1`) — well under the engine's `kMaxEventsPerBlock = 256` cap even for dense presets — so a single render can never overflow the event buffer. `nextPpq` is the only accumulated state; timing is derived from `AudioContext.currentTime`, not measured, so glitchy tab throttling degrades to silence instead of drift.
+
+## Component Family
+
+Two Astro components carry almost every audible or tabular example on the site.
+
+### `PolyPatch` — Parameter Tables
+
+`PolyPatch` is a static component: a titled block with a MDX `<slot />`. It's used for parameter tables and short "here's the exact patch" sidebars. No JavaScript, no state — pure MDX-in-Astro composition.
+
+### `PolyPreviewCard` — Audible Examples
+
+`PolyPreviewCard` is the interactive one. Each card carries a preset name; two buttons (Play + Try It) share the audio pipeline. Play uses the sample-loader + engine-scheduler path against the shared WASM module. Try It opens a sandboxed iframe running the same WASM engine inside the plugin's actual web UI.
+
+The wiring inside `startCard()` is small: the sample loader gets a role-hinted note map, the scheduler is created with the loader + the resolved preset + a shared voice-bus for RMS parity checks.
+
+<CodeSnippet file="site/src/components/PolyPreviewCard.astro" region="card-play-wiring" caption="Card Play wiring — sample loader + engine scheduler, one shared voice bus, role-hinted note resolution" />
+
+Everything else in the component is stateful UI: mute-per-lane chips, error-state banner, dump-mode SMF export (equivalence gates), the modal iframe.
+
+## Determinism Between Card and Try It
+
+The two paths — card Play and Try It modal — must be **audibly identical** for the same preset. Two classes of drift are watched:
+
+- **MIDI equivalence** — SMF-level dumps from both surfaces are byte-identical by construction (both run through the same `_poly_render` call). Enforced by the S13 equivalence gate.
+- **Sample selection equivalence** — the role-first fallback in `pick-entry-for-note` is mirrored inside `webui/wasm-host.js`, and a Playwright gate (added in the M044 sample-selection parity fix) asserts the two paths pick the same sample file for every `(role, note)` pair across all preset cards.
+
+Everything else — BPM, macro values, lane muting, playback timing — flows through the shared `preset-patterns.ts` resolver so there is no independent copy to drift.
+
+## Deployment
+
+`.github/workflows/deploy-site.yml` builds the site on every push to `main` and deploys to GitHub Pages. A post-deploy job then runs `scripts/site-verify-remote.sh` against the live URL — every gate that runs locally in `site-verify-local.sh` (audio, preset consistency, MIDI equivalence, sample-selection equivalence, macro-diff, lane-mute, control audit, console errors) also runs remote so a deployment regression fails visibly rather than shipping silently.
+
+The testing architecture appendix goes deeper into what each gate actually asserts, when it runs, and how the deliberate-break proofs are structured.

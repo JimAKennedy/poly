@@ -144,6 +144,7 @@ export function createEngineScheduler(
     set.clear();
   }
 
+  // region:scheduler-lookahead
   function renderChunk(): void {
     if (engineCtx === 0) return;
     const end = nextPpq + CHUNK_QUARTERS;
@@ -183,6 +184,7 @@ export function createEngineScheduler(
     }
     tickTimer = setTimeout(pump, tickMs);
   }
+  // endregion:scheduler-lookahead
 
   return {
     async start() {
