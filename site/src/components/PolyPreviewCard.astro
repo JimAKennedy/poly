@@ -27,7 +27,7 @@ const { preset, caption } = Astro.props;
 </div>
 
 <script>
-  import { createSampleLoader } from '../audio/sample-loader.ts';
+  import { createSampleLoader, pickEntryForNote } from '../audio/sample-loader.ts';
   import { createEngineScheduler } from '../audio/engine-scheduler.ts';
   import { getSharedEngine } from '../audio/engine-host.ts';
   import type { EngineModule } from '../audio/engine-host.ts';
@@ -76,6 +76,11 @@ const { preset, caption } = Astro.props;
     // silent; sampled after Play stabilises for cross-surface loudness parity
     // checks. Reset on Stop.
     measuredRmsDb: number;
+    // Sample-selection equivalence probe: { [midiNote]: file } resolved via
+    // pickEntryForNote(manifest, note, preferredRole) at Play time. The
+    // sample-equivalence gate reads this and asserts the WASM host resolved
+    // every note to the same file. Populated in startCard(); cleared on Stop.
+    sampleFilesByNote: Record<number, string>;
   }
 
   function resetProbe(probe: PolyAudioProbe): void {
@@ -88,6 +93,7 @@ const { preset, caption } = Astro.props;
     probe.fallbackActive = false;
     probe.lastError = null;
     probe.measuredRmsDb = -Infinity;
+    probe.sampleFilesByNote = {};
   }
 
   const audioProbe: PolyAudioProbe = {
@@ -100,6 +106,7 @@ const { preset, caption } = Astro.props;
     fallbackActive: false,
     lastError: null,
     measuredRmsDb: -Infinity,
+    sampleFilesByNote: {},
   };
   (window as unknown as { __polyAudioProbe: PolyAudioProbe }).__polyAudioProbe = audioProbe;
 
@@ -353,6 +360,14 @@ const { preset, caption } = Astro.props;
       if (!preferredRoles.has(lane.note)) {
         preferredRoles.set(lane.note, lane.role);
       }
+    }
+    // Record which manifest file the loader will pick for each lane's note.
+    // Same 2-step algorithm createSampleLoader uses — evaluated eagerly here
+    // so the sample-equivalence gate can read the resolution without waiting
+    // for playback to hit every note.
+    for (const [note, role] of preferredRoles) {
+      const entry = pickEntryForNote(manifest, note, role);
+      if (entry) audioProbe.sampleFilesByNote[note] = entry.file;
     }
     const loader = createSampleLoader({
       manifest,
