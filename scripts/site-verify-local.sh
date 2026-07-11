@@ -84,28 +84,35 @@ S11_EXIT=0
        npx playwright test tests-e2e/preset-consistency.spec.ts --project=chromium) \
     || S11_EXIT=$?
 
-echo "=== [7/10] Running S13 Play↔Try It equivalence gate ==="
+echo "=== [7/11] Running S13 Play↔Try It equivalence gate ==="
 S13_EXIT=0
 (cd "${SITE_DIR}" \
     && POLY_SITE_URL="${PREVIEW_URL}" \
        npx playwright test tests-e2e/dump-mode.spec.ts tests-e2e/equivalence.spec.ts --project=chromium) \
     || S13_EXIT=$?
 
-echo "=== [8/10] Running S14 lane-mute gate ==="
+echo "=== [8/11] Running S15 macro-diff gate ==="
+S15_EXIT=0
+(cd "${SITE_DIR}" \
+    && POLY_SITE_URL="${PREVIEW_URL}" \
+       npx playwright test tests-e2e/macro-diff.spec.ts --project=chromium) \
+    || S15_EXIT=$?
+
+echo "=== [9/11] Running S14 lane-mute gate ==="
 S14_EXIT=0
 (cd "${SITE_DIR}" \
     && POLY_SITE_URL="${PREVIEW_URL}" \
        npx playwright test tests-e2e/lane-mute.spec.ts --project=chromium) \
     || S14_EXIT=$?
 
-echo "=== [9/10] Running S18 control-audit gate ==="
+echo "=== [10/11] Running S18 control-audit gate ==="
 S18_CTRL_EXIT=0
 (cd "${SITE_DIR}" \
     && POLY_SITE_URL="${PREVIEW_URL}" \
        npx playwright test tests-e2e/control-audit.spec.ts --project=chromium) \
     || S18_CTRL_EXIT=$?
 
-echo "=== [10/10] Running S18 console-error gate ==="
+echo "=== [11/11] Running S18 console-error gate ==="
 S18_CONSOLE_EXIT=0
 (cd "${SITE_DIR}" \
     && POLY_SITE_URL="${PREVIEW_URL}" \
@@ -131,6 +138,29 @@ if [ -f "${S11_SRC}" ]; then
     echo "    wrote ${S11_DST}"
 else
     echo "    (no S11 summary produced — spec may have crashed before writing it)" >&2
+fi
+
+# S15 macro-diff: prefer the spec's own summary; synthesize a stub from exit
+# code otherwise, so an artifact always exists for a CI reviewer.
+S15_SRC="${SITE_DIR}/test-results/macro-diff-summary.json"
+S15_DST="${ARTIFACTS_DIR}/S15-macro-diff-local-verify.json"
+if [ -f "${S15_SRC}" ]; then
+    cp "${S15_SRC}" "${S15_DST}"
+    echo "    wrote ${S15_DST}"
+else
+    S15_VERDICT="fail"
+    [ "${S15_EXIT}" = "0" ] && S15_VERDICT="pass"
+    cat > "${S15_DST}" <<EOF
+{
+  "gate": "S15-macro-diff",
+  "url": "${PREVIEW_URL}",
+  "exitCode": ${S15_EXIT},
+  "verdict": "${S15_VERDICT}",
+  "spec": "site/tests-e2e/macro-diff.spec.ts",
+  "note": "synthesized: macro-diff spec did not emit test-results/macro-diff-summary.json"
+}
+EOF
+    echo "    synthesized ${S15_DST} (no spec summary; verdict=${S15_VERDICT})"
 fi
 
 # Local mirror of S18-remote-verify.json — same gate, local preview URL. If
@@ -181,11 +211,11 @@ EOF
 fi
 
 # Combine exit codes so any gate failing fails the script.
-GATE_EXIT=$(( S10_EXIT | S11_EXIT | S13_EXIT | S14_EXIT | S18_CTRL_EXIT | S18_CONSOLE_EXIT ))
+GATE_EXIT=$(( S10_EXIT | S11_EXIT | S13_EXIT | S15_EXIT | S14_EXIT | S18_CTRL_EXIT | S18_CONSOLE_EXIT ))
 
 if [ "${GATE_EXIT}" = "0" ]; then
-    echo "=== PASS: local audio + preset-consistency + equivalence + lane-mute + S18 control-audit + console-error gates ==="
+    echo "=== PASS: local audio + preset-consistency + equivalence + macro-diff + lane-mute + S18 control-audit + console-error gates ==="
 else
-    echo "=== FAIL: local gates (S10 exit ${S10_EXIT}, S11 exit ${S11_EXIT}, S13 exit ${S13_EXIT}, S14 lane-mute exit ${S14_EXIT}, S18 control-audit exit ${S18_CTRL_EXIT}, S18 console-error exit ${S18_CONSOLE_EXIT}) ==="
+    echo "=== FAIL: local gates (S10 exit ${S10_EXIT}, S11 exit ${S11_EXIT}, S13 exit ${S13_EXIT}, S15 macro-diff exit ${S15_EXIT}, S14 lane-mute exit ${S14_EXIT}, S18 control-audit exit ${S18_CTRL_EXIT}, S18 console-error exit ${S18_CONSOLE_EXIT}) ==="
 fi
 exit "${GATE_EXIT}"

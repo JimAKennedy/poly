@@ -675,6 +675,14 @@
       // Context, not scenes) so the dump remains deterministic against the
       // preset seed.
       Module._poly_copy_scenes(scratch, engineCtx);
+      // M043 S15 T03: _poly_load_preset above resets scratch's macros to the
+      // preset's baked values, and _poly_copy_scenes only copies scene grooves
+      // (macros live on Context, not Scene). Mirror engineCtx macros into
+      // scratch so any UI edit the user made since preset load reaches the
+      // dump path. Same 6-macro seed as the T02 Play-click path.
+      for (let i = 0; i < 6; i++) {
+        Module._poly_set_macro(scratch, i, Module._poly_macro_value(engineCtx, i));
+      }
 
       // 8 bars in 4/4 = 32 quarter notes (poly_render's ppq axis is quarter
       // notes). Render in 1-bar chunks so we never exceed the engine's
