@@ -481,15 +481,25 @@ test.describe('missing-sample failure surfaces', () => {
     }
   });
 
-  test('wasm host surfaces missing-role when a required sample role has no manifest entry', async ({
+  test('wasm host surfaces missing-note when no manifest entry serves the required MIDI note', async ({
     page,
     context,
   }) => {
-    const record: NegativeSummary = { name: 'wasm-missing-role-kick', pass: false };
+    const record: NegativeSummary = { name: 'wasm-missing-note-36', pass: false };
     negativeSummaries.push(record);
 
+    // Sample-selection parity fix: WASM host now resolves samples by (note,
+    // preferredRole) matching the card. Stripping role='kick' silently falls
+    // back to note 36's cajon entry on both surfaces (that's the shared, by-
+    // design behavior). To exercise a hard miss we strip note 36 from every
+    // entry — same strategy the card negative test above uses.
+    const STRIP_NOTE = 36;
     await stripManifest(context, realManifestText, (m) => {
-      m.samples = m.samples.filter((s: { role?: string }) => s.role !== 'kick');
+      for (const s of m.samples) {
+        if (Array.isArray(s.midiNotes)) {
+          s.midiNotes = s.midiNotes.filter((n: number) => n !== STRIP_NOTE);
+        }
+      }
     });
 
     try {
@@ -533,6 +543,7 @@ test.describe('missing-sample failure surfaces', () => {
         const p = (window as unknown as {
           __polyAudioProbe?: {
             missingRoles?: string[];
+            missingNotes?: number[];
             missingRolesFired?: boolean;
             fallbackActive?: boolean;
             lastError?: string | null;
@@ -540,12 +551,14 @@ test.describe('missing-sample failure surfaces', () => {
         }).__polyAudioProbe;
         return {
           missingRoles: p?.missingRoles ?? [],
+          missingNotes: p?.missingNotes ?? [],
           missingRolesFired: p?.missingRolesFired ?? false,
           fallbackActive: p?.fallbackActive ?? false,
           lastError: p?.lastError ?? null,
         };
       })) as {
         missingRoles: string[];
+        missingNotes: number[];
         missingRolesFired: boolean;
         fallbackActive: boolean;
         lastError: string | null;
@@ -560,13 +573,13 @@ test.describe('missing-sample failure surfaces', () => {
       ).toBe(false);
       expect(wasmProbe.missingRolesFired).toBe(true);
       expect(
-        wasmProbe.missingRoles.includes('kick'),
-        `probe.missingRoles=[${wasmProbe.missingRoles.join(', ')}], expected to include "kick"`,
+        wasmProbe.missingNotes.includes(STRIP_NOTE),
+        `probe.missingNotes=[${wasmProbe.missingNotes.join(', ')}], expected to include ${STRIP_NOTE}`,
       ).toBe(true);
       expect(
         wasmProbe.lastError,
-        `probe.lastError = ${wasmProbe.lastError}, expected /no sample for role "kick"/`,
-      ).toMatch(/no sample for role "kick"/);
+        `probe.lastError = ${wasmProbe.lastError}, expected /no sample for MIDI note ${STRIP_NOTE}/`,
+      ).toMatch(new RegExp(`no sample for MIDI note ${STRIP_NOTE}`));
 
       record.pass = true;
     } catch (err) {

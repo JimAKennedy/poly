@@ -8,7 +8,12 @@ import type {
 
 const DEFAULT_BASE_URL = '/samples/';
 
-function pickEntryForNote(
+// Exported so PolyPreviewCard and the sample-equivalence gate can compute the
+// expected file for a given (note, preferredRole) without duplicating this
+// algorithm. wasm-host.js mirrors this exact 2-step lookup so both surfaces
+// pick the same file for the same lane. Any change here MUST be mirrored in
+// webui/wasm-host.js::pickEntryForNote.
+export function pickEntryForNote(
   manifest: Manifest,
   note: number,
   preferredRole?: string,

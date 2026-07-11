@@ -104,6 +104,18 @@ S13_EXIT=0
        npx playwright test tests-e2e/dump-mode.spec.ts tests-e2e/equivalence.spec.ts --project=chromium) \
     || S13_EXIT=$?
 
+echo "=== Running sample-selection equivalence gate against ${URL} ==="
+SAMPLE_EQ_EXIT=0
+(cd "${SITE_DIR}" \
+    && POLY_SITE_URL="${URL}" \
+       npx playwright test tests-e2e/sample-equivalence.spec.ts --project=chromium) \
+    || SAMPLE_EQ_EXIT=$?
+capture_or_synthesize \
+    "${SITE_DIR}/test-results/sample-equivalence-summary.json" \
+    "${ARTIFACTS_DIR}/sample-equivalence-remote-verify.json" \
+    "sample-equivalence" "${URL}" "${SAMPLE_EQ_EXIT}" \
+    "site/tests-e2e/sample-equivalence.spec.ts"
+
 echo "=== Running S15-S16 macro-diff gate (complexity + density + swing) against ${URL} ==="
 S15_EXIT=0
 (cd "${SITE_DIR}" \
@@ -147,11 +159,11 @@ capture_or_synthesize \
     "S18-console-error" "${URL}" "${S18_CONSOLE_EXIT}" \
     "site/tests-e2e/console-error-gate.spec.ts"
 
-GATE_EXIT=$(( S10_EXIT | S18_WASM_EXIT | S11_EXIT | S13_EXIT | S15_EXIT | S14_EXIT | S18_CTRL_EXIT | S18_CONSOLE_EXIT ))
+GATE_EXIT=$(( S10_EXIT | S18_WASM_EXIT | S11_EXIT | S13_EXIT | SAMPLE_EQ_EXIT | S15_EXIT | S14_EXIT | S18_CTRL_EXIT | S18_CONSOLE_EXIT ))
 
 if [ "${GATE_EXIT}" = "0" ]; then
-    echo "=== PASS: remote audio + WASM freshness + preset-consistency + equivalence + macro-diff (complexity + density + swing) + lane-mute + S18 control-audit + console-error gates ==="
+    echo "=== PASS: remote audio + WASM freshness + preset-consistency + equivalence + sample-equivalence + macro-diff (complexity + density + swing) + lane-mute + S18 control-audit + console-error gates ==="
 else
-    echo "=== FAIL: remote gates (S10 exit ${S10_EXIT}, S18 WASM freshness exit ${S18_WASM_EXIT}, S11 exit ${S11_EXIT}, S13 exit ${S13_EXIT}, S15-S16 macro-diff exit ${S15_EXIT}, S14 lane-mute exit ${S14_EXIT}, S18 control-audit exit ${S18_CTRL_EXIT}, S18 console-error exit ${S18_CONSOLE_EXIT}) ==="
+    echo "=== FAIL: remote gates (S10 exit ${S10_EXIT}, S18 WASM freshness exit ${S18_WASM_EXIT}, S11 exit ${S11_EXIT}, S13 exit ${S13_EXIT}, sample-equivalence exit ${SAMPLE_EQ_EXIT}, S15-S16 macro-diff exit ${S15_EXIT}, S14 lane-mute exit ${S14_EXIT}, S18 control-audit exit ${S18_CTRL_EXIT}, S18 console-error exit ${S18_CONSOLE_EXIT}) ==="
 fi
 exit "${GATE_EXIT}"

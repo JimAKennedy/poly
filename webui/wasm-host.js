@@ -271,6 +271,10 @@
     probe.currentPreset = state.preset;
     probe.laneRoleLabels = laneRoleLabels.slice();
     syncStateFromWasm();
+    // Rebuild sample-selection tables from the new lane set. Safe when
+    // sampleManifest is still null (rebuildSampleSelection guards on it) —
+    // ensureSamplesLoaded calls this again once the manifest is decoded.
+    rebuildSampleSelection();
   }
 
   /* ---------- WebAudio preview voices ---------- */
@@ -288,10 +292,12 @@
   const PLAYBACK_LOOKAHEAD_SEC = 0.14;
   const now8 = () => (playing && ctx ? (ctx.currentTime - startAt) / eighthSec() : 0);
 
-  // Sample-backed playback (M043 S09). Manifest lookup is by role, so we map
-  // each lane's display name to a manifest role. Unmapped names get a benign
-  // default so unusual lane sets still play something; a full manifest failure
-  // flips fallbackActive so E2E can tell "sample path" from "synth rescue".
+  // Sample-backed playback (M043 S09, sample-selection parity fix).
+  // Both surfaces resolve samples by (MIDI note, preferred role) — mirrors
+  // site/src/audio/sample-loader.ts::pickEntryForNote. Old first-hit-per-role
+  // preload picked the wrong sample for any preset whose lane note didn't
+  // match the first manifest entry's note (e.g. Elvin Jones note-51 cymbal
+  // silently played china instead of ride).
   const NAME_TO_ROLE = {
     'kick': 'kick', 'bass': 'kick', 'davul': 'kick', 'surdo': 'kick',
     'mrid bass': 'kick', 'fixed': 'kick',
@@ -308,18 +314,6 @@
   };
   const DEFAULT_ROLE = 'hat';
 
-  // Role aliases for presets whose roleLabel doesn't have a matching manifest
-  // entry. Mirrors the card runtime's note-based fallback (createSampleLoader
-  // falls back to any entry whose midiNotes includes the requested note, which
-  // implicitly resolves clap→handclap etc.). Without this the WASM host would
-  // silently synth-fallback for every clap/openhat/rim lane while the card is
-  // audibly playing samples for the same chapter.
-  const ROLE_ALIASES = {
-    clap: 'handclap',
-    openhat: 'hat',
-    rim: 'snare',
-  };
-
   function roleForLaneName(name, laneIdx) {
     // Prefer the engine's per-lane roleLabel (from presets.json) when available.
     // Falls back to the name→role table for synthetic/init lanes that never
@@ -330,7 +324,68 @@
     return NAME_TO_ROLE[(name || '').toLowerCase().trim()] || DEFAULT_ROLE;
   }
 
-  const buffersByRole = new Map();
+  // Every manifest entry decoded once, keyed by file. Selection at voice time
+  // resolves file → buffer via buffersByFile.get(file). Card's sample-loader
+  // caches per-file too (bufferCache in createSampleLoader).
+  const buffersByFile = new Map();
+  // Full manifest kept for pickEntryForNote(). Null until ensureSamplesLoaded
+  // completes; guard callers accordingly.
+  let sampleManifest = null;
+  // Per-preset (rebuilt in applyPreset from state.lanes + laneRoleLabels):
+  // preferredRolesByNote[note] = preferredRole. Same construction as the card
+  // (first lane's role wins on collision). noteToFileCache memoises the file
+  // pickEntryForNote resolves for each note.
+  const preferredRolesByNote = new Map();
+  const noteToFileCache = new Map();
+
+  // Mirrors site/src/audio/sample-loader.ts::pickEntryForNote. Keep in sync.
+  function pickEntryForNote(manifest, note, preferredRole) {
+    if (!manifest || !Array.isArray(manifest.samples)) return null;
+    if (preferredRole) {
+      const roleMatch = manifest.samples.find(
+        (entry) => entry.role === preferredRole
+                && Array.isArray(entry.midiNotes)
+                && entry.midiNotes.includes(note),
+      );
+      if (roleMatch) return roleMatch;
+    }
+    return manifest.samples.find(
+      (entry) => Array.isArray(entry.midiNotes) && entry.midiNotes.includes(note),
+    ) || null;
+  }
+
+  function pickFileForNote(note) {
+    if (noteToFileCache.has(note)) return noteToFileCache.get(note);
+    const preferredRole = preferredRolesByNote.get(note);
+    const entry = pickEntryForNote(sampleManifest, note, preferredRole);
+    const file = entry ? entry.file : null;
+    noteToFileCache.set(note, file);
+    return file;
+  }
+
+  // Rebuild preferredRolesByNote + noteToFileCache after applyPreset() so the
+  // next Play resolves lanes against the newly-loaded preset's notes. Called
+  // at the end of applyPreset, after syncStateFromWasm has populated
+  // state.lanes with post-preset lane data.
+  function rebuildSampleSelection() {
+    preferredRolesByNote.clear();
+    noteToFileCache.clear();
+    probe.sampleFilesByNote = {};
+    for (let i = 0; i < state.lanes.length; i++) {
+      const lane = state.lanes[i];
+      if (!lane) continue;
+      const note = lane.note | 0;
+      const role = roleForLaneName(lane.name, i);
+      if (!preferredRolesByNote.has(note)) preferredRolesByNote.set(note, role);
+    }
+    // Eagerly resolve file per note so the sample-equivalence gate can read
+    // probe.sampleFilesByNote without waiting for playback. Cached values will
+    // be reused by pickFileForNote at voice time.
+    for (const [note] of preferredRolesByNote) {
+      const file = pickFileForNote(note);
+      if (file) probe.sampleFilesByNote[note] = file;
+    }
+  }
   // S11 T06 extends the probe with:
   //   - missingRoles / missingRolesFired / lastError: first CI-observable
   //     signal that sampleVoice() fell through to synthVoice(); only populated
@@ -355,10 +410,24 @@
     playing: false,
     fallbackActive: false,
     laneRoleLabels: [],
+    // A "missing role" here means: preferredRole did not match any manifest
+    // entry AND there was no note-level fallback. Under the sample-selection
+    // parity fix, single-role manifest gaps that DO have a note-level fallback
+    // are silently resolved (matches the card's pickEntryForNote behavior);
+    // only true hard misses populate this field.
     missingRoles: [],
     missingRolesFired: false,
+    // Per-note hard misses — populated when pickFileForNote returns null (no
+    // entry matches the requested note at all). Consumed by the S11 negative
+    // test to prove note-stripped manifests surface an error.
+    missingNotes: [],
     lastError: null,
     measuredRmsDb: -Infinity,
+    // Sample-selection equivalence probe: { [midiNote]: file } populated by
+    // rebuildSampleSelection() at applyPreset time. The sample-equivalence
+    // gate asserts these match the card's PolyAudioProbe.sampleFilesByNote for
+    // every lane in every preset — proves both surfaces pick the same file.
+    sampleFilesByNote: {},
   };
   window.__polyAudioProbe = probe;
   let samplesPromise = null;
@@ -437,25 +506,32 @@
         const res = await fetch(base + 'manifest.json');
         if (!res.ok) throw new Error(`manifest ${res.status}`);
         const manifest = await res.json();
+        sampleManifest = manifest;
 
-        // One sample per role — first-hit wins the slot.
-        const roleToFile = {};
+        // Decode every unique file in the manifest so pickEntryForNote can
+        // pick any (note, role) match at voice time — same reachability the
+        // card's per-note bufferCache offers but eagerly warmed.
+        const files = new Set();
         for (const s of manifest.samples || []) {
-          if (s.role && !roleToFile[s.role]) roleToFile[s.role] = s.file;
+          if (s && typeof s.file === 'string') files.add(s.file);
         }
-        await Promise.all(Object.entries(roleToFile).map(async ([role, file]) => {
+        await Promise.all(Array.from(files).map(async (file) => {
           try {
             const r = await fetch(base + file);
             if (!r.ok) throw new Error(`fetch ${file} -> ${r.status}`);
             const buf = await r.arrayBuffer();
             const audio = await ctx.decodeAudioData(buf);
-            buffersByRole.set(role, audio);
+            buffersByFile.set(file, audio);
             probe.samplesLoaded++;
           } catch (e) {
             console.warn('[wasm-host] sample skipped:', file, e.message);
           }
         }));
-        if (buffersByRole.size === 0) throw new Error('no samples decoded');
+        if (buffersByFile.size === 0) throw new Error('no samples decoded');
+        // Now that samples exist, resolve sampleFilesByNote for the currently
+        // loaded preset — rebuildSampleSelection may have run before samples
+        // decoded, so the eager map may be stale on cold start.
+        rebuildSampleSelection();
       } catch (e) {
         console.warn('[wasm-host] manifest load failed, synth fallback active:', e.message);
         probe.fallbackActive = true;
@@ -474,23 +550,29 @@
     return _nb;
   }
 
-  function sampleVoice(role, when, v) {
-    let buf = buffersByRole.get(role);
-    if (!buf && role && ROLE_ALIASES[role]) {
-      buf = buffersByRole.get(ROLE_ALIASES[role]);
-    }
+  function sampleVoice(note, role, when, v) {
+    const file = pickFileForNote(note);
+    const buf = file ? buffersByFile.get(file) : null;
     if (!buf) {
-      // S11 T06: only populate missing-role probe fields when samples have
-      // finished loading (samplesReady) AND we're NOT in the manifest-total-
-      // failure branch (fallbackActive). Guard 1 avoids double-attributing
-      // cold-start races; guard 2 avoids double-attributing the fallback that
-      // the S10 gate already catches.
-      if (samplesReady && !probe.fallbackActive && role) {
-        if (!probe.missingRoles.includes(role)) probe.missingRoles.push(role);
+      // Two guards mirror the pre-fix logic:
+      //   samplesReady — cold-start voices fire before manifest decode
+      //   completes; ignore those so the miss isn't double-attributed.
+      //   !fallbackActive — the manifest-total-failure branch is already
+      //   surfaced by the S10 gate; don't double-count.
+      if (samplesReady && !probe.fallbackActive) {
+        if (!probe.missingNotes.includes(note)) probe.missingNotes.push(note);
+        if (role && !probe.missingRoles.includes(role)) probe.missingRoles.push(role);
         probe.missingRolesFired = true;
-        probe.lastError = `no sample for role "${role}"`;
+        // Same error format as site/src/audio/sample-loader.ts:91 — lets the
+        // negative test assert one pattern against both surfaces.
+        probe.lastError = `no sample for MIDI note ${note}`;
       }
       return false;
+    }
+    // Remember what actually fired so the sample-equivalence gate can compare
+    // against the card without needing a probe on every note-on.
+    if (!(note in probe.sampleFilesByNote) && file) {
+      probe.sampleFilesByNote[note] = file;
     }
     const src = ctx.createBufferSource();
     const g = ctx.createGain();
@@ -549,9 +631,11 @@
 
   function voice(l, li, when, v) {
     // v is the shaped velocity in [0,1]; the card scheduler uses raw
-    // velocity/127 with no attenuation. Match its staging.
+    // velocity/127 with no attenuation. Match its staging. Resolution keys on
+    // the lane's MIDI note first + preferred role second — same shape as the
+    // card's pickEntryForNote(note, preferredRole).
     const role = roleForLaneName(l.name, li);
-    if (sampleVoice(role, when, v)) return;
+    if (sampleVoice(l.note | 0, role, when, v)) return;
     synthVoice(l, when, v);
   }
 
@@ -774,9 +858,11 @@
     playing = !playing;
     probe.playing = playing;
     if (playing) {
-      // Reset per-run probe fields (missing-role, RMS). fallbackActive is
-      // NOT reset — it's a one-way sticky flag set by ensureSamplesLoaded.
+      // Reset per-run probe fields (missing-role, missing-note, RMS).
+      // fallbackActive is NOT reset — it's a one-way sticky flag set by
+      // ensureSamplesLoaded when the manifest itself fails to load.
       probe.missingRoles = [];
+      probe.missingNotes = [];
       probe.missingRolesFired = false;
       probe.lastError = null;
       startAt = ctx ? ctx.currentTime + 0.06 : 0;
