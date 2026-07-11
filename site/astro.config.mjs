@@ -5,6 +5,9 @@ import starlight from '@astrojs/starlight';
 export default defineConfig({
 	site: 'https://jimakennedy.github.io',
 	base: '/poly',
+	redirects: {
+		'/appendix-architecture': '/poly/appendix-plugin-architecture',
+	},
 	integrations: [
 		starlight({
 			title: 'Poly Guide',
@@ -87,8 +90,16 @@ export default defineConfig({
 							slug: 'appendix-parameters',
 						},
 						{
-							label: 'Architecture',
-							slug: 'appendix-architecture',
+							label: 'Plugin Architecture',
+							slug: 'appendix-plugin-architecture',
+						},
+						{
+							label: 'Website Architecture',
+							slug: 'appendix-website-architecture',
+						},
+						{
+							label: 'Testing Architecture',
+							slug: 'appendix-testing-architecture',
 						},
 						{
 							label: 'Design Decisions',
