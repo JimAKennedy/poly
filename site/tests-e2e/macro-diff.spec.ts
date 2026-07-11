@@ -414,7 +414,7 @@ test.afterAll(() => {
   const pass = cases.filter((c) => c.pass).length;
   const fail = cases.length - pass;
   const summary = {
-    gate: 'S15-macro-diff',
+    gate: 'S15-S16-macro-diff',
     verdict: fail === 0 && cases.length > 0 ? 'pass' : 'fail',
     caseCount: cases.length,
     passCount: pass,
@@ -457,7 +457,7 @@ const CASES: Case[] = [
   },
 ];
 
-test.describe('S15 macro-diff — user macro edits reach the Try It dump path', () => {
+test.describe('S15-S16 macro-diff — complexity + density + swing reach the Try It dump path', () => {
   for (const c of CASES) {
     test(`[${c.preset}] macro.${c.macro}=0 and =1 produce different SMFs`, async ({
       page,

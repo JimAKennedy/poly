@@ -104,7 +104,7 @@ S13_EXIT=0
        npx playwright test tests-e2e/dump-mode.spec.ts tests-e2e/equivalence.spec.ts --project=chromium) \
     || S13_EXIT=$?
 
-echo "=== Running S15 macro-diff gate against ${URL} ==="
+echo "=== Running S15-S16 macro-diff gate (complexity + density + swing) against ${URL} ==="
 S15_EXIT=0
 (cd "${SITE_DIR}" \
     && POLY_SITE_URL="${URL}" \
@@ -113,7 +113,7 @@ S15_EXIT=0
 capture_or_synthesize \
     "${SITE_DIR}/test-results/macro-diff-summary.json" \
     "${ARTIFACTS_DIR}/S15-macro-diff-remote-verify.json" \
-    "S15-macro-diff" "${URL}" "${S15_EXIT}" \
+    "S15-S16-macro-diff" "${URL}" "${S15_EXIT}" \
     "site/tests-e2e/macro-diff.spec.ts"
 
 echo "=== Running S14 lane-mute gate against ${URL} ==="
@@ -150,8 +150,8 @@ capture_or_synthesize \
 GATE_EXIT=$(( S10_EXIT | S18_WASM_EXIT | S11_EXIT | S13_EXIT | S15_EXIT | S14_EXIT | S18_CTRL_EXIT | S18_CONSOLE_EXIT ))
 
 if [ "${GATE_EXIT}" = "0" ]; then
-    echo "=== PASS: remote audio + WASM freshness + preset-consistency + equivalence + macro-diff + lane-mute + S18 control-audit + console-error gates ==="
+    echo "=== PASS: remote audio + WASM freshness + preset-consistency + equivalence + macro-diff (complexity + density + swing) + lane-mute + S18 control-audit + console-error gates ==="
 else
-    echo "=== FAIL: remote gates (S10 exit ${S10_EXIT}, S18 WASM freshness exit ${S18_WASM_EXIT}, S11 exit ${S11_EXIT}, S13 exit ${S13_EXIT}, S15 macro-diff exit ${S15_EXIT}, S14 lane-mute exit ${S14_EXIT}, S18 control-audit exit ${S18_CTRL_EXIT}, S18 console-error exit ${S18_CONSOLE_EXIT}) ==="
+    echo "=== FAIL: remote gates (S10 exit ${S10_EXIT}, S18 WASM freshness exit ${S18_WASM_EXIT}, S11 exit ${S11_EXIT}, S13 exit ${S13_EXIT}, S15-S16 macro-diff exit ${S15_EXIT}, S14 lane-mute exit ${S14_EXIT}, S18 control-audit exit ${S18_CTRL_EXIT}, S18 console-error exit ${S18_CONSOLE_EXIT}) ==="
 fi
 exit "${GATE_EXIT}"
