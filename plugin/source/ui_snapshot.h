@@ -7,6 +7,7 @@
 
 namespace poly {
 
+// region:ui-snapshot
 // Per-instance UI snapshot shared between the processor (audio thread writer)
 // and the controller/web view (UI thread reader). Each plugin instance gets
 // its own UISnapshot — no globals, no multi-instance crosstalk.
@@ -24,5 +25,6 @@ struct UISnapshot {
     SceneState state{};
     std::atomic<bool> stateReady{false};
 };
+// endregion:ui-snapshot
 
 } // namespace poly

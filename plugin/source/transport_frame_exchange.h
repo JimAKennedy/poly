@@ -6,6 +6,7 @@
 
 namespace poly {
 
+// region:transport-frame-exchange
 // Lock-free transport frame shared between the processor (audio thread writer)
 // and the web UI view (UI thread reader). Bypasses the host's output parameter
 // relay which some hosts only activate when the editor has VSTGUI bindings.
@@ -18,6 +19,7 @@ struct TransportFrameExchange {
     std::atomic<bool> playing{false};
     std::atomic<double> lanePhases[kMaxLanes]{};
 };
+// endregion:transport-frame-exchange
 
 inline TransportFrameExchange& sharedTransportFrame() {
     static TransportFrameExchange instance;

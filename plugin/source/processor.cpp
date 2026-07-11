@@ -165,6 +165,7 @@ void PolyProcessor::emitMidiOutput(Steinberg::Vst::IEventList* outputEvents, Ste
         outputEvents->addEvent(ev);
     }
 
+    // region:emit-note-on
     for (size_t i = 0; i < noteBuffer_.count; ++i) {
         const auto& note = noteBuffer_.events[i];
 
@@ -186,6 +187,7 @@ void PolyProcessor::emitMidiOutput(Steinberg::Vst::IEventList* outputEvents, Ste
             .channel = note.channel,
         });
     }
+    // endregion:emit-note-on
 }
 
 static void outputLaneVisualization(Steinberg::Vst::IParameterChanges* outParams, const LaneConfig& cfg, int lane,
@@ -421,6 +423,7 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
         sceneState_.select = chainState_.update(sceneState_.chain, tc_.ppqStart);
     }
 
+    // region:process-render
     GrooveState base;
     if (sceneState_.select == SceneSelect::Morph) {
         base = interpolateGrooveState(sceneState_.sceneA, sceneState_.sceneB, sceneState_.morphAmount);
@@ -438,6 +441,7 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
 
     GrooveState resolved = resolveConstraints(base, resolveMacros(base));
     engine_.renderRange(tc_, resolved, noteBuffer_);
+    // endregion:process-render
 
     if (!data.outputEvents)
         return Steinberg::kResultOk;
@@ -816,6 +820,7 @@ Steinberg::tresult PLUGIN_API PolyProcessor::notify(Steinberg::Vst::IMessage* me
     return AudioEffect::notify(message);
 }
 
+// region:get-set-state
 Steinberg::tresult PLUGIN_API PolyProcessor::getState(Steinberg::IBStream* state) {
     if (!state)
         return Steinberg::kInvalidArgument;
@@ -848,5 +853,6 @@ Steinberg::tresult PLUGIN_API PolyProcessor::setState(Steinberg::IBStream* state
     stateReady_.store(true, std::memory_order_release);
     return Steinberg::kResultOk;
 }
+// endregion:get-set-state
 
 } // namespace poly

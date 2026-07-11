@@ -32,6 +32,10 @@ Poly is split into two libraries with a strict isolation boundary: a pure C++ en
 
 The plugin layer feeds the engine two things: the current transport state (`TransportContext`) and the resolved patch settings (`GrooveState`). The engine returns a buffer of `NoteEvent` objects. The plugin writes those events to the VST3 output `IEventList`. That is the entire interface.
 
+The engine exposes a single entry point — a stateless function from transport plus groove state to a bounded buffer of notes.
+
+<CodeSnippet file="engine/include/poly/engine.h" region="render-range" caption="Engine's public surface — one method, three arguments, no shared state" />
+
 ## Repository Structure
 
 ```
@@ -68,9 +72,19 @@ The DAW calls `PolyProcessor::process()` on the audio thread at each buffer cycl
 
 The VSTGUI editor runs on the UI thread. It reads parameter values for display (knob positions, lane states, visualization data) and writes parameter changes when the user interacts with controls. Communication between threads uses the VST3 parameter system — no custom locks or message queues.
 
+### Audio ↔ UI Handoff
+
+For visualization (playhead, lane phases) and state read-back, the processor writes into a per-instance `UISnapshot`. Transport fields are individually atomic; the full `SceneState` uses a flag-guarded single-copy exchange so the audio thread never blocks and the UI thread reads a consistent snapshot.
+
+<CodeSnippet file="plugin/source/ui_snapshot.h" region="ui-snapshot" caption="Per-instance atomic snapshot — no globals, no locks, no multi-instance crosstalk" />
+
+For the web UI, which reads visualization state 30 times per second without touching the VST3 parameter relay, a smaller lock-free `TransportFrameExchange` carries just the fields the visualizer needs.
+
+<CodeSnippet file="plugin/source/transport_frame_exchange.h" region="transport-frame-exchange" caption="Lock-free transport frame — atomic per field, tolerant of cross-field staleness at 30fps" />
+
 ### No Message-Passing Layer
 
-Unlike some plugin architectures that use ring buffers or lock-free queues between threads, Poly's engine is stateless — it derives everything from the current transport position and patch state. There is no accumulated state to synchronize. The `GrooveState` is read atomically by the audio thread; parameter changes from the UI thread flow through the VST3 parameter system, which handles thread safety.
+Unlike some plugin architectures that use ring buffers or lock-free queues between threads, Poly's engine is stateless — it derives everything from the current transport position and patch state. There is no accumulated state to synchronize. The `SceneState` is read atomically by the audio thread; parameter changes from the UI thread flow through the VST3 parameter system, which handles thread safety.
 
 ## Processing Pipeline
 
@@ -88,6 +102,8 @@ Three pattern modes are supported:
 ### 2. Macro Resolution
 
 The six macro knobs (Complexity, Density, Syncopation, Swing, Tension, Humanize) are resolved into concrete per-lane parameter modifications. Each macro influences multiple parameters coherently — for example, Density scales hit count, probability, and activation envelopes together, not as independent multiplies.
+
+<CodeSnippet file="engine/include/poly/types.h" region="macro-values" caption="Six macro knobs — the human-facing knobs before resolution into per-lane parameters" />
 
 Macro transitions are smoothed over ~400ms using an exponential moving average to prevent audible discontinuities when knobs are turned.
 
@@ -121,64 +137,27 @@ Hit candidates that survive all pipeline stages become `NoteEvent` objects with 
 
 ### LaneConfig
 
-Defines a single rhythmic lane — the fundamental unit of pattern generation.
+Defines a single rhythmic lane — the fundamental unit of pattern generation. Every knob on a lane strip maps to one field here.
 
-```cpp
-struct LaneConfig {
-    int hitCount = 4;            // Euclidean pulses
-    Cycle cycle{};               // steps + subdivision
-    float probability = 1.0f;    // per-step trigger chance
-    float tempoMultiplier = 1.0f;// per-lane tempo scaling
-    int kotekanSourceLane = -1;  // Balinese interlocking source
-    bool timeline = false;       // fixed pattern mode
-    // ... velocity, humanize, envelope assignments
-};
-```
+<CodeSnippet file="engine/include/poly/types.h" region="lane-config" caption="LaneConfig — the full per-lane parameter set, including Euclidean geometry, humanization, additive cells, timeline mode, envelopes, and constraints" />
 
 ### TransportContext
 
-Carries the DAW's current transport state into the engine.
+Carries the DAW's current transport state into the engine. The engine derives every phase-related quantity from `ppqStart`/`ppqEnd` — nothing is accumulated between calls.
 
-```cpp
-struct TransportContext {
-    double ppqStart;       // start of this buffer in PPQ
-    double ppqEnd;         // end of this buffer in PPQ
-    double tempo;          // current BPM
-    double sampleRate;
-    bool isPlaying;
-    bool isLooping;
-    double loopStartPpq;
-    double loopEndPpq;
-};
-```
-
-### GrooveState
-
-The complete serializable patch — everything the engine needs to produce output.
-
-```cpp
-struct GrooveState {
-    std::array<LaneConfig, 8> lanes;
-    std::vector<Envelope> globalEnvelopes;
-    MacroValues macros;
-    uint64_t seed;
-    // ... scene state, constraints
-};
-```
+<CodeSnippet file="engine/include/poly/types.h" region="transport-context" caption="TransportContext — what the DAW tells the engine on every process() call" />
 
 ### NoteEvent
 
-A single MIDI note event produced by the engine.
+A single MIDI note event produced by the engine. Positions are absolute PPQ; the plugin layer converts to VST3 sample offsets at emission time.
 
-```cpp
-struct NoteEvent {
-    double ppqPosition;    // absolute PPQ time
-    int pitch;             // MIDI note number (0-127)
-    float velocity;        // 0.0-1.0
-    float duration;        // in PPQ
-    int channel;           // MIDI channel (0-15)
-};
-```
+<CodeSnippet file="engine/include/poly/types.h" region="note-event" caption="NoteEvent — engine output, PPQ-timed and DAW-agnostic" />
+
+### GrooveState
+
+The complete serializable patch — everything the engine needs to produce output. Two of these live inside a `SceneState` (Scene A and Scene B), interpolated by `interpolateGrooveState()` when the plugin is in Morph mode.
+
+<CodeSnippet file="engine/include/poly/types.h" region="groove-state" caption="GrooveState — 8 lanes, up to 8 global envelopes, macro values, a deterministic seed, and a density ceiling" />
 
 ### Scene System
 
@@ -200,13 +179,33 @@ This determinism means loop restarts, tempo changes, and position jumps all prod
 
 ## Plugin Bridge
 
-`PolyProcessor` (the VST3 `AudioEffect` subclass) is deliberately thin:
+`PolyProcessor` (the VST3 `AudioEffect` subclass) is deliberately thin: it drains parameter changes, selects (or interpolates) a scene, smooths macros, resolves constraints, and calls the engine. The audio-thread inner loop is only a dozen lines.
 
-1. **Constructor** — initializes 8 default lanes with drum kit roles (Kick, Snare, HH Closed, HH Open, Tom Hi, Tom Lo, Ride, Crash)
-2. **`process()`** — reads transport, resolves parameters, calls `Engine::renderRange()`, writes events to VST3 output, updates capture buffer
-3. **`getState()`/`setState()`** — versioned binary serialization with forward migration
+<CodeSnippet file="plugin/source/processor.cpp" region="process-render" caption="Audio-thread render pipeline — scene select → macro smoothing → resolve → engine" />
+
+The engine's output is a compact buffer of PPQ-timed `NoteEvent` structs. Converting each one to a VST3 event with the correct sample offset — and scheduling a matching note-off — is the second half of `process()`.
+
+<CodeSnippet file="plugin/source/processor.cpp" region="emit-note-on" caption="VST3 event emission — PPQ → sample offset, note-on now, note-off queued for later" />
 
 The processor contains no musical logic. It translates between VST3's data structures and the engine's domain types, nothing more. This is what makes the engine fully testable without a DAW.
+
+## State Serialization
+
+Presets and DAW project state travel through `getState()` / `setState()`. The first `int32` of every serialized blob is a version number; the reader branches on it so older presets keep loading as the format evolves.
+
+<CodeSnippet file="engine/include/poly/state_io.h" region="state-version" caption="The version prefix that every serialized SceneState starts with" />
+
+<CodeSnippet file="plugin/source/processor.cpp" region="get-set-state" caption="getState/setState — writeSceneState prepends the version; readSceneState validates it before dispatching to a version-specific body reader" />
+
+`setState()` never mutates `sceneState_` directly — it writes into `pendingState_` and flips an atomic flag. The audio thread picks up the new state at the top of the next `process()` call, so preset loads never race with rendering.
+
+## Webview UI Bridge
+
+The web UI runs in a webview inside the plugin editor. State flows to the webview as JSON — the bridge serializes the current `GrooveState` + `SceneState` and posts it to the JS layer, which drives every knob, lane strip, and visualization.
+
+<CodeSnippet file="plugin/source/webui/bridge_serialization.h" region="groove-state-to-json" caption="Bridge entry point — full groove/scene snapshot to a single JSON string" />
+
+Serialization runs on the UI thread against the flag-guarded `UISnapshot`, never against the live audio-thread state. Parameter edits flow the other way through the VST3 parameter system, which handles thread safety.
 
 ## Test Architecture
 
@@ -218,4 +217,4 @@ The test suite runs entirely off-host using Google Test:
 - **UI interaction tests** — headless VSTGUI host verifying control behavior
 - **Visual regression tests** — pixel comparison of rendered UI (platform-specific baselines)
 
-All tests except visual regression are deterministic and platform-independent.
+All tests except visual regression are deterministic and platform-independent. The website and testing appendices go deeper into how each layer is wired up.
