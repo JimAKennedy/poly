@@ -41,6 +41,11 @@ repos:
         entry: scripts/check-realtime-safety.sh
         language: script
         pass_filenames: false
+      - id: check-snippet-regions
+        name: Check CodeSnippet region markers exist
+        entry: scripts/check-snippet-regions.sh
+        language: script
+        pass_filenames: false
       - id: pre-push-check
         name: Pre-push quality gate
         entry: scripts/pre-push-check.sh
@@ -49,4 +54,4 @@ repos:
         stages: [pre-push]
 
 ci:
-  skip: [check-pragma-once, check-realtime-safety, pre-push-check]
+  skip: [check-pragma-once, check-realtime-safety, check-snippet-regions, pre-push-check]
