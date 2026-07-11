@@ -53,7 +53,8 @@ The pre-push hook (`scripts/pre-push-check.sh`) enforces quality checks automati
 1. **Blocks direct pushes to main** — use a feature branch and PR instead
 2. **clang-format** on all C++ files
 3. **RT safety** — `scripts/check-realtime-safety.sh`
-4. **Build + tests** — `cmake --build build && ctest --test-dir build`
+4. **CodeSnippet region markers** — `scripts/check-snippet-regions.sh`
+5. **Build + tests** — `cmake --build build && ctest --test-dir build`
 
 Install via: `pre-commit install -t pre-push`
 Bypass for emergencies: `git push --no-verify`

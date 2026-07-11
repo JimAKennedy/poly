@@ -22,19 +22,25 @@ done
 
 echo "=== Pre-push quality checks ==="
 
-echo "[1/3] clang-format..."
+echo "[1/4] clang-format..."
 if ! pre-commit run clang-format --all-files; then
     echo "FAIL: clang-format found formatting issues."
     FAILED=1
 fi
 
-echo "[2/3] RT safety..."
+echo "[2/4] RT safety..."
 if ! scripts/check-realtime-safety.sh; then
     echo "FAIL: RT safety check failed."
     FAILED=1
 fi
 
-echo "[3/3] Build + test..."
+echo "[3/4] CodeSnippet region markers..."
+if ! scripts/check-snippet-regions.sh; then
+    echo "FAIL: CodeSnippet region check failed."
+    FAILED=1
+fi
+
+echo "[4/4] Build + test..."
 if ! cmake --build build --config Release --parallel 2>/dev/null; then
     echo "FAIL: Build failed."
     FAILED=1
