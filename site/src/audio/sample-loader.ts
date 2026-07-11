@@ -8,6 +8,7 @@ import type {
 
 const DEFAULT_BASE_URL = '/samples/';
 
+// region:pick-entry-for-note
 // Exported so PolyPreviewCard and the sample-equivalence gate can compute the
 // expected file for a given (note, preferredRole) without duplicating this
 // algorithm. wasm-host.js mirrors this exact 2-step lookup so both surfaces
@@ -27,6 +28,7 @@ export function pickEntryForNote(
   }
   return manifest.samples.find((entry) => entry.midiNotes.includes(note));
 }
+// endregion:pick-entry-for-note
 
 function joinUrl(baseUrl: string, file: string): string {
   const trimmedBase = baseUrl.endsWith('/') ? baseUrl : `${baseUrl}/`;

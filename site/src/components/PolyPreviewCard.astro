@@ -369,6 +369,7 @@ const { preset, caption } = Astro.props;
       const entry = pickEntryForNote(manifest, note, role);
       if (entry) audioProbe.sampleFilesByNote[note] = entry.file;
     }
+    // region:card-play-wiring
     const loader = createSampleLoader({
       manifest,
       context: ctx,
@@ -391,6 +392,7 @@ const { preset, caption } = Astro.props;
         audioProbe.scheduledNoteBeats.push(event.beat);
       },
     });
+    // endregion:card-play-wiring
     activeScheduler = scheduler;
     activeCard = card;
     // Equivalence-spec dump path. Runs synchronously on Play click so the
