@@ -4,8 +4,10 @@
 #include <array>
 #include <cstdint>
 
+#include "poly/constraint.h"
 #include "poly/engine.h"
 #include "poly/euclidean.h"
+#include "poly/macro.h"
 #include "poly/presets.h"
 #include "poly/sanitize.h"
 #include "poly/scene.h"
@@ -137,13 +139,19 @@ int poly_render(PolyContext ctx, double ppqStart, double ppqEnd, double tempo, d
     // both scenes rather than falling back to scene A. Mirrors the plugin's
     // process() path (processor.cpp:425-431) so the audible playback and the
     // eventual VST render agree on what Morph means.
+    // M043 S15 T01: resolve macros + constraints before rendering, matching
+    // processor.cpp:439. Preset-baked macros (complexity/density/etc.) only
+    // affect output through resolveMacros; without this, moving a macro
+    // slider or loading a preset with non-default macro values changes
+    // nothing on the site's Play or Try It surfaces.
+    poly::GrooveState base;
     if (c->scenes.select == poly::SceneSelect::Morph) {
-        poly::GrooveState morphed =
-            poly::interpolateGrooveState(c->scenes.sceneA, c->scenes.sceneB, c->scenes.morphAmount);
-        c->engine.renderRange(tc, morphed, c->eventBuffer);
+        base = poly::interpolateGrooveState(c->scenes.sceneA, c->scenes.sceneB, c->scenes.morphAmount);
     } else {
-        c->engine.renderRange(tc, c->state(), c->eventBuffer);
+        base = c->state();
     }
+    poly::GrooveState resolved = poly::resolveConstraints(base, poly::resolveMacros(base));
+    c->engine.renderRange(tc, resolved, c->eventBuffer);
 
     for (size_t i = 0; i < c->eventBuffer.count; ++i) {
         const auto& e = c->eventBuffer.events[i];

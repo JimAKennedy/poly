@@ -1558,7 +1558,7 @@ GrooveState makeRileyLayers() {
     auto& voiceB = s.lanes[2];
     voiceB.id = 2;
     voiceB.role = Role::Shimmer;
-    voiceB.midiNote = 45;
+    voiceB.midiNote = 56;
     voiceB.cycle = {10, 8};
     voiceB.hitCount = 6;
     voiceB.baseVelocity = 75;
@@ -1570,7 +1570,7 @@ GrooveState makeRileyLayers() {
     auto& voiceC = s.lanes[3];
     voiceC.id = 3;
     voiceC.role = Role::Ghost;
-    voiceC.midiNote = 47;
+    voiceC.midiNote = 60;
     voiceC.cycle = {7, 8};
     voiceC.hitCount = 4;
     voiceC.baseVelocity = 70;
@@ -1582,7 +1582,7 @@ GrooveState makeRileyLayers() {
     auto& voiceD = s.lanes[4];
     voiceD.id = 4;
     voiceD.role = Role::Ornament;
-    voiceD.midiNote = 50;
+    voiceD.midiNote = 76;
     voiceD.cycle = {9, 4};
     voiceD.hitCount = 3;
     voiceD.baseVelocity = 65;
