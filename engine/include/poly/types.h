@@ -17,6 +17,7 @@ static constexpr size_t kMaxEventsPerBlock = 256;
 
 // --- Transport ---
 
+// region:transport-context
 struct TransportContext {
     double ppqStart = 0.0;
     double ppqEnd = 0.0;
@@ -29,9 +30,11 @@ struct TransportContext {
     double loopStartPpq = 0.0;
     double loopEndPpq = 0.0;
 };
+// endregion:transport-context
 
 // --- Note Output ---
 
+// region:note-event
 struct NoteEvent {
     double ppqPosition = 0.0;
     int16_t pitch = 0;
@@ -40,6 +43,7 @@ struct NoteEvent {
     int16_t channel = 0;
     int16_t laneIndex = 0;
 };
+// endregion:note-event
 
 struct NoteEventBuffer {
     std::array<NoteEvent, kMaxEventsPerBlock> events{};
@@ -118,6 +122,7 @@ struct ConstraintConfig {
 
 // --- Lane Config ---
 
+// region:lane-config
 struct LaneConfig {
     int id = 0;
     Role role = Role::Custom;
@@ -155,6 +160,7 @@ struct LaneConfig {
     int envelopeCount = 0;
     ConstraintConfig constraints{};
 };
+// endregion:lane-config
 
 // --- Additive cell helpers ---
 
@@ -181,6 +187,7 @@ inline AdditiveCellInfo computeAdditiveCells(const LaneConfig& cfg) {
 
 // --- Macros ---
 
+// region:macro-values
 struct MacroValues {
     float complexity = 0.5f;
     float density = 0.5f;
@@ -189,6 +196,7 @@ struct MacroValues {
     float tension = 0.0f;
     float humanize = 0.0f;
 };
+// endregion:macro-values
 
 // --- Note Map (global output pitch remapping) ---
 
@@ -214,6 +222,7 @@ struct NoteMap {
 
 // --- Groove State (full serializable patch) ---
 
+// region:groove-state
 struct GrooveState {
     std::array<LaneConfig, kMaxLanes> lanes{};
     int activeLaneCount = 4;
@@ -223,5 +232,6 @@ struct GrooveState {
     uint64_t seed = 0;
     int globalDensityCeiling = 0;
 };
+// endregion:groove-state
 
 } // namespace poly
