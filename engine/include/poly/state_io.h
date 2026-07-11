@@ -9,7 +9,9 @@
 
 namespace poly {
 
+// region:state-version
 static constexpr int32_t kCurrentStateVersion = 15;
+// endregion:state-version
 
 // --- Envelope serialization helpers ---
 
