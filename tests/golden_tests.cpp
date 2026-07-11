@@ -117,6 +117,7 @@ std::string serialize(const std::vector<EventRecord>& events) {
 } // namespace
 
 // --- Test 1: Same patch+seed reproduces identical output ---
+// region:same-patch-same-seed
 TEST(GoldenDeterminism, SamePatchSameSeed) {
     poly::Engine engine;
     auto state = makeTestState();
@@ -127,6 +128,7 @@ TEST(GoldenDeterminism, SamePatchSameSeed) {
     ASSERT_EQ(run1.size(), run2.size());
     EXPECT_EQ(serialize(run1), serialize(run2));
 }
+// endregion:same-patch-same-seed
 
 // --- Test 2: Different block sizes produce identical events ---
 TEST(GoldenDeterminism, BlockSizeIndependence) {

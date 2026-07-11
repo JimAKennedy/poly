@@ -3,4 +3,104 @@ title: "Testing Architecture"
 description: "Engine goldens, RT-safety scanner, pre-push and pre-commit gates, site unit tests, Playwright E2E, sample-manifest checks, and the scripted post-deploy verification loop."
 ---
 
-Coming in M044 S05 — this appendix will cover engine unit and golden tests, the RT-safety scanner, the pre-push and pre-commit gates, site unit tests, Playwright end-to-end suites, sample-manifest and site-asset checks, and the scripted post-deploy verification loop under `scripts/site-verify-*.sh`, with build-time code snippets pulled from the tree.
+import CodeSnippet from '../../components/CodeSnippet.astro';
+
+Poly's testing pyramid climbs from pure C++ unit tests on the engine core up through browser-driven Playwright specs against the deployed guide site, with a scripted post-deploy verification loop tying every layer together. Each layer catches a specific class of regression the layer above cannot see. This appendix walks the pyramid top-down through the actual test code and gate scripts, not descriptions of them.
+
+## Layer 0 — Engine unit tests
+
+The engine ships a Google Test suite that runs entirely off-host, without the VST3 SDK, without a DAW, and without an audio device. Every algorithmic core — the Björklund Euclidean generator, envelope evaluation, macro resolution, constraint enforcement, scene interpolation, swing/humanization, sanitization — has its own unit-test file under `tests/`.
+
+Unit tests are small, deterministic, and assert known-good outputs for known inputs. The Björklund tests, for example, encode culturally-specific rhythms as string patterns and check the algorithm reproduces them exactly:
+
+<CodeSnippet file="tests/euclidean_tests.cpp" region="tresillo-test" caption="Tresillo (3-in-8) — a specific known-good pattern hardcoded as an assertion" />
+
+Similar tests cover cinquillo (5-in-8), rotation invariants (rotating by `n` returns to the original), zero-pulse and over-full edge cases, and the boundary condition where `k > n`. A single ctest run exercises hundreds of these across the engine's algorithmic surface.
+
+## Layer 0 — Golden determinism tests
+
+Unit tests prove each component is correct in isolation. Golden tests prove the engine as a whole is a **pure function** of transport plus groove state — same inputs, same outputs, byte-for-byte, forever. This is the invariant that makes VST3 preset compatibility possible and that CI enforces on every commit.
+
+<CodeSnippet file="tests/golden_tests.cpp" region="same-patch-same-seed" caption="Determinism gate — two runs with the same patch, same seed, must serialize identically" />
+
+The suite covers the full determinism surface: same seed on two runs, different block sizes producing identical events, loop restarts reproducing the pre-loop range, position jumps not accumulating state, tempo independence, and polymetric phase variation. A single serialization comparison catches any accidental introduction of shared mutable state anywhere in the engine.
+
+## Layer 1 — Real-time safety static scanner
+
+Google Test cannot detect a `push_back()` that will only misbehave under real-time contention. `scripts/check-realtime-safety.sh` catches it statically by scanning the audio-thread call chain for known-unsafe patterns and refusing to let the commit land.
+
+<CodeSnippet file="scripts/check-realtime-safety.sh" region="rt-scope" caption="RT-safety scanner — 8 audio-thread files, 25 unsafe patterns, one // RT-SAFE-OK escape hatch" />
+
+The scanner is scope-aware only at the file level — it does not track which functions in `processor.cpp` run on which thread. Non-audio-thread methods (`notify()`, `setState()` outside `process()`) that legitimately need to allocate get flagged; a `// RT-SAFE-OK` comment on the same line suppresses the finding while leaving a record of the intent. Every suppression must justify itself in code review.
+
+## Layer 2 — CodeSnippet region gate
+
+The three architecture appendices — plugin, website, and this one — pull their code blocks from live source files at build time via `<CodeSnippet />`. If a source region is renamed or deleted, every appendix pointing at that region silently rots. The region-check gate makes that a build failure instead.
+
+<CodeSnippet file="scripts/check-snippet-regions.sh" region="snippet-walk" caption="Walk every MDX for CodeSnippet tags, verify each (file, region) pair has matching start + end markers" />
+
+The gate runs in both pre-commit and pre-push. Renaming a region marker fails the pre-push hook at step [3/4] with the precise `(mdx:line, file, region)` triple, so a broken snippet reference is a fix-it-now blocker instead of a next-week discovery.
+
+## Layer 2 — Sample manifest gate
+
+The site's sample library lives under `site/public/samples/` with a JSON manifest describing every file's role, MIDI-note assignments, and license. Drift between the filesystem and the manifest silently breaks preset playback on the deployed site.
+
+<CodeSnippet file="scripts/check-sample-manifest.sh" region="manifest-args" caption="Sample-manifest checker — three modes: default cross-check, --strict attribution, --coverage GM MIDI note coverage" />
+
+The `--coverage` mode cross-references the manifest against `docs/midi-note-mapping.md` and exits non-zero if any documented GM note has zero registered samples — catching a sample deletion before it reaches production.
+
+## Layer 2 — Pre-push and pre-commit gates
+
+The pre-push hook is the local enforcement point for everything above. It refuses to push if any of four gates fails, so a red CI run is not the first signal of a formatting or safety regression:
+
+<CodeSnippet file="scripts/pre-push-check.sh" region="pre-push-gates" caption="Pre-push quality gate — four steps, all must pass before push proceeds" />
+
+The pre-commit hooks share the same script surface plus the standard hygiene hooks — trailing whitespace, end-of-file, YAML validity, gitleaks, clang-format, and the local scripts registered as `pass_filenames: false` so they always run against the whole tree:
+
+<CodeSnippet file=".pre-commit-config.yaml" region="local-hooks" caption="Local pre-commit hooks — pragma-once, RT safety, CodeSnippet regions, and the pre-push gate itself" />
+
+The `ci` skip list at the bottom of that file prevents the local-only hooks from firing in pre-commit.ci (where they would double-run against what CI executes directly).
+
+## Layer 3 — Site unit tests
+
+The website's audio stack — sample loading, preset-pattern resolution, SMF writer, dump-mode plumbing — has its own Node-based test suite under `site/tests/`. These use the built-in `node:test` runner plus `node-web-audio-api` for a headless `OfflineAudioContext`, so the tests decode real sample files but never touch the browser or a speaker.
+
+<CodeSnippet file="site/tests/sample-loader.test.mjs" region="loader-decode-test" caption="Sample loader — decodes real files through a headless OfflineAudioContext and asserts non-zero buffers" />
+
+Unit tests here focus on the pure data layer: loader memoization, note-to-sample resolution, preferred-role hints, SMF-writer byte layout, and preset-pattern schema conformance. Browser-only surfaces (WebAudio graph wiring, DOM event handlers) get covered at the next layer up.
+
+## Layer 3 — Playwright end-to-end
+
+The Playwright suite under `site/tests-e2e/` drives a real Chromium against a locally-built preview site. It covers every gate that only manifests once the full stack is running: audio-gate probes (card Play triggers real WebAudio nodes), preset-consistency parity (card path and Try It modal path must resolve to the same engine, lanes, and samples), sample-selection equivalence (both paths pick the same file for every note), macro-diff regression (macro=0 vs macro=1 must produce different SMFs for complexity, density, and swing), lane-mute, control-audit, and a zero-console-error walk of every published page.
+
+The keystone is the preset-consistency spec, which cross-checks the card path and the WASM modal path against each other rather than against a hand-written expectation:
+
+<CodeSnippet file="site/tests-e2e/preset-consistency.spec.ts" region="card-vs-modal-parity" caption="Card vs modal — same engine, same lane count, same note number and role label per lane" />
+
+Failures name the chapter, the diverging field, and the two values, so a broken preset is diagnosable from the CI log alone.
+
+## Layer 3 — Post-deploy verification pipeline
+
+`scripts/site-verify-local.sh` sequences all eight Playwright gates against a fresh local WASM + Astro build. Its remote sibling, `scripts/site-verify-remote.sh`, hits the deployed Pages URL after each release with the same gate lineup — proving the deployed site behaves like the built site, not just that the built site behaves like the source.
+
+Playwright clears `test-results/` at the start of every `npx playwright test` invocation, so the pipeline captures each gate's summary JSON into `.gsd/artifacts/` immediately after the spec runs — never batched at the end, where every summary but the last would be lost:
+
+<CodeSnippet file="scripts/site-verify-local.sh" region="per-spec-capture" caption="Per-spec summary capture — copy or synthesize before the next spec's test-results wipe" />
+
+The pipeline's exit code is the OR of every gate's exit code, so a single failing spec fails the whole run and the printed banner names which gate blocked.
+
+## Layer 4 — Continuous integration
+
+The `ci.yml` workflow runs the full pipeline on every push to main and every PR. The `site-e2e` job is the browser-driven half — it provisions Emscripten, Node, and Playwright, then hands off to `scripts/site-verify-local.sh` and archives the reports whether the run passes or fails:
+
+<CodeSnippet file=".github/workflows/ci.yml" region="site-e2e-job" caption="CI wiring — the site-e2e job that runs the same local pipeline every contributor runs on their machine" />
+
+The parallel `build` matrix runs the C++ tests across macOS-14, ubuntu-latest, and windows-2022, so an MSVC-only transitive-include bug can't hide behind a Clang-only PR check. The `pluginval` job runs the JUCE validator against the built `.vst3` on both macOS and Linux runners.
+
+A dedicated-machine CI stage for VSTGUI visual regression is deferred to a later milestone — visual baselines are macOS-version-sensitive, and the current shared runners don't produce stable pixel diffs.
+
+## What the pyramid does not cover
+
+Two categories are deliberately outside this test surface. Cubase-in-the-loop integration testing (an actual DAW hosting the plugin under automated control) is deferred to a later testing milestone — the harness for that is non-trivial and out of scope for M044. Visual regression across desktop OS variants uses the platform-specific baselines the RT-safety scanner cannot check, and the CI-on-dedicated-machine stage above is the intended home for it.
+
+Everything else — engine correctness, audio-thread safety, preset data integrity, site-deployed audio behavior, cross-surface parity — is caught by one of the layers above before a change can reach main.

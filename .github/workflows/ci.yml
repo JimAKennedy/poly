@@ -282,6 +282,7 @@ jobs:
       - name: Validate sample manifest (GM coverage)
         run: bash scripts/check-sample-manifest.sh --coverage
 
+  # region:site-e2e-job
   site-e2e:
     runs-on: ubuntu-latest
     steps:
@@ -312,6 +313,7 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Run local site-verify pipeline (S10 + S11 + S13 + sample-equivalence + S14 + S15-S16 macro-diff + S18 gates)
         run: bash scripts/site-verify-local.sh
+      # endregion:site-e2e-job
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

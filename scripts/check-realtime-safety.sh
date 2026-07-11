@@ -7,6 +7,7 @@ set -euo pipefail
 
 ERRORS=0
 
+# region:rt-scope
 # Files in the audio-thread call chain:
 #   process() -> renderRange() -> euclidean(), deterministicRand()
 RT_FILES=(
@@ -47,6 +48,7 @@ PATTERNS=(
     '\ballocateMessage\b'
     '\bsendMessage\b'
 )
+# endregion:rt-scope
 
 for file in "${RT_FILES[@]}"; do
     if [ ! -f "$file" ]; then
