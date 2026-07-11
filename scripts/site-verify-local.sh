@@ -74,6 +74,7 @@ echo "    preview ready at ${PREVIEW_URL}/poly/"
 
 mkdir -p "${ARTIFACTS_DIR}"
 
+# region:per-spec-capture
 # Each `npx playwright test` clears test-results/ at start, so each gate's
 # summary must be copied into .gsd/artifacts/ before the next spec runs.
 capture_summary() {
@@ -85,6 +86,7 @@ capture_summary() {
         echo "    (no summary at ${src} — spec may have crashed before writing it)" >&2
     fi
 }
+# endregion:per-spec-capture
 
 capture_or_synthesize() {
     local src="$1" dst="$2" gate="$3" url="$4" exit_code="$5" spec="$6"

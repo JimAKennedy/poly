@@ -11,6 +11,7 @@
 
 set -euo pipefail
 
+# region:manifest-args
 STRICT=0
 COVERAGE=0
 for arg in "$@"; do
@@ -27,6 +28,7 @@ for arg in "$@"; do
       ;;
   esac
 done
+# endregion:manifest-args
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 MANIFEST="$REPO_ROOT/site/public/samples/manifest.json"

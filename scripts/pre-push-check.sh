@@ -22,6 +22,7 @@ done
 
 echo "=== Pre-push quality checks ==="
 
+# region:pre-push-gates
 echo "[1/4] clang-format..."
 if ! pre-commit run clang-format --all-files; then
     echo "FAIL: clang-format found formatting issues."
@@ -48,6 +49,7 @@ elif ! ctest --test-dir build --build-config Release --output-on-failure 2>/dev/
     echo "FAIL: Tests failed."
     FAILED=1
 fi
+# endregion:pre-push-gates
 
 if [ "$FAILED" -ne 0 ]; then
     echo "=== Pre-push checks FAILED ==="

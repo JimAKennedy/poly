@@ -42,12 +42,14 @@ TEST(Euclidean, SinglePulse) {
     EXPECT_TRUE(p[0]);
 }
 
+// region:tresillo-test
 TEST(Euclidean, Tresillo_3_8) {
     std::array<bool, poly::kMaxSteps> p{};
     poly::euclidean(3, 8, 0, p);
     EXPECT_EQ(countHits(p, 8), 3);
     EXPECT_EQ(patternStr(p, 8), "10010010");
 }
+// endregion:tresillo-test
 
 TEST(Euclidean, Cinquillo_5_8) {
     std::array<bool, poly::kMaxSteps> p{};
