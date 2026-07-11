@@ -29,6 +29,7 @@ repos:
     hooks:
       - id: cmakelint
 
+  # region:local-hooks
   - repo: local
     hooks:
       - id: check-pragma-once
@@ -52,6 +53,7 @@ repos:
         language: script
         pass_filenames: false
         stages: [pre-push]
+  # endregion:local-hooks
 
 ci:
   skip: [check-pragma-once, check-realtime-safety, check-snippet-regions, pre-push-check]

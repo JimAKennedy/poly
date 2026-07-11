@@ -318,6 +318,7 @@ for (const chapter of CHAPTERS) {
     record.wasmProbe = wasmProbe;
 
     try {
+      // region:card-vs-modal-parity
       // ---------- Structural agreement ----------
       expect(
         cardResolved!.engineName,
@@ -341,6 +342,7 @@ for (const chapter of CHAPTERS) {
           `[${chapter.preset}] lane ${i} roleLabel mismatch: card="${cl.roleLabel}" wasm="${wl.roleLabel}"`,
         ).toBe(wl.roleLabel);
       }
+      // endregion:card-vs-modal-parity
 
       // ---------- Positive sample guarantee (card) ----------
       expect(

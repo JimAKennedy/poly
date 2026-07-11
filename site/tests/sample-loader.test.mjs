@@ -31,6 +31,7 @@ function filesystemFetcher(baseDir) {
   };
 }
 
+// region:loader-decode-test
 test('loadNotes decodes AudioBuffers for kick / snare / hat notes', async () => {
   const manifest = await readManifest();
   const context = new OfflineAudioContext(2, 48000, 48000);
@@ -51,6 +52,7 @@ test('loadNotes decodes AudioBuffers for kick / snare / hat notes', async () => 
     assert.ok(buf.sampleRate > 0, `note ${note} buffer has zero sampleRate`);
   }
 });
+// endregion:loader-decode-test
 
 test('loadNotes memoizes shared files across notes', async () => {
   const manifest = await readManifest();

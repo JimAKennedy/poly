@@ -37,6 +37,7 @@ log_fail() {
 "
 }
 
+# region:snippet-walk
 # grep across all mdx files, then parse each match line.
 # `-H` prefixes filename, `-n` prefixes line number. Format: `mdx:LINE:...`.
 while IFS= read -r hit; do
@@ -87,6 +88,7 @@ while IFS= read -r hit; do
         log_fail "  ${mdx_path}:${mdx_line}: (file=${file_attr}, region=${region_attr}) missing end marker in source"
     fi
 done < <(grep -rHnE "$PATTERN" "$DOCS_DIR" --include='*.mdx' || true)
+# endregion:snippet-walk
 
 if [ "$FAILURES" -ne 0 ]; then
     printf 'check-snippet-regions.sh: %d broken CodeSnippet reference(s):\n' "$FAILURES" >&2
