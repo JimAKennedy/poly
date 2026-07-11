@@ -2,21 +2,28 @@ import { test, expect } from '@playwright/test';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 
-// M043 S15 T03 — Macro-diff gate.
+// M043 S15 T03 + S16 T01 — Macro-diff gate.
 //
-// Directly tests the T01 fix (wasm_api.cpp poly_render calls resolveMacros +
+// Directly tests the S15 T01 fix (wasm_api.cpp poly_render calls resolveMacros +
 // resolveConstraints) end-to-end on the Try It surface: for each canonical
 // preset+macro pair we capture the SMF dump at macro=0 and macro=1 and assert
 // the two byte-sequences differ. If they don't, either T01 was reverted or the
 // dump path is not seeing the user's macro edits.
 //
-// Together with the T02 fix (playbackCtx macro seed) and the T03-bundled
+// Together with the S15 T02 fix (playbackCtx macro seed) and the T03-bundled
 // fireDumpTryIt macro seed, moving a macro slider before Play must produce a
 // distinctly different SMF than the same preset at the opposite macro extreme.
 //
+// S16 T01 adds a swing case on a jazz preset with an additional assertion:
+// the max paired-tick delta across matched (channel, note) note-on ordinals
+// must be > 0. This proves the delta is specifically an off-beat timing shift
+// (per engine.cpp::applyTimingShifts) rather than e.g. a velocity or density
+// change — the failure mode a byte-diff alone couldn't distinguish.
+//
 // Presets:
-//   - Deep House             (09-electronic/, slug deep-house)
-//   - Rachenitsa 7/8         (07-balkan/,     slug rachenitsa-7-8)
+//   - Deep House            (09-electronic/, slug deep-house)   — complexity, density
+//   - Rachenitsa 7/8        (07-balkan/,     slug rachenitsa-7-8) — complexity
+//   - Elvin Jones Cascade   (12-jazz/,       slug elvin-jones-cascade) — swing (S16)
 //
 // The plan named "Bulgarian Wedding" as the second preset; the actual preset
 // list uses "Rachenitsa 7/8" for the Balkan chapter — same family, same
@@ -300,6 +307,63 @@ function firstDifferingNoteOn(
   return null;
 }
 
+// S16 T01: for swing cases, pair the nth (channel, note) note-on in `low`
+// with the nth (channel, note) note-on in `high` and return the pair with
+// the largest absolute tick delta. Returns null if no (channel, note) key
+// has at least one pair on both sides — e.g. if mutation counts diverged
+// enough that every family shows up in only one dump (highly unlikely for
+// swing, since swing shifts existing note ticks rather than adding/removing
+// them, but the null path is a safety hatch, not a signal).
+interface PairedTickDelta {
+  maxDelta: number;
+  atChannel: number;
+  atNote: number;
+  atOrdinal: number;
+  lowTick: number;
+  highTick: number;
+}
+
+function computeMaxPairedTickDelta(
+  low: NoteOnEvent[],
+  high: NoteOnEvent[],
+): PairedTickDelta | null {
+  const bucket = (evts: NoteOnEvent[]): Map<string, NoteOnEvent[]> => {
+    const m = new Map<string, NoteOnEvent[]>();
+    for (const e of evts) {
+      const k = `${e.channel}|${e.note}`;
+      const arr = m.get(k);
+      if (arr) arr.push(e);
+      else m.set(k, [e]);
+    }
+    for (const arr of m.values()) arr.sort((a, b) => a.tick - b.tick);
+    return m;
+  };
+  const lowByKey = bucket(low);
+  const highByKey = bucket(high);
+  let best: PairedTickDelta | null = null;
+  for (const [key, lowArr] of lowByKey) {
+    const highArr = highByKey.get(key);
+    if (!highArr) continue;
+    const pairCount = Math.min(lowArr.length, highArr.length);
+    for (let i = 0; i < pairCount; i++) {
+      const l = lowArr[i];
+      const h = highArr[i];
+      const delta = Math.abs(h.tick - l.tick);
+      if (best === null || delta > best.maxDelta) {
+        best = {
+          maxDelta: delta,
+          atChannel: l.channel,
+          atNote: l.note,
+          atOrdinal: i,
+          lowTick: l.tick,
+          highTick: h.tick,
+        };
+      }
+    }
+  }
+  return best;
+}
+
 // -------------------- summary artifact --------------------
 
 interface MacroDiffCaseResult {
@@ -312,6 +376,16 @@ interface MacroDiffCaseResult {
   highNoteOnCount: number;
   byteIdentical: boolean;
   firstDifferingTick: number | null;
+  // S16 T01: populated only for macro === 'swing' cases. null means the
+  // pairing helper found no (channel, note) key with pairs on both sides.
+  maxSwingTickDelta: number | null;
+  swingDeltaLocation: {
+    channel: number;
+    note: number;
+    ordinal: number;
+    lowTick: number;
+    highTick: number;
+  } | null;
   pass: boolean;
   failReason?: string;
 }
@@ -368,6 +442,19 @@ const CASES: Case[] = [
   { preset: 'Deep House', path: '/poly/09-electronic/', slug: 'deep-house', macro: 'complexity' },
   { preset: 'Rachenitsa 7/8', path: '/poly/07-balkan/', slug: 'rachenitsa-7-8', macro: 'complexity' },
   { preset: 'Deep House', path: '/poly/09-electronic/', slug: 'deep-house', macro: 'density' },
+  // S16 T01: swing on a jazz preset. Elvin Jones Cascade has base swingAmount
+  // 0.30-0.40 on each of its 4 lanes and macros.swing = 0.35 baked in — so
+  // setting macro.swing = 0 pins lane swing at the preset baseline (~0.35)
+  // and macro.swing = 1 clamps to 1.0, producing a ~0.65 stepDur/3 tick delta
+  // on odd cycleSteps per engine.cpp::applyTimingShifts. This case verifies
+  // (a) the swing macro edit reaches the engine at all and (b) the resulting
+  // SMF difference is specifically an off-beat tick shift.
+  {
+    preset: 'Elvin Jones Cascade',
+    path: '/poly/12-jazz/',
+    slug: 'elvin-jones-cascade',
+    macro: 'swing',
+  },
 ];
 
 test.describe('S15 macro-diff — user macro edits reach the Try It dump path', () => {
@@ -385,6 +472,8 @@ test.describe('S15 macro-diff — user macro edits reach the Try It dump path', 
         highNoteOnCount: 0,
         byteIdentical: true,
         firstDifferingTick: null,
+        maxSwingTickDelta: null,
+        swingDeltaLocation: null,
         pass: false,
       };
       const persist = () => writePerCase(record);
@@ -414,10 +503,40 @@ test.describe('S15 macro-diff — user macro edits reach the Try It dump path', 
         expect(
           identical,
           `[${c.preset}] macro.${c.macro}: dumps are byte-identical (${low.bytes.length} bytes both) — ` +
-            `either wasm_api.cpp poly_render dropped resolveMacros (T01 regression) or fireDumpTryIt ` +
-            `is not mirroring engineCtx macros into scratch (T03 regression). ` +
+            `either wasm_api.cpp poly_render dropped resolveMacros (S15 T01 regression) or fireDumpTryIt ` +
+            `is not mirroring engineCtx macros into scratch (S15 T03 regression). ` +
             `note-on counts low=${low.noteOns.length} high=${high.noteOns.length}`,
         ).toBe(false);
+
+        // S16 T01: swing-specific proof. Byte-difference alone would go green
+        // if the macro changed e.g. velocity or density without ever shifting
+        // an off-beat tick. This assertion pairs the nth (channel, note)
+        // note-on in the swing=0 dump with the nth in the swing=1 dump and
+        // requires at least one pair to differ in tick. When it fails, the
+        // most likely regression is engine.cpp::applyTimingShifts dropping
+        // the `cfg.swingAmount * stepDurPpq / kSwingSyncopationDivisor` term.
+        if (c.macro === 'swing') {
+          const pairedDelta = computeMaxPairedTickDelta(low.noteOns, high.noteOns);
+          record.maxSwingTickDelta = pairedDelta?.maxDelta ?? null;
+          record.swingDeltaLocation = pairedDelta
+            ? {
+                channel: pairedDelta.atChannel,
+                note: pairedDelta.atNote,
+                ordinal: pairedDelta.atOrdinal,
+                lowTick: pairedDelta.lowTick,
+                highTick: pairedDelta.highTick,
+              }
+            : null;
+          expect(
+            pairedDelta !== null && pairedDelta.maxDelta > 0,
+            `[${c.preset}] macro.swing: max paired-tick delta = ` +
+              `${pairedDelta === null ? 'null (no matched pairs)' : pairedDelta.maxDelta} ` +
+              `(expected >0). If null, no (channel, note) key had matched pairs in both dumps — ` +
+              `check that the preset actually produces notes in the ${DUMP_BEATS}-beat window. ` +
+              `If 0, engine.cpp::applyTimingShifts is not applying swingAmount * stepDur / 3.0 ` +
+              `on odd cycleSteps — jazz will sound non-idiomatic.`,
+          ).toBe(true);
+        }
 
         record.pass = true;
       } catch (err) {
