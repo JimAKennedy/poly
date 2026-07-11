@@ -33,7 +33,7 @@ const CHAPTERS: Chapter[] = [
   { preset: 'Tintal Groove', path: '/poly/06-indian-classical/', expectedFactoryName: 'Tintal Groove', expectedBpm: 120, resolutionPath: 'direct' },
   { preset: 'Rupak Tal', path: '/poly/06-indian-classical/', expectedFactoryName: 'Rupak Tal', expectedBpm: 120, resolutionPath: 'direct' },
   { preset: 'Rachenitsa 7/8', path: '/poly/07-balkan/', expectedFactoryName: 'Rachenitsa 7/8', expectedBpm: 120, resolutionPath: 'direct' },
-  { preset: 'Kopanitsa 11/8', path: '/poly/07-balkan/', expectedFactoryName: 'Kopanitsa 11/8', expectedBpm: 120, resolutionPath: 'direct' },
+  { preset: 'Kopanitsa 11/8', path: '/poly/07-balkan/', expectedFactoryName: 'Kopanitsa 11/8', expectedBpm: 200, resolutionPath: 'direct' },
   { preset: 'Reich Phase Process', path: '/poly/08-minimalism/', expectedFactoryName: 'Reich Phase Process', expectedBpm: 100, resolutionPath: 'drift' },
   { preset: 'Riley Layered Entry', path: '/poly/08-minimalism/', expectedFactoryName: 'Riley Layered Entry', expectedBpm: 120, resolutionPath: 'direct' },
   { preset: 'Nancarrow Tempi', path: '/poly/08-minimalism/', expectedFactoryName: 'Nancarrow Tempi', expectedBpm: 120, resolutionPath: 'direct' },
