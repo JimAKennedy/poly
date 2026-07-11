@@ -91,6 +91,7 @@ function validate(parsed) {
   }
 }
 
+// region:presets-emitter-flow
 ensureEmitter();
 const raw = runEmitter();
 let parsed;
@@ -108,3 +109,4 @@ log(`wrote ${parsed.presetCount} presets → ${OUT_PATH}`);
 mkdirSync(dirname(WEBUI_OUT_PATH), { recursive: true });
 writeFileSync(WEBUI_OUT_PATH, serialized);
 log(`wrote ${parsed.presetCount} presets → ${WEBUI_OUT_PATH}`);
+// endregion:presets-emitter-flow

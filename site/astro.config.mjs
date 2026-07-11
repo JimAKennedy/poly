@@ -3,11 +3,13 @@ import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 
 export default defineConfig({
+	// region:astro-base-config
 	site: 'https://jimakennedy.github.io',
 	base: '/poly',
 	redirects: {
 		'/appendix-architecture': '/poly/appendix-plugin-architecture',
 	},
+	// endregion:astro-base-config
 	integrations: [
 		starlight({
 			title: 'Poly Guide',
@@ -75,6 +77,7 @@ export default defineConfig({
 				},
 				{
 					label: 'Appendices',
+					// region:starlight-appendix-sidebar
 					items: [
 						{ label: 'Preset Reference', slug: 'appendix-presets' },
 						{
@@ -114,6 +117,7 @@ export default defineConfig({
 							slug: 'credits',
 						},
 					],
+					// endregion:starlight-appendix-sidebar
 				},
 			],
 		}),
