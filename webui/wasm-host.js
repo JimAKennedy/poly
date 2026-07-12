@@ -73,6 +73,18 @@
   // Role hint per lane, sourced from presets.json for sample resolution.
   // Cleared on init/apply of -1 so unknown lanes fall through to NAME_TO_ROLE.
   let laneRoleLabels = [];
+  // M044 S06: per-scene label caches so Morph mode can snap lane names/roles
+  // between A's and B's presets at the morph = 0.5 boundary, matching the
+  // engine's snap-based interpolateLane behavior. Populated in applyPreset()
+  // and consumed by activeLaneLabels() below. sceneA is seeded to the same
+  // defaults as laneNames/laneRoles so a modal opened at Morph before any
+  // preset is loaded still gets sensible strings.
+  let laneNamesA = laneNames.slice();
+  let laneRolesA = laneRoles.slice();
+  let laneRoleLabelsA = [];
+  let laneNamesB = laneNames.slice();
+  let laneRolesB = laneRoles.slice();
+  let laneRoleLabelsB = [];
 
   const state = {
     preset: '', seed: 0, tempo: TEMPO,
@@ -231,14 +243,37 @@
     return state.scene === 'B' ? 1 : 0;
   }
 
+  // M044 S06: mirror the per-scene laneNames/laneRoles/laneRoleLabels caches
+  // into the module-scope active variables that readLaneFromWasm consumes.
+  // Under SceneSelect::Morph the engine's readState() interpolates lane fields
+  // by snapping at t=0.5; do the same for labels so the desk shows B's names
+  // once the audible sample flips to B.
+  function activateLabelsForScene(scene, morph) {
+    if (scene === 'Morph') {
+      const useB = (morph ?? 0) >= 0.5;
+      laneNames = useB ? laneNamesB.slice() : laneNamesA.slice();
+      laneRoles = useB ? laneRolesB.slice() : laneRolesA.slice();
+      laneRoleLabels = useB ? laneRoleLabelsB.slice() : laneRoleLabelsA.slice();
+    } else if (scene === 'B') {
+      laneNames = laneNamesB.slice();
+      laneRoles = laneRolesB.slice();
+      laneRoleLabels = laneRoleLabelsB.slice();
+    } else {
+      laneNames = laneNamesA.slice();
+      laneRoles = laneRolesA.slice();
+      laneRoleLabels = laneRoleLabelsA.slice();
+    }
+  }
+
   function applyPreset(index) {
     const targetScene = sceneTargetFromState();
+    let nextNames, nextRoles, nextLabels;
     if (index === -1) {
       Module._poly_action_apply_preset_to_scene(engineCtx, 0, targetScene);
       currentPresetIndex = -1;
-      laneNames = ['Lane 1', 'Lane 2', 'Lane 3', 'Lane 4'];
-      laneRoles = ['Anchor pulse', 'Backbeat', 'Shimmer', 'Ghost'];
-      laneRoleLabels = [];
+      nextNames = ['Lane 1', 'Lane 2', 'Lane 3', 'Lane 4'];
+      nextRoles = ['Anchor pulse', 'Backbeat', 'Shimmer', 'Ghost'];
+      nextLabels = [];
       state.preset = 'Init';
       state.morph = 0;
       state.chain = { enabled: false, mode: 0, entryCount: 0, entries: [] };
@@ -250,24 +285,36 @@
       const entry = presetsById && presetsById[index];
       if (entry) {
         const meta = labelsFromPresetEntry(entry);
-        laneNames = meta.names;
-        laneRoles = meta.roles;
-        laneRoleLabels = meta.labels;
+        nextNames = meta.names;
+        nextRoles = meta.roles;
+        nextLabels = meta.labels;
       } else {
         // presets.json missing or index out of range: keep engine-driven state,
         // fall back to generic labels so the modal still renders.
         const laneCount = Module._poly_active_lane_count(engineCtx);
-        laneNames = Array.from({ length: laneCount }, (_, i) => `Lane ${i + 1}`);
-        laneRoles = laneNames.map(() => 'Custom');
-        laneRoleLabels = [];
+        nextNames = Array.from({ length: laneCount }, (_, i) => `Lane ${i + 1}`);
+        nextRoles = nextNames.map(() => 'Custom');
+        nextLabels = [];
       }
       state.preset = engineName;
       console.info(
-        `[wasm-host] applied ${engineName} to scene ${targetScene === 1 ? 'B' : 'A'} (${laneNames.length} lanes)`
+        `[wasm-host] applied ${engineName} to scene ${targetScene === 1 ? 'B' : 'A'} (${nextNames.length} lanes)`
       );
+    } else {
+      return;
     }
-    if (targetScene === 1) probe.sceneBPreset = state.preset;
-    else probe.sceneAPreset = state.preset;
+    if (targetScene === 1) {
+      probe.sceneBPreset = state.preset;
+      laneNamesB = nextNames.slice();
+      laneRolesB = nextRoles.slice();
+      laneRoleLabelsB = nextLabels.slice();
+    } else {
+      probe.sceneAPreset = state.preset;
+      laneNamesA = nextNames.slice();
+      laneRolesA = nextRoles.slice();
+      laneRoleLabelsA = nextLabels.slice();
+    }
+    activateLabelsForScene(state.scene, state.morph);
     probe.currentPreset = state.preset;
     probe.laneRoleLabels = laneRoleLabels.slice();
     syncStateFromWasm();
@@ -637,13 +684,18 @@
     probe.synthVoiceCount++;
   }
 
-  function voice(l, li, when, v) {
+  function voice(l, li, note, when, v) {
     // v is the shaped velocity in [0,1]; the card scheduler uses raw
     // velocity/127 with no attenuation. Match its staging. Resolution keys on
-    // the lane's MIDI note first + preferred role second — same shape as the
-    // card's pickEntryForNote(note, preferredRole).
+    // the event's MIDI note first + lane's preferred role second — same shape
+    // as the card's pickEntryForNote(note, preferredRole).
+    //
+    // M044 S06: use the event's note (not lane.note) so Morph mode picks the
+    // interpolated sample. Post-engine-readState fix, l.note IS the
+    // interpolated note in Morph mode too, but routing the event's note
+    // through keeps the audio path robust against future scene/lane drift.
     const role = roleForLaneName(l.name, li);
-    if (sampleVoice(l.note | 0, role, when, v)) return;
+    if (sampleVoice(note | 0, role, when, v)) return;
     synthVoice(l, when, v);
   }
 
@@ -685,7 +737,7 @@
             ctx.currentTime + 0.001,
             startAt + eppq * secPerBeat,
           );
-          voice(lane, laneIdx, when, Math.max(0, Math.min(1, vel)));
+          voice(lane, laneIdx, note, when, Math.max(0, Math.min(1, vel)));
         }
       }
       playbackNextPpq = end;
@@ -986,6 +1038,17 @@
       Module._poly_set_morph(engineCtx, clamped);
       if (playbackCtx) Module._poly_set_morph(playbackCtx, clamped);
       probe.morphAmount = clamped;
+      // M044 S06: under SceneSelect::Morph, the engine's read accessors return
+      // an interpolated snapshot (readState()). A morph-slider drag can flip
+      // the snap-based fields (midiNote, role) at t=0.5, so swap the active
+      // lane label caches, re-sync state.lanes, and rebuild the note→sample
+      // map. Skipped when select != Morph because morphAmount has no effect
+      // on scene A/B playback.
+      if (state.scene === 'Morph') {
+        activateLabelsForScene('Morph', clamped);
+        syncStateFromWasm();
+        rebuildSampleSelection();
+      }
       emitState();
       return;
     }
@@ -1077,6 +1140,10 @@
 
   /* ---------- action handler ---------- */
   function action(name, payload = {}) {
+    // M044 S06: set by selectScene when preferredRolesByNote must be rebuilt
+    // against post-select lane data. Consumed after the dispatch-tail
+    // syncStateFromWasm so the rebuild sees the fresh state.lanes.
+    let needsSampleRebuild = false;
     switch (name) {
       case 'togglePlay':
         togglePlay();
@@ -1140,6 +1207,13 @@
           state.preset = probe.sceneBPreset;
           probe.currentPreset = probe.sceneBPreset;
         }
+        // M044 S06: swap active laneNames/laneRoles to match the newly-selected
+        // scene (or the snap point in Morph mode) so the desk labels stay in
+        // step with the audible lanes. Refresh preferredRolesByNote too:
+        // syncStateFromWasm at the end of dispatch() will repopulate
+        // state.lanes; queue a rebuild for immediately after.
+        activateLabelsForScene(state.scene, state.morph);
+        needsSampleRebuild = true;
         console.info(`[wasm-host] scene → ${state.scene}`);
         break;
       }
@@ -1187,6 +1261,7 @@
         return;
     }
     syncStateFromWasm();
+    if (needsSampleRebuild) rebuildSampleSelection();
     if (name !== 'togglePlay') emitState();
   }
 
