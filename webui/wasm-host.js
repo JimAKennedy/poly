@@ -428,6 +428,13 @@
     // gate asserts these match the card's PolyAudioProbe.sampleFilesByNote for
     // every lane in every preset — proves both surfaces pick the same file.
     sampleFilesByNote: {},
+    // M044 S06 T03: bumped every time voice() falls through to synthVoice()
+    // (either because pickFileForNote returned null OR because buffersByFile
+    // didn't have the file yet — the startup race). The first-bar-parity gate
+    // asserts this is 0 after ~1 bar of playback, proving no synth substitution
+    // reached the user during the first bar. Complements missingNotes/Roles
+    // which are gated by samplesReady and so miss cold-start races by design.
+    synthVoiceCount: 0,
   };
   window.__polyAudioProbe = probe;
   let samplesPromise = null;
@@ -627,6 +634,7 @@
       o.connect(g); g.connect(voiceOut()); o.start(when); o.stop(when + 0.13);
     }
     probe.nodesStarted++;
+    probe.synthVoiceCount++;
   }
 
   function voice(l, li, when, v) {
@@ -844,7 +852,7 @@
     }
   }
 
-  function togglePlay() {
+  async function togglePlay() {
     try {
       if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
       if (ctx.state === 'suspended') ctx.resume();
@@ -852,9 +860,6 @@
       ctx = null;
     }
     if (ctx) ensureAnalyserTap();
-    // Fire-and-forget: schedule() falls back to synth voices until buffers
-    // land, so nothing is silent while the first fetch is in flight.
-    if (ctx) ensureSamplesLoaded();
     playing = !playing;
     probe.playing = playing;
     if (playing) {
@@ -865,7 +870,9 @@
       probe.missingNotes = [];
       probe.missingRolesFired = false;
       probe.lastError = null;
-      startAt = ctx ? ctx.currentTime + 0.06 : 0;
+      // M044 S06 T03: reset synth-voice counter so first-bar-parity gate
+      // observes only this Play's synth fires, not accumulated across Plays.
+      probe.synthVoiceCount = 0;
       // Allocate a fresh scratch context so Engine RNG/phrase/drift state
       // starts from the preset's canonical seed on every Play click. Then
       // snapshot the full SceneState (both scenes + select + morph amount)
@@ -887,7 +894,23 @@
       }
       playbackNextPpq = 0.0;
       playbackRenderIter = 0;
+      // M044 S06 T02: mirror the card scheduler's contract — wait for sample
+      // buffers to land before anchoring startAt and starting the scheduler.
+      // Previously ensureSamplesLoaded() was fire-and-forget, so the first
+      // ~200-500ms of playback fell through to synthVoice() (sine/noise burst)
+      // until decodeAudioData resolved. After first Play the promise is cached
+      // and resolves synchronously, so this only delays the very first Play.
       if (ctx) {
+        try {
+          await ensureSamplesLoaded();
+        } catch (e) {
+          console.warn('[wasm-host] samples decode failed:', e && e.message);
+        }
+        // User may have clicked Stop during the await. Bail if they did.
+        if (!playing) return;
+        // Re-anchor startAt to the post-await currentTime so the 60ms
+        // lookahead is measured from "buffers ready", not from the click.
+        startAt = ctx.currentTime + 0.06;
         schedTimer = setInterval(schedule, 30);
         startRmsSampler();
       }
