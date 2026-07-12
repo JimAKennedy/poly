@@ -110,7 +110,7 @@ EOF
     fi
 }
 
-echo "=== [5/11] Running S10 audio gate ==="
+echo "=== [5/13] Running S10 audio gate ==="
 S10_EXIT=0
 (cd "${SITE_DIR}" \
     && POLY_SITE_URL="${PREVIEW_URL}" \
@@ -120,7 +120,7 @@ capture_summary \
     "${SITE_DIR}/test-results/audio-gate-summary.json" \
     "${ARTIFACTS_DIR}/S10-local-verify.json"
 
-echo "=== [6/12] Running S11 preset-consistency gate ==="
+echo "=== [6/13] Running S11 preset-consistency gate ==="
 S11_EXIT=0
 (cd "${SITE_DIR}" \
     && POLY_SITE_URL="${PREVIEW_URL}" \
@@ -130,14 +130,14 @@ capture_summary \
     "${SITE_DIR}/test-results/preset-consistency-summary.json" \
     "${ARTIFACTS_DIR}/S11-local-verify.json"
 
-echo "=== [7/12] Running S13 Play↔Try It equivalence gate ==="
+echo "=== [7/13] Running S13 Play↔Try It equivalence gate ==="
 S13_EXIT=0
 (cd "${SITE_DIR}" \
     && POLY_SITE_URL="${PREVIEW_URL}" \
        npx playwright test tests-e2e/dump-mode.spec.ts tests-e2e/equivalence.spec.ts --project=chromium) \
     || S13_EXIT=$?
 
-echo "=== [8/12] Running sample-selection equivalence gate (card vs Try It per-note file parity) ==="
+echo "=== [8/13] Running sample-selection equivalence gate (card vs Try It per-note file parity) ==="
 SAMPLE_EQ_EXIT=0
 (cd "${SITE_DIR}" \
     && POLY_SITE_URL="${PREVIEW_URL}" \
@@ -149,7 +149,7 @@ capture_or_synthesize \
     "sample-equivalence" "${PREVIEW_URL}" "${SAMPLE_EQ_EXIT}" \
     "site/tests-e2e/sample-equivalence.spec.ts"
 
-echo "=== [9/12] Running S15-S16 macro-diff gate (complexity + density + swing) ==="
+echo "=== [9/13] Running S15-S16 macro-diff gate (complexity + density + swing) ==="
 S15_EXIT=0
 (cd "${SITE_DIR}" \
     && POLY_SITE_URL="${PREVIEW_URL}" \
@@ -161,14 +161,26 @@ capture_or_synthesize \
     "S15-S16-macro-diff" "${PREVIEW_URL}" "${S15_EXIT}" \
     "site/tests-e2e/macro-diff.spec.ts"
 
-echo "=== [10/12] Running S14 lane-mute gate ==="
+echo "=== [10/13] Running S06 first-bar-parity gate (no synth fallback during first bar) ==="
+S06_EXIT=0
+(cd "${SITE_DIR}" \
+    && POLY_SITE_URL="${PREVIEW_URL}" \
+       npx playwright test tests-e2e/first-bar-parity.spec.ts --project=chromium) \
+    || S06_EXIT=$?
+capture_or_synthesize \
+    "${SITE_DIR}/test-results/first-bar-parity-summary.json" \
+    "${ARTIFACTS_DIR}/S06-first-bar-parity-local-verify.json" \
+    "S06-first-bar-parity" "${PREVIEW_URL}" "${S06_EXIT}" \
+    "site/tests-e2e/first-bar-parity.spec.ts"
+
+echo "=== [11/13] Running S14 lane-mute gate ==="
 S14_EXIT=0
 (cd "${SITE_DIR}" \
     && POLY_SITE_URL="${PREVIEW_URL}" \
        npx playwright test tests-e2e/lane-mute.spec.ts --project=chromium) \
     || S14_EXIT=$?
 
-echo "=== [11/12] Running S18 control-audit gate ==="
+echo "=== [12/13] Running S18 control-audit gate ==="
 S18_CTRL_EXIT=0
 (cd "${SITE_DIR}" \
     && POLY_SITE_URL="${PREVIEW_URL}" \
@@ -180,7 +192,7 @@ capture_or_synthesize \
     "S18-control-audit" "${PREVIEW_URL}" "${S18_CTRL_EXIT}" \
     "site/tests-e2e/control-audit.spec.ts"
 
-echo "=== [12/12] Running S18 console-error gate ==="
+echo "=== [13/13] Running S18 console-error gate ==="
 S18_CONSOLE_EXIT=0
 (cd "${SITE_DIR}" \
     && POLY_SITE_URL="${PREVIEW_URL}" \
@@ -193,11 +205,11 @@ capture_or_synthesize \
     "site/tests-e2e/console-error-gate.spec.ts"
 
 # Combine exit codes so any gate failing fails the script.
-GATE_EXIT=$(( S10_EXIT | S11_EXIT | S13_EXIT | SAMPLE_EQ_EXIT | S15_EXIT | S14_EXIT | S18_CTRL_EXIT | S18_CONSOLE_EXIT ))
+GATE_EXIT=$(( S10_EXIT | S11_EXIT | S13_EXIT | SAMPLE_EQ_EXIT | S15_EXIT | S06_EXIT | S14_EXIT | S18_CTRL_EXIT | S18_CONSOLE_EXIT ))
 
 if [ "${GATE_EXIT}" = "0" ]; then
-    echo "=== PASS: local audio + preset-consistency + equivalence + sample-equivalence + macro-diff (complexity + density + swing) + lane-mute + S18 control-audit + console-error gates ==="
+    echo "=== PASS: local audio + preset-consistency + equivalence + sample-equivalence + macro-diff (complexity + density + swing) + first-bar-parity + lane-mute + S18 control-audit + console-error gates ==="
 else
-    echo "=== FAIL: local gates (S10 exit ${S10_EXIT}, S11 exit ${S11_EXIT}, S13 exit ${S13_EXIT}, sample-equivalence exit ${SAMPLE_EQ_EXIT}, S15-S16 macro-diff exit ${S15_EXIT}, S14 lane-mute exit ${S14_EXIT}, S18 control-audit exit ${S18_CTRL_EXIT}, S18 console-error exit ${S18_CONSOLE_EXIT}) ==="
+    echo "=== FAIL: local gates (S10 exit ${S10_EXIT}, S11 exit ${S11_EXIT}, S13 exit ${S13_EXIT}, sample-equivalence exit ${SAMPLE_EQ_EXIT}, S15-S16 macro-diff exit ${S15_EXIT}, S06 first-bar-parity exit ${S06_EXIT}, S14 lane-mute exit ${S14_EXIT}, S18 control-audit exit ${S18_CTRL_EXIT}, S18 console-error exit ${S18_CONSOLE_EXIT}) ==="
 fi
 exit "${GATE_EXIT}"

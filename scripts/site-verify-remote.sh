@@ -128,6 +128,18 @@ capture_or_synthesize \
     "S15-S16-macro-diff" "${URL}" "${S15_EXIT}" \
     "site/tests-e2e/macro-diff.spec.ts"
 
+echo "=== Running S06 first-bar-parity gate (no synth fallback during first bar) against ${URL} ==="
+S06_EXIT=0
+(cd "${SITE_DIR}" \
+    && POLY_SITE_URL="${URL}" \
+       npx playwright test tests-e2e/first-bar-parity.spec.ts --project=chromium) \
+    || S06_EXIT=$?
+capture_or_synthesize \
+    "${SITE_DIR}/test-results/first-bar-parity-summary.json" \
+    "${ARTIFACTS_DIR}/S06-first-bar-parity-remote-verify.json" \
+    "S06-first-bar-parity" "${URL}" "${S06_EXIT}" \
+    "site/tests-e2e/first-bar-parity.spec.ts"
+
 echo "=== Running S14 lane-mute gate against ${URL} ==="
 S14_EXIT=0
 (cd "${SITE_DIR}" \
@@ -159,11 +171,11 @@ capture_or_synthesize \
     "S18-console-error" "${URL}" "${S18_CONSOLE_EXIT}" \
     "site/tests-e2e/console-error-gate.spec.ts"
 
-GATE_EXIT=$(( S10_EXIT | S18_WASM_EXIT | S11_EXIT | S13_EXIT | SAMPLE_EQ_EXIT | S15_EXIT | S14_EXIT | S18_CTRL_EXIT | S18_CONSOLE_EXIT ))
+GATE_EXIT=$(( S10_EXIT | S18_WASM_EXIT | S11_EXIT | S13_EXIT | SAMPLE_EQ_EXIT | S15_EXIT | S06_EXIT | S14_EXIT | S18_CTRL_EXIT | S18_CONSOLE_EXIT ))
 
 if [ "${GATE_EXIT}" = "0" ]; then
-    echo "=== PASS: remote audio + WASM freshness + preset-consistency + equivalence + sample-equivalence + macro-diff (complexity + density + swing) + lane-mute + S18 control-audit + console-error gates ==="
+    echo "=== PASS: remote audio + WASM freshness + preset-consistency + equivalence + sample-equivalence + macro-diff (complexity + density + swing) + first-bar-parity + lane-mute + S18 control-audit + console-error gates ==="
 else
-    echo "=== FAIL: remote gates (S10 exit ${S10_EXIT}, S18 WASM freshness exit ${S18_WASM_EXIT}, S11 exit ${S11_EXIT}, S13 exit ${S13_EXIT}, sample-equivalence exit ${SAMPLE_EQ_EXIT}, S15-S16 macro-diff exit ${S15_EXIT}, S14 lane-mute exit ${S14_EXIT}, S18 control-audit exit ${S18_CTRL_EXIT}, S18 console-error exit ${S18_CONSOLE_EXIT}) ==="
+    echo "=== FAIL: remote gates (S10 exit ${S10_EXIT}, S18 WASM freshness exit ${S18_WASM_EXIT}, S11 exit ${S11_EXIT}, S13 exit ${S13_EXIT}, sample-equivalence exit ${SAMPLE_EQ_EXIT}, S15-S16 macro-diff exit ${S15_EXIT}, S06 first-bar-parity exit ${S06_EXIT}, S14 lane-mute exit ${S14_EXIT}, S18 control-audit exit ${S18_CTRL_EXIT}, S18 console-error exit ${S18_CONSOLE_EXIT}) ==="
 fi
 exit "${GATE_EXIT}"
