@@ -75,6 +75,21 @@ POLY_EXPORT void poly_action_remove_envelope(PolyContext ctx, int lane, int inde
 POLY_EXPORT uint64_t poly_seed(PolyContext ctx);
 POLY_EXPORT void poly_set_seed(PolyContext ctx, uint64_t seed);
 
+// M044 S07: scene chain wiring. JS chain edits reach the render path so
+// enabling a chain in Try It / modal actually drives scene selection during
+// playback, matching the plugin.
+POLY_EXPORT void poly_set_chain_enabled(PolyContext ctx, int enabled);
+POLY_EXPORT int poly_chain_enabled(PolyContext ctx);
+POLY_EXPORT void poly_set_chain_mode(PolyContext ctx, int mode);
+POLY_EXPORT int poly_chain_mode(PolyContext ctx);
+POLY_EXPORT int poly_chain_entry_count(PolyContext ctx);
+POLY_EXPORT int poly_chain_add_entry(PolyContext ctx, int scene, int bars);
+POLY_EXPORT int poly_chain_remove_entry(PolyContext ctx, int index);
+POLY_EXPORT void poly_set_chain_entry_scene(PolyContext ctx, int index, int scene);
+POLY_EXPORT void poly_set_chain_entry_bars(PolyContext ctx, int index, int bars);
+POLY_EXPORT int poly_chain_entry_scene(PolyContext ctx, int index);
+POLY_EXPORT int poly_chain_entry_bars(PolyContext ctx, int index);
+
 #ifdef __cplusplus
 }
 #endif

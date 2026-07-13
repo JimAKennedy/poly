@@ -75,8 +75,14 @@
   /* --- chain popover --- */
   const chainBtn = document.getElementById('chainBtn');
   let chainPopover = null;
+  // M044 S07: dismiss handler is stored so rebuild-on-state-emit doesn't leave
+  // stale listeners on document. Without this, each rebuild's stale handler
+  // (with its own captured `pop`) fires on the next click bubble, sees the
+  // click as "outside" the removed popover, and immediately re-closes.
+  let chainDismiss = null;
   function buildChainPopover() {
     if (chainPopover) { chainPopover.remove(); chainPopover = null; }
+    if (chainDismiss) { document.removeEventListener('click', chainDismiss); chainDismiss = null; }
     const pop = document.createElement('div');
     pop.className = 'chain-popover open';
     pop.id = 'chainPopover';
@@ -103,9 +109,14 @@
     chainPopover = pop;
 
     pop.querySelector('[data-chain-enable]').addEventListener('click', () => {
-      host.edit('chain.enabled', chain.enabled ? 0 : 1, 'begin');
-      host.edit('chain.enabled', chain.enabled ? 0 : 1, 'perform');
-      host.edit('chain.enabled', chain.enabled ? 0 : 1, 'end');
+      // M044 S07: capture the target value BEFORE the edit sequence. `chain`
+      // is a live reference into state.chain — the 'perform' call synchronously
+      // mutates it, so re-reading `chain.enabled` on 'end' flips the value
+      // right back to 0 and the toggle appears to do nothing.
+      const nv = chain.enabled ? 0 : 1;
+      host.edit('chain.enabled', nv, 'begin');
+      host.edit('chain.enabled', nv, 'perform');
+      host.edit('chain.enabled', nv, 'end');
     });
     pop.querySelectorAll('[data-chain-mode]').forEach((b) =>
       b.addEventListener('click', () => {
@@ -151,13 +162,14 @@
     const dismiss = (e) => {
       if (!pop.contains(e.target) && e.target !== chainBtn) {
         closeChainPopover();
-        document.removeEventListener('click', dismiss);
       }
     };
+    chainDismiss = dismiss;
     setTimeout(() => document.addEventListener('click', dismiss), 0);
   }
   function closeChainPopover() {
     if (chainPopover) { chainPopover.remove(); chainPopover = null; }
+    if (chainDismiss) { document.removeEventListener('click', chainDismiss); chainDismiss = null; }
   }
   chainBtn.addEventListener('click', (e) => {
     e.stopPropagation();
@@ -179,6 +191,7 @@
 
   /* --- note map modal --- */
   let noteMapModal = null;
+  let noteMapDismiss = null;
   function buildNoteMapModal() {
     if (noteMapModal) { closeNoteMapModal(); return; }
     const nm = S.noteMap || [];
@@ -219,13 +232,14 @@
       if (noteMapModal && !noteMapModal.querySelector('.notemap-inner').contains(e.target) &&
           e.target !== document.getElementById('noteMapBtn')) {
         closeNoteMapModal();
-        document.removeEventListener('click', dismiss);
       }
     };
+    noteMapDismiss = dismiss;
     setTimeout(() => document.addEventListener('click', dismiss), 0);
   }
   function closeNoteMapModal() {
     if (noteMapModal) { noteMapModal.remove(); noteMapModal = null; }
+    if (noteMapDismiss) { document.removeEventListener('click', noteMapDismiss); noteMapDismiss = null; }
   }
   document.getElementById('noteMapBtn').addEventListener('click', (e) => {
     e.stopPropagation();
