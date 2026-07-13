@@ -17,6 +17,13 @@ set -euo pipefail
 # (or vice versa) is a real deploy hazard that the S13 equivalence gate
 # cannot catch (Play and Try It would still agree by construction; they'd
 # just agree on stale behavior).
+#
+# CI mode: emscripten is not reproducible cross-environment, so the CI-built
+# WASM won't be byte-identical to the committed webui/poly_engine.wasm. In CI
+# we pass the expected sha256 of the freshly-built artifacts through
+# POLY_EXPECTED_WASM_SHA256 and POLY_EXPECTED_JS_SHA256 env vars; when both
+# are set, they are the source of truth and the local webui/ files are not
+# read. Locally (no overrides) the script hashes the committed artifacts.
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
@@ -41,14 +48,22 @@ else
     exit 3
 fi
 
-# Local artifacts must exist. The script's job is comparing them to remote;
-# if they're missing, the caller forgot to `bash scripts/build-wasm.sh` first
-# and no comparison is possible.
-LOCAL_WASM="${PROJECT_DIR}/webui/poly_engine.wasm"
-LOCAL_JS="${PROJECT_DIR}/webui/poly_engine.js"
-if [ ! -f "${LOCAL_WASM}" ] || [ ! -f "${LOCAL_JS}" ]; then
-    echo "=== FAIL: local artifacts missing at webui/poly_engine.{wasm,js} — run scripts/build-wasm.sh first ===" >&2
-    exit 4
+EXPECTED_WASM_SHA="${POLY_EXPECTED_WASM_SHA256:-}"
+EXPECTED_JS_SHA="${POLY_EXPECTED_JS_SHA256:-}"
+
+# When both overrides are supplied we're in CI mode: trust the caller's shas
+# and skip the local-artifact requirement entirely. Otherwise the script
+# compares against the committed webui/ artifacts (local operator mode).
+if [ -n "${EXPECTED_WASM_SHA}" ] && [ -n "${EXPECTED_JS_SHA}" ]; then
+    LOCAL_MODE=0
+else
+    LOCAL_MODE=1
+    LOCAL_WASM="${PROJECT_DIR}/webui/poly_engine.wasm"
+    LOCAL_JS="${PROJECT_DIR}/webui/poly_engine.js"
+    if [ ! -f "${LOCAL_WASM}" ] || [ ! -f "${LOCAL_JS}" ]; then
+        echo "=== FAIL: local artifacts missing at webui/poly_engine.{wasm,js} — run scripts/build-wasm.sh first ===" >&2
+        exit 4
+    fi
 fi
 
 # Strip trailing slash for consistent URL joining.
@@ -62,11 +77,12 @@ trap cleanup EXIT INT TERM
 
 fetch_and_hash() {
     local remote_path="$1"
-    local local_file="$2"
-    local label="$3"
+    local expected_hash="$2"
+    local expected_source="$3"
+    local label="$4"
     local remote_url="${URL_TRIMMED}${remote_path}"
     local remote_file
-    remote_file="${TMP_DIR}/$(basename "${local_file}")"
+    remote_file="${TMP_DIR}/$(basename "${remote_path}")"
 
     if ! curl -sfL -o "${remote_file}" "${remote_url}"; then
         echo "=== FAIL: could not fetch ${remote_url} ===" >&2
@@ -74,16 +90,14 @@ fetch_and_hash() {
     fi
 
     local remote_hash
-    local local_hash
     remote_hash="$("${SHA_CMD[@]}" "${remote_file}" | awk '{print $1}')"
-    local_hash="$("${SHA_CMD[@]}" "${local_file}" | awk '{print $1}')"
 
-    if [ "${remote_hash}" != "${local_hash}" ]; then
+    if [ "${remote_hash}" != "${expected_hash}" ]; then
         {
             echo "FAIL: WASM staleness detected — ${label}"
-            echo "    path:   ${remote_path}"
-            echo "    remote: ${remote_hash}  (${remote_url})"
-            echo "    local:  ${local_hash}  (${local_file})"
+            echo "    path:     ${remote_path}"
+            echo "    remote:   ${remote_hash}  (${remote_url})"
+            echo "    expected: ${expected_hash}  (${expected_source})"
         } >&2
         return 1
     fi
@@ -92,11 +106,21 @@ fetch_and_hash() {
     return 0
 }
 
-echo "=== check-wasm-freshness: comparing ${URL_TRIMMED}/webui/poly_engine.{wasm,js} against local build ==="
+if [ "${LOCAL_MODE}" = "1" ]; then
+    echo "=== check-wasm-freshness: comparing ${URL_TRIMMED}/webui/poly_engine.{wasm,js} against local webui/ ==="
+    EXPECTED_WASM_SHA="$("${SHA_CMD[@]}" "${LOCAL_WASM}" | awk '{print $1}')"
+    EXPECTED_JS_SHA="$("${SHA_CMD[@]}" "${LOCAL_JS}" | awk '{print $1}')"
+    WASM_SOURCE="${LOCAL_WASM}"
+    JS_SOURCE="${LOCAL_JS}"
+else
+    echo "=== check-wasm-freshness: comparing ${URL_TRIMMED}/webui/poly_engine.{wasm,js} against POLY_EXPECTED_*_SHA256 overrides ==="
+    WASM_SOURCE="POLY_EXPECTED_WASM_SHA256"
+    JS_SOURCE="POLY_EXPECTED_JS_SHA256"
+fi
 
 STATUS=0
-fetch_and_hash "/webui/poly_engine.wasm" "${LOCAL_WASM}" "poly_engine.wasm" || STATUS=$?
-fetch_and_hash "/webui/poly_engine.js" "${LOCAL_JS}" "poly_engine.js" || STATUS=$?
+fetch_and_hash "/webui/poly_engine.wasm" "${EXPECTED_WASM_SHA}" "${WASM_SOURCE}" "poly_engine.wasm" || STATUS=$?
+fetch_and_hash "/webui/poly_engine.js" "${EXPECTED_JS_SHA}" "${JS_SOURCE}" "poly_engine.js" || STATUS=$?
 
 if [ "${STATUS}" = "0" ]; then
     echo "PASS: WASM freshness verified"
