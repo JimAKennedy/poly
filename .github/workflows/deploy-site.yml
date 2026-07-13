@@ -28,7 +28,7 @@ jobs:
       wasm_sha256: ${{ steps.wasm-hash.outputs.wasm_sha256 }}
       js_sha256: ${{ steps.wasm-hash.outputs.js_sha256 }}
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
       - name: Check site asset references
         run: bash scripts/check-site-assets.sh
       - name: Setup Emscripten
@@ -46,9 +46,9 @@ jobs:
           echo "js_sha256=${js_sha}" >> "$GITHUB_OUTPUT"
           echo "poly_engine.wasm sha256: ${wasm_sha}"
           echo "poly_engine.js   sha256: ${js_sha}"
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
-          node-version: 22
+          node-version: '24'
           cache: npm
           cache-dependency-path: site/package-lock.json
       - name: Install dependencies
@@ -61,7 +61,7 @@ jobs:
           npm run copy-webui
           cp ../build-wasm/poly_engine.js ../build-wasm/poly_engine.wasm public/webui/
           npx astro build
-      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3
+      - uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
         with:
           path: site/dist
 
@@ -81,10 +81,10 @@ jobs:
     needs: [build, deploy]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
-          node-version: 22
+          node-version: '24'
           cache: npm
           cache-dependency-path: site/package-lock.json
       - name: Install dependencies
@@ -95,7 +95,7 @@ jobs:
         working-directory: site
         run: echo "version=$(npx playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
       - name: Cache Playwright browsers
-        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ steps.pw-version.outputs.version }}
@@ -109,7 +109,7 @@ jobs:
         run: bash scripts/site-verify-remote.sh "${{ needs.deploy.outputs.page_url }}"
       - name: Upload Playwright report
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
         with:
           name: site-remote-verify-report
           path: site/playwright-report/
@@ -117,7 +117,7 @@ jobs:
           if-no-files-found: ignore
       - name: Upload test results
         if: failure()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
         with:
           name: site-remote-verify-test-results
           path: site/test-results/
@@ -125,7 +125,7 @@ jobs:
           if-no-files-found: ignore
       - name: Upload remote-verify summary artifacts
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
         with:
           name: site-remote-verify-summaries
           path: .gsd/artifacts/
