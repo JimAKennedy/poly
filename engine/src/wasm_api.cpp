@@ -20,6 +20,10 @@ static constexpr int kFieldsPerEvent = 6;
 struct Context {
     poly::Engine engine;
     poly::SceneState scenes{};
+    // M044 S07: Scene chain runtime state, mirrors processor.cpp:70. Advances at
+    // bar boundaries during poly_render when scenes.chain.enabled &&
+    // scenes.chain.entryCount > 0.
+    poly::SceneChainState chainState{};
     poly::NoteEventBuffer eventBuffer{};
     std::array<double, poly::kMaxEventsPerBlock * kFieldsPerEvent> flatEvents{};
     // Scratch buffer used by readState() to hand out an interpolated GrooveState
@@ -155,6 +159,16 @@ int poly_render(PolyContext ctx, double ppqStart, double ppqEnd, double tempo, d
     tc.jumped = (jumped != 0);
     tc.loopStartPpq = loopStartPpq;
     tc.loopEndPpq = loopEndPpq;
+
+    // M044 S07: Scene chain override. When enabled, advance the chain state
+    // machine at bar boundaries (processor.cpp:420-424) and let it drive
+    // scenes.select for this block, so subsequent readState()/render see the
+    // scene the chain picked (A, B, or Morph) rather than the manual pick.
+    if (c->scenes.chain.enabled && c->scenes.chain.entryCount > 0) {
+        if (tc.jumped)
+            c->chainState.reset();
+        c->scenes.select = c->chainState.update(c->scenes.chain, ppqStart);
+    }
 
     // M043 S14 T02: when Morph is selected, render an interpolated snapshot of
     // both scenes rather than falling back to scene A. Mirrors the plugin's
@@ -587,6 +601,10 @@ void poly_copy_scenes(PolyContext dst, PolyContext src) {
     auto* d = static_cast<Context*>(dst);
     auto* s = static_cast<Context*>(src);
     d->scenes = s->scenes;
+    // Chain runtime state is not part of scenes — reset it so the destination
+    // Context (typically the fresh playbackCtx seeded on Play) starts chain
+    // execution from bar 0.
+    d->chainState.reset();
 }
 
 void poly_action_set_fixed_step(PolyContext ctx, int lane, int step, int on) {
@@ -673,6 +691,87 @@ uint64_t poly_seed(PolyContext ctx) {
 
 void poly_set_seed(PolyContext ctx, uint64_t seed) {
     static_cast<Context*>(ctx)->state().seed = seed;
+}
+
+// --- Scene chain edits (M044 S07) ------------------------------------------
+// Mirror processor.cpp:492-523 so JS chain edits reach the render path. Without
+// these, the modal UI's chain state was JS-shadow only and playback ignored it.
+
+void poly_set_chain_enabled(PolyContext ctx, int enabled) {
+    auto* c = static_cast<Context*>(ctx);
+    bool wasEnabled = c->scenes.chain.enabled;
+    c->scenes.chain.enabled = (enabled != 0);
+    if (c->scenes.chain.enabled && !wasEnabled)
+        c->chainState.reset();
+}
+
+int poly_chain_enabled(PolyContext ctx) {
+    return static_cast<Context*>(ctx)->scenes.chain.enabled ? 1 : 0;
+}
+
+void poly_set_chain_mode(PolyContext ctx, int mode) {
+    auto* c = static_cast<Context*>(ctx);
+    c->scenes.chain.mode = static_cast<poly::ChainMode>(std::clamp(mode, 0, 2));
+}
+
+int poly_chain_mode(PolyContext ctx) {
+    return static_cast<int>(static_cast<Context*>(ctx)->scenes.chain.mode);
+}
+
+int poly_chain_entry_count(PolyContext ctx) {
+    return static_cast<Context*>(ctx)->scenes.chain.entryCount;
+}
+
+int poly_chain_add_entry(PolyContext ctx, int scene, int bars) {
+    auto* c = static_cast<Context*>(ctx);
+    if (c->scenes.chain.entryCount >= poly::kMaxChainEntries)
+        return c->scenes.chain.entryCount;
+    auto& e = c->scenes.chain.entries[static_cast<size_t>(c->scenes.chain.entryCount)];
+    e.scene = sceneFromInt(scene);
+    e.bars = std::clamp(bars, 1, 32);
+    ++c->scenes.chain.entryCount;
+    c->chainState.reset();
+    return c->scenes.chain.entryCount;
+}
+
+int poly_chain_remove_entry(PolyContext ctx, int index) {
+    auto* c = static_cast<Context*>(ctx);
+    if (index < 0 || index >= c->scenes.chain.entryCount)
+        return c->scenes.chain.entryCount;
+    for (int i = index; i < c->scenes.chain.entryCount - 1; ++i)
+        c->scenes.chain.entries[static_cast<size_t>(i)] = c->scenes.chain.entries[static_cast<size_t>(i + 1)];
+    c->scenes.chain.entries[static_cast<size_t>(c->scenes.chain.entryCount - 1)] = {};
+    --c->scenes.chain.entryCount;
+    c->chainState.reset();
+    return c->scenes.chain.entryCount;
+}
+
+void poly_set_chain_entry_scene(PolyContext ctx, int index, int scene) {
+    auto* c = static_cast<Context*>(ctx);
+    if (index < 0 || index >= c->scenes.chain.entryCount)
+        return;
+    c->scenes.chain.entries[static_cast<size_t>(index)].scene = sceneFromInt(scene);
+}
+
+void poly_set_chain_entry_bars(PolyContext ctx, int index, int bars) {
+    auto* c = static_cast<Context*>(ctx);
+    if (index < 0 || index >= c->scenes.chain.entryCount)
+        return;
+    c->scenes.chain.entries[static_cast<size_t>(index)].bars = std::clamp(bars, 1, 32);
+}
+
+int poly_chain_entry_scene(PolyContext ctx, int index) {
+    auto* c = static_cast<Context*>(ctx);
+    if (index < 0 || index >= c->scenes.chain.entryCount)
+        return 0;
+    return static_cast<int>(c->scenes.chain.entries[static_cast<size_t>(index)].scene);
+}
+
+int poly_chain_entry_bars(PolyContext ctx, int index) {
+    auto* c = static_cast<Context*>(ctx);
+    if (index < 0 || index >= c->scenes.chain.entryCount)
+        return 0;
+    return c->scenes.chain.entries[static_cast<size_t>(index)].bars;
 }
 
 } // extern "C"

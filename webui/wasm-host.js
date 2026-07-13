@@ -277,6 +277,20 @@
       state.preset = 'Init';
       state.morph = 0;
       state.chain = { enabled: false, mode: 0, entryCount: 0, entries: [] };
+      // M044 S07: keep engine chain state aligned with the JS shadow reset so
+      // Init doesn't leave stale entries driving playback.
+      Module._poly_set_chain_enabled(engineCtx, 0);
+      Module._poly_set_chain_mode(engineCtx, 0);
+      while (Module._poly_chain_entry_count(engineCtx) > 0)
+        Module._poly_chain_remove_entry(engineCtx, 0);
+      if (playbackCtx) {
+        Module._poly_set_chain_enabled(playbackCtx, 0);
+        Module._poly_set_chain_mode(playbackCtx, 0);
+        while (Module._poly_chain_entry_count(playbackCtx) > 0)
+          Module._poly_chain_remove_entry(playbackCtx, 0);
+      }
+      probe.engineChainEnabled = 0;
+      probe.engineChainEntryCount = 0;
       state.noteMap = identityNoteMap();
     } else if (index >= 0 && index < Module._poly_preset_count()) {
       Module._poly_action_apply_preset_to_scene(engineCtx, index, targetScene);
@@ -482,6 +496,12 @@
     // reached the user during the first bar. Complements missingNotes/Roles
     // which are gated by samplesReady and so miss cold-start races by design.
     synthVoiceCount: 0,
+    // M044 S07: mirrored engine chain state, refreshed on each chain edit and
+    // on selectScene. Lets the modal-chain-flow spec prove JS chain edits
+    // actually reached the WASM engine (the S07 fix) rather than sitting in
+    // the JS shadow only.
+    engineChainEnabled: 0,
+    engineChainEntryCount: 0,
   };
   window.__polyAudioProbe = probe;
   let samplesPromise = null;
@@ -1053,13 +1073,23 @@
       return;
     }
 
+    // M044 S07: chain edits are pushed into the WASM engine (engineCtx and any
+    // live playbackCtx) so poly_render's chain-driven scene override actually
+    // fires during Try It / modal playback. Prior to this, chain state lived
+    // JS-side only and enabling did nothing audible.
     if (paramId === 'chain.enabled') {
       state.chain.enabled = value >= 0.5;
+      const iv = state.chain.enabled ? 1 : 0;
+      Module._poly_set_chain_enabled(engineCtx, iv);
+      if (playbackCtx) Module._poly_set_chain_enabled(playbackCtx, iv);
+      probe.engineChainEnabled = Module._poly_chain_enabled(engineCtx);
       emitState();
       return;
     }
     if (paramId === 'chain.mode') {
       state.chain.mode = Math.round(value * 2);
+      Module._poly_set_chain_mode(engineCtx, state.chain.mode);
+      if (playbackCtx) Module._poly_set_chain_mode(playbackCtx, state.chain.mode);
       emitState();
       return;
     }
@@ -1068,8 +1098,17 @@
     if (cm) {
       const ei = parseInt(cm[1]);
       if (ei < state.chain.entryCount) {
-        if (cm[2] === 'scene') state.chain.entries[ei].scene = Math.round(value * 2);
-        else state.chain.entries[ei].bars = Math.round(value * 31) + 1;
+        if (cm[2] === 'scene') {
+          const sv = Math.round(value * 2);
+          state.chain.entries[ei].scene = sv;
+          Module._poly_set_chain_entry_scene(engineCtx, ei, sv);
+          if (playbackCtx) Module._poly_set_chain_entry_scene(playbackCtx, ei, sv);
+        } else {
+          const bv = Math.round(value * 31) + 1;
+          state.chain.entries[ei].bars = bv;
+          Module._poly_set_chain_entry_bars(engineCtx, ei, bv);
+          if (playbackCtx) Module._poly_set_chain_entry_bars(playbackCtx, ei, bv);
+        }
       }
       emitState();
       return;
@@ -1218,9 +1257,14 @@
         break;
       }
       case 'chainAddEntry':
+        // M044 S07: mirror the JS shadow into the engine so playback picks up
+        // the new entry. kMaxChainEntries = 16 on the engine side.
         if (state.chain.entryCount < 16) {
           state.chain.entries.push({ scene: 0, bars: 4 });
           state.chain.entryCount++;
+          Module._poly_chain_add_entry(engineCtx, 0, 4);
+          if (playbackCtx) Module._poly_chain_add_entry(playbackCtx, 0, 4);
+          probe.engineChainEntryCount = Module._poly_chain_entry_count(engineCtx);
         }
         break;
       case 'chainRemoveEntry': {
@@ -1228,6 +1272,9 @@
         if (ci >= 0 && ci < state.chain.entryCount) {
           state.chain.entries.splice(ci, 1);
           state.chain.entryCount--;
+          Module._poly_chain_remove_entry(engineCtx, ci);
+          if (playbackCtx) Module._poly_chain_remove_entry(playbackCtx, ci);
+          probe.engineChainEntryCount = Module._poly_chain_entry_count(engineCtx);
         }
         break;
       }
