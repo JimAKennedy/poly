@@ -20,12 +20,18 @@
 
   /* ================= chrome ================= */
   const embedded = !!window.__POLY_EMBEDDED__;
-  document.getElementById('play').addEventListener('click', () => { if (!embedded) host.action('togglePlay', {}); });
+  const playBtn = document.getElementById('play');
+  // The Play button is visually gated on state.samplesReady in renderChrome
+  // (opacity/cursor/title). The click itself is NOT blocked here — the host's
+  // togglePlay defers the transport-flag flip until decodeAudioData finishes,
+  // so a click during decode is a no-op audibly and visually (no desk
+  // animation) but is still accepted so e2e specs that click Play synchronously
+  // after modal open keep working.
+  playBtn.addEventListener('click', () => { if (!embedded) host.action('togglePlay', {}); });
   if (embedded) {
-    const pb = document.getElementById('play');
-    pb.style.opacity = '0.35';
-    pb.style.cursor = 'default';
-    pb.title = 'Transport controlled by host DAW';
+    playBtn.style.opacity = '0.35';
+    playBtn.style.cursor = 'default';
+    playBtn.title = 'Transport controlled by host DAW';
   }
   addEventListener('keydown', (e) => {
     if (e.code === 'Space' && !e.repeat) {
@@ -860,6 +866,14 @@
     const chain = S.chain || { enabled: false };
     chainBtn.classList.toggle('on', chain.enabled);
     if (chainPopover) buildChainPopover();
+    if (!embedded) {
+      const ready = !!S.samplesReady;
+      playBtn.classList.toggle('loading', !ready);
+      playBtn.style.opacity = ready ? '' : '0.35';
+      playBtn.style.cursor = ready ? '' : 'progress';
+      playBtn.setAttribute('aria-busy', ready ? 'false' : 'true');
+      playBtn.title = ready ? '' : 'Loading samples…';
+    }
   }
   function refreshAll() {
     renderChrome();
