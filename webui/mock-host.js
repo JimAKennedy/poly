@@ -451,6 +451,9 @@
     lanes: makePresetLanes(9),
     presets: PRESETS,
     noteMap: identityNoteMap(),
+    // Mock host has no real sample loader — report ready immediately so the
+    // UI's Play-gate lets Space/Play through.
+    samplesReady: true,
   };
 
   function saveCurrentScene() {

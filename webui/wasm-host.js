@@ -94,6 +94,12 @@
     lanes: [],
     presets: [],
     noteMap: identityNoteMap(),
+    // Flips to true once the sample manifest has been fetched and decoded (or
+    // has permanently fallen back to synth on manifest failure). UI gates the
+    // Play button on this so a user gesture can't outrun decodeAudioData —
+    // previously the transport flag flipped immediately and the desk animated
+    // as if playing while nothing was audible until buffers landed.
+    samplesReady: false,
   };
 
   function readLaneFromWasm(laneIdx) {
@@ -336,6 +342,12 @@
     // sampleManifest is still null (rebuildSampleSelection guards on it) —
     // ensureSamplesLoaded calls this again once the manifest is decoded.
     rebuildSampleSelection();
+    // Proactive decode: kick off the manifest fetch + decodeAudioData as soon
+    // as a preset is selected so the buffers are warm before the user clicks
+    // Play. Idempotent — samplesPromise is cached, so subsequent preset
+    // switches are no-ops. The returned promise is intentionally not awaited
+    // here: UI gates the Play button on state.samplesReady instead.
+    ensureSamplesLoaded();
   }
 
   /* ---------- WebAudio preview voices ---------- */
@@ -344,6 +356,11 @@
   // so param edits and Play state stay independent — and so a fresh Play
   // click re-seeds phrase/drift/RNG deterministically from the current preset.
   let ctx = null, playing = false, startAt = 0, schedTimer = null, _nb = null;
+  // Transport intent (`playing`) flips synchronously on Play click; audible
+  // playback (`audible`) only flips true after the scheduler actually starts,
+  // which is post-decode. Frame + probe expose `audible` so the desk can't
+  // animate "as if playing" during the ~200-500ms decodeAudioData window.
+  let audible = false;
   let playbackCtx = 0;
   let playbackNextPpq = 0.0;
   let playbackRenderIter = 0;
@@ -351,7 +368,7 @@
   const PLAYBACK_SAMPLE_RATE = 44100;
   const PLAYBACK_BLOCK_SIZE = 512;
   const PLAYBACK_LOOKAHEAD_SEC = 0.14;
-  const now8 = () => (playing && ctx ? (ctx.currentTime - startAt) / eighthSec() : 0);
+  const now8 = () => (audible && ctx ? (ctx.currentTime - startAt) / eighthSec() : 0);
 
   // Sample-backed playback (M043 S09, sample-selection parity fix).
   // Both surfaces resolve samples by (MIDI note, preferred role) — mirrors
@@ -571,9 +588,30 @@
     return new URL('../samples/', location.href).href;
   }
 
+  // Attempt to create a suspended AudioContext without a user gesture so
+  // decodeAudioData can run before Play. decodeAudioData is legal on a
+  // suspended context; only resume()/start() need a gesture. Some browsers
+  // (older Safari) may throw here — falls through to lazy creation in
+  // togglePlay.
+  function ensureCtx() {
+    if (ctx) return ctx;
+    try {
+      ctx = new (window.AudioContext || window.webkitAudioContext)();
+    } catch (e) {
+      ctx = null;
+    }
+    return ctx;
+  }
+
   async function ensureSamplesLoaded() {
     if (samplesPromise) return samplesPromise;
-    if (!ctx) return; // deferred until first togglePlay creates ctx
+    // Try to create a suspended ctx up front so preset-select can drive the
+    // decode without waiting for the first Play click. If ctx creation is
+    // blocked (rare), fall back to the historical "deferred until togglePlay"
+    // path — samplesReady stays false so the UI keeps the Play button
+    // enabled-but-not-loading and togglePlay will handle it there.
+    if (!ctx) ensureCtx();
+    if (!ctx) return;
     samplesPromise = (async () => {
       const base = samplesBasePath();
       try {
@@ -611,6 +649,8 @@
         probe.fallbackActive = true;
       } finally {
         samplesReady = true;
+        state.samplesReady = true;
+        emitState();
       }
     })();
     return samplesPromise;
@@ -933,7 +973,6 @@
     }
     if (ctx) ensureAnalyserTap();
     playing = !playing;
-    probe.playing = playing;
     if (playing) {
       // Reset per-run probe fields (missing-role, missing-note, RMS).
       // fallbackActive is NOT reset — it's a one-way sticky flag set by
@@ -985,6 +1024,10 @@
         startAt = ctx.currentTime + 0.06;
         schedTimer = setInterval(schedule, 30);
         startRmsSampler();
+        // Only now flip the audible/probe.playing flags — this is the point
+        // at which the desk animation and note-firing actually begin.
+        audible = true;
+        probe.playing = true;
       }
       try {
         fireDumpTryIt();
@@ -992,7 +1035,10 @@
         console.warn('[wasm-host] dump failed:', e && e.message);
       }
     } else {
+      audible = false;
+      probe.playing = false;
       clearInterval(schedTimer);
+      schedTimer = null;
       stopRmsSampler();
       if (Module && playbackCtx) {
         Module._poly_destroy(playbackCtx);
@@ -1004,10 +1050,14 @@
   /* ---------- frame pump ---------- */
   function pump() {
     const t8 = now8();
-    const convLeft = playing ? (CONV - (Math.floor(t8) % CONV)) % CONV || CONV : CONV;
+    // `audible` (not `playing` intent) drives all outward-facing playback
+    // signals so the desk animation, pause/play icon, and probe.playing agree
+    // on when audio actually starts firing. During the decode window they all
+    // read false; once the scheduler starts they all flip true together.
+    const convLeft = audible ? (CONV - (Math.floor(t8) % CONV)) % CONV || CONV : CONV;
     const frame = {
       t8,
-      playing,
+      playing: audible,
       convLeft,
       lanes: state.lanes.map((l) => {
         const cyc = cyc8(l);
