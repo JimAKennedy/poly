@@ -1,5 +1,7 @@
 #include "header_view.h"
 
+#include <cstring>
+
 #include "public.sdk/source/vst/vsteditcontroller.h"
 #include "vstgui/lib/cdrawcontext.h"
 #include "vstgui/lib/cfont.h"
@@ -131,21 +133,43 @@ VSTGUI::CMouseEventResult HeaderView::onMouseDown(VSTGUI::CPoint& where, const V
         return VSTGUI::kMouseEventNotHandled;
 
     auto menu = VSTGUI::makeOwned<VSTGUI::COptionMenu>(VSTGUI::CRect(0, 0, 0, 0), nullptr, -1);
-    menu->addEntry("Init (All Lanes)");
+    auto* initItem = menu->addEntry("Init (All Lanes)");
+    initItem->setTag(-1);
     menu->addSeparator();
-    for (int i = 0; i < kFactoryPresetCount; ++i) {
-        menu->addEntry(getFactoryPresetInfo(i).name);
+
+    for (int c = 0; c < kFactoryPresetCategoryCount; ++c) {
+        const char* categoryName = kFactoryPresetCategories[c];
+        auto submenu = VSTGUI::makeOwned<VSTGUI::COptionMenu>(VSTGUI::CRect(0, 0, 0, 0), nullptr, -1);
+        int addedCount = 0;
+        for (int p = 0; p < kFactoryPresetCount; ++p) {
+            const auto& info = getFactoryPresetInfo(p);
+            if (info.category && std::strcmp(info.category, categoryName) == 0) {
+                auto* presetItem = submenu->addEntry(info.name);
+                presetItem->setTag(p);
+                ++addedCount;
+            }
+        }
+        if (addedCount > 0) {
+            menu->addEntry(submenu, categoryName);
+        }
     }
 
     VSTGUI::CPoint framePos = where;
     localToFrame(framePos);
 
     if (menu->popup(getFrame(), framePos)) {
-        auto result = menu->getLastResult();
-        if (result == 0) {
-            resetToInit();
-        } else if (result >= 2 && result < 2 + kFactoryPresetCount) {
-            applyPreset(result - 2);
+        int32_t idxInMenu = 0;
+        VSTGUI::COptionMenu* clickedMenu = menu->getLastItemMenu(idxInMenu);
+        if (clickedMenu) {
+            VSTGUI::CMenuItem* clickedItem = clickedMenu->getEntry(idxInMenu);
+            if (clickedItem) {
+                int32_t tag = clickedItem->getTag();
+                if (tag == -1) {
+                    resetToInit();
+                } else if (tag >= 0 && tag < kFactoryPresetCount) {
+                    applyPreset(tag);
+                }
+            }
         }
     }
 
