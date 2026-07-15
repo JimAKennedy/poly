@@ -94,9 +94,28 @@
   .strip .core { display: flex; flex-direction: column; align-items: center; gap: 9px; flex: 1; min-height: 0; width: 100%; }
   .strip svg.ring { width: 64px; height: 64px; flex: none; }
   .ladder { display: flex; flex-direction: column-reverse; gap: 3px; width: 100%; flex: 1; min-height: 0; }
-  .ladder button { border-radius: 2px; background: var(--surface2); border: 0; padding: 0; min-height: 6px; }
+  .ladder button { border-radius: 2px; background: var(--surface2); border: 0; padding: 0; min-height: 6px; position: relative; }
   .ladder button.hit { background: var(--c); opacity: .82; }
   .ladder button.now { outline: 1.5px solid var(--text); opacity: 1; }
+  /* M045 S01 T03: truthful emission overlay. Reflects what the engine actually
+     fired vs. the pattern grid intent. Ring buffer clears on Stop → overlay
+     disappears; while playing, oldest-visible traversal per step is shown.
+     - em-add:   engine fired at a step NOT in the base pattern (mutation add).
+                 Dashed lane-colored outline over the empty cell.
+     - em-drop:  engine skipped a base-pattern hit (mutation drop or
+                 probability roll-off). Base fill is "punched through" to a
+                 low-opacity ghost so the reader sees a scheduled-but-not-fired.
+     - em-ghost: engine fired at ghost velocity. Base fill dims toward the
+                 dropped end without disappearing entirely. */
+  .ladder button.em-add { outline: 1.5px dashed var(--c); outline-offset: -1.5px; opacity: .55; }
+  .ladder button.em-add.now { outline: 1.5px dashed var(--text); opacity: 1; }
+  .ladder button.hit.em-drop { opacity: .18; }
+  .ladder button.hit.em-drop.now { opacity: .5; outline-style: dashed; }
+  .ladder button.hit.em-ghost { opacity: .42; }
+  /* Muted lane freezes emission overlay along with everything else. */
+  .strip.muted .ladder button.em-add { outline-color: #3A342C; opacity: .2; }
+  .strip.muted .ladder button.hit.em-drop,
+  .strip.muted .ladder button.hit.em-ghost { opacity: .18; }
   .vu { width: 100%; height: 5px; background: var(--surface2); border-radius: 3px; overflow: hidden; flex: none; }
   .vu i { display: block; height: 100%; width: 4%; background: linear-gradient(90deg, #6E5F41, var(--accent)); transition: width .08s linear; }
   .feel { width: 100%; font-size: 9.5px; color: var(--dim); letter-spacing: .1em; font-variant-numeric: tabular-nums; display: flex; flex-direction: column; gap: 2px; flex: none; }

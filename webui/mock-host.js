@@ -899,5 +899,8 @@
     setAsyncMode: (enabled) => { asyncMode = !!enabled; pendingPush = false; },
     flushState,
     hasPendingPush: () => pendingPush,
+    // M045 S01 T03: mock host has no engine emission stream — desk overlay
+    // silently no-ops when this returns [].
+    getLaneEmissions: () => [],
   };
 })();

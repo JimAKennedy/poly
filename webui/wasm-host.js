@@ -1511,6 +1511,10 @@
       setAsyncMode: (enabled) => { asyncMode = !!enabled; pendingPush = false; },
       flushState,
       hasPendingPush: () => pendingPush,
+      // M045 S01 T03: per-lane emission read for the desk overlay. Ordered
+      // oldest→newest; excludes unwritten ring slots. Empty when playback is
+      // stopped (ring is reset in togglePlay).
+      getLaneEmissions: (li) => readEmissionsOrdered(state.lanes[li]),
       // S11 T06: cross-surface consistency accessor. Returns the same shape
       // the site card exposes via __polyPatterns.resolvePreset — engine name
       // plus per-lane {noteNumber, roleLabel}. Sourced from presetsById (the
