@@ -16,6 +16,9 @@
 namespace {
 
 static constexpr int kFieldsPerEvent = 6;
+// M045 S01 T01: layout of poly_emission_buffer per emission.
+// [0]=ppqPosition, [1]=laneIndex, [2]=cycleStep, [3]=kind (0=Base,1=Ghost,2=Add,3=Drop).
+static constexpr int kFieldsPerEmission = 4;
 
 struct Context {
     poly::Engine engine;
@@ -25,7 +28,9 @@ struct Context {
     // scenes.chain.entryCount > 0.
     poly::SceneChainState chainState{};
     poly::NoteEventBuffer eventBuffer{};
+    poly::EmissionEventBuffer emissionBuffer{};
     std::array<double, poly::kMaxEventsPerBlock * kFieldsPerEvent> flatEvents{};
+    std::array<double, poly::kMaxEmissionsPerBlock * kFieldsPerEmission> flatEmissions{};
     // Scratch buffer used by readState() to hand out an interpolated GrooveState
     // view under SceneSelect::Morph. Owning it on the Context keeps returned
     // pointers (e.g. poly_lane_micro_timing_ptr) valid for the JS caller's
@@ -147,6 +152,7 @@ int poly_render(PolyContext ctx, double ppqStart, double ppqEnd, double tempo, d
                 int playing, int looping, double loopStartPpq, double loopEndPpq, int jumped) {
     auto* c = static_cast<Context*>(ctx);
     c->eventBuffer.clear();
+    c->emissionBuffer.clear();
 
     poly::TransportContext tc{};
     tc.ppqStart = ppqStart;
@@ -184,17 +190,26 @@ int poly_render(PolyContext ctx, double ppqStart, double ppqEnd, double tempo, d
     // there is a single source of truth.
     const poly::GrooveState& base = c->readState();
     poly::GrooveState resolved = poly::resolveConstraints(base, poly::resolveMacros(base));
-    c->engine.renderRange(tc, resolved, c->eventBuffer);
+    c->engine.renderRange(tc, resolved, c->eventBuffer, &c->emissionBuffer);
 
     for (size_t i = 0; i < c->eventBuffer.count; ++i) {
         const auto& e = c->eventBuffer.events[i];
-        size_t base = i * kFieldsPerEvent;
-        c->flatEvents[base + 0] = e.ppqPosition;
-        c->flatEvents[base + 1] = static_cast<double>(e.pitch);
-        c->flatEvents[base + 2] = static_cast<double>(e.velocity);
-        c->flatEvents[base + 3] = e.duration;
-        c->flatEvents[base + 4] = static_cast<double>(e.channel);
-        c->flatEvents[base + 5] = static_cast<double>(e.laneIndex);
+        size_t offset = i * kFieldsPerEvent;
+        c->flatEvents[offset + 0] = e.ppqPosition;
+        c->flatEvents[offset + 1] = static_cast<double>(e.pitch);
+        c->flatEvents[offset + 2] = static_cast<double>(e.velocity);
+        c->flatEvents[offset + 3] = e.duration;
+        c->flatEvents[offset + 4] = static_cast<double>(e.channel);
+        c->flatEvents[offset + 5] = static_cast<double>(e.laneIndex);
+    }
+
+    for (size_t i = 0; i < c->emissionBuffer.count; ++i) {
+        const auto& ee = c->emissionBuffer.events[i];
+        size_t offset = i * kFieldsPerEmission;
+        c->flatEmissions[offset + 0] = ee.ppqPosition;
+        c->flatEmissions[offset + 1] = static_cast<double>(ee.laneIndex);
+        c->flatEmissions[offset + 2] = static_cast<double>(ee.cycleStep);
+        c->flatEmissions[offset + 3] = static_cast<double>(ee.kind);
     }
 
     return static_cast<int>(c->eventBuffer.count);
@@ -206,6 +221,18 @@ int poly_event_count(PolyContext ctx) {
 
 double* poly_event_buffer(PolyContext ctx) {
     return static_cast<Context*>(ctx)->flatEvents.data();
+}
+
+int poly_emission_count(PolyContext ctx) {
+    return static_cast<int>(static_cast<Context*>(ctx)->emissionBuffer.count);
+}
+
+double* poly_emission_buffer(PolyContext ctx) {
+    return static_cast<Context*>(ctx)->flatEmissions.data();
+}
+
+int poly_emission_fields_per_event() {
+    return kFieldsPerEmission;
 }
 
 int poly_active_lane_count(PolyContext ctx) {

@@ -202,10 +202,73 @@
     };
   }
 
+  // M045 S01 T02: per-lane emission ring buffer. Populated by drainEmissions()
+  // in the schedule() loop from the engine's poly_emission_buffer, then read by
+  // the desk overlay to render mutation adds/drops/ghost hits truthfully.
+  // Fixed-cap circular buffer with pre-allocated slot objects so the drain
+  // loop never allocates.
+  const EMISSION_CAP = 32;
+  const EMISSION_KIND_LABELS = ['base', 'ghost', 'add', 'drop'];
+
+  function initLaneEmissions(lane) {
+    const ring = new Array(EMISSION_CAP);
+    for (let i = 0; i < EMISSION_CAP; i++) {
+      ring[i] = { ppq: 0, step: 0, kind: 'base' };
+    }
+    lane.emissions = ring;
+    lane._emHead = 0;
+    lane._emCount = 0;
+  }
+
+  function resetLaneEmissions(lane) {
+    if (!lane) return;
+    lane._emHead = 0;
+    lane._emCount = 0;
+  }
+
+  function readEmissionsOrdered(lane) {
+    if (!lane || !lane.emissions || !lane._emCount) return [];
+    const cap = EMISSION_CAP;
+    const start = (lane._emHead - lane._emCount + cap) % cap;
+    const out = new Array(lane._emCount);
+    for (let i = 0; i < lane._emCount; i++) {
+      const src = lane.emissions[(start + i) % cap];
+      out[i] = { ppq: src.ppq, step: src.step, kind: src.kind };
+    }
+    return out;
+  }
+
+  function drainEmissions(sourceCtx) {
+    if (!sourceCtx || !Module || !Module._poly_emission_count) return;
+    const count = Module._poly_emission_count(sourceCtx);
+    if (count <= 0) return;
+    const ptr = Module._poly_emission_buffer(sourceCtx);
+    if (!ptr) return;
+    const fpe = Module._poly_emission_fields_per_event();
+    const base = ptr >> 3;
+    for (let i = 0; i < count; i++) {
+      const off = base + i * fpe;
+      const laneIdx = Module.HEAPF64[off + 1] | 0;
+      const lane = state.lanes[laneIdx];
+      if (!lane || !lane.emissions) continue;
+      const slot = lane.emissions[lane._emHead];
+      slot.ppq = Module.HEAPF64[off + 0];
+      slot.step = Module.HEAPF64[off + 2] | 0;
+      const kindIdx = Module.HEAPF64[off + 3] | 0;
+      slot.kind = EMISSION_KIND_LABELS[kindIdx] || 'base';
+      lane._emHead = (lane._emHead + 1) % EMISSION_CAP;
+      if (lane._emCount < EMISSION_CAP) lane._emCount++;
+    }
+  }
+
   function syncStateFromWasm() {
     const laneCount = Module._poly_active_lane_count(engineCtx);
     state.lanes = [];
-    for (let i = 0; i < laneCount; i++) state.lanes.push(readLaneFromWasm(i));
+    for (let i = 0; i < laneCount; i++) {
+      const lane = readLaneFromWasm(i);
+      initLaneEmissions(lane);
+      state.lanes.push(lane);
+    }
     state.macros = {
       complexity: Module._poly_macro_value(engineCtx, 0),
       density: Module._poly_macro_value(engineCtx, 1),
@@ -805,6 +868,10 @@
           voice(lane, laneIdx, note, when, Math.max(0, Math.min(1, vel)));
         }
       }
+      // M045 S01 T02: drain the emission classification stream every render
+      // pass and append to the per-lane ring so the desk overlay sees
+      // base/ghost/add/drop entries alongside the audible events.
+      drainEmissions(playbackCtx);
       playbackNextPpq = end;
       playbackRenderIter += 1;
     }
@@ -1049,6 +1116,10 @@
         Module._poly_destroy(playbackCtx);
         playbackCtx = 0;
       }
+      // M045 S01 T02: emission ring is playback-scoped; clear it on Stop so
+      // the desk overlay doesn't linger on stale mutation marks after the
+      // scheduler is torn down.
+      for (const lane of state.lanes) resetLaneEmissions(lane);
     }
   }
 
@@ -1400,6 +1471,16 @@
     // ui.js or bridge code.
     window.__polyModule = Module;
     window.__polyEngineCtx = engineCtx;
+    // M045 S01 T02: browser-console inspection hook. Returns a shallow copy of
+    // state with each lane's emissions ring rewritten in oldest→newest order,
+    // filtering out unwritten slots. Not consumed by ui.js — debug only.
+    window.__polyState = () => ({
+      ...state,
+      lanes: state.lanes.map((l) => ({
+        ...l,
+        emissions: readEmissionsOrdered(l),
+      })),
+    });
 
     await loadPresetsJson();
 
@@ -1430,6 +1511,10 @@
       setAsyncMode: (enabled) => { asyncMode = !!enabled; pendingPush = false; },
       flushState,
       hasPendingPush: () => pendingPush,
+      // M045 S01 T03: per-lane emission read for the desk overlay. Ordered
+      // oldest→newest; excludes unwritten ring slots. Empty when playback is
+      // stopped (ring is reset in togglePlay).
+      getLaneEmissions: (li) => readEmissionsOrdered(state.lanes[li]),
       // S11 T06: cross-surface consistency accessor. Returns the same shape
       // the site card exposes via __polyPatterns.resolvePreset — engine name
       // plus per-lane {noteNumber, roleLabel}. Sourced from presetsById (the

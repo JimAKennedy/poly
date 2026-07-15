@@ -17,6 +17,11 @@
   let expanded = -1;
   let strips = [], rings = [], hands = [], ladders = [], vus = [];
   const tabState = {};
+  // M045 S01 T03: per-lane, per-step overlay class diff cache. Populated by
+  // updateEmissionOverlay each frame; reset in buildDesk when the ladder DOM
+  // is torn down and rebuilt. Declared here so buildDesk can reset it during
+  // the initial boot() call before the frame handler wires up.
+  const overlayLastKind = [];
 
   /* ================= chrome ================= */
   const embedded = !!window.__POLY_EMBEDDED__;
@@ -491,6 +496,9 @@
   function buildDesk() {
     desk.innerHTML = '';
     strips = []; rings = []; hands = []; ladders = []; vus = [];
+    // M045 S01 T03: ladder DOM was just recreated — invalidate the overlay
+    // diff cache so the next onFrame paints classes onto the fresh buttons.
+    overlayLastKind.length = 0;
     S.lanes.forEach((l, li) => {
       const s = document.createElement('div');
       s.className = 'strip';
@@ -977,6 +985,48 @@
   });
   if (host.getState()) boot(host.getState());
 
+  /* M045 S01 T03: desk emission overlay. Reads the ordered per-lane emission
+     ring exposed by the host and paints em-add / em-drop / em-ghost classes on
+     the ladder step buttons. Latest emission per step wins — when the playhead
+     next crosses that step and fires a base hit, the mark clears. On Stop the
+     host resets its rings, this loop paints all-clear on the next frame, and
+     the ladder reverts to base pattern rendering.
+     Empty return from getLaneEmissions() (mock host, non-WASM surfaces, or
+     stopped playback) hits the fast-path and clears any stale overlay. */
+  const OVERLAY_CLASSES = ['em-add', 'em-drop', 'em-ghost'];
+  function updateEmissionOverlay(li) {
+    if (!host.getLaneEmissions) return;
+    const lad = ladders[li];
+    if (!lad) return;
+    const emissions = host.getLaneEmissions(li) || [];
+    const buttons = lad.children;
+    if (!buttons.length) return;
+    let laneCache = overlayLastKind[li];
+    if (!laneCache || laneCache.length !== buttons.length) {
+      laneCache = new Array(buttons.length).fill(null);
+      overlayLastKind[li] = laneCache;
+    }
+    // Newest emission per step wins — walk oldest → newest so later entries
+    // overwrite earlier ones. Empty entries leave step at null (clears
+    // whatever overlay was there).
+    const stepKind = new Array(buttons.length).fill(null);
+    for (let i = 0; i < emissions.length; i++) {
+      const e = emissions[i];
+      if (e && e.step >= 0 && e.step < buttons.length) stepKind[e.step] = e.kind;
+    }
+    for (let i = 0; i < buttons.length; i++) {
+      const kind = stepKind[i];
+      if (kind === laneCache[i]) continue;
+      laneCache[i] = kind;
+      const btn = buttons[i];
+      const cls = btn.classList;
+      if (kind === 'add') { cls.add('em-add'); cls.remove('em-drop', 'em-ghost'); }
+      else if (kind === 'drop') { cls.add('em-drop'); cls.remove('em-add', 'em-ghost'); }
+      else if (kind === 'ghost') { cls.add('em-ghost'); cls.remove('em-add', 'em-drop'); }
+      else cls.remove(...OVERLAY_CLASSES);
+    }
+  }
+
   host.onFrame((frame) => {
     if (!S) return;
     if (REDUCED) frame = Object.assign({}, frame, { t8: Math.floor(frame.t8) });
@@ -994,6 +1044,7 @@
         hands[li].setAttribute('transform', `rotate(${laneOn ? fl.ph * 360 : 0} 32 32)`);
         ladders[li].querySelectorAll('button').forEach((b, i) =>
           b.classList.toggle('now', laneOn && frame.playing && i === fl.step));
+        updateEmissionOverlay(li);
         const active = laneOn && frame.playing && (l.cells ? true : !!l.pattern[fl.step]) && frame.t8 % 1 < 0.5;
         vus[li].style.width = active ? `${(l.vel / 127) * 100}%` : '4%';
         if (expanded === li) {

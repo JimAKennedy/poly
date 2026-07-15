@@ -122,10 +122,26 @@ static float computeMaxEnvelopeHumanizeMs(const LaneConfig& cfg, const GrooveSta
     return maxMs;
 }
 
-static bool shouldEmitStep(const LaneConfig& cfg, const GrooveState& state, int64_t absStep, int64_t cycleStep,
-                           bool isPatternStep, bool isAnchor, const EnvelopeMods& mods, bool& mutatedToGhost) {
+// M045 S01 T01: classifyStep supersedes shouldEmitStep. Returns one of five
+// outcomes so the caller can both decide whether to emit a NoteEvent and
+// record a truthful EmissionEvent for the display: Base/Ghost/Add all emit;
+// Drop suppresses an on-pattern hit (mutation or probability/activation/fill
+// cull); Silent means an off-pattern step that never fired — nothing worth
+// recording.
+enum class StepOutcome : uint8_t {
+    Base = 0,
+    Ghost = 1,
+    Add = 2,
+    Drop = 3,
+    Silent = 255,
+};
+
+static StepOutcome classifyStep(const LaneConfig& cfg, const GrooveState& state, int64_t absStep, int64_t cycleStep,
+                                bool isPatternStep, bool isAnchor, const EnvelopeMods& mods) {
+    const bool wasPatternStep = isPatternStep;
+    bool mutatedToGhost = false;
+
     int stepsInCycle = (cfg.cellCount > 0) ? cfg.cellCount : cfg.cycle.steps;
-    mutatedToGhost = false;
 
     if (cfg.mutationRate > 0.0f && !isAnchor) {
         int64_t cycleIndex = (absStep >= 0) ? absStep / stepsInCycle : (absStep - stepsInCycle + 1) / stepsInCycle;
@@ -145,29 +161,36 @@ static bool shouldEmitStep(const LaneConfig& cfg, const GrooveState& state, int6
         }
     }
 
+    auto notEmitted = [wasPatternStep]() { return wasPatternStep ? StepOutcome::Drop : StepOutcome::Silent; };
+
     if (!isAnchor) {
         if (!isPatternStep) {
             if (mods.fill <= 0.0f)
-                return false;
+                return notEmitted();
             float fillProb = std::clamp(mods.fill, 0.0f, 1.0f);
             float fillRoll = deterministicRand(state.seed, cfg.id, absStep, 4);
             if (fillRoll >= fillProb)
-                return false;
+                return notEmitted();
         }
 
         if (mods.activation < 0.0f) {
             float activationProb = std::clamp(1.0f + mods.activation, 0.0f, 1.0f);
             float actRoll = deterministicRand(state.seed, cfg.id, absStep, 5);
             if (actRoll >= activationProb)
-                return false;
+                return notEmitted();
         }
 
         float effectiveProb = std::clamp(cfg.probability + mods.probability, 0.0f, 1.0f);
         float probRoll = deterministicRand(state.seed, cfg.id, absStep, 0);
         if (probRoll >= effectiveProb)
-            return false;
+            return notEmitted();
     }
-    return true;
+
+    if (mutatedToGhost)
+        return StepOutcome::Ghost;
+    if (wasPatternStep)
+        return StepOutcome::Base;
+    return StepOutcome::Add;
 }
 
 static float computeStepVelocity(const LaneConfig& cfg, const GrooveState& state, int64_t absStep, int64_t cycleStep,
@@ -347,8 +370,11 @@ static void buildNoteEvent(NoteEventBuffer& out, const LaneConfig& cfg, int lane
     out.push(ev);
 }
 
-void Engine::renderRange(const TransportContext& tc, const GrooveState& state, NoteEventBuffer& out) {
+void Engine::renderRange(const TransportContext& tc, const GrooveState& state, NoteEventBuffer& out,
+                         EmissionEventBuffer* emissions) {
     out.clear();
+    if (emissions)
+        emissions->clear();
 
     if (!tc.playing || tc.ppqEnd <= tc.ppqStart)
         return;
@@ -379,10 +405,25 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
 
             bool isPatternStep = ctx.pattern[static_cast<size_t>(cycleStep)];
             bool isAnchor = cfg.constraints.anchorSteps.steps[static_cast<size_t>(cycleStep)] > 0.0f;
-            bool mutatedToGhost = false;
-            if (!shouldEmitStep(cfg, state, absStep, cycleStep, isPatternStep, isAnchor, mods, mutatedToGhost))
+            StepOutcome outcome = classifyStep(cfg, state, absStep, cycleStep, isPatternStep, isAnchor, mods);
+
+            // Record classification for the display, but only for steps whose
+            // pre-timing-shift ppq falls inside the current render window —
+            // otherwise the outer safety margin double-counts across block
+            // boundaries. Silent (off-pattern, no fire) is never recorded.
+            if (emissions != nullptr && outcome != StepOutcome::Silent && ppq >= tc.ppqStart && ppq < tc.ppqEnd) {
+                EmissionEvent ee{};
+                ee.ppqPosition = ppq;
+                ee.cycleStep = static_cast<int16_t>(cycleStep);
+                ee.laneIndex = static_cast<int16_t>(lane);
+                ee.kind = static_cast<uint8_t>(outcome);
+                emissions->push(ee);
+            }
+
+            if (outcome == StepOutcome::Drop || outcome == StepOutcome::Silent)
                 continue;
 
+            bool mutatedToGhost = (outcome == StepOutcome::Ghost);
             float vel = computeStepVelocity(cfg, state, absStep, cycleStep, mods, mutatedToGhost);
             ppq = applyTimingShifts(cfg, tc, state, ppq, stepDurPpq, absStep, cycleStep, mods.humanize);
             if (ppq < tc.ppqStart || ppq >= tc.ppqEnd)
