@@ -37,6 +37,13 @@
   .preset-menu [role="option"].active { color: var(--accent); font-weight: 600; }
   .preset-menu [role="option"] small { display: block; font-size: 10px; color: var(--dim); font-weight: 400; letter-spacing: .04em; margin-top: 1px; }
   .preset-menu .sep { height: 1px; background: var(--line); margin: 4px 8px; }
+  .preset-menu .preset-chips-sep { height: 1px; background: var(--line); margin: 4px 8px; }
+  .preset-menu .preset-chips { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px 10px 6px; }
+  .preset-menu .preset-chip { border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: 3px 9px; font-size: 10px; letter-spacing: .04em; color: var(--dim); cursor: pointer; white-space: nowrap; font-family: inherit; }
+  .preset-menu .preset-chip:hover { color: var(--text); border-color: rgba(240,234,223,.32); }
+  .preset-menu .preset-chip.active { color: var(--ground); background: var(--accent); border-color: var(--accent); }
+  .preset-menu .preset-chip:focus-visible { outline: 1px solid var(--accent); outline-offset: 1px; }
+  .preset-menu [role="option"].preset-hidden { display: none; }
   .chip { border: 1px solid var(--line); background: transparent; border-radius: 6px; padding: 5px 11px; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: var(--dim); }
   .chip.on { color: var(--ground); background: var(--text); border-color: var(--text); }
   #modes { display: flex; gap: 4px; margin-left: 8px; }

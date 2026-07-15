@@ -47,6 +47,11 @@
   }
 
   // Engine-emitted preset lane metadata (M043 S11). Populated at boot from
+  // Ordered category enum from presets.json — mirrors kFactoryPresetCategories
+  // in engine/src/presets.cpp. Populated by loadPresetsJson() so the UI can
+  // build a chip-row filter above the preset dropdown without needing another
+  // engine accessor. See docs/preset-taxonomy.md.
+  let presetCategories = [];
   // /poly/webui/presets.json — same file the site card consumes — so lane
   // labels, MIDI notes, and role hints never drift from the C++ engine.
   // presetsById[index] = { name, lanes: [{ noteNumber, roleLabel, ... }] }.
@@ -1375,10 +1380,12 @@
       if (!Array.isArray(parsed.presets)) throw new Error('presets array missing');
       presetsById = {};
       for (const p of parsed.presets) presetsById[p.index] = p;
+      presetCategories = Array.isArray(parsed.categories) ? parsed.categories.slice() : [];
       console.info(`[wasm-host] loaded ${parsed.presets.length} presets (schemaVersion ${parsed.schemaVersion})`);
     } catch (e) {
       console.warn('[wasm-host] presets.json load failed; falling back to engine-only lane labels:', e.message);
       presetsById = null;
+      presetCategories = [];
     }
   }
 
@@ -1399,11 +1406,14 @@
     const presetCount = Module._poly_preset_count();
     state.presets = [];
     for (let i = 0; i < presetCount; i++) {
+      const jsonEntry = presetsById && presetsById[i];
       state.presets.push({
         name: Module.UTF8ToString(Module._poly_preset_name(i)),
         description: Module.UTF8ToString(Module._poly_preset_description(i)),
+        category: jsonEntry && typeof jsonEntry.category === 'string' ? jsonEntry.category : '',
       });
     }
+    state.categories = presetCategories.slice();
 
     applyPreset(9);
     syncStateFromWasm();
