@@ -144,7 +144,7 @@
   .param-slider { display: flex; align-items: center; gap: 8px; }
   .param-slider label { min-width: 68px; font-size: 9.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--dim); flex: none; }
   .slider-track { flex: 1; height: 14px; background: var(--surface2); border-radius: 3px; position: relative; cursor: ew-resize; touch-action: none; overflow: hidden; }
-  .slider-track i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--c); opacity: .7; border-radius: 3px; pointer-events: none; }
+  .slider-track i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--c, var(--accent)); opacity: .7; border-radius: 3px; pointer-events: none; }
   .param-slider .v { min-width: 46px; text-align: right; font-size: 11px; font-variant-numeric: tabular-nums; color: #C9C0B2; flex: none; }
 
   #master { background: linear-gradient(#201B16, #1A1511); border: 1px solid #322A21; border-radius: 8px; padding: 15px 14px; display: flex; flex-direction: column; gap: 12px; min-height: 0; overflow-y: auto; }

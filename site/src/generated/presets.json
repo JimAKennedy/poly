@@ -2140,14 +2140,14 @@
           "subdivision": 8,
           "stepLen": 2,
           "hits": 2,
-          "rotation": 4,
+          "rotation": 2,
           "velocity": 105,
           "probability": 1
         },
         {
           "laneIndex": 2,
-          "noteNumber": 38,
-          "roleLabel": "snare",
+          "noteNumber": 37,
+          "roleLabel": "rim",
           "role": "Ghost",
           "cycleSteps": 16,
           "subdivision": 16,
@@ -2202,7 +2202,7 @@
           "subdivision": 8,
           "stepLen": 2,
           "hits": 2,
-          "rotation": 4,
+          "rotation": 2,
           "velocity": 90,
           "probability": 0.95
         },
@@ -2407,8 +2407,8 @@
         },
         {
           "laneIndex": 3,
-          "noteNumber": 38,
-          "roleLabel": "snare",
+          "noteNumber": 37,
+          "roleLabel": "rim",
           "role": "Ghost",
           "cycleSteps": 16,
           "subdivision": 16,
