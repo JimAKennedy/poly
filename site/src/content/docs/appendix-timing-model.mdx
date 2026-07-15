@@ -1,0 +1,124 @@
+---
+title: "Appendix: Timing Model"
+description: "How tempo, subdivision, and step count combine to produce Poly's polymetric grid — with worked examples showing cycle lengths, rotations per minute, and lane relationships."
+---
+
+import PolyPatch from '../../components/PolyPatch.astro';
+
+Poly generates rhythm on the DAW's musical-time grid. Nothing in the engine keeps a "master lane" or a private clock — every lane locks to the same underlying quarter-note pulse and rolls its own cycle over that pulse independently. This appendix walks through the arithmetic that turns tempo, subdivision, and step count into audible cycles, and shows how to reason about lane relationships from first principles.
+
+## The DAW is the clock
+
+The host DAW hands Poly a musical-time coordinate every process block: the PPQ (pulses per quarter note) position, along with the current tempo in BPM. Every scheduling decision in the engine is derived from that PPQ position — no state is accumulated between blocks. This is why looping, tempo automation, and position jumps all "just work" without drift: the engine recomputes from PPQ every time.
+
+The anchor is a single fixed rule:
+
+> **A quarter note is always 1.0 PPQ, at any BPM.**
+
+BPM is a *quarter-notes-per-minute* value. It converts musical time (PPQ) to seconds — and it converts millisecond-based parameters like Humanize and Timing Offset to PPQ — but it does not otherwise enter the rhythmic math. Two projects at 80 BPM and 160 BPM playing the same patch produce identical patterns of PPQ events; only the wall-clock duration differs.
+
+## The two knobs on every lane
+
+Each lane has two independent parameters that determine its cycle:
+
+| Parameter | Meaning |
+|-----------|---------|
+| **Subdivision** | The size of one step. `1` = whole note, `2` = half, `4` = quarter, `8` = eighth, `16` = sixteenth. |
+| **Steps** | How many of those steps make up one full cycle of the lane. Range: 1–64. |
+
+These are orthogonal. Subdivision sets the *resolution* of the grid; Steps sets *how much of the grid* the cycle spans.
+
+Two lanes at Subdivision 16 both snap to sixteenth-note positions on the DAW grid — but a lane with Steps=16 completes its cycle in one bar, while a lane with Steps=12 completes its cycle in 3/4 of a bar. Same resolution, different cycle length.
+
+## Cycle length: `cyclePpq`
+
+The length of one full lane cycle, measured in quarter notes (PPQ), is:
+
+```
+stepPpq  = 4.0 / subdivision           // quarter notes per step
+cyclePpq = stepPpq * steps             // quarter notes per full cycle
+```
+
+And the number of rotations per minute is:
+
+```
+rotations/min = BPM / cyclePpq
+              = BPM * subdivision / (4 * steps)
+```
+
+## Worked examples at 120 BPM
+
+At 120 BPM, one quarter note lasts 0.5 seconds and one bar (4 quarter notes) lasts 2 seconds.
+
+| Steps | Subdivision | stepPpq | cyclePpq | Cycle length in bars | Cycle length in seconds | Rotations/min |
+|------:|------------:|--------:|---------:|---------------------:|------------------------:|--------------:|
+| 4  | 4  | 1.0  | 4.0  | 1.00 | 2.00 s | 30  |
+| 8  | 8  | 0.5  | 4.0  | 1.00 | 2.00 s | 30  |
+| 16 | 16 | 0.25 | 4.0  | 1.00 | 2.00 s | 30  |
+| 4  | 8  | 0.5  | 2.0  | 0.50 | 1.00 s | 60  |
+| 16 | 8  | 0.5  | 8.0  | 2.00 | 4.00 s | 15  |
+| 7  | 8  | 0.5  | 3.5  | 0.875 | 1.75 s | ≈34.3 |
+| 12 | 8  | 0.5  | 6.0  | 1.50 | 3.00 s | 20  |
+| 5  | 16 | 0.25 | 1.25 | 0.3125 | 0.625 s | 96 |
+
+Read the first three rows carefully: **Steps=4/Sub=4, Steps=8/Sub=8, and Steps=16/Sub=16 all produce one-bar cycles.** They differ only in grid resolution — how finely you can place hits within the bar. The rhythmic *period* is the same.
+
+The last row highlights the opposite: a very short cycle (5 sixteenth notes) that repeats more than 3 times per bar. The lane will constantly cross bar lines out of phase with the DAW's meter.
+
+## Lane relationships: no master, only shared time
+
+Because every lane's cycle length is derived from the same PPQ timeline, two lanes with different `cyclePpq` values drift against each other in a completely deterministic way. The combined pattern repeats when the two cycles next align — the least common multiple of their cycle lengths.
+
+The simplest case: two lanes at 120 BPM, both Subdivision 8.
+
+- Lane A: Steps=7 → cyclePpq = 3.5
+- Lane B: Steps=12 → cyclePpq = 6.0
+
+`lcm(3.5, 6.0) = 42` quarter notes = 10.5 bars. The combined pattern completes every 10.5 bars. Both cycles are running at their own natural rate — neither is quantised to the other.
+
+If instead you make Lane A the "reference" for musical purposes (setting it to Steps=16, Sub=16 for a 1-bar cycle) and put Lane B on Steps=12, Sub=16, then Lane B completes 4 cycles in the time Lane A completes 3. That is a 4:3 polymetric relationship, resolving every 3 bars — and it emerges automatically from the arithmetic, without any special "polymetric mode."
+
+The Foundations chapter covers this at [`Cycle Independence`](/poly/01-foundations/#cycle-independence).
+
+<PolyPatch title="Timing Model: 4:3 Polymetric Ratio at 120 BPM">
+
+| Lane | Role | Steps | Subdivision | cyclePpq | Cycles per 3 bars |
+|------|------|-------|-------------|----------|-------------------|
+| 1 | Anchor bell | 16 | 1/16 | 4.0 | 3 |
+| 2 | Counter | 12 | 1/16 | 3.0 | 4 |
+
+</PolyPatch>
+
+## Where BPM re-enters
+
+Even though the rhythmic grid is PPQ-based, BPM does directly affect three engine paths:
+
+1. **Sample-position scheduling.** The plugin layer converts each event's PPQ position to a sample offset using the current BPM and sample rate. This is a plumbing concern, not a musical one.
+2. **Millisecond timing controls.** Per-lane `Humanize`, `Timing Offset`, and per-step `Micro-Timing` are specified in milliseconds. They are converted to PPQ each block via `ppq = ms * BPM / 60000`. This means a 10 ms humanize amount produces less positional jitter (in PPQ) at 60 BPM than at 240 BPM, but the same wall-clock jitter — which is what you almost always want.
+3. **Ms-based syncopation nudges** use the same conversion.
+
+None of these change *which step fires* — they only shift *when within the step* it fires.
+
+## The one true speed knob: `Tempo Mult`
+
+Every lane has a **Tempo Mult** parameter (0.25×–4.0×) that scales the lane's step size independently of the host tempo:
+
+```
+stepPpq' = stepPpq / tempoMultiplier
+```
+
+- `1.0×` (default) — lane follows host tempo exactly.
+- `2.0×` — steps are half as long; the cycle rotates twice as fast.
+- `0.5×` — steps are twice as long; the cycle rotates half as fast.
+
+This is the closest thing to "run this lane at a different tempo," and it is the mechanism for Nancarrow-style metric modulation. A 1.5× lane against a 1.0× lane creates a 3:2 hemiola without any change in Steps or Subdivision. See [`Metric Modulation`](/poly/guide-using-poly/#metric-modulation) in the Using Poly guide for the practical treatment.
+
+Note that `Tempo Mult` scales the *step grid*, not the *phrase gating* — phrase length remains in absolute PPQ, so gating boundaries stay bar-aligned regardless of the multiplier.
+
+## Additive (aksak) cell mode
+
+For completeness: when a lane is in additive cell mode (used for Balkan aksak meters like 2+2+3 = 7/8), the cycle length is not `steps * stepPpq`. Instead, each cell has its own step count and the total cycle is the sum of cell durations. The `stepPpq` and `Tempo Mult` scaling still apply per step; only the aggregation differs. See the [`Balkan`](/poly/07-balkan/) chapter and the [`Parameter Reference`](/poly/appendix-parameters/#additive--timeline) entry for Cell Sizes.
+
+## Mental model in one sentence
+
+**Set the grid with Subdivision. Set the cycle length with Steps. Every lane runs on the DAW's PPQ clock independently — polymetric interaction is what happens for free when two lanes have different cycle lengths.**

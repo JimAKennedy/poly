@@ -85,6 +85,10 @@ export default defineConfig({
 							slug: 'appendix-euclidean-reference',
 						},
 						{
+							label: 'Timing Model',
+							slug: 'appendix-timing-model',
+						},
+						{
 							label: 'MIDI Note Mapping',
 							slug: 'appendix-midi-mapping',
 						},
