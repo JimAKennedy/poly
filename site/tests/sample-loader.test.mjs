@@ -209,8 +209,8 @@ test('preferredRoles: pattern-lane resolution snapshot covers all factory preset
   // so a manifest edit that shadows them fails loudly instead of silently
   // switching voices.
   const expected = {
-    '36:kick':      'kick/boochi44-kick.wav',           // was cajon before fix
-    '38:snare':     'snare/drskit-snare.flac',
+    '36:kick':      'kick/fischer808-bd.wav',           // manifest reordered: shortest-tail first (M044 S09 A-fix)
+    '38:snare':     'snare/fischer808-sd.wav',          // manifest reordered: shortest-tail first (M044 S09 A-fix)
     '42:hat':       'hat/boochi44-hat.wav',
     '43:tom':       'tom/muldjord-tom-lo.flac',         // was darbuka before fix
     '45:tom':       'tom/muldjord-tom-mid.flac',
