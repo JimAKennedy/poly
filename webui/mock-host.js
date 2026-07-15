@@ -83,6 +83,69 @@
     { name: 'Compositional Arc', description: 'Six-lane layered build — three continuous lanes plus three gated ornamental voices' },
   ];
 
+  // Category enum + per-preset assignments. Mirrors kFactoryPresetCategories
+  // in engine/src/presets.cpp; must stay in lockstep with docs/preset-taxonomy.md.
+  const CATEGORIES = [
+    'Foundational',
+    'Minimalist / Compositional',
+    'House / Techno',
+    'Jazz / Funk / Soul',
+    'Breaks / Drum & Bass',
+    'Latin / Brazilian',
+    'African',
+    'Asian Traditions',
+    'Balkan / Eastern European',
+    'Experimental / Fusion',
+  ];
+
+  const PRESET_CATEGORY_BY_INDEX = [
+    'House / Techno',              // 0  Four on the Floor
+    'Foundational',                // 1  Polymetric Drift
+    'Foundational',                // 2  Sparse Pulse
+    'Breaks / Drum & Bass',        // 3  Breakbeat
+    'Latin / Brazilian',           // 4  Latin Feel
+    'House / Techno',              // 5  Afro-House Phrases
+    'Minimalist / Compositional',  // 6  Reich Phasing
+    'Asian Traditions',            // 7  Kotekan Interlock
+    'Jazz / Funk / Soul',          // 8  Pocket Groove
+    'African',                     // 9  Afrobeat 12/8
+    'Balkan / Eastern European',   // 10 Balkan Aksak
+    'Latin / Brazilian',           // 11 Bossa Nova
+    'Asian Traditions',            // 12 Carnatic Tala
+    'Experimental / Fusion',       // 13 IDM Glitch
+    'African',                     // 14 Sub-Saharan: Agbekor
+    'Asian Traditions',            // 15 Gamelan: Colotomic
+    'Foundational',                // 16 Polymetric Foundation
+    'African',                     // 17 Ewe Polymetric Ensemble
+    'African',                     // 18 Manding Djembe
+    'Latin / Brazilian',           // 19 Cuban Son Montuno
+    'African',                     // 20 Afrobeat Lagos
+    'Asian Traditions',            // 21 Balinese Kotekan
+    'Asian Traditions',            // 22 Javanese Colotomic
+    'Asian Traditions',            // 23 Tintal Groove
+    'Asian Traditions',            // 24 Rupak Tal
+    'Balkan / Eastern European',   // 25 Rachenitsa 7/8
+    'Balkan / Eastern European',   // 26 Kopanitsa 11/8
+    'Minimalist / Compositional',  // 27 Reich Phase Process
+    'Minimalist / Compositional',  // 28 Riley Layered Entry
+    'Minimalist / Compositional',  // 29 Nancarrow Tempi
+    'House / Techno',              // 30 Minimal Techno
+    'House / Techno',              // 31 Deep House
+    'Latin / Brazilian',           // 32 Samba Batucada
+    'Latin / Brazilian',           // 33 Bossa Nova Trio
+    'Jazz / Funk / Soul',          // 34 Classic Funk
+    'Jazz / Funk / Soul',          // 35 Neo-Soul Pocket
+    'Jazz / Funk / Soul',          // 36 Jazz Bop Ride
+    'Jazz / Funk / Soul',          // 37 Elvin Jones Cascade
+    'Breaks / Drum & Bass',        // 38 Jungle Break
+    'Breaks / Drum & Bass',        // 39 Liquid Drum and Bass
+    'Experimental / Fusion',       // 40 Afro-Electronic Fusion
+    'Balkan / Eastern European',   // 41 Balkan Funk
+    'Minimalist / Compositional',  // 42 Compositional Arc
+  ];
+
+  PRESETS.forEach((p, i) => { p.category = PRESET_CATEGORY_BY_INDEX[i] || ''; });
+
   const PRESET_NAMES = [
     ['Kick', 'Snare', 'Hi-Hat', 'Open Hat'],
     ['Kick', 'Rim', 'Tom', 'Hi-Hat'],
@@ -450,6 +513,7 @@
     macros: { complexity: 0.45, density: 0.5, syncopation: 0.3, swing: 0.1, tension: 0.25, humanize: 0.15 },
     lanes: makePresetLanes(9),
     presets: PRESETS,
+    categories: CATEGORIES,
     noteMap: identityNoteMap(),
     // Mock host has no real sample loader — report ready immediately so the
     // UI's Play-gate lets Space/Play through.

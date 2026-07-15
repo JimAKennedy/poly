@@ -256,11 +256,59 @@
   const presetBtn = document.getElementById('presetName');
   const presetMenu = document.getElementById('presetMenu');
   let presetMenuBuilt = false;
+  let presetCategoryFilter = 'All';
 
   function buildPresetMenu() {
     if (!S || !S.presets || presetMenuBuilt) return;
     presetMenuBuilt = true;
     presetMenu.innerHTML = '';
+
+    // Chip row: All + one chip per category (order from state.categories,
+    // which mirrors the taxonomy in docs/preset-taxonomy.md).
+    const cats = Array.isArray(S.categories) ? S.categories : [];
+    if (cats.length > 0) {
+      const chipRow = document.createElement('div');
+      chipRow.className = 'preset-chips';
+      chipRow.setAttribute('role', 'tablist');
+      chipRow.setAttribute('aria-label', 'Filter presets by category');
+      const chipLabels = ['All', ...cats];
+      chipLabels.forEach((label) => {
+        const chip = document.createElement('button');
+        chip.className = 'preset-chip';
+        chip.setAttribute('role', 'tab');
+        chip.dataset.category = label;
+        chip.textContent = label;
+        const selected = label === presetCategoryFilter;
+        chip.classList.toggle('active', selected);
+        chip.tabIndex = selected ? 0 : -1;
+        chip.setAttribute('aria-selected', selected ? 'true' : 'false');
+        chipRow.appendChild(chip);
+      });
+      chipRow.addEventListener('click', (e) => {
+        const chip = e.target.closest('[role="tab"]');
+        if (!chip) return;
+        e.stopPropagation();
+        selectCategory(chip.dataset.category);
+      });
+      chipRow.addEventListener('keydown', (e) => {
+        if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' && e.key !== 'Home' && e.key !== 'End') return;
+        e.preventDefault();
+        const chips = Array.from(chipRow.querySelectorAll('[role="tab"]'));
+        const currentIdx = chips.findIndex((c) => c.dataset.category === presetCategoryFilter);
+        let next = currentIdx;
+        if (e.key === 'ArrowLeft') next = (currentIdx - 1 + chips.length) % chips.length;
+        else if (e.key === 'ArrowRight') next = (currentIdx + 1) % chips.length;
+        else if (e.key === 'Home') next = 0;
+        else if (e.key === 'End') next = chips.length - 1;
+        selectCategory(chips[next].dataset.category);
+        chips[next].focus();
+      });
+      presetMenu.appendChild(chipRow);
+      const chipSep = document.createElement('div');
+      chipSep.className = 'preset-chips-sep';
+      presetMenu.appendChild(chipSep);
+    }
+
     const init = document.createElement('button');
     init.setAttribute('role', 'option');
     init.textContent = 'Init (All Lanes)';
@@ -273,6 +321,7 @@
       const opt = document.createElement('button');
       opt.setAttribute('role', 'option');
       opt.dataset.index = String(i);
+      opt.dataset.category = p.category || '';
       opt.innerHTML = `${p.name}<small>${p.description}</small>`;
       presetMenu.appendChild(opt);
     });
@@ -281,6 +330,29 @@
       if (!opt) return;
       host.action('applyPreset', { index: parseInt(opt.dataset.index, 10) });
       closePresetMenu();
+    });
+    applyPresetCategoryFilter();
+  }
+
+  function selectCategory(label) {
+    presetCategoryFilter = label;
+    presetMenu.querySelectorAll('.preset-chip').forEach((chip) => {
+      const on = chip.dataset.category === label;
+      chip.classList.toggle('active', on);
+      chip.setAttribute('aria-selected', on ? 'true' : 'false');
+      chip.tabIndex = on ? 0 : -1;
+    });
+    applyPresetCategoryFilter();
+  }
+
+  function applyPresetCategoryFilter() {
+    // Init always visible; only preset options with matching category are
+    // shown when a specific category is selected.
+    const showAll = presetCategoryFilter === 'All';
+    presetMenu.querySelectorAll('[role="option"]').forEach((opt) => {
+      const idx = parseInt(opt.dataset.index, 10);
+      const match = showAll || idx === -1 || opt.dataset.category === presetCategoryFilter;
+      opt.classList.toggle('preset-hidden', !match);
     });
   }
 

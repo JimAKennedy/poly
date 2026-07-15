@@ -7,9 +7,15 @@ namespace poly {
 struct PresetInfo {
     const char* name;
     const char* description;
+    const char* category;
 };
 
 static constexpr int kFactoryPresetCount = 43;
+static constexpr int kFactoryPresetCategoryCount = 10;
+
+// Ordered category list — presentation order for plugin submenus and site chips.
+// Every PresetInfo::category MUST match one of these strings exactly.
+extern const char* const kFactoryPresetCategories[kFactoryPresetCategoryCount];
 
 GrooveState makeFourOnTheFloor();
 GrooveState makePolymetricDrift();
