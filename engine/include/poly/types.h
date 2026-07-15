@@ -65,6 +65,54 @@ struct NoteEventBuffer {
     }
 };
 
+// --- Emission Classification (M045 S01 T01) ---
+//
+// The desk grid historically displayed the base Euclidean pattern only, so
+// mutation-added, mutation-dropped, ghost-velocity, and probability-culled
+// hits were invisible — the observed "Jazz Bop Ride snare is all over the
+// place" bug. renderRange optionally emits one EmissionEvent per considered
+// step so the UI can composite the truth on top of the base pattern.
+// Base:  emitted, on-pattern, unmodified velocity
+// Ghost: emitted, on-pattern, mutation floored velocity
+// Add:   emitted, off-pattern position (mutation-added or fill-added)
+// Drop:  NOT emitted, on-pattern (mutation drop or probability/activation cull)
+// Silent (off-pattern non-hit) is not recorded — nothing to display.
+enum class EmissionKind : uint8_t {
+    Base = 0,
+    Ghost = 1,
+    Add = 2,
+    Drop = 3,
+};
+
+struct EmissionEvent {
+    double ppqPosition = 0.0;
+    int16_t cycleStep = 0;
+    int16_t laneIndex = 0;
+    uint8_t kind = 0; // EmissionKind
+};
+
+static constexpr size_t kMaxEmissionsPerBlock = 512;
+
+struct EmissionEventBuffer {
+    std::array<EmissionEvent, kMaxEmissionsPerBlock> events{};
+    size_t count = 0;
+    size_t droppedCount = 0;
+
+    void clear() {
+        count = 0;
+        droppedCount = 0;
+    }
+
+    bool push(const EmissionEvent& e) {
+        if (count >= kMaxEmissionsPerBlock) {
+            ++droppedCount;
+            return false;
+        }
+        events[count++] = e;
+        return true;
+    }
+};
+
 // --- Lane Model ---
 
 enum class Role : uint8_t { AnchorPulse, Backbeat, Shimmer, Accent, Ghost, Ornament, Fill, Custom };

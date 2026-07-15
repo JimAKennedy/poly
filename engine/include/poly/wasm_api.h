@@ -29,6 +29,14 @@ POLY_EXPORT int poly_render(PolyContext ctx, double ppqStart, double ppqEnd, dou
 POLY_EXPORT int poly_event_count(PolyContext ctx);
 POLY_EXPORT double* poly_event_buffer(PolyContext ctx);
 
+// M045 S01 T01: emission classification stream. Populated by the most recent
+// poly_render call. Each emission is 4 doubles: [ppqPosition, laneIndex,
+// cycleStep, kind]. kind: 0=Base, 1=Ghost, 2=Add, 3=Drop. The JS host drains
+// this per render pass and pushes into a per-lane ring for the desk overlay.
+POLY_EXPORT int poly_emission_count(PolyContext ctx);
+POLY_EXPORT double* poly_emission_buffer(PolyContext ctx);
+POLY_EXPORT int poly_emission_fields_per_event();
+
 POLY_EXPORT int poly_active_lane_count(PolyContext ctx);
 POLY_EXPORT double poly_macro_value(PolyContext ctx, int index);
 POLY_EXPORT void poly_set_macro(PolyContext ctx, int index, double value);
