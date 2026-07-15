@@ -12,6 +12,20 @@ import { dirname, join } from 'node:path';
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PRESETS_PATH = join(HERE, '..', 'src', 'generated', 'presets.json');
 
+// Closed enum — must match kFactoryPresetCategories in engine/src/presets.cpp.
+const EXPECTED_CATEGORIES = [
+  'Foundational',
+  'Minimalist / Compositional',
+  'House / Techno',
+  'Jazz / Funk / Soul',
+  'Breaks / Drum & Bass',
+  'Latin / Brazilian',
+  'African',
+  'Asian Traditions',
+  'Balkan / Eastern European',
+  'Experimental / Fusion',
+];
+
 test('presets.json — schema shape', async () => {
   const raw = await readFile(PRESETS_PATH, 'utf8');
   const parsed = JSON.parse(raw);
@@ -22,9 +36,21 @@ test('presets.json — schema shape', async () => {
     'schemaVersion must be a number',
   );
   assert.ok(
-    parsed.schemaVersion >= 1,
-    `schemaVersion=${parsed.schemaVersion}, expected >= 1`,
+    parsed.schemaVersion >= 2,
+    `schemaVersion=${parsed.schemaVersion}, expected >= 2`,
   );
+
+  assert.ok(
+    Array.isArray(parsed.categories),
+    'categories must be an array',
+  );
+  assert.deepEqual(
+    parsed.categories,
+    EXPECTED_CATEGORIES,
+    'categories must match the ordered enum in engine/src/presets.cpp',
+  );
+
+  const categorySet = new Set(EXPECTED_CATEGORIES);
 
   assert.ok(Array.isArray(parsed.presets), 'presets must be an array');
   assert.equal(
@@ -42,6 +68,15 @@ test('presets.json — schema shape', async () => {
     assert.ok(
       preset.name.length > 0,
       `preset[${pi}].name is empty`,
+    );
+    assert.equal(
+      typeof preset.category,
+      'string',
+      `preset[${pi}] "${preset.name}".category is not a string`,
+    );
+    assert.ok(
+      categorySet.has(preset.category),
+      `preset[${pi}] "${preset.name}".category="${preset.category}" is not one of the closed enum`,
     );
     assert.ok(
       Number.isInteger(preset.notesInBar) && preset.notesInBar >= 1,
@@ -68,5 +103,15 @@ test('presets.json — schema shape', async () => {
         `preset[${pi}] "${preset.name}" lane[${li}].roleLabel is empty`,
       );
     });
+  });
+
+  // Every declared category should contain at least one preset (guards against
+  // orphaned enum entries or presets silently drifting to the wrong bucket).
+  const seen = new Set(parsed.presets.map((p) => p.category));
+  EXPECTED_CATEGORIES.forEach((cat) => {
+    assert.ok(
+      seen.has(cat),
+      `category "${cat}" is declared but has no presets assigned`,
+    );
   });
 });

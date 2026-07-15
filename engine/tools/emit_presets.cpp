@@ -6,13 +6,15 @@
 //
 // Schema:
 // {
-//   "schemaVersion": 1,
+//   "schemaVersion": 2,
 //   "presetCount": 43,
+//   "categories": ["Foundational", "Minimalist / Compositional", ...],  // ordered
 //   "presets": [
 //     {
 //       "index": 0,
 //       "name": "Four on the Floor",
 //       "description": "...",
+//       "category": "House / Techno",  // one of `categories`
 //       "activeLaneCount": 4,
 //       "notesInBar": 16,          // composite loop length in 16th-note ticks
 //                                  // (LCM of steps * 16/subdivision across active lanes)
@@ -242,6 +244,7 @@ void writePreset(std::ostringstream& out, int index) {
         << "    \"index\":" << index << ",\n"
         << "    \"name\":\"" << escapeJson(info.name) << "\",\n"
         << "    \"description\":\"" << escapeJson(info.description) << "\",\n"
+        << "    \"category\":\"" << escapeJson(info.category) << "\",\n"
         << "    \"activeLaneCount\":" << lanes << ",\n"
         << "    \"notesInBar\":" << compositeSteps16ths(state) << ",\n"
         << "    \"seed\":" << state.seed << ",\n"
@@ -261,8 +264,15 @@ void writePreset(std::ostringstream& out, int index) {
 int main() {
     std::ostringstream out;
     out << "{\n"
-        << "  \"schemaVersion\":1,\n"
+        << "  \"schemaVersion\":2,\n"
         << "  \"presetCount\":" << poly::kFactoryPresetCount << ",\n"
+        << "  \"categories\":[";
+    for (int i = 0; i < poly::kFactoryPresetCategoryCount; ++i) {
+        out << "\"" << escapeJson(poly::kFactoryPresetCategories[i]) << "\"";
+        if (i + 1 < poly::kFactoryPresetCategoryCount)
+            out << ",";
+    }
+    out << "],\n"
         << "  \"presets\":[\n";
     for (int i = 0; i < poly::kFactoryPresetCount; ++i) {
         writePreset(out, i);

@@ -5,7 +5,7 @@
 // data from the same file instead of drifting hand-copies.
 //
 // Contract with the emitter (engine/tools/emit_presets.cpp):
-//   { schemaVersion, presetCount, presets: [{ index, name, notesInBar, lanes: [...] }] }
+//   { schemaVersion, presetCount, categories: [...], presets: [{ index, name, category, notesInBar, lanes: [...] }] }
 //
 // If the emitter binary is missing, we configure (only if needed) and build it.
 // A native build failure exits non-zero and fails the site build — that is
@@ -65,9 +65,13 @@ function validate(parsed) {
   if (typeof parsed.schemaVersion !== 'number') {
     fail('missing schemaVersion');
   }
-  if (parsed.schemaVersion !== 1) {
+  if (parsed.schemaVersion !== 2) {
     fail(`unexpected schemaVersion ${parsed.schemaVersion} — regenerate/update consumers`);
   }
+  if (!Array.isArray(parsed.categories) || parsed.categories.length === 0) {
+    fail('categories array missing or empty');
+  }
+  const categorySet = new Set(parsed.categories);
   if (!Array.isArray(parsed.presets)) {
     fail('presets array missing');
   }
@@ -79,6 +83,12 @@ function validate(parsed) {
   for (const p of parsed.presets) {
     if (typeof p.name !== 'string' || !p.name.length) {
       fail(`preset index ${p.index}: missing name`);
+    }
+    if (typeof p.category !== 'string' || !p.category.length) {
+      fail(`preset "${p.name}": missing category`);
+    }
+    if (!categorySet.has(p.category)) {
+      fail(`preset "${p.name}": category "${p.category}" not in declared enum`);
     }
     if (!Array.isArray(p.lanes) || p.lanes.length === 0) {
       fail(`preset "${p.name}": no lanes`);
