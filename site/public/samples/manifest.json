@@ -188,10 +188,10 @@
       "tags": ["fallback:pedal-hat"]
     },
     {
-      "file": "kick/boochi44-kick.wav",
+      "file": "kick/fischer808-bd.wav",
       "spdx": "CC0-1.0",
-      "source": "Boochi44 Free Drums",
-      "sourceUrl": "https://github.com/Boochi44/free-drum-samples",
+      "source": "Fischer TR-808",
+      "sourceUrl": "https://github.com/tidalcycles/sounds-tr808-fischer",
       "midiNotes": [36],
       "role": "kick"
     },
@@ -205,19 +205,19 @@
       "role": "kick"
     },
     {
-      "file": "kick/fischer808-bd.wav",
-      "spdx": "CC0-1.0",
-      "source": "Fischer TR-808",
-      "sourceUrl": "https://github.com/tidalcycles/sounds-tr808-fischer",
-      "midiNotes": [36],
-      "role": "kick"
-    },
-    {
       "file": "kick/muldjord-kick.flac",
       "spdx": "CC-BY-4.0",
       "attribution": "MuldjordKit by DrumGizmo team (https://github.com/freepats/MuldjordKit), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)",
       "source": "FreePats MuldjordKit",
       "sourceUrl": "https://github.com/freepats/MuldjordKit",
+      "midiNotes": [36],
+      "role": "kick"
+    },
+    {
+      "file": "kick/boochi44-kick.wav",
+      "spdx": "CC0-1.0",
+      "source": "Boochi44 Free Drums",
+      "sourceUrl": "https://github.com/Boochi44/free-drum-samples",
       "midiNotes": [36],
       "role": "kick"
     },
@@ -259,6 +259,22 @@
       "tags": ["fallback:long-shaker"]
     },
     {
+      "file": "snare/fischer808-sd.wav",
+      "spdx": "CC0-1.0",
+      "source": "Fischer TR-808",
+      "sourceUrl": "https://github.com/tidalcycles/sounds-tr808-fischer",
+      "midiNotes": [38],
+      "role": "snare"
+    },
+    {
+      "file": "snare/vcsl-snare.wav",
+      "spdx": "CC0-1.0",
+      "source": "VCSL",
+      "sourceUrl": "https://github.com/sgossner/VCSL",
+      "midiNotes": [38],
+      "role": "snare"
+    },
+    {
       "file": "snare/drskit-snare.flac",
       "spdx": "CC-BY-4.0",
       "attribution": "DRSKit by Jes Eiler (DRSDrums) and the DrumGizmo team (https://github.com/sfzinstruments/DrumGizmo.DRSKit), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)",
@@ -268,27 +284,11 @@
       "role": "snare"
     },
     {
-      "file": "snare/fischer808-sd.wav",
-      "spdx": "CC0-1.0",
-      "source": "Fischer TR-808",
-      "sourceUrl": "https://github.com/tidalcycles/sounds-tr808-fischer",
-      "midiNotes": [38],
-      "role": "snare"
-    },
-    {
       "file": "snare/muldjord-snare.flac",
       "spdx": "CC-BY-4.0",
       "attribution": "MuldjordKit by DrumGizmo team (https://github.com/freepats/MuldjordKit), CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/)",
       "source": "FreePats MuldjordKit",
       "sourceUrl": "https://github.com/freepats/MuldjordKit",
-      "midiNotes": [38],
-      "role": "snare"
-    },
-    {
-      "file": "snare/vcsl-snare.wav",
-      "spdx": "CC0-1.0",
-      "source": "VCSL",
-      "sourceUrl": "https://github.com/sgossner/VCSL",
       "midiNotes": [38],
       "role": "snare"
     },

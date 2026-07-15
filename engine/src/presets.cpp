@@ -1883,7 +1883,7 @@ GrooveState makeClassicFunk() {
     snareAccent.midiNote = 38;
     snareAccent.cycle = {8, 8};
     snareAccent.hitCount = 2;
-    snareAccent.rotation = 4;
+    snareAccent.rotation = 2;
     snareAccent.baseVelocity = 105;
     snareAccent.probability = 1.0f;
     snareAccent.velocitySpread = 0.15f;
@@ -1892,7 +1892,7 @@ GrooveState makeClassicFunk() {
     auto& snareGhost = s.lanes[2];
     snareGhost.id = 2;
     snareGhost.role = Role::Ghost;
-    snareGhost.midiNote = 38;
+    snareGhost.midiNote = 37;
     snareGhost.cycle = {16, 16};
     snareGhost.hitCount = 11;
     snareGhost.baseVelocity = 40;
@@ -1939,7 +1939,7 @@ GrooveState makeNeoSoul() {
     snare.midiNote = 38;
     snare.cycle = {8, 8};
     snare.hitCount = 2;
-    snare.rotation = 4;
+    snare.rotation = 2;
     snare.baseVelocity = 90;
     snare.probability = 0.95f;
     snare.ghostFloor = 35;
@@ -2137,7 +2137,7 @@ GrooveState makeJungleBreak() {
     auto& ghostLayer = s.lanes[3];
     ghostLayer.id = 3;
     ghostLayer.role = Role::Ghost;
-    ghostLayer.midiNote = 38;
+    ghostLayer.midiNote = 37;
     ghostLayer.cycle = {16, 16};
     ghostLayer.hitCount = 11;
     ghostLayer.rotation = 2;
