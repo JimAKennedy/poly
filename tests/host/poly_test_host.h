@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 #include <vector>
 
@@ -37,6 +38,18 @@ public:
     void processBlock(double ppqStart, double tempo, bool playing, bool looping = false, double loopStart = 0.0,
                       double loopEnd = 0.0);
     void stopAndFlush(double ppqPos, double tempo);
+
+    // --- Host-side state IO (real IBStream via Steinberg::MemoryStream) ---
+    // saveState() calls processor->getState() end-to-end and returns the serialized bytes.
+    // loadState() calls processor->setState(); the state is applied on the next process() block.
+    // Returns an empty vector on failure.
+    std::vector<uint8_t> saveState();
+    bool loadState(const std::vector<uint8_t>& bytes);
+
+    // Dispatches a NoteMapUpdate message through processor->notify(). The edit is parked in
+    // pendingNoteMap_ and drained into sceneState_ on the next process() block. Used to model
+    // a controller-driven scene-state edit in save-after-stop regression tests.
+    void injectNoteMap(const std::array<int16_t, 128>& map);
 
     const std::vector<MidiEvent>& events() const { return events_; }
     void clearEvents() { events_.clear(); }

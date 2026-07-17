@@ -3,8 +3,11 @@
 #include <algorithm>
 #include <cstring>
 
+#include "pluginterfaces/base/ibstream.h"
 #include "pluginterfaces/vst/ivstaudioprocessor.h"
+#include "pluginterfaces/vst/ivstmessage.h"
 #include "pluginterfaces/vst/ivstprocesscontext.h"
+#include "public.sdk/source/common/memorystream.h"
 #include "public.sdk/source/vst/hosting/eventlist.h"
 #include "public.sdk/source/vst/hosting/hostclasses.h"
 #include "public.sdk/source/vst/hosting/parameterchanges.h"
@@ -166,6 +169,40 @@ std::vector<MidiEvent> PolyTestHost::noteOffEvents() const {
         if (e.type == MidiEvent::NoteOff)
             result.push_back(e);
     return result;
+}
+
+std::vector<uint8_t> PolyTestHost::saveState() {
+    if (!processor_)
+        return {};
+    MemoryStream stream;
+    if (processor_->getState(&stream) != kResultOk)
+        return {};
+    auto size = stream.getSize();
+    if (size <= 0 || !stream.getData())
+        return {};
+    std::vector<uint8_t> buf(static_cast<size_t>(size));
+    std::memcpy(buf.data(), stream.getData(), static_cast<size_t>(size));
+    return buf;
+}
+
+bool PolyTestHost::loadState(const std::vector<uint8_t>& bytes) {
+    if (!processor_ || bytes.empty())
+        return false;
+    // Non-owning MemoryStream over the caller's buffer; cursor starts at 0, size == bytes.size().
+    MemoryStream stream(const_cast<uint8_t*>(bytes.data()), static_cast<TSize>(bytes.size()));
+    return processor_->setState(&stream) == kResultOk;
+}
+
+void PolyTestHost::injectNoteMap(const std::array<int16_t, 128>& map) {
+    if (!processor_)
+        return;
+    auto* msg = new HostMessage; // ownership-transfer to local refcount
+    msg->setMessageID("NoteMapUpdate");
+    if (auto* attrs = msg->getAttributes()) {
+        attrs->setBinary("map", map.data(), static_cast<uint32>(sizeof(int16_t) * map.size()));
+    }
+    processor_->notify(msg);
+    msg->release();
 }
 
 } // namespace test

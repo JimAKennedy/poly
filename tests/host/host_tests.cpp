@@ -1,5 +1,7 @@
 #include <algorithm>
+#include <array>
 #include <cmath>
+#include <cstring>
 #include <fstream>
 #include <map>
 #include <set>
@@ -9,10 +11,49 @@
 
 #include <gtest/gtest.h>
 
+#include "poly/scene.h"
+#include "poly/state_io.h"
 #include "poly_test_host.h"
 
 using poly::test::MidiEvent;
 using poly::test::PolyTestHost;
+
+namespace {
+
+// Deserializes a saveState() byte buffer via readSceneState so tests can assert against
+// individual fields (noteMap, macros, etc.) without depending on raw byte layout.
+poly::SceneState deserializeSceneState(const std::vector<uint8_t>& bytes) {
+    poly::SceneState scene{};
+    size_t cursor = 0;
+    auto read = [&](void* dst, size_t size) -> bool {
+        if (cursor + size > bytes.size())
+            return false;
+        std::memcpy(dst, bytes.data() + cursor, size);
+        cursor += size;
+        return true;
+    };
+    if (!poly::readSceneState(read, scene))
+        return {};
+    return scene;
+}
+
+// Any non-identity map suffices to distinguish the "edited" state from the default map.
+// Chosen to touch every byte so a partial write couldn't accidentally masquerade as success.
+std::array<int16_t, 128> makeEditedNoteMap() {
+    std::array<int16_t, 128> map{};
+    for (int i = 0; i < 128; ++i)
+        map[static_cast<size_t>(i)] = static_cast<int16_t>((i + 42) % 128);
+    return map;
+}
+
+std::array<int16_t, 128> makeDefaultNoteMap() {
+    std::array<int16_t, 128> map{};
+    for (int i = 0; i < 128; ++i)
+        map[static_cast<size_t>(i)] = static_cast<int16_t>(i);
+    return map;
+}
+
+} // namespace
 
 // --- T01: Basic harness sanity ---
 
@@ -68,6 +109,102 @@ TEST(HostTests, StopFlush_NoHangingNotes) {
     }
 
     host.teardown();
+}
+
+// --- Save/load state regression tests (M046 P1 + P2) ---
+//
+// These pin two release-blocking bugs in the plugin state-serialization path:
+//
+//   P1 (processor.cpp:383-415): the stopped-path early return drains pending edits into
+//   sceneState_ but never republishes stateSnapshot_. If getState is called while the
+//   stateSnapshot_ still holds a pre-edit value (from the last playing block), the DAW
+//   saves stale state — the user's post-stop edit is silently lost.
+//
+//   P2 (processor.cpp:838-839): when snapshotReady_ is false, getState falls through to
+//   an unsynchronized read of sceneState_ from the message thread. Racy in production;
+//   in a single-threaded test it appears "correct", so P2 is covered indirectly by the
+//   cold-processor round-trip test — which will break if T03 removes the fallback
+//   without publishing an initial snapshot from setActive(true).
+
+TEST(HostTests, SaveAfterStop_PreservesEdits) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+
+    // Play a bar so the playing-path publishes stateSnapshot_ (snapshotReady_ = true)
+    // holding the pre-edit noteMap. This mirrors the real "user hits play, then makes
+    // an edit, then stops" sequence.
+    host.playBars(1.0, 120.0);
+    host.stopAndFlush(4.0, 120.0);
+
+    // Simulate a controller-driven edit arriving after stop (e.g. user drags a note in
+    // the note-map view while the transport is idle).
+    const auto editedMap = makeEditedNoteMap();
+    host.injectNoteMap(editedMap);
+
+    // One stopped block so process() drains pendingNoteMap_ into sceneState_.
+    // On current HEAD this drain happens (line 348-350 runs before the early return)
+    // but the stopped-path early return at line 383-415 does NOT republish
+    // stateSnapshot_ — so stateSnapshot_ still holds the pre-edit map.
+    host.processBlock(4.0, 120.0, false);
+
+    auto bytes = host.saveState();
+    ASSERT_FALSE(bytes.empty()) << "saveState() should produce a non-empty buffer";
+
+    auto scene = deserializeSceneState(bytes);
+
+    // Fail-loud diagnostic: report how many map slots survived unchanged so the red
+    // output tells the reader exactly how the bug manifested.
+    int matched = 0;
+    for (int i = 0; i < 128; ++i)
+        if (scene.noteMap.map[static_cast<size_t>(i)] == editedMap[static_cast<size_t>(i)])
+            ++matched;
+
+    EXPECT_EQ(matched, 128) << "Save-after-stop dropped the noteMap edit: " << matched
+                            << "/128 slots match the edited map. This is P1 in the M046 review — "
+                               "the stopped-path early return in PolyProcessor::process() drains "
+                               "pending edits into sceneState_ but never republishes stateSnapshot_, "
+                               "so getState() returns the pre-edit snapshot.";
+
+    host.teardown();
+}
+
+TEST(HostTests, GetStateFromColdProcessor_RoundTrips) {
+    // Cold processor: setup only, no playBars, no notify(), no processBlock().
+    // On current HEAD this passes via the P2 torn-state fallback because there is no
+    // concurrent writer. Once T03 removes the fallback, this test guards the invariant
+    // that setActive(true) must publish an initial stateSnapshot_ so cold getState()
+    // still round-trips instead of returning kResultFalse or reading uninitialized state.
+    PolyTestHost hostA;
+    ASSERT_TRUE(hostA.setup(44100.0, 512));
+
+    auto bytes = hostA.saveState();
+    ASSERT_FALSE(bytes.empty()) << "Cold saveState() should produce a non-empty buffer";
+
+    auto sceneA = deserializeSceneState(bytes);
+    const auto defaultMap = makeDefaultNoteMap();
+    for (int i = 0; i < 128; ++i) {
+        ASSERT_EQ(sceneA.noteMap.map[static_cast<size_t>(i)], defaultMap[static_cast<size_t>(i)])
+            << "Cold state should serialize the identity noteMap; slot " << i << " diverged";
+    }
+
+    hostA.teardown();
+
+    PolyTestHost hostB;
+    ASSERT_TRUE(hostB.setup(44100.0, 512));
+    ASSERT_TRUE(hostB.loadState(bytes)) << "loadState() should accept a valid saveState() buffer";
+
+    // One block so the setState → pendingState_ → sceneState_ handoff completes.
+    hostB.processBlock(0.0, 120.0, false);
+
+    auto bytes2 = hostB.saveState();
+    ASSERT_FALSE(bytes2.empty()) << "Post-load saveState() should produce a non-empty buffer";
+    auto sceneB = deserializeSceneState(bytes2);
+    for (int i = 0; i < 128; ++i) {
+        EXPECT_EQ(sceneB.noteMap.map[static_cast<size_t>(i)], defaultMap[static_cast<size_t>(i)])
+            << "Round-tripped noteMap diverges from default at slot " << i;
+    }
+
+    hostB.teardown();
 }
 
 TEST(HostTests, Determinism_SameInputSameOutput) {

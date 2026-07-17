@@ -97,6 +97,7 @@ if(NOT POLY_ENGINE_ONLY)
         host/host_tests.cpp
         host/poly_test_host.cpp
         ${CMAKE_SOURCE_DIR}/plugin/source/processor.cpp
+        ${vst3sdk_SOURCE_DIR}/public.sdk/source/common/memorystream.cpp
     )
 
     target_link_libraries(poly_host_tests PRIVATE
