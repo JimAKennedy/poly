@@ -386,6 +386,16 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
             uiSnapshot_.state = sceneState_;
             uiSnapshot_.stateReady.store(true, std::memory_order_release);
         }
+        // P1 fix: republish stateSnapshot_ unconditionally so host-thread getState()
+        // sees post-stop edits. Pending notify payloads already drained into sceneState_
+        // above (see stateReady_/noteMapReady_/envelopeReady_/etc handlers at 344-379).
+        // Unconditional (unlike the playing-path guard below): transport is idle so we
+        // are not racing another publish. A stale ready-but-unconsumed snapshot is
+        // exactly the P1 hazard — overwriting it with fresher data is the fix.
+        // A concurrent getState() read is the P2 torn-read hazard, addressed in T03 by
+        // removing the racy fallback and publishing an initial snapshot from setActive.
+        stateSnapshot_ = sceneState_;
+        snapshotReady_.store(true, std::memory_order_release);
         if (wasPlaying_ && pendingNoteOffs_.count() > 0 && data.outputEvents) {
             PendingNoteOff allOffs[PendingNoteOffBuffer::kCapacity];
             size_t n = pendingNoteOffs_.flushDue(-1e12, 1e12, allOffs, PendingNoteOffBuffer::kCapacity);
