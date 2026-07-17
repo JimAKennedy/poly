@@ -68,6 +68,12 @@ Steinberg::tresult PLUGIN_API PolyProcessor::setActive(Steinberg::TBool state) {
         expectedNextPpq_ = -1.0;
         macroSmoother_.initialized = false;
         chainState_.reset();
+        // P2 fix (M046 S01 T03): publish initial stateSnapshot_ before the audio thread
+        // starts running so a cold getState() (host loads preset / queries state before
+        // the first processBlock) reads a well-defined snapshot instead of falling back
+        // to a live sceneState_ read that could race a concurrent process() publish.
+        stateSnapshot_ = sceneState_;
+        snapshotReady_.store(true, std::memory_order_release);
     }
     return AudioEffect::setActive(state);
 }
@@ -831,6 +837,8 @@ Steinberg::tresult PLUGIN_API PolyProcessor::notify(Steinberg::Vst::IMessage* me
 }
 
 // region:get-set-state
+// Invariant: stateSnapshot_ is publishable after setActive(true) — see processor.cpp setActive; audit trail M046 S01
+// T03
 Steinberg::tresult PLUGIN_API PolyProcessor::getState(Steinberg::IBStream* state) {
     if (!state)
         return Steinberg::kInvalidArgument;
@@ -841,12 +849,11 @@ Steinberg::tresult PLUGIN_API PolyProcessor::getState(Steinberg::IBStream* state
                Steinberg::kResultOk;
     };
 
-    if (snapshotReady_.load(std::memory_order_acquire)) {
-        auto result = writeSceneState(write, stateSnapshot_) ? Steinberg::kResultOk : Steinberg::kResultFalse;
-        snapshotReady_.store(false, std::memory_order_release);
-        return result;
-    }
-    return writeSceneState(write, sceneState_) ? Steinberg::kResultOk : Steinberg::kResultFalse;
+    if (!snapshotReady_.load(std::memory_order_acquire))
+        return Steinberg::kResultFalse;
+    auto result = writeSceneState(write, stateSnapshot_) ? Steinberg::kResultOk : Steinberg::kResultFalse;
+    snapshotReady_.store(false, std::memory_order_release);
+    return result;
 }
 
 Steinberg::tresult PLUGIN_API PolyProcessor::setState(Steinberg::IBStream* state) {
