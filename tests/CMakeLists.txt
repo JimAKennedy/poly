@@ -130,6 +130,7 @@ if(NOT POLY_ENGINE_ONLY)
         host/poly_test_host.cpp
         ${CMAKE_SOURCE_DIR}/plugin/source/processor.cpp
         ${CMAKE_SOURCE_DIR}/tools/midi_probe/source/probe_processor.cpp
+        ${vst3sdk_SOURCE_DIR}/public.sdk/source/common/memorystream.cpp
     )
 
     target_link_libraries(poly_probe_tests PRIVATE
