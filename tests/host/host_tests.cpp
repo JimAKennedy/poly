@@ -168,6 +168,49 @@ TEST(HostTests, SaveAfterStop_PreservesEdits) {
     host.teardown();
 }
 
+// P1-regression (T05): pluginval on PR #80 failed 221/255 Plugin state restoration
+// sub-tests because T03's setActive(true) initial publish leaves snapshotReady_ = true,
+// and the playing-path guard at processor.cpp:483-486 only publishes when
+// snapshotReady_ is false. So the first scene edit during playback drains into
+// sceneState_ but never reaches stateSnapshot_. getState() returns the stale default.
+// The fix is to publish unconditionally in the playing path (matching T02's stopped path).
+
+TEST(HostTests, PlayingProcessWithParamChange_GetStateReflectsLatest) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+    // setActive(true) has published the default sceneState_ into stateSnapshot_
+    // and left snapshotReady_ = true. This is the pluginval trap.
+
+    // Simulate the pluginval sequence: host queues a param change (here, a noteMap
+    // edit via the same notify path a real controller uses), then process() runs.
+    const auto editedMap = makeEditedNoteMap();
+    host.injectNoteMap(editedMap);
+
+    // One playing block. process() drains pendingNoteMap_ into sceneState_ before the
+    // snapshot guard runs. On the buggy HEAD (guarded on !snapshotReady_), the guard
+    // sees ready=true and skips — stateSnapshot_ stays at the default from setActive.
+    host.processBlock(0.0, 120.0, true);
+
+    auto bytes = host.saveState();
+    ASSERT_FALSE(bytes.empty()) << "saveState() should produce a non-empty buffer";
+
+    auto scene = deserializeSceneState(bytes);
+
+    int matched = 0;
+    for (int i = 0; i < 128; ++i)
+        if (scene.noteMap.map[static_cast<size_t>(i)] == editedMap[static_cast<size_t>(i)])
+            ++matched;
+
+    EXPECT_EQ(matched, 128) << "Playing-path snapshot regression: " << matched
+                            << "/128 slots match. The guard at processor.cpp:483-486 only publishes "
+                               "stateSnapshot_ when snapshotReady_ is false, but T03's setActive(true) "
+                               "initial publish leaves it true — so the first real scene edit during "
+                               "playback drains into sceneState_ but never reaches stateSnapshot_. "
+                               "This is the fingerprint pluginval saw on PR #80.";
+
+    host.teardown();
+}
+
 TEST(HostTests, GetStateFromColdProcessor_RoundTrips) {
     // Cold processor: setup only, no playBars, no notify(), no processBlock().
     // On current HEAD this passes via the P2 torn-state fallback because there is no

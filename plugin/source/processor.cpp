@@ -480,10 +480,17 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
 
     outputParameterFeedback(data, resolved);
 
-    if (!snapshotReady_.load(std::memory_order_acquire)) {
-        stateSnapshot_ = sceneState_;
-        snapshotReady_.store(true, std::memory_order_release);
-    }
+    // State-snapshot publish: unconditionally republish the latest sceneState_ each
+    // playing block. Matches T02's stopped-path semantics — state serialization needs
+    // the LATEST scene, not the last-unconsumed one. The T03 setActive(true) initial
+    // publish left snapshotReady_ = true, so guarding this on !snapshotReady_ meant
+    // scene edits during playback never reached stateSnapshot_ (M046 S01 T05 fix;
+    // pluginval regression on PR #80 caught this). The theoretical torn-read window
+    // on stateSnapshot_ (writer struct-copy racing reader struct-copy) is the same
+    // P2 hazard the pre-T03 fallback carried on sceneState_ — M046 S03 T02 (P4) will
+    // replace this with a 2-slot exchange as the durable fix.
+    stateSnapshot_ = sceneState_;
+    snapshotReady_.store(true, std::memory_order_release);
 
     if (!uiSnapshot_.stateReady.load(std::memory_order_acquire)) {
         uiSnapshot_.state = sceneState_;
