@@ -68,6 +68,12 @@ Steinberg::tresult PLUGIN_API PolyProcessor::setActive(Steinberg::TBool state) {
         expectedNextPpq_ = -1.0;
         macroSmoother_.initialized = false;
         chainState_.reset();
+        // P2 fix (M046 S01 T03): publish initial stateSnapshot_ before the audio thread
+        // starts running so a cold getState() (host loads preset / queries state before
+        // the first processBlock) reads a well-defined snapshot instead of falling back
+        // to a live sceneState_ read that could race a concurrent process() publish.
+        stateSnapshot_ = sceneState_;
+        snapshotReady_.store(true, std::memory_order_release);
     }
     return AudioEffect::setActive(state);
 }
@@ -386,6 +392,16 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
             uiSnapshot_.state = sceneState_;
             uiSnapshot_.stateReady.store(true, std::memory_order_release);
         }
+        // P1 fix: republish stateSnapshot_ unconditionally so host-thread getState()
+        // sees post-stop edits. Pending notify payloads already drained into sceneState_
+        // above (see stateReady_/noteMapReady_/envelopeReady_/etc handlers at 344-379).
+        // Unconditional (unlike the playing-path guard below): transport is idle so we
+        // are not racing another publish. A stale ready-but-unconsumed snapshot is
+        // exactly the P1 hazard — overwriting it with fresher data is the fix.
+        // A concurrent getState() read is the P2 torn-read hazard, addressed in T03 by
+        // removing the racy fallback and publishing an initial snapshot from setActive.
+        stateSnapshot_ = sceneState_;
+        snapshotReady_.store(true, std::memory_order_release);
         if (wasPlaying_ && pendingNoteOffs_.count() > 0 && data.outputEvents) {
             PendingNoteOff allOffs[PendingNoteOffBuffer::kCapacity];
             size_t n = pendingNoteOffs_.flushDue(-1e12, 1e12, allOffs, PendingNoteOffBuffer::kCapacity);
@@ -464,10 +480,17 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
 
     outputParameterFeedback(data, resolved);
 
-    if (!snapshotReady_.load(std::memory_order_acquire)) {
-        stateSnapshot_ = sceneState_;
-        snapshotReady_.store(true, std::memory_order_release);
-    }
+    // State-snapshot publish: unconditionally republish the latest sceneState_ each
+    // playing block. Matches T02's stopped-path semantics — state serialization needs
+    // the LATEST scene, not the last-unconsumed one. The T03 setActive(true) initial
+    // publish left snapshotReady_ = true, so guarding this on !snapshotReady_ meant
+    // scene edits during playback never reached stateSnapshot_ (M046 S01 T05 fix;
+    // pluginval regression on PR #80 caught this). The theoretical torn-read window
+    // on stateSnapshot_ (writer struct-copy racing reader struct-copy) is the same
+    // P2 hazard the pre-T03 fallback carried on sceneState_ — M046 S03 T02 (P4) will
+    // replace this with a 2-slot exchange as the durable fix.
+    stateSnapshot_ = sceneState_;
+    snapshotReady_.store(true, std::memory_order_release);
 
     if (!uiSnapshot_.stateReady.load(std::memory_order_acquire)) {
         uiSnapshot_.state = sceneState_;
@@ -821,6 +844,8 @@ Steinberg::tresult PLUGIN_API PolyProcessor::notify(Steinberg::Vst::IMessage* me
 }
 
 // region:get-set-state
+// Invariant: stateSnapshot_ is publishable after setActive(true) — see processor.cpp setActive; audit trail M046 S01
+// T03
 Steinberg::tresult PLUGIN_API PolyProcessor::getState(Steinberg::IBStream* state) {
     if (!state)
         return Steinberg::kInvalidArgument;
@@ -831,12 +856,11 @@ Steinberg::tresult PLUGIN_API PolyProcessor::getState(Steinberg::IBStream* state
                Steinberg::kResultOk;
     };
 
-    if (snapshotReady_.load(std::memory_order_acquire)) {
-        auto result = writeSceneState(write, stateSnapshot_) ? Steinberg::kResultOk : Steinberg::kResultFalse;
-        snapshotReady_.store(false, std::memory_order_release);
-        return result;
-    }
-    return writeSceneState(write, sceneState_) ? Steinberg::kResultOk : Steinberg::kResultFalse;
+    if (!snapshotReady_.load(std::memory_order_acquire))
+        return Steinberg::kResultFalse;
+    auto result = writeSceneState(write, stateSnapshot_) ? Steinberg::kResultOk : Steinberg::kResultFalse;
+    snapshotReady_.store(false, std::memory_order_release);
+    return result;
 }
 
 Steinberg::tresult PLUGIN_API PolyProcessor::setState(Steinberg::IBStream* state) {

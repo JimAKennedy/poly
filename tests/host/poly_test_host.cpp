@@ -3,12 +3,17 @@
 #include <algorithm>
 #include <cstring>
 
+#include "pluginterfaces/base/ibstream.h"
 #include "pluginterfaces/vst/ivstaudioprocessor.h"
+#include "pluginterfaces/vst/ivsteditcontroller.h"
+#include "pluginterfaces/vst/ivstmessage.h"
 #include "pluginterfaces/vst/ivstprocesscontext.h"
+#include "public.sdk/source/common/memorystream.h"
 #include "public.sdk/source/vst/hosting/eventlist.h"
 #include "public.sdk/source/vst/hosting/hostclasses.h"
 #include "public.sdk/source/vst/hosting/parameterchanges.h"
 
+#include "controller_base.h"
 #include "processor.h"
 
 void* moduleHandle = nullptr;
@@ -24,7 +29,7 @@ static HostApplication sHostApp;
 PolyTestHost::PolyTestHost() = default;
 
 PolyTestHost::~PolyTestHost() {
-    if (active_)
+    if (active_ || processor_ || controller_)
         teardown();
 }
 
@@ -33,6 +38,17 @@ bool PolyTestHost::setup(double sampleRate, int blockSize) {
     processor_ = proc;
 
     if (processor_->initialize(&sHostApp) != kResultOk) {
+        processor_->release();
+        processor_ = nullptr;
+        return false;
+    }
+
+    auto* ctrl = new poly::PolyControllerBase(); // ownership-transfer
+    controller_ = ctrl;
+    if (controller_->initialize(&sHostApp) != kResultOk) {
+        controller_->release();
+        controller_ = nullptr;
+        processor_->terminate();
         processor_->release();
         processor_ = nullptr;
         return false;
@@ -52,6 +68,9 @@ bool PolyTestHost::setup(double sampleRate, int blockSize) {
     rightBuf_.resize(static_cast<size_t>(blockSize), 0.0f);
 
     if (processor_->setActive(true) != kResultOk) {
+        controller_->terminate();
+        controller_->release();
+        controller_ = nullptr;
         processor_->terminate();
         processor_->release();
         processor_ = nullptr;
@@ -63,14 +82,20 @@ bool PolyTestHost::setup(double sampleRate, int blockSize) {
 }
 
 void PolyTestHost::teardown() {
-    if (!processor_)
-        return;
-    if (active_)
-        processor_->setActive(false);
-    processor_->terminate();
-    processor_->release();
-    processor_ = nullptr;
+    if (processor_) {
+        if (active_)
+            processor_->setActive(false);
+        processor_->terminate();
+        processor_->release();
+        processor_ = nullptr;
+    }
+    if (controller_) {
+        controller_->terminate();
+        controller_->release();
+        controller_ = nullptr;
+    }
     active_ = false;
+    pendingParamChanges_.clear();
 }
 
 double PolyTestHost::ppqPerBlock(double tempo) const {
@@ -106,6 +131,17 @@ void PolyTestHost::processBlock(double ppqStart, double tempo, bool playing, boo
     EventList outputEvents;
     ParameterChanges inputParams;
     ParameterChanges outputParams;
+
+    // Drain any pending param changes queued via injectParamChangeThroughProcess.
+    for (const auto& [paramId, value] : pendingParamChanges_) {
+        int32 queueIdx = 0;
+        auto* queue = inputParams.addParameterData(static_cast<ParamID>(paramId), queueIdx);
+        if (queue) {
+            int32 pointIdx = 0;
+            queue->addPoint(0, value, pointIdx);
+        }
+    }
+    pendingParamChanges_.clear();
 
     ProcessData data{};
     data.processMode = kRealtime;
@@ -166,6 +202,149 @@ std::vector<MidiEvent> PolyTestHost::noteOffEvents() const {
         if (e.type == MidiEvent::NoteOff)
             result.push_back(e);
     return result;
+}
+
+std::vector<uint8_t> PolyTestHost::saveState() {
+    if (!processor_)
+        return {};
+    MemoryStream stream;
+    if (processor_->getState(&stream) != kResultOk)
+        return {};
+    auto size = stream.getSize();
+    if (size <= 0 || !stream.getData())
+        return {};
+    std::vector<uint8_t> buf(static_cast<size_t>(size));
+    std::memcpy(buf.data(), stream.getData(), static_cast<size_t>(size));
+    return buf;
+}
+
+bool PolyTestHost::loadState(const std::vector<uint8_t>& bytes) {
+    if (!processor_ || bytes.empty())
+        return false;
+    // Push the bytes through processor->setState() first so sceneState_ is refreshed.
+    MemoryStream procStream(const_cast<uint8_t*>(bytes.data()), static_cast<TSize>(bytes.size()));
+    if (processor_->setState(&procStream) != kResultOk)
+        return false;
+    // Then, if a controller is attached, hand the same bytes to setComponentState so its
+    // param cache mirrors the restored processor state — this is what the DAW does on
+    // preset restore, and it is what pluginval verifies.
+    if (controller_) {
+        MemoryStream ctrlStream(const_cast<uint8_t*>(bytes.data()), static_cast<TSize>(bytes.size()));
+        if (controller_->setComponentState(&ctrlStream) != kResultOk)
+            return false;
+    }
+    return true;
+}
+
+std::vector<uint8_t> PolyTestHost::saveFullPluginState() {
+    if (!processor_)
+        return {};
+
+    MemoryStream procStream;
+    if (processor_->getState(&procStream) != kResultOk)
+        return {};
+    auto procSize = procStream.getSize();
+    if (procSize < 0)
+        return {};
+
+    MemoryStream ctrlStream;
+    int64 ctrlSize = 0;
+    if (controller_) {
+        if (controller_->getState(&ctrlStream) != kResultOk)
+            return {};
+        ctrlSize = ctrlStream.getSize();
+        if (ctrlSize < 0)
+            return {};
+    }
+
+    std::vector<uint8_t> buf;
+    buf.reserve(sizeof(uint32_t) + static_cast<size_t>(procSize) + sizeof(uint32_t) + static_cast<size_t>(ctrlSize));
+
+    auto appendU32 = [&buf](uint32_t v) {
+        for (size_t i = 0; i < sizeof(v); ++i)
+            buf.push_back(static_cast<uint8_t>((v >> (i * 8)) & 0xFFu));
+    };
+
+    appendU32(static_cast<uint32_t>(procSize));
+    if (procSize > 0 && procStream.getData()) {
+        auto* p = reinterpret_cast<const uint8_t*>(procStream.getData());
+        buf.insert(buf.end(), p, p + procSize);
+    }
+    appendU32(static_cast<uint32_t>(ctrlSize));
+    if (ctrlSize > 0 && ctrlStream.getData()) {
+        auto* p = reinterpret_cast<const uint8_t*>(ctrlStream.getData());
+        buf.insert(buf.end(), p, p + ctrlSize);
+    }
+    return buf;
+}
+
+bool PolyTestHost::loadFullPluginState(const std::vector<uint8_t>& bytes) {
+    if (!processor_ || bytes.size() < sizeof(uint32_t))
+        return false;
+
+    auto readU32 = [&bytes](size_t offset) -> uint32_t {
+        uint32_t v = 0;
+        for (size_t i = 0; i < sizeof(v); ++i)
+            v |= static_cast<uint32_t>(bytes[offset + i]) << (i * 8);
+        return v;
+    };
+
+    uint32_t procLen = readU32(0);
+    size_t cursor = sizeof(uint32_t);
+    if (bytes.size() < cursor + procLen + sizeof(uint32_t))
+        return false;
+    const uint8_t* procData = bytes.data() + cursor;
+    cursor += procLen;
+
+    uint32_t ctrlLen = readU32(cursor);
+    cursor += sizeof(uint32_t);
+    if (bytes.size() < cursor + ctrlLen)
+        return false;
+    const uint8_t* ctrlData = bytes.data() + cursor;
+
+    MemoryStream procStream(const_cast<uint8_t*>(procData), static_cast<TSize>(procLen));
+    if (processor_->setState(&procStream) != kResultOk)
+        return false;
+
+    if (controller_) {
+        MemoryStream compStream(const_cast<uint8_t*>(procData), static_cast<TSize>(procLen));
+        if (controller_->setComponentState(&compStream) != kResultOk)
+            return false;
+        if (ctrlLen > 0) {
+            MemoryStream ctrlStream(const_cast<uint8_t*>(ctrlData), static_cast<TSize>(ctrlLen));
+            if (controller_->setState(&ctrlStream) != kResultOk)
+                return false;
+        }
+    }
+    return true;
+}
+
+void PolyTestHost::injectNoteMap(const std::array<int16_t, 128>& map) {
+    if (!processor_)
+        return;
+    auto* msg = new HostMessage; // ownership-transfer to local refcount
+    msg->setMessageID("NoteMapUpdate");
+    if (auto* attrs = msg->getAttributes()) {
+        attrs->setBinary("map", map.data(), static_cast<uint32>(sizeof(int16_t) * map.size()));
+    }
+    processor_->notify(msg);
+    msg->release();
+}
+
+bool PolyTestHost::setParamOnController(uint32_t paramId, double normalizedValue) {
+    if (!controller_)
+        return false;
+    return controller_->setParamNormalized(static_cast<ParamID>(paramId), normalizedValue) == kResultOk;
+}
+
+double PolyTestHost::getParamOnController(uint32_t paramId) const {
+    if (!controller_)
+        return -1.0;
+    return controller_->getParamNormalized(static_cast<ParamID>(paramId));
+}
+
+void PolyTestHost::injectParamChangeThroughProcess(uint32_t paramId, double normalizedValue) {
+    pendingParamChanges_.emplace_back(paramId, normalizedValue);
 }
 
 } // namespace test

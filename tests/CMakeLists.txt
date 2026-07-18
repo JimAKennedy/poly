@@ -97,6 +97,8 @@ if(NOT POLY_ENGINE_ONLY)
         host/host_tests.cpp
         host/poly_test_host.cpp
         ${CMAKE_SOURCE_DIR}/plugin/source/processor.cpp
+        ${CMAKE_SOURCE_DIR}/plugin/source/controller_base.cpp
+        ${vst3sdk_SOURCE_DIR}/public.sdk/source/common/memorystream.cpp
     )
 
     target_link_libraries(poly_host_tests PRIVATE
@@ -128,7 +130,9 @@ if(NOT POLY_ENGINE_ONLY)
         host/probe_tests.cpp
         host/poly_test_host.cpp
         ${CMAKE_SOURCE_DIR}/plugin/source/processor.cpp
+        ${CMAKE_SOURCE_DIR}/plugin/source/controller_base.cpp
         ${CMAKE_SOURCE_DIR}/tools/midi_probe/source/probe_processor.cpp
+        ${vst3sdk_SOURCE_DIR}/public.sdk/source/common/memorystream.cpp
     )
 
     target_link_libraries(poly_probe_tests PRIVATE
@@ -158,6 +162,8 @@ if(NOT POLY_ENGINE_ONLY)
     include(${CMAKE_SOURCE_DIR}/cmake/jk_ui_test_harness.cmake)
 
     set(POLY_PLUGIN_SOURCES
+        ${CMAKE_SOURCE_DIR}/plugin/source/controller_base.h
+        ${CMAKE_SOURCE_DIR}/plugin/source/controller_base.cpp
         ${CMAKE_SOURCE_DIR}/plugin/source/controller.h
         ${CMAKE_SOURCE_DIR}/plugin/source/controller.cpp
         ${CMAKE_SOURCE_DIR}/plugin/source/plugids.h
