@@ -57,7 +57,9 @@ public:
 
 protected:
     void registerOutputParameters();
-    static constexpr int kControllerStateVersion = 1;
+    // v1: version + lane names.
+    // v2: v1 + writable-param snapshot (pluginval save/restore round-trip). Bumped in M046 S01a.
+    static constexpr int kControllerStateVersion = 2;
     SceneState cachedState_{};
     std::array<std::string, kMaxLanes> laneNames_;
     uint32_t stateGeneration_ = 0;

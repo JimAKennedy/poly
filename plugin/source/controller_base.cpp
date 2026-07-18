@@ -305,6 +305,11 @@ Steinberg::tresult PLUGIN_API PolyControllerBase::setComponentState(Steinberg::I
 
     ++stateGeneration_;
 
+    // Notify the host (JUCE VST3 wrappers hold their own param cache) that internal
+    // setParamNormalized calls above changed values, so it re-queries.
+    if (componentHandler)
+        componentHandler->restartComponent(Steinberg::Vst::kParamValuesChanged);
+
     return Steinberg::kResultOk;
 }
 
@@ -324,6 +329,30 @@ Steinberg::tresult PLUGIN_API PolyControllerBase::getState(Steinberg::IBStream* 
             if (state->write(laneNames_[i].data(), len, nullptr) != Steinberg::kResultOk)
                 return Steinberg::kResultFalse;
         }
+    }
+
+    // v2: snapshot every writable param. Restores here (not via setComponentState) so a
+    // controller-only setParamNormalized (no process() flush, as pluginval does between
+    // save and restore) round-trips faithfully. Read-only params are host-driven outputs
+    // and would clobber live state on restore, so skip them.
+    Steinberg::int32 paramCount = 0;
+    for (Steinberg::int32 i = 0; i < parameters.getParameterCount(); ++i) {
+        auto* p = parameters.getParameterByIndex(i);
+        if (p && !(p->getInfo().flags & Steinberg::Vst::ParameterInfo::kIsReadOnly))
+            ++paramCount;
+    }
+    if (state->write(&paramCount, sizeof(paramCount), nullptr) != Steinberg::kResultOk)
+        return Steinberg::kResultFalse;
+    for (Steinberg::int32 i = 0; i < parameters.getParameterCount(); ++i) {
+        auto* p = parameters.getParameterByIndex(i);
+        if (!p || (p->getInfo().flags & Steinberg::Vst::ParameterInfo::kIsReadOnly))
+            continue;
+        Steinberg::Vst::ParamID id = p->getInfo().id;
+        double value = p->getNormalized();
+        if (state->write(&id, sizeof(id), nullptr) != Steinberg::kResultOk)
+            return Steinberg::kResultFalse;
+        if (state->write(&value, sizeof(value), nullptr) != Steinberg::kResultOk)
+            return Steinberg::kResultFalse;
     }
 
     return Steinberg::kResultOk;
@@ -350,6 +379,29 @@ Steinberg::tresult PLUGIN_API PolyControllerBase::setState(Steinberg::IBStream* 
             } else {
                 laneNames_[i] = kDefaultLaneNames[i];
             }
+        }
+    }
+
+    if (version >= 2) {
+        Steinberg::int32 paramCount = 0;
+        if (state->read(&paramCount, sizeof(paramCount), &bytesRead) == Steinberg::kResultOk &&
+            bytesRead == sizeof(paramCount) && paramCount >= 0 && paramCount < 4096) {
+            for (Steinberg::int32 i = 0; i < paramCount; ++i) {
+                Steinberg::Vst::ParamID id = 0;
+                double value = 0.0;
+                if (state->read(&id, sizeof(id), &bytesRead) != Steinberg::kResultOk || bytesRead != sizeof(id))
+                    break;
+                if (state->read(&value, sizeof(value), &bytesRead) != Steinberg::kResultOk ||
+                    bytesRead != sizeof(value))
+                    break;
+                setParamNormalized(id, value);
+            }
+            // Wake the host up: JUCE-based hosts (pluginval, most DAWs) cache param values in
+            // their own wrapper and don't observe internal setParamNormalized calls until told
+            // to re-query. Without this, pluginval's Plugin state restoration test at strictness 8
+            // reads stale values and reports "Param not restored on setStateInformation".
+            if (componentHandler)
+                componentHandler->restartComponent(Steinberg::Vst::kParamValuesChanged);
         }
     }
 

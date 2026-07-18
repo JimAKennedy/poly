@@ -22,8 +22,8 @@ SHA before a v1.0 tag.
 
 | ID | Slice | Fix commit(s) | Regression test(s) | Notes |
 |----|-------|---------------|--------------------|-------|
-| P1 | M046 S01 | `c4042de` (red) · `0fa4ef4` (green) · **T05 hotfix** (playing-path) | `HostTests.SaveAfterStop_PreservesEdits` · `HostTests.PlayingProcessWithParamChange_GetStateReflectsLatest` | Two republish paths now match T02's stopped-path semantics. Stopped path: fixed in `0fa4ef4`. Playing path (`processor.cpp:483-486`): T05 removed the `!snapshotReady_` guard so `stateSnapshot_ = sceneState_` runs unconditionally each block — the T03 initial publish in `setActive(true)` had otherwise trapped `snapshotReady_ = true` forever, so scene edits during playback never reached the snapshot. Regression caught by pluginval on PR #80 (221/255 Plugin state restoration sub-tests failing); T05 test flips 0/128→128/128. Residual torn-read window on `stateSnapshot_` is the same P2 hazard the pre-T03 fallback carried on `sceneState_` — durable fix is M046 S03 T02 (P4) 2-slot exchange. |
-| P2 | M046 S01 | `bc1afd1` | `HostTests.GetStateFromColdProcessor_RoundTrips` (guards) | Torn-state fallback at `processor.cpp:846` removed. `setActive(true)` now publishes an initial `stateSnapshot_` so cold `getState()` (host reload, restart) has a valid atomic snapshot to serialize. `writeSceneState(write, sceneState_)` no longer appears in `getState()` — verified by `rg`. |
+| P1 | M046 S01 + S01a | `c4042de` (red) · `0fa4ef4` (green) · **T05 hotfix** (playing-path) · **S01a T04** (controller-side param round-trip) | `HostTests.SaveAfterStop_PreservesEdits` · `HostTests.PlayingProcessWithParamChange_GetStateReflectsLatest` · `HostTests.SetParamOnController_NoProcess_ThenGetState_ReflectsChange` · `HostTests.PluginvalMimic_SaveRestoreParamRoundTrip` (255-param sweep) | Save/restore chain now covers three flow-paths: stopped-path republish (`0fa4ef4`), unconditional playing-path republish (T05), and controller-side param round-trip (S01a). Last path was the pluginval-visible gap — `setParamNormalized` on the controller without a process() flush left `sceneState_` stale. **Fix:** `PolyControllerBase::getState/setState` bumped to v2 and now snapshot every writable param via the controller's own state (plus `componentHandler->restartComponent(kParamValuesChanged)` so JUCE-based hosts refresh their cached param values after internal `setParamNormalized` calls). Pluginval strictness 8 (CI parity) now SUCCESS locally. Residual torn-read window on `stateSnapshot_` is the same P2 hazard the pre-T03 fallback carried on `sceneState_` — durable fix is M046 S03 T02 (P4) 2-slot exchange. |
+| P2 | M046 S01 | `64f2ff0` | `HostTests.GetStateFromColdProcessor_RoundTrips` (guards) | Torn-state fallback at `processor.cpp:846` removed. `setActive(true)` now publishes an initial `stateSnapshot_` so cold `getState()` (host reload, restart) has a valid atomic snapshot to serialize. `writeSceneState(write, sceneState_)` no longer appears in `getState()` — verified by `rg`. |
 | P3 | M046 S02 (pending) | — | — | `kDistributable` vs raw-pointer IPC in `uiSnapshot_`. Blocks any bridged-host use. |
 | P4 | M046 S02 (pending) | — | — | Writer-side TOCTOU across all six `notify()` handlers + `setState()`. Migration notes overclaim "atomic handshakes" — half the pattern is missing on the writer side. |
 
@@ -71,7 +71,20 @@ here so the review's remediation surface is complete on one page.
 
 ---
 
+## Local verification parity (M046 S01a)
+
+Three-layer defense so pluginval-class regressions never reach CI silently again:
+
+- **L1 — fast unit** (`tests/host/host_tests.cpp`): controller-only param round-trip via `saveFullPluginState/loadFullPluginState`. Sub-second. Catches the exact fingerprint pluginval reports.
+- **L2 — sweep** (`HostTests.PluginvalMimic_SaveRestoreParamRoundTrip`): every scene-affecting param the controller registers. Reports ALL mismatches per run (not first-fail-abort) so the local log mirrors CI's report style.
+- **L3 — pluginval binary** (`scripts/pre-push-check.sh` step 5): runs the actual pluginval against the built .vst3 at strictness 5 by default; `PLUGINVAL_STRICTNESS=8 bash scripts/pre-push-check.sh` for CI parity. Install via `bash scripts/install-pluginval.sh`.
+
+Pre-push hook also now (a) auto-reconfigures `build/` if it slid back to `POLY_ENGINE_ONLY=ON` (would silently skip host tests) and (b) narrows clang-format to staged files for speed.
+
+---
+
 ## Change log
 
 - **2026-07-17** — Index created. P1/P2 populated by M046 S01 T04.
 - **2026-07-17** — P1 row updated with T05 hotfix for the playing-path guard regression that T03 introduced and pluginval on PR #80 caught. New regression test `HostTests.PlayingProcessWithParamChange_GetStateReflectsLatest` locks the invariant.
+- **2026-07-18** — M046 S01a lands. P1 row extended with the controller-side param round-trip fix; new pluginval-mimic sweep test + L3 pre-push pluginval gate close the local/CI parity gap.
