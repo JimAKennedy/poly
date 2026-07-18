@@ -162,6 +162,8 @@ if(NOT POLY_ENGINE_ONLY)
     include(${CMAKE_SOURCE_DIR}/cmake/jk_ui_test_harness.cmake)
 
     set(POLY_PLUGIN_SOURCES
+        ${CMAKE_SOURCE_DIR}/plugin/source/controller_base.h
+        ${CMAKE_SOURCE_DIR}/plugin/source/controller_base.cpp
         ${CMAKE_SOURCE_DIR}/plugin/source/controller.h
         ${CMAKE_SOURCE_DIR}/plugin/source/controller.cpp
         ${CMAKE_SOURCE_DIR}/plugin/source/plugids.h
