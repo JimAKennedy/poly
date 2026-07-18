@@ -114,6 +114,37 @@ TEST(HostTests, StopFlush_NoHangingNotes) {
     host.teardown();
 }
 
+// --- IPC snapshot-pointer lifecycle regression (M046 S02 P3) ---
+//
+// The processor sends a raw pointer to its own UISnapshot field to the controller via an
+// IMessage on IConnectionPoint::connect. The controller caches that pointer in uiSnapshot_
+// and dereferences it from the UI thread. When the DAW tears the connection down, the
+// controller MUST null the cached pointer — otherwise it dangles across reconnects and
+// (worse) would point into another process's address space in a bridged/distributed host.
+// See docs/reviews/2026-07-16-product-review.md P3.
+
+TEST(HostTests, InitializeWithConnect_UISnapshotPopulated) {
+    // Guardrail — proves the connect wiring works so DisconnectNullsSnapshotPointer's
+    // "was non-null, now null" assertion is meaningful. If this ever regresses, the P3 fix's
+    // disconnect assertion is testing nothing.
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+    EXPECT_NE(host.controllerUiSnapshot(), nullptr)
+        << "connect() should have populated the controller's uiSnapshot_ via UISnapshotPtr notify";
+    host.teardown();
+}
+
+TEST(HostTests, DisconnectNullsSnapshotPointer) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+    ASSERT_NE(host.controllerUiSnapshot(), nullptr) << "fixture broken: connect never populated snapshot";
+    host.disconnectComponents();
+    EXPECT_EQ(host.controllerUiSnapshot(), nullptr)
+        << "P3 (M046 S02): PolyControllerBase::disconnect must null uiSnapshot_ so the raw "
+           "pointer cannot dangle across reconnects";
+    host.teardown();
+}
+
 // --- Save/load state regression tests (M046 P1 + P2) ---
 //
 // These pin two release-blocking bugs in the plugin state-serialization path:
