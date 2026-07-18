@@ -2,13 +2,19 @@
 
 #include <array>
 #include <cstdint>
+#include <utility>
 #include <vector>
 
 namespace Steinberg {
 namespace Vst {
 class AudioEffect;
-}
+class EditController;
+} // namespace Vst
 } // namespace Steinberg
+
+namespace poly {
+class PolyControllerBase;
+} // namespace poly
 
 namespace poly {
 namespace test {
@@ -41,7 +47,9 @@ public:
 
     // --- Host-side state IO (real IBStream via Steinberg::MemoryStream) ---
     // saveState() calls processor->getState() end-to-end and returns the serialized bytes.
-    // loadState() calls processor->setState(); the state is applied on the next process() block.
+    // loadState() calls processor->setState(); if a controller is attached, it also invokes
+    // controller->setComponentState(bytes) so the controller-side param cache mirrors the
+    // restored processor state — matches the host contract pluginval exercises.
     // Returns an empty vector on failure.
     std::vector<uint8_t> saveState();
     bool loadState(const std::vector<uint8_t>& bytes);
@@ -50,6 +58,19 @@ public:
     // pendingNoteMap_ and drained into sceneState_ on the next process() block. Used to model
     // a controller-driven scene-state edit in save-after-stop regression tests.
     void injectNoteMap(const std::array<int16_t, 128>& map);
+
+    // --- Controller-side parameter access (pluginval-mimic path) ---
+    // setParamOnController: pushes a normalized value into the controller's param cache
+    // via IEditController::setParamNormalized. Does NOT touch the processor. Mirrors
+    // pluginval's setParamNormalized calls between save/restore.
+    bool setParamOnController(uint32_t paramId, double normalizedValue);
+    // getParamOnController: reads back the controller-cached normalized value. Returns
+    // -1.0 if no controller is attached.
+    double getParamOnController(uint32_t paramId) const;
+    // injectParamChangeThroughProcess: queues a normalized value onto a fresh
+    // IParameterChanges/IParamValueQueue that will be handed to the next processBlock()
+    // call. Models the standard VST3 automation path — this IS the working path.
+    void injectParamChangeThroughProcess(uint32_t paramId, double normalizedValue);
 
     const std::vector<MidiEvent>& events() const { return events_; }
     void clearEvents() { events_.clear(); }
@@ -63,12 +84,15 @@ public:
 
 private:
     Steinberg::Vst::AudioEffect* processor_ = nullptr;
+    poly::PolyControllerBase* controller_ = nullptr;
     double sampleRate_ = 44100.0;
     int blockSize_ = 512;
     bool active_ = false;
     std::vector<MidiEvent> events_;
     std::vector<float> leftBuf_;
     std::vector<float> rightBuf_;
+    // Pending param changes to be flushed on the next processBlock() call via inputParameterChanges.
+    std::vector<std::pair<uint32_t, double>> pendingParamChanges_;
 };
 
 } // namespace test

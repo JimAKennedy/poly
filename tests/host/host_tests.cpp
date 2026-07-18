@@ -11,6 +11,7 @@
 
 #include <gtest/gtest.h>
 
+#include "plugids.h"
 #include "poly/scene.h"
 #include "poly/state_io.h"
 #include "poly_test_host.h"
@@ -207,6 +208,97 @@ TEST(HostTests, PlayingProcessWithParamChange_GetStateReflectsLatest) {
                                "initial publish leaves it true — so the first real scene edit during "
                                "playback drains into sceneState_ but never reaches stateSnapshot_. "
                                "This is the fingerprint pluginval saw on PR #80.";
+
+    host.teardown();
+}
+
+// --- M046 S01a T01: controller-side pluginval-fingerprint tests ---
+//
+// The T05 hotfix (63b5dd6) fixed the playing-path snapshot guard but pluginval
+// on PR #80 stayed red 224/255 with the same "Param not restored" fingerprint.
+// Reason: pluginval also exercises the path where a param is set via
+// IEditController::setParamNormalized WITHOUT a process() call between the
+// mutation and the state save. In that path the controller's cache holds the
+// new value but the processor's sceneState_ never sees it — the standard VST3
+// automation flow is host → IParameterChanges → process() → sceneState_, and
+// pluginval bypasses process() for its round-trip test.
+//
+// These two tests split the space:
+//   CONTROL (green today): a param change flushed through process() DOES survive
+//   the save→restore cycle. Guards the working path against regressions.
+//
+//   RED (red today, fingerprint match): a controller-only param mutation is
+//   LOST in the save→restore cycle. Reproduces pluginval's failure locally
+//   in <1s, closing the local-test gap that let 63b5dd6 pass locally then go
+//   red on CI.
+
+TEST(HostTests, ControllerParamChangeThroughProcess_ReflectsInGetState) {
+    // Working path: the DAW-standard automation flow.
+    // A param change queued onto IParameterChanges and drained by process()
+    // reaches sceneState_ AND (via T05's unconditional playing-path publish)
+    // stateSnapshot_, so save→restore round-trips through the controller.
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+
+    const uint32_t paramId = poly::ParamIDs::laneParam(0, poly::ParamIDs::kBaseVelocity);
+    const double target = 0.42;
+    const double defaultNorm = 100.0 / 127.0; // matches kLaneParamDefs default
+
+    host.injectParamChangeThroughProcess(paramId, target);
+    host.processBlock(0.0, 120.0, true);
+
+    auto bytes = host.saveState();
+    ASSERT_FALSE(bytes.empty());
+
+    // Mutate to force restore work — controller now holds a different value.
+    host.setParamOnController(paramId, 0.99);
+    ASSERT_NEAR(host.getParamOnController(paramId), 0.99, 1e-6);
+
+    ASSERT_TRUE(host.loadState(bytes));
+
+    EXPECT_NEAR(host.getParamOnController(paramId), target, 0.1)
+        << "Working path regression: param " << paramId << " through IParameterChanges did not round-trip. "
+        << "Default=" << defaultNorm << " target=" << target << " actual=" << host.getParamOnController(paramId);
+
+    host.teardown();
+}
+
+TEST(HostTests, SetParamOnController_NoProcess_ThenGetState_ReflectsChange) {
+    // Broken path (pluginval fingerprint): a param change set only on the
+    // controller — no IParameterChanges, no process() flush — is lost on
+    // save→restore. Expected RED on current HEAD (post-T05, pre-S01a fix).
+    //
+    // On green (post-fix), the controller-cached value survives the round-trip
+    // because either (a) the processor's getState reads controller state too,
+    // or (b) the controller's own getState/setState covers scene params.
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+
+    const uint32_t paramId = poly::ParamIDs::laneParam(0, poly::ParamIDs::kBaseVelocity);
+    const double target = 0.42;
+    const double defaultNorm = 100.0 / 127.0; // matches kLaneParamDefs default
+
+    // Confirm we start at the default — sanity check.
+    ASSERT_NEAR(host.getParamOnController(paramId), defaultNorm, 1e-6);
+
+    // Set on controller ONLY. No IParameterChanges, no process().
+    ASSERT_TRUE(host.setParamOnController(paramId, target));
+    ASSERT_NEAR(host.getParamOnController(paramId), target, 1e-6)
+        << "setParamNormalized should update controller cache";
+
+    auto bytes = host.saveState();
+    ASSERT_FALSE(bytes.empty());
+
+    // Mutate further, then restore.
+    ASSERT_TRUE(host.setParamOnController(paramId, 0.99));
+    ASSERT_TRUE(host.loadState(bytes));
+
+    const double restored = host.getParamOnController(paramId);
+    EXPECT_NEAR(restored, target, 0.1)
+        << "Pluginval fingerprint match: controller-only param set was LOST on save→restore. "
+        << "Set target=" << target << ", processor never saw it, saveState wrote default=" << defaultNorm
+        << ", loadState + setComponentState pushed default back to controller cache=" << restored
+        << ". This is the same class of bug pluginval reports as 'Param not restored on setStateInformation'.";
 
     host.teardown();
 }
