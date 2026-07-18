@@ -4,6 +4,8 @@ smtg_add_vst3plugin(poly_plugin
     source/processor.cpp
     source/controller.h
     source/controller.cpp
+    source/controller_base.h
+    source/controller_base.cpp
     source/plugids.h
     source/ui/cell_editor_view.h
     source/ui/cell_editor_view.cpp

@@ -1,5 +1,8 @@
 #include <algorithm>
+#include <array>
 #include <cmath>
+#include <cstdint>
+#include <cstring>
 #include <fstream>
 #include <map>
 #include <set>
@@ -9,10 +12,51 @@
 
 #include <gtest/gtest.h>
 
+#include "plugids.h"
+#include "poly/scene.h"
+#include "poly/state_io.h"
+#include "poly/types.h"
 #include "poly_test_host.h"
 
 using poly::test::MidiEvent;
 using poly::test::PolyTestHost;
+
+namespace {
+
+// Deserializes a saveState() byte buffer via readSceneState so tests can assert against
+// individual fields (noteMap, macros, etc.) without depending on raw byte layout.
+poly::SceneState deserializeSceneState(const std::vector<uint8_t>& bytes) {
+    poly::SceneState scene{};
+    size_t cursor = 0;
+    auto read = [&](void* dst, size_t size) -> bool {
+        if (cursor + size > bytes.size())
+            return false;
+        std::memcpy(dst, bytes.data() + cursor, size);
+        cursor += size;
+        return true;
+    };
+    if (!poly::readSceneState(read, scene))
+        return {};
+    return scene;
+}
+
+// Any non-identity map suffices to distinguish the "edited" state from the default map.
+// Chosen to touch every byte so a partial write couldn't accidentally masquerade as success.
+std::array<int16_t, 128> makeEditedNoteMap() {
+    std::array<int16_t, 128> map{};
+    for (int i = 0; i < 128; ++i)
+        map[static_cast<size_t>(i)] = static_cast<int16_t>((i + 42) % 128);
+    return map;
+}
+
+std::array<int16_t, 128> makeDefaultNoteMap() {
+    std::array<int16_t, 128> map{};
+    for (int i = 0; i < 128; ++i)
+        map[static_cast<size_t>(i)] = static_cast<int16_t>(i);
+    return map;
+}
+
+} // namespace
 
 // --- T01: Basic harness sanity ---
 
@@ -68,6 +112,365 @@ TEST(HostTests, StopFlush_NoHangingNotes) {
     }
 
     host.teardown();
+}
+
+// --- Save/load state regression tests (M046 P1 + P2) ---
+//
+// These pin two release-blocking bugs in the plugin state-serialization path:
+//
+//   P1 (processor.cpp:383-415): the stopped-path early return drains pending edits into
+//   sceneState_ but never republishes stateSnapshot_. If getState is called while the
+//   stateSnapshot_ still holds a pre-edit value (from the last playing block), the DAW
+//   saves stale state — the user's post-stop edit is silently lost.
+//
+//   P2 (processor.cpp:838-839): when snapshotReady_ is false, getState falls through to
+//   an unsynchronized read of sceneState_ from the message thread. Racy in production;
+//   in a single-threaded test it appears "correct", so P2 is covered indirectly by the
+//   cold-processor round-trip test — which will break if T03 removes the fallback
+//   without publishing an initial snapshot from setActive(true).
+
+TEST(HostTests, SaveAfterStop_PreservesEdits) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+
+    // Play a bar so the playing-path publishes stateSnapshot_ (snapshotReady_ = true)
+    // holding the pre-edit noteMap. This mirrors the real "user hits play, then makes
+    // an edit, then stops" sequence.
+    host.playBars(1.0, 120.0);
+    host.stopAndFlush(4.0, 120.0);
+
+    // Simulate a controller-driven edit arriving after stop (e.g. user drags a note in
+    // the note-map view while the transport is idle).
+    const auto editedMap = makeEditedNoteMap();
+    host.injectNoteMap(editedMap);
+
+    // One stopped block so process() drains pendingNoteMap_ into sceneState_.
+    // On current HEAD this drain happens (line 348-350 runs before the early return)
+    // but the stopped-path early return at line 383-415 does NOT republish
+    // stateSnapshot_ — so stateSnapshot_ still holds the pre-edit map.
+    host.processBlock(4.0, 120.0, false);
+
+    auto bytes = host.saveState();
+    ASSERT_FALSE(bytes.empty()) << "saveState() should produce a non-empty buffer";
+
+    auto scene = deserializeSceneState(bytes);
+
+    // Fail-loud diagnostic: report how many map slots survived unchanged so the red
+    // output tells the reader exactly how the bug manifested.
+    int matched = 0;
+    for (int i = 0; i < 128; ++i)
+        if (scene.noteMap.map[static_cast<size_t>(i)] == editedMap[static_cast<size_t>(i)])
+            ++matched;
+
+    EXPECT_EQ(matched, 128) << "Save-after-stop dropped the noteMap edit: " << matched
+                            << "/128 slots match the edited map. This is P1 in the M046 review — "
+                               "the stopped-path early return in PolyProcessor::process() drains "
+                               "pending edits into sceneState_ but never republishes stateSnapshot_, "
+                               "so getState() returns the pre-edit snapshot.";
+
+    host.teardown();
+}
+
+// P1-regression (T05): pluginval on PR #80 failed 221/255 Plugin state restoration
+// sub-tests because T03's setActive(true) initial publish leaves snapshotReady_ = true,
+// and the playing-path guard at processor.cpp:483-486 only publishes when
+// snapshotReady_ is false. So the first scene edit during playback drains into
+// sceneState_ but never reaches stateSnapshot_. getState() returns the stale default.
+// The fix is to publish unconditionally in the playing path (matching T02's stopped path).
+
+TEST(HostTests, PlayingProcessWithParamChange_GetStateReflectsLatest) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+    // setActive(true) has published the default sceneState_ into stateSnapshot_
+    // and left snapshotReady_ = true. This is the pluginval trap.
+
+    // Simulate the pluginval sequence: host queues a param change (here, a noteMap
+    // edit via the same notify path a real controller uses), then process() runs.
+    const auto editedMap = makeEditedNoteMap();
+    host.injectNoteMap(editedMap);
+
+    // One playing block. process() drains pendingNoteMap_ into sceneState_ before the
+    // snapshot guard runs. On the buggy HEAD (guarded on !snapshotReady_), the guard
+    // sees ready=true and skips — stateSnapshot_ stays at the default from setActive.
+    host.processBlock(0.0, 120.0, true);
+
+    auto bytes = host.saveState();
+    ASSERT_FALSE(bytes.empty()) << "saveState() should produce a non-empty buffer";
+
+    auto scene = deserializeSceneState(bytes);
+
+    int matched = 0;
+    for (int i = 0; i < 128; ++i)
+        if (scene.noteMap.map[static_cast<size_t>(i)] == editedMap[static_cast<size_t>(i)])
+            ++matched;
+
+    EXPECT_EQ(matched, 128) << "Playing-path snapshot regression: " << matched
+                            << "/128 slots match. The guard at processor.cpp:483-486 only publishes "
+                               "stateSnapshot_ when snapshotReady_ is false, but T03's setActive(true) "
+                               "initial publish leaves it true — so the first real scene edit during "
+                               "playback drains into sceneState_ but never reaches stateSnapshot_. "
+                               "This is the fingerprint pluginval saw on PR #80.";
+
+    host.teardown();
+}
+
+// --- M046 S01a T01: controller-side pluginval-fingerprint tests ---
+//
+// The T05 hotfix (63b5dd6) fixed the playing-path snapshot guard but pluginval
+// on PR #80 stayed red 224/255 with the same "Param not restored" fingerprint.
+// Reason: pluginval also exercises the path where a param is set via
+// IEditController::setParamNormalized WITHOUT a process() call between the
+// mutation and the state save. In that path the controller's cache holds the
+// new value but the processor's sceneState_ never sees it — the standard VST3
+// automation flow is host → IParameterChanges → process() → sceneState_, and
+// pluginval bypasses process() for its round-trip test.
+//
+// These two tests split the space:
+//   CONTROL (green today): a param change flushed through process() DOES survive
+//   the save→restore cycle. Guards the working path against regressions.
+//
+//   RED (red today, fingerprint match): a controller-only param mutation is
+//   LOST in the save→restore cycle. Reproduces pluginval's failure locally
+//   in <1s, closing the local-test gap that let 63b5dd6 pass locally then go
+//   red on CI.
+
+TEST(HostTests, ControllerParamChangeThroughProcess_ReflectsInGetState) {
+    // Working path: the DAW-standard automation flow.
+    // A param change queued onto IParameterChanges and drained by process()
+    // reaches sceneState_ AND (via T05's unconditional playing-path publish)
+    // stateSnapshot_, so save→restore round-trips through the controller.
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+
+    const uint32_t paramId = poly::ParamIDs::laneParam(0, poly::ParamIDs::kBaseVelocity);
+    const double target = 0.42;
+    const double defaultNorm = 100.0 / 127.0; // matches kLaneParamDefs default
+
+    // Standard DAW automation contract: host mirrors the automated value into both the
+    // processor (via IParameterChanges) AND the controller (via setParamNormalized). Our
+    // injectParamChangeThroughProcess only touches the processor side; add the controller
+    // side explicitly so this test matches production host behaviour and doesn't drift
+    // out of sync with itself after the S01a fix serializes controller state too.
+    host.injectParamChangeThroughProcess(paramId, target);
+    host.setParamOnController(paramId, target);
+    host.processBlock(0.0, 120.0, true);
+
+    auto bytes = host.saveFullPluginState();
+    ASSERT_FALSE(bytes.empty());
+
+    // Mutate to force restore work — controller now holds a different value.
+    host.setParamOnController(paramId, 0.99);
+    ASSERT_NEAR(host.getParamOnController(paramId), 0.99, 1e-6);
+
+    ASSERT_TRUE(host.loadFullPluginState(bytes));
+
+    EXPECT_NEAR(host.getParamOnController(paramId), target, 0.1)
+        << "Working path regression: param " << paramId << " through IParameterChanges did not round-trip. "
+        << "Default=" << defaultNorm << " target=" << target << " actual=" << host.getParamOnController(paramId);
+
+    host.teardown();
+}
+
+TEST(HostTests, SetParamOnController_NoProcess_ThenGetState_ReflectsChange) {
+    // Broken path (pluginval fingerprint): a param change set only on the
+    // controller — no IParameterChanges, no process() flush — is lost on
+    // save→restore. Expected RED on current HEAD (post-T05, pre-S01a fix).
+    //
+    // On green (post-fix), the controller-cached value survives the round-trip
+    // because either (a) the processor's getState reads controller state too,
+    // or (b) the controller's own getState/setState covers scene params.
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+
+    const uint32_t paramId = poly::ParamIDs::laneParam(0, poly::ParamIDs::kBaseVelocity);
+    const double target = 0.42;
+    const double defaultNorm = 100.0 / 127.0; // matches kLaneParamDefs default
+
+    // Confirm we start at the default — sanity check.
+    ASSERT_NEAR(host.getParamOnController(paramId), defaultNorm, 1e-6);
+
+    // Set on controller ONLY. No IParameterChanges, no process().
+    ASSERT_TRUE(host.setParamOnController(paramId, target));
+    ASSERT_NEAR(host.getParamOnController(paramId), target, 1e-6)
+        << "setParamNormalized should update controller cache";
+
+    // saveFullPluginState mirrors what a JUCE-based host (pluginval, most DAWs) does:
+    // it captures both processor and controller state. Without controller state serialized
+    // via controller->getState, controller-only edits (no process() flush) are lost.
+    auto bytes = host.saveFullPluginState();
+    ASSERT_FALSE(bytes.empty());
+
+    // Mutate further, then restore.
+    ASSERT_TRUE(host.setParamOnController(paramId, 0.99));
+    ASSERT_TRUE(host.loadFullPluginState(bytes));
+
+    const double restored = host.getParamOnController(paramId);
+    EXPECT_NEAR(restored, target, 0.1)
+        << "Pluginval fingerprint match: controller-only param set was LOST on save→restore. "
+        << "Set target=" << target << ", processor never saw it, saveState wrote default=" << defaultNorm
+        << ", loadState + setComponentState pushed default back to controller cache=" << restored
+        << ". This is the same class of bug pluginval reports as 'Param not restored on setStateInformation'.";
+
+    host.teardown();
+}
+
+// --- M046 S01a T02: pluginval-mimic corpus sweep ---
+//
+// Broad guard against the whole class of controller/processor param-sync bugs the
+// PR #80 pluginval failure exposed. For each scene-affecting param the controller
+// registers with kCanAutomate, set a distinct non-default value on the CONTROLLER
+// side only (no IParameterChanges, no process()), take a full DAW-realistic
+// save/restore round trip, and assert the value survives. Any bug that lets a
+// controller-only param drift on save/restore will now fail here in <2s instead
+// of surfacing on CI ~15 minutes after push.
+
+namespace {
+
+// Enumerates the automatable scene-affecting param IDs the controller exposes,
+// mirroring the registerLaneParams + addParam calls in controller_base.cpp. Kept
+// intentionally hand-listed (not reflection-based) so a param registration change
+// forces a review of what the pluginval-mimic corpus covers.
+std::vector<uint32_t> makePluginvalMimicParamIds() {
+    std::vector<uint32_t> ids;
+    for (int lane = 0; lane < poly::kMaxLanes; ++lane) {
+        for (int offset = 0; offset < poly::ParamIDs::kLaneParamCount; ++offset)
+            ids.push_back(poly::ParamIDs::laneParam(lane, offset));
+    }
+    for (int lane = 0; lane < poly::kMaxLanes; ++lane) {
+        for (int offset = 0; offset < poly::ParamIDs::kCoreParamsPerLane; ++offset)
+            ids.push_back(poly::ParamIDs::laneCoreParam(lane, offset));
+    }
+    ids.push_back(poly::ParamIDs::kMacroComplexity);
+    ids.push_back(poly::ParamIDs::kMacroDensity);
+    ids.push_back(poly::ParamIDs::kMacroSyncopation);
+    ids.push_back(poly::ParamIDs::kMacroSwing);
+    ids.push_back(poly::ParamIDs::kMacroTension);
+    ids.push_back(poly::ParamIDs::kMacroHumanize);
+    ids.push_back(poly::ParamIDs::kActiveLaneCount);
+    ids.push_back(poly::ParamIDs::kSeed);
+    ids.push_back(poly::ParamIDs::kSceneSelect);
+    ids.push_back(poly::ParamIDs::kSceneMorph);
+    ids.push_back(poly::ParamIDs::kChainEnabled);
+    ids.push_back(poly::ParamIDs::kChainMode);
+    ids.push_back(poly::ParamIDs::kChainEntryCount);
+    for (int e = 0; e < poly::kMaxChainEntries; ++e) {
+        ids.push_back(poly::ParamIDs::chainEntryParam(e, poly::ParamIDs::kChainEntryScene));
+        ids.push_back(poly::ParamIDs::chainEntryParam(e, poly::ParamIDs::kChainEntryBars));
+    }
+    ids.push_back(poly::ParamIDs::kExportTrigger);
+    ids.push_back(poly::ParamIDs::kCaptureLength);
+    return ids;
+}
+
+// Distinct non-default normalized value, deterministic per index, wrapped clear
+// of the (0.0, 0.1) and (0.9, 1.0) tolerance-adjacent edges pluginval avoids.
+double pickTargetValue(size_t index) {
+    double base = 0.37 + static_cast<double>(index) * 0.017;
+    double frac = base - std::floor(base);
+    return 0.05 + 0.9 * frac;
+}
+
+} // namespace
+
+TEST(HostTests, PluginvalMimic_SaveRestoreParamRoundTrip) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+
+    const auto ids = makePluginvalMimicParamIds();
+    ASSERT_GT(ids.size(), 200u) << "Corpus sanity: expected ~250 params, got " << ids.size();
+
+    struct Failure {
+        uint32_t paramId;
+        double target;
+        double restored;
+        const char* reason;
+    };
+    std::vector<Failure> failures;
+
+    for (size_t i = 0; i < ids.size(); ++i) {
+        const uint32_t id = ids[i];
+        const double target = pickTargetValue(i);
+        const double mutation = pickTargetValue(i + 137);
+
+        if (!host.setParamOnController(id, target)) {
+            failures.push_back({id, target, -1.0, "setParamNormalized failed"});
+            continue;
+        }
+        // Refresh the processor's stateSnapshot_ (one-shot per publish today, drained by
+        // getState). No IParameterChanges are queued for this call, so the controller-only
+        // edit above stays out of sceneState_ — that's exactly the pluginval-fingerprint gap.
+        host.processBlock(0.0, 120.0, false);
+        auto bytes = host.saveFullPluginState();
+        if (bytes.empty()) {
+            failures.push_back({id, target, -1.0, "saveFullPluginState returned empty"});
+            continue;
+        }
+        host.setParamOnController(id, mutation);
+        if (!host.loadFullPluginState(bytes)) {
+            failures.push_back({id, target, -1.0, "loadFullPluginState failed"});
+            continue;
+        }
+        double restored = host.getParamOnController(id);
+        if (std::abs(restored - target) > 0.1) {
+            failures.push_back({id, target, restored, "not restored (>0.1 diff)"});
+        }
+    }
+
+    if (!failures.empty()) {
+        std::ostringstream oss;
+        oss << "Pluginval-mimic reported " << failures.size() << "/" << ids.size()
+            << " params NOT restored on setStateInformation. Same class of bug pluginval reports on CI.\n";
+        constexpr size_t kMaxShown = 25;
+        for (size_t i = 0; i < failures.size() && i < kMaxShown; ++i) {
+            const auto& f = failures[i];
+            oss << "  param=" << f.paramId << " target=" << f.target << " restored=" << f.restored << " (" << f.reason
+                << ")\n";
+        }
+        if (failures.size() > kMaxShown)
+            oss << "  ... (" << (failures.size() - kMaxShown) << " more)\n";
+        ADD_FAILURE() << oss.str();
+    }
+
+    host.teardown();
+}
+
+TEST(HostTests, GetStateFromColdProcessor_RoundTrips) {
+    // Cold processor: setup only, no playBars, no notify(), no processBlock().
+    // On current HEAD this passes via the P2 torn-state fallback because there is no
+    // concurrent writer. Once T03 removes the fallback, this test guards the invariant
+    // that setActive(true) must publish an initial stateSnapshot_ so cold getState()
+    // still round-trips instead of returning kResultFalse or reading uninitialized state.
+    PolyTestHost hostA;
+    ASSERT_TRUE(hostA.setup(44100.0, 512));
+
+    auto bytes = hostA.saveState();
+    ASSERT_FALSE(bytes.empty()) << "Cold saveState() should produce a non-empty buffer";
+
+    auto sceneA = deserializeSceneState(bytes);
+    const auto defaultMap = makeDefaultNoteMap();
+    for (int i = 0; i < 128; ++i) {
+        ASSERT_EQ(sceneA.noteMap.map[static_cast<size_t>(i)], defaultMap[static_cast<size_t>(i)])
+            << "Cold state should serialize the identity noteMap; slot " << i << " diverged";
+    }
+
+    hostA.teardown();
+
+    PolyTestHost hostB;
+    ASSERT_TRUE(hostB.setup(44100.0, 512));
+    ASSERT_TRUE(hostB.loadState(bytes)) << "loadState() should accept a valid saveState() buffer";
+
+    // One block so the setState → pendingState_ → sceneState_ handoff completes.
+    hostB.processBlock(0.0, 120.0, false);
+
+    auto bytes2 = hostB.saveState();
+    ASSERT_FALSE(bytes2.empty()) << "Post-load saveState() should produce a non-empty buffer";
+    auto sceneB = deserializeSceneState(bytes2);
+    for (int i = 0; i < 128; ++i) {
+        EXPECT_EQ(sceneB.noteMap.map[static_cast<size_t>(i)], defaultMap[static_cast<size_t>(i)])
+            << "Round-tripped noteMap diverges from default at slot " << i;
+    }
+
+    hostB.teardown();
 }
 
 TEST(HostTests, Determinism_SameInputSameOutput) {
