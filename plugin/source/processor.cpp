@@ -87,6 +87,10 @@ Steinberg::tresult PLUGIN_API PolyProcessor::connect(Steinberg::Vst::IConnection
 }
 
 void PolyProcessor::sendSnapshotPointer() {
+    // No processor-side disconnect override: the pointer we ship (`&uiSnapshot_`)
+    // refers to a member of this processor and lives as long as the processor does,
+    // so nothing on the sender side can dangle. The controller nulls its cached copy
+    // via PolyControllerBase::disconnect() when the DAW tears the connection down.
     if (auto* msg = allocateMessage()) { // RT-SAFE-OK: connect() runs on message thread
         msg->setMessageID("UISnapshotPtr");
         if (auto* attrs = msg->getAttributes()) {
