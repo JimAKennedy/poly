@@ -54,6 +54,20 @@ public:
     std::vector<uint8_t> saveState();
     bool loadState(const std::vector<uint8_t>& bytes);
 
+    // --- Full-DAW pluginval-mimic state IO ---
+    // saveFullPluginState() serializes BOTH processor and controller state in one blob,
+    // the way JUCE-based hosts (including pluginval) do via getStateInformation. Layout:
+    //   [uint32 procLen][procBytes][uint32 ctrlLen][ctrlBytes]
+    // loadFullPluginState() unpacks the blob and calls, in order:
+    //   1. processor->setState(procBytes)
+    //   2. controller->setComponentState(procBytes) — DAW sync contract
+    //   3. controller->setState(ctrlBytes)          — controller-owned state has the last word
+    // This is the loop pluginval exercises when it reports "Param not restored on
+    // setStateInformation" — use these helpers (not saveState/loadState) for tests that
+    // reproduce controller-side param round-trip.
+    std::vector<uint8_t> saveFullPluginState();
+    bool loadFullPluginState(const std::vector<uint8_t>& bytes);
+
     // Dispatches a NoteMapUpdate message through processor->notify(). The edit is parked in
     // pendingNoteMap_ and drained into sceneState_ on the next process() block. Used to model
     // a controller-driven scene-state edit in save-after-stop regression tests.

@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstdint>
 #include <cstring>
 #include <fstream>
 #include <map>
@@ -14,6 +15,7 @@
 #include "plugids.h"
 #include "poly/scene.h"
 #include "poly/state_io.h"
+#include "poly/types.h"
 #include "poly_test_host.h"
 
 using poly::test::MidiEvent;
@@ -244,17 +246,23 @@ TEST(HostTests, ControllerParamChangeThroughProcess_ReflectsInGetState) {
     const double target = 0.42;
     const double defaultNorm = 100.0 / 127.0; // matches kLaneParamDefs default
 
+    // Standard DAW automation contract: host mirrors the automated value into both the
+    // processor (via IParameterChanges) AND the controller (via setParamNormalized). Our
+    // injectParamChangeThroughProcess only touches the processor side; add the controller
+    // side explicitly so this test matches production host behaviour and doesn't drift
+    // out of sync with itself after the S01a fix serializes controller state too.
     host.injectParamChangeThroughProcess(paramId, target);
+    host.setParamOnController(paramId, target);
     host.processBlock(0.0, 120.0, true);
 
-    auto bytes = host.saveState();
+    auto bytes = host.saveFullPluginState();
     ASSERT_FALSE(bytes.empty());
 
     // Mutate to force restore work — controller now holds a different value.
     host.setParamOnController(paramId, 0.99);
     ASSERT_NEAR(host.getParamOnController(paramId), 0.99, 1e-6);
 
-    ASSERT_TRUE(host.loadState(bytes));
+    ASSERT_TRUE(host.loadFullPluginState(bytes));
 
     EXPECT_NEAR(host.getParamOnController(paramId), target, 0.1)
         << "Working path regression: param " << paramId << " through IParameterChanges did not round-trip. "
@@ -286,12 +294,15 @@ TEST(HostTests, SetParamOnController_NoProcess_ThenGetState_ReflectsChange) {
     ASSERT_NEAR(host.getParamOnController(paramId), target, 1e-6)
         << "setParamNormalized should update controller cache";
 
-    auto bytes = host.saveState();
+    // saveFullPluginState mirrors what a JUCE-based host (pluginval, most DAWs) does:
+    // it captures both processor and controller state. Without controller state serialized
+    // via controller->getState, controller-only edits (no process() flush) are lost.
+    auto bytes = host.saveFullPluginState();
     ASSERT_FALSE(bytes.empty());
 
     // Mutate further, then restore.
     ASSERT_TRUE(host.setParamOnController(paramId, 0.99));
-    ASSERT_TRUE(host.loadState(bytes));
+    ASSERT_TRUE(host.loadFullPluginState(bytes));
 
     const double restored = host.getParamOnController(paramId);
     EXPECT_NEAR(restored, target, 0.1)
@@ -299,6 +310,126 @@ TEST(HostTests, SetParamOnController_NoProcess_ThenGetState_ReflectsChange) {
         << "Set target=" << target << ", processor never saw it, saveState wrote default=" << defaultNorm
         << ", loadState + setComponentState pushed default back to controller cache=" << restored
         << ". This is the same class of bug pluginval reports as 'Param not restored on setStateInformation'.";
+
+    host.teardown();
+}
+
+// --- M046 S01a T02: pluginval-mimic corpus sweep ---
+//
+// Broad guard against the whole class of controller/processor param-sync bugs the
+// PR #80 pluginval failure exposed. For each scene-affecting param the controller
+// registers with kCanAutomate, set a distinct non-default value on the CONTROLLER
+// side only (no IParameterChanges, no process()), take a full DAW-realistic
+// save/restore round trip, and assert the value survives. Any bug that lets a
+// controller-only param drift on save/restore will now fail here in <2s instead
+// of surfacing on CI ~15 minutes after push.
+
+namespace {
+
+// Enumerates the automatable scene-affecting param IDs the controller exposes,
+// mirroring the registerLaneParams + addParam calls in controller_base.cpp. Kept
+// intentionally hand-listed (not reflection-based) so a param registration change
+// forces a review of what the pluginval-mimic corpus covers.
+std::vector<uint32_t> makePluginvalMimicParamIds() {
+    std::vector<uint32_t> ids;
+    for (int lane = 0; lane < poly::kMaxLanes; ++lane) {
+        for (int offset = 0; offset < poly::ParamIDs::kLaneParamCount; ++offset)
+            ids.push_back(poly::ParamIDs::laneParam(lane, offset));
+    }
+    for (int lane = 0; lane < poly::kMaxLanes; ++lane) {
+        for (int offset = 0; offset < poly::ParamIDs::kCoreParamsPerLane; ++offset)
+            ids.push_back(poly::ParamIDs::laneCoreParam(lane, offset));
+    }
+    ids.push_back(poly::ParamIDs::kMacroComplexity);
+    ids.push_back(poly::ParamIDs::kMacroDensity);
+    ids.push_back(poly::ParamIDs::kMacroSyncopation);
+    ids.push_back(poly::ParamIDs::kMacroSwing);
+    ids.push_back(poly::ParamIDs::kMacroTension);
+    ids.push_back(poly::ParamIDs::kMacroHumanize);
+    ids.push_back(poly::ParamIDs::kActiveLaneCount);
+    ids.push_back(poly::ParamIDs::kSeed);
+    ids.push_back(poly::ParamIDs::kSceneSelect);
+    ids.push_back(poly::ParamIDs::kSceneMorph);
+    ids.push_back(poly::ParamIDs::kChainEnabled);
+    ids.push_back(poly::ParamIDs::kChainMode);
+    ids.push_back(poly::ParamIDs::kChainEntryCount);
+    for (int e = 0; e < poly::kMaxChainEntries; ++e) {
+        ids.push_back(poly::ParamIDs::chainEntryParam(e, poly::ParamIDs::kChainEntryScene));
+        ids.push_back(poly::ParamIDs::chainEntryParam(e, poly::ParamIDs::kChainEntryBars));
+    }
+    ids.push_back(poly::ParamIDs::kExportTrigger);
+    ids.push_back(poly::ParamIDs::kCaptureLength);
+    return ids;
+}
+
+// Distinct non-default normalized value, deterministic per index, wrapped clear
+// of the (0.0, 0.1) and (0.9, 1.0) tolerance-adjacent edges pluginval avoids.
+double pickTargetValue(size_t index) {
+    double base = 0.37 + static_cast<double>(index) * 0.017;
+    double frac = base - std::floor(base);
+    return 0.05 + 0.9 * frac;
+}
+
+} // namespace
+
+TEST(HostTests, PluginvalMimic_SaveRestoreParamRoundTrip) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+
+    const auto ids = makePluginvalMimicParamIds();
+    ASSERT_GT(ids.size(), 200u) << "Corpus sanity: expected ~250 params, got " << ids.size();
+
+    struct Failure {
+        uint32_t paramId;
+        double target;
+        double restored;
+        const char* reason;
+    };
+    std::vector<Failure> failures;
+
+    for (size_t i = 0; i < ids.size(); ++i) {
+        const uint32_t id = ids[i];
+        const double target = pickTargetValue(i);
+        const double mutation = pickTargetValue(i + 137);
+
+        if (!host.setParamOnController(id, target)) {
+            failures.push_back({id, target, -1.0, "setParamNormalized failed"});
+            continue;
+        }
+        // Refresh the processor's stateSnapshot_ (one-shot per publish today, drained by
+        // getState). No IParameterChanges are queued for this call, so the controller-only
+        // edit above stays out of sceneState_ — that's exactly the pluginval-fingerprint gap.
+        host.processBlock(0.0, 120.0, false);
+        auto bytes = host.saveFullPluginState();
+        if (bytes.empty()) {
+            failures.push_back({id, target, -1.0, "saveFullPluginState returned empty"});
+            continue;
+        }
+        host.setParamOnController(id, mutation);
+        if (!host.loadFullPluginState(bytes)) {
+            failures.push_back({id, target, -1.0, "loadFullPluginState failed"});
+            continue;
+        }
+        double restored = host.getParamOnController(id);
+        if (std::abs(restored - target) > 0.1) {
+            failures.push_back({id, target, restored, "not restored (>0.1 diff)"});
+        }
+    }
+
+    if (!failures.empty()) {
+        std::ostringstream oss;
+        oss << "Pluginval-mimic reported " << failures.size() << "/" << ids.size()
+            << " params NOT restored on setStateInformation. Same class of bug pluginval reports on CI.\n";
+        constexpr size_t kMaxShown = 25;
+        for (size_t i = 0; i < failures.size() && i < kMaxShown; ++i) {
+            const auto& f = failures[i];
+            oss << "  param=" << f.paramId << " target=" << f.target << " restored=" << f.restored << " (" << f.reason
+                << ")\n";
+        }
+        if (failures.size() > kMaxShown)
+            oss << "  ... (" << (failures.size() - kMaxShown) << " more)\n";
+        ADD_FAILURE() << oss.str();
+    }
 
     host.teardown();
 }

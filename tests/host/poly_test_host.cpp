@@ -236,6 +236,89 @@ bool PolyTestHost::loadState(const std::vector<uint8_t>& bytes) {
     return true;
 }
 
+std::vector<uint8_t> PolyTestHost::saveFullPluginState() {
+    if (!processor_)
+        return {};
+
+    MemoryStream procStream;
+    if (processor_->getState(&procStream) != kResultOk)
+        return {};
+    auto procSize = procStream.getSize();
+    if (procSize < 0)
+        return {};
+
+    MemoryStream ctrlStream;
+    int64 ctrlSize = 0;
+    if (controller_) {
+        if (controller_->getState(&ctrlStream) != kResultOk)
+            return {};
+        ctrlSize = ctrlStream.getSize();
+        if (ctrlSize < 0)
+            return {};
+    }
+
+    std::vector<uint8_t> buf;
+    buf.reserve(sizeof(uint32_t) + static_cast<size_t>(procSize) + sizeof(uint32_t) + static_cast<size_t>(ctrlSize));
+
+    auto appendU32 = [&buf](uint32_t v) {
+        for (size_t i = 0; i < sizeof(v); ++i)
+            buf.push_back(static_cast<uint8_t>((v >> (i * 8)) & 0xFFu));
+    };
+
+    appendU32(static_cast<uint32_t>(procSize));
+    if (procSize > 0 && procStream.getData()) {
+        auto* p = reinterpret_cast<const uint8_t*>(procStream.getData());
+        buf.insert(buf.end(), p, p + procSize);
+    }
+    appendU32(static_cast<uint32_t>(ctrlSize));
+    if (ctrlSize > 0 && ctrlStream.getData()) {
+        auto* p = reinterpret_cast<const uint8_t*>(ctrlStream.getData());
+        buf.insert(buf.end(), p, p + ctrlSize);
+    }
+    return buf;
+}
+
+bool PolyTestHost::loadFullPluginState(const std::vector<uint8_t>& bytes) {
+    if (!processor_ || bytes.size() < sizeof(uint32_t))
+        return false;
+
+    auto readU32 = [&bytes](size_t offset) -> uint32_t {
+        uint32_t v = 0;
+        for (size_t i = 0; i < sizeof(v); ++i)
+            v |= static_cast<uint32_t>(bytes[offset + i]) << (i * 8);
+        return v;
+    };
+
+    uint32_t procLen = readU32(0);
+    size_t cursor = sizeof(uint32_t);
+    if (bytes.size() < cursor + procLen + sizeof(uint32_t))
+        return false;
+    const uint8_t* procData = bytes.data() + cursor;
+    cursor += procLen;
+
+    uint32_t ctrlLen = readU32(cursor);
+    cursor += sizeof(uint32_t);
+    if (bytes.size() < cursor + ctrlLen)
+        return false;
+    const uint8_t* ctrlData = bytes.data() + cursor;
+
+    MemoryStream procStream(const_cast<uint8_t*>(procData), static_cast<TSize>(procLen));
+    if (processor_->setState(&procStream) != kResultOk)
+        return false;
+
+    if (controller_) {
+        MemoryStream compStream(const_cast<uint8_t*>(procData), static_cast<TSize>(procLen));
+        if (controller_->setComponentState(&compStream) != kResultOk)
+            return false;
+        if (ctrlLen > 0) {
+            MemoryStream ctrlStream(const_cast<uint8_t*>(ctrlData), static_cast<TSize>(ctrlLen));
+            if (controller_->setState(&ctrlStream) != kResultOk)
+                return false;
+        }
+    }
+    return true;
+}
+
 void PolyTestHost::injectNoteMap(const std::array<int16_t, 128>& map) {
     if (!processor_)
         return;
