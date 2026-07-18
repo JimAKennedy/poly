@@ -32,10 +32,28 @@ echo "=== Pre-push quality checks ==="
 # region:pre-push-gates
 echo "[0/5] Build config check..."
 CACHE_FILE="build/CMakeCache.txt"
-if [ -f "$CACHE_FILE" ] && grep -q '^POLY_ENGINE_ONLY:BOOL=ON' "$CACHE_FILE"; then
-    echo "  build/ is configured POLY_ENGINE_ONLY=ON — host tests would be skipped. Reconfiguring..."
-    if ! cmake -S . -B build -DPOLY_ENGINE_ONLY=OFF >/dev/null; then
-        echo "FAIL: could not reconfigure build/ with POLY_ENGINE_ONLY=OFF."
+NEEDS_RECONFIG=0
+RECONFIG_REASONS=()
+if [ -f "$CACHE_FILE" ]; then
+    if grep -q '^POLY_ENGINE_ONLY:BOOL=ON' "$CACHE_FILE"; then
+        NEEDS_RECONFIG=1
+        RECONFIG_REASONS+=("POLY_ENGINE_ONLY=ON (host tests would be skipped)")
+    fi
+    # BUILD_INTERACTION_TESTS gates poly_interaction_tests (and by extension the
+    # POLY_PLUGIN_SOURCES link check). If it's OFF, a missing source in that list
+    # only trips on CI — see the T01 fixup (controller_base.cpp) that shipped
+    # a red build to CI because local hooks compiled without this target.
+    if ! grep -q '^BUILD_INTERACTION_TESTS:BOOL=ON' "$CACHE_FILE"; then
+        NEEDS_RECONFIG=1
+        RECONFIG_REASONS+=("BUILD_INTERACTION_TESTS!=ON (CI-parity link check would be skipped)")
+    fi
+fi
+if [ "$NEEDS_RECONFIG" -eq 1 ]; then
+    for reason in "${RECONFIG_REASONS[@]}"; do
+        echo "  build/ needs reconfigure: $reason"
+    done
+    if ! cmake -S . -B build -DPOLY_ENGINE_ONLY=OFF -DBUILD_INTERACTION_TESTS=ON >/dev/null; then
+        echo "FAIL: could not reconfigure build/ with POLY_ENGINE_ONLY=OFF -DBUILD_INTERACTION_TESTS=ON."
         FAILED=1
     fi
 fi
