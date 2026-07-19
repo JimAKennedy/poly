@@ -58,18 +58,20 @@ TEST(PendingNoteOff, PushAndCount) {
     EXPECT_EQ(buf.count(), 2u);
 }
 
-TEST(PendingNoteOff, FlushDue_EmitsInRange) {
+TEST(PendingNoteOff, FlushDue_EmitsInWindowAndStragglers) {
+    // Post-M046 S04 P5 contract: flushDue emits every off due before ppqEnd,
+    // including stragglers with ppqOff < ppqStart. Only future offs
+    // (ppqOff >= ppqEnd) stay in the buffer.
     poly::PendingNoteOffBuffer buf;
-    buf.push({.ppqOff = 0.5, .pitch = 36, .channel = 0});
-    buf.push({.ppqOff = 1.5, .pitch = 38, .channel = 0});
-    buf.push({.ppqOff = 2.5, .pitch = 42, .channel = 0});
+    buf.push({.ppqOff = 0.5, .pitch = 36, .channel = 0}); // straggler
+    buf.push({.ppqOff = 1.5, .pitch = 38, .channel = 0}); // in window
+    buf.push({.ppqOff = 2.5, .pitch = 42, .channel = 0}); // future
 
     poly::PendingNoteOff out[8];
     size_t n = buf.flushDue(1.0, 2.0, out, 8);
 
-    EXPECT_EQ(n, 1u);
-    EXPECT_EQ(out[0].pitch, 38);
-    EXPECT_EQ(buf.count(), 2u);
+    EXPECT_EQ(n, 2u);
+    EXPECT_EQ(buf.count(), 1u);
 }
 
 TEST(PendingNoteOff, FlushDue_MultipleInRange) {

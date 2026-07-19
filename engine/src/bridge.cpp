@@ -23,10 +23,14 @@ bool PendingNoteOffBuffer::push(const PendingNoteOff& noff) {
 }
 
 size_t PendingNoteOffBuffer::flushDue(double ppqStart, double ppqEnd, PendingNoteOff* out, size_t maxOut) {
+    (void)ppqStart;
     size_t flushed = 0;
     size_t i = 0;
     while (i < count_ && flushed < maxOut) {
-        if (buf_[i].ppqOff >= ppqStart && buf_[i].ppqOff < ppqEnd) {
+        // Emit every note-off due before ppqEnd, including stragglers whose
+        // ppqOff sits below ppqStart (missed by a prior block due to tempo
+        // drift or float rounding). ppqToSampleOffset clamps to [0, blockSize).
+        if (buf_[i].ppqOff < ppqEnd) {
             out[flushed++] = buf_[i];
             buf_[i] = buf_[--count_];
         } else {
