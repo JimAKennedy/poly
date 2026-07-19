@@ -633,3 +633,100 @@ TEST(GoldenProcessor, DefaultPatch4Bars) {
 
     host.teardown();
 }
+
+// --- M046 S03 P4: UI-to-audio handshake TOCTOU regressions ---
+//
+// Invariant under test (target for S03 T02): for every UI-to-audio handshake site,
+// notify-issued == applied + drops. Two rapid writes with no processBlock() between
+// them therefore MUST show drops == 1 (writer detected the previous unconsumed publish
+// and accounted for the overwrite).
+//
+// On current HEAD both tests fail: the writer silently stomps pending without
+// incrementing the drop counter. That is the P4 silent-loss defect this slice
+// eliminates.
+
+TEST(HostTests, NotifyBurstBetweenProcess_LandsBothOrDropsCleanly) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+
+    // Two distinct note maps issued via notify() back-to-back, no process() between.
+    std::array<int16_t, 128> mapA{};
+    std::array<int16_t, 128> mapB{};
+    for (int i = 0; i < 128; ++i) {
+        mapA[static_cast<size_t>(i)] = static_cast<int16_t>((i + 30) % 128);
+        mapB[static_cast<size_t>(i)] = static_cast<int16_t>((i + 90) % 128);
+    }
+
+    auto baseline = host.handshakeDrops();
+    ASSERT_EQ(baseline.noteMap, 0u) << "handshake drop counter is not zeroed at setup";
+
+    host.injectNoteMap(mapA);
+    host.injectNoteMap(mapB); // second write with no process() between — should be counted
+
+    // Drain the pending map (whichever version survives) into sceneState_.
+    host.processBlock(0.0, 120.0, false);
+
+    // Invariant: issued=2, applied=1 (only one survives sceneState_), therefore drops=1.
+    // On HEAD: drops=0 (silent loss). Post-S03-T02: drops=1.
+    auto after = host.handshakeDrops();
+    EXPECT_EQ(after.noteMap, 1u) << "P4 silent-loss: two rapid NoteMapUpdate notifies with no process() between "
+                                    "must count as one apply + one drop; got drops="
+                                 << after.noteMap;
+
+    host.teardown();
+}
+
+TEST(HostTests, SetStateBurst_TearOrLoss) {
+    // Prepare two distinct serialized scene states so we have two clearly-different
+    // payloads to feed into setState back-to-back.
+    std::vector<uint8_t> bytesA;
+    std::vector<uint8_t> bytesB;
+    {
+        PolyTestHost prep;
+        ASSERT_TRUE(prep.setup(44100.0, 512));
+        std::array<int16_t, 128> mapA{};
+        for (int i = 0; i < 128; ++i)
+            mapA[static_cast<size_t>(i)] = static_cast<int16_t>((i + 20) % 128);
+        prep.injectNoteMap(mapA);
+        prep.processBlock(0.0, 120.0, false);
+        bytesA = prep.saveState();
+        prep.teardown();
+    }
+    {
+        PolyTestHost prep;
+        ASSERT_TRUE(prep.setup(44100.0, 512));
+        std::array<int16_t, 128> mapB{};
+        for (int i = 0; i < 128; ++i)
+            mapB[static_cast<size_t>(i)] = static_cast<int16_t>((i + 100) % 128);
+        prep.injectNoteMap(mapB);
+        prep.processBlock(0.0, 120.0, false);
+        bytesB = prep.saveState();
+        prep.teardown();
+    }
+    ASSERT_FALSE(bytesA.empty());
+    ASSERT_FALSE(bytesB.empty());
+    ASSERT_NE(bytesA, bytesB) << "prep-run states are identical — burst assertion cannot distinguish them";
+
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+
+    auto baseline = host.handshakeDrops();
+    ASSERT_EQ(baseline.state, 0u) << "handshake drop counter is not zeroed at setup";
+
+    // Two rapid setState calls, no process() between — writer overwrites pendingState_
+    // before the audio thread drains it.
+    ASSERT_TRUE(host.loadState(bytesA));
+    ASSERT_TRUE(host.loadState(bytesB));
+
+    // Drain pendingState_ into sceneState_.
+    host.processBlock(0.0, 120.0, false);
+
+    // Invariant: issued=2, applied=1 (only one setState survives), therefore drops=1.
+    // On HEAD: drops=0. Post-S03-T02: drops=1.
+    auto after = host.handshakeDrops();
+    EXPECT_EQ(after.state, 1u) << "P4 silent-loss: two rapid setState calls with no process() between must count as "
+                                  "one apply + one drop; got drops="
+                               << after.state;
+
+    host.teardown();
+}

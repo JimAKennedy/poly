@@ -18,6 +18,21 @@ public:
     PolyProcessor();
     ~PolyProcessor() override = default;
 
+    // M046 S03 P4: per-handshake drop counter. Incremented by the writer whenever the
+    // reader hasn't consumed the previous publish yet. Invariant (after S03 T02):
+    // notify-issued == applied + drops for every field. If drops stay zero on HEAD
+    // it proves silent loss (writer stomped pending without accounting).
+    struct HandshakeDropCounters {
+        std::atomic<uint64_t> state{0};
+        std::atomic<uint64_t> noteMap{0};
+        std::atomic<uint64_t> cellSizes{0};
+        std::atomic<uint64_t> timeline{0};
+        std::atomic<uint64_t> microTiming{0};
+        std::atomic<uint64_t> envelope{0};
+        std::atomic<uint64_t> accentMask{0};
+    };
+    const HandshakeDropCounters& handshakeDrops() const { return handshakeDrops_; }
+
     static Steinberg::FUnknown* createInstance(void*) {
         return static_cast<Steinberg::Vst::IAudioProcessor*>(
             new PolyProcessor()); // ownership-transfer — RT-SAFE-OK: host factory, not audio thread
@@ -105,6 +120,8 @@ private:
     std::atomic<bool> snapshotReady_{false};
 
     UISnapshot uiSnapshot_{};
+
+    HandshakeDropCounters handshakeDrops_{};
 };
 
 } // namespace poly

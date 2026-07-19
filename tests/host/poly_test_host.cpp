@@ -391,5 +391,90 @@ void PolyTestHost::injectParamChangeThroughProcess(uint32_t paramId, double norm
     pendingParamChanges_.emplace_back(paramId, normalizedValue);
 }
 
+void PolyTestHost::injectCellSizes(int laneIndex, const std::array<int, poly::kMaxSteps>& sizes) {
+    if (!processor_)
+        return;
+    auto* msg = new HostMessage; // ownership-transfer to local refcount
+    msg->setMessageID("CellSizesUpdate");
+    if (auto* attrs = msg->getAttributes()) {
+        attrs->setInt("lane", laneIndex);
+        attrs->setBinary("sizes", sizes.data(), static_cast<uint32>(sizeof(int) * sizes.size()));
+    }
+    processor_->notify(msg);
+    msg->release();
+}
+
+void PolyTestHost::injectTimelinePattern(int laneIndex, const std::array<bool, poly::kMaxSteps>& pattern,
+                                         int patternLength) {
+    if (!processor_)
+        return;
+    auto* msg = new HostMessage; // ownership-transfer to local refcount
+    msg->setMessageID("TimelinePatternUpdate");
+    if (auto* attrs = msg->getAttributes()) {
+        attrs->setInt("lane", laneIndex);
+        attrs->setInt("patLen", patternLength);
+        attrs->setBinary("pattern", pattern.data(), static_cast<uint32>(sizeof(bool) * pattern.size()));
+    }
+    processor_->notify(msg);
+    msg->release();
+}
+
+void PolyTestHost::injectMicroTiming(int laneIndex, const std::array<float, poly::kMaxSteps>& timingMs) {
+    if (!processor_)
+        return;
+    auto* msg = new HostMessage; // ownership-transfer to local refcount
+    msg->setMessageID("MicroTimingUpdate");
+    if (auto* attrs = msg->getAttributes()) {
+        attrs->setInt("lane", laneIndex);
+        attrs->setBinary("timing", timingMs.data(), static_cast<uint32>(sizeof(float) * timingMs.size()));
+    }
+    processor_->notify(msg);
+    msg->release();
+}
+
+void PolyTestHost::injectEnvelope(int laneIndex, int envelopeIndex, bool active, const poly::Envelope& envelope) {
+    if (!processor_)
+        return;
+    auto* msg = new HostMessage; // ownership-transfer to local refcount
+    msg->setMessageID("EnvelopeUpdate");
+    if (auto* attrs = msg->getAttributes()) {
+        attrs->setInt("lane", laneIndex);
+        attrs->setInt("envIdx", envelopeIndex);
+        attrs->setInt("active", active ? 1 : 0);
+        attrs->setBinary("envelope", &envelope, static_cast<uint32>(sizeof(envelope)));
+    }
+    processor_->notify(msg);
+    msg->release();
+}
+
+void PolyTestHost::injectAccentMask(int laneIndex, const std::array<float, poly::kMaxSteps>& steps) {
+    if (!processor_)
+        return;
+    auto* msg = new HostMessage; // ownership-transfer to local refcount
+    msg->setMessageID("AccentMaskUpdate");
+    if (auto* attrs = msg->getAttributes()) {
+        attrs->setInt("lane", laneIndex);
+        attrs->setBinary("accents", steps.data(), static_cast<uint32>(sizeof(float) * steps.size()));
+    }
+    processor_->notify(msg);
+    msg->release();
+}
+
+PolyTestHost::HandshakeDropSnapshot PolyTestHost::handshakeDrops() const {
+    HandshakeDropSnapshot snap{};
+    if (!processor_)
+        return snap;
+    auto* proc = static_cast<PolyProcessor*>(processor_);
+    const auto& c = proc->handshakeDrops();
+    snap.state = c.state.load(std::memory_order_relaxed);
+    snap.noteMap = c.noteMap.load(std::memory_order_relaxed);
+    snap.cellSizes = c.cellSizes.load(std::memory_order_relaxed);
+    snap.timeline = c.timeline.load(std::memory_order_relaxed);
+    snap.microTiming = c.microTiming.load(std::memory_order_relaxed);
+    snap.envelope = c.envelope.load(std::memory_order_relaxed);
+    snap.accentMask = c.accentMask.load(std::memory_order_relaxed);
+    return snap;
+}
+
 } // namespace test
 } // namespace poly
