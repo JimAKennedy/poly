@@ -14,6 +14,7 @@ class EditController;
 
 namespace poly {
 class PolyControllerBase;
+struct UISnapshot;
 } // namespace poly
 
 namespace poly {
@@ -39,6 +40,21 @@ public:
 
     bool setup(double sampleRate = 44100.0, int blockSize = 512);
     void teardown();
+
+    // --- IConnectionPoint lifecycle (M046 S02 P3) ---
+    // Wires processor <-> controller via IConnectionPoint::connect on both sides — matches
+    // what real DAWs (Cubase, JUCE hosts) do at plugin load. Called automatically by setup()
+    // so most tests see the full lifecycle; exposed here for tests that need to reconnect.
+    // Returns false if either side lacks IConnectionPoint or the connect calls fail.
+    bool connectComponents();
+    // Symmetric IConnectionPoint::disconnect on both sides. Called automatically by teardown()
+    // before terminate/release. After a clean disconnect, the controller's cached uiSnapshot_
+    // pointer MUST be nulled (that's the P3 invariant — see PolyControllerBase::disconnect).
+    void disconnectComponents();
+    // Returns the controller's cached processor-side UISnapshot pointer.
+    // Null before connect() and after disconnect(); non-null while connected once the
+    // UISnapshotPtr message has been delivered via notify().
+    poly::UISnapshot* controllerUiSnapshot() const;
 
     void playBars(double bars, double tempo);
     void processBlock(double ppqStart, double tempo, bool playing, bool looping = false, double loopStart = 0.0,
