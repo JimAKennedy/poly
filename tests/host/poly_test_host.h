@@ -152,6 +152,17 @@ public:
     // S04 T03 lands the return-value check + drop counter bump.
     uint64_t noteOffDrops() const;
 
+    // --- M046 S06 P9: MIDI capture buffer accessors (loop-wrap defect) ---
+    // pushCapturedNote pokes a synthetic entry straight into the processor's
+    // captureBuffer_ so tests can seed known state prior to a loop-wrap block
+    // and observe whether the buffer survives. capturedNoteCount reads back the
+    // buffer size after processBlock. On HEAD, a loop-wrap block trips the
+    // transport-jump detector and captureBuffer_ is cleared to zero. After
+    // S06 T02, wrap-detection distinguishes wrap from real jump and the seeded
+    // notes survive.
+    void pushCapturedNote(const NoteEvent& note);
+    size_t capturedNoteCount() const;
+
     // T03: Read-only handshake applied counter snapshot. Incremented by the RT reader
     // on every successful consume(). Paired with handshakeDrops() to prove the
     // no-silent-loss invariant: issued == applied + drops.
