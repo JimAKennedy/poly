@@ -351,42 +351,29 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
         }
     }
 
-    if (stateReady_.load(std::memory_order_acquire)) {
-        sceneState_ = pendingState_;
-        stateReady_.store(false, std::memory_order_release);
-    }
-    if (noteMapReady_.load(std::memory_order_acquire)) {
-        sceneState_.noteMap = pendingNoteMap_;
-        noteMapReady_.store(false, std::memory_order_release);
-    }
+    // M046 S03 P4: drain all seven host→RT handshake slots. `consume()` atomically
+    // detaches the published payload (if any) via exchange(-1), guaranteeing the
+    // reader either applies one publish or none — never a torn read of an in-flight
+    // publish. Drops are surfaced via handshakeDrops_ on the writer side, not here.
+    stateSlot_.consume([this](const SceneState& s) { sceneState_ = s; });
+    noteMapSlot_.consume([this](const NoteMap& nm) { sceneState_.noteMap = nm; });
     auto& activeScene = (sceneState_.select == SceneSelect::B) ? sceneState_.sceneB : sceneState_.sceneA;
-    if (cellSizesReady_.load(std::memory_order_acquire)) {
-        auto& lane = activeScene.lanes[pendingCellSizes_.laneIndex];
-        lane.cellSizes = pendingCellSizes_.sizes;
-        cellSizesReady_.store(false, std::memory_order_release);
-    }
-    if (timelineReady_.load(std::memory_order_acquire)) {
-        auto& lane = activeScene.lanes[pendingTimeline_.laneIndex];
-        lane.fixedPattern = pendingTimeline_.pattern;
-        lane.fixedPatternLength = pendingTimeline_.patternLength;
-        timelineReady_.store(false, std::memory_order_release);
-    }
-    if (microTimingReady_.load(std::memory_order_acquire)) {
-        auto& lane = activeScene.lanes[pendingMicroTiming_.laneIndex];
-        lane.microTimingMs = pendingMicroTiming_.timingMs;
-        microTimingReady_.store(false, std::memory_order_release);
-    }
-    if (envelopeReady_.load(std::memory_order_acquire)) {
-        auto& lane = activeScene.lanes[pendingEnvelope_.laneIndex];
-        lane.envelopes[pendingEnvelope_.envelopeIndex].envelope = pendingEnvelope_.envelope;
-        lane.envelopes[pendingEnvelope_.envelopeIndex].active = pendingEnvelope_.active;
-        envelopeReady_.store(false, std::memory_order_release);
-    }
-    if (accentMaskReady_.load(std::memory_order_acquire)) {
-        auto& lane = activeScene.lanes[pendingAccentMask_.laneIndex];
-        lane.accents.steps = pendingAccentMask_.steps;
-        accentMaskReady_.store(false, std::memory_order_release);
-    }
+    cellSizesSlot_.consume(
+        [&activeScene](const PendingCellSizes& p) { activeScene.lanes[p.laneIndex].cellSizes = p.sizes; });
+    timelineSlot_.consume([&activeScene](const PendingTimelinePattern& p) {
+        auto& lane = activeScene.lanes[p.laneIndex];
+        lane.fixedPattern = p.pattern;
+        lane.fixedPatternLength = p.patternLength;
+    });
+    microTimingSlot_.consume(
+        [&activeScene](const PendingMicroTiming& p) { activeScene.lanes[p.laneIndex].microTimingMs = p.timingMs; });
+    envelopeSlot_.consume([&activeScene](const PendingEnvelope& p) {
+        auto& lane = activeScene.lanes[p.laneIndex];
+        lane.envelopes[p.envelopeIndex].envelope = p.envelope;
+        lane.envelopes[p.envelopeIndex].active = p.active;
+    });
+    accentMaskSlot_.consume(
+        [&activeScene](const PendingAccentMask& p) { activeScene.lanes[p.laneIndex].accents.steps = p.steps; });
 
     updateTransportContext(data);
 
@@ -398,7 +385,7 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
         }
         // P1 fix: republish stateSnapshot_ unconditionally so host-thread getState()
         // sees post-stop edits. Pending notify payloads already drained into sceneState_
-        // above (see stateReady_/noteMapReady_/envelopeReady_/etc handlers at 344-379).
+        // above (see stateSlot_/noteMapSlot_/envelopeSlot_/etc consume() calls).
         // Unconditional (unlike the playing-path guard below): transport is idle so we
         // are not racing another publish. A stale ready-but-unconsumed snapshot is
         // exactly the P1 hazard — overwriting it with fresher data is the fix.
@@ -720,13 +707,19 @@ Steinberg::tresult PLUGIN_API PolyProcessor::notify(Steinberg::Vst::IMessage* me
     if (!message)
         return Steinberg::kInvalidArgument;
 
+    // M046 S03 P4: each notify handler now writes into the "safe" slot (the one not
+    // currently published) and commits via atomic exchange. If commit() reports it
+    // displaced a previous unconsumed publish, the drop counter is bumped so the
+    // loss is accounted (never silent).
     if (Steinberg::FIDStringsEqual(message->getMessageID(), "NoteMapUpdate")) {
         if (auto* attrs = message->getAttributes()) {
             const void* data = nullptr;
             Steinberg::uint32 size = 0;
-            if (attrs->getBinary("map", data, size) == Steinberg::kResultOk && size == sizeof(pendingNoteMap_.map)) {
-                std::memcpy(pendingNoteMap_.map.data(), data, size);
-                noteMapReady_.store(true, std::memory_order_release);
+            if (attrs->getBinary("map", data, size) == Steinberg::kResultOk && size == sizeof(NoteMap::map)) {
+                const int32_t idx = noteMapSlot_.writeSlot();
+                std::memcpy(noteMapSlot_.slots[idx].map.data(), data, size);
+                if (noteMapSlot_.commit(idx))
+                    handshakeDrops_.noteMap.fetch_add(1, std::memory_order_relaxed);
             }
         }
         return Steinberg::kResultOk;
@@ -739,10 +732,13 @@ Steinberg::tresult PLUGIN_API PolyProcessor::notify(Steinberg::Vst::IMessage* me
             Steinberg::uint32 size = 0;
             if (attrs->getInt("lane", laneIndex) == Steinberg::kResultOk &&
                 attrs->getBinary("sizes", data, size) == Steinberg::kResultOk && laneIndex >= 0 &&
-                laneIndex < kMaxLanes && size == sizeof(pendingCellSizes_.sizes)) {
-                pendingCellSizes_.laneIndex = static_cast<int>(laneIndex);
-                std::memcpy(pendingCellSizes_.sizes.data(), data, size);
-                cellSizesReady_.store(true, std::memory_order_release);
+                laneIndex < kMaxLanes && size == sizeof(PendingCellSizes::sizes)) {
+                const int32_t idx = cellSizesSlot_.writeSlot();
+                auto& payload = cellSizesSlot_.slots[idx];
+                payload.laneIndex = static_cast<int>(laneIndex);
+                std::memcpy(payload.sizes.data(), data, size);
+                if (cellSizesSlot_.commit(idx))
+                    handshakeDrops_.cellSizes.fetch_add(1, std::memory_order_relaxed);
             }
         }
         return Steinberg::kResultOk;
@@ -757,11 +753,14 @@ Steinberg::tresult PLUGIN_API PolyProcessor::notify(Steinberg::Vst::IMessage* me
             if (attrs->getInt("lane", laneIndex) == Steinberg::kResultOk &&
                 attrs->getInt("patLen", patLen) == Steinberg::kResultOk &&
                 attrs->getBinary("pattern", data, size) == Steinberg::kResultOk && laneIndex >= 0 &&
-                laneIndex < kMaxLanes && size == sizeof(pendingTimeline_.pattern)) {
-                pendingTimeline_.laneIndex = static_cast<int>(laneIndex);
-                pendingTimeline_.patternLength = static_cast<int>(patLen);
-                std::memcpy(pendingTimeline_.pattern.data(), data, size);
-                timelineReady_.store(true, std::memory_order_release);
+                laneIndex < kMaxLanes && size == sizeof(PendingTimelinePattern::pattern)) {
+                const int32_t idx = timelineSlot_.writeSlot();
+                auto& payload = timelineSlot_.slots[idx];
+                payload.laneIndex = static_cast<int>(laneIndex);
+                payload.patternLength = static_cast<int>(patLen);
+                std::memcpy(payload.pattern.data(), data, size);
+                if (timelineSlot_.commit(idx))
+                    handshakeDrops_.timeline.fetch_add(1, std::memory_order_relaxed);
             }
         }
         return Steinberg::kResultOk;
@@ -774,10 +773,13 @@ Steinberg::tresult PLUGIN_API PolyProcessor::notify(Steinberg::Vst::IMessage* me
             Steinberg::uint32 size = 0;
             if (attrs->getInt("lane", laneIndex) == Steinberg::kResultOk &&
                 attrs->getBinary("timing", data, size) == Steinberg::kResultOk && laneIndex >= 0 &&
-                laneIndex < kMaxLanes && size == sizeof(pendingMicroTiming_.timingMs)) {
-                pendingMicroTiming_.laneIndex = static_cast<int>(laneIndex);
-                std::memcpy(pendingMicroTiming_.timingMs.data(), data, size);
-                microTimingReady_.store(true, std::memory_order_release);
+                laneIndex < kMaxLanes && size == sizeof(PendingMicroTiming::timingMs)) {
+                const int32_t idx = microTimingSlot_.writeSlot();
+                auto& payload = microTimingSlot_.slots[idx];
+                payload.laneIndex = static_cast<int>(laneIndex);
+                std::memcpy(payload.timingMs.data(), data, size);
+                if (microTimingSlot_.commit(idx))
+                    handshakeDrops_.microTiming.fetch_add(1, std::memory_order_relaxed);
             }
         }
         return Steinberg::kResultOk;
@@ -794,13 +796,16 @@ Steinberg::tresult PLUGIN_API PolyProcessor::notify(Steinberg::Vst::IMessage* me
                 attrs->getInt("envIdx", envIdx) == Steinberg::kResultOk &&
                 attrs->getBinary("envelope", data, size) == Steinberg::kResultOk && laneIndex >= 0 &&
                 laneIndex < kMaxLanes && envIdx >= 0 && envIdx < kMaxEnvelopesPerLane &&
-                size == sizeof(pendingEnvelope_.envelope)) {
-                pendingEnvelope_.laneIndex = static_cast<int>(laneIndex);
-                pendingEnvelope_.envelopeIndex = static_cast<int>(envIdx);
-                std::memcpy(&pendingEnvelope_.envelope, data, size);
+                size == sizeof(PendingEnvelope::envelope)) {
+                const int32_t idx = envelopeSlot_.writeSlot();
+                auto& payload = envelopeSlot_.slots[idx];
+                payload.laneIndex = static_cast<int>(laneIndex);
+                payload.envelopeIndex = static_cast<int>(envIdx);
+                std::memcpy(&payload.envelope, data, size);
                 attrs->getInt("active", activeVal);
-                pendingEnvelope_.active = (activeVal != 0);
-                envelopeReady_.store(true, std::memory_order_release);
+                payload.active = (activeVal != 0);
+                if (envelopeSlot_.commit(idx))
+                    handshakeDrops_.envelope.fetch_add(1, std::memory_order_relaxed);
             }
         }
         return Steinberg::kResultOk;
@@ -813,10 +818,13 @@ Steinberg::tresult PLUGIN_API PolyProcessor::notify(Steinberg::Vst::IMessage* me
             Steinberg::uint32 size = 0;
             if (attrs->getInt("lane", laneIndex) == Steinberg::kResultOk &&
                 attrs->getBinary("accents", data, size) == Steinberg::kResultOk && laneIndex >= 0 &&
-                laneIndex < kMaxLanes && size == sizeof(pendingAccentMask_.steps)) {
-                pendingAccentMask_.laneIndex = static_cast<int>(laneIndex);
-                std::memcpy(pendingAccentMask_.steps.data(), data, size);
-                accentMaskReady_.store(true, std::memory_order_release);
+                laneIndex < kMaxLanes && size == sizeof(PendingAccentMask::steps)) {
+                const int32_t idx = accentMaskSlot_.writeSlot();
+                auto& payload = accentMaskSlot_.slots[idx];
+                payload.laneIndex = static_cast<int>(laneIndex);
+                std::memcpy(payload.steps.data(), data, size);
+                if (accentMaskSlot_.commit(idx))
+                    handshakeDrops_.accentMask.fetch_add(1, std::memory_order_relaxed);
             }
         }
         return Steinberg::kResultOk;
@@ -876,9 +884,14 @@ Steinberg::tresult PLUGIN_API PolyProcessor::setState(Steinberg::IBStream* state
         return state->read(data, static_cast<Steinberg::int32>(size), &bytesRead) == Steinberg::kResultOk;
     };
 
-    if (!readSceneState(read, pendingState_))
+    // M046 S03 P4: read into the reserved (safe) slot and atomically publish.
+    // Two back-to-back setState calls with no process() between now count the
+    // displaced publish via handshakeDrops_.state instead of silently overwriting.
+    const int32_t idx = stateSlot_.writeSlot();
+    if (!readSceneState(read, stateSlot_.slots[idx]))
         return Steinberg::kResultFalse;
-    stateReady_.store(true, std::memory_order_release);
+    if (stateSlot_.commit(idx))
+        handshakeDrops_.state.fetch_add(1, std::memory_order_relaxed);
     return Steinberg::kResultOk;
 }
 // endregion:get-set-state
