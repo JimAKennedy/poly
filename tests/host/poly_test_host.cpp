@@ -15,6 +15,8 @@
 
 #include "base/source/fobject.h"
 #include "controller_base.h"
+#include "poly/scene.h"
+#include "poly/state_io.h"
 #include "processor.h"
 #include "ui_snapshot.h"
 
@@ -458,6 +460,27 @@ void PolyTestHost::injectAccentMask(int laneIndex, const std::array<float, poly:
     }
     processor_->notify(msg);
     msg->release();
+}
+
+bool PolyTestHost::feedComponentState(const poly::SceneState& scene) {
+    if (!controller_)
+        return false;
+
+    // Serialize both scenes + select + morph via the same writer the processor uses,
+    // then push through setComponentState. Same DAW-preset-restore contract, but
+    // driven by an in-memory SceneState so tests can pin select=SceneSelect::B and
+    // put distinct values on each scene to force the P7 sceneA-hardcode to surface.
+    MemoryStream stream;
+    auto write = [&stream](const void* data, size_t size) -> bool {
+        int32 written = 0;
+        return stream.write(const_cast<void*>(data), static_cast<int32>(size), &written) == kResultOk &&
+               written == static_cast<int32>(size);
+    };
+    if (!poly::writeSceneState(write, scene))
+        return false;
+
+    stream.seek(0, IBStream::kIBSeekSet, nullptr);
+    return controller_->setComponentState(&stream) == kResultOk;
 }
 
 void PolyTestHost::injectPendingNoteOff(double ppqOff, int16_t pitch, int16_t channel) {
