@@ -137,6 +137,32 @@ TEST(PendingNoteOff, PushOverflow) {
     EXPECT_EQ(buf.count(), poly::PendingNoteOffBuffer::kCapacity);
 }
 
+// M046 S04 P5: flushDue drops entries with ppqOff < ppqStart even though those are
+// stragglers that missed their emission window (e.g. tempo ramp pushed ppqStart past
+// the off's scheduled time, or the DAW jumped forward slightly). The current guard
+// `ppqOff >= ppqStart && ppqOff < ppqEnd` treats them as "in the future" instead of
+// "late", so they sit in the buffer indefinitely and manifest as stuck notes.
+//
+// Expected on HEAD: flushed = 0, buffer keeps the straggler.
+// Expected on GREEN (T02 removes the lower bound): flushed = 1, straggler emits at
+// block sample 0 as a best-effort late off.
+TEST(PendingNoteOff, FlushDueStragglerBeforePpqStart_Emitted) {
+    poly::PendingNoteOffBuffer buf;
+    buf.push({.ppqOff = 0.5, .pitch = 36, .channel = 0}); // scheduled BEFORE the query window
+
+    poly::PendingNoteOff out[8];
+    size_t n = buf.flushDue(2.0, 3.0, out, 8);
+
+    EXPECT_EQ(n, 1u) << "P5 (M046 S04): a straggler with ppqOff < ppqStart must emit in the "
+                        "next block (best-effort late off) rather than sit forever. The "
+                        "current guard `ppqOff >= ppqStart` treats late offs as future work.";
+    EXPECT_EQ(buf.count(), 0u) << "Straggler should be consumed once emitted";
+    if (n >= 1u) {
+        EXPECT_EQ(out[0].pitch, 36);
+        EXPECT_DOUBLE_EQ(out[0].ppqOff, 0.5);
+    }
+}
+
 // --- State serialization round-trip tests ---
 
 static poly::GrooveState makeTestState() {

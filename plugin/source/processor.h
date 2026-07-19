@@ -91,6 +91,19 @@ public:
     };
     const HandshakeAppliedCounters& handshakeApplied() const { return handshakeApplied_; }
 
+    // M046 S04 P6: note-off drop counter. Incremented by emitMidiOutput when
+    // pendingNoteOffs_.push() returns false (buffer at kCapacity) so the drop is
+    // accounted rather than silently swallowed. Fix (T03) also emits an immediate
+    // best-effort off in the same block so the DAW hears a short note rather than
+    // a stuck one.
+    uint64_t noteOffDrops() const { return noteOffDrops_.load(std::memory_order_relaxed); }
+
+    // M046 S04 T01: test-only injector so host tests can prefill pendingNoteOffs_
+    // (P6 overflow reproduction) and poke synthetic stragglers (P5 flushDue lower-bound
+    // reproduction) without threading a synthetic tempo ramp through processBlock.
+    // Returns false if the buffer is already at kCapacity — mirrors PendingNoteOffBuffer::push.
+    bool pushPendingNoteOffForTesting(const PendingNoteOff& off) { return pendingNoteOffs_.push(off); }
+
     static Steinberg::FUnknown* createInstance(void*) {
         return static_cast<Steinberg::Vst::IAudioProcessor*>(
             new PolyProcessor()); // ownership-transfer — RT-SAFE-OK: host factory, not audio thread
@@ -175,6 +188,9 @@ private:
 
     HandshakeDropCounters handshakeDrops_{};
     HandshakeAppliedCounters handshakeApplied_{};
+
+    // M046 S04 P6: incremented on pendingNoteOffs_ overflow. Zero until T03 lands the fix.
+    std::atomic<uint64_t> noteOffDrops_{0};
 };
 
 } // namespace poly

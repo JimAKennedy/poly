@@ -131,6 +131,17 @@ public:
     };
     HandshakeDropSnapshot handshakeDrops() const;
 
+    // --- M046 S04 P5/P6: note-off integrity injector + counter ---
+    // injectPendingNoteOff pokes a synthetic entry straight into the processor's
+    // pendingNoteOffs_ buffer. Used to (a) reproduce the P5 "straggler emits below
+    // ppqStart" defect by injecting an off with ppqOff < the current block window,
+    // and (b) prefill the buffer to kCapacity so a subsequent note-on triggers the
+    // P6 overflow-drop path.
+    void injectPendingNoteOff(double ppqOff, int16_t pitch, int16_t channel);
+    // Read-only note-off drop count. Zero on HEAD (silent overflow); increments after
+    // S04 T03 lands the return-value check + drop counter bump.
+    uint64_t noteOffDrops() const;
+
     // T03: Read-only handshake applied counter snapshot. Incremented by the RT reader
     // on every successful consume(). Paired with handshakeDrops() to prove the
     // no-silent-loss invariant: issued == applied + drops.
