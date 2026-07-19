@@ -191,11 +191,28 @@ void PolyProcessor::emitMidiOutput(Steinberg::Vst::IEventList* outputEvents, Ste
         ev.noteOn.noteId = -1;
         outputEvents->addEvent(ev);
 
-        pendingNoteOffs_.push({
+        const PendingNoteOff pendingOff = {
             .ppqOff = note.ppqPosition + note.duration,
             .pitch = mappedPitch,
             .channel = note.channel,
-        });
+        };
+        if (!pendingNoteOffs_.push(pendingOff)) {
+            // Buffer is full: better a truncated note than a stuck one. Emit
+            // an immediate best-effort note-off in this same block and bump
+            // the drop counter so the caller (and tests) can observe the
+            // pressure.
+            noteOffDrops_.fetch_add(1, std::memory_order_relaxed);
+            Steinberg::Vst::Event off = {};
+            off.busIndex = 0;
+            off.sampleOffset = ev.sampleOffset;
+            off.ppqPosition = pendingOff.ppqOff;
+            off.type = Steinberg::Vst::Event::kNoteOffEvent;
+            off.noteOff.channel = pendingOff.channel;
+            off.noteOff.pitch = pendingOff.pitch;
+            off.noteOff.velocity = 0.0f;
+            off.noteOff.noteId = -1;
+            outputEvents->addEvent(off);
+        }
     }
     // endregion:emit-note-on
 }
