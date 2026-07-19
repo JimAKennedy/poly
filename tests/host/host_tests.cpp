@@ -469,6 +469,76 @@ TEST(HostTests, PluginvalMimic_SaveRestoreParamRoundTrip) {
     host.teardown();
 }
 
+// --- M046 S05 P7: SceneSelect-aware controller publish ---
+//
+// Broken path: on current HEAD, PolyControllerBase::setComponentState hardcodes
+// `cachedState_.sceneA` at controller_base.cpp:225, so a preset that ships with
+// select=SceneSelect::B is loaded into cachedState_ correctly but publishes
+// Scene A values through setParamNormalized. Result: the UI shows the wrong scene
+// on load. The fix is to route the publish through activeScene() (already used
+// everywhere else in this file).
+
+TEST(HostTests, SetComponentStateWithSceneB_ControllerReflectsSceneB) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+
+    poly::SceneState scene{};
+    scene.select = poly::SceneSelect::B;
+    scene.morphAmount = 0.0f;
+    // Deliberately distinct sceneA vs sceneB values across several publish sites
+    // (macros, lane params, core params) so a hardcoded `.sceneA` read shows up
+    // on multiple assertions rather than a single fluke.
+    scene.sceneA.macros.complexity = 0.10f;
+    scene.sceneA.macros.density = 0.20f;
+    scene.sceneA.lanes[0].baseVelocity = 30;
+    scene.sceneA.lanes[0].cycle.steps = 4;
+
+    scene.sceneB.macros.complexity = 0.80f;
+    scene.sceneB.macros.density = 0.90f;
+    scene.sceneB.lanes[0].baseVelocity = 110;
+    scene.sceneB.lanes[0].cycle.steps = 12;
+
+    ASSERT_TRUE(host.feedComponentState(scene));
+
+    const double complexity = host.getParamOnController(poly::ParamIDs::kMacroComplexity);
+    const double density = host.getParamOnController(poly::ParamIDs::kMacroDensity);
+    const double baseVel = host.getParamOnController(poly::ParamIDs::laneParam(0, poly::ParamIDs::kBaseVelocity));
+    const double steps = host.getParamOnController(poly::ParamIDs::laneCoreParam(0, poly::ParamIDs::kCoreSteps));
+
+    EXPECT_NEAR(complexity, 0.80, 1e-4) << "P7 fingerprint: select=B but controller published sceneA.complexity=0.10; "
+                                        << "expected sceneB.complexity=0.80. See controller_base.cpp:225.";
+    EXPECT_NEAR(density, 0.90, 1e-4) << "sceneB.density=0.90 was expected; sceneA.density=0.20 leaked through.";
+    EXPECT_NEAR(baseVel, 110.0 / 127.0, 1e-4)
+        << "sceneB.lanes[0].baseVelocity=110 was expected; sceneA.lanes[0].baseVelocity=30 leaked through.";
+    EXPECT_NEAR(steps, (12 - 1) / 63.0, 1e-4)
+        << "sceneB.lanes[0].cycle.steps=12 was expected; sceneA value=4 leaked through.";
+
+    host.teardown();
+}
+
+TEST(HostTests, SetComponentStateWithSceneA_ControllerReflectsSceneA) {
+    // Guard against a naive "always read sceneB" fix — the opposite regression.
+    // Passes on current HEAD (sceneA IS what's hardcoded); MUST also pass after
+    // the T02 fix flips to activeScene().
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+
+    poly::SceneState scene{};
+    scene.select = poly::SceneSelect::A;
+    scene.sceneA.macros.complexity = 0.15f;
+    scene.sceneB.macros.complexity = 0.85f;
+    scene.sceneA.lanes[0].baseVelocity = 40;
+    scene.sceneB.lanes[0].baseVelocity = 100;
+
+    ASSERT_TRUE(host.feedComponentState(scene));
+
+    EXPECT_NEAR(host.getParamOnController(poly::ParamIDs::kMacroComplexity), 0.15, 1e-4);
+    EXPECT_NEAR(host.getParamOnController(poly::ParamIDs::laneParam(0, poly::ParamIDs::kBaseVelocity)), 40.0 / 127.0,
+                1e-4);
+
+    host.teardown();
+}
+
 TEST(HostTests, GetStateFromColdProcessor_RoundTrips) {
     // Cold processor: setup only, no playBars, no notify(), no processBlock().
     // On current HEAD this passes via the P2 torn-state fallback because there is no

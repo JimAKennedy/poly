@@ -17,6 +17,7 @@ class EditController;
 
 namespace poly {
 class PolyControllerBase;
+struct SceneState;
 struct UISnapshot;
 } // namespace poly
 
@@ -130,6 +131,15 @@ public:
         uint64_t accentMask = 0;
     };
     HandshakeDropSnapshot handshakeDrops() const;
+
+    // --- M046 S05 P7: SceneSelect-aware controller state feed ---
+    // Serializes a full SceneState (both sceneA and sceneB plus select/morph) via
+    // writeSceneState and pushes it through controller->setComponentState. Used to
+    // reproduce the P7 controller-only-publishes-Scene-A defect: after
+    // setComponentState with select=SceneSelect::B, the controller's setParamNormalized
+    // publishes must reflect sceneB values, not sceneA. RED on current HEAD because
+    // controller_base.cpp:225 hardcodes `cachedState_.sceneA` instead of activeScene().
+    bool feedComponentState(const SceneState& scene);
 
     // --- M046 S04 P5/P6: note-off integrity injector + counter ---
     // injectPendingNoteOff pokes a synthetic entry straight into the processor's
