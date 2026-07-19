@@ -460,6 +460,19 @@ void PolyTestHost::injectAccentMask(int laneIndex, const std::array<float, poly:
     msg->release();
 }
 
+void PolyTestHost::injectPendingNoteOff(double ppqOff, int16_t pitch, int16_t channel) {
+    if (!processor_)
+        return;
+    auto* proc = static_cast<PolyProcessor*>(processor_);
+    proc->pushPendingNoteOffForTesting({.ppqOff = ppqOff, .pitch = pitch, .channel = channel});
+}
+
+uint64_t PolyTestHost::noteOffDrops() const {
+    if (!processor_)
+        return 0;
+    return static_cast<PolyProcessor*>(processor_)->noteOffDrops();
+}
+
 PolyTestHost::HandshakeDropSnapshot PolyTestHost::handshakeDrops() const {
     HandshakeDropSnapshot snap{};
     if (!processor_)

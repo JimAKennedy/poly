@@ -16,6 +16,7 @@
 #include <gtest/gtest.h>
 
 #include "plugids.h"
+#include "poly/bridge.h"
 #include "poly/scene.h"
 #include "poly/state_io.h"
 #include "poly/types.h"
@@ -633,6 +634,99 @@ TEST(GoldenProcessor, DefaultPatch4Bars) {
     EXPECT_EQ(actual, expected) << "Processor output diverges from golden file.\n"
                                 << "Note-on count: " << noteOns.size() << "\n"
                                 << "To regenerate: rm " << goldenPath << " && re-run tests";
+
+    host.teardown();
+}
+
+// --- M046 S04 P5/P6: note-off integrity regressions ---
+//
+// P5 (engine/src/bridge.cpp:29): PendingNoteOffBuffer::flushDue treats entries with
+// ppqOff < ppqStart as "future work" instead of "late". They sit forever, and any
+// tempo ramp / transport jump / block-boundary rounding that skips past a scheduled
+// off produces a stuck note. Fix (T02): drop the lower bound; late offs emit at
+// block sample 0 as best-effort late offs.
+//
+// P6 (plugin/source/processor.cpp:194): emitMidiOutput calls pendingNoteOffs_.push()
+// but ignores the bool return. When the buffer hits kCapacity (512) the push silently
+// fails — the note-on IS emitted, but no off is ever scheduled. Fix (T03): check the
+// return; on overflow bump noteOffDrops_ AND emit an immediate best-effort off in the
+// same block, so a full buffer means "short notes" instead of "stuck notes".
+
+TEST(HostTests, PendingStragglerBelowPpqStart_EmittedInNextBlock) {
+    // Poke a straggler directly into pendingNoteOffs_ with ppqOff = 0.5, then run one
+    // playing block at [2.0, 2.0 + ppqPerBlock). On HEAD the straggler stays parked
+    // forever because flushDue's guard requires ppqOff >= ppqStart. Post-T02 the guard
+    // is removed and the straggler surfaces as an off at sample 0 of the block.
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+
+    const int16_t kPitch = 36;
+    const int16_t kChannel = 0;
+    host.injectPendingNoteOff(0.5, kPitch, kChannel);
+    host.clearEvents();
+
+    host.processBlock(2.0, 120.0, true);
+
+    bool foundStragglerOff = false;
+    for (const auto& e : host.events()) {
+        if (e.type == MidiEvent::NoteOff && e.pitch == kPitch && e.channel == kChannel) {
+            foundStragglerOff = true;
+            break;
+        }
+    }
+
+    EXPECT_TRUE(foundStragglerOff) << "P5 (M046 S04): a note-off scheduled at ppqOff=0.5 was never "
+                                      "emitted after processing a block at ppqStart=2.0. flushDue's "
+                                      "`ppqOff >= ppqStart` lower bound leaves late offs stuck in the "
+                                      "buffer. Fix removes the lower bound so stragglers emit at block "
+                                      "sample 0.";
+
+    host.teardown();
+}
+
+TEST(HostTests, NoteOffOverflow_DropCounterIncrementsAndImmediateOffEmitted) {
+    // Prefill pendingNoteOffs_ to kCapacity with far-future entries so the ring never
+    // drains during the test window. Then drive a playing block that generates note-ons.
+    // The scheduling code path at processor.cpp:194 (pendingNoteOffs_.push) will silently
+    // fail for every generated note-on. On HEAD: drops=0, no immediate off, stuck notes.
+    // Post-T03: drops>0, an immediate off for each dropped push, note-off count matches
+    // dropped count.
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+
+    const int16_t kFillerPitch = 100;
+    for (size_t i = 0; i < poly::PendingNoteOffBuffer::kCapacity; ++i) {
+        host.injectPendingNoteOff(1e6, kFillerPitch, 0); // far future — never drains in-window
+    }
+    ASSERT_EQ(host.noteOffDrops(), 0u) << "drop counter must be zero at start";
+    host.clearEvents();
+
+    // Play long enough to guarantee at least one note-on gets generated.
+    host.playBars(1.0, 120.0);
+
+    const auto onCount = host.noteOnEvents().size();
+    ASSERT_GT(onCount, 0u) << "default patch should produce note-ons in 1 bar";
+
+    EXPECT_GT(host.noteOffDrops(), 0u) << "P6 (M046 S04): buffer full but pendingNoteOffs_.push() bool "
+                                          "return is discarded at processor.cpp:194 — the failed push "
+                                          "is silent. Fix bumps noteOffDrops_ so overflow is accounted.";
+
+    // Immediate off invariant: every dropped push produces a best-effort off in the
+    // same block. On HEAD there are no note-offs at all for the newly-generated pitches,
+    // only stragglers from the filler pitch (which never drain because ppqOff=1e6).
+    size_t immediateOffsForOnPitches = 0;
+    for (const auto& on : host.noteOnEvents()) {
+        for (const auto& off : host.noteOffEvents()) {
+            if (off.pitch == on.pitch && off.channel == on.channel) {
+                ++immediateOffsForOnPitches;
+                break;
+            }
+        }
+    }
+    EXPECT_GE(immediateOffsForOnPitches, host.noteOffDrops())
+        << "P6 (M046 S04): the fix must also emit an immediate best-effort off per dropped push so "
+           "the DAW hears a short note rather than a stuck one. Currently: "
+        << immediateOffsForOnPitches << " immediate offs vs " << host.noteOffDrops() << " drops.";
 
     host.teardown();
 }
