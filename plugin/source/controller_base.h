@@ -26,6 +26,7 @@ public:
     Steinberg::tresult PLUGIN_API getState(Steinberg::IBStream* state) override;
     Steinberg::tresult PLUGIN_API setState(Steinberg::IBStream* state) override;
     Steinberg::tresult PLUGIN_API notify(Steinberg::Vst::IMessage* message) override;
+    Steinberg::tresult PLUGIN_API disconnect(Steinberg::Vst::IConnectionPoint* other) override;
 
     const SceneState& cachedState() const { return cachedState_; }
     SceneState& mutableCachedState() { return cachedState_; }
@@ -53,6 +54,10 @@ public:
     void resetLaneNames();
 
     uint32_t stateGeneration() const { return stateGeneration_; }
+    // Invariant: the returned pointer is populated by the processor's UISnapshotPtr
+    // message on connect() and cleared by disconnect(). Consumers MUST null-check
+    // before dereferencing — the pointer is nullptr both before the first connect
+    // and while disconnected between reconnects. See P3 (M046 S02).
     UISnapshot* uiSnapshot() const { return uiSnapshot_; }
 
 protected:

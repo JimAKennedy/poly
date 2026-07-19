@@ -13,8 +13,10 @@
 #include "public.sdk/source/vst/hosting/hostclasses.h"
 #include "public.sdk/source/vst/hosting/parameterchanges.h"
 
+#include "base/source/fobject.h"
 #include "controller_base.h"
 #include "processor.h"
+#include "ui_snapshot.h"
 
 void* moduleHandle = nullptr;
 
@@ -67,6 +69,18 @@ bool PolyTestHost::setup(double sampleRate, int blockSize) {
     leftBuf_.resize(static_cast<size_t>(blockSize), 0.0f);
     rightBuf_.resize(static_cast<size_t>(blockSize), 0.0f);
 
+    // Wire processor <-> controller before setActive so PolyProcessor::connect() can dispatch
+    // the UISnapshotPtr message that populates the controller's uiSnapshot_ cache.
+    if (!connectComponents()) {
+        controller_->terminate();
+        controller_->release();
+        controller_ = nullptr;
+        processor_->terminate();
+        processor_->release();
+        processor_ = nullptr;
+        return false;
+    }
+
     if (processor_->setActive(true) != kResultOk) {
         controller_->terminate();
         controller_->release();
@@ -82,6 +96,7 @@ bool PolyTestHost::setup(double sampleRate, int blockSize) {
 }
 
 void PolyTestHost::teardown() {
+    disconnectComponents();
     if (processor_) {
         if (active_)
             processor_->setActive(false);
@@ -96,6 +111,35 @@ void PolyTestHost::teardown() {
     }
     active_ = false;
     pendingParamChanges_.clear();
+}
+
+bool PolyTestHost::connectComponents() {
+    if (!processor_ || !controller_)
+        return false;
+    FUnknownPtr<IConnectionPoint> procCp(processor_->unknownCast());
+    FUnknownPtr<IConnectionPoint> ctrlCp(controller_->unknownCast());
+    if (!procCp || !ctrlCp)
+        return false;
+    if (procCp->connect(ctrlCp) != kResultOk)
+        return false;
+    if (ctrlCp->connect(procCp) != kResultOk)
+        return false;
+    return true;
+}
+
+void PolyTestHost::disconnectComponents() {
+    if (!processor_ || !controller_)
+        return;
+    FUnknownPtr<IConnectionPoint> procCp(processor_->unknownCast());
+    FUnknownPtr<IConnectionPoint> ctrlCp(controller_->unknownCast());
+    if (procCp && ctrlCp) {
+        procCp->disconnect(ctrlCp);
+        ctrlCp->disconnect(procCp);
+    }
+}
+
+poly::UISnapshot* PolyTestHost::controllerUiSnapshot() const {
+    return controller_ ? controller_->uiSnapshot() : nullptr;
 }
 
 double PolyTestHost::ppqPerBlock(double tempo) const {

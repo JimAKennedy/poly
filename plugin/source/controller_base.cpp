@@ -440,6 +440,15 @@ Steinberg::tresult PLUGIN_API PolyControllerBase::notify(Steinberg::Vst::IMessag
     return EditControllerEx1::notify(message);
 }
 
+Steinberg::tresult PLUGIN_API PolyControllerBase::disconnect(Steinberg::Vst::IConnectionPoint* other) {
+    // P3 (M046 S02): null the cached raw pointer BEFORE tearing down the connection
+    // so any late UI thread read observes nullptr rather than a dangling address.
+    // The processor owns the underlying UISnapshot storage; a subsequent reconnect
+    // will re-publish the pointer via the UISnapshotPtr notify path.
+    uiSnapshot_ = nullptr;
+    return EditControllerEx1::disconnect(other);
+}
+
 void PolyControllerBase::sendNoteMap() {
     if (auto* msg = allocateMessage()) {
         msg->setMessageID("NoteMapUpdate");
