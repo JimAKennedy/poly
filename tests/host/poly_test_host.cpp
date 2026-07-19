@@ -476,5 +476,21 @@ PolyTestHost::HandshakeDropSnapshot PolyTestHost::handshakeDrops() const {
     return snap;
 }
 
+PolyTestHost::HandshakeAppliedSnapshot PolyTestHost::handshakeApplied() const {
+    HandshakeAppliedSnapshot snap{};
+    if (!processor_)
+        return snap;
+    auto* proc = static_cast<PolyProcessor*>(processor_);
+    const auto& c = proc->handshakeApplied();
+    snap.state = c.state.load(std::memory_order_relaxed);
+    snap.noteMap = c.noteMap.load(std::memory_order_relaxed);
+    snap.cellSizes = c.cellSizes.load(std::memory_order_relaxed);
+    snap.timeline = c.timeline.load(std::memory_order_relaxed);
+    snap.microTiming = c.microTiming.load(std::memory_order_relaxed);
+    snap.envelope = c.envelope.load(std::memory_order_relaxed);
+    snap.accentMask = c.accentMask.load(std::memory_order_relaxed);
+    return snap;
+}
+
 } // namespace test
 } // namespace poly

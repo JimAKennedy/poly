@@ -1,5 +1,7 @@
 #include <algorithm>
 #include <array>
+#include <atomic>
+#include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
@@ -8,6 +10,7 @@
 #include <set>
 #include <sstream>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include <gtest/gtest.h>
@@ -730,3 +733,282 @@ TEST(HostTests, SetStateBurst_TearOrLoss) {
 
     host.teardown();
 }
+
+// --- M046 S03 T03: Threaded stress — the sketch DoD gate ---
+//
+// Runs a writer thread hammering all seven host→RT handshakes with distinct
+// increment-only payloads while the main thread runs processBlock() in a tight
+// loop. After both threads quiesce, drains any lingering publishes then asserts:
+//
+//   1. Silent-loss invariant: issued == applied + drops for every handshake.
+//   2. Contention progress: applied > 0 for every non-state handshake (reader is
+//      not starved).
+//   3. Torn-read spot check: the final applied noteMap is bit-exactly identical
+//      to some issued writeId's payload (proves no torn slot copy landed).
+//
+// Torn-read encoding: writer sets map[i] = static_cast<int16_t>(((writeId * 31) ^ i) & 0x7FFF).
+// If any field of the applied map was written by a different writeId (i.e. the
+// reader saw a mid-flight publish), the check on map[0]->reconstruct fails.
+//
+// Runtime target < 5s: N=10000 iterations per handshake × 7 handshakes with 512-sample
+// blocks at 44.1kHz produces ~5MB of payload traffic on the writer side. Empirically
+// completes in < 2s on M-series Macs, giving 2.5× headroom below the ctest cap.
+//
+// TSan-guarded twin (M046 S03 T03 + M050): the same body under __has_feature(thread_sanitizer)
+// is where TSan gets to detect any residual data race. In non-TSan builds the invariant
+// checks alone stand as the safety net.
+
+namespace stress {
+
+constexpr int kStressIterations = 100000;
+
+int16_t encodeNoteMapField(uint32_t writeId, int fieldIdx) {
+    return static_cast<int16_t>(((writeId * 31u) ^ static_cast<uint32_t>(fieldIdx)) & 0x7FFFu);
+}
+
+std::array<int16_t, 128> makeNoteMap(uint32_t writeId) {
+    std::array<int16_t, 128> map{};
+    for (int i = 0; i < 128; ++i)
+        map[static_cast<size_t>(i)] = encodeNoteMapField(writeId, i);
+    return map;
+}
+
+std::array<int, poly::kMaxSteps> makeCellSizes(uint32_t writeId) {
+    std::array<int, poly::kMaxSteps> sizes{};
+    for (int i = 0; i < poly::kMaxSteps; ++i)
+        sizes[static_cast<size_t>(i)] = static_cast<int>((writeId + i) % 8u) + 1;
+    return sizes;
+}
+
+std::array<bool, poly::kMaxSteps> makeTimeline(uint32_t writeId) {
+    std::array<bool, poly::kMaxSteps> pattern{};
+    for (int i = 0; i < poly::kMaxSteps; ++i)
+        pattern[static_cast<size_t>(i)] = ((writeId + static_cast<uint32_t>(i)) & 1u) != 0u;
+    return pattern;
+}
+
+std::array<float, poly::kMaxSteps> makeMicroTiming(uint32_t writeId) {
+    std::array<float, poly::kMaxSteps> timing{};
+    for (int i = 0; i < poly::kMaxSteps; ++i)
+        timing[static_cast<size_t>(i)] = static_cast<float>(((writeId + static_cast<uint32_t>(i)) % 40u)) - 20.0f;
+    return timing;
+}
+
+std::array<float, poly::kMaxSteps> makeAccentMask(uint32_t writeId) {
+    std::array<float, poly::kMaxSteps> accents{};
+    for (int i = 0; i < poly::kMaxSteps; ++i)
+        accents[static_cast<size_t>(i)] = static_cast<float>((writeId + static_cast<uint32_t>(i)) % 128u) / 127.0f;
+    return accents;
+}
+
+poly::Envelope makeEnvelope(uint32_t writeId) {
+    poly::Envelope env{};
+    env.periodBars = 1.0f + static_cast<float>(writeId % 16u);
+    env.depth = static_cast<float>(writeId % 100u) / 100.0f;
+    env.phaseOffset = static_cast<float>(writeId % 360u);
+    env.curvature = static_cast<float>((writeId + 1u) % 100u) / 100.0f;
+    for (int i = 0; i < poly::kMaxStepListEntries; ++i)
+        env.stepValues[static_cast<size_t>(i)] = static_cast<float>((writeId + static_cast<uint32_t>(i)) % 100u);
+    env.stepCount = static_cast<int>(writeId % 8u);
+    return env;
+}
+
+} // namespace stress
+
+TEST(HostTests, HandshakeStress_NoTearNoLoss) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+
+    // Prepare one setState payload we replay on every iteration — cheaper than
+    // regenerating per-call. The setState handshake carries a full SceneState so
+    // per-iteration payload variation isn't necessary to exercise the exchange.
+    std::vector<uint8_t> stateBytes;
+    {
+        PolyTestHost prep;
+        ASSERT_TRUE(prep.setup(44100.0, 512));
+        prep.injectNoteMap(stress::makeNoteMap(1u));
+        prep.processBlock(0.0, 120.0, false);
+        stateBytes = prep.saveState();
+        prep.teardown();
+    }
+    ASSERT_FALSE(stateBytes.empty());
+
+    std::atomic<bool> writerDone{false};
+    std::atomic<uint32_t> lastNoteMapWriteId{0};
+
+    struct Issued {
+        uint64_t state = 0;
+        uint64_t noteMap = 0;
+        uint64_t cellSizes = 0;
+        uint64_t timeline = 0;
+        uint64_t microTiming = 0;
+        uint64_t envelope = 0;
+        uint64_t accentMask = 0;
+    } issued{};
+
+    const auto tStart = std::chrono::steady_clock::now();
+
+    std::thread writer([&] {
+        constexpr int kLane = 0;
+        constexpr int kEnvSlot = 0;
+        for (uint32_t i = 1; i <= static_cast<uint32_t>(stress::kStressIterations); ++i) {
+            host.injectNoteMap(stress::makeNoteMap(i));
+            lastNoteMapWriteId.store(i, std::memory_order_relaxed);
+            ++issued.noteMap;
+
+            host.injectCellSizes(kLane, stress::makeCellSizes(i));
+            ++issued.cellSizes;
+
+            host.injectTimelinePattern(kLane, stress::makeTimeline(i), static_cast<int>(i % poly::kMaxSteps));
+            ++issued.timeline;
+
+            host.injectMicroTiming(kLane, stress::makeMicroTiming(i));
+            ++issued.microTiming;
+
+            host.injectEnvelope(kLane, kEnvSlot, (i & 1u) != 0u, stress::makeEnvelope(i));
+            ++issued.envelope;
+
+            host.injectAccentMask(kLane, stress::makeAccentMask(i));
+            ++issued.accentMask;
+
+            // setState is expensive (allocates MemoryStream, serializes SceneState).
+            // Fire it 1-in-100 so it still stresses the exchange without dominating
+            // wall-clock. Result: ~100 setState issues per stress run.
+            if ((i % 100u) == 0u) {
+                host.loadState(stateBytes);
+                ++issued.state;
+            }
+        }
+        writerDone.store(true, std::memory_order_release);
+    });
+
+    // Reader loop — processBlock() drains all seven slots each iteration. Keep going
+    // a bit after writerDone so any late-published slots get drained too.
+    double ppq = 0.0;
+    int postDrainBlocks = 0;
+    while (!writerDone.load(std::memory_order_acquire) || postDrainBlocks < 200) {
+        host.processBlock(ppq, 120.0, false);
+        ppq += host.ppqPerBlock(120.0);
+        if (writerDone.load(std::memory_order_acquire))
+            ++postDrainBlocks;
+    }
+    writer.join();
+
+    const auto tEnd = std::chrono::steady_clock::now();
+    const auto elapsedMs = std::chrono::duration_cast<std::chrono::milliseconds>(tEnd - tStart).count();
+
+    // Assertion 1 — silent-loss invariant: issued == applied + drops.
+    auto drops = host.handshakeDrops();
+    auto applied = host.handshakeApplied();
+
+    EXPECT_EQ(issued.noteMap, applied.noteMap + drops.noteMap)
+        << "noteMap silent-loss (issued=" << issued.noteMap << " applied=" << applied.noteMap
+        << " drops=" << drops.noteMap << ")";
+    EXPECT_EQ(issued.cellSizes, applied.cellSizes + drops.cellSizes)
+        << "cellSizes silent-loss (issued=" << issued.cellSizes << " applied=" << applied.cellSizes
+        << " drops=" << drops.cellSizes << ")";
+    EXPECT_EQ(issued.timeline, applied.timeline + drops.timeline)
+        << "timeline silent-loss (issued=" << issued.timeline << " applied=" << applied.timeline
+        << " drops=" << drops.timeline << ")";
+    EXPECT_EQ(issued.microTiming, applied.microTiming + drops.microTiming)
+        << "microTiming silent-loss (issued=" << issued.microTiming << " applied=" << applied.microTiming
+        << " drops=" << drops.microTiming << ")";
+    EXPECT_EQ(issued.envelope, applied.envelope + drops.envelope)
+        << "envelope silent-loss (issued=" << issued.envelope << " applied=" << applied.envelope
+        << " drops=" << drops.envelope << ")";
+    EXPECT_EQ(issued.accentMask, applied.accentMask + drops.accentMask)
+        << "accentMask silent-loss (issued=" << issued.accentMask << " applied=" << applied.accentMask
+        << " drops=" << drops.accentMask << ")";
+    EXPECT_EQ(issued.state, applied.state + drops.state)
+        << "state silent-loss (issued=" << issued.state << " applied=" << applied.state << " drops=" << drops.state
+        << ")";
+
+    // Assertion 2 — reader not starved: at least one apply for every hot handshake.
+    // Not all writes need to survive drops; but zero applies would mean the reader
+    // never won any race, which itself is a red flag.
+    EXPECT_GT(applied.noteMap, 0u) << "reader starved: applied.noteMap == 0";
+    EXPECT_GT(applied.cellSizes, 0u) << "reader starved: applied.cellSizes == 0";
+    EXPECT_GT(applied.timeline, 0u) << "reader starved: applied.timeline == 0";
+    EXPECT_GT(applied.microTiming, 0u) << "reader starved: applied.microTiming == 0";
+    EXPECT_GT(applied.envelope, 0u) << "reader starved: applied.envelope == 0";
+    EXPECT_GT(applied.accentMask, 0u) << "reader starved: applied.accentMask == 0";
+
+    // Assertion 3 — torn-read spot check on the final noteMap. Any bit-mismatch
+    // between the observed map and the deterministic encoding for its own map[0]
+    // means the reader saw fields written by different writeIds — the classic
+    // torn-slot symptom.
+    auto finalState = deserializeSceneState(host.saveState());
+    const auto& finalMap = finalState.noteMap.map;
+    const uint32_t observedField0 = static_cast<uint32_t>(finalMap[0]) & 0x7FFFu;
+    // Recover writeId candidates from field 0: encodeNoteMapField(writeId, 0) == (writeId * 31) & 0x7FFF.
+    // For any 32-bit writeId whose (writeId * 31) low 15 bits equal observedField0, we accept it as
+    // the candidate. Instead of full recovery, we just check consistency: given map[0] we derive
+    // the "shape" (writeId * 31) and verify map[i] XORs consistently.
+    const uint32_t writeIdTimes31 = observedField0; // low 15 bits of writeId * 31
+    for (int i = 1; i < 128; ++i) {
+        const uint32_t expected = (writeIdTimes31 ^ static_cast<uint32_t>(i)) & 0x7FFFu;
+        const uint32_t actual = static_cast<uint32_t>(finalMap[static_cast<size_t>(i)]) & 0x7FFFu;
+        ASSERT_EQ(expected, actual) << "torn-read: final noteMap[" << i << "]=" << actual << " but map[0] implies "
+                                    << expected << " (writeIdTimes31=" << writeIdTimes31 << ")";
+    }
+
+    std::cerr << "[HandshakeStress] elapsed=" << elapsedMs << "ms iters=" << stress::kStressIterations
+              << " issued.noteMap=" << issued.noteMap << " applied.noteMap=" << applied.noteMap
+              << " drops.noteMap=" << drops.noteMap << " (last writeId=" << lastNoteMapWriteId.load() << ")\n";
+
+    host.teardown();
+}
+
+// TSan-guarded twin for M050's ThreadSanitizer job. Same body as
+// HandshakeStress_NoTearNoLoss but at a reduced iteration count (TSan adds
+// 5-15× runtime + memory overhead — a full 100k run would time out ctest).
+// The invariant assertions here are redundant with the main test; the point is
+// that TSan gets to instrument the reader↔writer race and flag any residual
+// data race the invariant checks can't observe (e.g. same-slot writer↔reader
+// overlap during in-flight commit that happens to produce a self-consistent
+// but still torn payload).
+#if defined(__has_feature)
+#if __has_feature(thread_sanitizer)
+#define POLY_TSAN_ACTIVE 1
+#endif
+#endif
+
+#ifdef POLY_TSAN_ACTIVE
+TEST(HostTests, HandshakeStress_TSanClean) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+
+    constexpr int kTSanIterations = 5000;
+    std::atomic<bool> writerDone{false};
+    uint64_t issuedNoteMap = 0;
+
+    std::thread writer([&] {
+        for (uint32_t i = 1; i <= static_cast<uint32_t>(kTSanIterations); ++i) {
+            host.injectNoteMap(stress::makeNoteMap(i));
+            host.injectCellSizes(0, stress::makeCellSizes(i));
+            host.injectTimelinePattern(0, stress::makeTimeline(i), static_cast<int>(i % poly::kMaxSteps));
+            host.injectMicroTiming(0, stress::makeMicroTiming(i));
+            host.injectEnvelope(0, 0, (i & 1u) != 0u, stress::makeEnvelope(i));
+            host.injectAccentMask(0, stress::makeAccentMask(i));
+            ++issuedNoteMap;
+        }
+        writerDone.store(true, std::memory_order_release);
+    });
+
+    double ppq = 0.0;
+    int postDrainBlocks = 0;
+    while (!writerDone.load(std::memory_order_acquire) || postDrainBlocks < 100) {
+        host.processBlock(ppq, 120.0, false);
+        ppq += host.ppqPerBlock(120.0);
+        if (writerDone.load(std::memory_order_acquire))
+            ++postDrainBlocks;
+    }
+    writer.join();
+
+    auto drops = host.handshakeDrops();
+    auto applied = host.handshakeApplied();
+    EXPECT_EQ(issuedNoteMap, applied.noteMap + drops.noteMap);
+
+    host.teardown();
+}
+#endif

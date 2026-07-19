@@ -131,6 +131,20 @@ public:
     };
     HandshakeDropSnapshot handshakeDrops() const;
 
+    // T03: Read-only handshake applied counter snapshot. Incremented by the RT reader
+    // on every successful consume(). Paired with handshakeDrops() to prove the
+    // no-silent-loss invariant: issued == applied + drops.
+    struct HandshakeAppliedSnapshot {
+        uint64_t state = 0;
+        uint64_t noteMap = 0;
+        uint64_t cellSizes = 0;
+        uint64_t timeline = 0;
+        uint64_t microTiming = 0;
+        uint64_t envelope = 0;
+        uint64_t accentMask = 0;
+    };
+    HandshakeAppliedSnapshot handshakeApplied() const;
+
     const std::vector<MidiEvent>& events() const { return events_; }
     void clearEvents() { events_.clear(); }
 

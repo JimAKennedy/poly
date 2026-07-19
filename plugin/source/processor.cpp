@@ -354,26 +354,35 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
     // M046 S03 P4: drain all seven host→RT handshake slots. `consume()` atomically
     // detaches the published payload (if any) via exchange(-1), guaranteeing the
     // reader either applies one publish or none — never a torn read of an in-flight
-    // publish. Drops are surfaced via handshakeDrops_ on the writer side, not here.
-    stateSlot_.consume([this](const SceneState& s) { sceneState_ = s; });
-    noteMapSlot_.consume([this](const NoteMap& nm) { sceneState_.noteMap = nm; });
+    // publish. Drops are surfaced via handshakeDrops_ on the writer side; applied
+    // counters (T03) bump here on every successful consume so the "no silent loss"
+    // invariant `issued == applied + drops` is directly testable.
+    if (stateSlot_.consume([this](const SceneState& s) { sceneState_ = s; }))
+        handshakeApplied_.state.fetch_add(1, std::memory_order_relaxed);
+    if (noteMapSlot_.consume([this](const NoteMap& nm) { sceneState_.noteMap = nm; }))
+        handshakeApplied_.noteMap.fetch_add(1, std::memory_order_relaxed);
     auto& activeScene = (sceneState_.select == SceneSelect::B) ? sceneState_.sceneB : sceneState_.sceneA;
-    cellSizesSlot_.consume(
-        [&activeScene](const PendingCellSizes& p) { activeScene.lanes[p.laneIndex].cellSizes = p.sizes; });
-    timelineSlot_.consume([&activeScene](const PendingTimelinePattern& p) {
-        auto& lane = activeScene.lanes[p.laneIndex];
-        lane.fixedPattern = p.pattern;
-        lane.fixedPatternLength = p.patternLength;
-    });
-    microTimingSlot_.consume(
-        [&activeScene](const PendingMicroTiming& p) { activeScene.lanes[p.laneIndex].microTimingMs = p.timingMs; });
-    envelopeSlot_.consume([&activeScene](const PendingEnvelope& p) {
-        auto& lane = activeScene.lanes[p.laneIndex];
-        lane.envelopes[p.envelopeIndex].envelope = p.envelope;
-        lane.envelopes[p.envelopeIndex].active = p.active;
-    });
-    accentMaskSlot_.consume(
-        [&activeScene](const PendingAccentMask& p) { activeScene.lanes[p.laneIndex].accents.steps = p.steps; });
+    if (cellSizesSlot_.consume(
+            [&activeScene](const PendingCellSizes& p) { activeScene.lanes[p.laneIndex].cellSizes = p.sizes; }))
+        handshakeApplied_.cellSizes.fetch_add(1, std::memory_order_relaxed);
+    if (timelineSlot_.consume([&activeScene](const PendingTimelinePattern& p) {
+            auto& lane = activeScene.lanes[p.laneIndex];
+            lane.fixedPattern = p.pattern;
+            lane.fixedPatternLength = p.patternLength;
+        }))
+        handshakeApplied_.timeline.fetch_add(1, std::memory_order_relaxed);
+    if (microTimingSlot_.consume(
+            [&activeScene](const PendingMicroTiming& p) { activeScene.lanes[p.laneIndex].microTimingMs = p.timingMs; }))
+        handshakeApplied_.microTiming.fetch_add(1, std::memory_order_relaxed);
+    if (envelopeSlot_.consume([&activeScene](const PendingEnvelope& p) {
+            auto& lane = activeScene.lanes[p.laneIndex];
+            lane.envelopes[p.envelopeIndex].envelope = p.envelope;
+            lane.envelopes[p.envelopeIndex].active = p.active;
+        }))
+        handshakeApplied_.envelope.fetch_add(1, std::memory_order_relaxed);
+    if (accentMaskSlot_.consume(
+            [&activeScene](const PendingAccentMask& p) { activeScene.lanes[p.laneIndex].accents.steps = p.steps; }))
+        handshakeApplied_.accentMask.fetch_add(1, std::memory_order_relaxed);
 
     updateTransportContext(data);
 
