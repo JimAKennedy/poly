@@ -222,7 +222,10 @@ Steinberg::tresult PLUGIN_API PolyControllerBase::setComponentState(Steinberg::I
     if (!readSceneState(read, cachedState_))
         return Steinberg::kResultFalse;
 
-    const auto& gs = cachedState_.sceneA;
+    // P7 fix (M046 S05 T02): publish the SELECTED scene, not always sceneA.
+    // activeScene() branches on cachedState_.select — matches the rest of the
+    // controller/UI which reads through this accessor for scene-aware fields.
+    const auto& gs = activeScene();
     for (int lane = 0; lane < kMaxLanes; ++lane) {
         const auto& cfg = gs.lanes[lane];
         setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kProbability), cfg.probability);
