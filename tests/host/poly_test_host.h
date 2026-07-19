@@ -1,9 +1,12 @@
 #pragma once
 
 #include <array>
+#include <cstddef>
 #include <cstdint>
 #include <utility>
 #include <vector>
+
+#include "poly/types.h"
 
 namespace Steinberg {
 namespace Vst {
@@ -101,6 +104,46 @@ public:
     // IParameterChanges/IParamValueQueue that will be handed to the next processBlock()
     // call. Models the standard VST3 automation path — this IS the working path.
     void injectParamChangeThroughProcess(uint32_t paramId, double normalizedValue);
+
+    // --- M046 S03 P4: UI-to-audio handshake burst injectors ---
+    // Each helper dispatches ONE notify() call to the processor with a distinct payload.
+    // Tests call these back-to-back without processBlock() between to reproduce the P4
+    // TOCTOU race: on current HEAD the second call silently overwrites the first, and
+    // the drop counter stays at zero (proof of silent loss). After S03 T02's 2-slot
+    // exchange, the drop counter increments to 1 on the second call.
+    void injectCellSizes(int laneIndex, const std::array<int, poly::kMaxSteps>& sizes);
+    void injectTimelinePattern(int laneIndex, const std::array<bool, poly::kMaxSteps>& pattern, int patternLength);
+    void injectMicroTiming(int laneIndex, const std::array<float, poly::kMaxSteps>& timingMs);
+    void injectEnvelope(int laneIndex, int envelopeIndex, bool active, const poly::Envelope& envelope);
+    void injectAccentMask(int laneIndex, const std::array<float, poly::kMaxSteps>& steps);
+
+    // Read-only handshake drop counter snapshot. Reflects the number of writer-side
+    // overwrites of unconsumed publishes for each handshake site. Zero on HEAD; expected
+    // to increment after S03 T02 lands the 2-slot exchange.
+    struct HandshakeDropSnapshot {
+        uint64_t state = 0;
+        uint64_t noteMap = 0;
+        uint64_t cellSizes = 0;
+        uint64_t timeline = 0;
+        uint64_t microTiming = 0;
+        uint64_t envelope = 0;
+        uint64_t accentMask = 0;
+    };
+    HandshakeDropSnapshot handshakeDrops() const;
+
+    // T03: Read-only handshake applied counter snapshot. Incremented by the RT reader
+    // on every successful consume(). Paired with handshakeDrops() to prove the
+    // no-silent-loss invariant: issued == applied + drops.
+    struct HandshakeAppliedSnapshot {
+        uint64_t state = 0;
+        uint64_t noteMap = 0;
+        uint64_t cellSizes = 0;
+        uint64_t timeline = 0;
+        uint64_t microTiming = 0;
+        uint64_t envelope = 0;
+        uint64_t accentMask = 0;
+    };
+    HandshakeAppliedSnapshot handshakeApplied() const;
 
     const std::vector<MidiEvent>& events() const { return events_; }
     void clearEvents() { events_.clear(); }
