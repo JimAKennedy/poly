@@ -70,10 +70,12 @@ endif()
 jk_target_warnings(poly_plugin)
 
 # -----------------------------------------------------------------------------
-# Experimental web UI — OFF by default; the shipping editor remains VSTGUI.
+# choc-webview web UI — the shipping DAW editor as of M052 (2026-07-20).
+# Flip to OFF to build the legacy native VSTGUI editor from plugin/source/ui/*;
+# M053 will decommission that path entirely after a full feature-parity audit.
 # See webui/README.md for architecture and bridge-schema.md for the protocol.
 # -----------------------------------------------------------------------------
-option(POLY_WEB_UI "Build the experimental choc-webview web UI editor" OFF)
+option(POLY_WEB_UI "Build the choc-webview web UI editor (shipping default)" ON)
 if(POLY_WEB_UI)
     include(FetchContent)
     FetchContent_Declare(choc

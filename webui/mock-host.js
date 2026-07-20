@@ -885,7 +885,20 @@
             else if (count === 0) lane.cells = null;
             lane.cellCount = count;
           },
-          timeline:     v => { lane.timeline = v >= 0.5; },
+          timeline:     v => {
+            const wasTimeline = lane.timeline;
+            lane.timeline = v >= 0.5;
+            // Match plugin behaviour on transition: when a lane flips into
+            // timeline mode, seed lane.fixed with an all-zeros pattern of
+            // length lane.steps if none exists. The C++ engine's
+            // LaneConfig.fixedPattern is a std::array<bool, 64> pre-allocated
+            // to false, so ui.js never encounters a null fixed there. Without
+            // this seed the mock host would leave lane.fixed = null and
+            // buildPanes would throw on `l.fixed.map(...)`.
+            if (lane.timeline && !wasTimeline && !lane.fixed) {
+              lane.fixed = new Array(lane.steps).fill(0);
+            }
+          },
         };
         if (LANE_EDITS[field]) {
           LANE_EDITS[field](value);

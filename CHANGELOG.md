@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- **WebUI is now the shipping DAW editor.** `POLY_WEB_UI` CMake default flipped from `OFF` to `ON` so `cmake -S . -B build` (no override) now produces the choc-webview UI. The legacy VSTGUI editor from `plugin/source/ui/*` remains buildable via `-DPOLY_WEB_UI=OFF` until M053 completes the feature-parity audit and decommissions it. (M052 S02)
+
+### Added
+
+- **Manual per-step pattern editing is reachable from the WebUI.** Each lane's pattern pane now has a **Timeline mode** toggle at the top. Flipping it into timeline mode replaces the Euclidean stepper controls with a step grid; clicking any step paints its on/off state directly, using the same C++ bridge that the accent row and micro-timing bars already use. Flipping back returns to Euclidean mode. Works identically in the DAW plugin and on the site preview since both surfaces share `webui/*`. (M052 S02)
+
 ## [0.1.0] - 2026-06-27
 
 Initial open-source release of Poly, a polymetric drum pattern generator outputting MIDI via VST3.

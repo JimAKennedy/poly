@@ -684,7 +684,8 @@
         <div class="hint">Fixed pattern — immune to macros. The bell is law.</div>
         <div class="hrow" data-fixed>${l.fixed.map((h, i) => `<button class="${h ? 'hit' : ''}" data-i="${i}" aria-label="pulse ${i + 1}"></button>`).join('')}</div>`;
     } else {
-      html += `<div class="prow"><label>Steps</label><span class="stepper"><button data-st="-1">−</button><span class="v">${l.steps} × ${l.stepLen === 2 ? '♩' : '♪'}</span><button data-st="1">+</button></span></div>
+      html += `<div class="prow"><label>Timeline mode</label><span class="switch"><button data-tl aria-label="Timeline mode"><i></i></button></span></div>
+        <div class="prow"><label>Steps</label><span class="stepper"><button data-st="-1">−</button><span class="v">${l.steps} × ${l.stepLen === 2 ? '♩' : '♪'}</span><button data-st="1">+</button></span></div>
         <div class="prow"><label>Hits</label><span class="stepper"><button data-ht="-1">−</button><span class="v">E(${l.hits},${l.steps})</span><button data-ht="1">+</button></span></div>
         <div class="prow"><label>Rotation</label><span class="stepper"><button data-rt="-1">−</button><span class="v">${l.rot}</span><button data-rt="1">+</button></span></div>
         <div class="prow"><label>Additive cells</label><span class="switch"><button ${l.cells ? 'class="on"' : ''} data-cl aria-label="Additive cells"><i></i></button></span></div>`;
@@ -693,6 +694,15 @@
           <div class="hint">aksak grouping — click a cell to cycle 2·3·4 · cycle = ${cyc8(l)}♪ (${l.cells.join('+')})</div>`;
     }
     pat.innerHTML = html;
+    const tlBtn = pat.querySelector('[data-tl]');
+    if (tlBtn) {
+      tlBtn.addEventListener('click', () => {
+        const next = l.timeline ? 0.0 : 1.0;
+        host.edit(`lane.${li}.timeline`, next, 'begin');
+        host.edit(`lane.${li}.timeline`, next, 'perform');
+        host.edit(`lane.${li}.timeline`, next, 'end');
+      });
+    }
     if (l.timeline) {
       pat.querySelectorAll('[data-fixed] button').forEach((b) =>
         b.addEventListener('click', () => {
