@@ -80,6 +80,25 @@ test.describe('WebUI timeline-mode toggle', () => {
     await expect(patternPane.locator('[data-tl]')).toHaveClass(/\bon\b/);
     await expect(patternPane.locator('[data-st]')).toHaveCount(0);
 
+    // M047 S01 T03: seed-on-toggle behaviour. When timeline mode flips on,
+    // the pattern grid should be seeded from the lane's current Euclidean
+    // state (hits × steps × rotation) — not empty. This enables the
+    // "Euclidean approximation → adjust one step" workflow that chapter 3
+    // teaches for son clave / rumba clave. Regression signal: if the seed
+    // is dropped either in the C++ bridge (web_ui_view.cpp kCoreTimeline
+    // case) or in the mock host (mock-host.js LANE_EDITS.timeline), the
+    // hit-button count here will be zero and this assertion fails.
+    const seededHitCount = await fixedGrid.locator('button.hit').count();
+    const expectedHitCount = await page.evaluate((idx) => {
+      const host = (window as unknown as { PolyHost?: { getState(): unknown } }).PolyHost;
+      const state = host?.getState() as { lanes?: Array<{ hits?: number }> } | undefined;
+      return state?.lanes?.[idx]?.hits ?? 0;
+    }, euclidLaneIndex);
+    expect(
+      seededHitCount,
+      `Timeline mode should seed ${expectedHitCount} hits from Euclidean state, saw ${seededHitCount}`,
+    ).toBe(expectedHitCount);
+
     // Clicking a step button in the fixed grid should toggle its hit class.
     const step0 = fixedGrid.locator('button').nth(0);
     const wasHitBefore = (await step0.getAttribute('class') || '').includes('hit');

@@ -8,6 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **WebUI Timeline mode toggle now seeds the step pattern from the lane's current Euclidean configuration** (steps × hits × rotation) instead of starting empty. Enables the Euclidean-approximation-then-manual-refinement workflow: set steps/hits/rotation to get a close Euclidean starter (e.g. E(5,16) for son clave), flip Timeline mode to inherit those hits as an editable step grid, then shift one or two steps to reach the exact traditional pattern. Applies to the plugin (`web_ui_view.cpp`) and the site's mock host equivalently. (M047 S01)
 - **WebUI is now the shipping DAW editor on macOS and Windows.** `POLY_WEB_UI` CMake default flipped from `OFF` to `ON` on the shipping platforms so `cmake -S . -B build` (no override) now produces the choc-webview UI. On Linux the default stays `OFF` — choc's WebKitGTK backend needs `libgtk-3-dev` + `libwebkit2gtk-4.1-dev` and CI toolchain wiring that Poly doesn't currently carry, and Poly ships no Linux VST3 binary anyway. M054 will decide whether to add the Linux WebUI toolchain or drop Ubuntu from CI entirely. The legacy VSTGUI editor from `plugin/source/ui/*` remains buildable on all platforms via `-DPOLY_WEB_UI=OFF` until M053 completes the feature-parity audit and decommissions it. (M052 S02)
 
 ### Added
@@ -16,7 +17,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Docs
 
-- **Chapters 2 (Sub-Saharan Africa), 4 (Afrobeat), and 10 (Brazilian) now link to chapter 18's timeline-mode workflow** from the exact paragraphs where they describe fixed bell patterns and locked ensemble parts, so readers can go straight from the musical context to the step-drawing UI. Chapter 3 (Afro-Cuban clave) will get the same hook in M047 S01's clave rewrite. (M052 S04)
+- **Chapter 3 (Afro-Cuban) and the Euclidean-reference appendix now correctly identify son clave and rumba clave as non-Euclidean patterns.** Previously chapter 3 claimed 'son clave 3-2 is exactly E(5,16)' and the appendix's 16-Steps table showed an arithmetically impossible grouping `3+3+2+4+3+1` (six intervals for five onsets) attributed to `Bossa nova bass / son clave`. Corrected per findings D1 and D2 of the 2026-07-16 product review: the son clave (gaps 3-3-4-2-4) contains a 2-gap that Euclidean distribution cannot produce; E(5,16)'s true grouping is 3-3-4-3-3 and its cultural home is bossa nova bass alone. Chapter 3 now teaches the seed-and-adjust workflow using the new Timeline mode seed behavior — start from E(5,16), flip Timeline mode, shift one step to reach the exact son clave. Both chapters cite Toussaint via existing footnotes. (M047 S01)
+- **Chapters 2 (Sub-Saharan Africa), 4 (Afrobeat), and 10 (Brazilian) now link to chapter 18's timeline-mode workflow** from the exact paragraphs where they describe fixed bell patterns and locked ensemble parts, so readers can go straight from the musical context to the step-drawing UI. Chapter 3 (Afro-Cuban clave) got its own hook in M047 S01. (M052 S04)
 
 ## [0.1.0] - 2026-06-27
 

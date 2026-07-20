@@ -610,9 +610,25 @@ void WebUIView::applyEditToCache(Steinberg::Vst::ParamID id, double normalized) 
         case kCoreCellCount:
             cfg.cellCount = static_cast<int>(std::round(normalized * 64.0));
             break;
-        case kCoreTimeline:
-            cfg.timeline = normalized > 0.5;
+        case kCoreTimeline: {
+            const bool next = normalized > 0.5;
+            // On the false→true edge, seed fixedPattern[] from the current
+            // Euclidean state so the user's timeline-mode step grid starts
+            // populated with the same hits the lane was already playing.
+            // Enables the "Euclidean approximation → adjust one step" workflow
+            // documented in chapter 3 for son clave / rumba clave.
+            // On true→false edge, leave fixedPattern intact so re-enabling
+            // timeline mode restores any manual edits.
+            // UI-thread only (applyEditToCache); no RT constraint.
+            if (next && !cfg.timeline) {
+                poly::euclidean(cfg.hitCount, cfg.cycle.steps, cfg.rotation, cfg.fixedPattern);
+                if (cfg.fixedPatternLength == 0) {
+                    cfg.fixedPatternLength = cfg.cycle.steps;
+                }
+            }
+            cfg.timeline = next;
             break;
+        }
         case kCoreFixedPatternLen:
             cfg.fixedPatternLength = static_cast<int>(std::round(normalized * 64.0));
             break;
