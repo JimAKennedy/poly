@@ -104,6 +104,15 @@ public:
     // Returns false if the buffer is already at kCapacity — mirrors PendingNoteOffBuffer::push.
     bool pushPendingNoteOffForTesting(const PendingNoteOff& off) { return pendingNoteOffs_.push(off); }
 
+    // M046 S06 T01: test-only accessor + injector for the MIDI capture buffer so host
+    // tests can reproduce the P9 loop-wrap defect. On HEAD, when the transport wraps
+    // from loopEnd back to loopStart, handleTransportJump() calls captureBuffer_.clear()
+    // because expectedNextPpq_ − ppqStart trips the jump detector (fixed threshold of
+    // 0.001 PPQ). Tests seed the buffer with synthetic notes then step through a wrap
+    // to observe the drop.
+    void pushCapturedNoteForTesting(const NoteEvent& note) { captureBuffer_.push(note); }
+    size_t captureBufferCount() const { return captureBuffer_.count(); }
+
     static Steinberg::FUnknown* createInstance(void*) {
         return static_cast<Steinberg::Vst::IAudioProcessor*>(
             new PolyProcessor()); // ownership-transfer — RT-SAFE-OK: host factory, not audio thread

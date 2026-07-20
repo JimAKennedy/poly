@@ -496,6 +496,18 @@ uint64_t PolyTestHost::noteOffDrops() const {
     return static_cast<PolyProcessor*>(processor_)->noteOffDrops();
 }
 
+void PolyTestHost::pushCapturedNote(const NoteEvent& note) {
+    if (!processor_)
+        return;
+    static_cast<PolyProcessor*>(processor_)->pushCapturedNoteForTesting(note);
+}
+
+size_t PolyTestHost::capturedNoteCount() const {
+    if (!processor_)
+        return 0;
+    return static_cast<PolyProcessor*>(processor_)->captureBufferCount();
+}
+
 PolyTestHost::HandshakeDropSnapshot PolyTestHost::handshakeDrops() const {
     HandshakeDropSnapshot snap{};
     if (!processor_)

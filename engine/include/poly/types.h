@@ -27,6 +27,12 @@ struct TransportContext {
     bool playing = false;
     bool looping = false;
     bool jumped = false;
+    // M046 S06 P9: true when this block is the first block after a natural loop
+    // wrap (playhead snapped from ~loopEndPpq back to ~loopStartPpq while
+    // looping). Callers that clear per-jump state (capture buffer, scene chain,
+    // macro smoother) should gate on !wrappedLoop to preserve continuity across
+    // repeats. Pending note-offs still flush unconditionally to avoid stuck notes.
+    bool wrappedLoop = false;
     double loopStartPpq = 0.0;
     double loopEndPpq = 0.0;
 };

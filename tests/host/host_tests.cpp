@@ -1176,3 +1176,97 @@ TEST(HostTests, HandshakeStress_TSanClean) {
     host.teardown();
 }
 #endif
+
+// --- M046 S06 P9: loop-wrap MIDI-capture preservation (RED on HEAD) ---
+//
+// Root cause: PolyProcessor::updateTransportContext at processor.cpp:104 sets
+// `tc_.jumped = |ppqStart − expectedNextPpq_| > 0.001` — a fixed threshold that
+// treats any transport discontinuity as a jump. When Cubase (or any host) loops
+// back from loopEnd to loopStart, `expectedNextPpq_ ≈ loopEnd` while next
+// `ppqStart = loopStart`, and the delta far exceeds 0.001. `handleTransportJump`
+// then clears `captureBuffer_` at processor.cpp:141, dropping every captured
+// note across the wrap — the P9 defect. This is silent: no counter fires.
+//
+// Test 1: seed the capture buffer, drive one wrap block, and assert the seeded
+// notes survive. RED today because handleTransportJump wipes them.
+// Test 2 (guard): a real project-time jump (user drags playhead) SHOULD still
+// clear — proves the fix doesn't over-broaden the guard and let stragglers
+// linger across genuine jumps.
+TEST(HostTests, LoopWrap_CaptureBufferPreservedAcrossPasses) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+
+    constexpr double kTempo = 120.0;
+    constexpr double kLoopStart = 0.0;
+    constexpr double kLoopEnd = 4.0;
+
+    // Warmup: prime expectedNextPpq_ inside the loop range. First block sees
+    // expectedNextPpq_ = -1 → jumped stays false; the next-block ppqStart
+    // becomes the reference for wrap detection.
+    host.processBlock(3.5, kTempo, /*playing=*/true, /*looping=*/true, kLoopStart, kLoopEnd);
+
+    // Seed synthetic captured notes with distinct pitches so any post-wrap
+    // engine adds don't collide accidentally. The warmup block may itself have
+    // emitted engine-generated notes into the capture buffer, so track the
+    // seeded delta relative to whatever's already there.
+    const size_t preSeedCount = host.capturedNoteCount();
+    constexpr size_t kSeeded = 10;
+    for (size_t i = 0; i < kSeeded; ++i) {
+        poly::NoteEvent note{};
+        note.ppqPosition = 3.5 + 0.01 * static_cast<double>(i);
+        note.pitch = static_cast<int16_t>(96 + i);
+        note.velocity = 0.75f;
+        note.duration = 0.05;
+        note.channel = 0;
+        note.laneIndex = 0;
+        host.pushCapturedNote(note);
+    }
+    const size_t postSeedCount = host.capturedNoteCount();
+    ASSERT_EQ(postSeedCount, preSeedCount + kSeeded) << "seed helper should populate captureBuffer_";
+
+    // Loop wrap: ppqStart snaps back to loopStart. expectedNextPpq_ ≈ 3.6, so
+    // `|0.0 - 3.6| = 3.6 >> 0.001` trips the jump detector on HEAD → capture
+    // buffer cleared. After S06 T02, wrap-aware detection preserves it.
+    host.processBlock(kLoopStart, kTempo, /*playing=*/true, /*looping=*/true, kLoopStart, kLoopEnd);
+
+    // Allow for engine-generated adds in the wrap block; assert the seeded
+    // notes survived. RED on HEAD (buffer cleared → count << postSeedCount).
+    EXPECT_GE(host.capturedNoteCount(), postSeedCount)
+        << "P9 regression: loop wrap cleared captureBuffer_ (expected >= " << postSeedCount << ", got "
+        << host.capturedNoteCount() << ")";
+
+    host.teardown();
+}
+
+TEST(HostTests, NonWrapJump_CaptureBufferCleared) {
+    // Guard against over-fix: a genuine project-time jump (not a loop wrap)
+    // MUST still clear the capture buffer so stragglers don't leak across a
+    // scrub. Passes on HEAD and must keep passing after T02.
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+
+    constexpr double kTempo = 120.0;
+
+    host.processBlock(0.0, kTempo, /*playing=*/true);
+    host.processBlock(0.1, kTempo, /*playing=*/true);
+
+    constexpr size_t kSeeded = 5;
+    for (size_t i = 0; i < kSeeded; ++i) {
+        poly::NoteEvent note{};
+        note.ppqPosition = 0.1 + 0.01 * static_cast<double>(i);
+        note.pitch = static_cast<int16_t>(60 + i);
+        note.velocity = 0.6f;
+        note.duration = 0.05;
+        host.pushCapturedNote(note);
+    }
+    ASSERT_EQ(host.capturedNoteCount(), kSeeded);
+
+    // Real jump: playhead scrubbed forward to bar 16, no looping active. Trips
+    // jumped=true with wrappedLoop=false — must still clear.
+    host.processBlock(64.0, kTempo, /*playing=*/true, /*looping=*/false);
+
+    EXPECT_LT(host.capturedNoteCount(), kSeeded)
+        << "non-wrap jump must not preserve capture (count=" << host.capturedNoteCount() << ")";
+
+    host.teardown();
+}

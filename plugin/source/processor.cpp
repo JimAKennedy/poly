@@ -112,6 +112,11 @@ void PolyProcessor::updateTransportContext(const Steinberg::Vst::ProcessData& da
     tc_.playing = (ctx.state & Steinberg::Vst::ProcessContext::kPlaying) != 0;
     tc_.looping = (ctx.state & Steinberg::Vst::ProcessContext::kCycleActive) != 0;
 
+    if (ctx.state & Steinberg::Vst::ProcessContext::kCycleValid) {
+        tc_.loopStartPpq = ctx.cycleStartMusic;
+        tc_.loopEndPpq = ctx.cycleEndMusic;
+    }
+
     if (ctx.state & Steinberg::Vst::ProcessContext::kProjectTimeMusicValid) {
         double ppqStart = ctx.projectTimeMusic;
         double beatsPerSample = tc_.tempo > 0.0 ? tc_.tempo / (60.0 * tc_.sampleRate) : 0.0;
@@ -120,17 +125,30 @@ void PolyProcessor::updateTransportContext(const Steinberg::Vst::ProcessData& da
 
         constexpr double kJumpThreshold = 0.001;
         tc_.jumped = (expectedNextPpq_ >= 0.0 && std::abs(ppqStart - expectedNextPpq_) > kJumpThreshold);
+
+        // M046 S06 P9: distinguish natural loop wraps from real scrubs. When
+        // looping is active and the transport jumps back to loopStart, treat
+        // it as a wrap regardless of where the previous block ended — DAWs do
+        // not guarantee a block boundary lands exactly on loopEnd. Dynamic
+        // tolerance keeps detection robust across common block sizes
+        // (64…8192 samples). Wrapped blocks preserve capture buffer, chain
+        // state, and macro smoother; genuine scrubs (looping=false) still
+        // clear them.
+        tc_.wrappedLoop = false;
+        if (tc_.jumped && tc_.looping && tc_.loopEndPpq > tc_.loopStartPpq) {
+            const double wrapTol = std::max(0.01, 2.0 * beatsPerSample * static_cast<double>(data.numSamples));
+            const bool startedAtLoopStart = std::abs(ppqStart - tc_.loopStartPpq) <= wrapTol;
+            const bool jumpedBackward = ppqStart < expectedNextPpq_;
+            tc_.wrappedLoop = startedAtLoopStart && jumpedBackward;
+        }
+
         expectedNextPpq_ = tc_.ppqEnd;
     } else {
         tc_.ppqStart = 0.0;
         tc_.ppqEnd = 0.0;
         tc_.jumped = false;
+        tc_.wrappedLoop = false;
         expectedNextPpq_ = -1.0;
-    }
-
-    if (ctx.state & Steinberg::Vst::ProcessContext::kCycleValid) {
-        tc_.loopStartPpq = ctx.cycleStartMusic;
-        tc_.loopEndPpq = ctx.cycleEndMusic;
     }
 }
 
@@ -138,7 +156,11 @@ void PolyProcessor::handleTransportJump(Steinberg::Vst::IEventList* outputEvents
     if (!tc_.jumped)
         return;
 
-    captureBuffer_.clear();
+    // M046 S06 P9: preserve capture across natural loop wraps. Genuine scrubs
+    // (jumped=true, wrappedLoop=false) still clear so stragglers don't leak
+    // across the discontinuity.
+    if (!tc_.wrappedLoop)
+        captureBuffer_.clear();
     if (outputEvents) {
         PendingNoteOff allOffs[PendingNoteOffBuffer::kCapacity];
         size_t n = pendingNoteOffs_.flushDue(-1e12, 1e12, allOffs, PendingNoteOffBuffer::kCapacity);
@@ -451,7 +473,9 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
     handleTransportJump(data.outputEvents);
 
     if (sceneState_.chain.enabled && sceneState_.chain.entryCount > 0) {
-        if (tc_.jumped)
+        // M046 S06 P9: don't reset chain progression on a loop wrap — the pattern
+        // is designed to keep flowing across the repeat. Real jumps still reset.
+        if (tc_.jumped && !tc_.wrappedLoop)
             chainState_.reset();
         sceneState_.select = chainState_.update(sceneState_.chain, tc_.ppqStart);
     }
@@ -467,7 +491,9 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
     }
 
     macroSmoother_.setTarget(base.macros);
-    if (tc_.jumped)
+    // M046 S06 P9: keep the macro smoother continuous across a loop wrap.
+    // Snapping mid-groove would defeat the smoother; real scrubs still snap.
+    if (tc_.jumped && !tc_.wrappedLoop)
         macroSmoother_.snapToTarget();
     macroSmoother_.advance(tc_.sampleRate, tc_.blockSize);
     base.macros = macroSmoother_.current;
