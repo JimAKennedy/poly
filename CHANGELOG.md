@@ -14,6 +14,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - **Manual per-step pattern editing is reachable from the WebUI.** Each lane's pattern pane now has a **Timeline mode** toggle at the top. Flipping it into timeline mode replaces the Euclidean stepper controls with a step grid; clicking any step paints its on/off state directly, using the same C++ bridge that the accent row and micro-timing bars already use. Flipping back returns to Euclidean mode. Works identically in the DAW plugin and on the site preview since both surfaces share `webui/*`. (M052 S02)
 
+### Docs
+
+- **Chapters 2 (Sub-Saharan Africa), 4 (Afrobeat), and 10 (Brazilian) now link to chapter 18's timeline-mode workflow** from the exact paragraphs where they describe fixed bell patterns and locked ensemble parts, so readers can go straight from the musical context to the step-drawing UI. Chapter 3 (Afro-Cuban clave) will get the same hook in M047 S01's clave rewrite. (M052 S04)
+
 ## [0.1.0] - 2026-06-27
 
 Initial open-source release of Poly, a polymetric drum pattern generator outputting MIDI via VST3.
