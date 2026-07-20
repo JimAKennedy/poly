@@ -887,17 +887,30 @@
           },
           timeline:     v => {
             const wasTimeline = lane.timeline;
-            lane.timeline = v >= 0.5;
+            const next = v >= 0.5;
             // Match plugin behaviour on transition: when a lane flips into
-            // timeline mode, seed lane.fixed with an all-zeros pattern of
-            // length lane.steps if none exists. The C++ engine's
-            // LaneConfig.fixedPattern is a std::array<bool, 64> pre-allocated
-            // to false, so ui.js never encounters a null fixed there. Without
-            // this seed the mock host would leave lane.fixed = null and
-            // buildPanes would throw on `l.fixed.map(...)`.
-            if (lane.timeline && !wasTimeline && !lane.fixed) {
-              lane.fixed = new Array(lane.steps).fill(0);
+            // timeline mode from Euclidean, seed lane.fixed from the current
+            // Euclidean pattern (hits × steps × rot) so the user's step grid
+            // starts populated with the same hits the lane was already
+            // playing. Enables the "Euclidean approximation → adjust one
+            // step" workflow documented in chapter 3 for son clave and
+            // rumba clave.
+            //
+            // On true→false edge, leave lane.fixed intact so re-enabling
+            // timeline mode restores any manual edits.
+            //
+            // The C++ engine's LaneConfig.fixedPattern is a
+            // std::array<bool, 64> pre-allocated to false, so ui.js never
+            // encounters a null fixed there — we still need to allocate the
+            // array here for the mock host case where lane.fixed can be
+            // null.
+            if (next && !wasTimeline) {
+              const seed = rotArr(euclid(lane.hits, lane.steps), lane.rot);
+              // seed is a Uint8Array or number array of length lane.steps.
+              // lane.fixed should be a plain array of booleans/0-1.
+              lane.fixed = Array.from(seed, (v) => (v ? 1 : 0));
             }
+            lane.timeline = next;
           },
         };
         if (LANE_EDITS[field]) {
