@@ -74,8 +74,18 @@ jk_target_warnings(poly_plugin)
 # Flip to OFF to build the legacy native VSTGUI editor from plugin/source/ui/*;
 # M053 will decommission that path entirely after a full feature-parity audit.
 # See webui/README.md for architecture and bridge-schema.md for the protocol.
+#
+# Default is platform-conditional: ON for macOS+Windows (the shipping targets),
+# OFF for Linux until choc's WebKitGTK backend is wired up in CI (M054).
+# Poly does not ship a Linux VST3 — the Ubuntu build is a portability sanity
+# check, so it stays on the native VSTGUI editor path for now.
 # -----------------------------------------------------------------------------
-option(POLY_WEB_UI "Build the choc-webview web UI editor (shipping default)" ON)
+if(APPLE OR WIN32)
+    set(POLY_WEB_UI_DEFAULT ON)
+else()
+    set(POLY_WEB_UI_DEFAULT OFF)
+endif()
+option(POLY_WEB_UI "Build the choc-webview web UI editor (shipping default on macOS+Windows)" ${POLY_WEB_UI_DEFAULT})
 if(POLY_WEB_UI)
     include(FetchContent)
     FetchContent_Declare(choc

@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
-- **WebUI is now the shipping DAW editor.** `POLY_WEB_UI` CMake default flipped from `OFF` to `ON` so `cmake -S . -B build` (no override) now produces the choc-webview UI. The legacy VSTGUI editor from `plugin/source/ui/*` remains buildable via `-DPOLY_WEB_UI=OFF` until M053 completes the feature-parity audit and decommissions it. (M052 S02)
+- **WebUI is now the shipping DAW editor on macOS and Windows.** `POLY_WEB_UI` CMake default flipped from `OFF` to `ON` on the shipping platforms so `cmake -S . -B build` (no override) now produces the choc-webview UI. On Linux the default stays `OFF` — choc's WebKitGTK backend needs `libgtk-3-dev` + `libwebkit2gtk-4.1-dev` and CI toolchain wiring that Poly doesn't currently carry, and Poly ships no Linux VST3 binary anyway. M054 will decide whether to add the Linux WebUI toolchain or drop Ubuntu from CI entirely. The legacy VSTGUI editor from `plugin/source/ui/*` remains buildable on all platforms via `-DPOLY_WEB_UI=OFF` until M053 completes the feature-parity audit and decommissions it. (M052 S02)
 
 ### Added
 
