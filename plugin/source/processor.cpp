@@ -181,11 +181,21 @@ void PolyProcessor::handleTransportJump(Steinberg::Vst::IEventList* outputEvents
 }
 
 void PolyProcessor::emitMidiOutput(Steinberg::Vst::IEventList* outputEvents, Steinberg::int32 numSamples) {
+    // M046 S07 P12: stage events into emitScratch_ then sort by sampleOffset
+    // before addEvent(). flushDue's swap-remove compaction (bridge.cpp) returns
+    // stragglers in arbitrary order; JUCE-based hosts and older Bitwig builds
+    // reject non-monotonic event sequences, silently dropping MIDI. Insertion
+    // sort is stable (preserves due-offs-before-note-ons when sampleOffset
+    // ties — musically correct: earlier-block offs land before this-block ons)
+    // and does no heap allocation (RT-safe), and n is small in practice.
+    size_t count = 0;
+
     PendingNoteOff dueOffs[kMaxEventsPerBlock];
     size_t numDue = pendingNoteOffs_.flushDue(tc_.ppqStart, tc_.ppqEnd, dueOffs, kMaxEventsPerBlock);
 
     for (size_t i = 0; i < numDue; ++i) {
-        Steinberg::Vst::Event ev = {};
+        auto& ev = emitScratch_[count++];
+        ev = {};
         ev.busIndex = 0;
         ev.sampleOffset = ppqToSampleOffset(dueOffs[i].ppqOff, tc_.ppqStart, tc_.tempo, tc_.sampleRate, numSamples);
         ev.ppqPosition = dueOffs[i].ppqOff;
@@ -194,14 +204,14 @@ void PolyProcessor::emitMidiOutput(Steinberg::Vst::IEventList* outputEvents, Ste
         ev.noteOff.pitch = dueOffs[i].pitch;
         ev.noteOff.velocity = 0.0f;
         ev.noteOff.noteId = -1;
-        outputEvents->addEvent(ev);
     }
 
     // region:emit-note-on
     for (size_t i = 0; i < noteBuffer_.count; ++i) {
         const auto& note = noteBuffer_.events[i];
 
-        Steinberg::Vst::Event ev = {};
+        auto& ev = emitScratch_[count++];
+        ev = {};
         ev.busIndex = 0;
         ev.sampleOffset = ppqToSampleOffset(note.ppqPosition, tc_.ppqStart, tc_.tempo, tc_.sampleRate, numSamples);
         ev.ppqPosition = note.ppqPosition;
@@ -211,7 +221,6 @@ void PolyProcessor::emitMidiOutput(Steinberg::Vst::IEventList* outputEvents, Ste
         ev.noteOn.pitch = mappedPitch;
         ev.noteOn.velocity = note.velocity;
         ev.noteOn.noteId = -1;
-        outputEvents->addEvent(ev);
 
         const PendingNoteOff pendingOff = {
             .ppqOff = note.ppqPosition + note.duration,
@@ -224,7 +233,8 @@ void PolyProcessor::emitMidiOutput(Steinberg::Vst::IEventList* outputEvents, Ste
             // the drop counter so the caller (and tests) can observe the
             // pressure.
             noteOffDrops_.fetch_add(1, std::memory_order_relaxed);
-            Steinberg::Vst::Event off = {};
+            auto& off = emitScratch_[count++];
+            off = {};
             off.busIndex = 0;
             off.sampleOffset = ev.sampleOffset;
             off.ppqPosition = pendingOff.ppqOff;
@@ -233,10 +243,41 @@ void PolyProcessor::emitMidiOutput(Steinberg::Vst::IEventList* outputEvents, Ste
             off.noteOff.pitch = pendingOff.pitch;
             off.noteOff.velocity = 0.0f;
             off.noteOff.noteId = -1;
-            outputEvents->addEvent(off);
         }
     }
     // endregion:emit-note-on
+
+    // Insertion sort by sampleOffset. Stable, no allocation, O(n^2) but n is
+    // typically well under 20 per block, so faster than a std::stable_sort in
+    // practice — and std::stable_sort may internally allocate (RT-unsafe).
+    for (size_t i = 1; i < count; ++i) {
+        Steinberg::Vst::Event key = emitScratch_[i];
+        size_t j = i;
+        while (j > 0 && emitScratch_[j - 1].sampleOffset > key.sampleOffset) {
+            emitScratch_[j] = emitScratch_[j - 1];
+            --j;
+        }
+        emitScratch_[j] = key;
+    }
+
+    for (size_t i = 0; i < count; ++i)
+        outputEvents->addEvent(emitScratch_[i]);
+}
+
+void PolyProcessor::bounceExportTriggerZero(Steinberg::Vst::IParameterChanges* outParams) {
+    // M046 S07 P10: kExportTrigger is a momentary edge (0→1 = commit). The
+    // consume paths clear exportTriggered_ locally but the host never observes
+    // the 1→0 fall — dedupe-aware wrappers (JUCE, Cubase) then treat a second
+    // Export click as "value unchanged, skip". Bouncing 0.0 back through
+    // outputParameterChanges makes the fall visible so subsequent clicks fire.
+    if (!outParams)
+        return;
+    Steinberg::int32 idx;
+    auto* queue = outParams->addParameterData(ParamIDs::kExportTrigger, idx);
+    if (queue) {
+        Steinberg::int32 ptIdx;
+        queue->addPoint(0, 0.0, ptIdx);
+    }
 }
 
 static void outputLaneVisualization(Steinberg::Vst::IParameterChanges* outParams, const LaneConfig& cfg, int lane,
@@ -464,6 +505,7 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
                 captureBuffer_.extractLastBars(captureLengthBars_, exportEvents_.data(), exportEvents_.size());
             exportTempo_ = tc_.tempo;
             exportReady_.store(true, std::memory_order_release);
+            bounceExportTriggerZero(data.outputParameterChanges);
         }
         wasPlaying_ = false;
         return Steinberg::kResultOk;
@@ -519,6 +561,7 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
             captureBuffer_.extractLastBars(captureLengthBars_, exportEvents_.data(), exportEvents_.size());
         exportTempo_ = tc_.tempo;
         exportReady_.store(true, std::memory_order_release);
+        bounceExportTriggerZero(data.outputParameterChanges);
     }
 
     outputParameterFeedback(data, resolved);
