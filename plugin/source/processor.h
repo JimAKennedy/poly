@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <utility>
 
+#include "pluginterfaces/vst/ivstevents.h"
 #include "public.sdk/source/vst/vstaudioeffect.h"
 
 #include "poly/bridge.h"
@@ -132,6 +133,7 @@ private:
     void handleTransportJump(Steinberg::Vst::IEventList* outputEvents);
     void emitMidiOutput(Steinberg::Vst::IEventList* outputEvents, Steinberg::int32 numSamples);
     void outputParameterFeedback(Steinberg::Vst::ProcessData& data, const GrooveState& resolved);
+    void bounceExportTriggerZero(Steinberg::Vst::IParameterChanges* outParams);
     void sendSnapshotPointer();
     bool applySceneParameter(Steinberg::Vst::ParamID id, double normalized);
     bool applyLaneParameter(Steinberg::Vst::ParamID id, double normalized, GrooveState& gs);
@@ -200,6 +202,13 @@ private:
 
     // M046 S04 P6: incremented on pendingNoteOffs_ overflow. Zero until T03 lands the fix.
     std::atomic<uint64_t> noteOffDrops_{0};
+
+    // M046 S07 P12: pre-allocated scratch for emitMidiOutput. Events are staged
+    // here, sorted by sampleOffset, then addEvent()'d in order — avoids the
+    // non-monotonic sequence that JUCE-based hosts / older Bitwig reject. Sized
+    // for the worst case: kMaxEventsPerBlock due-offs + kMaxEventsPerBlock note-ons
+    // + kMaxEventsPerBlock immediate offs on push overflow.
+    Steinberg::Vst::Event emitScratch_[3 * kMaxEventsPerBlock]{};
 };
 
 } // namespace poly
