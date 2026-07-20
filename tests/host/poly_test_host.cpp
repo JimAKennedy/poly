@@ -218,6 +218,32 @@ void PolyTestHost::processBlock(double ppqStart, double tempo, bool playing, boo
                                ev.noteOff.channel, ev.sampleOffset});
         }
     }
+
+    // Drain outputParameterChanges into lastOutputParams_ so tests can assert what
+    // the processor bounced back to the host this block (e.g. kExportTrigger=0 on
+    // export commit — P10 regression). Keep only the trailing point of each queue.
+    lastOutputParams_.clear();
+    int32 numOutParams = outputParams.getParameterCount();
+    for (int32 i = 0; i < numOutParams; ++i) {
+        auto* queue = outputParams.getParameterData(i);
+        if (!queue)
+            continue;
+        int32 pointCount = queue->getPointCount();
+        if (pointCount <= 0)
+            continue;
+        int32 sampleOffset = 0;
+        Steinberg::Vst::ParamValue value = 0.0;
+        if (queue->getPoint(pointCount - 1, sampleOffset, value) == kResultOk) {
+            lastOutputParams_[static_cast<uint32_t>(queue->getParameterId())] = value;
+        }
+    }
+}
+
+std::optional<double> PolyTestHost::lastOutputParamValue(uint32_t paramId) const {
+    auto it = lastOutputParams_.find(paramId);
+    if (it == lastOutputParams_.end())
+        return std::nullopt;
+    return it->second;
 }
 
 void PolyTestHost::playBars(double bars, double tempo) {

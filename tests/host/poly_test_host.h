@@ -3,6 +3,8 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <optional>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -183,6 +185,15 @@ public:
     std::vector<MidiEvent> noteOnEvents() const;
     std::vector<MidiEvent> noteOffEvents() const;
 
+    // --- M046 S07 P10: outputParameterChanges observer ---
+    // Returns the LAST value queued for `paramId` on data.outputParameterChanges
+    // during the most recent processBlock() call. Cleared and rebuilt each block.
+    // Returns std::nullopt when no point was emitted for that paramId in the last
+    // block. Used to prove the P10 fix: after T02, kExportTrigger bounces back to
+    // 0.0 in the same block it was consumed, so a dedupe-aware host sees a fresh
+    // 0->1 transition on the next click.
+    std::optional<double> lastOutputParamValue(uint32_t paramId) const;
+
     double sampleRate() const { return sampleRate_; }
     int blockSize() const { return blockSize_; }
     double ppqPerBlock(double tempo) const;
@@ -198,6 +209,10 @@ private:
     std::vector<float> rightBuf_;
     // Pending param changes to be flushed on the next processBlock() call via inputParameterChanges.
     std::vector<std::pair<uint32_t, double>> pendingParamChanges_;
+    // Last value emitted for each paramId via data.outputParameterChanges during the
+    // most recent processBlock(). Cleared each block, then repopulated with the trailing
+    // point of every queue. Backs lastOutputParamValue() for P10 regression tests.
+    std::unordered_map<uint32_t, double> lastOutputParams_;
 };
 
 } // namespace test

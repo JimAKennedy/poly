@@ -1270,3 +1270,103 @@ TEST(HostTests, NonWrapJump_CaptureBufferCleared) {
 
     host.teardown();
 }
+
+// --- M046 S07 T01: export trigger + event-sort regressions (RED on HEAD) ---
+//
+// P10: kExportTrigger is a momentary edge — 0->1 tells process() to snapshot the
+// capture buffer. The consume path clears exportTriggered_ locally but never
+// bounces the param back to 0 via outputParameterChanges. A dedupe-aware host
+// (Cubase, JUCE) that caches the last written value never observes the fall,
+// so a second Export click sees "value unchanged, skip" and no MIDI export
+// fires. T02 fixes both consume sites (stopped path ~461, playing path ~516).
+
+TEST(HostTests, ExportTrigger_ResetsAfterCommit_StoppedPath) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+
+    host.injectParamChangeThroughProcess(poly::ParamIDs::kExportTrigger, 1.0);
+    host.processBlock(0.0, 120.0, /*playing=*/false);
+
+    auto v = host.lastOutputParamValue(poly::ParamIDs::kExportTrigger);
+    ASSERT_TRUE(v.has_value()) << "M046 S07 P10 fingerprint (stopped path): kExportTrigger not bounced back "
+                                  "via outputParameterChanges. Dedupe-aware host never sees the 1->0 fall, "
+                                  "so a second Export click does nothing. T02 must add the bounce at both "
+                                  "consume sites (stopped-path ~461, playing-path ~516).";
+    EXPECT_DOUBLE_EQ(*v, 0.0);
+
+    host.teardown();
+}
+
+TEST(HostTests, ExportTrigger_ResetsAfterCommit_PlayingPath) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+
+    host.injectParamChangeThroughProcess(poly::ParamIDs::kExportTrigger, 1.0);
+    host.processBlock(0.0, 120.0, /*playing=*/true);
+
+    auto v = host.lastOutputParamValue(poly::ParamIDs::kExportTrigger);
+    ASSERT_TRUE(v.has_value()) << "M046 S07 P10 fingerprint (playing path): kExportTrigger not bounced back "
+                                  "via outputParameterChanges. Same defect as the stopped-path variant — "
+                                  "T02 must fix both consume sites.";
+    EXPECT_DOUBLE_EQ(*v, 0.0);
+
+    host.teardown();
+}
+
+// P12: emitMidiOutput forwards flushDue output straight to addEvent in the order
+// flushDue returns entries. flushDue uses swap-remove compaction (bridge.cpp:35),
+// so the emitted sequence isn't monotonic in sampleOffset — some hosts (JUCE-based
+// wrappers and older Bitwig builds) reject or reorder unsorted events, which can
+// drop MIDI notes. T03 fixes this with a stable_sort over a stack-allocated scratch
+// array inside emitMidiOutput.
+//
+// Reproduction: inject 4 stragglers whose ppqOff values sit inside a single block
+// window (tempo=120, SR=44100, block=512 => block spans PPQ [0, 0.02322)). Insertion
+// order below is designed so flushDue's swap-remove yields sample offsets
+// [441, 220, 331, 110] — clearly non-monotonic. After T03 the sequence is
+// [110, 220, 331, 441] and the assertion passes.
+
+TEST(HostTests, OutputEvents_SortedBySampleOffset) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+
+    // ppqOff -> expected sampleOffset at tempo=120, SR=44100:
+    //   0.020 -> round(0.020 * 22050) = 441
+    //   0.005 -> round(0.005 * 22050) = 110
+    //   0.015 -> round(0.015 * 22050) = 331
+    //   0.010 -> round(0.010 * 22050) = 220
+    host.injectPendingNoteOff(0.020, 60, 0);
+    host.injectPendingNoteOff(0.005, 61, 0);
+    host.injectPendingNoteOff(0.015, 62, 0);
+    host.injectPendingNoteOff(0.010, 63, 0);
+
+    host.processBlock(0.0, 120.0, /*playing=*/true);
+
+    auto offs = host.noteOffEvents();
+    ASSERT_EQ(offs.size(), 4u) << "flushDue should emit all 4 injected stragglers inside this block window "
+                                  "(size="
+                               << offs.size() << ")";
+
+    int32_t prevOffSample = -1;
+    for (size_t i = 0; i < offs.size(); ++i) {
+        EXPECT_GE(offs[i].sampleOffset, prevOffSample)
+            << "M046 S07 P12 fingerprint: off " << i << " (pitch=" << offs[i].pitch
+            << ") sampleOffset=" << offs[i].sampleOffset << " < prev=" << prevOffSample
+            << ". emitMidiOutput forwards flushDue's swap-remove order straight to "
+               "addEvent — T03 must buffer + stable_sort by sampleOffset.";
+        prevOffSample = offs[i].sampleOffset;
+    }
+
+    // Stronger claim: ALL events (offs + any engine-generated note-ons) must be
+    // monotonically non-decreasing by sampleOffset. T03's single stable_sort over
+    // the union guarantees this; the per-off assertion above is a weaker subset.
+    int32_t prevSample = -1;
+    for (const auto& ev : host.events()) {
+        EXPECT_GE(ev.sampleOffset, prevSample)
+            << "event " << (ev.type == MidiEvent::NoteOn ? "on" : "off") << " pitch=" << ev.pitch
+            << " sampleOffset=" << ev.sampleOffset << " < prev=" << prevSample;
+        prevSample = ev.sampleOffset;
+    }
+
+    host.teardown();
+}
