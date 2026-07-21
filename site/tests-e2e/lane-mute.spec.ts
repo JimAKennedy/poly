@@ -21,13 +21,13 @@ import { test, expect } from '@playwright/test';
 // counting note-ons for note 42 is an unambiguous signal that lane 1's
 // contribution is present or absent.
 
-const CHAPTER_PATH = '/poly/09-electronic/';
+const CHAPTER_PATH = '/09-electronic/';
 const PRESET = 'Minimal Techno';
 const TARGET_LANE_INDEX = 1;
 const TARGET_NOTE = 42;
 const DUMP_BEATS = 32;
 const CAPTURE_TIMEOUT_MS = 30_000;
-const IFRAME_URL_PATTERN = /\/poly\/webui\/index\.html\?/;
+const IFRAME_URL_PATTERN = /\/webui\/index\.html\?/;
 
 const DOWNLOAD_SHIM = `
   (() => {

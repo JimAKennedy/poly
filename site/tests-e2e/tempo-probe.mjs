@@ -14,7 +14,7 @@ const logs = [];
 page.on('console', (msg) => logs.push({ type: msg.type(), text: msg.text() }));
 page.on('pageerror', (err) => logs.push({ type: 'pageerror', text: err.message }));
 
-await page.goto(BASE + '/poly/13-drum-and-bass/', { waitUntil: 'networkidle' });
+await page.goto(BASE + '/13-drum-and-bass/', { waitUntil: 'networkidle' });
 
 const card = page.locator('.poly-preview[data-poly-preset="Jungle Break"]');
 await card.locator('.poly-preview-btn').click();

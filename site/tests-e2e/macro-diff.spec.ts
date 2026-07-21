@@ -31,7 +31,7 @@ import * as path from 'node:path';
 
 const DUMP_BEATS = 32;
 const CAPTURE_TIMEOUT_MS = 30_000;
-const IFRAME_URL_PATTERN = /\/poly\/webui\/index\.html\?/;
+const IFRAME_URL_PATTERN = /\/webui\/index\.html\?/;
 
 interface CapturedDownload {
   filename: string;
@@ -439,9 +439,9 @@ interface Case {
 }
 
 const CASES: Case[] = [
-  { preset: 'Deep House', path: '/poly/09-electronic/', slug: 'deep-house', macro: 'complexity' },
-  { preset: 'Rachenitsa 7/8', path: '/poly/07-balkan/', slug: 'rachenitsa-7-8', macro: 'complexity' },
-  { preset: 'Deep House', path: '/poly/09-electronic/', slug: 'deep-house', macro: 'density' },
+  { preset: 'Deep House', path: '/09-electronic/', slug: 'deep-house', macro: 'complexity' },
+  { preset: 'Rachenitsa 7/8', path: '/07-balkan/', slug: 'rachenitsa-7-8', macro: 'complexity' },
+  { preset: 'Deep House', path: '/09-electronic/', slug: 'deep-house', macro: 'density' },
   // S16 T01: swing on a jazz preset. Elvin Jones Cascade has base swingAmount
   // 0.30-0.40 on each of its 4 lanes and macros.swing = 0.35 baked in — so
   // setting macro.swing = 0 pins lane swing at the preset baseline (~0.35)
@@ -451,7 +451,7 @@ const CASES: Case[] = [
   // SMF difference is specifically an off-beat tick shift.
   {
     preset: 'Elvin Jones Cascade',
-    path: '/poly/12-jazz/',
+    path: '/12-jazz/',
     slug: 'elvin-jones-cascade',
     macro: 'swing',
   },

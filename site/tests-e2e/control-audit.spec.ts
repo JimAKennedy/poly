@@ -28,7 +28,7 @@ interface NoteOnEvent {
   channel: number;
 }
 
-const IFRAME_URL_PATTERN = /\/poly\/webui\/index\.html\?/;
+const IFRAME_URL_PATTERN = /\/webui\/index\.html\?/;
 const CAPTURE_TIMEOUT_MS = 30_000;
 const DUMP_BEATS = 32;
 
@@ -311,19 +311,19 @@ interface ChapterSpec {
 const AUDIT_CHAPTERS: ChapterSpec[] = [
   {
     preset: 'Deep House',
-    path: '/poly/09-electronic/',
+    path: '/09-electronic/',
     slug: 'deep-house',
     otherPreset: 'Minimal Techno',
   },
   {
     preset: 'Jungle Break',
-    path: '/poly/13-drum-and-bass/',
+    path: '/13-drum-and-bass/',
     slug: 'jungle-break',
     otherPreset: 'Liquid Drum and Bass',
   },
   {
     preset: 'Reich Phase Process',
-    path: '/poly/08-minimalism/',
+    path: '/08-minimalism/',
     slug: 'reich-phase-process',
     otherPreset: 'Riley Layered Entry',
   },
@@ -341,7 +341,7 @@ test.describe('S14 T04 — Try It modal fits at every tested viewport', () => {
   for (const vp of VIEWPORTS) {
     test(`modal has no horizontal overflow at ${vp.name} (${vp.width}px)`, async ({ page }) => {
       await page.setViewportSize({ width: vp.width, height: vp.height });
-      await page.goto('/poly/09-electronic/');
+      await page.goto('/09-electronic/');
       const card = page.locator('.poly-preview[data-poly-preset="Deep House"]');
       await expect(card).toBeVisible();
       await card.locator('.poly-preview-btn').click();
@@ -370,7 +370,7 @@ test.describe('S14 T04 — Try It modal fits at every tested viewport', () => {
 
 test.describe('S14 T04 — Play and Try It buttons share sizing', () => {
   test('Play + Try It buttons match height and border-radius on Deep House card', async ({ page }) => {
-    await page.goto('/poly/09-electronic/');
+    await page.goto('/09-electronic/');
     const card = page.locator('.poly-preview[data-poly-preset="Deep House"]');
     await expect(card).toBeVisible();
     const sizes = await card.evaluate((root) => {

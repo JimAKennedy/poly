@@ -4,7 +4,8 @@ set -euo pipefail
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DOCS_DIR="$REPO_ROOT/site/src/content/docs"
 PUBLIC_DIR="$REPO_ROOT/site/public"
-BASE="/poly"
+# Custom domain (poly.jk.digital) serves from root; base path was dropped in M047 S05a.
+BASE=""
 ERRORS=0
 WARNINGS=0
 
