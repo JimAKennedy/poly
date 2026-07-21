@@ -58,7 +58,7 @@ trap cleanup EXIT INT TERM
 
 READY=0
 for _ in $(seq 1 60); do
-    if curl -sf -o /dev/null "${PREVIEW_URL}/poly/"; then
+    if curl -sf -o /dev/null "${PREVIEW_URL}/"; then
         READY=1
         break
     fi
@@ -70,7 +70,7 @@ if [ "${READY}" != "1" ]; then
     tail -n 40 "${PREVIEW_LOG}" >&2 || true
     exit 1
 fi
-echo "    preview ready at ${PREVIEW_URL}/poly/"
+echo "    preview ready at ${PREVIEW_URL}/"
 
 mkdir -p "${ARTIFACTS_DIR}"
 

@@ -5,8 +5,8 @@ set -euo pipefail
 # built artifacts and fail if they diverge.
 #
 # Usage:
-#   bash scripts/check-wasm-freshness.sh https://user.github.io/poly/
-#   POLY_SITE_URL=https://user.github.io/poly/ bash scripts/check-wasm-freshness.sh
+#   bash scripts/check-wasm-freshness.sh https://poly.jk.digital/
+#   POLY_SITE_URL=https://poly.jk.digital/ bash scripts/check-wasm-freshness.sh
 #
 # Positional argument wins over $POLY_SITE_URL. Missing both is a hard fail
 # (exit 2). Remote-only by design: running against a local preview URL that
