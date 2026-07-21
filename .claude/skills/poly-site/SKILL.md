@@ -12,7 +12,7 @@ Trigger on any work touching `site/` — content edits, styling, components, con
 - **Config**: `site/astro.config.mjs`
 - **Base path**: `/poly` (GitHub Pages subdirectory)
 - **Deploy**: GitHub Actions (`deploy-site.yml`) on push to `main` when `site/**` changes
-- **Live URL**: https://jimakennedy.github.io/poly/
+- **Live URL**: https://poly.jk.digital/poly/ (custom domain via `site/public/CNAME`; GitHub Pages serves under the `/poly` subpath)
 
 ## File layout
 

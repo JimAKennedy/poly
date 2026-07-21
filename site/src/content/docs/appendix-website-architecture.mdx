@@ -13,7 +13,7 @@ The whole site is one `astro.config.mjs`. `defineConfig` sets the deploy origin 
 
 <CodeSnippet file="site/astro.config.mjs" region="astro-base-config" caption="Site origin, base path, and one legacy redirect — the whole non-Starlight surface" />
 
-`base: '/poly'` is the first thing that has to be right on this project: GitHub Pages serves the site under `https://jimakennedy.github.io/poly/`, and every asset URL (samples, WASM, presets JSON) resolves against `import.meta.env.BASE_URL` so nothing 404s under the subpath.
+`base: '/poly'` is the first thing that has to be right on this project: GitHub Pages serves the site under the `/poly` subpath (the branded canonical URL is `https://poly.jk.digital/poly/`, via the `site/public/CNAME` custom-domain file), and every asset URL (samples, WASM, presets JSON) resolves against `import.meta.env.BASE_URL` so nothing 404s under the subpath.
 
 The sidebar is fully hand-authored — chapters in reading order, appendices in reference order — so the reader isn't dependent on file-tree alphabetical accidents.
 
