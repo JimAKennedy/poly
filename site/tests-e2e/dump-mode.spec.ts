@@ -8,13 +8,13 @@ import { test, expect } from '@playwright/test';
 // Deep House is chosen for its 4-beat loopBeats → 8 loops = ~16s at 120 BPM,
 // keeping the wall-clock wait comfortably under the 60s test timeout.
 
-const DUMP_URL = '/poly/09-electronic/?dump=1';
-const CLEAN_URL = '/poly/09-electronic/';
+const DUMP_URL = '/09-electronic/?dump=1';
+const CLEAN_URL = '/09-electronic/';
 const CARD_SELECTOR = '.poly-preview[data-poly-preset="Deep House"]';
 
-const TRYIT_DUMP_URL = '/poly/13-drum-and-bass/?dump=1';
+const TRYIT_DUMP_URL = '/13-drum-and-bass/?dump=1';
 const TRYIT_CARD_SELECTOR = '.poly-preview[data-poly-preset="Jungle Break"]';
-const TRYIT_IFRAME_URL_PATTERN = /\/poly\/webui\/index\.html\?/;
+const TRYIT_IFRAME_URL_PATTERN = /\/webui\/index\.html\?/;
 
 // Extra headroom over 8 loops * 4 beats * (60/120) = 16s wall time; the
 // scheduler lookahead nudges the fire time ~100ms earlier, but we want a
@@ -121,7 +121,7 @@ test.describe('S12 T02 dump mode — live browser', () => {
     await expect(tryBtn).toBeEnabled();
     await tryBtn.click();
 
-    // The Try It modal loads /poly/webui/index.html in an iframe. Wait for it
+    // The Try It modal loads /webui/index.html in an iframe. Wait for it
     // to appear, then wait for #play inside the frame (host boot is async).
     const frameLocator = page.frameLocator('iframe.poly-modal-frame');
     const playBtn = frameLocator.locator('#play');

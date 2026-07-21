@@ -78,7 +78,7 @@ The simplest case: two lanes at 120 BPM, both Subdivision 8.
 
 If instead you make Lane A the "reference" for musical purposes (setting it to Steps=16, Sub=16 for a 1-bar cycle) and put Lane B on Steps=12, Sub=16, then Lane B completes 4 cycles in the time Lane A completes 3. That is a 4:3 polymetric relationship, resolving every 3 bars — and it emerges automatically from the arithmetic, without any special "polymetric mode."
 
-The Foundations chapter covers this at [`Cycle Independence`](/poly/01-foundations/#cycle-independence).
+The Foundations chapter covers this at [`Cycle Independence`](/01-foundations/#cycle-independence).
 
 <PolyPatch title="Timing Model: 4:3 Polymetric Ratio at 120 BPM">
 
@@ -111,13 +111,13 @@ stepPpq' = stepPpq / tempoMultiplier
 - `2.0×` — steps are half as long; the cycle rotates twice as fast.
 - `0.5×` — steps are twice as long; the cycle rotates half as fast.
 
-This is the closest thing to "run this lane at a different tempo," and it is the mechanism for Nancarrow-style metric modulation. A 1.5× lane against a 1.0× lane creates a 3:2 hemiola without any change in Steps or Subdivision. See [`Metric Modulation`](/poly/guide-using-poly/#metric-modulation) in the Using Poly guide for the practical treatment.
+This is the closest thing to "run this lane at a different tempo," and it is the mechanism for Nancarrow-style metric modulation. A 1.5× lane against a 1.0× lane creates a 3:2 hemiola without any change in Steps or Subdivision. See [`Metric Modulation`](/guide-using-poly/#metric-modulation) in the Using Poly guide for the practical treatment.
 
 Note that `Tempo Mult` scales the *step grid*, not the *phrase gating* — phrase length remains in absolute PPQ, so gating boundaries stay bar-aligned regardless of the multiplier.
 
 ## Additive (aksak) cell mode
 
-For completeness: when a lane is in additive cell mode (used for Balkan aksak meters like 2+2+3 = 7/8), the cycle length is not `steps * stepPpq`. Instead, each cell has its own step count and the total cycle is the sum of cell durations. The `stepPpq` and `Tempo Mult` scaling still apply per step; only the aggregation differs. See the [`Balkan`](/poly/07-balkan/) chapter and the [`Parameter Reference`](/poly/appendix-parameters/#additive--timeline) entry for Cell Sizes.
+For completeness: when a lane is in additive cell mode (used for Balkan aksak meters like 2+2+3 = 7/8), the cycle length is not `steps * stepPpq`. Instead, each cell has its own step count and the total cycle is the sum of cell durations. The `stepPpq` and `Tempo Mult` scaling still apply per step; only the aggregation differs. See the [`Balkan`](/07-balkan/) chapter and the [`Parameter Reference`](/appendix-parameters/#additive--timeline) entry for Cell Sizes.
 
 ## Mental model in one sentence
 

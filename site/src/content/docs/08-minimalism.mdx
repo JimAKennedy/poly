@@ -9,11 +9,11 @@ import CodeSnippet from '../../components/CodeSnippet.astro';
 import EuclideanDiagram from '../../components/EuclideanDiagram.astro';
 import PolyPreviewCard from '../../components/PolyPreviewCard.astro';
 
-The American minimalists of the 1960s and 70s discovered something that West African and Indonesian musicians had known for centuries: when two identical patterns move at slightly different rates, the interference between them generates far more complexity than either pattern contains alone<sup>[32](/poly/appendix-references/#ref-32)</sup>. Steve Reich called it "music as a gradual process." Poly calls it the Drift parameter.
+The American minimalists of the 1960s and 70s discovered something that West African and Indonesian musicians had known for centuries: when two identical patterns move at slightly different rates, the interference between them generates far more complexity than either pattern contains alone<sup>[32](/appendix-references/#ref-32)</sup>. Steve Reich called it "music as a gradual process." Poly calls it the Drift parameter.
 
 ## Reich and Phase Shifting
 
-In *Drumming* (1971), Steve Reich starts two identical rhythmic patterns in unison, then gradually shifts one forward until it has moved through every possible phase relationship and returns to unison<sup>[34](/poly/appendix-references/#ref-34)</sup>. The piece is an exhaustive exploration of a single pattern's rotational space.
+In *Drumming* (1971), Steve Reich starts two identical rhythmic patterns in unison, then gradually shifts one forward until it has moved through every possible phase relationship and returns to unison<sup>[34](/appendix-references/#ref-34)</sup>. The piece is an exhaustive exploration of a single pattern's rotational space.
 
 The core pattern of *Clapping Music* (1972) is even more explicit: `x x x . x x . x . x x .` — eight claps distributed across twelve pulses in the inter-onset gap sequence 1-1-2-1-2-2-1-2. One performer holds steady while the other shifts by one position after every twelve bars. Twelve shifts later, they are back in unison.
 
@@ -51,7 +51,7 @@ Start playback and wait. The two patterns begin in unison, sounding like a singl
 
 ## Riley and the Layered Loop
 
-Terry Riley's *In C* (1964) takes a different approach: fifty-three short melodic phrases, performed by any number of players who move through them at their own pace<sup>[33](/poly/appendix-references/#ref-33)</sup>. The texture at any moment depends on which phrases are active and how they overlap.
+Terry Riley's *In C* (1964) takes a different approach: fifty-three short melodic phrases, performed by any number of players who move through them at their own pace<sup>[33](/appendix-references/#ref-33)</sup>. The texture at any moment depends on which phrases are active and how they overlap.
 
 Poly's phrase gating models this layered-entry structure. Each lane can have its own phrase Length, Gap, and Offset. Set five lanes to different Euclidean patterns with staggered Offsets, and voices enter and exit the texture at different points in the cycle — the same gradual accumulation and thinning that defines *In C*.
 

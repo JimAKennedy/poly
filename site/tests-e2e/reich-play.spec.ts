@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test('Reich Phase Process play button drives the AudioContext and fires >= 6 sources', async ({
   page,
 }) => {
-  await page.goto('/poly/08-minimalism/');
+  await page.goto('/08-minimalism/');
 
   // Locate the PolyPreviewCard for the Reich Phase Process preset.
   const card = page.locator('.poly-preview[data-poly-preset="Reich Phase Process"]');
@@ -57,7 +57,7 @@ test('chapter alias card ("Jungle Break") resolves to a factory pattern and enab
   // Jungle Break is a chapter-only preset name — resolved via CHAPTER_ALIASES
   // to Factory: Breakbeat. If the alias map is missing an entry, the Play
   // button stays disabled with "Audio preview coming soon".
-  await page.goto('/poly/13-drum-and-bass/');
+  await page.goto('/13-drum-and-bass/');
   const card = page.locator('.poly-preview[data-poly-preset="Jungle Break"]');
   await expect(card).toBeVisible();
   const playBtn = card.locator('.poly-preview-play');

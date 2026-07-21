@@ -26,7 +26,7 @@ const REPO_ROOT = resolve(HERE, '..', '..');
 const BUILD_DIR = resolve(REPO_ROOT, 'build-presets');
 const EMITTER = resolve(BUILD_DIR, 'engine', 'tools', 'poly_presets_emit');
 const OUT_PATH = resolve(REPO_ROOT, 'site', 'src', 'generated', 'presets.json');
-// The WASM Try It modal fetches this file at boot from /poly/webui/presets.json.
+// The WASM Try It modal fetches this file at boot from /webui/presets.json.
 // Writing it here alongside the build-time copy keeps dev-mode consumers in
 // sync without depending on `npm run copy-webui`.
 const WEBUI_OUT_PATH = resolve(REPO_ROOT, 'site', 'public', 'webui', 'presets.json');

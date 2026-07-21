@@ -24,7 +24,7 @@ const OLD_HOST = 'jimakennedy.github.io';
 // Two representative pages: the landing card and one chapter. Chapter
 // pages exercise the general MDX pipeline; the landing page is a
 // splash template with different meta-tag emission paths.
-const PAGES = ['/poly/', '/poly/03-afro-cuban/'];
+const PAGES = ['/', '/03-afro-cuban/'];
 
 for (const pagePath of PAGES) {
   test(`canonical + OG metadata on ${pagePath} points at poly.jk.digital`, async ({ page }) => {

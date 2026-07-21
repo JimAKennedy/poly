@@ -3,7 +3,7 @@
 import { chromium } from '@playwright/test';
 
 const BASE = 'http://localhost:4321';
-const PAGE_URL = BASE + '/poly/13-drum-and-bass/';
+const PAGE_URL = BASE + '/13-drum-and-bass/';
 
 const browser = await chromium.launch({
   headless: true,
@@ -64,7 +64,7 @@ console.log('SCREENSHOT /tmp/try-it-jungle-break.png');
 
 // --- Probe: close and try a factory preset (Latin) from a different chapter. ---
 await page.keyboard.press('Escape');
-await page.goto(BASE + '/poly/06-latin/', { waitUntil: 'networkidle' });
+await page.goto(BASE + '/06-latin/', { waitUntil: 'networkidle' });
 const latinCards = await page.locator('.poly-preview').evaluateAll((els) =>
   els.map((el) => el.getAttribute('data-poly-preset')),
 );

@@ -9,11 +9,11 @@ import CodeSnippet from '../../components/CodeSnippet.astro';
 import EuclideanDiagram from '../../components/EuclideanDiagram.astro';
 import PolyPreviewCard from '../../components/PolyPreviewCard.astro';
 
-Every pattern Poly generates starts from a single principle: distribute *k* onsets as evenly as possible across *n* time steps. This is the Euclidean rhythm, and it connects a 2003 particle-accelerator timing algorithm<sup>[46](/poly/appendix-references/#ref-46)</sup> to the oldest drumming traditions on earth<sup>[3](/poly/appendix-references/#ref-3)</sup>.
+Every pattern Poly generates starts from a single principle: distribute *k* onsets as evenly as possible across *n* time steps. This is the Euclidean rhythm, and it connects a 2003 particle-accelerator timing algorithm<sup>[46](/appendix-references/#ref-46)</sup> to the oldest drumming traditions on earth<sup>[3](/appendix-references/#ref-3)</sup>.
 
 ## The Bjorklund Algorithm
 
-In 2004, Godfried Toussaint demonstrated that Bjorklund's algorithm for distributing neutron beam pulses produces the same onset patterns found in traditional West African, Afro-Cuban, and Middle Eastern percussion.<sup>[1](/poly/appendix-references/#ref-1)</sup> The connection is not metaphorical — the algorithm is mathematically identical.
+In 2004, Godfried Toussaint demonstrated that Bjorklund's algorithm for distributing neutron beam pulses produces the same onset patterns found in traditional West African, Afro-Cuban, and Middle Eastern percussion.<sup>[1](/appendix-references/#ref-1)</sup> The connection is not metaphorical — the algorithm is mathematically identical.
 
 Given `steps = 12` and `hits = 7`, the algorithm produces the pattern `[x . x . x x . x . x x .]` — seven onsets distributed as evenly as possible across twelve positions. This is the standard West African bell timeline, found identically in Ewe, Yoruba, and Afrobeat contexts.
 
@@ -43,7 +43,7 @@ The second foundation is *cycle independence*: each lane in Poly has its own ste
 
 This is not a bug or a special mode — it is the default behaviour. Polymetric interaction emerges automatically from independent cycle lengths, exactly as it does in the interlocking percussion ensembles of West Africa and Southeast Asia.
 
-There is no "master lane": every lane locks directly to the DAW's quarter-note grid, and the tempo, subdivision, and step count of each lane combine to determine how fast its cycle rotates. The [Timing Model](/poly/appendix-timing-model/) appendix walks through the arithmetic with worked examples if you want to reason about cycle lengths and lane relationships from first principles.
+There is no "master lane": every lane locks directly to the DAW's quarter-note grid, and the tempo, subdivision, and step count of each lane combine to determine how fast its cycle rotates. The [Timing Model](/appendix-timing-model/) appendix walks through the arithmetic with worked examples if you want to reason about cycle lengths and lane relationships from first principles.
 
 ## Rotation and Phase
 

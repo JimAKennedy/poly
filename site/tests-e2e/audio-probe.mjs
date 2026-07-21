@@ -1,7 +1,7 @@
 import { chromium } from '@playwright/test';
 
 const BASE = 'http://localhost:4321';
-const PAGE_URL = BASE + '/poly/13-drum-and-bass/';
+const PAGE_URL = BASE + '/13-drum-and-bass/';
 
 const browser = await chromium.launch({
   headless: true,

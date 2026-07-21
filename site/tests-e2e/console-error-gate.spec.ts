@@ -29,7 +29,7 @@ const PER_DIR = path.join(OUT_DIR, 'console-error-per-chapter');
 
 interface ChapterRoute {
   slug: string;   // filename minus .mdx
-  route: string;  // page path under baseURL — Astro uses /poly/<slug>/ (or /poly/ for index)
+  route: string;  // page path under baseURL — Astro uses /<slug>/ (or / for index)
 }
 
 interface AllowlistedMatch {
@@ -56,7 +56,7 @@ function discoverChapters(): ChapterRoute[] {
     .sort();
   return files.map((file) => {
     const slug = file.slice(0, -'.mdx'.length);
-    const route = slug === 'index' ? '/poly/' : `/poly/${slug}/`;
+    const route = slug === 'index' ? '/' : `/${slug}/`;
     return { slug, route };
   });
 }

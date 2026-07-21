@@ -4,15 +4,15 @@ set -euo pipefail
 # site-verify-remote.sh — run the S10 audio gate against a deployed URL.
 #
 # Usage:
-#   bash scripts/site-verify-remote.sh https://user.github.io/poly/
-#   POLY_SITE_URL=https://staging.example/poly/ bash scripts/site-verify-remote.sh
+#   bash scripts/site-verify-remote.sh https://poly.jk.digital/
+#   POLY_SITE_URL=https://staging.example/ bash scripts/site-verify-remote.sh
 #
 # Positional argument wins over $POLY_SITE_URL. Missing both is a hard fail (exit 2).
 #
 # Playwright config (site/playwright.config.ts) reads POLY_SITE_URL as its
-# baseURL. Only the origin is used — spec paths start with /poly/... — so
-# passing either "https://user.github.io/poly/" or "https://user.github.io"
-# resolves the same way.
+# baseURL. Spec paths are root-relative (e.g. /03-afro-cuban/) since the
+# custom-domain deploy serves at the root — passing the origin with or
+# without trailing slash resolves the same way.
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
@@ -26,8 +26,8 @@ if [ -z "${URL}" ]; then
 Usage: bash scripts/site-verify-remote.sh <URL>
        POLY_SITE_URL=<URL> bash scripts/site-verify-remote.sh
 
-Example (GitHub Pages):
-  bash scripts/site-verify-remote.sh https://user.github.io/poly/
+Example (custom domain):
+  bash scripts/site-verify-remote.sh https://poly.jk.digital/
 EOF
     exit 2
 fi

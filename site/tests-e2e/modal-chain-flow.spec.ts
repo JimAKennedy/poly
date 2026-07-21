@@ -33,7 +33,7 @@ import { test, expect, Frame, Page } from '@playwright/test';
 //     probe.engineChainEnabled) matches the JS shadow.
 //   - Adding an entry increments both counts.
 
-const PAGE_PATH = '/poly/13-drum-and-bass/';
+const PAGE_PATH = '/13-drum-and-bass/';
 const CARD_SELECTOR = '.poly-preview[data-poly-preset="Liquid Drum and Bass"]';
 
 interface ChainProbe {

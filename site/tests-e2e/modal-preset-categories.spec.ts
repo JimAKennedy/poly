@@ -12,7 +12,7 @@ import { test, expect, Frame, Page } from '@playwright/test';
 // really hides options, "All" restores, keyboard navigation moves selection
 // forward and wraps back.
 
-const PAGE_PATH = '/poly/12-jazz/';
+const PAGE_PATH = '/12-jazz/';
 const CARD_SELECTOR = '.poly-preview[data-poly-preset="Jazz Bop Ride"]';
 
 // From docs/preset-taxonomy.md — must stay in lockstep with
