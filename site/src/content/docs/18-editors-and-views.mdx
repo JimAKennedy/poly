@@ -34,7 +34,7 @@ Timeline lanes in Poly serve exactly this function. While other lanes respond to
 
 This is the standard Afrobeat bell pattern: seven hits across twelve positions, with the characteristic asymmetric clustering in the second half of the cycle (steps 5-6 and 9-10 are consecutive). This specific distribution is not Euclidean — E(7,12) produces a different arrangement. It is a culturally specific pattern that emerged from centuries of musical practice, and it sounds right in a way that no algorithm can derive from first principles. Timeline mode lets you enter it exactly as tradition dictates.
 
-Use cases for timeline mode extend beyond bell patterns. Any part that must remain invariant belongs on a timeline lane: a clave pattern in an Afro-Cuban groove, a tamborim figure in a Bossa Nova patch, a tabla theka in a Carnatic-inspired composition, or a programmed breakbeat pattern that you have hand-placed and do not want the engine to touch. Timeline mode is the escape hatch from generative logic — the place where you assert direct authorship over a lane's output. See [Chapter 2 (Sub-Saharan Africa)](/poly/02-sub-saharan-africa/) and [Chapter 4 (Afrobeat)](/poly/04-afrobeat/) for deeper context on the musical role of timeline instruments.
+Use cases for timeline mode extend beyond bell patterns. Any part that must remain invariant belongs on a timeline lane: a clave pattern in an Afro-Cuban groove, a tamborim figure in a Bossa Nova patch, a tabla theka in a Carnatic-inspired composition, or a programmed breakbeat pattern that you have hand-placed and do not want the engine to touch. Timeline mode is the escape hatch from generative logic — the place where you assert direct authorship over a lane's output. See [Chapter 2 (Sub-Saharan Africa)](/02-sub-saharan-africa/) and [Chapter 4 (Afrobeat)](/04-afrobeat/) for deeper context on the musical role of timeline instruments.
 
 ## Micro-Timing Editor
 
@@ -76,7 +76,7 @@ The editor displays cells as variable-width blocks, visually proportional to the
 
 The distinction between Euclidean and additive distribution is subtle but musically fundamental.
 
-Euclidean distribution solves an optimization problem: given K hits and N steps, place the hits as evenly as possible. E(3,7) produces the inter-onset pattern [2+2+3] — three hits, seven steps, maximum evenness. This happens to match the rachenitsa grouping, which is why [Chapter 7 (Balkan)](/poly/07-balkan/) can demonstrate aksak patterns using Euclidean distribution. But the match is a fortunate coincidence, not a guarantee.
+Euclidean distribution solves an optimization problem: given K hits and N steps, place the hits as evenly as possible. E(3,7) produces the inter-onset pattern [2+2+3] — three hits, seven steps, maximum evenness. This happens to match the rachenitsa grouping, which is why [Chapter 7 (Balkan)](/07-balkan/) can demonstrate aksak patterns using Euclidean distribution. But the match is a fortunate coincidence, not a guarantee.
 
 Additive distribution solves a different problem: place hits at the boundaries of explicitly defined groupings. Cells [2+2+3] place hits at positions 0, 2, and 4 — the same result as E(3,7), in this case. But cells [3+2+2] place hits at positions 0, 3, and 5 — a different pattern that E(3,7) at rotation 0 does not produce.
 

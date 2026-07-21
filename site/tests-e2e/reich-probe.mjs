@@ -2,7 +2,7 @@
 // scheduler's mutedLanes set + nodesStarted respond as expected.
 import { chromium } from '@playwright/test';
 
-const URL = 'http://localhost:4321/poly/08-minimalism/';
+const URL = 'http://localhost:4321/08-minimalism/';
 
 const browser = await chromium.launch({ headless: true });
 const context = await browser.newContext();

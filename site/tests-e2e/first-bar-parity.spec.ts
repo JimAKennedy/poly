@@ -33,9 +33,9 @@ interface PresetSpec {
 }
 
 const PRESETS: PresetSpec[] = [
-  { preset: 'Elvin Jones Cascade', path: '/poly/12-jazz/' },
-  { preset: 'Kopanitsa 11/8', path: '/poly/07-balkan/' },
-  { preset: 'Deep House', path: '/poly/09-electronic/' },
+  { preset: 'Elvin Jones Cascade', path: '/12-jazz/' },
+  { preset: 'Kopanitsa 11/8', path: '/07-balkan/' },
+  { preset: 'Deep House', path: '/09-electronic/' },
 ];
 
 const FIRST_BAR_NOTE_THRESHOLD = 12;

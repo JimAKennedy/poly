@@ -29,7 +29,7 @@ import { test, expect, Frame, Page } from '@playwright/test';
 // ~1.2 ghost. Two bars typically surface ≥3 add and ≥3 drop; the poll
 // budget covers up to ~5 bars for headroom.
 
-const PAGE_PATH = '/poly/12-jazz/';
+const PAGE_PATH = '/12-jazz/';
 const CARD_SELECTOR = '.poly-preview[data-poly-preset="Jazz Bop Ride"]';
 const SNARE_LANE = 3;
 

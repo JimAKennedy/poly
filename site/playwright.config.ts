@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 // POLY_SITE_URL overrides baseURL so the same spec runs against local preview
 // (default http://localhost:4321) and any deployed URL passed by the
-// site-verify-remote.sh script (e.g. https://user.github.io/poly/).
+// site-verify-remote.sh script (e.g. https://user.github.io/).
 const baseURL = process.env.POLY_SITE_URL || 'http://localhost:4321';
 
 export default defineConfig({

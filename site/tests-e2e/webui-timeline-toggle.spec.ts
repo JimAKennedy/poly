@@ -26,7 +26,7 @@ test.describe('WebUI timeline-mode toggle', () => {
       if (msg.type() === 'error') consoleErrors.push(msg.text());
     });
 
-    await page.goto('/poly/webui/index.html');
+    await page.goto('/webui/index.html');
 
     // Wait for the UI to boot — .strip elements are the per-lane containers
     // built by buildDesk once the host publishes its first state frame.

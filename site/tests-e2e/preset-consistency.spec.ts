@@ -58,33 +58,33 @@ interface ChapterSpec {
 // All PolyPreviewCard chapters — every chapter with a preview card is gated
 // for card ↔ WASM structural agreement and both-audible sample playback.
 const CHAPTERS: ChapterSpec[] = [
-  { preset: 'Polymetric Foundation', path: '/poly/01-foundations/' },
-  { preset: 'Ewe Polymetric Ensemble', path: '/poly/02-sub-saharan-africa/' },
-  { preset: 'Manding Djembe', path: '/poly/02-sub-saharan-africa/' },
-  { preset: 'Cuban Son Montuno', path: '/poly/03-afro-cuban/' },
-  { preset: 'Afrobeat Lagos', path: '/poly/04-afrobeat/' },
-  { preset: 'Balinese Kotekan', path: '/poly/05-gamelan/' },
-  { preset: 'Javanese Colotomic', path: '/poly/05-gamelan/' },
-  { preset: 'Tintal Groove', path: '/poly/06-indian-classical/' },
-  { preset: 'Rupak Tal', path: '/poly/06-indian-classical/' },
-  { preset: 'Rachenitsa 7/8', path: '/poly/07-balkan/' },
-  { preset: 'Kopanitsa 11/8', path: '/poly/07-balkan/' },
-  { preset: 'Reich Phase Process', path: '/poly/08-minimalism/' },
-  { preset: 'Riley Layered Entry', path: '/poly/08-minimalism/' },
-  { preset: 'Nancarrow Tempi', path: '/poly/08-minimalism/' },
-  { preset: 'Minimal Techno', path: '/poly/09-electronic/' },
-  { preset: 'Deep House', path: '/poly/09-electronic/' },
-  { preset: 'Samba Batucada', path: '/poly/10-brazilian/' },
-  { preset: 'Bossa Nova Trio', path: '/poly/10-brazilian/' },
-  { preset: 'Classic Funk', path: '/poly/11-funk-soul/' },
-  { preset: 'Neo-Soul Pocket', path: '/poly/11-funk-soul/' },
-  { preset: 'Jazz Bop Ride', path: '/poly/12-jazz/' },
-  { preset: 'Elvin Jones Cascade', path: '/poly/12-jazz/' },
-  { preset: 'Jungle Break', path: '/poly/13-drum-and-bass/' },
-  { preset: 'Liquid Drum and Bass', path: '/poly/13-drum-and-bass/' },
-  { preset: 'Afro-Electronic Fusion', path: '/poly/14-synthesis/' },
-  { preset: 'Balkan Funk', path: '/poly/14-synthesis/' },
-  { preset: 'Compositional Arc', path: '/poly/15-compositional-grammar/' },
+  { preset: 'Polymetric Foundation', path: '/01-foundations/' },
+  { preset: 'Ewe Polymetric Ensemble', path: '/02-sub-saharan-africa/' },
+  { preset: 'Manding Djembe', path: '/02-sub-saharan-africa/' },
+  { preset: 'Cuban Son Montuno', path: '/03-afro-cuban/' },
+  { preset: 'Afrobeat Lagos', path: '/04-afrobeat/' },
+  { preset: 'Balinese Kotekan', path: '/05-gamelan/' },
+  { preset: 'Javanese Colotomic', path: '/05-gamelan/' },
+  { preset: 'Tintal Groove', path: '/06-indian-classical/' },
+  { preset: 'Rupak Tal', path: '/06-indian-classical/' },
+  { preset: 'Rachenitsa 7/8', path: '/07-balkan/' },
+  { preset: 'Kopanitsa 11/8', path: '/07-balkan/' },
+  { preset: 'Reich Phase Process', path: '/08-minimalism/' },
+  { preset: 'Riley Layered Entry', path: '/08-minimalism/' },
+  { preset: 'Nancarrow Tempi', path: '/08-minimalism/' },
+  { preset: 'Minimal Techno', path: '/09-electronic/' },
+  { preset: 'Deep House', path: '/09-electronic/' },
+  { preset: 'Samba Batucada', path: '/10-brazilian/' },
+  { preset: 'Bossa Nova Trio', path: '/10-brazilian/' },
+  { preset: 'Classic Funk', path: '/11-funk-soul/' },
+  { preset: 'Neo-Soul Pocket', path: '/11-funk-soul/' },
+  { preset: 'Jazz Bop Ride', path: '/12-jazz/' },
+  { preset: 'Elvin Jones Cascade', path: '/12-jazz/' },
+  { preset: 'Jungle Break', path: '/13-drum-and-bass/' },
+  { preset: 'Liquid Drum and Bass', path: '/13-drum-and-bass/' },
+  { preset: 'Afro-Electronic Fusion', path: '/14-synthesis/' },
+  { preset: 'Balkan Funk', path: '/14-synthesis/' },
+  { preset: 'Compositional Arc', path: '/15-compositional-grammar/' },
 ];
 
 interface ChapterSummary {
@@ -444,7 +444,7 @@ test.describe('missing-sample failure surfaces', () => {
     });
 
     try {
-      await page.goto('/poly/09-electronic/');
+      await page.goto('/09-electronic/');
       const card = page.locator('.poly-preview[data-poly-preset="Minimal Techno"]');
       await expect(card).toBeVisible();
       await card.locator('.poly-preview-play').click();
@@ -505,7 +505,7 @@ test.describe('missing-sample failure surfaces', () => {
     });
 
     try {
-      await page.goto('/poly/09-electronic/');
+      await page.goto('/09-electronic/');
       const frame = await openTryItModal(page, 'Minimal Techno');
 
       const playClicked = await frame.evaluate(() => {

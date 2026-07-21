@@ -9,7 +9,7 @@ import CodeSnippet from '../../components/CodeSnippet.astro';
 import EuclideanDiagram from '../../components/EuclideanDiagram.astro';
 import PolyPreviewCard from '../../components/PolyPreviewCard.astro';
 
-Cuban music is organised around clave. Not a specific instrument, not a particular song form, but a rhythmic matrix — a two-bar pattern that every musician in the ensemble feels, whether or not anyone is playing it aloud.<sup>[10](/poly/appendix-references/#ref-10)</sup> The clave is the gravitational centre of the arrangement. Parts that align with it feel grounded. Parts that push against it create tension. Parts that ignore it sound wrong.
+Cuban music is organised around clave. Not a specific instrument, not a particular song form, but a rhythmic matrix — a two-bar pattern that every musician in the ensemble feels, whether or not anyone is playing it aloud.<sup>[10](/appendix-references/#ref-10)</sup> The clave is the gravitational centre of the arrangement. Parts that align with it feel grounded. Parts that push against it create tension. Parts that ignore it sound wrong.
 
 What makes clave remarkable from a Euclidean perspective is that its most common forms are simple distributions — the same algorithm that produces West African bell patterns generates the rhythmic DNA of Cuban son, rumba, and timba.
 
@@ -29,7 +29,7 @@ Where tresillo distributes three hits across eight pulses, the cinquillo distrib
 
 <EuclideanDiagram steps={8} hits={5} />
 
-The cinquillo was central to nineteenth-century Cuban contradanza and remains embedded in the conga patterns of modern salsa. When you layer tresillo and cinquillo in Poly, their interlocking creates a composite pattern that covers nearly every pulse — dense but never cluttered, because the underlying distributions are mathematically balanced.<sup>[13](/poly/appendix-references/#ref-13)</sup>
+The cinquillo was central to nineteenth-century Cuban contradanza and remains embedded in the conga patterns of modern salsa. When you layer tresillo and cinquillo in Poly, their interlocking creates a composite pattern that covers nearly every pulse — dense but never cluttered, because the underlying distributions are mathematically balanced.<sup>[13](/appendix-references/#ref-13)</sup>
 
 ## Rotation and the Two Faces of a Pattern
 
@@ -52,12 +52,12 @@ The full 16-pulse son clave inherits this rotational logic from the tresillo but
 Both the son clave and the rumba clave are *non*-Euclidean patterns. They share four of five hits and differ by a single displacement on the 3-side:
 
 **Son clave 3-2** (16 pulses): `x . . x . . x . . . x . x . . .`
-Hits at positions 0, 3, 6, 10, 12. Inter-onset gaps: 3-3-4-2-4. The 2-gap between hits 4 and 5 (positions 10 and 12) is the asymmetry that no Euclidean distribution produces — E(k,n) can only generate patterns whose gaps take one of two consecutive values (here, 3s and 4s).<sup>[10](/poly/appendix-references/#ref-10)</sup>
+Hits at positions 0, 3, 6, 10, 12. Inter-onset gaps: 3-3-4-2-4. The 2-gap between hits 4 and 5 (positions 10 and 12) is the asymmetry that no Euclidean distribution produces — E(k,n) can only generate patterns whose gaps take one of two consecutive values (here, 3s and 4s).<sup>[10](/appendix-references/#ref-10)</sup>
 
 **Rumba clave 3-2** (16 pulses): `x . . x . . . x . . x . x . . .`
 Hits at positions 0, 3, 7, 10, 12. Inter-onset gaps: 3-4-3-2-4. The third hit shifts from pulse 6 to pulse 7, widening the gap on the 3-side and creating a different — but still non-Euclidean — asymmetry that gives rumba its characteristic lurch.
 
-Neither pattern can be produced by E(k,n) at any rotation. This is a matter of arithmetic, not stylistic interpretation: the son clave's gap sequence contains a 2, and Euclidean distribution of 5 onsets across 16 pulses produces gaps of only 3 and 4 (specifically, 3-3-4-3-3, summing to 16). That Euclidean pattern — E(5,16) — *is* a real musical object, but its cultural home is the bossa nova bass, not Cuban clave; see [Chapter 10 (Brazilian)](/poly/10-brazilian/) for the bossa reading.
+Neither pattern can be produced by E(k,n) at any rotation. This is a matter of arithmetic, not stylistic interpretation: the son clave's gap sequence contains a 2, and Euclidean distribution of 5 onsets across 16 pulses produces gaps of only 3 and 4 (specifically, 3-3-4-3-3, summing to 16). That Euclidean pattern — E(5,16) — *is* a real musical object, but its cultural home is the bossa nova bass, not Cuban clave; see [Chapter 10 (Brazilian)](/10-brazilian/) for the bossa reading.
 
 E(5,16) sits close enough to the son clave — differing only in the fifth hit's position (13 vs 12) — that Poly's Cuban Son Montuno preset ships it as a compact Euclidean shorthand. The one-pulse difference is small musically and lets the clave lane participate in Poly's macro modulation (density, complexity, mutation) that a timeline-locked lane would ignore.
 
@@ -68,7 +68,7 @@ For the exact traditional pattern, Poly gives you a two-step workflow that turns
 
 For rumba clave, start from the same E(5,16) seed, flip Timeline mode, then make two shifts: position 6 → 7 (click 6 off, 7 on) and position 13 → 12. The lane plays the rumba clave at hits 0, 3, 7, 10, 12.
 
-See [Chapter 18 (Editors and Advanced Views)](/poly/18-editors-and-views/#timeline-mode-and-the-step-editor) for the timeline-mode UI in detail. The Euclidean-seed-then-adjust workflow is the pattern for any tradition whose signature rhythm sits close to but not on a Euclidean distribution — start from the closest E(k,n), flip into timeline mode to inherit those hits as an editable starting point, then shift steps to reach the exact target.
+See [Chapter 18 (Editors and Advanced Views)](/18-editors-and-views/#timeline-mode-and-the-step-editor) for the timeline-mode UI in detail. The Euclidean-seed-then-adjust workflow is the pattern for any tradition whose signature rhythm sits close to but not on a Euclidean distribution — start from the closest E(k,n), flip into timeline mode to inherit those hits as an editable starting point, then shift steps to reach the exact target.
 
 ## Building a Cuban Son Ensemble
 

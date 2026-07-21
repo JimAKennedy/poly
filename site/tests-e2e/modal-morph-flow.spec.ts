@@ -27,7 +27,7 @@ import { test, expect, Frame, Page } from '@playwright/test';
 // notes. A regression on either side of the fix will break the snap-flip
 // assertions.
 
-const PAGE_PATH = '/poly/13-drum-and-bass/';
+const PAGE_PATH = '/13-drum-and-bass/';
 const CARD_SELECTOR = '.poly-preview[data-poly-preset="Liquid Drum and Bass"]';
 const PRESET_A = 'Liquid Drum and Bass';
 const PRESET_B = 'Sparse Pulse';
@@ -219,7 +219,7 @@ test.describe('M044 S06 modal-morph-flow — Morph mode instrument selection tra
     // loaded successfully. Bail out with a diagnostic if not.
     expect(
       probe.fallbackActive,
-      'samples must be loaded — S10 covers the fallback path, not this spec. Check /poly/samples/manifest.json.',
+      'samples must be loaded — S10 covers the fallback path, not this spec. Check /samples/manifest.json.',
     ).toBe(false);
     expect(
       probe.samplesLoaded,

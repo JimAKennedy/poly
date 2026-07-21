@@ -5,7 +5,7 @@
 import { chromium } from '@playwright/test';
 
 const BASE = 'http://localhost:4321';
-const PAGE_URL = BASE + '/poly/09-electronic/';
+const PAGE_URL = BASE + '/09-electronic/';
 
 const browser = await chromium.launch({
   headless: true,

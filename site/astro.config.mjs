@@ -5,9 +5,8 @@ import starlight from '@astrojs/starlight';
 export default defineConfig({
 	// region:astro-base-config
 	site: 'https://poly.jk.digital',
-	base: '/poly',
 	redirects: {
-		'/appendix-architecture': '/poly/appendix-plugin-architecture',
+		'/appendix-architecture': '/appendix-plugin-architecture',
 	},
 	// endregion:astro-base-config
 	integrations: [
@@ -29,11 +28,11 @@ export default defineConfig({
 			head: [
 				{
 					tag: 'meta',
-					attrs: { property: 'og:image', content: 'https://poly.jk.digital/poly/og-image.png' },
+					attrs: { property: 'og:image', content: 'https://poly.jk.digital/og-image.png' },
 				},
 				{
 					tag: 'meta',
-					attrs: { name: 'twitter:image', content: 'https://poly.jk.digital/poly/og-image.png' },
+					attrs: { name: 'twitter:image', content: 'https://poly.jk.digital/og-image.png' },
 				},
 			],
 			customCss: ['./src/styles/custom.css'],
