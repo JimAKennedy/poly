@@ -1,3 +1,7 @@
+---
+class: gated
+---
+
 # Poly — Cubase Workflow Guide
 
 ## Overview

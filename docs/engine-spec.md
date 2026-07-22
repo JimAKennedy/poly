@@ -1,3 +1,7 @@
+---
+class: gated
+---
+
 # Poly Engine — Technical Specification
 
 ## Architecture
