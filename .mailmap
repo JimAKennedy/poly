@@ -1,0 +1,15 @@
+# .mailmap — normalize author/committer identities in git log/shortlog and on
+# GitHub commit views. Does not rewrite history; git renders the canonical
+# form on the left when it sees any of the aliases on the right.
+#
+# Format: Canonical Name <canonical@email> <alias@email>
+#         Canonical Name <canonical@email> Alias Name <alias@email>
+#
+# See git-shortlog(1) "MAPPING AUTHORS" for the full precedence rules.
+
+# Fix stray curly-quote in name that made commits render as `"Jim <jim@jk.digital>`.
+Jim Kennedy <jim@jk.digital> “Jim <jim@jk.digital>
+
+# Fold the older personal email into the canonical jk.digital identity.
+Jim Kennedy <jim@jk.digital> JimAKennedy <the.jim.kennedy@gmail.com>
+Jim Kennedy <jim@jk.digital> Jim Kennedy <the.jim.kennedy@gmail.com>
