@@ -13,6 +13,7 @@
 #include "poly/constraint.h"
 #include "poly/envelope.h"
 #include "poly/macro.h"
+#include "poly/params_def.h"
 #include "poly/scene.h"
 #include "poly/smf_writer.h"
 #include "poly/state_io.h"
@@ -643,39 +644,39 @@ static bool applyCoreParam(Steinberg::Vst::ParamID id, double normalized, Groove
     int lane = rel / kCoreParamsPerLane;
     int offset = rel % kCoreParamsPerLane;
     auto& cfg = gs.lanes[lane];
+    // Scaling lives in poly::params::normToEngineCore (engine/include/poly/params_def.h).
+    // This switch only maps offset -> which GrooveState field receives the scaled value.
+    const double eng = params::normToEngineCore(static_cast<uint32_t>(offset), normalized);
     switch (offset) {
     case kCoreSteps:
-        cfg.cycle.steps = 1 + static_cast<int>(std::round(normalized * 63.0));
+        cfg.cycle.steps = static_cast<int>(eng);
         break;
-    case kCoreSubdivision: {
-        static constexpr int subdivs[] = {1, 2, 4, 8, 16};
-        int idx = static_cast<int>(std::round(normalized * 4.0));
-        cfg.cycle.subdivision = subdivs[std::clamp(idx, 0, 4)];
+    case kCoreSubdivision:
+        cfg.cycle.subdivision = static_cast<int>(eng);
         break;
-    }
     case kCoreHits:
-        cfg.hitCount = static_cast<int>(std::round(normalized * 64.0));
+        cfg.hitCount = static_cast<int>(eng);
         break;
     case kCoreRotation:
-        cfg.rotation = static_cast<int>(std::round(normalized * 63.0));
+        cfg.rotation = static_cast<int>(eng);
         break;
     case kCoreMidiNote:
-        cfg.midiNote = static_cast<int16_t>(std::round(normalized * 127.0));
+        cfg.midiNote = static_cast<int16_t>(eng);
         break;
     case kCoreCellCount:
-        cfg.cellCount = static_cast<int>(std::round(normalized * 64.0));
+        cfg.cellCount = static_cast<int>(eng);
         break;
     case kCoreTimeline:
-        cfg.timeline = normalized > 0.5;
+        cfg.timeline = (eng > 0.5);
         break;
     case kCoreFixedPatternLen:
-        cfg.fixedPatternLength = static_cast<int>(std::round(normalized * 64.0));
+        cfg.fixedPatternLength = static_cast<int>(eng);
         break;
     case kCoreTempoMult:
-        cfg.tempoMultiplier = static_cast<float>(0.25 + normalized * 3.75);
+        cfg.tempoMultiplier = static_cast<float>(eng);
         break;
     case kCoreMidiChannel:
-        cfg.midiChannel = static_cast<int16_t>(std::round(normalized * 16.0)) - 1;
+        cfg.midiChannel = static_cast<int16_t>(eng);
         break;
     default:
         break;
@@ -691,54 +692,57 @@ static bool applyExpressionParam(Steinberg::Vst::ParamID id, double normalized, 
     int lane = static_cast<int>(id) / kParamsPerLane;
     int offset = static_cast<int>(id) % kParamsPerLane;
     auto& cfg = gs.lanes[lane];
+    // Scaling lives in poly::params::normToEngineExpr (engine/include/poly/params_def.h).
+    // This switch only maps offset -> which GrooveState field receives the scaled value.
+    const double eng = params::normToEngineExpr(static_cast<uint32_t>(offset), normalized);
     switch (offset) {
     case kProbability:
-        cfg.probability = static_cast<float>(normalized);
+        cfg.probability = static_cast<float>(eng);
         break;
     case kBaseVelocity:
-        cfg.baseVelocity = static_cast<uint8_t>(std::round(normalized * 127.0));
+        cfg.baseVelocity = static_cast<uint8_t>(eng);
         break;
     case kEmphasisProb:
-        cfg.emphasisProb = static_cast<float>(normalized);
+        cfg.emphasisProb = static_cast<float>(eng);
         break;
     case kGhostFloor:
-        cfg.ghostFloor = static_cast<uint8_t>(std::round(normalized * 127.0));
+        cfg.ghostFloor = static_cast<uint8_t>(eng);
         break;
     case kVelocitySpread:
-        cfg.velocitySpread = static_cast<float>(normalized);
+        cfg.velocitySpread = static_cast<float>(eng);
         break;
     case kSwingAmount:
-        cfg.swingAmount = static_cast<float>(normalized);
+        cfg.swingAmount = static_cast<float>(eng);
         break;
     case kHumanizeMs:
-        cfg.humanizeMs = static_cast<float>(normalized * 50.0);
+        cfg.humanizeMs = static_cast<float>(eng);
         break;
     case kNoteDuration:
-        cfg.noteDuration = static_cast<float>(normalized * 4.0);
+        cfg.noteDuration = static_cast<float>(eng);
         break;
     case kActive:
-        cfg.active = (normalized > 0.5);
+        cfg.active = (eng > 0.5);
         break;
     case kPhraseLength:
-        cfg.phraseLength = static_cast<float>(normalized * 64.0);
+        cfg.phraseLength = static_cast<float>(eng);
         break;
     case kPhraseGap:
-        cfg.phraseGap = static_cast<float>(normalized * 64.0);
+        cfg.phraseGap = static_cast<float>(eng);
         break;
     case kPhraseOffset:
-        cfg.phraseOffset = static_cast<float>(normalized * 64.0);
+        cfg.phraseOffset = static_cast<float>(eng);
         break;
     case kMutationRate:
-        cfg.mutationRate = static_cast<float>(normalized);
+        cfg.mutationRate = static_cast<float>(eng);
         break;
     case kDriftRate:
-        cfg.driftRate = static_cast<float>(normalized * 8.0 - 4.0);
+        cfg.driftRate = static_cast<float>(eng);
         break;
     case kTimingOffset:
-        cfg.timingOffsetMs = static_cast<float>(normalized * 40.0 - 20.0);
+        cfg.timingOffsetMs = static_cast<float>(eng);
         break;
     case kKotekanSource:
-        cfg.kotekanSourceLane = static_cast<int>(std::round(normalized * 8.0)) - 1;
+        cfg.kotekanSourceLane = static_cast<int>(eng);
         break;
     default:
         break;
