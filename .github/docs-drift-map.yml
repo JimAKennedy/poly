@@ -1,0 +1,114 @@
+# Docs drift map (M048 S02).
+#
+# When a PR touches any file matching a mapping's `sources` glob, the PR MUST
+# ALSO touch the mapped `doc` — OR any commit in the PR range must carry a
+# `Docs-Not-Affected: <reason>` trailer. Enforced by scripts/check-doc-drift.sh
+# in the site-lint CI job.
+#
+# Purpose: prevent the "code drift, docs frozen" failure mode that motivated
+# M048. If you rename a symbol, extend an enum, or change a range, the gated
+# doc that describes that surface has to move in the same PR (or you have to
+# explain why not, in the commit trailer, right next to the change).
+#
+# Add a mapping when:
+#   - A new gated doc lands and it describes a specific source surface
+#   - A source area gains a documented invariant not yet in the map
+#
+# Do NOT map:
+#   - Archived docs (they are frozen by definition — the taxonomy check gates them)
+#   - Docs whose content is auto-generated (they carry `class: generated` and are
+#     regenerated at build time — S05/S07 introduce these)
+#   - Speculative "someday this doc will describe X" pairs — only real,
+#     current, checkable claims
+
+version: 1
+
+mappings:
+  # Engine public API and type definitions
+  - sources:
+      - "engine/include/poly/types.h"
+      - "engine/include/poly/engine.h"
+      - "engine/include/poly/scene.h"
+      - "engine/include/poly/envelope.h"
+      - "engine/include/poly/macro.h"
+      - "engine/include/poly/constraint.h"
+      - "engine/include/poly/bridge.h"
+      - "engine/include/poly/state_io.h"
+      - "engine/include/poly/state_io_read_lane.h"
+      - "engine/include/poly/state_io_write_lane.h"
+      - "engine/include/poly/sanitize.h"
+      - "engine/include/poly/rng.h"
+      - "engine/src/engine.cpp"
+      - "engine/src/scene.cpp"
+      - "engine/src/envelope.cpp"
+      - "engine/src/macro.cpp"
+      - "engine/src/constraint.cpp"
+      - "engine/src/bridge.cpp"
+      - "engine/src/sanitize.cpp"
+    doc: "docs/engine-spec.md"
+    reason: "engine-spec.md documents the LaneConfig struct, macro system, envelope model, and public engine API. A change to any of these headers or their impls without a doc update creates D1-D3-style drift."
+
+  # Euclidean rhythm implementation
+  - sources:
+      - "engine/include/poly/euclidean.h"
+      - "engine/src/euclidean.cpp"
+    doc: "docs/euclidean-rhythm-guide.md"
+    reason: "euclidean-rhythm-guide.md walks through Bjorklund's algorithm and its Poly implementation. Any change to euclidean.{h,cpp} risks the guide's worked examples becoming false."
+
+  # Factory presets and category taxonomy
+  - sources:
+      - "engine/include/poly/presets.h"
+      - "engine/src/presets.cpp"
+      - "engine/tools/emit_presets.cpp"
+    doc: "docs/preset-taxonomy.md"
+    reason: "preset-taxonomy.md documents the 10-category taxonomy and every preset's category assignment. Adding, removing, or recategorizing a preset without updating the taxonomy is the exact drift that triggered M047."
+
+  # MIDI note capture and mapping
+  - sources:
+      - "engine/include/poly/midi_capture.h"
+      - "engine/src/midi_capture.cpp"
+      - "engine/include/poly/smf_writer.h"
+      - "engine/src/smf_writer.cpp"
+    doc: "docs/midi-note-mapping.md"
+    reason: "midi-note-mapping.md documents the note inventory Poly emits (GM-adjacent). Capture and SMF-writer changes are exactly where note-number contracts can drift."
+
+  # Sample library and its manifest
+  - sources:
+      - "site/public/samples/manifest.json"
+      - "scripts/fetch-samples.sh"
+      - "scripts/check-sample-manifest.sh"
+    doc: "docs/sample-sourcing.md"
+    reason: "sample-sourcing.md is the licensing/attribution ledger for every CC sample shipped. Any manifest change (new sample, renamed folder, license swap) must land with a docs update, or the credits are wrong."
+
+  # Test strategy
+  - sources:
+      - "tests/**"
+      - "site/tests-e2e/**"
+      - "site/tests/**"
+    doc: "docs/testing-strategy.md"
+    reason: "testing-strategy.md classifies which test categories cover which risks. Adding a new test category (or removing one) without doc update makes the strategy doc lie about coverage."
+
+  # Plugin UI (native VSTGUI header)
+  - sources:
+      - "plugin/source/ui/**"
+      - "plugin/source/controller.cpp"
+      - "plugin/source/controller.h"
+      - "plugin/source/controller_base.cpp"
+      - "plugin/source/controller_base.h"
+    doc: "docs/ui-guide.md"
+    reason: "ui-guide.md describes the plugin header UI (preset selector, lanes area, macros). Changes to header/lanes/macros widgets or controller wiring should update the UI walkthrough."
+
+  # Cubase-specific workflow
+  - sources:
+      - "plugin/source/processor.cpp"
+      - "plugin/source/processor.h"
+      - "plugin/source/factory.cpp"
+      - "plugin/source/plugids.h"
+    doc: "docs/cubase-workflow.md"
+    reason: "cubase-workflow.md documents transport/MIDI-routing behavior a Cubase user sees. Processor and factory changes are the most likely to affect that surface."
+
+  # PR-AF review workflow itself
+  - sources:
+      - ".github/workflows/pr-af-review.yml"
+    doc: "docs/pr-af-review.md"
+    reason: "pr-af-review.md is the user-facing description of the opt-in AI review. The workflow file and the doc must agree on trigger label, model, cost, and cadence."
