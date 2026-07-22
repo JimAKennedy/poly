@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "poly-bridge-v1",
-  "description": "Poly Web UI ↔ Native bridge wire format (v1). See bridge-schema.md.",
+  "description": "Poly Web UI ↔ Native bridge wire format (v1). See bridge-schema.md. The applyPreset action's index refers to the runtime preset inventory (see site/src/generated/presets.json, emitted from engine/src/presets.cpp) — do NOT hard-code a maximum here; the count is defined by that inventory.",
 
   "definitions": {
     "envelope": {
@@ -272,9 +272,14 @@
     },
 
     "payloadApplyPreset": {
+      "description": "index=-1 loads Init (all lanes cleared). index>=0 selects a factory preset from the runtime inventory (site/src/generated/presets.json). No hard maximum here: bounds are enforced by the native side against the actual inventory.",
       "type": "object",
       "properties": {
-        "index": { "type": "integer", "minimum": -1 }
+        "index": {
+          "type": "integer",
+          "minimum": -1,
+          "description": "-1 = Init; 0..N-1 = factory preset where N = presets.length from presets.json"
+        }
       },
       "required": ["index"],
       "additionalProperties": false
