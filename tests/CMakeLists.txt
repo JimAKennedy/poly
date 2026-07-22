@@ -18,6 +18,7 @@ add_executable(poly_tests
     swing_humanize_tests.cpp
     macro_tests.cpp
     midi_capture_tests.cpp
+    params_def_tests.cpp
     plugin_tests.cpp
     preset_tests.cpp
     sanitize_tests.cpp
