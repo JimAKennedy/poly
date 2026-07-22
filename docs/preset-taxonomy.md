@@ -2,6 +2,8 @@
 class: gated
 ---
 
+<!-- counts-ok: this doc IS the taxonomy source-of-truth. Preset/category counts here are authoritative (verified against site/src/generated/presets.json by the numeral lint's whole-file exemption). -->
+
 # Poly Preset Taxonomy
 
 The 43 factory presets are grouped into 10 categories. This grouping is the source of truth for both the plugin's nested `Category > Preset` menu (`plugin/source/ui/header_view.cpp`) and the site's Try It category filter row.

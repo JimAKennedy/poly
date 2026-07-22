@@ -49,7 +49,7 @@ Displays the plugin name **POLY** (blue), a **preset selector dropdown**, and th
 **Preset selector:** Click the dropdown in the center of the header bar. The menu offers:
 
 - **Init (All Lanes)** — resets all parameters to defaults with all 8 lanes active. Use this to return to a clean state after loading a preset.
-- **14 factory presets** — each loads lane configurations, macro settings, active lane count, and seed in one shot.
+- **Factory presets** — each loads lane configurations, macro settings, active lane count, and seed in one shot. The full list is grouped by category in [`docs/preset-taxonomy.md`](preset-taxonomy.md); the site guide's appendix documents a curated subset.
 
 After loading, the preset name displays in the header. All knobs, bars, and visualizations update immediately.
 
@@ -227,7 +227,9 @@ At 2.0x, a lane plays its pattern in half the time, effectively doubling its rat
 
 ## Presets
 
-Poly has **14 factory presets** built into the engine:
+<!-- counts-ok: legacy 14-preset table from M025 era; superseded by preset-taxonomy.md (43 across 10 categories) and the site's appendix-presets.mdx. Retained here as an early-tradition snapshot; do not extend inline — extend the taxonomy instead. -->
+
+Poly's engine ships a set of factory presets. The list below reflects the original 14-preset roster from milestone M025 and predates the M045 taxonomy expansion. For the current authoritative catalogue see [preset-taxonomy.md](preset-taxonomy.md); the site's [Preset Reference appendix](../site/src/content/docs/appendix-presets.mdx) documents each preset in detail.
 
 | #  | Name              | Style                                              | Active Lanes |
 |----|-------------------|----------------------------------------------------|--------------|
