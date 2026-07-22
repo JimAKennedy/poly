@@ -286,6 +286,22 @@ jobs:
       - name: Validate sample manifest (GM coverage)
         run: bash scripts/check-sample-manifest.sh --coverage
 
+  doc-drift:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
+      - run: pip install pyyaml
+      - name: Check doc drift (M048 S02)
+        env:
+          GITHUB_BASE_REF: ${{ github.base_ref }}
+        run: bash scripts/check-doc-drift.sh
+
   # region:site-e2e-job
   site-e2e:
     runs-on: ubuntu-latest
