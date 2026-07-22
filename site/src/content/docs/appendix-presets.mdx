@@ -1,15 +1,18 @@
 ---
 class: gated
 title: "Appendix: Factory Preset Reference"
-description: "Complete parameter tables for all fourteen factory presets — lane configurations, macro settings, and suggested experiments."
+description: "Parameter tables for the founding factory presets — lane configurations, macro settings, and suggested experiments. The engine ships more presets than are documented here; see the preset taxonomy for the full catalogue."
 ---
 
 import PolyPatch from '../../components/PolyPatch.astro';
 import ListenFor from '../../components/ListenFor.astro';
 import CodeSnippet from '../../components/CodeSnippet.astro';
 import EuclideanDiagram from '../../components/EuclideanDiagram.astro';
+import counts from '../../generated/counts.json';
 
-This appendix documents all fourteen factory presets shipped with Poly. Each preset is a starting point, not a destination — the parameter tables and experiment suggestions below are designed to help you understand what each preset does and where you might take it.
+{/* counts-ok: this appendix intentionally documents only the founding 14-preset subset — the full {counts.presets}-preset catalogue is grouped by category in docs/preset-taxonomy.md and exposed via the Try It category filter. Extending to full coverage is tracked separately from S06. */}
+
+This appendix documents the founding fourteen factory presets shipped with Poly. Each preset is a starting point, not a destination — the parameter tables and experiment suggestions below are designed to help you understand what each preset does and where you might take it. The engine now ships {counts.presets} factory presets across {counts.categories} categories; the additional presets are grouped and browsable in the plugin's category menu and the site's Try It modal.
 
 ## 1. Four on the Floor
 
