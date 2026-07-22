@@ -1,3 +1,7 @@
+---
+class: archived
+---
+
 # Findings Fixed — 2026-07-16 Product Review
 
 **Purpose.** Per-finding index of remediation for the 2026-07-16 product & engineering review

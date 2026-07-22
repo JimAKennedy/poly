@@ -275,6 +275,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      - name: Check doc taxonomy (M048 S01)
+        run: bash scripts/check-doc-taxonomy.sh
       - name: Check site asset references
         run: bash scripts/check-site-assets.sh
       - name: Validate sample manifest (strict)

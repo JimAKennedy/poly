@@ -1,3 +1,7 @@
+---
+class: gated
+---
+
 # Poly Testing Strategy — Plugin, Bridge, and Cubase-in-the-Loop
 
 Status: proposed (2026-07-03), written against `main@63c960b`. Companion to

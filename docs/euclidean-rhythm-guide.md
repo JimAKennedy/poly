@@ -1,3 +1,7 @@
+---
+class: gated
+---
+
 # Poly — Euclidean Rhythm Guide
 
 A hands-on guide to every rhythmic feature in Poly, with UI references, parameter ranges, and sample values you can dial in to hear each concept.

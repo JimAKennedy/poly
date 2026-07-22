@@ -1,5 +1,12 @@
 # Poly — Implementation Plan
 
+> **Archived (2026-07-22)** — this document is a frozen historical record from Poly's
+> early planning phase. It is no longer maintained and its dates, phase counts, and
+> "next step" prose have drifted from reality. For current state see the public
+> [GitHub milestones](https://github.com/JimAKennedy/poly/milestones), the
+> [CHANGELOG](CHANGELOG.md), and `.gsd/` for the active roadmap. Do not treat any
+> claim in this file as authoritative.
+
 A Cubase-targeted **VST3 instrument** that generates evolving polymetric grooves from
 4–8 independent rhythmic lanes, with dynamics-first velocity/emphasis modeling and
 superimposed multi-timescale envelopes. This document turns the

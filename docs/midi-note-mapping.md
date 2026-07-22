@@ -1,3 +1,7 @@
+---
+class: gated
+---
+
 # MIDI Note Mapping Reference
 
 All Poly presets use General MIDI drum map assignments, compatible with Cubase Drum Maps, Native Instruments Battery/Kontakt, and any GM-compliant kit.

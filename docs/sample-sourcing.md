@@ -1,3 +1,7 @@
+---
+class: gated
+---
+
 # CC Drum Sample Sourcing Guide — poly.jk.digital
 
 Research date: 2026-07-06. Purpose: pair playable one-shot samples with the
