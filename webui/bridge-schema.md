@@ -17,7 +17,7 @@ ignored; unknown message types must be logged and dropped, never crash.
 |---|---|---|
 | `ready` | — | push initial `state`; start the frame timer |
 | `edit` | `paramId, value (normalized 0..1), gesture ('begin'\|'perform'\|'end')` | map to `beginEdit`/`performEdit`/`endEdit` on the controller — automation-correct |
-| `action` | `name, payload` (see host-iface.js action list) | structural edits with no single-param representation: route to the existing message paths or dedicated setters; each mutation is followed by a fresh `state` push. Actions include `applyPreset {index}` (-1=Init, 0-13=factory) |
+| `action` | `name, payload` (see host-iface.js action list) | structural edits with no single-param representation: route to the existing message paths or dedicated setters; each mutation is followed by a fresh `state` push. Actions include `applyPreset {index}` (-1=Init, 0..N-1=factory where N = `state.presets.length`; source: `site/src/generated/presets.json`) |
 
 `paramId` strings map to `ParamIDs` via a table in the shell (e.g.
 `"macro.density"` → `kMacroDensity`, `"lane.3.hits"` →
@@ -39,9 +39,11 @@ does not render (mutation, drift, phrase, kotekan, accent masks, note map,
 chain) are still included so the UI can grow without schema churn; the UI
 ignores what it doesn't know.
 
-`State.presets` is an array of `{name, description}` for the 14 factory
-presets (index 0-13), always included. `State.preset` is the name of the
-currently active preset (empty string if no preset / custom edits).
+`State.presets` is an array of `{name, description}` for the factory presets
+from `site/src/generated/presets.json`. `applyPreset` accepts index `-1`
+(Init) or `0..presets.length-1`.
+`State.preset` is the name of the currently active preset (empty string if
+no preset / custom edits).
 
 ## Invariants
 
