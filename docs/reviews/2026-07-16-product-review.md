@@ -1,3 +1,7 @@
+---
+class: archived
+---
+
 # Poly — Product & Engineering Review
 
 **Date:** 2026-07-16

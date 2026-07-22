@@ -1,3 +1,7 @@
+---
+class: gated
+---
+
 # PR-AF Review — Opt-in Deep Architectural Audit
 
 Status: trial (2026-07-09). Adds a label-gated GitHub Actions workflow that

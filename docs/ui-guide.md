@@ -1,3 +1,7 @@
+---
+class: gated
+---
+
 # Poly UI Guide
 
 Reference for the Poly VST3 plugin interface. Poly is a polymetric drum pattern generator that outputs MIDI.

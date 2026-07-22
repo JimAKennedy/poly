@@ -1,4 +1,15 @@
+---
+class: archived
+---
+
 # Web UI Migration — Status & Remaining Work
+
+> **Archived (2026-07-22)** — this document is a frozen snapshot from the mid-migration
+> `webui-integration` branch. The migration itself is long complete. For current WebUI
+> state see [engine-spec.md](engine-spec.md), the WebUI section of
+> [appendix-plugin-architecture.mdx](../site/src/content/docs/appendix-plugin-architecture.mdx),
+> and the `webui/` source directory. Do not treat any "remaining work" claim in this
+> file as still open.
 
 Status as of `webui-integration` branch (2026-07-04). Audience: roadmap/planning session.
 This is the handoff document for completing the migration of the Cubase
