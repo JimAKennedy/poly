@@ -1,0 +1,75 @@
+{
+  "$schema": "M048 S14: single source of truth for the E(k,n) reference appendix.",
+  "$note": "Pattern and Grouping columns are computed from bjorklund(k,n) by scripts/generate-euclidean-appendix.mjs. Only Traditional Association, Chapter, and optional rotation are hand-authored per row. Rotation defaults to 0 (canonical Bjorklund); set it when the traditional rhythm is voiced at a specific rotation that the surrounding prose depends on (e.g. E(5,16) bossa nova at rotation 12 for gap sequence 3-3-4-3-3; E(7,12) Ewe gankogui bell at rotation 1 for grouping 2+2+1+2+2+1+2). To add a row: add {k, n, association, chapter, rotation?} to the appropriate section, then run 'node scripts/generate-euclidean-appendix.mjs'.",
+  "sections": [
+    {
+      "n": 4,
+      "rows": [
+        { "k": 1, "association": "Whole-note pulse", "chapter": 1 },
+        { "k": 2, "association": "Backbeat, half-time snare", "chapter": 11 },
+        { "k": 3, "association": "Afrobeat support", "chapter": 4, "rotation": 2 },
+        { "k": 4, "association": "Four-on-the-floor kick", "chapter": 9 }
+      ]
+    },
+    {
+      "n": 5,
+      "rows": [
+        { "k": 2, "association": "Khafif-e-ramal (Persian)", "chapter": 1 },
+        { "k": 3, "association": "Gamelan pelog accent", "chapter": 5 }
+      ]
+    },
+    {
+      "n": 7,
+      "rows": [
+        { "k": 2, "association": "Bendir accent (North Africa)", "chapter": 2 },
+        { "k": 3, "association": "Rachenitsa (Bulgaria, 7/8)", "chapter": 7 },
+        { "k": 4, "association": "Longa variant", "chapter": 7, "rotation": 3 },
+        { "k": 5, "association": "Dense aksak fill", "chapter": 7 }
+      ]
+    },
+    {
+      "n": 8,
+      "rows": [
+        { "k": 3, "association": "Tresillo (Cuba, West Africa)", "chapter": 3 },
+        { "k": 4, "association": "Straight eighth-note pulse", "chapter": 9 },
+        { "k": 5, "association": "Cinquillo (Cuba)", "chapter": 3 },
+        { "k": 7, "association": "Near-saturated fill", "chapter": 1, "rotation": 2 }
+      ]
+    },
+    {
+      "n": 9,
+      "rows": [
+        { "k": 2, "association": "Sparse aksak pulse", "chapter": 7 },
+        { "k": 4, "association": "Daichovo horo (Bulgaria, 9/8)", "chapter": 7 },
+        { "k": 5, "association": "Dense 9/8 variant", "chapter": 7, "rotation": 3 }
+      ]
+    },
+    {
+      "n": 11,
+      "rows": [
+        { "k": 4, "association": "Kopanitsa (Bulgaria, 11/8)", "chapter": 7 },
+        { "k": 5, "association": "Dense kopanitsa variant", "chapter": 7 }
+      ]
+    },
+    {
+      "n": 12,
+      "rows": [
+        { "k": 3, "association": "Structural pulse (even ternary)", "chapter": 2 },
+        { "k": 4, "association": "Triplet feel, shuffle accent", "chapter": 12 },
+        { "k": 5, "association": "Reich phasing seed", "chapter": 8 },
+        { "k": 7, "association": "Ewe gankogui bell (West Africa)", "chapter": 2, "rotation": 2 },
+        { "k": 9, "association": "Dense 12/8 fill", "chapter": 4 }
+      ]
+    },
+    {
+      "n": 16,
+      "rows": [
+        { "k": 3, "association": "Syncopated breakbeat kick", "chapter": 13 },
+        { "k": 4, "association": "Straight quarter-note pulse", "chapter": 9 },
+        { "k": 5, "association": "Bossa nova bass", "chapter": 10, "rotation": 10 },
+        { "k": 7, "association": "Polymetric ghost layer", "chapter": 1 },
+        { "k": 9, "association": "Dense hi-hat fill", "chapter": 9 }
+      ]
+    }
+  ]
+}
