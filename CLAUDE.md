@@ -8,7 +8,9 @@ Poly is a **MIDI-only VST3 instrument** that generates evolving polyrhythmic gro
 
 **Engine isolation** is the core architectural principle: `poly_engine` is a pure C++ static library with zero VST3/audio-thread dependencies. The plugin layer (`poly_plugin`) feeds it transport/parameter state and drains its `NoteEvent` output. The engine must compile and pass all tests without the VST3 SDK.
 
-See `IMPLEMENTATION_PLAN.md` for the full architecture, domain model, and phase plan.
+See `ARCHITECTURE.md` for the current architecture. Active roadmap is public
+[GitHub milestones](https://github.com/JimAKennedy/poly/milestones) +
+`CHANGELOG.md`; `IMPLEMENTATION_PLAN.md` is archived Phase 0 planning.
 
 ## Tech Stack
 

@@ -56,7 +56,10 @@ The engine compiles and passes all tests without the VST3 SDK. The plugin feeds
 transport and parameter state to the engine and drains its `NoteEvent` output to
 the DAW's MIDI event list.
 
-See `IMPLEMENTATION_PLAN.md` for the full architecture and domain model.
+For current architecture see `ARCHITECTURE.md`. Active work is tracked in the
+public [GitHub milestones](https://github.com/JimAKennedy/poly/milestones) and
+`CHANGELOG.md`. `IMPLEMENTATION_PLAN.md` is archived Phase 0 planning kept for
+historical context only.
 
 ## DAW compatibility
 
