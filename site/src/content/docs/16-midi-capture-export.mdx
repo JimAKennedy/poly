@@ -14,9 +14,9 @@ The answer is MIDI capture. Poly continuously records every note it generates in
 
 ## The Capture Buffer
 
-Every `NoteEvent` that Poly's engine produces during playback is written into a `MidiCaptureBuffer` — a fixed-size circular buffer that holds the most recent 2048 events. At typical groove densities (four to six active lanes, moderate Density), this covers roughly eight bars of output. Busier patches with high Complexity and many active lanes will fill the buffer faster; sparser patches will retain more history.
+Every `NoteEvent` that Poly's engine produces during playback is written into a `MidiCaptureBuffer` — a fixed-size circular buffer that holds the most recent 2048 events. At typical groove densities (four to six active lanes, moderate Density), this covers roughly eight bars of output. [⚠ unverified] Busier patches with high Complexity and many active lanes will fill the buffer faster; sparser patches will retain more history.
 
-The buffer stores each event's PPQ position, pitch, velocity, MIDI channel, and duration — everything needed to reconstruct the musical content as a standard MIDI part. There is no separate "recording" state to engage. As long as the DAW transport is running, the buffer is capturing. When the transport stops, the buffer resets.
+The buffer stores each event's PPQ position, pitch, velocity, MIDI channel, and duration — everything needed to reconstruct the musical content as a standard MIDI part. There is no separate "recording" state to engage. As long as the DAW transport is running, the buffer is capturing. When the transport stops, the buffer resets. When the DAW loops back to the start of a region, the capture buffer is preserved across the wrap — the last several bars from before the loop remain exportable. [verified: HostTests.LoopWrap_CaptureBufferPreservedAcrossPasses]
 
 This design is deliberate. Poly's output is generative — every playback produces a slightly different result, shaped by mutation, humanization, and macro modulation. The circular buffer ensures that whatever you just heard is always available for export, without requiring you to anticipate which pass will produce the keeper. You listen, you react, you capture.
 

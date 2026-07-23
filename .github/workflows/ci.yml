@@ -304,6 +304,8 @@ jobs:
         run: npm ci
       - name: Check doc taxonomy (M048 S01)
         run: bash scripts/check-doc-taxonomy.sh
+      - name: Check behavioral claims (M048 S09)
+        run: node scripts/check-behavioral-claims.mjs
       - name: Check count drift (M048 S06)
         run: bash scripts/check-count-drift.sh
       - name: Check bridge schema coverage (M048 S07)
