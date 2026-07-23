@@ -1,10 +1,17 @@
 name: PR-AF Review (opt-in)
 
-# Deep architectural review by Agent-Field's PR-AF (https://github.com/Agent-Field/pr-af).
+# Scoped LLM review by Agent-Field's PR-AF (https://github.com/Agent-Field/pr-af).
 # Opt-in only: triggers when a maintainer adds the `pr-af` label to a PR.
 # Runtime is ~35–50 min and each run consumes OpenRouter credits — do not add to
-# the required-checks list. Add the label when you specifically want a second
-# opinion beyond our NFR review and /code-review ultra.
+# the required-checks list.
+#
+# Review scope (M048 S12): prose, pedagogy, and design-intent only —
+# guide-site chapters, appendix explanations, docstring narrative, PRD-shaped
+# claims, and UX copy. NOT code correctness, NOT architecture, NOT security —
+# the nightly `nfr-review.yml` + on-demand `/code-review ultra` already cover
+# those with tools better suited to structured findings. Label this only
+# when the diff is docs-heavy or when a design decision needs a prose-focused
+# second opinion beyond the existing gates.
 #
 # Prerequisite: repo secret `OPENROUTER_API_KEY` must be set. Without it the
 # workflow will start but the reviewer agent will fail.

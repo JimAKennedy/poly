@@ -1,3 +1,7 @@
+---
+class: archived
+---
+
 # Poly — Implementation Plan
 
 > **Archived (2026-07-22)** — this document is a frozen historical record from Poly's

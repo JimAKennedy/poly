@@ -25,6 +25,14 @@ collect_docs() {
     find "$REPO_ROOT/docs" -type f -name '*.md' 2>/dev/null || true
     # site/src/content/docs/*.mdx
     find "$REPO_ROOT/site/src/content/docs" -type f -name '*.mdx' 2>/dev/null || true
+    # Root-level historical planning docs (M048 S12): these are outside
+    # docs/ but still shape reader expectations, so they carry the same
+    # class: frontmatter contract. Note: internal-docs/ is gitignored so
+    # is not enforced here (kept local-only per project convention).
+    for path in \
+        "$REPO_ROOT/IMPLEMENTATION_PLAN.md"; do
+        [ -f "$path" ] && echo "$path"
+    done
 }
 
 # Extract the value of `class:` from the first YAML front-matter block.

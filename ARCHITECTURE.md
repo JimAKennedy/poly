@@ -20,4 +20,8 @@ Host (Cubase/VST3)          poly_engine (pure C++, no VST3 deps)
 
 - **`tests/`** -- off-host unit tests, golden output determinism tests, UI interaction and visual regression tests.
 
-See [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) for the full design, domain model, and phase plan.
+Active work is tracked in the public
+[GitHub milestones](https://github.com/JimAKennedy/poly/milestones) and
+[CHANGELOG](CHANGELOG.md). [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)
+is the archived Phase 0 planning document — useful as a historical record of
+early design intent, not as a current-state reference.

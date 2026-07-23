@@ -4,17 +4,27 @@ class: gated
 
 # PR-AF Review — Opt-in Deep Architectural Audit
 
-Status: trial (2026-07-09). Adds a label-gated GitHub Actions workflow that
-runs [Agent-Field's PR-AF](https://github.com/Agent-Field/pr-af) as a second
-opinion beyond our NFR review and `/code-review ultra` stack.
+Status: trial (2026-07-09), rescoped 2026-07-23 (M048 S12). Adds a label-gated
+GitHub Actions workflow that runs
+[Agent-Field's PR-AF](https://github.com/Agent-Field/pr-af) as a **prose,
+pedagogy, and design-intent** second opinion beyond our NFR review and
+`/code-review ultra` stack.
 
 ## What it is
 
-PR-AF spawns dimension-specific reviewer agents (correctness, design, security,
-etc.), grounds findings in extracted source evidence, and posts inline PR
-comments. It topped the Martian Code-Review-Bench benchmark but is explicitly
-built as a **CI gate**, not fast inner-loop feedback — expect **35–50 minutes
-per run**.
+PR-AF spawns dimension-specific reviewer agents, grounds findings in extracted
+source evidence, and posts inline PR comments. It topped the Martian
+Code-Review-Bench benchmark but is explicitly built as a **CI gate**, not fast
+inner-loop feedback — expect **35–50 minutes per run**.
+
+**Scope on this repo (M048 S12):** prose, pedagogy, and design-intent only —
+guide-site chapters, appendix explanations, docstring narrative, PRD-shaped
+claims, and UX copy. NOT code correctness, NOT architecture, NOT security.
+Those are already covered by the nightly `nfr-review.yml` +
+`/code-review ultra` stack, which have tools better suited to structured
+findings. Label PRs for this workflow only when the diff is docs-heavy or
+when a design decision needs a prose-focused second opinion beyond the
+existing gates.
 
 We wired it as **opt-in only**: it does nothing unless a maintainer adds the
 `pr-af` label to a PR. It is not on any required-checks list, and it should
@@ -32,9 +42,10 @@ not be added to one.
 - **Do not** add `pr-af-review` to branch protection required checks. It is
   slow and paid; a required check would block every merge for 45 min.
 
-Rule of thumb: use the label when the PR touches architecture, engine
-internals, RT-safety, or crosses subsystem boundaries. Skip it for CSS-only,
-docs-only, or single-line fixes.
+Rule of thumb: use the label when the PR is docs-heavy — guide-site chapters,
+appendix rewrites, PRD-shaped claims, UX copy — or when a design decision
+needs a prose-focused second opinion. Skip it for pure code changes; the
+nightly NFR review and `/code-review ultra` cover those.
 
 ## How to trigger a review
 
@@ -131,18 +142,17 @@ branch yet (it lives at `.github/workflows/pr-af-review.yml` and must be on
 
 ## What we're evaluating during the trial
 
-- **C++/VST3 signal quality** — PR-AF's benchmark is Python/JS-heavy. Does
-  it catch RT-safety violations, allocation-in-`process()`, missing state
-  version stamps? (Our existing `nfr-review.yaml` and
-  `scripts/check-realtime-safety.sh` already catch these; PR-AF adds value
-  only if it catches things they miss.)
+- **Prose/pedagogy signal quality** — does PR-AF catch drifted claims, weak
+  explanations, contradictions between chapters, and missing citations in the
+  guide-site content? That is the niche this workflow is scoped to; code-side
+  gates already cover the rest.
 - **False positive rate** — high enough that maintainers stop reading
   comments = kills adoption.
 - **Cost vs. `/code-review ultra`** on the same PR — head-to-head is the
   fairest comparison, since both are "deep review, paid".
 
 Log findings on the PR trial thread. Decide adopt / adopt-as-optional / drop
-after 3 labeled PRs of varying shape (pure CSS, JS/WASM, C++ engine).
+after 3 labeled docs-heavy PRs of varying shape.
 
 ## Related
 
