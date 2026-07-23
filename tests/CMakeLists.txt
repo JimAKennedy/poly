@@ -24,6 +24,7 @@ add_executable(poly_tests
     sanitize_tests.cpp
     scene_tests.cpp
     smf_writer_tests.cpp
+    wasm_api_envelope_gap_slot_tests.cpp
 )
 
 target_link_libraries(poly_tests

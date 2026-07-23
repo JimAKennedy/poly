@@ -10,6 +10,7 @@ add_library(poly_engine STATIC
     src/sanitize.cpp
     src/scene.cpp
     src/smf_writer.cpp
+    src/wasm_api.cpp
 )
 
 target_include_directories(poly_engine

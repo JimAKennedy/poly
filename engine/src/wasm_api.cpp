@@ -692,6 +692,16 @@ void poly_action_set_envelope(PolyContext ctx, int lane, int index, int target, 
     auto& cfg = c->state().lanes[static_cast<size_t>(lane)];
     if (index < 0 || index >= poly::kMaxEnvelopesPerLane)
         return;
+    // E1 fix (M049 S01): if the caller jumps past the current count, mark the
+    // intervening gap slots as inactive. EnvelopeAssign{} defaults to
+    // active=true / target=Velocity / depth=1.0 / periodBars=4.0, so without
+    // this the engine's read loop would accumulate phantom full-depth velocity
+    // LFOs from every gap slot the caller never asked to activate.
+    for (int i = cfg.envelopeCount; i < index; ++i) {
+        auto& gap = cfg.envelopes[static_cast<size_t>(i)];
+        gap.envelope = poly::Envelope{};
+        gap.active = false;
+    }
     auto& ea = cfg.envelopes[static_cast<size_t>(index)];
     ea.envelope.target = static_cast<poly::EnvTarget>(std::clamp(target, 0, 7));
     ea.envelope.periodBars = std::max(0.25f, period);
