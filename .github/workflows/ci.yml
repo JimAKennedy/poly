@@ -308,6 +308,8 @@ jobs:
         run: node scripts/check-behavioral-claims.mjs
       - name: Check status prose (M048 S10)
         run: node scripts/check-status-prose.mjs
+      - name: Check file:line references (M048 S11)
+        run: node scripts/check-file-line-refs.mjs
       - name: Check count drift (M048 S06)
         run: bash scripts/check-count-drift.sh
       - name: Check bridge schema coverage (M048 S07)
