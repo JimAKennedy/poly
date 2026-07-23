@@ -23,9 +23,9 @@ static constexpr int kFieldsPerEmission = 4;
 struct Context {
     poly::Engine engine;
     poly::SceneState scenes{};
-    // M044 S07: Scene chain runtime state, mirrors processor.cpp:70. Advances at
-    // bar boundaries during poly_render when scenes.chain.enabled &&
-    // scenes.chain.entryCount > 0.
+    // M044 S07: Scene chain runtime state, mirrors PolyProcessor::setActive
+    // chainState_.reset() init. Advances at bar boundaries during poly_render
+    // when scenes.chain.enabled && scenes.chain.entryCount > 0.
     poly::SceneChainState chainState{};
     poly::NoteEventBuffer eventBuffer{};
     poly::EmissionEventBuffer emissionBuffer{};
@@ -38,7 +38,7 @@ struct Context {
     poly::GrooveState interpBuf{};
 
     // Edits always target A or B directly (Morph selection routes to A) —
-    // matches the VST plugin's behavior (processor.cpp:646).
+    // matches the VST plugin's behavior in applyCoreParam().
     poly::GrooveState& state() { return scenes.select == poly::SceneSelect::B ? scenes.sceneB : scenes.sceneA; }
     const poly::GrooveState& state() const {
         return scenes.select == poly::SceneSelect::B ? scenes.sceneB : scenes.sceneA;
@@ -167,9 +167,10 @@ int poly_render(PolyContext ctx, double ppqStart, double ppqEnd, double tempo, d
     tc.loopEndPpq = loopEndPpq;
 
     // M044 S07: Scene chain override. When enabled, advance the chain state
-    // machine at bar boundaries (processor.cpp:420-424) and let it drive
-    // scenes.select for this block, so subsequent readState()/render see the
-    // scene the chain picked (A, B, or Morph) rather than the manual pick.
+    // machine at bar boundaries (mirrors the chainState_.update() call in
+    // PolyProcessor::process) and let it drive scenes.select for this block,
+    // so subsequent readState()/render see the scene the chain picked
+    // (A, B, or Morph) rather than the manual pick.
     if (c->scenes.chain.enabled && c->scenes.chain.entryCount > 0) {
         if (tc.jumped)
             c->chainState.reset();
@@ -178,13 +179,14 @@ int poly_render(PolyContext ctx, double ppqStart, double ppqEnd, double tempo, d
 
     // M043 S14 T02: when Morph is selected, render an interpolated snapshot of
     // both scenes rather than falling back to scene A. Mirrors the plugin's
-    // process() path (processor.cpp:425-431) so the audible playback and the
+    // PolyProcessor::process() Morph branch so the audible playback and the
     // eventual VST render agree on what Morph means.
     // M043 S15 T01: resolve macros + constraints before rendering, matching
-    // processor.cpp:439. Preset-baked macros (complexity/density/etc.) only
-    // affect output through resolveMacros; without this, moving a macro
-    // slider or loading a preset with non-default macro values changes
-    // nothing on the site's Play or Try It surfaces.
+    // the resolveMacros/resolveConstraints call in PolyProcessor::process.
+    // Preset-baked macros (complexity/density/etc.) only affect output through
+    // resolveMacros; without this, moving a macro slider or loading a preset
+    // with non-default macro values changes nothing on the site's Play or
+    // Try It surfaces.
     // readState() already handles the Morph interpolation; poly_render used to
     // duplicate the branch, kept in sync manually. Route through readState() so
     // there is a single source of truth.
@@ -603,9 +605,9 @@ int poly_scene_select(PolyContext ctx) {
 }
 
 // M043 S14 T02: morph amount push/pull. The plugin exposes this as
-// kSceneMorph (processor.cpp:484); the web bridge routes `scene.morph` edits
-// here so Morph-mode playback and dumps interpolate against the current UI
-// value, not a stale default.
+// kSceneMorph (see applySceneParameter in the processor); the web bridge
+// routes `scene.morph` edits here so Morph-mode playback and dumps
+// interpolate against the current UI value, not a stale default.
 void poly_set_morph(PolyContext ctx, double amount) {
     auto* c = static_cast<Context*>(ctx);
     c->scenes.morphAmount = std::clamp(static_cast<float>(amount), 0.0f, 1.0f);
@@ -721,8 +723,9 @@ void poly_set_seed(PolyContext ctx, uint64_t seed) {
 }
 
 // --- Scene chain edits (M044 S07) ------------------------------------------
-// Mirror processor.cpp:492-523 so JS chain edits reach the render path. Without
-// these, the modal UI's chain state was JS-shadow only and playback ignored it.
+// Mirror the kSceneChain* handlers in PolyProcessor::applyParameter so JS
+// chain edits reach the render path. Without these, the modal UI's chain
+// state was JS-shadow only and playback ignored it.
 
 void poly_set_chain_enabled(PolyContext ctx, int enabled) {
     auto* c = static_cast<Context*>(ctx);
