@@ -279,6 +279,8 @@ jobs:
         run: bash scripts/check-doc-taxonomy.sh
       - name: Check count drift (M048 S06)
         run: bash scripts/check-count-drift.sh
+      - name: Check bridge schema coverage (M048 S07)
+        run: node scripts/check-bridge-schema-coverage.mjs
       - name: Check site asset references
         run: bash scripts/check-site-assets.sh
       - name: Validate sample manifest (strict)
