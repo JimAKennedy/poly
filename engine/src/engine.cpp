@@ -137,11 +137,9 @@ enum class StepOutcome : uint8_t {
 };
 
 static StepOutcome classifyStep(const LaneConfig& cfg, const GrooveState& state, int64_t absStep, int64_t cycleStep,
-                                bool isPatternStep, bool isAnchor, const EnvelopeMods& mods) {
+                                bool isPatternStep, bool isAnchor, const EnvelopeMods& mods, int stepsInCycle) {
     const bool wasPatternStep = isPatternStep;
     bool mutatedToGhost = false;
-
-    int stepsInCycle = (cfg.cellCount > 0) ? cfg.cellCount : cfg.cycle.steps;
 
     if (cfg.mutationRate > 0.0f && !isAnchor) {
         int64_t cycleIndex = (absStep >= 0) ? absStep / stepsInCycle : (absStep - stepsInCycle + 1) / stepsInCycle;
@@ -266,6 +264,12 @@ struct LaneRenderContext {
     double phraseOffPpq = 0.0;
     bool hasPhraseGating = false;
     bool isAdditive = false;
+    // M049 S02 (E2): authoritative cycle length for wrap. In timeline mode with
+    // fixedPatternLength > 0, the pattern's own length governs playback wrap —
+    // otherwise a lane with fixedPatternLength=10 / cycle.steps=16 plays 16
+    // steps with a 6-step silent tail, contradicting every editor that shows
+    // only the fixedPatternLength slots as editable.
+    int stepsInCycle = 0;
 };
 
 static LaneRenderContext prepareLaneContext(const LaneConfig& cfg, const GrooveState& state, int lane,
@@ -282,7 +286,14 @@ static LaneRenderContext prepareLaneContext(const LaneConfig& cfg, const GrooveS
         ctx.additive.totalPpq *= tempoScale;
     }
     ctx.isAdditive = ctx.additive.count > 0;
-    ctx.cyclePpqLen = ctx.isAdditive ? ctx.additive.totalPpq : (cfg.cycle.steps * ctx.sPpq);
+    // M049 S02 (E2): fixedPatternLength governs wrap in timeline mode.
+    if (ctx.isAdditive)
+        ctx.stepsInCycle = ctx.additive.count;
+    else if (cfg.timeline && cfg.fixedPatternLength > 0)
+        ctx.stepsInCycle = cfg.fixedPatternLength;
+    else
+        ctx.stepsInCycle = cfg.cycle.steps;
+    ctx.cyclePpqLen = ctx.isAdditive ? ctx.additive.totalPpq : (ctx.stepsInCycle * ctx.sPpq);
 
     double maxStepDur = ctx.sPpq;
     if (ctx.isAdditive) {
@@ -345,7 +356,7 @@ static bool passesPhraseGating(const LaneRenderContext& ctx, double ppq) {
 // region:drift-accumulator
 static int64_t computeDriftedCycleStep(const LaneConfig& cfg, const LaneRenderContext& ctx, int64_t absStep,
                                        double ppq) {
-    int stepsInCycle = ctx.isAdditive ? ctx.additive.count : cfg.cycle.steps;
+    int stepsInCycle = ctx.stepsInCycle;
     int64_t cycleStep = ((absStep % stepsInCycle) + stepsInCycle) % stepsInCycle;
     if (cfg.driftRate != 0.0f) {
         double barPos = ppq / kPpqPerBar;
@@ -405,7 +416,8 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
 
             bool isPatternStep = ctx.pattern[static_cast<size_t>(cycleStep)];
             bool isAnchor = cfg.constraints.anchorSteps.steps[static_cast<size_t>(cycleStep)] > 0.0f;
-            StepOutcome outcome = classifyStep(cfg, state, absStep, cycleStep, isPatternStep, isAnchor, mods);
+            StepOutcome outcome =
+                classifyStep(cfg, state, absStep, cycleStep, isPatternStep, isAnchor, mods, ctx.stepsInCycle);
 
             // Record classification for the display, but only for steps whose
             // pre-timing-shift ppq falls inside the current render window —
