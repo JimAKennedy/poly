@@ -44,6 +44,15 @@ void sanitizeAccentMask(AccentMask& mask) {
 }
 
 void sanitizeLane(LaneConfig& lane, int laneIndex) {
+    // Repair the lane.id == laneIndex invariant. `deterministicRand` in
+    // engine.cpp keys 8 per-step decision channels on `cfg.id`; two lanes
+    // sharing an id would produce byte-identical rolls, silently correlating
+    // what should be independent lanes. Both live init sites already assign
+    // .id = laneIndex (processor.cpp setActive, web_ui_view.cpp createInitial);
+    // this makes the invariant universal so hostile / corrupted presets can't
+    // break it either. (E4, M049 S04.)
+    lane.id = laneIndex;
+
     if (static_cast<uint8_t>(lane.role) > static_cast<uint8_t>(Role::Custom))
         lane.role = Role::Custom;
     lane.midiNote = static_cast<int16_t>(clampi(lane.midiNote, 0, 127));
