@@ -265,3 +265,12 @@ webui/playwright-report/
 
 # Sample-fetch scratch dir
 .cache/
+
+# -----------------------------------------------------------------------------
+# Machine-local agent config
+# -----------------------------------------------------------------------------
+# .mcp.json is written by gsd-pi with absolute paths tied to the local pnpm
+# store and node install (see /Users/jim/... prefixes). Not portable to other
+# clones, so we don't track it. If a team-shareable variant emerges later
+# (commands only, no absolute paths), we can revisit.
+.mcp.json
