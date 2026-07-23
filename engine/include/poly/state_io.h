@@ -15,7 +15,8 @@ static constexpr int32_t kCurrentStateVersion = 15;
 
 // --- Envelope serialization helpers ---
 
-template <typename WriteFn> [[nodiscard]] bool writeEnvelope(WriteFn&& write, const Envelope& env) {
+template <typename WriteFn>
+[[nodiscard]] bool writeEnvelope(WriteFn&& write, const Envelope& env, int32_t version = kCurrentStateVersion) {
     auto target = static_cast<uint8_t>(env.target);
     if (!write(&target, sizeof(target)))
         return false;
@@ -28,13 +29,18 @@ template <typename WriteFn> [[nodiscard]] bool writeEnvelope(WriteFn&& write, co
         return false;
     if (!write(&env.phaseOffset, sizeof(env.phaseOffset)))
         return false;
-    if (!write(&env.curvature, sizeof(env.curvature)))
-        return false;
-    if (!write(&env.stepCount, sizeof(env.stepCount)))
-        return false;
-    for (int s = 0; s < kMaxStepListEntries; ++s) {
-        if (!write(&env.stepValues[static_cast<size_t>(s)], sizeof(float)))
+    // v2 added curvature + step list. Mirror readEnvelope's version gate so
+    // writeGrooveStateBody(bodyVersion=1) produces bytes readGrooveStateBody(v=1)
+    // can align. (E5, M049 S05.)
+    if (version >= 2) {
+        if (!write(&env.curvature, sizeof(env.curvature)))
             return false;
+        if (!write(&env.stepCount, sizeof(env.stepCount)))
+            return false;
+        for (int s = 0; s < kMaxStepListEntries; ++s) {
+            if (!write(&env.stepValues[static_cast<size_t>(s)], sizeof(float)))
+                return false;
+        }
     }
     return true;
 }
@@ -90,7 +96,7 @@ template <typename WriteFn>
     if (!write(&state.globalEnvelopeCount, sizeof(state.globalEnvelopeCount)))
         return false;
     for (int e = 0; e < kMaxGlobalEnvelopes; ++e) {
-        if (!writeEnvelope(write, state.globalEnvelopes[static_cast<size_t>(e)]))
+        if (!writeEnvelope(write, state.globalEnvelopes[static_cast<size_t>(e)], bodyVersion))
             return false;
     }
 
