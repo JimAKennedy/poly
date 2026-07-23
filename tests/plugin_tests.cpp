@@ -179,7 +179,9 @@ static poly::GrooveState makeTestState() {
     state.macros.humanize = 0.15f;
 
     auto& lane0 = state.lanes[0];
-    lane0.id = 1;
+    // M049 S04: lane.id must equal laneIndex or sanitize (called by readGrooveState)
+    // will repair it, breaking the field-preservation assertion below.
+    lane0.id = 0;
     lane0.role = poly::Role::AnchorPulse;
     lane0.midiNote = 36;
     lane0.cycle = {.steps = 4, .subdivision = 4};
@@ -205,7 +207,7 @@ static poly::GrooveState makeTestState() {
     lane0.envelopes[0].envelope.phaseOffset = 0.25f;
 
     auto& lane1 = state.lanes[1];
-    lane1.id = 2;
+    lane1.id = 1;
     lane1.role = poly::Role::Ghost;
     lane1.midiNote = 45;
     lane1.cycle = {.steps = 5, .subdivision = 16};

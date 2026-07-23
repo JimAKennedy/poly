@@ -121,3 +121,123 @@ TEST(Sanitize, RenderRangeProducesEventsAfterSanitization) {
     engine.renderRange(tc, state, out);
     EXPECT_GT(out.count, 0u);
 }
+
+// Regression tests for M049 S04 / E4 finding from the 2026-07-16 review.
+//
+// Bug: `deterministicRand(seed, laneId, absStep, channel)` in engine.cpp keys 8
+// per-step decision channels on `cfg.id`. If two lanes share the same id
+// (which is possible via a hostile preset or an editing mistake — sanitize
+// did not enforce uniqueness), the two lanes produce byte-identical
+// probability/mutation/ghost/activation rolls, silently correlating what
+// should be independent voices.
+//
+// Fix: sanitizeLane repairs lane.id = laneIndex unconditionally.
+
+namespace {
+
+poly::GrooveState makeTwoLaneStateWithSharedId(int sharedId) {
+    poly::GrooveState state{};
+    state.seed = 42;
+    state.activeLaneCount = 2;
+    for (int i = 0; i < 2; ++i) {
+        auto& lane = state.lanes[static_cast<size_t>(i)];
+        lane.id = sharedId; // Deliberate duplicate.
+        lane.active = true;
+        lane.midiNote = static_cast<int16_t>(36 + i);
+        lane.cycle = {.steps = 8, .subdivision = 4};
+        lane.hitCount = 4;
+        lane.baseVelocity = 100;
+        // probability < 1 so deterministicRand actually gates emission —
+        // otherwise both lanes fire on every step regardless of id and the
+        // test can't distinguish correlated vs independent rolls.
+        lane.probability = 0.5f;
+        lane.emphasisProb = 0.5f;
+        lane.ghostFloor = 0;
+        lane.velocitySpread = 0.5f; // exercise channel 1
+    }
+    return state;
+}
+
+std::vector<poly::NoteEvent> renderAndCollect(const poly::GrooveState& state, int lane) {
+    poly::Engine engine{};
+    poly::TransportContext tc{};
+    tc.playing = true;
+    tc.ppqStart = 0.0;
+    tc.ppqEnd = 16.0;
+    tc.tempo = 120.0;
+    poly::NoteEventBuffer buf{};
+    engine.renderRange(tc, state, buf);
+    std::vector<poly::NoteEvent> out;
+    for (size_t i = 0; i < buf.count; ++i)
+        if (buf.events[i].laneIndex == lane)
+            out.push_back(buf.events[i]);
+    return out;
+}
+
+// Compare two lanes' event streams ignoring pitch (they use different midiNotes)
+// so we're only checking that the RNG-driven timing/velocity/emission decisions
+// diverged.
+bool rngDecisionsIdentical(const std::vector<poly::NoteEvent>& a, const std::vector<poly::NoteEvent>& b) {
+    if (a.size() != b.size())
+        return false;
+    for (size_t i = 0; i < a.size(); ++i) {
+        if (a[i].ppqPosition != b[i].ppqPosition)
+            return false;
+        if (a[i].velocity != b[i].velocity)
+            return false;
+    }
+    return true;
+}
+
+} // namespace
+
+TEST(Sanitize, LaneIdsRepairedToLaneIndex) {
+    poly::GrooveState state{};
+    state.activeLaneCount = 3;
+    state.lanes[0].id = 3;
+    state.lanes[1].id = 3;
+    state.lanes[2].id = 3;
+    state.lanes[3].id = 3;
+
+    poly::sanitizeGrooveState(state);
+
+    EXPECT_EQ(state.lanes[0].id, 0);
+    EXPECT_EQ(state.lanes[1].id, 1);
+    EXPECT_EQ(state.lanes[2].id, 2);
+    EXPECT_EQ(state.lanes[3].id, 3);
+}
+
+TEST(Sanitize, DuplicateLaneIdsProduceCorrelatedRollsBeforeFix) {
+    // Without sanitize, two lanes with the same id emit byte-identical
+    // RNG-driven decisions (same ppq timing offsets, same velocity randomization).
+    // This test documents the bug and locks in the invariant that motivates the fix.
+    auto state = makeTwoLaneStateWithSharedId(5);
+
+    auto lane0 = renderAndCollect(state, 0);
+    auto lane1 = renderAndCollect(state, 1);
+
+    ASSERT_FALSE(lane0.empty()) << "test setup: lane 0 must emit at least one note";
+    ASSERT_FALSE(lane1.empty()) << "test setup: lane 1 must emit at least one note";
+    EXPECT_TRUE(rngDecisionsIdentical(lane0, lane1))
+        << "pre-fix: two lanes with same id must produce correlated RNG rolls — "
+        << "if they diverge here, the fix already landed or the test is checking the wrong invariant";
+}
+
+TEST(Sanitize, DuplicateLaneIdsProduceIndependentRollsAfterSanitize) {
+    // After sanitize, the two lanes have distinct ids (0 and 1) so their RNG
+    // channels diverge. The two event streams must differ on either timing,
+    // velocity, or count.
+    auto state = makeTwoLaneStateWithSharedId(5);
+    poly::sanitizeGrooveState(state);
+
+    ASSERT_EQ(state.lanes[0].id, 0);
+    ASSERT_EQ(state.lanes[1].id, 1);
+
+    auto lane0 = renderAndCollect(state, 0);
+    auto lane1 = renderAndCollect(state, 1);
+
+    ASSERT_FALSE(lane0.empty());
+    ASSERT_FALSE(lane1.empty());
+    EXPECT_FALSE(rngDecisionsIdentical(lane0, lane1))
+        << "post-fix: sanitize must repair lane ids so RNG channels diverge";
+}
