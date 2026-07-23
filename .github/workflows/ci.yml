@@ -189,22 +189,27 @@ jobs:
           retention-days: 30
           if-no-files-found: ignore
 
-  pluginval:
+  # M048 S13: pluginval was previously a matrix job with 2 legs (macOS, Linux).
+  # PR #104 (run 29990515657) revealed two matrix-related bugs in GitHub Actions:
+  #   1. `needs.pluginval.result` in ci-complete reported `success` while the
+  #      ubuntu leg was still `in_progress` — allowing ci-complete to pass
+  #      advisorily against a leg that hadn't finalized.
+  #   2. The ubuntu leg's outer job envelope stayed `in_progress` indefinitely
+  #      after all its steps had completed successfully. Manual re-run was
+  #      required to make GitHub finalize the check run.
+  # Fix: split into two explicit jobs so ci-complete's `needs` list references
+  # two individually-tracked check runs, each of which GitHub finalizes on its
+  # own. `build` remains a matrix (3 legs, no observed bug, split would add
+  # substantial churn); revisit if the same class of failure surfaces there.
+
+  pluginval-macos:
     needs: build
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: macos-14
-            artifact: plugin-macos-14
-          - os: ubuntu-latest
-            artifact: plugin-ubuntu-latest
-    runs-on: ${{ matrix.os }}
+    runs-on: macos-14
     steps:
       - name: Download plugin artifact
         uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
         with:
-          name: ${{ matrix.artifact }}
+          name: plugin-macos-14
           path: plugin
       - name: Find VST3 bundle
         id: find-vst3
@@ -214,34 +219,48 @@ jobs:
           echo "Found VST3 at: $VST3_PATH"
       - name: Download pluginval
         run: |
-          if [[ "${{ runner.os }}" == "macOS" ]]; then
-            curl -fsSL -o pluginval.zip https://github.com/Tracktion/pluginval/releases/latest/download/pluginval_macOS.zip
-          else
-            curl -fsSL -o pluginval.zip https://github.com/Tracktion/pluginval/releases/latest/download/pluginval_Linux.zip
-          fi
+          curl -fsSL -o pluginval.zip https://github.com/Tracktion/pluginval/releases/latest/download/pluginval_macOS.zip
           unzip -q pluginval.zip
-      - name: Install dependencies (Linux)
-        if: runner.os == 'Linux'
+      - name: Run pluginval
+        run: |
+          chmod +x "pluginval.app/Contents/MacOS/pluginval"
+          "pluginval.app/Contents/MacOS/pluginval" \
+            --strictness-level 8 \
+            --skip-gui-tests \
+            --timeout-ms 120000 \
+            --validate "${{ steps.find-vst3.outputs.path }}"
+
+  pluginval-linux:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download plugin artifact
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        with:
+          name: plugin-ubuntu-latest
+          path: plugin
+      - name: Find VST3 bundle
+        id: find-vst3
+        run: |
+          VST3_PATH=$(find plugin -name "*.vst3" -not -name "*probe*" -type d | head -1)
+          echo "path=$VST3_PATH" >> "$GITHUB_OUTPUT"
+          echo "Found VST3 at: $VST3_PATH"
+      - name: Download pluginval
+        run: |
+          curl -fsSL -o pluginval.zip https://github.com/Tracktion/pluginval/releases/latest/download/pluginval_Linux.zip
+          unzip -q pluginval.zip
+      - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y libasound2-dev libfreetype6-dev libx11-dev libxcomposite-dev libxcursor-dev libxext-dev libxinerama-dev libxrandr-dev libxrender-dev libcairo2-dev libfontconfig1-dev libxcb1-dev libxkbcommon-x11-dev libx11-xcb-dev libxcb-util-dev libxcb-cursor-dev libxcb-keysyms1-dev libxcb-xkb-dev libxkbcommon-dev libgtkmm-3.0-dev libsqlite3-dev libxcb-util0-dev
       - name: Run pluginval
         run: |
-          if [[ "${{ runner.os }}" == "macOS" ]]; then
-            chmod +x "pluginval.app/Contents/MacOS/pluginval"
-            "pluginval.app/Contents/MacOS/pluginval" \
-              --strictness-level 8 \
-              --skip-gui-tests \
-              --timeout-ms 120000 \
-              --validate "${{ steps.find-vst3.outputs.path }}"
-          else
-            chmod +x pluginval
-            xvfb-run -a ./pluginval \
-              --strictness-level 8 \
-              --skip-gui-tests \
-              --timeout-ms 120000 \
-              --validate "${{ steps.find-vst3.outputs.path }}"
-          fi
+          chmod +x pluginval
+          xvfb-run -a ./pluginval \
+            --strictness-level 8 \
+            --skip-gui-tests \
+            --timeout-ms 120000 \
+            --validate "${{ steps.find-vst3.outputs.path }}"
 
   wasm-build:
     runs-on: ubuntu-latest
@@ -377,7 +396,7 @@ jobs:
           if-no-files-found: ignore
 
   ci-complete:
-    needs: [code-quality, build, engine-isolation, secrets-scan, code-coverage, webui-tests, pluginval, wasm-build, site-lint, site-e2e]
+    needs: [code-quality, build, engine-isolation, secrets-scan, code-coverage, webui-tests, pluginval-macos, pluginval-linux, wasm-build, site-lint, site-e2e]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -389,7 +408,8 @@ jobs:
              [[ "${{ needs.secrets-scan.result }}" != "success" ]] || \
              [[ "${{ needs.code-coverage.result }}" != "success" ]] || \
              [[ "${{ needs.webui-tests.result }}" != "success" ]] || \
-             [[ "${{ needs.pluginval.result }}" != "success" ]] || \
+             [[ "${{ needs.pluginval-macos.result }}" != "success" ]] || \
+             [[ "${{ needs.pluginval-linux.result }}" != "success" ]] || \
              [[ "${{ needs.wasm-build.result }}" != "success" ]] || \
              [[ "${{ needs.site-lint.result }}" != "success" ]] || \
              [[ "${{ needs.site-e2e.result }}" != "success" ]]; then
