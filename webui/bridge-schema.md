@@ -24,12 +24,50 @@ ignored; unknown message types must be logged and dropped, never crash.
 `laneCoreParam(3, kCoreHits)`), so the JS side never hardcodes numeric VST
 param IDs.
 
+### Action reference
+
+<!-- Regenerate via `node scripts/generate-bridge-schema-doc.mjs`. Do not hand-edit content between markers. -->
+
+<!-- BEGIN GENERATED: actions -->
+| Action | Payload type | Required fields | Notes |
+|---|---|---|---|
+| `toggleStep` | `payloadToggleStep` | `lane`, `step` |  |
+| `setEuclid` | `payloadSetEuclid` | `lane` |  |
+| `setCells` | `payloadSetCells` | `lane`, `cells` |  |
+| `setFixedStep` | `payloadSetFixedStep` | `lane`, `step`, `on` |  |
+| `setMicroTiming` | `payloadSetMicroTiming` | `lane`, `step`, `ms` |  |
+| `setEnvelope` | `payloadSetEnvelope` | `lane`, `index` |  |
+| `selectScene` | `payloadSelectScene` | `scene` |  |
+| `applyPreset` | `payloadApplyPreset` | `index` | index=-1 loads Init (all lanes cleared). index>=0 selects a factory preset from the runtime inventory (site/src/generated/presets.json). No hard maximum here: bounds are enforced by the native side against the actual inventory. |
+| `togglePlay` | `payloadEmpty` | — | Empty payload for: togglePlay, exportRequest, chainAddEntry, resetNoteMap |
+| `exportRequest` | `payloadEmpty` | — | Empty payload for: togglePlay, exportRequest, chainAddEntry, resetNoteMap |
+| `chainAddEntry` | `payloadEmpty` | — | Empty payload for: togglePlay, exportRequest, chainAddEntry, resetNoteMap |
+| `chainRemoveEntry` | `payloadChainRemoveEntry` | `index` |  |
+| `resetNoteMap` | `payloadEmpty` | — | Empty payload for: togglePlay, exportRequest, chainAddEntry, resetNoteMap |
+| `setNoteMap` | `payloadSetNoteMap` | `note`, `output` |  |
+| `setAccent` | `payloadSetAccent` | `lane`, `step`, `value` |  |
+<!-- END GENERATED: actions -->
+
 ## C++ → JS
 
 | type | payload | cadence |
 |---|---|---|
 | `state` | `state: State` (full snapshot — see host-iface.js) | on `ready`, preset load, scene switch, `setComponentState`, and after every `action` |
 | `frame` | `frame: {t8, playing, convLeft, lanes:[{ph, step}]}` | ~30 Hz message-thread timer while the editor is open; sourced from the same values the read-only feedback params carry today |
+
+### Message reference
+
+<!-- Regenerate via `node scripts/generate-bridge-schema-doc.mjs`. Do not hand-edit content between markers. -->
+
+<!-- BEGIN GENERATED: messages -->
+| Message type | Direction | Fields | Required |
+|---|---|---|---|
+| `msgReady` | JS → C++ | `type`: `"ready"`<br>`v`: integer | `type`, `v` |
+| `msgEdit` | JS → C++ | `type`: `"edit"`<br>`v`: integer<br>`paramId`: string<br>`value`: number<br>`gesture`: `begin`\|`perform`\|`end` | `type`, `v`, `paramId`, `value`, `gesture` |
+| `msgAction` | JS → C++ | `type`: `"action"`<br>`v`: integer<br>`name`: `toggleStep`\|`setEuclid`\|`setCells`\|`setFixedStep`\|`setMicroTiming`\|`setEnvelope`\|`selectScene`\|`applyPreset`\|`togglePlay`\|`exportRequest`\|`chainAddEntry`\|`chainRemoveEntry`\|`resetNoteMap`\|`setNoteMap`\|`setAccent`<br>`payload`: object | `type`, `v`, `name`, `payload` |
+| `msgState` | C++ → JS | `type`: `"state"`<br>`state`: `state` | `type`, `state` |
+| `msgFrame` | C++ → JS | `type`: `"frame"`<br>`frame`: `frame` | `type`, `frame` |
+<!-- END GENERATED: messages -->
 
 ## State mapping (C++ side)
 
