@@ -9,6 +9,7 @@
 
 #include "../controller.h"
 #include "../plugids.h"
+#include "poly/params_def.h"
 
 namespace poly {
 
@@ -198,10 +199,10 @@ CMouseEventResult CellEditorView::onMouseDown(CPoint& where, const CButtonState&
     if (addButtonRect().pointInside(where)) {
         auto cellCountId = ParamIDs::laneCoreParam(selectedLane, ParamIDs::kCoreCellCount);
         double cur = controller_->getParamNormalized(cellCountId);
-        int count = static_cast<int>(std::round(cur * 64.0));
+        int count = static_cast<int>(params::normToEngineCore(ParamIDs::kCoreCellCount, cur));
         if (count < kMaxCells) {
             count++;
-            double norm = count / 64.0;
+            double norm = params::engineToNormCore(ParamIDs::kCoreCellCount, count);
             controller_->beginEdit(cellCountId);
             controller_->setParamNormalized(cellCountId, norm);
             controller_->performEdit(cellCountId, norm);
@@ -214,10 +215,10 @@ CMouseEventResult CellEditorView::onMouseDown(CPoint& where, const CButtonState&
     if (removeButtonRect().pointInside(where)) {
         auto cellCountId = ParamIDs::laneCoreParam(selectedLane, ParamIDs::kCoreCellCount);
         double cur = controller_->getParamNormalized(cellCountId);
-        int count = static_cast<int>(std::round(cur * 64.0));
+        int count = static_cast<int>(params::normToEngineCore(ParamIDs::kCoreCellCount, cur));
         if (count > 0) {
             count--;
-            double norm = count / 64.0;
+            double norm = params::engineToNormCore(ParamIDs::kCoreCellCount, count);
             controller_->beginEdit(cellCountId);
             controller_->setParamNormalized(cellCountId, norm);
             controller_->performEdit(cellCountId, norm);

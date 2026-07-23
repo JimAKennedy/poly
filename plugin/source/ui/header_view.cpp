@@ -11,6 +11,7 @@
 #include "../controller.h"
 #include "../plugids.h"
 #include "note_map_view.h"
+#include "poly/params_def.h"
 #include "poly/presets.h"
 #include "poly/types.h"
 
@@ -190,56 +191,42 @@ void HeaderView::applyPreset(int index) {
         controller_->endEdit(id);
     };
 
+    // Inverse scaling via poly::params::engineToNorm{Expr,Core} (engine/include/poly/params_def.h).
     for (int lane = 0; lane < kMaxLanes; ++lane) {
         const auto& cfg = state.lanes[lane];
-        pushParam(ParamIDs::laneParam(lane, ParamIDs::kProbability), cfg.probability);
-        pushParam(ParamIDs::laneParam(lane, ParamIDs::kBaseVelocity), cfg.baseVelocity / 127.0);
-        pushParam(ParamIDs::laneParam(lane, ParamIDs::kEmphasisProb), cfg.emphasisProb);
-        pushParam(ParamIDs::laneParam(lane, ParamIDs::kGhostFloor), cfg.ghostFloor / 127.0);
-        pushParam(ParamIDs::laneParam(lane, ParamIDs::kVelocitySpread), cfg.velocitySpread);
-        pushParam(ParamIDs::laneParam(lane, ParamIDs::kSwingAmount), cfg.swingAmount);
-        pushParam(ParamIDs::laneParam(lane, ParamIDs::kHumanizeMs), cfg.humanizeMs / 50.0);
-        pushParam(ParamIDs::laneParam(lane, ParamIDs::kNoteDuration), cfg.noteDuration / 4.0);
-        pushParam(ParamIDs::laneParam(lane, ParamIDs::kActive), (lane < state.activeLaneCount) ? 1.0 : 0.0);
-        pushParam(ParamIDs::laneParam(lane, ParamIDs::kPhraseLength), cfg.phraseLength / 64.0);
-        pushParam(ParamIDs::laneParam(lane, ParamIDs::kPhraseGap), cfg.phraseGap / 64.0);
-        pushParam(ParamIDs::laneParam(lane, ParamIDs::kPhraseOffset), cfg.phraseOffset / 64.0);
-        pushParam(ParamIDs::laneParam(lane, ParamIDs::kMutationRate), cfg.mutationRate);
-        pushParam(ParamIDs::laneParam(lane, ParamIDs::kDriftRate), static_cast<double>((cfg.driftRate + 4.0f) / 8.0f));
-        pushParam(ParamIDs::laneParam(lane, ParamIDs::kTimingOffset),
-                  static_cast<double>((cfg.timingOffsetMs + 20.0f) / 40.0f));
-        pushParam(ParamIDs::laneParam(lane, ParamIDs::kKotekanSource),
-                  static_cast<double>(cfg.kotekanSourceLane + 1) / 8.0);
+        auto expr = [&](int offset, double engine) {
+            pushParam(ParamIDs::laneParam(lane, offset),
+                      params::engineToNormExpr(static_cast<uint32_t>(offset), engine));
+        };
+        auto core = [&](int offset, double engine) {
+            pushParam(ParamIDs::laneCoreParam(lane, offset),
+                      params::engineToNormCore(static_cast<uint32_t>(offset), engine));
+        };
+        expr(ParamIDs::kProbability, cfg.probability);
+        expr(ParamIDs::kBaseVelocity, cfg.baseVelocity);
+        expr(ParamIDs::kEmphasisProb, cfg.emphasisProb);
+        expr(ParamIDs::kGhostFloor, cfg.ghostFloor);
+        expr(ParamIDs::kVelocitySpread, cfg.velocitySpread);
+        expr(ParamIDs::kSwingAmount, cfg.swingAmount);
+        expr(ParamIDs::kHumanizeMs, cfg.humanizeMs);
+        expr(ParamIDs::kNoteDuration, cfg.noteDuration);
+        expr(ParamIDs::kActive, (lane < state.activeLaneCount) ? 1.0 : 0.0);
+        expr(ParamIDs::kPhraseLength, cfg.phraseLength);
+        expr(ParamIDs::kPhraseGap, cfg.phraseGap);
+        expr(ParamIDs::kPhraseOffset, cfg.phraseOffset);
+        expr(ParamIDs::kMutationRate, cfg.mutationRate);
+        expr(ParamIDs::kDriftRate, cfg.driftRate);
+        expr(ParamIDs::kTimingOffset, cfg.timingOffsetMs);
+        expr(ParamIDs::kKotekanSource, cfg.kotekanSourceLane);
 
-        pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreSteps), (cfg.cycle.steps - 1) / 63.0);
-        int subIdx = 0;
-        switch (cfg.cycle.subdivision) {
-        case 1:
-            subIdx = 0;
-            break;
-        case 2:
-            subIdx = 1;
-            break;
-        case 4:
-            subIdx = 2;
-            break;
-        case 8:
-            subIdx = 3;
-            break;
-        case 16:
-            subIdx = 4;
-            break;
-        default:
-            subIdx = 2;
-            break;
-        }
-        pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreSubdivision), subIdx / 4.0);
-        pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreHits), cfg.hitCount / 64.0);
-        pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreRotation), cfg.rotation / 63.0);
-        pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreMidiNote), cfg.midiNote / 127.0);
-        pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreCellCount), cfg.cellCount / 64.0);
-        pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreTimeline), cfg.timeline ? 1.0 : 0.0);
-        pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreFixedPatternLen), cfg.fixedPatternLength / 64.0);
+        core(ParamIDs::kCoreSteps, cfg.cycle.steps);
+        core(ParamIDs::kCoreSubdivision, cfg.cycle.subdivision);
+        core(ParamIDs::kCoreHits, cfg.hitCount);
+        core(ParamIDs::kCoreRotation, cfg.rotation);
+        core(ParamIDs::kCoreMidiNote, cfg.midiNote);
+        core(ParamIDs::kCoreCellCount, cfg.cellCount);
+        core(ParamIDs::kCoreTimeline, cfg.timeline ? 1.0 : 0.0);
+        core(ParamIDs::kCoreFixedPatternLen, cfg.fixedPatternLength);
     }
 
     auto* polyCtrl = static_cast<PolyController*>(controller_);
@@ -296,16 +283,27 @@ void HeaderView::resetToInit() {
         controller_->endEdit(id);
     };
 
+    // kInit* arrays are ENGINE values (steps, subdivision, hits, midi note). The registry
+    // converts them to normalized via engineToNormCore; UI-facing constants (0.5, 0.0, 1.0)
+    // are already normalized so bypass the helper.
     static constexpr int kInitSteps[] = {4, 4, 8, 5, 7, 3, 6, 9};
     static constexpr int kInitSubs[] = {4, 4, 8, 16, 8, 16, 16, 16};
     static constexpr int kInitHits[] = {4, 2, 8, 3, 4, 2, 4, 5};
     static constexpr int kInitNotes[] = {36, 38, 42, 45, 46, 39, 43, 50};
 
     for (int lane = 0; lane < kMaxLanes; ++lane) {
+        auto exprEngine = [&](int offset, double engine) {
+            pushParam(ParamIDs::laneParam(lane, offset),
+                      params::engineToNormExpr(static_cast<uint32_t>(offset), engine));
+        };
+        auto coreEngine = [&](int offset, double engine) {
+            pushParam(ParamIDs::laneCoreParam(lane, offset),
+                      params::engineToNormCore(static_cast<uint32_t>(offset), engine));
+        };
         pushParam(ParamIDs::laneParam(lane, ParamIDs::kProbability), 1.0);
-        pushParam(ParamIDs::laneParam(lane, ParamIDs::kBaseVelocity), 100.0 / 127.0);
+        exprEngine(ParamIDs::kBaseVelocity, 100.0);
         pushParam(ParamIDs::laneParam(lane, ParamIDs::kEmphasisProb), 0.5);
-        pushParam(ParamIDs::laneParam(lane, ParamIDs::kGhostFloor), 30.0 / 127.0);
+        exprEngine(ParamIDs::kGhostFloor, 30.0);
         pushParam(ParamIDs::laneParam(lane, ParamIDs::kVelocitySpread), 0.05);
         pushParam(ParamIDs::laneParam(lane, ParamIDs::kSwingAmount), 0.0);
         pushParam(ParamIDs::laneParam(lane, ParamIDs::kHumanizeMs), 0.0);
@@ -319,32 +317,11 @@ void HeaderView::resetToInit() {
         pushParam(ParamIDs::laneParam(lane, ParamIDs::kTimingOffset), 0.5);
         pushParam(ParamIDs::laneParam(lane, ParamIDs::kKotekanSource), 0.0);
 
-        pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreSteps), (kInitSteps[lane] - 1) / 63.0);
-        int subIdx = 0;
-        switch (kInitSubs[lane]) {
-        case 1:
-            subIdx = 0;
-            break;
-        case 2:
-            subIdx = 1;
-            break;
-        case 4:
-            subIdx = 2;
-            break;
-        case 8:
-            subIdx = 3;
-            break;
-        case 16:
-            subIdx = 4;
-            break;
-        default:
-            subIdx = 2;
-            break;
-        }
-        pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreSubdivision), subIdx / 4.0);
-        pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreHits), kInitHits[lane] / 64.0);
+        coreEngine(ParamIDs::kCoreSteps, kInitSteps[lane]);
+        coreEngine(ParamIDs::kCoreSubdivision, kInitSubs[lane]);
+        coreEngine(ParamIDs::kCoreHits, kInitHits[lane]);
         pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreRotation), 0.0);
-        pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreMidiNote), kInitNotes[lane] / 127.0);
+        coreEngine(ParamIDs::kCoreMidiNote, kInitNotes[lane]);
         pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreCellCount), 0.0);
         pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreTimeline), 0.0);
         pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreFixedPatternLen), 0.0);

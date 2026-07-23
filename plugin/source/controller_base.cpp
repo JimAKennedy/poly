@@ -7,6 +7,7 @@
 #include "pluginterfaces/base/ustring.h"
 
 #include "plugids.h"
+#include "poly/params_def.h"
 #include "poly/scene.h"
 #include "poly/state_io.h"
 #include "poly/types.h"
@@ -25,6 +26,10 @@ struct LaneParamDef {
     double defaultNorm;
 };
 
+// defaultNorm values below mirror poly::params::kLaneExprParamRegistry[i].defaultEngine
+// after engineToNormExpr. Kept as literal ratios here because ParameterInfo registration
+// requires constexpr initializers and the runtime helpers are not constexpr yet.
+// If a default changes, update BOTH sites — see M048 S04 followUps for the constexpr path.
 static constexpr LaneParamDef kLaneParamDefs[] = {
     {ParamIDs::kProbability, "Probability", "%", 0, 1.0},
     {ParamIDs::kBaseVelocity, "Base Velocity", "", 127, 100.0 / 127.0},
@@ -52,6 +57,7 @@ struct CoreParamDef {
     double defaultNorm;
 };
 
+// See comment above kLaneParamDefs — same constexpr-vs-registry note applies.
 static constexpr CoreParamDef kCoreParamDefs[] = {
     {ParamIDs::kCoreSteps, "Steps", "", 63, 3.0 / 63.0},
     {ParamIDs::kCoreSubdivision, "Subdivision", "", 4, 0.5},
@@ -225,62 +231,46 @@ Steinberg::tresult PLUGIN_API PolyControllerBase::setComponentState(Steinberg::I
     // P7 fix (M046 S05 T02): publish the SELECTED scene, not always sceneA.
     // activeScene() branches on cachedState_.select — matches the rest of the
     // controller/UI which reads through this accessor for scene-aware fields.
+    // Inverse scaling lives in poly::params::engineToNorm{Expr,Core} (engine/include/poly/params_def.h).
+    // Field mapping stays explicit for readability; per-field literal inverse math is gone.
     const auto& gs = activeScene();
     for (int lane = 0; lane < kMaxLanes; ++lane) {
         const auto& cfg = gs.lanes[lane];
-        setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kProbability), cfg.probability);
-        setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kBaseVelocity), cfg.baseVelocity / 127.0);
-        setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kEmphasisProb), cfg.emphasisProb);
-        setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kGhostFloor), cfg.ghostFloor / 127.0);
-        setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kVelocitySpread), cfg.velocitySpread);
-        setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kSwingAmount), cfg.swingAmount);
-        setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kHumanizeMs), cfg.humanizeMs / 50.0);
-        setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kNoteDuration), cfg.noteDuration / 4.0);
-        setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kActive), cfg.active ? 1.0 : 0.0);
-        setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kPhraseLength), cfg.phraseLength / 64.0);
-        setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kPhraseGap), cfg.phraseGap / 64.0);
-        setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kPhraseOffset), cfg.phraseOffset / 64.0);
-        setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kMutationRate), cfg.mutationRate);
-        setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kDriftRate),
-                           static_cast<double>((cfg.driftRate + 4.0f) / 8.0f));
-        setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kTimingOffset),
-                           static_cast<double>((cfg.timingOffsetMs + 20.0f) / 40.0f));
-        setParamNormalized(ParamIDs::laneParam(lane, ParamIDs::kKotekanSource),
-                           static_cast<double>(cfg.kotekanSourceLane + 1) / 8.0);
+        auto expr = [&](int offset, double engine) {
+            setParamNormalized(ParamIDs::laneParam(lane, offset),
+                               params::engineToNormExpr(static_cast<uint32_t>(offset), engine));
+        };
+        auto core = [&](int offset, double engine) {
+            setParamNormalized(ParamIDs::laneCoreParam(lane, offset),
+                               params::engineToNormCore(static_cast<uint32_t>(offset), engine));
+        };
+        expr(ParamIDs::kProbability, cfg.probability);
+        expr(ParamIDs::kBaseVelocity, cfg.baseVelocity);
+        expr(ParamIDs::kEmphasisProb, cfg.emphasisProb);
+        expr(ParamIDs::kGhostFloor, cfg.ghostFloor);
+        expr(ParamIDs::kVelocitySpread, cfg.velocitySpread);
+        expr(ParamIDs::kSwingAmount, cfg.swingAmount);
+        expr(ParamIDs::kHumanizeMs, cfg.humanizeMs);
+        expr(ParamIDs::kNoteDuration, cfg.noteDuration);
+        expr(ParamIDs::kActive, cfg.active ? 1.0 : 0.0);
+        expr(ParamIDs::kPhraseLength, cfg.phraseLength);
+        expr(ParamIDs::kPhraseGap, cfg.phraseGap);
+        expr(ParamIDs::kPhraseOffset, cfg.phraseOffset);
+        expr(ParamIDs::kMutationRate, cfg.mutationRate);
+        expr(ParamIDs::kDriftRate, cfg.driftRate);
+        expr(ParamIDs::kTimingOffset, cfg.timingOffsetMs);
+        expr(ParamIDs::kKotekanSource, cfg.kotekanSourceLane);
 
-        setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreSteps), (cfg.cycle.steps - 1) / 63.0);
-        int subIdx = 0;
-        switch (cfg.cycle.subdivision) {
-        case 1:
-            subIdx = 0;
-            break;
-        case 2:
-            subIdx = 1;
-            break;
-        case 4:
-            subIdx = 2;
-            break;
-        case 8:
-            subIdx = 3;
-            break;
-        case 16:
-            subIdx = 4;
-            break;
-        default:
-            subIdx = 2;
-            break;
-        }
-        setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreSubdivision), subIdx / 4.0);
-        setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreHits), cfg.hitCount / 64.0);
-        setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreRotation), cfg.rotation / 63.0);
-        setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreMidiNote), cfg.midiNote / 127.0);
-        setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreCellCount), cfg.cellCount / 64.0);
-        setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreTimeline), cfg.timeline ? 1.0 : 0.0);
-        setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreFixedPatternLen),
-                           cfg.fixedPatternLength / 64.0);
-        setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreTempoMult),
-                           static_cast<double>((cfg.tempoMultiplier - 0.25f) / 3.75f));
-        setParamNormalized(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreMidiChannel), (cfg.midiChannel + 1) / 16.0);
+        core(ParamIDs::kCoreSteps, cfg.cycle.steps);
+        core(ParamIDs::kCoreSubdivision, cfg.cycle.subdivision);
+        core(ParamIDs::kCoreHits, cfg.hitCount);
+        core(ParamIDs::kCoreRotation, cfg.rotation);
+        core(ParamIDs::kCoreMidiNote, cfg.midiNote);
+        core(ParamIDs::kCoreCellCount, cfg.cellCount);
+        core(ParamIDs::kCoreTimeline, cfg.timeline ? 1.0 : 0.0);
+        core(ParamIDs::kCoreFixedPatternLen, cfg.fixedPatternLength);
+        core(ParamIDs::kCoreTempoMult, cfg.tempoMultiplier);
+        core(ParamIDs::kCoreMidiChannel, cfg.midiChannel);
     }
 
     setParamNormalized(ParamIDs::kMacroComplexity, gs.macros.complexity);

@@ -17,6 +17,7 @@
 #include "choc/gui/choc_WebView.h"
 #include "choc/text/choc_JSON.h"
 #include "poly/euclidean.h"
+#include "poly/params_def.h"
 #include "poly/presets.h"
 #include "poly_webui_assets.h" // generated: jk_embed_assets(webui/*)
 
@@ -244,15 +245,18 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
         auto stepsId = ParamIDs::laneCoreParam(lane, ParamIDs::kCoreSteps);
         auto hitsId = ParamIDs::laneCoreParam(lane, ParamIDs::kCoreHits);
         auto rotId = ParamIDs::laneCoreParam(lane, ParamIDs::kCoreRotation);
+        const double stepsNorm = params::engineToNormCore(ParamIDs::kCoreSteps, cfg.cycle.steps);
+        const double hitsNorm = params::engineToNormCore(ParamIDs::kCoreHits, cfg.hitCount);
+        const double rotNorm = params::engineToNormCore(ParamIDs::kCoreRotation, cfg.rotation);
         controller_->beginEdit(stepsId);
         controller_->beginEdit(hitsId);
         controller_->beginEdit(rotId);
-        controller_->setParamNormalized(stepsId, (cfg.cycle.steps - 1) / 63.0);
-        controller_->performEdit(stepsId, (cfg.cycle.steps - 1) / 63.0);
-        controller_->setParamNormalized(hitsId, cfg.hitCount / 64.0);
-        controller_->performEdit(hitsId, cfg.hitCount / 64.0);
-        controller_->setParamNormalized(rotId, cfg.rotation / 63.0);
-        controller_->performEdit(rotId, cfg.rotation / 63.0);
+        controller_->setParamNormalized(stepsId, stepsNorm);
+        controller_->performEdit(stepsId, stepsNorm);
+        controller_->setParamNormalized(hitsId, hitsNorm);
+        controller_->performEdit(hitsId, hitsNorm);
+        controller_->setParamNormalized(rotId, rotNorm);
+        controller_->performEdit(rotId, rotNorm);
         controller_->endEdit(stepsId);
         controller_->endEdit(hitsId);
         controller_->endEdit(rotId);
@@ -273,9 +277,10 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
             cfg.cellCount = 0;
         }
         auto cellId = ParamIDs::laneCoreParam(lane, ParamIDs::kCoreCellCount);
+        const double cellNorm = params::engineToNormCore(ParamIDs::kCoreCellCount, cfg.cellCount);
         controller_->beginEdit(cellId);
-        controller_->setParamNormalized(cellId, cfg.cellCount / 64.0);
-        controller_->performEdit(cellId, cfg.cellCount / 64.0);
+        controller_->setParamNormalized(cellId, cellNorm);
+        controller_->performEdit(cellId, cellNorm);
         controller_->endEdit(cellId);
         controller_->sendCellSizes(lane);
         return;
@@ -383,9 +388,12 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
             controller_->resetLaneNames();
             for (int lane = 0; lane < kMaxLanes; ++lane) {
                 pushParam(ParamIDs::laneParam(lane, ParamIDs::kActive), 1.0);
-                pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreSteps), (kInitSteps[lane] - 1) / 63.0);
-                pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreHits), kInitHits[lane] / 64.0);
-                pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreMidiNote), kInitNotes[lane] / 127.0);
+                pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreSteps),
+                          params::engineToNormCore(ParamIDs::kCoreSteps, kInitSteps[lane]));
+                pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreHits),
+                          params::engineToNormCore(ParamIDs::kCoreHits, kInitHits[lane]));
+                pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreMidiNote),
+                          params::engineToNormCore(ParamIDs::kCoreMidiNote, kInitNotes[lane]));
             }
             pushParam(ParamIDs::kActiveLaneCount, (kMaxLanes - 1) / 7.0);
             pushParam(ParamIDs::kSeed, 0.0);
@@ -398,55 +406,39 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
 
             for (int lane = 0; lane < kMaxLanes; ++lane) {
                 const auto& cfg = state.lanes[lane];
-                pushParam(ParamIDs::laneParam(lane, ParamIDs::kProbability), cfg.probability);
-                pushParam(ParamIDs::laneParam(lane, ParamIDs::kBaseVelocity), cfg.baseVelocity / 127.0);
-                pushParam(ParamIDs::laneParam(lane, ParamIDs::kEmphasisProb), cfg.emphasisProb);
-                pushParam(ParamIDs::laneParam(lane, ParamIDs::kGhostFloor), cfg.ghostFloor / 127.0);
-                pushParam(ParamIDs::laneParam(lane, ParamIDs::kVelocitySpread), cfg.velocitySpread);
-                pushParam(ParamIDs::laneParam(lane, ParamIDs::kSwingAmount), cfg.swingAmount);
-                pushParam(ParamIDs::laneParam(lane, ParamIDs::kHumanizeMs), cfg.humanizeMs / 50.0);
-                pushParam(ParamIDs::laneParam(lane, ParamIDs::kNoteDuration), cfg.noteDuration / 4.0);
-                pushParam(ParamIDs::laneParam(lane, ParamIDs::kActive), (lane < state.activeLaneCount) ? 1.0 : 0.0);
-                pushParam(ParamIDs::laneParam(lane, ParamIDs::kPhraseLength), cfg.phraseLength / 64.0);
-                pushParam(ParamIDs::laneParam(lane, ParamIDs::kPhraseGap), cfg.phraseGap / 64.0);
-                pushParam(ParamIDs::laneParam(lane, ParamIDs::kPhraseOffset), cfg.phraseOffset / 64.0);
-                pushParam(ParamIDs::laneParam(lane, ParamIDs::kMutationRate), cfg.mutationRate);
-                pushParam(ParamIDs::laneParam(lane, ParamIDs::kDriftRate),
-                          static_cast<double>((cfg.driftRate + 4.0f) / 8.0f));
-                pushParam(ParamIDs::laneParam(lane, ParamIDs::kTimingOffset),
-                          static_cast<double>((cfg.timingOffsetMs + 20.0f) / 40.0f));
-                pushParam(ParamIDs::laneParam(lane, ParamIDs::kKotekanSource),
-                          static_cast<double>(cfg.kotekanSourceLane + 1) / 8.0);
+                auto expr = [&](int offset, double engine) {
+                    pushParam(ParamIDs::laneParam(lane, offset),
+                              params::engineToNormExpr(static_cast<uint32_t>(offset), engine));
+                };
+                auto core = [&](int offset, double engine) {
+                    pushParam(ParamIDs::laneCoreParam(lane, offset),
+                              params::engineToNormCore(static_cast<uint32_t>(offset), engine));
+                };
+                expr(ParamIDs::kProbability, cfg.probability);
+                expr(ParamIDs::kBaseVelocity, cfg.baseVelocity);
+                expr(ParamIDs::kEmphasisProb, cfg.emphasisProb);
+                expr(ParamIDs::kGhostFloor, cfg.ghostFloor);
+                expr(ParamIDs::kVelocitySpread, cfg.velocitySpread);
+                expr(ParamIDs::kSwingAmount, cfg.swingAmount);
+                expr(ParamIDs::kHumanizeMs, cfg.humanizeMs);
+                expr(ParamIDs::kNoteDuration, cfg.noteDuration);
+                expr(ParamIDs::kActive, (lane < state.activeLaneCount) ? 1.0 : 0.0);
+                expr(ParamIDs::kPhraseLength, cfg.phraseLength);
+                expr(ParamIDs::kPhraseGap, cfg.phraseGap);
+                expr(ParamIDs::kPhraseOffset, cfg.phraseOffset);
+                expr(ParamIDs::kMutationRate, cfg.mutationRate);
+                expr(ParamIDs::kDriftRate, cfg.driftRate);
+                expr(ParamIDs::kTimingOffset, cfg.timingOffsetMs);
+                expr(ParamIDs::kKotekanSource, cfg.kotekanSourceLane);
 
-                pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreSteps), (cfg.cycle.steps - 1) / 63.0);
-                int subIdx = 0;
-                switch (cfg.cycle.subdivision) {
-                case 1:
-                    subIdx = 0;
-                    break;
-                case 2:
-                    subIdx = 1;
-                    break;
-                case 4:
-                    subIdx = 2;
-                    break;
-                case 8:
-                    subIdx = 3;
-                    break;
-                case 16:
-                    subIdx = 4;
-                    break;
-                default:
-                    subIdx = 2;
-                    break;
-                }
-                pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreSubdivision), subIdx / 4.0);
-                pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreHits), cfg.hitCount / 64.0);
-                pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreRotation), cfg.rotation / 63.0);
-                pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreMidiNote), cfg.midiNote / 127.0);
-                pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreCellCount), cfg.cellCount / 64.0);
-                pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreTimeline), cfg.timeline ? 1.0 : 0.0);
-                pushParam(ParamIDs::laneCoreParam(lane, ParamIDs::kCoreFixedPatternLen), cfg.fixedPatternLength / 64.0);
+                core(ParamIDs::kCoreSteps, cfg.cycle.steps);
+                core(ParamIDs::kCoreSubdivision, cfg.cycle.subdivision);
+                core(ParamIDs::kCoreHits, cfg.hitCount);
+                core(ParamIDs::kCoreRotation, cfg.rotation);
+                core(ParamIDs::kCoreMidiNote, cfg.midiNote);
+                core(ParamIDs::kCoreCellCount, cfg.cellCount);
+                core(ParamIDs::kCoreTimeline, cfg.timeline ? 1.0 : 0.0);
+                core(ParamIDs::kCoreFixedPatternLen, cfg.fixedPatternLength);
             }
 
             pushParam(ParamIDs::kMacroComplexity, state.macros.complexity);
@@ -588,30 +580,28 @@ void WebUIView::applyEditToCache(Steinberg::Vst::ParamID id, double normalized) 
         int lane = rel / kCoreParamsPerLane;
         int offset = rel % kCoreParamsPerLane;
         auto& cfg = gs.lanes[lane];
+        const double engineValue = params::normToEngineCore(static_cast<uint32_t>(offset), normalized);
         switch (offset) {
         case kCoreSteps:
-            cfg.cycle.steps = 1 + static_cast<int>(std::round(normalized * 63.0));
+            cfg.cycle.steps = static_cast<int>(engineValue);
             break;
-        case kCoreSubdivision: {
-            static constexpr int subdivs[] = {1, 2, 4, 8, 16};
-            int idx = static_cast<int>(std::round(normalized * 4.0));
-            cfg.cycle.subdivision = subdivs[std::clamp(idx, 0, 4)];
+        case kCoreSubdivision:
+            cfg.cycle.subdivision = static_cast<int>(engineValue);
             break;
-        }
         case kCoreHits:
-            cfg.hitCount = static_cast<int>(std::round(normalized * 64.0));
+            cfg.hitCount = static_cast<int>(engineValue);
             break;
         case kCoreRotation:
-            cfg.rotation = static_cast<int>(std::round(normalized * 63.0));
+            cfg.rotation = static_cast<int>(engineValue);
             break;
         case kCoreMidiNote:
-            cfg.midiNote = static_cast<int16_t>(std::round(normalized * 127.0));
+            cfg.midiNote = static_cast<int16_t>(engineValue);
             break;
         case kCoreCellCount:
-            cfg.cellCount = static_cast<int>(std::round(normalized * 64.0));
+            cfg.cellCount = static_cast<int>(engineValue);
             break;
         case kCoreTimeline: {
-            const bool next = normalized > 0.5;
+            const bool next = engineValue > 0.5;
             // On the false→true edge, seed fixedPattern[] from the current
             // Euclidean state so the user's timeline-mode step grid starts
             // populated with the same hits the lane was already playing.
@@ -630,13 +620,13 @@ void WebUIView::applyEditToCache(Steinberg::Vst::ParamID id, double normalized) 
             break;
         }
         case kCoreFixedPatternLen:
-            cfg.fixedPatternLength = static_cast<int>(std::round(normalized * 64.0));
+            cfg.fixedPatternLength = static_cast<int>(engineValue);
             break;
         case kCoreTempoMult:
-            cfg.tempoMultiplier = static_cast<float>(0.25 + normalized * 3.75);
+            cfg.tempoMultiplier = static_cast<float>(engineValue);
             break;
         case kCoreMidiChannel:
-            cfg.midiChannel = static_cast<int16_t>(std::round(normalized * 16.0)) - 1;
+            cfg.midiChannel = static_cast<int16_t>(engineValue);
             break;
         default:
             break;
@@ -648,54 +638,55 @@ void WebUIView::applyEditToCache(Steinberg::Vst::ParamID id, double normalized) 
         int lane = static_cast<int>(id) / kParamsPerLane;
         int offset = static_cast<int>(id) % kParamsPerLane;
         auto& cfg = gs.lanes[lane];
+        const double engineValue = params::normToEngineExpr(static_cast<uint32_t>(offset), normalized);
         switch (offset) {
         case kProbability:
-            cfg.probability = static_cast<float>(normalized);
+            cfg.probability = static_cast<float>(engineValue);
             break;
         case kBaseVelocity:
-            cfg.baseVelocity = static_cast<uint8_t>(std::round(normalized * 127.0));
+            cfg.baseVelocity = static_cast<uint8_t>(engineValue);
             break;
         case kEmphasisProb:
-            cfg.emphasisProb = static_cast<float>(normalized);
+            cfg.emphasisProb = static_cast<float>(engineValue);
             break;
         case kGhostFloor:
-            cfg.ghostFloor = static_cast<uint8_t>(std::round(normalized * 127.0));
+            cfg.ghostFloor = static_cast<uint8_t>(engineValue);
             break;
         case kVelocitySpread:
-            cfg.velocitySpread = static_cast<float>(normalized);
+            cfg.velocitySpread = static_cast<float>(engineValue);
             break;
         case kSwingAmount:
-            cfg.swingAmount = static_cast<float>(normalized);
+            cfg.swingAmount = static_cast<float>(engineValue);
             break;
         case kHumanizeMs:
-            cfg.humanizeMs = static_cast<float>(normalized * 50.0);
+            cfg.humanizeMs = static_cast<float>(engineValue);
             break;
         case kNoteDuration:
-            cfg.noteDuration = static_cast<float>(normalized * 4.0);
+            cfg.noteDuration = static_cast<float>(engineValue);
             break;
         case kActive:
-            cfg.active = (normalized > 0.5);
+            cfg.active = (engineValue > 0.5);
             break;
         case kPhraseLength:
-            cfg.phraseLength = static_cast<float>(normalized * 64.0);
+            cfg.phraseLength = static_cast<float>(engineValue);
             break;
         case kPhraseGap:
-            cfg.phraseGap = static_cast<float>(normalized * 64.0);
+            cfg.phraseGap = static_cast<float>(engineValue);
             break;
         case kPhraseOffset:
-            cfg.phraseOffset = static_cast<float>(normalized * 64.0);
+            cfg.phraseOffset = static_cast<float>(engineValue);
             break;
         case kMutationRate:
-            cfg.mutationRate = static_cast<float>(normalized);
+            cfg.mutationRate = static_cast<float>(engineValue);
             break;
         case kDriftRate:
-            cfg.driftRate = static_cast<float>(normalized * 8.0 - 4.0);
+            cfg.driftRate = static_cast<float>(engineValue);
             break;
         case kTimingOffset:
-            cfg.timingOffsetMs = static_cast<float>(normalized * 40.0 - 20.0);
+            cfg.timingOffsetMs = static_cast<float>(engineValue);
             break;
         case kKotekanSource:
-            cfg.kotekanSourceLane = static_cast<int>(std::round(normalized * 8.0)) - 1;
+            cfg.kotekanSourceLane = static_cast<int>(engineValue);
             break;
         default:
             break;
