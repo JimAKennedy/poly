@@ -2,6 +2,25 @@
 class: gated
 title: "3. Afro-Cuban: Clave and the Rhythmic Matrix"
 description: "How the son clave organises Cuban rhythm — tresillo, cinquillo, and the rotation principle that connects African timelines to Caribbean dance music."
+patternClaims:
+  - label: "Tresillo E(3,8)"
+    pattern: "x . . x . . x ."
+    isEuclidean: { k: 3, n: 8, rotation: 0 }
+    reference: "line 19 prose 'tresillo — E(3,8)'"
+  - label: "Cinquillo E(5,8)"
+    pattern: "x . x x . x x ."
+    isEuclidean: { k: 5, n: 8, rotation: 0 }
+    reference: "line 29 prose 'cinquillo — E(5,8)'"
+  - label: "Son clave 3-2"
+    pattern: "x . . x . . x . . . x . x . . ."
+    isEuclidean: false
+    gapSequence: [3, 3, 4, 2, 4]
+    reference: "line 55 prose (locked by M048 S08 after M047 S01 D1 fix)"
+  - label: "Rumba clave 3-2"
+    pattern: "x . . x . . . x . . x . x . . ."
+    isEuclidean: false
+    gapSequence: [3, 4, 3, 2, 4]
+    reference: "line 58 prose"
 ---
 
 import PolyPatch from '../../components/PolyPatch.astro';
