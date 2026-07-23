@@ -211,32 +211,19 @@ struct GrooveState {
 | kMaxGlobalEnvelopes | 8 | Global modulation slots |
 | kMaxEventsPerBlock | 256 | Bounded output buffer |
 
-## Future Extensions (Designed For, Not Implemented)
+## Related Subsystems
 
-### Accent Mask Application
+Behaviors described in the data model above are implemented across the engine's
+supporting modules — refer to those sources for evaluation semantics:
 
-The `AccentMask` and `emphasisProb` fields are defined in the data model but not yet applied in `renderRange()`. When implemented:
-- Accented steps will get boosted velocity
-- `emphasisProb` gates whether the accent expresses on a given cycle
-- Channel 2 of `deterministicRand` will be used for emphasis decisions
-
-### Envelope Evaluation
-
-Per-lane and global envelopes are defined in the data model but not yet evaluated. When implemented:
-- Envelope phase derived from absolute PPQ: `phase = fmod(ppq / (periodBars * 4.0), 1.0) + phaseOffset`
-- Shape functions map phase to modulation value
-- Modulation applied multiplicatively or additively per target
-
-### Humanization
-
-The `humanizeMs` field is defined but not yet applied. When implemented:
-- Timing jitter will be derived from `deterministicRand` (channel 3)
-- Converted from ms to PPQ using current tempo
-- Applied as offset to `ppqPosition` in the output event
-
-### Macro Resolution
-
-`MacroValues` are defined but not yet resolved into per-lane parameter modifications. When implemented:
-- Each macro maps to a coherent set of lane parameters
-- Resolution happens before the lane processing loop
-- Macro effects are additive/multiplicative on top of lane defaults
+- **Accent expression** (`AccentMask`, `emphasisProb`) — evaluated in
+  `engine/src/engine.cpp` via `effectiveEmphasis` gating against
+  `deterministicRand`.
+- **Envelope evaluation** (`EnvelopeAssign`, per-lane and global) —
+  `engine/src/envelope.cpp:computeEnvelopePhase` derives phase from absolute
+  PPQ; shape functions in the same file map phase to modulation value.
+- **Humanization** (`humanizeMs`) — applied in `engine/src/engine.cpp` as a
+  ms-to-PPQ timing offset against `ppqPosition`.
+- **Macro resolution** (`MacroValues`) — `engine/src/macro.cpp:resolveMacros`
+  maps macros to per-lane parameter deltas before the lane render loop; called
+  from both the plugin processor and the WASM host.
