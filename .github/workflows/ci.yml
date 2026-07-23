@@ -319,6 +319,10 @@ jobs:
       - name: Install site dependencies
         working-directory: site
         run: npm ci
+      - name: Check generated doc regions match params_def.h (M048 S05)
+        run: |
+          node site/scripts/generate-params-json.mjs
+          bash scripts/check-generated-docs.sh
       - name: Get Playwright version
         id: pw-version
         working-directory: site

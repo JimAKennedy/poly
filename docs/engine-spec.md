@@ -178,24 +178,28 @@ struct GrooveState {
 
 ### LaneConfig
 
+<!-- Regenerate via `node scripts/generate-param-docs.mjs`. Do not hand-edit content between markers. -->
+
+<!-- BEGIN GENERATED: laneconfig -->
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
 | id | int | 0 | Lane identifier (used in RNG keying) |
 | role | Role | Custom | Semantic role for UI grouping |
 | midiNote | int16 | 36 | MIDI pitch (drum map) |
-| cycle | Cycle | 4 steps / 4 subdiv | Cycle length and subdivision |
+| cycle | Cycle | Steps × Subdivision defaults | Cycle length and subdivision |
 | hitCount | int | 4 | Euclidean pulse count |
 | rotation | int | 0 | Pattern rotation offset |
-| probability | float | 1.0 | Per-step trigger probability |
+| probability | float | 100% | Per-step trigger probability |
 | baseVelocity | uint8 | 100 | Nominal velocity (0–127) |
 | accents | AccentMask | all false | Step positions with emphasis |
-| emphasisProb | float | 0.5 | Accent expression probability |
+| emphasisProb | float | 50% | Accent expression probability |
 | ghostFloor | uint8 | 30 | Minimum ghost-note velocity |
-| velocitySpread | float | 0.05 | Velocity randomization range |
-| humanizeMs | float | 0.0 | Timing jitter in milliseconds |
-| active | bool | true | Lane on/off |
+| velocitySpread | float | 5% | Velocity randomization range |
+| humanizeMs | float | 0 | Timing jitter in milliseconds |
+| active | bool | On | Lane on/off |
 | envelopes | EnvelopeAssign[4] | — | Per-lane envelope assignments |
 | envelopeCount | int | 0 | Active envelope count |
+<!-- END GENERATED: laneconfig -->
 
 ### Capacity Constants
 
