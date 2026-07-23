@@ -65,7 +65,12 @@ std::vector<uint8_t> writeSMF(const NoteEvent* events, size_t count, double temp
     std::vector<uint8_t> track;
     track.reserve(count * 12 + 32);
 
-    uint32_t usPerQuarter = static_cast<uint32_t>(std::round(60000000.0 / tempo));
+    // M049 S03 (E3): clamp pathological tempo values so the usPerQuarter
+    // computation never produces inf/NaN (undefined uint32_t cast) or a value
+    // that overflows the 3-byte tempo meta encoding. See kSmfMinTempo in the
+    // header for the rationale.
+    const double safeTempo = (std::isfinite(tempo) && tempo >= kSmfMinTempo) ? tempo : kSmfMinTempo;
+    uint32_t usPerQuarter = static_cast<uint32_t>(std::round(60000000.0 / safeTempo));
     writeVLQToVec(track, 0);
     track.push_back(0xFF);
     track.push_back(0x51);

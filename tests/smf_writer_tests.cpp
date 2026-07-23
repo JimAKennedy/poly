@@ -1,3 +1,4 @@
+#include <cmath>
 #include <cstdint>
 
 #include <gtest/gtest.h>
@@ -180,4 +181,60 @@ TEST(SmfWriter, NoteOffBeforeNoteOnAtSameTick) {
         }
     }
     EXPECT_TRUE(noteOffFirst);
+}
+
+// M049 S03 (E3) regression: writeSMF() previously divided by tempo directly.
+// tempo=0 → 60000000/0 = inf → std::round(inf) → uint32_t cast UB. Bridge
+// guards ppqToSampleOffset the same way. Fix: clamp to kSmfMinTempo (20 BPM)
+// before the division so the export path never emits UB regardless of caller
+// pathology (transport paused, uninitialized export state).
+namespace {
+uint32_t extractTempoMeta(const std::vector<uint8_t>& data) {
+    return (static_cast<uint32_t>(data[26]) << 16) | (static_cast<uint32_t>(data[27]) << 8) |
+           static_cast<uint32_t>(data[28]);
+}
+} // namespace
+
+TEST(SmfWriter, TempoZeroClampsToMinimum) {
+    NoteEvent ev = {0.0, 60, 0.8f, 0.5, 0};
+    auto data = writeSMF(&ev, 1, 0.0);
+
+    ASSERT_GE(data.size(), 29u);
+    const uint32_t expected = static_cast<uint32_t>(60000000.0 / kSmfMinTempo);
+    EXPECT_EQ(extractTempoMeta(data), expected);
+
+    int noteOnCount = 0;
+    for (size_t i = 22; i + 2 < data.size(); ++i)
+        if ((data[i] & 0xF0) == 0x90)
+            ++noteOnCount;
+    EXPECT_EQ(noteOnCount, 1);
+}
+
+TEST(SmfWriter, TempoNegativeClampsToMinimum) {
+    NoteEvent ev = {0.0, 60, 0.8f, 0.5, 0};
+    auto data = writeSMF(&ev, 1, -120.0);
+
+    ASSERT_GE(data.size(), 29u);
+    const uint32_t expected = static_cast<uint32_t>(60000000.0 / kSmfMinTempo);
+    EXPECT_EQ(extractTempoMeta(data), expected);
+}
+
+TEST(SmfWriter, TempoNaNClampsToMinimum) {
+    NoteEvent ev = {0.0, 60, 0.8f, 0.5, 0};
+    auto data = writeSMF(&ev, 1, std::nan(""));
+
+    ASSERT_GE(data.size(), 29u);
+    const uint32_t expected = static_cast<uint32_t>(60000000.0 / kSmfMinTempo);
+    EXPECT_EQ(extractTempoMeta(data), expected);
+}
+
+TEST(SmfWriter, TempoBelowMinimumClampsToMinimum) {
+    // Sub-20-BPM values are technically finite and positive but musically
+    // nonsensical and can push usPerQuarter above the 3-byte encoding range.
+    NoteEvent ev = {0.0, 60, 0.8f, 0.5, 0};
+    auto data = writeSMF(&ev, 1, 5.0);
+
+    ASSERT_GE(data.size(), 29u);
+    const uint32_t expected = static_cast<uint32_t>(60000000.0 / kSmfMinTempo);
+    EXPECT_EQ(extractTempoMeta(data), expected);
 }
