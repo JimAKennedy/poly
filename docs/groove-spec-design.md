@@ -346,24 +346,78 @@ spec-side concept names as its UI vocabulary.
 ## 9. Prior art and licensing
 
 Poly is GPLv3, so GPL-compatible copyleft prior art is reusable as code, not
-just as reference. Survey summary (verified 2026-07-23; licenses checked at
-source — re-verify before vendoring anything):
+just as reference. Survey summary (web research 2026-07-23; licenses verified
+at source at that date — **re-verify before vendoring anything**).
 
-### 9.1 Pattern algebra / Toussaint formalizations
+**Headline:** nobody has formalized Toussaint's geometry-of-rhythm operations
+as a coherent DSL or spec language, and no existing format combines
+cycle-relative shaped envelopes + temporal process records + section timelines
+in one spec. The groove spec's *combination* is novel. Each stratum, however,
+has strong ancestors to borrow from — several license-compatible.
 
-*Findings to be inserted from research pass — see §9.4 verdicts.*
+### 9.1 Pattern algebra / rhythm DSLs
+
+| System | License | Relevance | Verdict |
+| --- | --- | --- | --- |
+| **TidalCycles** (Haskell; repo moved to Codeberg) | GPL-3.0 | The only serious formal combinator algebra over cyclic rhythm: patterns as pure functions of rational cycle time; `euclid`, `euclidInv` (= our complement), `rotL/rotR`, polymeter `{..}%n`, stacking; mini-notation descends from Bel's Bol Processor. McLean's "Alternate Timelines" paper formalizes the semantics. | **Primary design reference** for §3.1 semantics; code/algorithm reuse legally clean (GPL-3.0 = ours) |
+| **Strudel** (JS port of Tidal, `@strudel/core`) | AGPL-3.0 | Faithful JS pattern algebra + mini-notation parser — closest existing thing to our WebUI needs. | AGPL is one-way compatible with GPLv3 but contaminating (network terms). **Design reference only**; do not vendor |
+| **total-serialism** (JS) | MIT | Euclid/clave generators (explicitly Toussaint-derived), rotation, transforms. | **Reusable (MIT)** for WebUI-side utilities; API-naming reference |
+| **Sonic Pi** (`spread`/`ring`) | MIT (core) | Euclid + rotation on ring buffers; ergonomics reference only. | Design reference |
+| **Nestup** (nested-tuplets DSL, JS) | MIT | A small published rhythm DSL with grammar+parser; subdivision-oriented, not circle-geometry. | Grammar-ergonomics reference |
+| **Bol Processor BP3** (C) | BSD-style (verify exact text) | Formal generative grammars for tabla rhythm; ancestor of Tidal mini-notation. | Design reference |
+| Euclidean micro-libraries (npm/crates/PyPI) | MIT etc. | Single-function Bjorklund implementations. | Ignore — we already have `euclidean()` |
+| Toussaint / Demaine et al. papers | n/a (published math) | Theorems for §3.1 laws: necklace/rotation equivalence, evenness, distances. | **Implement from the papers** (already the M-A plan) |
 
 ### 9.2 Envelope / modulation / timeline formats
 
-*Findings to be inserted from research pass — see §9.4 verdicts.*
+| Format | License | Relevance | Verdict |
+| --- | --- | --- | --- |
+| **SuperCollider `Env`** | GPL-3.0 | Cleanest breakpoint-envelope abstraction found: parallel `levels` / `times` / per-segment `curve` arrays, where curve is a *numeric curvature factor* or shape name — subsumes our Ramp/Sine/Triangle/Curve/StepList enum. Deterministic client-side evaluation. | **Strongest design model for the envelope record**; port-compatible license |
+| **DAWproject** (Bitwig/PreSonus) | MIT, with formal XSD | `Points` automation: `Target` + `RealPoint{time, value, interpolation}` with `timeUnit: beats` — beats-domain automation points, exactly our problem minus richer shapes. `Arrangement → Lanes → Clips` + markers + tempo lanes = a section-timeline backbone. | **Reuse schema shapes (MIT)** for envelopes-in-beats and the M-G timeline |
+| **OpenTimelineIO** | Apache-2.0 | Composable timeline containers (Track/Clip/Gap/Stack) and — especially — the per-record `"SCHEMA": "Name.version"` versioned-typed-JSON idiom. | **Adopt the versioned-record idiom** for spec/process records (matches our `kStateVersion` culture) |
+| **Web Audio `AudioParam`** | W3C (permissive) | The litigated segment-type taxonomy (step/linear/exp/target/sampled-curve) with exact interpolation math. | Borrow the interpolation definitions for determinism |
+| **Tone.js** | MIT | The only surveyed format with native musical time: `bars:beats:sixteenths` strings + note-value notation. | **Adopt time-literal conventions (MIT)** |
+| SFZ / SoundFont 2 / DLS / CLAP / VST3 | CC0 / proprietary / MIT | SF2's modulator tuple (source→dest→amount→curve) and CLAP's additive non-destructive modulation semantics are good models for how envelopes combine with base values. VST3 is MIT as of 3.8. | Design references only |
+| MNX / MusicXML, Ableton `.als`, MIDI 2.0/MPE, note-seq | various | Score notation, proprietary project files, wire protocols, rendered-event lists — none specify generative structure. note-seq (Apache-2.0) is a good model for the *rendered-output* golden representation, not the spec. | Ignore for the spec itself |
 
-### 9.3 Constraint and analysis systems
+### 9.3 Analysis metrics and constraint systems
 
-*Findings to be inserted from research pass — see §9.4 verdicts.*
+| System | License | Relevance | Verdict |
+| --- | --- | --- | --- |
+| **GrooveToolbox** (Bruford et al., ISMIR 2020; Python) | Apache-2.0 | Mono + polyphonic (Witek-weighted) LHL syncopation, density, swing ratio, microtiming, and rhythm similarity (weighted/fuzzy Hamming, structural). | **Best license+coverage source for M-A** — port to C++ directly |
+| **SynPy** (Song/Pearce/Harte) | CC-BY-3.0 (code-unfriendly) | Seven syncopation models (LHL, Pressing, Keith, Sioros-Guedes, WNBD, Toussaint metric complexity + off-beatness) — the best *map* of the metric landscape. | Reimplement from the published model definitions; don't copy code |
+| **rhythmtoolbox** (Gómez-Marín) | **No license** | 18+ descriptors (balance, evenness, per-band syncopation) *perceptually validated* against human similarity judgments — directly informs which descriptors deserve `targetable: yes`. | Design reference only; implement from the papers |
+| **XronoMorph** (Milne) | Closed (math published) | Perfect balance + well-formedness — the strongest prior art for our balance/evenness targets. | Implement from the NIME/papers |
+| **music21** | BSD-3-Clause | Meter hierarchy / `beatStrength` (L&J metric weights — the substrate LHL needs). | Design reference for the metric-weight model |
+| **Strasheela** (Anders; Oz) | GPL-2.0-only (dead platform) | *The* prior art for declaratively constraining rhythmic structure — esp. its constraint-scope mechanism ("apply rule R to all pairs of simultaneous events"), which anticipates our relation predicates. | Design reference (license-incompatible, platform dead) |
+| **Cluster Engine** (Sandred; Common Lisp) | BSD-2-Clause (declared in .asd; confirm) | Multi-voice solver where each voice's rhythm is a separately constrainable sequence with cross-voice rules — structurally the closest system to our lane-relational model. | Design reference; study its rule-accessor model for §3.2 |
+| **Mutable Instruments Grids** (C++ firmware) | GPL-3.0 (AVR projects) | Canonical open drum-pattern generator; its interpolated density-map data is embeddable (license-identical) — a candidate *style prior* for M-C mutation in the house/techno space. | **Code and data reusable**; fixed-grid model differs from our variable lanes |
+| OpenMusic / OM# | GPL-3.0 | IRCAM constraint libs; Lisp visual-patching doesn't transfer. | Algorithm reference only |
 
-### 9.4 Verdicts
+### 9.4 Recommendations
 
-*Findings to be inserted from research pass.*
+1. **Build the spec language ourselves** — the survey confirms no adoptable
+   existing language; the strata borrow *shapes*, not implementations:
+   - §3.1 semantics validated against TidalCycles' pattern algebra (and its
+     rational-cycle-time model);
+   - envelope record modeled on SuperCollider `Env` (numeric curvature
+     replacing part of our shape enum is worth considering for v2);
+   - beats-domain point lists and timeline structure modeled on DAWproject;
+   - every spec/process record carries the OTIO-style versioned-type tag;
+   - time literals use Tone.js `bars:beats:sixteenths` conventions.
+2. **For M-A implementation**: port GrooveToolbox (Apache-2.0) where it
+   covers a metric; implement the rest (off-beatness, balance, evenness,
+   distances) from Toussaint/Milne/SynPy *papers*, never from unlicensed or
+   CC-licensed code. Use Gómez-Marín's perceptual-validation results to
+   choose the `targetable` descriptor set.
+3. **Do not vendor Strudel** (AGPL) despite it being the closest JS pattern
+   algebra; treat as design reference. total-serialism (MIT) covers the
+   WebUI-side utility needs.
+4. **Consider embedding the Grids density maps** (GPL-3.0, license-identical)
+   as an M-C style prior for the house/techno space — the one piece of
+   third-party *data* that is both useful and cleanly licensed.
+5. Record all borrowings in a `THIRD_PARTY.md` with upstream commit hashes
+   and license texts at vendoring time.
 
 ---
 
