@@ -64,7 +64,7 @@ template <typename WriteFn>
 
     for (int e = 0; e < kMaxEnvelopesPerLane; ++e) {
         const auto& ea = lane.envelopes[static_cast<size_t>(e)];
-        if (!writeEnvelope(write, ea.envelope))
+        if (!writeEnvelope(write, ea.envelope, bodyVersion))
             return false;
         uint8_t envActive = ea.active ? 1 : 0;
         if (!write(&envActive, sizeof(envActive)))
