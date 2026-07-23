@@ -10,11 +10,20 @@ ERRORS=0
 # region:rt-scope
 # Files in the audio-thread call chain:
 #   process() -> renderRange() -> euclidean(), deterministicRand()
+#   process() -> resolveMacros(), resolveConstraints(), interpolateGrooveState(),
+#                SceneChainState::update()  (plugin/source/processor.cpp process())
+#   renderRange() -> computeEnvelopePhase(), evaluateShapeFull()  (engine.cpp per-envelope loop)
+# M049 S07 (E8): scene/macro/constraint/envelope added — all four are live on the
+# audio thread but were previously ungated.
 RT_FILES=(
     plugin/source/processor.cpp
     plugin/source/processor.h
     engine/src/engine.cpp
     engine/src/euclidean.cpp
+    engine/src/scene.cpp
+    engine/src/macro.cpp
+    engine/src/constraint.cpp
+    engine/src/envelope.cpp
     engine/include/poly/engine.h
     engine/include/poly/euclidean.h
     engine/include/poly/rng.h
