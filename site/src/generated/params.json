@@ -1,0 +1,267 @@
+{
+  "schemaVersion": 1,
+  "expressionParams": [
+    {
+      "offset": 0,
+      "name": "Probability",
+      "kind": "Unit01",
+      "minEngine": 0,
+      "maxEngine": 1,
+      "defaultEngine": 1,
+      "engineRange": "0.0 - 1.0",
+      "defaultDisplay": "100%"
+    },
+    {
+      "offset": 1,
+      "name": "Base Velocity",
+      "kind": "Byte7",
+      "minEngine": 0,
+      "maxEngine": 127,
+      "defaultEngine": 100,
+      "engineRange": "0 - 127",
+      "defaultDisplay": "100"
+    },
+    {
+      "offset": 2,
+      "name": "Emphasis",
+      "kind": "Unit01",
+      "minEngine": 0,
+      "maxEngine": 1,
+      "defaultEngine": 0.5,
+      "engineRange": "0.0 - 1.0",
+      "defaultDisplay": "50%"
+    },
+    {
+      "offset": 3,
+      "name": "Ghost Floor",
+      "kind": "Byte7",
+      "minEngine": 0,
+      "maxEngine": 127,
+      "defaultEngine": 30,
+      "engineRange": "0 - 127",
+      "defaultDisplay": "30"
+    },
+    {
+      "offset": 4,
+      "name": "Spread",
+      "kind": "Unit01",
+      "minEngine": 0,
+      "maxEngine": 1,
+      "defaultEngine": 0.05,
+      "engineRange": "0.0 - 1.0",
+      "defaultDisplay": "5%"
+    },
+    {
+      "offset": 5,
+      "name": "Swing",
+      "kind": "Unit01",
+      "minEngine": 0,
+      "maxEngine": 1,
+      "defaultEngine": 0,
+      "engineRange": "0.0 - 1.0",
+      "defaultDisplay": "0%"
+    },
+    {
+      "offset": 6,
+      "name": "Humanize",
+      "kind": "LinearFloat",
+      "minEngine": 0,
+      "maxEngine": 50,
+      "defaultEngine": 0,
+      "engineRange": "0 - 50",
+      "defaultDisplay": "0"
+    },
+    {
+      "offset": 7,
+      "name": "Duration",
+      "kind": "LinearFloat",
+      "minEngine": 0,
+      "maxEngine": 4,
+      "defaultEngine": 0,
+      "engineRange": "0 - 4",
+      "defaultDisplay": "0"
+    },
+    {
+      "offset": 8,
+      "name": "Active",
+      "kind": "Bool",
+      "minEngine": 0,
+      "maxEngine": 1,
+      "defaultEngine": 1,
+      "engineRange": "Off / On",
+      "defaultDisplay": "On"
+    },
+    {
+      "offset": 9,
+      "name": "Phrase Len",
+      "kind": "LinearFloat",
+      "minEngine": 0,
+      "maxEngine": 64,
+      "defaultEngine": 0,
+      "engineRange": "0 - 64",
+      "defaultDisplay": "0"
+    },
+    {
+      "offset": 10,
+      "name": "Phrase Gap",
+      "kind": "LinearFloat",
+      "minEngine": 0,
+      "maxEngine": 64,
+      "defaultEngine": 0,
+      "engineRange": "0 - 64",
+      "defaultDisplay": "0"
+    },
+    {
+      "offset": 11,
+      "name": "Phrase Offset",
+      "kind": "LinearFloat",
+      "minEngine": 0,
+      "maxEngine": 64,
+      "defaultEngine": 0,
+      "engineRange": "0 - 64",
+      "defaultDisplay": "0"
+    },
+    {
+      "offset": 12,
+      "name": "Mutation",
+      "kind": "Unit01",
+      "minEngine": 0,
+      "maxEngine": 1,
+      "defaultEngine": 0,
+      "engineRange": "0.0 - 1.0",
+      "defaultDisplay": "0%"
+    },
+    {
+      "offset": 13,
+      "name": "Drift Rate",
+      "kind": "DriftRate",
+      "minEngine": -4,
+      "maxEngine": 4,
+      "defaultEngine": 0,
+      "engineRange": "-4.0 to +4.0 steps/bar",
+      "defaultDisplay": "0"
+    },
+    {
+      "offset": 14,
+      "name": "Timing Offset",
+      "kind": "TimingOffs",
+      "minEngine": -20,
+      "maxEngine": 20,
+      "defaultEngine": 0,
+      "engineRange": "-20 to +20 ms",
+      "defaultDisplay": "0"
+    },
+    {
+      "offset": 15,
+      "name": "Kotekan Source",
+      "kind": "KotekanSrc",
+      "minEngine": -1,
+      "maxEngine": 7,
+      "defaultEngine": -1,
+      "engineRange": "-1 to 7",
+      "defaultDisplay": "Independent"
+    }
+  ],
+  "coreParams": [
+    {
+      "offset": 0,
+      "name": "Steps",
+      "kind": "Ranged1_64",
+      "minEngine": 1,
+      "maxEngine": 64,
+      "defaultEngine": 4,
+      "engineRange": "1 - 64",
+      "defaultDisplay": "4"
+    },
+    {
+      "offset": 1,
+      "name": "Subdivision",
+      "kind": "Subdivision",
+      "minEngine": 1,
+      "maxEngine": 16,
+      "defaultEngine": 4,
+      "engineRange": "1, 2, 4, 8, 16",
+      "defaultDisplay": "4 (1/4 note)"
+    },
+    {
+      "offset": 2,
+      "name": "Hits",
+      "kind": "Ranged0_64",
+      "minEngine": 0,
+      "maxEngine": 64,
+      "defaultEngine": 4,
+      "engineRange": "0 - 64",
+      "defaultDisplay": "4"
+    },
+    {
+      "offset": 3,
+      "name": "Rotation",
+      "kind": "Ranged0_63",
+      "minEngine": 0,
+      "maxEngine": 63,
+      "defaultEngine": 0,
+      "engineRange": "0 - 63",
+      "defaultDisplay": "0"
+    },
+    {
+      "offset": 4,
+      "name": "MIDI Note",
+      "kind": "Byte7",
+      "minEngine": 0,
+      "maxEngine": 127,
+      "defaultEngine": 36,
+      "engineRange": "0 - 127",
+      "defaultDisplay": "36"
+    },
+    {
+      "offset": 5,
+      "name": "Cell Count",
+      "kind": "Ranged0_64",
+      "minEngine": 0,
+      "maxEngine": 64,
+      "defaultEngine": 0,
+      "engineRange": "0 - 64",
+      "defaultDisplay": "0"
+    },
+    {
+      "offset": 6,
+      "name": "Timeline",
+      "kind": "Bool",
+      "minEngine": 0,
+      "maxEngine": 1,
+      "defaultEngine": 0,
+      "engineRange": "Off / On",
+      "defaultDisplay": "Off"
+    },
+    {
+      "offset": 7,
+      "name": "Pattern Length",
+      "kind": "Ranged0_64",
+      "minEngine": 0,
+      "maxEngine": 64,
+      "defaultEngine": 0,
+      "engineRange": "0 - 64",
+      "defaultDisplay": "0"
+    },
+    {
+      "offset": 8,
+      "name": "Tempo Mult",
+      "kind": "TempoMult",
+      "minEngine": 0.25,
+      "maxEngine": 4,
+      "defaultEngine": 1,
+      "engineRange": "0.25x - 4.0x",
+      "defaultDisplay": "1x"
+    },
+    {
+      "offset": 9,
+      "name": "MIDI Channel",
+      "kind": "MidiChannel",
+      "minEngine": -1,
+      "maxEngine": 15,
+      "defaultEngine": -1,
+      "engineRange": "-1 to 15",
+      "defaultDisplay": "Auto"
+    }
+  ]
+}

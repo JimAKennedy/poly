@@ -12,46 +12,56 @@ Each of the 8 lanes exposes the following parameters. Lane-scoped parameter IDs 
 
 ### Core
 
+{/* Regenerate this table via `node scripts/generate-param-docs.mjs`. Do not hand-edit content between markers. */}
+
+{/* BEGIN GENERATED: lane-core */}
 | Parameter | ID Offset | Range | Default | Description |
 |---|---|---|---|---|
-| Active | 8 | On / Off | On (L1--L4), Off (L5--L8) | Enable or disable the lane |
-| MIDI Note | core 4 | 0--127 | Varies by lane (36, 38, 42, 45, 46, 39, 43, 50) | GM drum note assignment |
-| MIDI Channel | core 9 | -1 to 15 | -1 (Auto) | -1 = lane index as channel; 0--15 = explicit MIDI channel |
-| Steps | core 0 | 1--64 | 8 | Cycle length in steps |
-| Hits | core 2 | 0--Steps | 3 | Number of active hits per cycle (Euclidean distribution) |
-| Rotation | core 3 | 0--(Steps-1) | 0 | Pattern rotation offset |
-| Subdivision | core 1 | 1, 2, 4, 8, 16 | 8 (1/8 note) | Step grid resolution: 1=whole, 2=half, 4=quarter, 8=eighth, 16=sixteenth |
-| Tempo Mult | core 8 | 0.25x--4.0x | 1.0x | Per-lane tempo scaling (Nancarrow-style) |
+| Steps | core 0 | 1 - 64 | 4 | Cycle length in steps |
+| Subdivision | core 1 | 1, 2, 4, 8, 16 | 4 (1/4 note) | Step grid resolution: 1=whole, 2=half, 4=quarter, 8=eighth, 16=sixteenth |
+| Hits | core 2 | 0 - 64 | 4 | Number of active hits per cycle (Euclidean distribution) |
+| Rotation | core 3 | 0 - 63 | 0 | Pattern rotation offset |
+| MIDI Note | core 4 | 0 - 127 | 36 | GM drum note assignment |
+| Cell Count | core 5 | 0 - 64 | 0 | 0 = standard Euclidean; >0 = additive cell mode (aksak) |
+| Timeline | core 6 | Off / On | Off | Use fixed pattern instead of Euclidean distribution |
+| Pattern Length | core 7 | 0 - 64 | 0 | 0 = use Steps value; >0 = explicit timeline length |
+| Tempo Mult | core 8 | 0.25x - 4.0x | 1x | Per-lane tempo scaling (Nancarrow-style) |
+| MIDI Channel | core 9 | -1 to 15 | Auto | -1 = lane index as channel; 0–15 = explicit MIDI channel |
+{/* END GENERATED: lane-core */}
 
 ### Expression
 
+{/* Regenerate this table via `node scripts/generate-param-docs.mjs`. Do not hand-edit content between markers. */}
+
+{/* BEGIN GENERATED: lane-expr */}
 | Parameter | ID Offset | Range | Default | Description |
 |---|---|---|---|---|
-| Probability | 0 | 0--100% | 100% | Chance each note triggers per cycle |
-| Base Velocity | 1 | 0--127 | 100 | Default MIDI velocity |
-| Emphasis Prob | 2 | 0--100% | 50% | Probability of accented hits |
-| Ghost Floor | 3 | 0--127 | 30 | Minimum velocity for ghost notes |
-| Velocity Spread | 4 | 0--100% | 5% | Random velocity variation around base velocity |
-| Swing Amount | 5 | 0--100% | 0% | Swing feel (delays alternate steps) |
-| Humanize | 6 | 0--50ms | 0ms | Random timing jitter per note |
-| Note Duration | 7 | 0--4 beats | 0.0 | MIDI note-off duration |
-| Phrase Length | 9 | 0--32 beats | 0 (continuous) | Phrase gating period; 0 = no gating |
-| Phrase Gap | 10 | 0--32 beats | 0 | Silence between phrases |
-| Phrase Offset | 11 | 0--32 beats | 0 | Phase offset for this lane's phrase cycle |
-| Mutation Rate | 12 | 0--100% | 0% | Per-step random pattern variation each cycle |
-| Drift Rate | 13 | 0--10 steps/bar | 0 | Phase drift speed (Reich phasing) |
-| Timing Offset | 14 | -20 to +20ms | 0ms | Fixed per-lane timing offset (positive = late) |
-| Kotekan Source | 15 | -1 to 7 | -1 | -1 = independent; 0--7 = complement source lane |
+| Probability | 0 | 0.0 - 1.0 | 100% | Chance each note triggers per cycle |
+| Base Velocity | 1 | 0 - 127 | 100 | Default MIDI velocity |
+| Emphasis | 2 | 0.0 - 1.0 | 50% | Probability of accented hits |
+| Ghost Floor | 3 | 0 - 127 | 30 | Minimum velocity for ghost notes |
+| Spread | 4 | 0.0 - 1.0 | 5% | Random velocity variation around base velocity |
+| Swing | 5 | 0.0 - 1.0 | 0% | Swing feel (delays alternate steps) |
+| Humanize | 6 | 0 - 50 | 0 | Random timing jitter per note |
+| Duration | 7 | 0 - 4 | 0 | MIDI note-off duration in beats |
+| Active | 8 | Off / On | On | Enable or disable the lane |
+| Phrase Len | 9 | 0 - 64 | 0 | Phrase gating period in beats; 0 = no gating |
+| Phrase Gap | 10 | 0 - 64 | 0 | Silence between phrases in beats |
+| Phrase Offset | 11 | 0 - 64 | 0 | Phase offset for this lane's phrase cycle in beats |
+| Mutation | 12 | 0.0 - 1.0 | 0% | Per-step random pattern variation each cycle |
+| Drift Rate | 13 | -4.0 to +4.0 steps/bar | 0 | Phase drift speed (Reich phasing) |
+| Timing Offset | 14 | -20 to +20 ms | 0 | Fixed per-lane timing offset (positive = late) |
+| Kotekan Source | 15 | -1 to 7 | Independent | -1 = independent; 0–7 = complement source lane |
+{/* END GENERATED: lane-expr */}
 
-### Additive / Timeline
+### Additive / Timeline (state-only, not VST3 parameters)
 
-| Parameter | ID Offset | Range | Default | Description |
-|---|---|---|---|---|
-| Cell Count | core 5 | 0--64 | 0 | 0 = standard Euclidean; >0 = additive cell mode (aksak) |
-| Cell Sizes | (state only) | Array of ints | [] | Subdivision units per cell (e.g., [2,2,3] for 7/8) |
-| Timeline | core 6 | On / Off | Off | Use fixed pattern instead of Euclidean distribution |
-| Fixed Pattern | (state only) | Array of booleans | [] | Per-step on/off for timeline mode |
-| Fixed Pattern Length | core 7 | 0--64 | 0 | 0 = use Steps value; >0 = explicit timeline length |
+The `Cell Count`, `Timeline`, and `Fixed Pattern Length` params live in the Core table above. The two entries here are state-only fields (not exposed as VST3 params) that supplement them.
+
+| Parameter | Range | Default | Description |
+|---|---|---|---|
+| Cell Sizes | Array of ints | [] | Subdivision units per cell (e.g., [2,2,3] for 7/8) |
+| Fixed Pattern | Array of booleans | [] | Per-step on/off for timeline mode |
 
 ### Per-Step Modulation
 
