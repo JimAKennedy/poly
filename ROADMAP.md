@@ -122,6 +122,8 @@ M-A (descriptors) ──► M-B (archetypes + recognition) ──► M-C (propos
         └──────────► (site/WASM educational surfacing, ongoing)
 M-F (articulation)  — independent, any time after M-A
 M-G (multi-scale)   — after M-C; uses descriptors for arc/novelty measurement
+M-H (NL groove spec / chat) — after M-A+B+C minimum; gains M-E (relationships)
+                              and M-G (processes/arrangement) as they land
 ```
 
 ---
@@ -501,6 +503,112 @@ measured novelty against the plan.
 
 ---
 
+### M-H — Natural-language groove specification (chat interface)
+
+**Goal:** a chat interface where a user describes a groove in prose — *"an EDM
+bass and snare combination with toms supporting a call-and-response interaction
+over a 4-bar period, layers combining into a shimmering cymbal effect with phase
+effects over a 12–36 bar period, and breaks built into the tom and cymbal cycles"*
+— and Poly proposes configurations that meet the specification.
+
+**The architectural principle: the LLM is a compiler, not a generator.** It
+translates prose into a structured *groove spec* — descriptor targets (M-A) +
+archetype/template selections (M-B) + roles and relationships (M-E) + process/
+arrangement directives (M-G) — validated against a published JSON schema. The
+deterministic, seeded M-C proposal engine then does the actual generation and
+ranking. The LLM never emits a note. This preserves determinism, theory
+grounding, explainability, and testability. Every clause of the example prompt
+maps onto roadmap constructs:
+
+| Prose clause | Spec construct |
+| --- | --- |
+| "EDM bass and snare combination" | Ensemble template / archetypes, House–Techno style space (M-B) |
+| "toms… call and response over 4 bars" | Role `response`, relationship `answer` to anchor (M-E) + 4-bar phrase length |
+| "shimmering cymbals effect" | High-density stratum + kotekan interlock pair (engine) |
+| "phase effects over a 12–36 bar period" | Cycle lengths constrained so super-cycle LCM ∈ [12, 36] bars + drift/offsets (M-A super-cycle descriptor) |
+| "breaks in the tom and cymbal cycles" | Phrase gating + FillLikelihood envelopes (engine); construction/reduction processes (M-G) |
+
+**Approach options (decision record):**
+
+1. **Frontier LLM, no training — chosen for v1.** Claude API with structured
+   outputs (`output_config.format` forcing a schema-valid spec) plus a small
+   agentic tool-use loop (SDK tool runner). Costs cents per chat turn with
+   prompt caching on the static system prompt.
+2. **Fine-tuned small open-weights model** — only if offline/embedded operation
+   becomes a requirement. Training data via synthetic backtranslation: sample
+   valid specs / presets / archetypes → render → compute descriptors → have a
+   frontier model write diverse prose descriptions → SFT (LoRA) on the
+   resulting (prose → spec) pairs; validate against the eval harness below.
+3. **End-to-end symbolic MIDI model — rejected.** Bypasses the engine, destroys
+   determinism and the theory/education layer, needs licensed MIDI corpora,
+   cannot explain itself.
+4. **Embedding retrieval only** — offline fallback path: embed template/
+   archetype descriptions, NL query → nearest template + macro nudge. Cannot
+   handle compositional requests; keep as degraded mode, not the product.
+
+**v1 design (option 1):**
+
+- **Groove-spec contract:** `groove-spec.schema.json`, published and
+  drift-checked like `bridge.schema.json`. One artifact, three consumers: the
+  LLM's output contract, the proposal engine's input contract, and the eval
+  harness's assertion vocabulary. Vocabulary drawn from `docs/descriptor-spec.md`
+  (targetable descriptors), the archetype/ensemble schemas, the M-E role/
+  relationship enums, and M-G process types.
+- **Tool loop:** the model converses with the user and calls a small tool set —
+  `analyze_current_groove` (returns `poly_analysis` descriptors),
+  `search_archetypes` (library queries), `propose_candidates` (invokes M-C,
+  returns ranked candidates *with their measured descriptors*), `cast_to_lanes`.
+  The measured-descriptor feedback is the grounding loop: the model verifies
+  that proposals actually hit the targets and iterates when they don't.
+  Multi-turn refinement ("sparser", "more tension in bars 9–16") edits the
+  persistent spec object incrementally.
+- **Model:** default `claude-opus-4-8`; a cheaper tier (e.g. `claude-haiku-4-5`)
+  as a budget option. Model IDs current as of 2026-07; re-check at build time.
+  System prompt (schemas + descriptor definitions + archetype catalog summary)
+  is static → prompt-cache it.
+- **Placement:** never in the plugin RT process, and preferably not in the VST
+  binary at all. Chat panel lives in the WebUI; API calls go through the WebUI
+  backing layer or a small companion service, reaching the processor via the
+  existing bridge/handshakes. User-supplied API key, stored outside the plugin
+  state (never serialized into patches).
+- **Determinism:** a proposal batch remains `f(spec, patch, batchSeed)` — the
+  LLM chooses the spec, not the notes. Accepted results are ordinary state
+  updates, reproducible without the LLM present.
+
+**Evaluation harness (CI-testable because generation is deterministic):**
+a benchmark file of prose prompts, each with assertions on the *resulting
+descriptors and structure* — e.g. "super-cycle ∈ [12, 36] bars", "tom lane has
+`answer` relationship to anchor", "composite density < 0.5". Pipeline: prompt →
+spec → propose → analyze → assert. Schema-validity rate and assertion pass rate
+are the regression metrics; run against recorded LLM outputs (fixtures) in CI,
+against the live API in a scheduled job.
+
+**Deliverables:**
+
+- [ ] `groove-spec.schema.json` + generator/drift check + spec→engine-state
+      compiler (pure, unit-tested, LLM-free — usable and testable on its own).
+- [ ] Compiler service: Claude API integration, structured output, tool loop,
+      prompt caching, spec persistence per session.
+- [ ] WebUI chat panel: conversation, spec inspector (show the user the
+      compiled spec — this is itself an educational surface), candidate
+      audition/accept/reject wired to the M-C tray.
+- [ ] Eval harness: benchmark prompts + descriptor assertions; fixture-based CI
+      job; scheduled live-API job.
+- [ ] Accept/reject logging extended with the associated prose intent (feeds
+      the deferred learned-ranking work).
+- [ ] Offline fallback: embedding-retrieval template match (option 4) when no
+      API access.
+
+**Sequencing:** requires M-A + M-B + M-C; substantially better after M-E
+(relationship vocabulary) and M-G (processes/arrangement). A thin demo (chat →
+macro settings + ensemble-template selection) is possible right after M-B.
+
+**Acceptance:** the example prompt above compiles to a valid spec, proposals
+satisfy the eval assertions, refinement turns edit the spec incrementally, and
+an accepted groove reloads deterministically with the LLM disconnected.
+
+---
+
 ## 5. Explicitly deferred (decisions needed before planning)
 
 - **Pitched basslines / harmony coupling.** Poly has no pitch model; chord-tone
@@ -508,8 +616,13 @@ measured novelty against the plan.
   kick/bass coupling is covered by M-E relationships. Pitched generation is a
   product-direction fork — decide separately.
 - **Learned proposal ranking.** Deferred by design (as in the archived plan).
-  M-C's accept/reject log accumulates the data; revisit only after M-D ships and
-  real usage exists.
+  M-C's accept/reject log accumulates the data — enriched by M-H with the prose
+  intent behind each accept/reject; revisit only after M-D ships and real usage
+  exists. Likely first form: preference-tuning a lightweight candidate
+  re-ranker, not the generator.
+- **Fine-tuned local NL model.** M-H ships on a hosted frontier LLM; a local
+  fine-tuned compiler (M-H option 2) is worth building only if offline/embedded
+  operation becomes a product requirement.
 - **VSTGUI parity for new surfaces.** New UI lands in the WebUI only; the legacy
   editor stays frozen pending its existing decommission plan.
 
@@ -533,6 +646,12 @@ Recommended PR-sized slices, in order:
 11. M-E: state model + predicates; proposal integration; UI edges/badges.
 12. M-F: articulation engine change; schema v2; UI editor.
 13. M-G: weights → scaffold → processes → timeline (4+ PRs).
+14. M-H: `groove-spec.schema.json` + spec→state compiler + eval harness
+    (LLM-free, fully unit-tested).
+15. M-H: compiler service (Claude API, structured output, tool loop) +
+    fixture-based CI eval.
+16. M-H: WebUI chat panel + spec inspector + candidate tray wiring +
+    offline fallback.
 
 Every PR: follows invariants §3; updates goldens intentionally (never
 incidentally); adds Playwright coverage for UI; keeps the drift checks green;
