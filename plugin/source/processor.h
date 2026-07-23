@@ -27,8 +27,11 @@ namespace poly {
 // applied or accounted."
 //
 // SPSC invariants (single writer = host thread, single reader = RT thread):
-//   - `writeSlot()` returns the slot index that is *not* currently published, so
-//     the writer never stomps a slot the reader may be reading.
+//   - `writeSlot()` returns the writer's next alternating slot index (0↔1). The
+//     writer alone owns this counter, so the reader — which detaches the
+//     current published slot via exchange(-1) and holds it exclusively for the
+//     duration of its apply() callback — never overlaps the writer's next
+//     write, regardless of how the atomic `published` sequences.
 //   - `commit(idx)` atomically swaps the published-index; if the previous
 //     published-index was ≥ 0 the writer displaced an unconsumed publish and
 //     the caller MUST bump its drop counter.
@@ -41,8 +44,22 @@ template <typename Payload> struct HostToRTSlot {
     Payload slots[2]{};
     std::atomic<int32_t> published{-1}; // -1 = empty, 0 or 1 = slot holding an unconsumed publish
 
-    // Writer: pick the slot that is safe to write into (the one not currently published).
-    int32_t writeSlot() const { return (published.load(std::memory_order_acquire) == 0) ? 1 : 0; }
+    // M049 S11: writer owns its own alternating slot index. Deriving the target
+    // slot from `published` was racy: right after consume() atomically sets
+    // published back to -1, the reader is still inside its apply() callback
+    // copying out slots[cur], but the writer's next writeSlot() sees -1 and
+    // could hand back the SAME slot the reader is still reading. Alternating
+    // 0↔1 in a writer-owned field guarantees writer never re-enters a slot the
+    // reader may still be applying, without any additional synchronization.
+    int32_t nextSlot{0};
+
+    // Writer: pick the slot to write into. SPSC-safe because only the writer
+    // touches nextSlot; alternation guarantees exclusivity vs the reader.
+    int32_t writeSlot() {
+        int32_t idx = nextSlot;
+        nextSlot ^= 1;
+        return idx;
+    }
 
     // Writer: atomically publish the newly-filled slot. Returns true if a previous
     // unconsumed publish was displaced (writer should bump its drop counter).
