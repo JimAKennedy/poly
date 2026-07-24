@@ -9,7 +9,11 @@ jobs:
   asan:
     name: AddressSanitizer
     runs-on: ubuntu-latest
-    continue-on-error: true
+    # M050 S01: no job-level continue-on-error. GitHub Actions sets the job's
+    # `result` to `success` when continue-on-error is true regardless of what
+    # steps did, which made the notify job's `needs.asan.result == "failure"`
+    # check dead code. Let the job report failure honestly; the notify job's
+    # `if: always()` still runs on either outcome.
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
       - run: sudo apt-get install -y ninja-build
@@ -25,7 +29,6 @@ jobs:
   ubsan:
     name: UndefinedBehaviorSanitizer
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
       - run: sudo apt-get install -y ninja-build
@@ -41,7 +44,6 @@ jobs:
   tsan:
     name: ThreadSanitizer
     runs-on: ubuntu-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
       - run: sudo apt-get install -y ninja-build
