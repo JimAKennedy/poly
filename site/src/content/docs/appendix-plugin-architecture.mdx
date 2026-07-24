@@ -194,7 +194,7 @@ The processor contains no musical logic. It translates between VST3's data struc
 
 Presets and DAW project state travel through `getState()` / `setState()`. The first `int32` of every serialized blob is a version number; the reader branches on it so older presets keep loading as the format evolves.
 
-<CodeSnippet file="engine/include/poly/state_io.h" region="state-version" caption="The version prefix that every serialized SceneState starts with" />
+<CodeSnippet file="engine/include/poly/state_io_envelope.h" region="state-version" caption="The version prefix that every serialized SceneState starts with" />
 
 <CodeSnippet file="plugin/source/processor.cpp" region="get-set-state" caption="getState/setState — writeSceneState prepends the version; readSceneState validates it before dispatching to a version-specific body reader" />
 

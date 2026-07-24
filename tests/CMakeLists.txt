@@ -27,6 +27,7 @@ add_executable(poly_tests
     wasm_api_envelope_gap_slot_tests.cpp
     fixed_pattern_wrap_tests.cpp
     write_envelope_body_version_tests.cpp
+    state_io_header_hygiene_tests.cpp
 )
 
 target_link_libraries(poly_tests

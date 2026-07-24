@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "poly/state_io_envelope.h"
 #include "poly/types.h"
 
 namespace poly {
