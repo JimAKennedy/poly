@@ -44,17 +44,23 @@ template <typename Payload> struct HostToRTSlot {
     Payload slots[2]{};
     std::atomic<int32_t> published{-1}; // -1 = empty, 0 or 1 = slot holding an unconsumed publish
 
-    // M049 S11: writer owns its own alternating slot index. Deriving the target
-    // slot from `published` was racy: right after consume() atomically sets
-    // published back to -1, the reader is still inside its apply() callback
-    // copying out slots[cur], but the writer's next writeSlot() sees -1 and
-    // could hand back the SAME slot the reader is still reading. Alternating
-    // 0↔1 in a writer-owned field guarantees writer never re-enters a slot the
-    // reader may still be applying, without any additional synchronization.
+    // M049 S11 / M050 S02: writer owns an alternating slot index (0↔1) rather
+    // than deriving the target from `published`. Deriving from `published` was
+    // racy: after consume()'s exchange sets published back to -1, the writer's
+    // next writeSlot() could hand back the SAME slot the reader was still
+    // reading from (M049 S11). Alternation gives the writer a one-round
+    // guarantee. The remaining lap-around race — writer alternates twice and
+    // hits the same slot again while the reader is still reading it (M050 S02
+    // TSan finding) — is closed by consume() detaching the payload into a
+    // stack local immediately after acquire, so slots[cur] is no longer read
+    // by the time the writer laps back.
     int32_t nextSlot{0};
 
-    // Writer: pick the slot to write into. SPSC-safe because only the writer
-    // touches nextSlot; alternation guarantees exclusivity vs the reader.
+    // Writer: pick the slot to write into. Alternation guarantees non-collision
+    // for consecutive writes; the reader detaches the slot content immediately
+    // after acquire (see consume()), so by the time the writer laps back to
+    // slot `cur` two rounds later, the reader has finished reading it. No
+    // spin needed. SPSC-safe: only the writer touches nextSlot.
     int32_t writeSlot() {
         int32_t idx = nextSlot;
         nextSlot ^= 1;
@@ -66,11 +72,20 @@ template <typename Payload> struct HostToRTSlot {
     bool commit(int32_t writeIdx) { return published.exchange(writeIdx, std::memory_order_release) >= 0; }
 
     // Reader (RT thread): apply pending payload via callback if one is published.
+    // M050 S02: detach the payload into a local copy immediately after acquire,
+    // then run apply() on the local. This closes the M050 lap-around race —
+    // by the time the writer alternates back to slot `cur` two rounds later,
+    // this function has already finished reading slots[cur] (only into `local`),
+    // so no reader→writer synchronization is needed. RT cost: one POD copy
+    // (~260 B typical, 27 KB for SceneState — same shape as the render
+    // pipeline's existing GrooveState copies, measured at 0.02% of block
+    // deadline in M049 S09).
     template <typename Apply> bool consume(Apply&& apply) {
         int32_t cur = published.exchange(-1, std::memory_order_acquire);
         if (cur < 0)
             return false;
-        std::forward<Apply>(apply)(slots[cur]);
+        Payload local = slots[cur];
+        std::forward<Apply>(apply)(local);
         return true;
     }
 };

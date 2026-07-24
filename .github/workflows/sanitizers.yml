@@ -56,9 +56,56 @@ jobs:
         env:
           TSAN_OPTIONS: suppressions=${{ github.workspace }}/.github/tsan.supp
 
+  # M050 S02: plugin-inclusive sanitizer runs. The engine-only jobs above miss
+  # exactly the surface where the P1-P4 review findings lived — plugin/source/
+  # processor.cpp with its host<->RT handshake slots. These jobs drop
+  # POLY_ENGINE_ONLY so ASan/TSan see the plugin translation unit, and target
+  # poly_host_tests explicitly (which links processor.cpp + sdk_hosting and
+  # runs the HandshakeStress + TSan-active twin). Bridge tests come along for
+  # ASan coverage of the WebUI serialization layer.
+  asan-plugin:
+    name: AddressSanitizer (plugin)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build libx11-dev libxcb1-dev libxkbcommon-x11-dev libx11-xcb-dev libxcb-util-dev libxcb-cursor-dev libxcb-keysyms1-dev libxcb-xkb-dev libxkbcommon-dev libfontconfig1-dev libcairo2-dev libgtkmm-3.0-dev libsqlite3-dev libxcb-util0-dev
+      - name: Configure
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DENABLE_ASAN=ON
+      - name: Build host + bridge tests
+        run: cmake --build build --parallel --target poly_host_tests poly_bridge_tests
+      - name: Run host tests
+        run: ctest --test-dir build --output-on-failure -R "^HostTests\.|^ProbeTestFixture\.|^ProbeChain\.|^GoldenProcessor\."
+        env:
+          LSAN_OPTIONS: suppressions=${{ github.workspace }}/.github/lsan.supp
+      - name: Run bridge tests
+        run: ctest --test-dir build --output-on-failure -R "^Bridge"
+        env:
+          LSAN_OPTIONS: suppressions=${{ github.workspace }}/.github/lsan.supp
+
+  tsan-plugin:
+    name: ThreadSanitizer (plugin)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build libx11-dev libxcb1-dev libxkbcommon-x11-dev libx11-xcb-dev libxcb-util-dev libxcb-cursor-dev libxcb-keysyms1-dev libxcb-xkb-dev libxkbcommon-dev libfontconfig1-dev libcairo2-dev libgtkmm-3.0-dev libsqlite3-dev libxcb-util0-dev
+      - name: Configure
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DENABLE_TSAN=ON
+      - name: Build host tests
+        run: cmake --build build --parallel --target poly_host_tests
+      - name: Run host tests (includes HandshakeStress_TSanClean, guarded on __has_feature(thread_sanitizer))
+        run: ctest --test-dir build --output-on-failure -R "^HostTests\."
+        env:
+          TSAN_OPTIONS: suppressions=${{ github.workspace }}/.github/tsan.supp
+
   notify:
     name: Failure notification
-    needs: [asan, ubsan, tsan]
+    needs: [asan, ubsan, tsan, asan-plugin, tsan-plugin]
     if: always()
     runs-on: ubuntu-latest
     permissions:
@@ -71,6 +118,8 @@ jobs:
           [[ "${{ needs.asan.result }}" == "failure" ]] && FAILED="${FAILED} ASAN"
           [[ "${{ needs.ubsan.result }}" == "failure" ]] && FAILED="${FAILED} UBSAN"
           [[ "${{ needs.tsan.result }}" == "failure" ]] && FAILED="${FAILED} TSAN"
+          [[ "${{ needs.asan-plugin.result }}" == "failure" ]] && FAILED="${FAILED} ASAN-PLUGIN"
+          [[ "${{ needs.tsan-plugin.result }}" == "failure" ]] && FAILED="${FAILED} TSAN-PLUGIN"
           if [ -n "$FAILED" ]; then
             echo "failed=${FAILED}" >> "$GITHUB_OUTPUT"
             echo "has_failure=true" >> "$GITHUB_OUTPUT"
