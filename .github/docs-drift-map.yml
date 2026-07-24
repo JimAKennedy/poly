@@ -81,12 +81,28 @@ mappings:
     reason: "sample-sourcing.md is the licensing/attribution ledger for every CC sample shipped. Any manifest change (new sample, renamed folder, license swap) must land with a docs update, or the credits are wrong."
 
   # Test strategy
+  #
+  # M049 S10 tightening: only shape-changing files trigger this mapping. Adding
+  # one more .cpp / .spec.ts / .test.mjs inside an existing binary or suite is
+  # NOT a taxonomy change — testing-strategy.md classifies levels (L1 engine,
+  # L2 bridge, L3 host, L4 Cubase) and the surface that houses each level, not
+  # the individual regression tests. Broadening the glob to tests/** caused a
+  # false positive on every M049 engine PR (S01/S02/S03/S04/S05/S08/S09) that
+  # added a single regression test file, requiring a Docs-Not-Affected trailer
+  # each time. The narrow set below matches the actual reshape signal:
+  #   * tests/CMakeLists.txt      — new C++ test binary (add_executable) or
+  #                                  new subdir wiring reshapes taxonomy
+  #   * site/playwright.config.ts — Playwright project/reporter/dir changes
+  #                                  reshape the L2/L4-web surface definition
+  #   * site/package.json         — new npm test script or test-framework dep
+  #                                  is where a whole new JS test category
+  #                                  gets its entry point
   - sources:
-      - "tests/**"
-      - "site/tests-e2e/**"
-      - "site/tests/**"
+      - "tests/CMakeLists.txt"
+      - "site/playwright.config.ts"
+      - "site/package.json"
     doc: "docs/testing-strategy.md"
-    reason: "testing-strategy.md classifies which test categories cover which risks. Adding a new test category (or removing one) without doc update makes the strategy doc lie about coverage."
+    reason: "testing-strategy.md classifies test categories (L1 engine, L2 bridge, L3 host, L4 Cubase) and the surfaces that house them. Adding a new test binary (CMakeLists), reshaping the Playwright surface (config), or introducing a new JS test entry-point (package.json) is a taxonomy change that must land with a doc update. Per-file additions to existing binaries or suites do not — they exercise the taxonomy, they don't change it."
 
   # Plugin UI (native VSTGUI header)
   - sources:
