@@ -528,23 +528,41 @@ maps onto roadmap constructs:
 | "phase effects over a 12–36 bar period" | Cycle lengths constrained so super-cycle LCM ∈ [12, 36] bars + drift/offsets (M-A super-cycle descriptor) |
 | "breaks in the tom and cymbal cycles" | Phrase gating + FillLikelihood envelopes (engine); construction/reduction processes (M-G) |
 
-**Approach options (decision record):**
+**Approach options (decision record — revised 2026-07-23):**
 
-1. **Frontier LLM, no training — chosen for v1.** Claude API with structured
-   outputs (`output_config.format` forcing a schema-valid spec) plus a small
-   agentic tool-use loop (SDK tool runner). Costs cents per chat turn with
-   prompt caching on the static system prompt.
-2. **Fine-tuned small open-weights model** — only if offline/embedded operation
-   becomes a requirement. Training data via synthetic backtranslation: sample
-   valid specs / presets / archetypes → render → compute descriptors → have a
-   frontier model write diverse prose descriptions → SFT (LoRA) on the
-   resulting (prose → spec) pairs; validate against the eval harness below.
+1. **Frontier LLM, no training — v1.** Claude API with structured outputs
+   (`output_config.format` forcing a schema-valid spec) plus a small agentic
+   tool-use loop (SDK tool runner). Costs cents per chat turn with prompt
+   caching on the static system prompt. Also serves as the *teacher* for
+   option 2: every interaction is logged as future SLM training data.
+2. **Local SLM with LLM fall-through — the v2 target architecture** (upgraded
+   from conditional to planned; full design in `docs/slm-architecture.md`).
+   A LoRA-fine-tuned 3–8B open-weights model runs locally with
+   grammar-constrained decoding against `groove-spec.schema.json`
+   (schema-valid by construction), inside a try→validate→escalate loop:
+   verified failures — not predicted difficulty — route to the hosted LLM.
+   Training data via synthetic backtranslation plus accumulated v1/escalation
+   traces. Local-first is a product feature (offline studios, no API key,
+   privacy), and escalation doubles as the distillation flywheel.
 3. **End-to-end symbolic MIDI model — rejected.** Bypasses the engine, destroys
    determinism and the theory/education layer, needs licensed MIDI corpora,
    cannot explain itself.
 4. **Embedding retrieval only** — offline fallback path: embed template/
    archetype descriptions, NL query → nearest template + macro nudge. Cannot
    handle compositional requests; keep as degraded mode, not the product.
+
+**Model phasing** (details and gate criteria in `docs/slm-architecture.md`):
+
+- **v1 — LLM-only.** Fastest to value; establishes the quality bar; builds
+  the shared validators/eval harness; logs teacher data.
+- **v1.5 — SLM shadow mode.** Train on synthetic + logged pairs; run the SLM
+  on every request in shadow (compile, validate, log — never serve) until it
+  clears the offline gates on critical slices.
+- **v2 — SLM-first with LLM fall-through.** Flip the default. LLM serves
+  verified escalations and open-ended teaching turns; a user-facing
+  **never-escalate mode** (fully local) is a first-class setting, not a
+  degraded state. Escalation rate becomes the KPI that should fall over time
+  as retraining absorbs escalation traces.
 
 **v1 design (option 1):**
 
@@ -595,9 +613,16 @@ against the live API in a scheduled job.
 - [ ] Eval harness: benchmark prompts + descriptor assertions; fixture-based CI
       job; scheduled live-API job.
 - [ ] Accept/reject logging extended with the associated prose intent (feeds
-      the deferred learned-ranking work).
+      the deferred learned-ranking work), plus full compile traces (utterance,
+      spec, validator outcomes, repair iterations) — the SLM training corpus.
 - [ ] Offline fallback: embedding-retrieval template match (option 4) when no
-      API access.
+      API access (superseded by the v2 SLM for compilation; retained for
+      zero-download installs).
+- [ ] *(v1.5)* SLM training pipeline (synthetic backtranslation + trace
+      curation, contamination-guarded) + shadow-mode evaluation against the
+      offline gates.
+- [ ] *(v2)* Try→validate→escalate routing, never-escalate mode, escalation
+      telemetry, retraining cadence — per `docs/slm-architecture.md`.
 
 **Sequencing:** requires M-A + M-B + M-C; substantially better after M-E
 (relationship vocabulary) and M-G (processes/arrangement). A thin demo (chat →
@@ -620,9 +645,10 @@ an accepted groove reloads deterministically with the LLM disconnected.
   intent behind each accept/reject; revisit only after M-D ships and real usage
   exists. Likely first form: preference-tuning a lightweight candidate
   re-ranker, not the generator.
-- **Fine-tuned local NL model.** M-H ships on a hosted frontier LLM; a local
-  fine-tuned compiler (M-H option 2) is worth building only if offline/embedded
-  operation becomes a product requirement.
+- ~~**Fine-tuned local NL model.**~~ No longer deferred: promoted to the M-H
+  v1.5/v2 phases (SLM-first with LLM fall-through) — see M-H and
+  `docs/slm-architecture.md`. The LLM-only v1 still ships first, as teacher
+  and quality bar.
 - **VSTGUI parity for new surfaces.** New UI lands in the WebUI only; the legacy
   editor stays frozen pending its existing decommission plan.
 
@@ -652,6 +678,8 @@ Recommended PR-sized slices, in order:
     fixture-based CI eval.
 16. M-H: WebUI chat panel + spec inspector + candidate tray wiring +
     offline fallback.
+17. M-H v1.5: SLM training pipeline + shadow-mode evaluation.
+18. M-H v2: escalation routing + never-escalate mode + retraining cadence.
 
 Every PR: follows invariants §3; updates goldens intentionally (never
 incidentally); adds Playwright coverage for UI; keeps the drift checks green;
