@@ -342,24 +342,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+        with:
+          # jk-standards doc-drift needs the full history for merge-base and
+          # Docs-Not-Affected trailer scanning on pull_request events.
+          fetch-depth: 0
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: '24'
           cache: npm
           cache-dependency-path: site/package-lock.json
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: '3.12'
       - name: Install site dependencies (for js-yaml in claim tests)
         working-directory: site
         run: npm ci
-      - name: Check doc taxonomy (M048 S01)
-        run: bash scripts/check-doc-taxonomy.sh
-      - name: Check behavioral claims (M048 S09)
-        run: node scripts/check-behavioral-claims.mjs
-      - name: Check status prose (M048 S10)
-        run: node scripts/check-status-prose.mjs
-      - name: Check file:line references (M048 S11)
-        run: node scripts/check-file-line-refs.mjs
-      - name: Check count drift (M048 S06)
-        run: bash scripts/check-count-drift.sh
+      - name: Install jk-standards
+        run: pip install "git+https://github.com/JimAKennedy/jk-standards@v0.1.0"
+      - name: Regenerate params.json from engine headers (M048 S05 input)
+        run: node site/scripts/generate-params-json.mjs
+      - name: Doc discipline checks (M048 S01/S02/S05/S06/S09/S10/S11 via jk-standards)
+        env:
+          GITHUB_BASE_REF: ${{ github.base_ref }}
+        run: jk-standards all
       - name: Check bridge schema coverage (M048 S07)
         run: node scripts/check-bridge-schema-coverage.mjs
       - name: Check music-theory claim fixtures (M048 S08)
@@ -371,22 +376,6 @@ jobs:
         run: bash scripts/check-sample-manifest.sh --strict
       - name: Validate sample manifest (GM coverage)
         run: bash scripts/check-sample-manifest.sh --coverage
-
-  doc-drift:
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
-        with:
-          python-version: '3.12'
-      - run: pip install pyyaml
-      - name: Check doc drift (M048 S02)
-        env:
-          GITHUB_BASE_REF: ${{ github.base_ref }}
-        run: bash scripts/check-doc-drift.sh
 
   # region:site-e2e-job
   site-e2e:
@@ -405,10 +394,6 @@ jobs:
       - name: Install site dependencies
         working-directory: site
         run: npm ci
-      - name: Check generated doc regions match params_def.h (M048 S05)
-        run: |
-          node site/scripts/generate-params-json.mjs
-          bash scripts/check-generated-docs.sh
       - name: Get Playwright version
         id: pw-version
         working-directory: site

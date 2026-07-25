@@ -1,0 +1,69 @@
+version: 1
+
+doc_roots:
+  - path: docs
+    extensions: [".md"]
+  - path: site/src/content/docs
+    extensions: [".mdx"]
+
+exempt_dirs:
+  - docs/reviews/          # dated reviews: frozen, line refs pinned by date
+
+taxonomy:
+  classes: [generated, gated, archived]
+  extra_files:
+    - IMPLEMENTATION_PLAN.md   # root-level historical planning doc
+
+status_prose:
+  forbidden_extra:
+    - pattern: 'Designed\s+For,\s+Not\s+Implemented'
+      hint: forbidden section heading — describe current state or remove
+    - pattern: 'TODO\(spike\)\s+markers?\s+remain'
+      hint: progress claim — belongs in generated dashboard
+
+file_line_refs:
+  extensions: [cpp, h, hpp, mjs, ts, astro, mdx, md, sh, js]
+  source_roots:
+    - path: engine/src
+      extensions: [".cpp", ".h", ".hpp"]
+    - path: engine/include
+      extensions: [".h", ".hpp"]
+    - path: plugin/source
+      extensions: [".cpp", ".h", ".hpp"]
+
+count_drift:
+  triggers:
+    - 'factory\s+presets?'
+    - 'presets?\s+(?:in\s+total|total|shipped|are\s+grouped|exist)'
+    - 'presets?\s+across\s+\d+\s+categor'
+    - 'of\s+the\s+presets?'
+    - 'presets?\s+built\s+into'
+    - 'categories?\s+(?:total|in\s+total)'
+    - 'chapters?\s+(?:total|in\s+total)'
+    - '(?:the|all)\s+categories'
+
+drift_map: .github/docs-drift-map.yml   # existing file, format-compatible
+
+doc_drift:
+  deps_only_manifests:        # parity with poly PR #140: Dependabot version
+    - site/package.json       # bumps must not trigger the testing-strategy
+    - webui/package.json      # mapping (dependabot.yml landed in PR #130)
+
+generated:
+  - doc: site/src/content/docs/appendix-parameters.mdx
+    command: node scripts/generate-param-docs.mjs
+  - doc: docs/engine-spec.md
+    command: node scripts/generate-param-docs.mjs
+  - doc: webui/bridge-schema.md
+    command: node scripts/generate-bridge-schema-doc.mjs
+  - doc: site/src/content/docs/appendix-euclidean-reference.mdx
+    command: node scripts/generate-euclidean-appendix.mjs
+
+behavioral_claims:
+  sources:
+    - type: gtest
+      path: tests
+    - type: js
+      path: site/tests
+    - type: js
+      path: site/tests-e2e

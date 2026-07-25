@@ -254,7 +254,7 @@ Under `SceneSelect::Morph`, the render path materializes an interpolated `Groove
 | envelopeCount | int | 0 | Active envelope count |
 <!-- END GENERATED: laneconfig -->
 
-The table above is generated from `engine/include/poly/types.h` by `scripts/generate-param-docs.mjs` (M048 S05). Do not hand-edit — CI's `check-generated-docs.sh` rejects any divergence. Additional `LaneConfig` fields not yet exposed via the generator: `midiChannel`, `swingAmount`, `noteDuration`, `phraseLength`/`phraseGap`/`phraseOffset`, `mutationRate`, `driftRate`, `timingOffsetMs`, `syncopationOffset`, `tempoMultiplier`, `kotekanSourceLane`, `cellCount`/`cellSizes`, `timeline`/`fixedPattern`/`fixedPatternLength`, `microTimingMs`, `constraints`.
+The table above is generated from `engine/include/poly/types.h` by `scripts/generate-param-docs.mjs` (M048 S05). Do not hand-edit — CI's `jk-standards` generated-freshness check rejects any divergence. Additional `LaneConfig` fields not yet exposed via the generator: `midiChannel`, `swingAmount`, `noteDuration`, `phraseLength`/`phraseGap`/`phraseOffset`, `mutationRate`, `driftRate`, `timingOffsetMs`, `syncopationOffset`, `tempoMultiplier`, `kotekanSourceLane`, `cellCount`/`cellSizes`, `timeline`/`fixedPattern`/`fixedPatternLength`, `microTimingMs`, `constraints`.
 
 ### MacroValues (Six Musical-Intent Controls)
 

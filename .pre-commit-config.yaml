@@ -29,6 +29,13 @@ repos:
     hooks:
       - id: cmakelint
 
+  - repo: https://github.com/JimAKennedy/jk-standards
+    rev: v0.1.0
+    hooks:
+      - id: doc-taxonomy
+      - id: status-prose
+      - id: file-line-refs
+
   # region:local-hooks
   - repo: local
     hooks:
@@ -56,4 +63,4 @@ repos:
   # endregion:local-hooks
 
 ci:
-  skip: [check-pragma-once, check-realtime-safety, check-snippet-regions, pre-push-check]
+  skip: [doc-taxonomy, status-prose, file-line-refs, check-pragma-once, check-realtime-safety, check-snippet-regions, pre-push-check]
