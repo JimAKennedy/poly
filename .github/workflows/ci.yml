@@ -262,6 +262,44 @@ jobs:
             --timeout-ms 120000 \
             --validate "${{ steps.find-vst3.outputs.path }}"
 
+  # M050 S03 (G3): pluginval on the Windows artifact. Windows is where several
+  # plugin-loading bugs historically hide (COM apartment threading, DLL search
+  # order, path-encoding for CFBundle-equivalents), so absence of Windows
+  # pluginval was the largest coverage gap on this axis. Same strictness (8),
+  # same GUI-skip, same 120s timeout as the macOS/Linux siblings so all three
+  # platforms surface the same class of failures. Uses git-bash (default shell
+  # on windows-2022 for `run:` blocks named without `shell:`) — the find/curl/
+  # unzip invocations match the sibling jobs.
+  pluginval-windows:
+    needs: build
+    runs-on: windows-2022
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Download plugin artifact
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        with:
+          name: plugin-windows-2022
+          path: plugin
+      - name: Find VST3 bundle
+        id: find-vst3
+        run: |
+          VST3_PATH=$(find plugin -name "*.vst3" -not -name "*probe*" -type d | head -1)
+          echo "path=$VST3_PATH" >> "$GITHUB_OUTPUT"
+          echo "Found VST3 at: $VST3_PATH"
+      - name: Download pluginval
+        run: |
+          curl -fsSL -o pluginval.zip https://github.com/Tracktion/pluginval/releases/latest/download/pluginval_Windows.zip
+          unzip -q pluginval.zip
+      - name: Run pluginval
+        run: |
+          ./pluginval.exe \
+            --strictness-level 8 \
+            --skip-gui-tests \
+            --timeout-ms 120000 \
+            --validate "${{ steps.find-vst3.outputs.path }}"
+
   wasm-build:
     runs-on: ubuntu-latest
     steps:
@@ -402,7 +440,7 @@ jobs:
           if-no-files-found: ignore
 
   ci-complete:
-    needs: [code-quality, build, engine-isolation, secrets-scan, code-coverage, webui-tests, pluginval-macos, pluginval-linux, wasm-build, site-lint, site-e2e]
+    needs: [code-quality, build, engine-isolation, secrets-scan, code-coverage, webui-tests, pluginval-macos, pluginval-linux, pluginval-windows, wasm-build, site-lint, site-e2e]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -416,6 +454,7 @@ jobs:
              [[ "${{ needs.webui-tests.result }}" != "success" ]] || \
              [[ "${{ needs.pluginval-macos.result }}" != "success" ]] || \
              [[ "${{ needs.pluginval-linux.result }}" != "success" ]] || \
+             [[ "${{ needs.pluginval-windows.result }}" != "success" ]] || \
              [[ "${{ needs.wasm-build.result }}" != "success" ]] || \
              [[ "${{ needs.site-lint.result }}" != "success" ]] || \
              [[ "${{ needs.site-e2e.result }}" != "success" ]]; then
