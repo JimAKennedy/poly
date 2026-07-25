@@ -70,6 +70,58 @@ if [ -z "$CHANGED_FILES" ]; then
   exit 0
 fi
 
+# --- Deps-only detector for package.json files ---
+# Dependabot bumps to site/package.json and webui/package.json touch only
+# `dependencies` / `devDependencies` version strings — those are NOT taxonomy
+# changes (the "new npm test entry-point" trigger is a `scripts` block edit,
+# not a version bump on an existing dep). Compute the deps-only set here and
+# hand it to the Python matcher so those files are ignored for the mapping
+# that names them as a taxonomy signal.
+DEPS_ONLY_FILES=""
+for f in site/package.json webui/package.json; do
+  if echo "$CHANGED_FILES" | grep -qxF "$f"; then
+    # Grab the file diff. If every hunk line touches only a version-string
+    # inside dependencies / devDependencies, it's deps-only.
+    if git diff "$MERGE_BASE"...HEAD -- "$f" \
+        | python3 -c '
+import re, sys
+in_deps = False
+deps_only = True
+saw_change = False
+brace_depth = 0
+for line in sys.stdin:
+    if line.startswith(("+++", "---", "@@", "diff ", "index ")):
+        continue
+    if not line.startswith(("+", "-")):
+        # Context: track when we are inside dependencies / devDependencies.
+        m = re.match(r"\s*\"(dependencies|devDependencies)\"\s*:\s*\{", line)
+        if m:
+            in_deps = True
+            brace_depth = 1
+            continue
+        if in_deps:
+            brace_depth += line.count("{") - line.count("}")
+            if brace_depth <= 0:
+                in_deps = False
+        continue
+    saw_change = True
+    body = line[1:]
+    # A version-string change looks like:  "pkg-name": "^1.2.3",
+    if in_deps and re.match(r"\s*\"[^\"]+\"\s*:\s*\"[^\"]+\",?\s*$", body):
+        continue
+    deps_only = False
+    break
+sys.exit(0 if (saw_change and deps_only) else 1)
+' 2>/dev/null; then
+      DEPS_ONLY_FILES="$DEPS_ONLY_FILES $f"
+    fi
+  fi
+done
+
+if [ -n "$DEPS_ONLY_FILES" ]; then
+  echo "Deps-only bump detected on:${DEPS_ONLY_FILES} — ignoring for taxonomy triggers." >&2
+fi
+
 # --- Collect Docs-Not-Affected trailer bypasses ---
 # Read commit messages for the PR range and pick out any Docs-Not-Affected: lines.
 # Each line documents ONE bypass; the value string is the reason.
@@ -84,7 +136,7 @@ fi
 # --- Parse map and check mappings ---
 # Use python for portable YAML + glob matching. The script emits GitHub-format
 # ::error annotations to stderr on violation and a plain summary to stdout.
-export CHANGED_FILES BYPASSES MAP_FILE
+export CHANGED_FILES BYPASSES MAP_FILE DEPS_ONLY_FILES
 
 python3 <<'PYEOF'
 import fnmatch
@@ -98,6 +150,7 @@ with open(os.environ['MAP_FILE']) as f:
 changed = [line for line in os.environ['CHANGED_FILES'].splitlines() if line]
 bypasses = [line for line in os.environ.get('BYPASSES', '').splitlines() if line]
 has_bypass = bool(bypasses)
+deps_only = set(os.environ.get('DEPS_ONLY_FILES', '').split())
 
 changed_set = set(changed)
 violations = []
@@ -114,11 +167,11 @@ for m in data['mappings']:
         if '**' in pattern:
             base = pattern.split('**')[0]
             for f in changed:
-                if f.startswith(base):
+                if f.startswith(base) and f not in deps_only:
                     triggered_sources.append(f)
         else:
             for f in changed:
-                if fnmatch.fnmatchcase(f, pattern):
+                if fnmatch.fnmatchcase(f, pattern) and f not in deps_only:
                     triggered_sources.append(f)
     if not triggered_sources:
         continue
