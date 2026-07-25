@@ -1,0 +1,87 @@
+# M050 S05 (G6): Dependabot configuration.
+#
+# Watches the three ecosystems Poly actually ships with:
+#   1. github-actions   -- all pinned action SHAs/tags in .github/workflows/
+#   2. npm (/site)      -- Astro/Starlight guide site + Playwright e2e + sharp
+#   3. npm (/webui)     -- Playwright host tests + ajv (bundle has no runtime deps)
+#
+# No submodules and no other tracked manifests. The emsdk package.json under
+# .gsd/tools/ is gitignored and out of scope. VST3 SDK is FetchContent-vendored
+# from CMakeLists.txt, not a package manifest -- upstream tag bumps live in the
+# CMake file and are reviewed manually.
+#
+# Grouping policy: minor + patch bumps land in one grouped PR per ecosystem
+# per week so routine work reads as a single review. Majors open individual
+# PRs because they carry breaking-change risk (esp. Astro / Starlight / sharp).
+#
+# open-pull-requests-limit caps ecosystem inbox flood at 5 concurrent PRs.
+
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    reviewers:
+      - JimAKennedy
+    assignees:
+      - JimAKennedy
+    labels:
+      - dependencies
+      - dependabot
+      - github-actions
+    commit-message:
+      prefix: chore(actions)
+    groups:
+      actions-minor-patch:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: npm
+    directory: /site
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    reviewers:
+      - JimAKennedy
+    assignees:
+      - JimAKennedy
+    labels:
+      - dependencies
+      - dependabot
+      - npm
+      - site
+    commit-message:
+      prefix: chore(site-deps)
+    groups:
+      site-minor-patch:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: npm
+    directory: /webui
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    reviewers:
+      - JimAKennedy
+    assignees:
+      - JimAKennedy
+    labels:
+      - dependencies
+      - dependabot
+      - npm
+      - webui
+    commit-message:
+      prefix: chore(webui-deps)
+    groups:
+      webui-minor-patch:
+        update-types:
+          - minor
+          - patch
