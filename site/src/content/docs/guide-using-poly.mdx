@@ -291,6 +291,10 @@ Capture is especially powerful during scene morphs, where the groove transforms 
 
 Poly exposes all macro knobs, scene controls, chain parameters, per-lane settings, and metric modulation values to the DAW automation system. Show automation lanes on the Poly track and draw curves or record automation moves.
 
+### Automation and scene chain
+
+Today, host automation lanes target the currently selected scene rather than a specific scene. During Scene Chain playback the active scene rotates automatically at bar boundaries, so a single automation curve will silently retarget Scene A vs Scene B across a chain cycle. If you need a curve to control one scene only, disable Scene Chain and set the scene manually while recording that automation. A future release will give each scene its own automation namespace so per-scene curves work under chain playback without this workaround (tracked as milestone M067).
+
 ## Preset Management
 
 ### Factory Presets
