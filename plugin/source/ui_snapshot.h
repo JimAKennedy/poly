@@ -20,6 +20,10 @@ struct UISnapshot {
     std::atomic<double> ppqNorm{0.0};
     std::atomic<bool> playing{false};
     std::atomic<double> lanePhases[kMaxLanes]{};
+    // M051 S02: host time signature, populated from ProcessContext every block.
+    // Defaults to 4/4 when the host doesn't publish kTimeSigValid.
+    std::atomic<int16_t> timeSigNumerator{4};
+    std::atomic<int16_t> timeSigDenominator{4};
 
     // Full state — flag-guarded exchange
     SceneState state{};

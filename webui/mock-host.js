@@ -508,6 +508,9 @@
 
   const state = {
     preset: 'Afrobeat 12/8', seed: 88, tempo: TEMPO,
+    // M051 S02: mock host defaults to 4/4; tests override via
+    // window.__polyMockSetTimeSig(num, den) before asserting the header.
+    timeSigNumerator: 4, timeSigDenominator: 4,
     scene: 'A', morph: 0,
     chain: { enabled: false, mode: 0, entryCount: 0, entries: [] },
     macros: { complexity: 0.45, density: 0.5, syncopation: 0.3, swing: 0.1, tension: 0.25, humanize: 0.15 },
@@ -670,6 +673,8 @@
       t8,
       playing,
       convLeft,
+      tsNum: state.timeSigNumerator,
+      tsDen: state.timeSigDenominator,
       lanes: state.lanes.map((l) => {
         const cyc = cyc8(l);
         const tin = Math.floor(t8 % cyc);
@@ -925,6 +930,9 @@
     setAsyncMode: (enabled) => { asyncMode = !!enabled; pendingPush = false; },
     flushState,
     hasPendingPush: () => pendingPush,
+    // M051 S02: Playwright evidence hook for time-signature display.
+    // Real plugin gets meter from Vst::ProcessContext; mock has none.
+    _setTimeSig: (num, den) => { state.timeSigNumerator = num; state.timeSigDenominator = den; },
     // M045 S01 T03: mock host has no engine emission stream — desk overlay
     // silently no-ops when this returns [].
     getLaneEmissions: () => [],

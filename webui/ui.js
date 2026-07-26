@@ -1044,6 +1044,12 @@
     document.getElementById('picon').setAttribute('d',
       frame.playing ? 'M2.5 2 H5.5 V12 H2.5 Z M8.5 2 H11.5 V12 H8.5 Z' : 'M3 2 L12 7 L3 12 Z');
     document.querySelector('#conv b').textContent = Math.ceil(frame.convLeft / 12);
+    // M051 S02: reflect host time signature next to BPM. tsNum/tsDen absent
+    // on legacy hosts or older plugin builds — fall back to 4/4 silently.
+    if (typeof frame.tsNum === 'number' && typeof frame.tsDen === 'number') {
+      const el = document.getElementById('timeSigVal');
+      if (el) el.textContent = `${frame.tsNum}/${frame.tsDen}`;
+    }
     if (mode === 'desk') {
       S.lanes.forEach((l, li) => {
         const fl = frame.lanes[li];

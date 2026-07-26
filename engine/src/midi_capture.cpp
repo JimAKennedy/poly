@@ -54,11 +54,13 @@ size_t MidiCaptureBuffer::extract(double fromPpq, double toPpq, NoteEvent* out, 
     return outCount;
 }
 
-size_t MidiCaptureBuffer::extractLastBars(int bars, NoteEvent* out, size_t maxOut) const {
+size_t MidiCaptureBuffer::extractLastBars(int bars, NoteEvent* out, size_t maxOut, double ppqPerBar) const {
     if (count_ == 0)
         return 0;
+    if (ppqPerBar <= 0.0)
+        ppqPerBar = kBeatsPerBar;
     double newest = newestPpq();
-    double fromPpq = newest - bars * kBeatsPerBar;
+    double fromPpq = newest - bars * ppqPerBar;
     return extract(fromPpq, newest + 1.0, out, maxOut);
 }
 

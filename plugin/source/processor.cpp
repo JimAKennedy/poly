@@ -118,6 +118,27 @@ void PolyProcessor::updateTransportContext(const Steinberg::Vst::ProcessData& da
         tc_.loopEndPpq = ctx.cycleEndMusic;
     }
 
+    // M051 S02 E6: read host time signature when the host publishes one.
+    // Sanitize to plausible ranges (numerator 1..32, denominator ∈ {1,2,4,8,16,32})
+    // so a garbage host reading can't propagate a nonsense ppqPerBar() into the
+    // engine. Fall back to 4/4 on missing flag or invalid values.
+    tc_.timeSigNumerator = 4;
+    tc_.timeSigDenominator = 4;
+    if (ctx.state & Steinberg::Vst::ProcessContext::kTimeSigValid) {
+        const int32_t num = ctx.timeSigNumerator;
+        const int32_t den = ctx.timeSigDenominator;
+        const bool numOk = num >= 1 && num <= 32;
+        const bool denOk = (den == 1 || den == 2 || den == 4 || den == 8 || den == 16 || den == 32);
+        if (numOk && denOk) {
+            tc_.timeSigNumerator = static_cast<int16_t>(num);
+            tc_.timeSigDenominator = static_cast<int16_t>(den);
+        }
+    }
+    // Publish to UI snapshot for the WebUI header display (relaxed — value
+    // is stable per-block, no ordering requirement with other fields).
+    uiSnapshot_.timeSigNumerator.store(tc_.timeSigNumerator, std::memory_order_relaxed);
+    uiSnapshot_.timeSigDenominator.store(tc_.timeSigDenominator, std::memory_order_relaxed);
+
     if (ctx.state & Steinberg::Vst::ProcessContext::kProjectTimeMusicValid) {
         double ppqStart = ctx.projectTimeMusic;
         double beatsPerSample = tc_.tempo > 0.0 ? tc_.tempo / (60.0 * tc_.sampleRate) : 0.0;
@@ -282,7 +303,7 @@ void PolyProcessor::bounceExportTriggerZero(Steinberg::Vst::IParameterChanges* o
 }
 
 static void outputLaneVisualization(Steinberg::Vst::IParameterChanges* outParams, const LaneConfig& cfg, int lane,
-                                    double ppqStart, UISnapshot& snap) {
+                                    double ppqStart, double ppqPerBar, UISnapshot& snap) {
     auto additive = computeAdditiveCells(cfg);
     double laneTempoScale = (cfg.tempoMultiplier > 0.0f) ? 1.0 / static_cast<double>(cfg.tempoMultiplier) : 1.0;
     double cycleBeats = additive.count > 0 ? additive.totalPpq * laneTempoScale
@@ -313,7 +334,7 @@ static void outputLaneVisualization(Steinberg::Vst::IParameterChanges* outParams
     double envValue = 0.5;
     if (cfg.envelopeCount > 0) {
         const auto& env = cfg.envelopes[0].envelope;
-        double envPhase = computeEnvelopePhase(ppqStart, env.periodBars, env.phaseOffset);
+        double envPhase = computeEnvelopePhase(ppqStart, env.periodBars, env.phaseOffset, ppqPerBar);
         envValue = static_cast<double>(evaluateShapeFull(env, static_cast<float>(envPhase)));
     }
 
@@ -383,7 +404,7 @@ void PolyProcessor::outputParameterFeedback(Steinberg::Vst::ProcessData& data, c
 
     for (int lane = 0; lane < kMaxLanes; ++lane) {
         if (resolved.lanes[lane].active)
-            outputLaneVisualization(outParams, resolved.lanes[lane], lane, tc_.ppqStart, uiSnapshot_);
+            outputLaneVisualization(outParams, resolved.lanes[lane], lane, tc_.ppqStart, tc_.ppqPerBar(), uiSnapshot_);
     }
 
     {
@@ -502,8 +523,8 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
         }
         if (exportTriggered_ && !exportReady_.load(std::memory_order_acquire)) {
             exportTriggered_ = false;
-            exportEventCount_ =
-                captureBuffer_.extractLastBars(captureLengthBars_, exportEvents_.data(), exportEvents_.size());
+            exportEventCount_ = captureBuffer_.extractLastBars(captureLengthBars_, exportEvents_.data(),
+                                                               exportEvents_.size(), tc_.ppqPerBar());
             exportTempo_ = tc_.tempo;
             exportReady_.store(true, std::memory_order_release);
             bounceExportTriggerZero(data.outputParameterChanges);
@@ -520,7 +541,7 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
         // is designed to keep flowing across the repeat. Real jumps still reset.
         if (tc_.jumped && !tc_.wrappedLoop)
             chainState_.reset();
-        sceneState_.select = chainState_.update(sceneState_.chain, tc_.ppqStart);
+        sceneState_.select = chainState_.update(sceneState_.chain, tc_.ppqStart, tc_.ppqPerBar());
     }
 
     // region:process-render
@@ -558,8 +579,8 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
 
     if (exportTriggered_ && !exportReady_.load(std::memory_order_acquire)) {
         exportTriggered_ = false;
-        exportEventCount_ =
-            captureBuffer_.extractLastBars(captureLengthBars_, exportEvents_.data(), exportEvents_.size());
+        exportEventCount_ = captureBuffer_.extractLastBars(captureLengthBars_, exportEvents_.data(),
+                                                           exportEvents_.size(), tc_.ppqPerBar());
         exportTempo_ = tc_.tempo;
         exportReady_.store(true, std::memory_order_release);
         bounceExportTriggerZero(data.outputParameterChanges);
