@@ -2,8 +2,8 @@
 #
 # When a PR touches any file matching a mapping's `sources` glob, the PR MUST
 # ALSO touch the mapped `doc` — OR any commit in the PR range must carry a
-# `Docs-Not-Affected: <reason>` trailer. Enforced by scripts/check-doc-drift.sh
-# in the site-lint CI job.
+# `Docs-Not-Affected: <reason>` trailer. Enforced by the jk-standards
+# doc-drift check (configured in jk-standards.yaml) in the site-lint CI job.
 #
 # Purpose: prevent the "code drift, docs frozen" failure mode that motivated
 # M048. If you rename a symbol, extend an enum, or change a range, the gated
