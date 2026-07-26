@@ -769,6 +769,9 @@ void WebUIView::pushFrame() {
     // Read transport from per-instance snapshot (no globals)
     double ppqNorm = snap ? snap->ppqNorm.load(std::memory_order_relaxed) : 0.0;
     bool playing = snap ? snap->playing.load(std::memory_order_relaxed) : false;
+    // M051 S02: host time signature for subtle header display
+    int tsNum = snap ? snap->timeSigNumerator.load(std::memory_order_relaxed) : 4;
+    int tsDen = snap ? snap->timeSigDenominator.load(std::memory_order_relaxed) : 4;
 
     double t8 = ppqNorm * 256.0;
 
@@ -785,9 +788,9 @@ void WebUIView::pushFrame() {
     js.reserve(512);
     js += "{\"type\":\"frame\",\"frame\":{";
 
-    char buf[64];
-    std::snprintf(buf, sizeof(buf), "\"t8\":%.4f,\"playing\":%s,\"convLeft\":%d", t8, playing ? "true" : "false",
-                  convLeft);
+    char buf[96];
+    std::snprintf(buf, sizeof(buf), "\"t8\":%.4f,\"playing\":%s,\"convLeft\":%d,\"tsNum\":%d,\"tsDen\":%d", t8,
+                  playing ? "true" : "false", convLeft, tsNum, tsDen);
     js += buf;
 
     const auto& gs = controller_->activeScene();

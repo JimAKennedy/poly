@@ -34,8 +34,8 @@ struct EnvelopeMods {
     float fill = 0.0f;
 };
 
-static void accumulateEnvelope(const Envelope& env, double ppq, EnvelopeMods& mods) {
-    double phase = computeEnvelopePhase(ppq, env.periodBars, env.phaseOffset);
+static void accumulateEnvelope(const Envelope& env, double ppq, double ppqPerBar, EnvelopeMods& mods) {
+    double phase = computeEnvelopePhase(ppq, env.periodBars, env.phaseOffset, ppqPerBar);
     float value = evaluateShapeFull(env, static_cast<float>(phase));
     switch (env.target) {
     case EnvTarget::Velocity:
@@ -63,16 +63,16 @@ static void accumulateEnvelope(const Envelope& env, double ppq, EnvelopeMods& mo
     }
 }
 
-static EnvelopeMods computeEnvelopeMods(const LaneConfig& cfg, const GrooveState& state, double ppq) {
+static EnvelopeMods computeEnvelopeMods(const LaneConfig& cfg, const GrooveState& state, double ppq, double ppqPerBar) {
     EnvelopeMods mods{};
     for (int e = 0; e < cfg.envelopeCount; ++e) {
         const auto& ea = cfg.envelopes[e];
         if (!ea.active)
             continue;
-        accumulateEnvelope(ea.envelope, ppq, mods);
+        accumulateEnvelope(ea.envelope, ppq, ppqPerBar, mods);
     }
     for (int e = 0; e < state.globalEnvelopeCount; ++e) {
-        accumulateEnvelope(state.globalEnvelopes[e], ppq, mods);
+        accumulateEnvelope(state.globalEnvelopes[e], ppq, ppqPerBar, mods);
     }
     return mods;
 }
@@ -412,7 +412,7 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
                 continue;
 
             int64_t cycleStep = computeDriftedCycleStep(cfg, ctx, absStep, ppq);
-            EnvelopeMods mods = computeEnvelopeMods(cfg, state, ppq);
+            EnvelopeMods mods = computeEnvelopeMods(cfg, state, ppq, tc.ppqPerBar());
 
             bool isPatternStep = ctx.pattern[static_cast<size_t>(cycleStep)];
             bool isAnchor = cfg.constraints.anchorSteps.steps[static_cast<size_t>(cycleStep)] > 0.0f;

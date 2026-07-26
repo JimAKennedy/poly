@@ -29,6 +29,7 @@ add_executable(poly_tests
     write_envelope_body_version_tests.cpp
     state_io_header_hygiene_tests.cpp
     groovestate_copy_benchmark.cpp
+    time_signature_tests.cpp
 )
 
 target_link_libraries(poly_tests

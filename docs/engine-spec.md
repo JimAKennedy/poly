@@ -57,16 +57,18 @@ All working buffers are stack-allocated or use fixed-capacity `std::array`.
 
 All timing is derived from absolute PPQ (pulses per quarter note) position, never accumulated across blocks:
 
-- **Step PPQ**: `4.0 / cycle.subdivision` — a quarter note is always 1.0 PPQ
+- **Step PPQ**: `4.0 / cycle.subdivision` — a quarter note is always 1.0 PPQ. Step PPQ is deliberately **meter-independent**: a `steps=7, subdivision=8` lane cycles every 7 × (4/8) = 3.5 PPQ regardless of what the host says the time signature is. This preserves Poly's polymeter contract — lanes speak in their own units.
 - **Cycle PPQ**: `stepPpq * cycle.steps` — total PPQ length of one cycle
 - **Absolute step index**: `ceil(ppqStart / stepPpq)` to `ceil(ppqEnd / stepPpq)`
 - **Cycle-local step**: `absStep % stepsInCycle` (with negative modulo correction)
+- **Bar PPQ** (M051 S02): `TransportContext::ppqPerBar()` returns `numerator * (4 / denominator)`. Only three surfaces use it — scene chain boundary detection (`scene.h`), envelope period conversion (`envelope.cpp`), and MIDI capture window (`midi_capture.h`) — because those are user-facing "one bar" counts, not lane math. Defaults to 4.0 (4/4) when the host doesn't publish `kTimeSigValid`.
 
 This guarantees:
 - Loop restarts reproduce identically (no drift from accumulated phase)
 - Tempo changes take effect immediately (PPQ positions don't change)
 - Position jumps produce correct output (no state to invalidate)
 - Block boundaries are invisible (same step index regardless of split point)
+- Lanes cycle identically under any host meter (only scene chain, envelopes, and capture windows follow host meter)
 
 ### Transport Context
 
@@ -83,6 +85,10 @@ struct TransportContext {
     bool wrappedLoop;       // True iff `jumped` is a natural loop wrap
     double loopStartPpq;    // Loop region start
     double loopEndPpq;      // Loop region end
+    int16_t timeSigNumerator;    // Host time signature numerator (M051 S02)
+    int16_t timeSigDenominator;  // Host time signature denominator (M051 S02)
+    // ppqPerBar() → numerator * (4 / denominator). Drives scene chain bar
+    // boundaries, envelope periods, and MIDI capture windows. Defaults to 4/4.
 };
 ```
 

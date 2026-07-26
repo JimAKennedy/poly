@@ -229,6 +229,14 @@ With **1-Shot**, the chain plays 24 bars and holds the last entry. With **Loop**
 
 Chain position resets on transport jumps. Chain advances only at bar boundaries — mid-bar starts wait for the next bar line.
 
+### Time Signature and Bar Counts
+
+"Bar" throughout Poly means the host's bar. If your DAW project is in 7/8, a chain entry with `bars=2` runs for 2 × 7/8 (7 PPQ) — not for 2 × 4/4 (8 PPQ). The same rule holds for envelope `Period Bars` and the "last N bars" MIDI capture window. Poly's header displays the current host time signature next to BPM so the coupling is visible at a glance — if you see `120 BPM · 7/8`, every "bar" in the UI is a 7/8 bar.
+
+Individual **lane cycles are meter-independent by design.** A lane with `steps=7, subdivision=8` always cycles every 7/8 regardless of what the host meter says. The host meter only affects UI-facing "bar" counts (scene chain length, envelope period, capture window), never the underlying rhythmic grid. This is what makes true polymeter work: a 7/8 lane can play against a 4/4 host, or vice versa, and both stay musically coherent.
+
+If you're writing music in an unusual meter (aksak 9/8, tala, Balkan 11/8), set your DAW's project time signature to match — Poly will follow. Time-signature changes mid-project take effect on the next block; there is no per-project "master meter" parameter today (a possible future addition if the host-as-authority coupling proves painful).
+
 ## Metric Modulation
 
 Each lane has a **Tempo Mult** parameter that scales its step grid independently from the host tempo.

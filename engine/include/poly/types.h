@@ -35,6 +35,22 @@ struct TransportContext {
     bool wrappedLoop = false;
     double loopStartPpq = 0.0;
     double loopEndPpq = 0.0;
+    // M051 S02 E6: host time signature drives bar-unit math where "bar" is a
+    // user-facing count — scene chain "advance every N bars," envelope
+    // `periodBars`, MIDI capture "last N bars." Lane cycles remain
+    // meter-independent: a steps=7/subdivision=8 lane always cycles every 7/8,
+    // regardless of host meter (subdivision is notes-per-bar, and 4.0 PPQ stays
+    // the reference bar for step math). Plugin populates from
+    // Vst::ProcessContext::timeSigNumerator/Denominator under kTimeSigValid;
+    // defaults to 4/4 for engine tests and hosts that don't publish it.
+    int16_t timeSigNumerator = 4;
+    int16_t timeSigDenominator = 4;
+
+    // PPQ per bar = numerator * (4 / denominator). Poly's PPQ unit is one
+    // quarter note, so a 7/8 bar is 7 * (4/8) = 3.5 PPQ.
+    double ppqPerBar() const {
+        return static_cast<double>(timeSigNumerator) * (4.0 / static_cast<double>(timeSigDenominator));
+    }
 };
 // endregion:transport-context
 

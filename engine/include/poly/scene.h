@@ -46,11 +46,17 @@ struct SceneChainState {
         startBarNumber = -1;
     }
 
-    SceneSelect update(const SceneChainConfig& config, double ppqPosition) {
+    // M051 S02: ppqPerBar defaults to 4.0 so existing tests and any
+    // engine-only callers keep the historical 4/4 behavior. Plugin threads
+    // TransportContext::ppqPerBar() through so the chain advances on host
+    // bar boundaries under non-4/4 meters.
+    SceneSelect update(const SceneChainConfig& config, double ppqPosition, double ppqPerBar = 4.0) {
         if (config.entryCount <= 0)
             return SceneSelect::A;
 
-        int64_t barNumber = static_cast<int64_t>(std::floor(ppqPosition / 4.0));
+        if (ppqPerBar <= 0.0)
+            ppqPerBar = 4.0;
+        int64_t barNumber = static_cast<int64_t>(std::floor(ppqPosition / ppqPerBar));
 
         if (startBarNumber < 0) {
             startBarNumber = barNumber;
