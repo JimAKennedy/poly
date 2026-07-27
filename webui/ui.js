@@ -1069,10 +1069,87 @@
     }
   }
 
+  /* ================= first-run MIDI-routing diagnostic banner =================
+     Poly is a MIDI-only instrument: it makes no sound until its output is routed
+     to a drum instrument in the DAW, and the plugin has no audio-feedback path
+     to prove that routing exists. The only viable fix for the "plugin makes no
+     sound; is it broken?" support case is in-plugin guidance shown exactly in
+     the failure window — transport playing while at least one active lane is
+     emitting hits, yet no audio is guaranteed. The banner fires once after a
+     wall-clock dwell (Date.now(), not a frame count, so it is robust to frame
+     rate), is dismissible, and persists the dismissal to localStorage so it
+     never re-nags. It NEVER appears in non-embedded (mock/standalone) mode —
+     there the browser Web Audio host makes real sound, so the diagnostic is
+     meaningless. Copy mirrors the routing wording in
+     site/src/content/docs/guide-using-poly.mdx and docs/cubase-workflow.md. */
+  const ROUTING_BANNER_KEY = 'poly.routingBannerDismissed';
+  // Wall-clock dwell before the banner appears. Overridable via
+  // window.__POLY_ROUTING_BANNER_MS so Playwright can shrink the production
+  // window (a few seconds) to a few frames without a slow real-time wait.
+  const ROUTING_BANNER_MS = (typeof window.__POLY_ROUTING_BANNER_MS === 'number')
+    ? window.__POLY_ROUTING_BANNER_MS : 4000;
+  let routingEmitSince = 0;      // Date.now() when play+emit began; 0 = not counting
+  let routingBanner = null;      // banner DOM node once shown
+  let routingBannerDone = false; // shown or dismissed this session — never re-trigger
+
+  function routingDismissed() {
+    // localStorage can throw (private mode / disabled storage) — treat any
+    // failure as "not dismissed" so the diagnostic still helps the user.
+    try { return localStorage.getItem(ROUTING_BANNER_KEY) === '1'; } catch (_) { return false; }
+  }
+  // A lane "emits hits" when it is active and its pattern actually produces
+  // onsets — mirrors the VU `active` gate (cells lanes always emit; euclid /
+  // timeline lanes emit only with >=1 hit). A muted or empty lane makes no MIDI.
+  function laneEmitsHits(l) {
+    if (!l || !l.active) return false;
+    if (l.cells) return true;
+    if (l.timeline) return Array.isArray(l.fixed) && l.fixed.some(Boolean);
+    return Array.isArray(l.pattern) && l.pattern.some(Boolean);
+  }
+  function showRoutingBanner() {
+    if (routingBanner) return;
+    const b = document.createElement('div');
+    b.id = 'routingBanner';
+    b.className = 'routing-banner';
+    b.setAttribute('role', 'status');
+    b.setAttribute('aria-live', 'polite');
+    b.innerHTML =
+      `<div class="routing-banner-body">` +
+      `<strong>No sound? Route Poly's MIDI to a drum instrument.</strong>` +
+      `<span>Poly generates MIDI only — it produces no audio on its own. ` +
+      `Route its output to a drum sound source (Groove Agent, Battery, Kontakt, ` +
+      `Drum Rack, or any GM-compatible drum plugin) to hear the groove. ` +
+      `See the Poly guide for your DAW's MIDI routing steps.</span>` +
+      `</div>` +
+      `<button type="button" class="routing-banner-dismiss" ` +
+      `aria-label="Dismiss routing help and don't show again">Don't show again</button>`;
+    document.getElementById('win').appendChild(b);
+    routingBanner = b;
+    b.querySelector('.routing-banner-dismiss').addEventListener('click', dismissRoutingBanner);
+  }
+  function dismissRoutingBanner() {
+    routingBannerDone = true;
+    try { localStorage.setItem(ROUTING_BANNER_KEY, '1'); } catch (_) { /* storage disabled — best effort */ }
+    if (routingBanner) { routingBanner.remove(); routingBanner = null; }
+  }
+  function updateRoutingBanner(frame) {
+    if (!embedded || routingBannerDone) return;
+    if (routingDismissed()) { routingBannerDone = true; return; }
+    const emitting = !!(frame && frame.playing) && !!(S && S.lanes && S.lanes.some(laneEmitsHits));
+    if (!emitting) { routingEmitSince = 0; return; }
+    const now = Date.now();
+    if (routingEmitSince === 0) { routingEmitSince = now; return; }
+    if (now - routingEmitSince >= ROUTING_BANNER_MS) {
+      routingBannerDone = true; // latch before showing so it fires exactly once
+      showRoutingBanner();
+    }
+  }
+
   host.onFrame((frame) => {
     if (!S) return;
     if (REDUCED) frame = Object.assign({}, frame, { t8: Math.floor(frame.t8) });
     lastFrame = frame;
+    updateRoutingBanner(frame);
     document.getElementById('picon').setAttribute('d',
       frame.playing ? 'M2.5 2 H5.5 V12 H2.5 Z M8.5 2 H11.5 V12 H8.5 Z' : 'M3 2 L12 7 L3 12 Z');
     document.querySelector('#conv b').textContent = Math.ceil(frame.convLeft / 12);
