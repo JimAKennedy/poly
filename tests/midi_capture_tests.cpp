@@ -8,6 +8,19 @@ static NoteEvent makeEvent(double ppq, int16_t pitch, float vel, int16_t ch) {
     return {ppq, pitch, vel, 0.25, ch};
 }
 
+// Field-exact equality of an extracted window: the S08 frozen-snapshot guarantee
+// is that the exported SMF is identical event-for-event. NoteEvent has padding
+// bytes, so a raw memcmp is unreliable — compare every serialized field instead.
+static bool eventsEqual(const NoteEvent* a, const NoteEvent* b, size_t n) {
+    for (size_t i = 0; i < n; ++i) {
+        if (a[i].ppqPosition != b[i].ppqPosition || a[i].pitch != b[i].pitch || a[i].velocity != b[i].velocity ||
+            a[i].duration != b[i].duration || a[i].channel != b[i].channel || a[i].laneIndex != b[i].laneIndex) {
+            return false;
+        }
+    }
+    return true;
+}
+
 TEST(MidiCaptureBuffer, PushAndCount) {
     MidiCaptureBuffer buf;
     EXPECT_TRUE(buf.empty());
@@ -107,6 +120,73 @@ TEST(MidiCaptureBuffer, NewestPpq) {
 
     buf.push(makeEvent(10.0, 38, 0.6f, 1));
     EXPECT_DOUBLE_EQ(buf.newestPpq(), 10.0);
+}
+
+// S08 frozen-window guarantee: reaching `complete` must yield a STABLE SMF
+// regardless of continued playback. The freeze primitive is extract() over an
+// absolute-PPQ window. Prove that extracting the same window before and after
+// further push()es beyond that window returns byte-identical results, so the
+// processor can snapshot once and rely on it.
+TEST(MidiCaptureBuffer, ExtractByteStableAfterFurtherPushes) {
+    MidiCaptureBuffer buf;
+    // Window [0, 8): bars 1..8 worth of notes (one per beat).
+    for (int i = 0; i < 8; ++i)
+        buf.push(makeEvent(static_cast<double>(i), static_cast<int16_t>(36 + i), 0.7f, 0));
+
+    NoteEvent before[64];
+    size_t nBefore = buf.extract(0.0, 8.0, before, 64);
+    EXPECT_EQ(nBefore, 8u);
+
+    // Playback continues: many more notes land strictly beyond the window.
+    for (int i = 0; i < 500; ++i)
+        buf.push(makeEvent(8.0 + static_cast<double>(i), static_cast<int16_t>(50), 0.9f, 3));
+
+    NoteEvent after[64];
+    size_t nAfter = buf.extract(0.0, 8.0, after, 64);
+    EXPECT_EQ(nAfter, nBefore);
+    EXPECT_TRUE(eventsEqual(before, after, nAfter));
+}
+
+// The exclusive upper bound must never leak later pushes into a frozen window:
+// a note landing exactly on toPpq (or beyond) is excluded, so re-extracting the
+// same window after those pushes stays byte-identical.
+TEST(MidiCaptureBuffer, ExtractStableExcludesUpperBoundary) {
+    MidiCaptureBuffer buf;
+    for (int i = 0; i < 8; ++i)
+        buf.push(makeEvent(static_cast<double>(i), static_cast<int16_t>(36 + i), 0.7f, 0));
+
+    NoteEvent before[64];
+    size_t nBefore = buf.extract(0.0, 8.0, before, 64);
+
+    // A note exactly on the exclusive upper bound and beyond it.
+    buf.push(makeEvent(8.0, 60, 0.5f, 1));
+    buf.push(makeEvent(9.0, 61, 0.5f, 1));
+
+    NoteEvent after[64];
+    size_t nAfter = buf.extract(0.0, 8.0, after, 64);
+    EXPECT_EQ(nAfter, nBefore);
+    EXPECT_TRUE(eventsEqual(before, after, nAfter));
+}
+
+// Stability holds only while the window's events remain resident in the ring.
+// Documenting the eviction boundary: once push()es wrap past the window events,
+// extract() no longer returns them — the processor must snapshot before that.
+TEST(MidiCaptureBuffer, ExtractWindowEvictedAfterWrap) {
+    MidiCaptureBuffer buf;
+    for (int i = 0; i < 8; ++i)
+        buf.push(makeEvent(static_cast<double>(i), static_cast<int16_t>(36 + i), 0.7f, 0));
+
+    NoteEvent before[64];
+    size_t nBefore = buf.extract(0.0, 8.0, before, 64);
+    EXPECT_EQ(nBefore, 8u);
+
+    // Overflow the ring so the original window events are overwritten.
+    for (size_t i = 0; i < MidiCaptureBuffer::kCapacity + 8; ++i)
+        buf.push(makeEvent(100.0 + static_cast<double>(i), 50, 0.9f, 3));
+
+    NoteEvent after[64];
+    size_t nAfter = buf.extract(0.0, 8.0, after, 64);
+    EXPECT_EQ(nAfter, 0u);
 }
 
 TEST(MidiCaptureBuffer, ExtractSortedOutput) {
