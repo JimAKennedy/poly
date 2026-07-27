@@ -34,6 +34,14 @@ static const char* kPresetLaneNames[kFactoryPresetCount][kMaxLanes] = {
     {"Kick", "Snare", "Hi-Hat", "Perc", "Glitch", "Tom Lo", "Ride", "Crash"},
 };
 
+// The table is intentionally sparse: only presets with bespoke lane labels carry
+// a row; the rest zero-fill to null and fall back to default lane names at the
+// applyPreset call site (the null-guard there is load-bearing — do NOT
+// setLaneName() a raw entry without checking it first). Extent stays pinned to
+// the preset count so index arithmetic can never read past the array.
+static_assert(sizeof(kPresetLaneNames) / sizeof(kPresetLaneNames[0]) == kFactoryPresetCount,
+              "kPresetLaneNames must be dimensioned to kFactoryPresetCount");
+
 HeaderView::HeaderView(const VSTGUI::CRect& size, Steinberg::Vst::EditController* controller)
     : CView(size), controller_(controller) {
     setMouseEnabled(true);
@@ -61,6 +69,13 @@ void HeaderView::draw(VSTGUI::CDrawContext* context) {
         presetName = "Init (All Lanes)";
     } else if (selectedPreset_ >= 0 && selectedPreset_ < kFactoryPresetCount) {
         presetName = getFactoryPresetInfo(selectedPreset_).name;
+    } else if (auto* polyCtrl = dynamic_cast<PolyController*>(controller_)) {
+        // No preset actively clicked this session (selectedPreset_ == -1), but the
+        // controller may carry a preset label restored from persisted v3 state on
+        // project reload. Show it instead of the "Select Preset..." placeholder.
+        const std::string& restored = polyCtrl->presetLabel();
+        if (!restored.empty())
+            presetName = restored.c_str();
     }
 
     CRect presetRect(bounds.left + 180, bounds.top + 5, bounds.right - 90, bounds.bottom - 5);
@@ -231,8 +246,19 @@ void HeaderView::applyPreset(int index) {
 
     auto* polyCtrl = static_cast<PolyController*>(controller_);
     polyCtrl->mutableActiveScene() = state;
-    for (int lane = 0; lane < kMaxLanes; ++lane)
-        polyCtrl->setLaneName(lane, kPresetLaneNames[index][lane]);
+    // kPresetLaneNames only carries explicit rows for the first batch of factory
+    // presets; later presets (index >= the number of initialised rows) have
+    // all-null entries. Reset to defaults first, then override only where a
+    // non-null label exists — passing a null const char* into setLaneName() would
+    // construct std::string(nullptr) and crash in strlen(). Same class of bug as
+    // the WebUI path (M051 S06). See L4/L6: preset inventory grew 14 -> 43 without
+    // extending this table.
+    polyCtrl->resetLaneNames();
+    for (int lane = 0; lane < kMaxLanes; ++lane) {
+        if (const char* label = kPresetLaneNames[index][lane])
+            polyCtrl->setLaneName(lane, label);
+    }
+    polyCtrl->setPresetLabel(selectedPreset_ == kInitPreset ? "Init" : getFactoryPresetInfo(index).name);
 
     pushParam(ParamIDs::kMacroComplexity, state.macros.complexity);
     pushParam(ParamIDs::kMacroDensity, state.macros.density);

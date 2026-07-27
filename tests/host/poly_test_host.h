@@ -4,10 +4,12 @@
 #include <cstddef>
 #include <cstdint>
 #include <optional>
+#include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
+#include "poly/scene.h"
 #include "poly/types.h"
 
 namespace Steinberg {
@@ -142,6 +144,16 @@ public:
     // publishes must reflect sceneB values, not sceneA. RED on current HEAD because
     // controller_base.cpp:225 hardcodes `cachedState_.sceneA` instead of activeScene().
     bool feedComponentState(const SceneState& scene);
+
+    // --- M051 S06: preset-label persistence (v3 controller state) ---
+    // Sets/reads the controller's cosmetic preset label for the CURRENTLY selected
+    // scene so tests can prove it survives the controller getState/setState
+    // round-trip (project reload) and that A and B stay independent. Returns
+    // false / empty when no controller is attached. setControllerScene switches
+    // which scene the label accessors target.
+    bool setControllerScene(poly::SceneSelect select);
+    bool setControllerPresetLabel(const std::string& label);
+    std::string controllerPresetLabel() const;
 
     // --- M046 S04 P5/P6: note-off integrity injector + counter ---
     // injectPendingNoteOff pokes a synthetic entry straight into the processor's

@@ -34,6 +34,8 @@
   // after modal open keep working.
   playBtn.addEventListener('click', () => { if (!embedded) host.action('togglePlay', {}); });
   if (embedded) {
+    // Fill the plugin iframe: no centered gutter / border / radius / shadow.
+    document.body.classList.add('embedded');
     playBtn.style.opacity = '0.35';
     playBtn.style.cursor = 'default';
     playBtn.title = 'Transport controlled by host DAW';
@@ -278,6 +280,7 @@
   });
 
   /* --- preset dropdown --- */
+  const presetTrigger = document.getElementById('presetTrigger');
   const presetBtn = document.getElementById('presetName');
   const presetMenu = document.getElementById('presetMenu');
   let presetMenuBuilt = false;
@@ -405,6 +408,7 @@
 
   presetBtn.addEventListener('click', (e) => {
     e.stopPropagation();
+    if (presetBtn.getAttribute('aria-disabled') === 'true') return;
     if (presetMenu.classList.contains('open')) closePresetMenu();
     else openPresetMenu();
   });
@@ -971,6 +975,14 @@
     document.getElementById('scA').classList.toggle('on', S.scene === 'A');
     document.getElementById('scB').classList.toggle('on', S.scene === 'B');
     document.getElementById('scM').classList.toggle('on', S.scene === 'Morph');
+    // In Morph the output is a blend of A and B, so applying a preset is
+    // meaningless. Hide the whole preset group (label + dropdown + seed) rather
+    // than just disabling it: that frees the horizontal space the morph slider
+    // needs, so the seed no longer overlaps the Cloth chip in the nowrap chrome.
+    const morphing = S.scene === 'Morph';
+    presetTrigger.classList.toggle('preset-hidden', morphing);
+    presetBtn.setAttribute('aria-disabled', morphing ? 'true' : 'false');
+    if (morphing) closePresetMenu();
     morphSlider.style.display = S.scene === 'Morph' ? 'flex' : 'none';
     morphFill.style.width = `${((S.morph || 0) * 100).toFixed(1)}%`;
     const chain = S.chain || { enabled: false };

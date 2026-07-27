@@ -5,8 +5,10 @@
 #include "web_ui_view.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <cstdio>
+#include <ctime>
 #include <string>
 
 #include "../controller.h"
@@ -45,6 +47,15 @@ static const char* kWebPresetLaneNames[kFactoryPresetCount][kMaxLanes] = {
     {"Mridangam Lo", "Mridangam Hi", "Ghatam", "Kanjira", "Tom Hi", "Tom Lo", "Ride", "Crash"},
     {"Kick", "Snare", "Hi-Hat", "Perc", "Glitch", "Tom Lo", "Ride", "Crash"},
 };
+
+// The table is intentionally sparse: only presets with bespoke lane labels
+// carry a row; the rest (index >= the initialised rows) zero-fill to null and
+// fall back to default lane names at the applyPreset call site. The null-guard
+// there is load-bearing — do NOT setLaneName() a raw kWebPresetLaneNames entry
+// without checking it first. The declared extent stays pinned to the preset
+// count so index arithmetic can never read past the array.
+static_assert(sizeof(kWebPresetLaneNames) / sizeof(kWebPresetLaneNames[0]) == kFactoryPresetCount,
+              "kWebPresetLaneNames must be dimensioned to kFactoryPresetCount");
 
 // --- WebUIView implementation ---
 
@@ -358,6 +369,11 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
         controller_->setParamNormalized(ParamIDs::kSceneSelect, val);
         controller_->performEdit(ParamIDs::kSceneSelect, val);
         controller_->endEdit(ParamIDs::kSceneSelect);
+        // The preset label is per-scene and lives on the controller; re-push so the
+        // header shows the newly-selected scene's label (blank during Morph) instead
+        // of the previous scene's name. Runs on the WebView message thread, same as
+        // pushState's other callers.
+        pushState();
         return;
     }
 
@@ -373,6 +389,7 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
 
         if (index == -1) {
             currentPresetName_ = "Init";
+            controller_->setPresetLabel(currentPresetName_);
             GrooveState init{};
             init.activeLaneCount = kMaxLanes;
             static constexpr int kInitSteps[] = {4, 4, 8, 5, 7, 3, 6, 9};
@@ -403,9 +420,21 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
         } else if (index >= 0 && index < kFactoryPresetCount) {
             auto state = makeFactoryPreset(index);
             currentPresetName_ = getFactoryPresetInfo(index).name;
+            controller_->setPresetLabel(currentPresetName_);
             controller_->mutableActiveScene() = state;
-            for (int lane = 0; lane < kMaxLanes; ++lane)
-                controller_->setLaneName(lane, kWebPresetLaneNames[index][lane]);
+            // kWebPresetLaneNames only carries explicit rows for the first
+            // batch of factory presets; later presets (index >= the number of
+            // initialised rows) have all-null entries. Reset to sane defaults
+            // first, then override only where a non-null label exists — passing
+            // a null const char* into setLaneName() would construct
+            // std::string(nullptr) and crash the host in strlen(). See L4/L6:
+            // the preset inventory grew from 14 to 43 without extending this
+            // table.
+            controller_->resetLaneNames();
+            for (int lane = 0; lane < kMaxLanes; ++lane) {
+                if (const char* label = kWebPresetLaneNames[index][lane])
+                    controller_->setLaneName(lane, label);
+            }
 
             for (int lane = 0; lane < kMaxLanes; ++lane) {
                 const auto& cfg = state.lanes[lane];
@@ -485,6 +514,14 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
             openSaveDialogFromCache();
         } else {
             savePending_ = true;
+            // Fire the kExportTrigger param edge so the processor snapshots the
+            // capture buffer and sets exportReady_; without it RequestMidiExport
+            // never gets a MidiExportData reply and dragSmfCache_ stays empty,
+            // so savePending_ never resolves and the dialog never opens.
+            controller_->beginEdit(ParamIDs::kExportTrigger);
+            controller_->setParamNormalized(ParamIDs::kExportTrigger, 1.0);
+            controller_->performEdit(ParamIDs::kExportTrigger, 1.0);
+            controller_->endEdit(ParamIDs::kExportTrigger);
             requestBackgroundExport();
         }
         return;
@@ -749,6 +786,11 @@ void WebUIView::pushState() {
 
     const auto& ss = controller_->cachedState();
     const auto& gs = controller_->activeScene();
+    // The controller holds the persisted preset label (restored from v3 state on
+    // reload). Sync our working copy from it so a project reload shows the
+    // last-applied preset name instead of the constructor default "Init", and so
+    // suggestedExportName() slugs from the restored name too.
+    currentPresetName_ = controller_->presetLabel();
     auto nameFn = [](int lane, void* ctx) -> const std::string& {
         return static_cast<PolyController*>(ctx)->laneName(lane);
     };
@@ -872,6 +914,23 @@ std::string WebUIView::suggestedExportName() const {
     char seedBuf[24];
     std::snprintf(seedBuf, sizeof(seedBuf), "-%llu", static_cast<unsigned long long>(gs.seed));
     name += seedBuf;
+
+    // Wall-clock timestamp disambiguator. Poly is deterministic — the same
+    // preset+seed produces byte-identical MIDI, so without this two exports
+    // collide on one filename and the second silently offers to overwrite the
+    // first. This runs on the UI/message thread at dialog-open time (not the
+    // audio thread), so a wall-clock read here is RT-safe by placement.
+    const std::time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    std::tm tmBuf{};
+#ifdef _WIN32
+    localtime_s(&tmBuf, &now);
+#else
+    localtime_r(&now, &tmBuf);
+#endif
+    char tsBuf[20];
+    if (std::strftime(tsBuf, sizeof(tsBuf), "-%Y%m%d-%H%M%S", &tmBuf) > 0)
+        name += tsBuf;
+
     name += ".mid";
     return name;
 }

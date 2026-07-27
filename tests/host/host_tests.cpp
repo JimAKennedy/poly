@@ -349,6 +349,88 @@ TEST(HostTests, SetParamOnController_NoProcess_ThenGetState_ReflectsChange) {
     host.teardown();
 }
 
+// --- M051 S06: preset-label persistence across project reload ---
+//
+// Regression for the UAT finding "plugin keeps opening with Init instead of the
+// last-used preset". The cosmetic preset label lived only on the WebUIView
+// (runtime, reset to "Init" on reload) and was never serialized. It now lives on
+// the controller as v3 state fields (one per scene). This proves the SELECTED
+// scene's label survives the controller getState/setState round-trip a DAW does
+// on project save/reload.
+TEST(HostTests, PresetLabel_SurvivesFullPluginStateRoundTrip) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+
+    // Default before any preset is applied (scene A selected).
+    EXPECT_EQ(host.controllerPresetLabel(), "Init");
+
+    // Apply a preset label (as applyPreset does) and save.
+    ASSERT_TRUE(host.setControllerPresetLabel("Tresillo Fire"));
+    ASSERT_EQ(host.controllerPresetLabel(), "Tresillo Fire");
+
+    auto bytes = host.saveFullPluginState();
+    ASSERT_FALSE(bytes.empty());
+
+    // Mutate the label to force restore to do real work, then reload.
+    ASSERT_TRUE(host.setControllerPresetLabel("Something Else"));
+    ASSERT_EQ(host.controllerPresetLabel(), "Something Else");
+
+    ASSERT_TRUE(host.loadFullPluginState(bytes));
+
+    EXPECT_EQ(host.controllerPresetLabel(), "Tresillo Fire")
+        << "Preset label was lost on save->reload — the header would revert to a stale/Init "
+           "value instead of the last-applied preset. v3 controller state must round-trip it.";
+
+    host.teardown();
+}
+
+// --- M051 S06: per-scene preset labels (A and B independent, Morph blank) ---
+//
+// Regression for the UAT finding that a single per-plugin label is misleading:
+// switching between scenes A and B showed the other scene's preset name. Labels
+// are now tracked per scene. This proves A and B are independent, that the
+// accessor tracks the selected scene, that Morph shows a blank label (an
+// interpolation is not "a preset"), and that BOTH survive project reload.
+TEST(HostTests, PresetLabel_PerSceneIndependentAndSurvivesReload) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+
+    // Label scene A, then switch to B and label it differently.
+    ASSERT_TRUE(host.setControllerScene(poly::SceneSelect::A));
+    ASSERT_TRUE(host.setControllerPresetLabel("Tresillo Fire"));
+    ASSERT_TRUE(host.setControllerScene(poly::SceneSelect::B));
+    ASSERT_TRUE(host.setControllerPresetLabel("Gamelan Drift"));
+
+    // Each scene reports its OWN label — no bleed-through.
+    ASSERT_TRUE(host.setControllerScene(poly::SceneSelect::A));
+    EXPECT_EQ(host.controllerPresetLabel(), "Tresillo Fire");
+    ASSERT_TRUE(host.setControllerScene(poly::SceneSelect::B));
+    EXPECT_EQ(host.controllerPresetLabel(), "Gamelan Drift");
+
+    // Morph is a blend of A and B, not a preset — label is blank.
+    ASSERT_TRUE(host.setControllerScene(poly::SceneSelect::Morph));
+    EXPECT_EQ(host.controllerPresetLabel(), "")
+        << "During Morph the header must not claim to be showing a single preset.";
+
+    auto bytes = host.saveFullPluginState();
+    ASSERT_FALSE(bytes.empty());
+
+    // Corrupt both labels, then reload and confirm each scene's label restored.
+    ASSERT_TRUE(host.setControllerScene(poly::SceneSelect::A));
+    ASSERT_TRUE(host.setControllerPresetLabel("Wrong A"));
+    ASSERT_TRUE(host.setControllerScene(poly::SceneSelect::B));
+    ASSERT_TRUE(host.setControllerPresetLabel("Wrong B"));
+
+    ASSERT_TRUE(host.loadFullPluginState(bytes));
+
+    ASSERT_TRUE(host.setControllerScene(poly::SceneSelect::A));
+    EXPECT_EQ(host.controllerPresetLabel(), "Tresillo Fire") << "Scene A label lost on reload.";
+    ASSERT_TRUE(host.setControllerScene(poly::SceneSelect::B));
+    EXPECT_EQ(host.controllerPresetLabel(), "Gamelan Drift") << "Scene B label lost on reload.";
+
+    host.teardown();
+}
+
 // --- M046 S01a T02: pluginval-mimic corpus sweep ---
 //
 // Broad guard against the whole class of controller/processor param-sync bugs the

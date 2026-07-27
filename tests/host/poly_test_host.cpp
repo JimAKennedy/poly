@@ -509,6 +509,26 @@ bool PolyTestHost::feedComponentState(const poly::SceneState& scene) {
     return controller_->setComponentState(&stream) == kResultOk;
 }
 
+bool PolyTestHost::setControllerScene(poly::SceneSelect select) {
+    if (!controller_)
+        return false;
+    controller_->mutableCachedState().select = select;
+    return true;
+}
+
+bool PolyTestHost::setControllerPresetLabel(const std::string& label) {
+    if (!controller_)
+        return false;
+    controller_->setPresetLabel(label);
+    return true;
+}
+
+std::string PolyTestHost::controllerPresetLabel() const {
+    if (!controller_)
+        return {};
+    return controller_->presetLabel();
+}
+
 void PolyTestHost::injectPendingNoteOff(double ppqOff, int16_t pitch, int16_t channel) {
     if (!processor_)
         return;

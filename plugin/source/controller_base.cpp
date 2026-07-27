@@ -348,6 +348,19 @@ Steinberg::tresult PLUGIN_API PolyControllerBase::getState(Steinberg::IBStream* 
             return Steinberg::kResultFalse;
     }
 
+    // v3: per-scene cosmetic preset labels (A then B) so the header restores the
+    // last-applied preset name for each scene across project reload
+    // (length-prefixed, same shape as lane names).
+    for (std::string* label : {&sceneALabel_, &sceneBLabel_}) {
+        auto len = static_cast<Steinberg::int32>(label->size());
+        if (state->write(&len, sizeof(len), nullptr) != Steinberg::kResultOk)
+            return Steinberg::kResultFalse;
+        if (len > 0) {
+            if (state->write(label->data(), len, nullptr) != Steinberg::kResultOk)
+                return Steinberg::kResultFalse;
+        }
+    }
+
     return Steinberg::kResultOk;
 }
 
@@ -395,6 +408,24 @@ Steinberg::tresult PLUGIN_API PolyControllerBase::setState(Steinberg::IBStream* 
             // reads stale values and reports "Param not restored on setStateInformation".
             if (componentHandler)
                 componentHandler->restartComponent(Steinberg::Vst::kParamValuesChanged);
+        }
+    }
+
+    if (version >= 3) {
+        for (std::string* label : {&sceneALabel_, &sceneBLabel_}) {
+            Steinberg::int32 len = 0;
+            if (state->read(&len, sizeof(len), &bytesRead) != Steinberg::kResultOk || bytesRead != sizeof(len) ||
+                len < 0 || len >= 256) {
+                *label = "Init";
+                break;
+            }
+            if (len > 0) {
+                label->resize(static_cast<size_t>(len));
+                if (state->read(label->data(), len, &bytesRead) != Steinberg::kResultOk || bytesRead != len)
+                    *label = "Init";
+            } else {
+                *label = "Init";
+            }
         }
     }
 
