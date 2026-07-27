@@ -546,6 +546,14 @@
   let asyncMode = false;
   let pendingPush = false;
 
+  // M051 S08: capture state machine mirror. The native processor owns the real
+  // arm->capture->complete machine (UISnapshot atomics); the mock reproduces it
+  // so Cloth's capture timeline can be developed and CI-tested standalone.
+  //   state: 0 idle | 1 armed | 2 capturing | 3 complete
+  const capture = { state: 0, bars: 8, prog: 0, startT8: null };
+  const eighthsPerBar = () =>
+    Math.max(1, Math.round(state.timeSigNumerator * (8 / state.timeSigDenominator)));
+
   const emitState = () => {
     if (asyncMode) { pendingPush = true; return; }
     stateSubs.forEach((cb) => cb(state));
@@ -666,8 +674,29 @@
   }
 
   /* ---------- frame pump ---------- */
+  // Advance the capture machine from transport position. Only runs while
+  // playing so headless CI (no audio clock, t8===0) leaves test-forced capture
+  // values untouched — see _setCapture.
+  function advanceCapture(t8) {
+    if (!playing) return;
+    const epb = eighthsPerBar();
+    if (capture.state === 1) {
+      // Armed: latch on the next whole-bar boundary, then start capturing.
+      capture.startT8 = Math.ceil(t8 / epb) * epb;
+      capture.state = 2;
+      capture.prog = 0;
+    } else if (capture.state === 2 && capture.startT8 != null) {
+      capture.prog = Math.max(0, (t8 - capture.startT8) / epb);
+      if (capture.prog >= capture.bars) {
+        capture.prog = capture.bars;
+        capture.state = 3; // complete — window frozen
+      }
+    }
+  }
+
   function pump() {
     const t8 = now8();
+    advanceCapture(t8);
     const convLeft = playing ? (CONV - (Math.floor(t8) % CONV)) % CONV || CONV : CONV;
     const frame = {
       t8,
@@ -675,6 +704,9 @@
       convLeft,
       tsNum: state.timeSigNumerator,
       tsDen: state.timeSigDenominator,
+      capState: capture.state,
+      capBars: capture.bars,
+      capProg: capture.prog,
       lanes: state.lanes.map((l) => {
         const cyc = cyc8(l);
         const tin = Math.floor(t8 % cyc);
@@ -782,6 +814,26 @@
       case 'resetNoteMap':
         state.noteMap = identityNoteMap();
         break;
+      case 'armCapture':
+        // Arm only from idle; a re-arm mid-capture is a no-op (Reset first).
+        if (capture.state === 0) {
+          capture.state = 1;
+          capture.prog = 0;
+          capture.startT8 = null;
+        }
+        break;
+      case 'resetCapture':
+        capture.state = 0;
+        capture.prog = 0;
+        capture.startT8 = null;
+        break;
+      case 'setCaptureBars': {
+        // Bound to kCaptureLength; the picker offers {4,8,16,32}. Only editable
+        // before capture latches (idle/armed).
+        const b = Math.round(payload.bars);
+        if ([4, 8, 16, 32].includes(b) && capture.state <= 1) capture.bars = b;
+        break;
+      }
       case 'exportRequest':
         console.info('[mock-host] exportRequest — native host runs the SMF export path here');
         break;
@@ -936,5 +988,15 @@
     // M045 S01 T03: mock host has no engine emission stream — desk overlay
     // silently no-ops when this returns [].
     getLaneEmissions: () => [],
+    // M051 S08: Playwright hook to force a capture-machine state without a
+    // running audio clock. Mirrors what the native UISnapshot atomics would
+    // report; the next rAF frame carries these values to Cloth.
+    _setCapture: ({ state, bars, prog } = {}) => {
+      if (typeof state === 'number') capture.state = state;
+      if (typeof bars === 'number') capture.bars = bars;
+      if (typeof prog === 'number') capture.prog = prog;
+      capture.startT8 = null; // don't let advanceCapture clobber forced values
+    },
+    _getCapture: () => ({ ...capture }),
   };
 })();

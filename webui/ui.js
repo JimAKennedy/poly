@@ -431,6 +431,15 @@
   /* ================= cloth ================= */
   const loom = document.getElementById('loom');
   const tags = document.getElementById('tags');
+  const clothEl = document.getElementById('cloth');
+  const clothAnns = ['annA', 'annB', 'annC'].map((id) => document.getElementById(id));
+  const capline = clothEl ? clothEl.querySelector('.capline') : null;
+  // Eighth-note ticks per bar from the host meter (4/4 -> 8). Feedback frames
+  // carry tsNum/tsDen; fall back to 4/4 on legacy hosts.
+  function eighthsPerBar() {
+    const num = lastFrame.tsNum || 4, den = lastFrame.tsDen || 4;
+    return Math.max(1, Math.round(num * (8 / den)));
+  }
   loom.addEventListener('click', (e) => {
     const r = loom.getBoundingClientRect();
     setMode('desk', Math.min(S.lanes.length - 1, Math.floor(((e.clientY - r.top) / r.height) * S.lanes.length)));
@@ -452,11 +461,33 @@
       tags.appendChild(t);
     });
   }
+  // M051 S08: Cloth is a capture timeline whose visual IS the export receipt.
+  // In idle it keeps the decorative convergence weave; once armed it becomes a
+  // bar-anchored timeline (X = bars 1..N, Y = lanes) with an L->R playhead
+  // during capturing and a gold selvage marking bar N at complete.
   function drawLoom(t8) {
     const g = loom.getContext('2d');
     if (!g || !S) return;
     const W = loom.width, H = loom.height, dp = devicePixelRatio;
     g.clearRect(0, 0, W, H);
+    const capState = lastFrame.capState | 0;
+    const bars = Math.max(1, lastFrame.capBars || 8);
+    const prog = Math.max(0, Math.min(bars, lastFrame.capProg || 0));
+    updateClothChrome(capState, bars, prog);
+    if (capState >= 1) drawCaptureTimeline(g, W, H, dp, bars, capState, prog);
+    else drawConvergence(g, W, H, dp, t8);
+    // Receipt hook: the capture progression is directly observable (the visual
+    // is the receipt). Consumed by webui/tests/capture-timeline.spec.mjs.
+    window.__polyClothState = {
+      capState, bars,
+      mode: capState >= 1 ? 'timeline' : 'convergence',
+      playhead: capState === 2 ? prog / bars : capState === 3 ? 1 : 0,
+    };
+  }
+
+  // Idle decorative weave: lanes stacked over the convergence window with the
+  // step grid, per-lane cycle markers, gold selvage and a sweeping playhead.
+  function drawConvergence(g, W, H, dp, t8) {
     const bandH = H / S.lanes.length, colW = W / CONV;
     S.lanes.forEach((l, li) => {
       const y0 = li * bandH;
@@ -507,6 +538,84 @@
     g.lineTo(sx + 1 * dp, 14 * dp);
     g.closePath();
     g.fill();
+  }
+
+  // Bar-anchored capture timeline. Note ticks are the emitted notes (the engine
+  // emits exactly the lane pattern, so laneHitAt over the window IS the emitted
+  // stream); captured ticks are solid, not-yet-woven ticks are dimmed.
+  function drawCaptureTimeline(g, W, H, dp, bars, capState, prog) {
+    const bandH = H / S.lanes.length;
+    const barW = W / bars;
+    const ticks = bars * eighthsPerBar();
+    const tickW = W / ticks;
+    S.lanes.forEach((l, li) => {
+      const y0 = li * bandH;
+      g.fillStyle = li % 2 ? '#222E52' : '#26335A';
+      g.fillRect(0, y0, W, bandH);
+      g.fillStyle = 'rgba(240,234,223,.05)';
+      for (let e = 0; e < ticks; e++) g.fillRect(e * tickW, y0, 1 * dp, bandH);
+      for (let e = 0; e < ticks; e++) {
+        const hit = laneHitAt(l, e);
+        if (!hit) continue;
+        // A tick is "woven" once the playhead has passed it (or always, at
+        // complete). Ahead-of-playhead ticks are faint to read as pending.
+        const woven = capState === 3 || e / ticks <= prog / bars;
+        const vn = hitVelocity(l, li, e, hit);
+        const bw = Math.max(2 * dp, tickW * 0.7);
+        const bh = bandH * Math.min(0.9, 0.32 + vn * 0.5);
+        const x = e * tickW + (tickW - bw) / 2;
+        const y = y0 + (bandH - bh) / 2;
+        g.globalAlpha = woven ? 1 : 0.18;
+        g.fillStyle = l.hue;
+        g.fillRect(x, y, bw, bh);
+        g.globalAlpha = 1;
+      }
+      g.fillStyle = 'rgba(14,21,38,.55)';
+      g.fillRect(0, y0 + bandH - 2 * dp, W, 2 * dp);
+    });
+    // Bar dividers + bar-number ruler (X = bars 1..N).
+    g.fillStyle = 'rgba(240,234,223,.20)';
+    for (let b = 1; b < bars; b++) g.fillRect(b * barW, 0, 1 * dp, H);
+    g.fillStyle = 'rgba(240,234,223,.6)';
+    g.font = `${11 * dp}px system-ui, -apple-system, sans-serif`;
+    g.textBaseline = 'top';
+    for (let b = 0; b < bars; b++) g.fillText(String(b + 1), b * barW + 3 * dp, 2 * dp);
+    // Gold selvage marks bar N — brighter/thicker once the window is frozen.
+    const complete = capState === 3;
+    g.fillStyle = complete ? '#F0C24A' : '#D9A441';
+    const selW = (complete ? 6 : 4) * dp;
+    g.fillRect(W - selW, 0, selW, H);
+    // Playhead sweeps L->R while capturing.
+    if (capState === 2) {
+      const px = (prog / bars) * W;
+      g.fillStyle = 'rgba(240,234,223,.92)';
+      g.fillRect(px, 0, 2 * dp, H);
+      g.beginPath();
+      g.moveTo(px - 9 * dp, 0);
+      g.lineTo(px + 11 * dp, 0);
+      g.lineTo(px + 1 * dp, 14 * dp);
+      g.closePath();
+      g.fill();
+    }
+  }
+
+  // Cloth chrome reflects the capture state: annotations are the idle story, so
+  // they hide once the cloth becomes a functional capture timeline. The capline
+  // narrates the arm->capture->complete progression.
+  function updateClothChrome(capState, bars, prog) {
+    if (clothEl) {
+      clothEl.classList.toggle('capArmed', capState === 1);
+      clothEl.classList.toggle('capturing', capState === 2);
+      clothEl.classList.toggle('capComplete', capState === 3);
+    }
+    const timeline = capState >= 1;
+    clothAnns.forEach((a) => { if (a) a.style.display = timeline ? 'none' : ''; });
+    if (capline) {
+      if (capState === 1) capline.innerHTML = `Armed · <b>${bars} bars</b> · waiting for bar 1`;
+      else if (capState === 2) capline.innerHTML = `Capturing · bar <b>${Math.min(bars, Math.floor(prog) + 1)}/${bars}</b>`;
+      else if (capState === 3) capline.innerHTML = `Complete · <b>${bars} bars</b> · drag cloth to DAW`;
+      else capline.innerHTML = `Capture · <b>${bars} bars</b> · arm to weave`;
+    }
   }
 
   /* ================= desk ================= */
