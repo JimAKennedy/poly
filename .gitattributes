@@ -1,0 +1,6 @@
+# The vendored jk-standards warning module is checksum-pinned in CMakeLists.txt
+# against its LF byte form via file(SHA256 ...). Windows runners check code out
+# with CRLF by default, which changes the bytes and breaks the guard. Force LF
+# on all platforms so the SHA256 matches everywhere. Re-pin JK_WARNINGS_SHA256
+# only when re-vendoring from upstream, never to accommodate line-ending drift.
+cmake/jk_warnings.cmake text eol=lf
