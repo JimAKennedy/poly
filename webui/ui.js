@@ -602,7 +602,7 @@
         window.addEventListener('pointerup', up, { once: true });
       });
     });
-    desk.style.gridTemplateColumns = `repeat(${S.lanes.length}, 1fr) 196px`;
+    desk.style.gridTemplateColumns = `repeat(${S.lanes.length}, 1fr) 160px`;
   }
   function expandStrip(li) {
     expanded = li;
@@ -610,9 +610,9 @@
     const n = S.lanes.length;
     const wide = n >= 6 ? '4fr' : '2.9fr';
     const narrow = n >= 6 ? '.38fr' : '.62fr';
-    const master = n >= 6 ? '160px' : '176px';
+    const master = n >= 6 ? '148px' : '160px';
     desk.style.gridTemplateColumns = li < 0
-      ? `repeat(${n}, 1fr) 196px`
+      ? `repeat(${n}, 1fr) 160px`
       : S.lanes.map((_, i) => (i === li ? wide : narrow)).join(' ') + ` ${master}`;
     if (li >= 0) buildPanes(li);
   }
