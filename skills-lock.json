@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "jkStandardsVersion": "0.3.0",
+  "skills": {
+    "branch-discipline": {
+      "source": "JimAKennedy/jk-standards",
+      "sourceType": "github",
+      "skillPath": "skills/branch-discipline/SKILL.md",
+      "computedHash": "e1ee5cab3879a98592bb6029648dca86b9da6916097a70fa9696159916140723"
+    },
+    "ci-hygiene": {
+      "source": "JimAKennedy/jk-standards",
+      "sourceType": "github",
+      "skillPath": "skills/ci-hygiene/SKILL.md",
+      "computedHash": "7a93024bbdde089b08111b0fe179688e5766b07eafc6c1082cff7ba4866732f8"
+    },
+    "doc-anti-drift": {
+      "source": "JimAKennedy/jk-standards",
+      "sourceType": "github",
+      "skillPath": "skills/doc-anti-drift/SKILL.md",
+      "computedHash": "f2e688a5d3aaa6ce2d7c6fc6e1e4a7eb6613f5245ddbf3882c444a4f2c681a46"
+    },
+    "escape-hatch-discipline": {
+      "source": "JimAKennedy/jk-standards",
+      "sourceType": "github",
+      "skillPath": "skills/escape-hatch-discipline/SKILL.md",
+      "computedHash": "6412933a0d29577c4d1519eeaf1a01a285fb1f6012460f484da250bc93f1e6dd"
+    },
+    "sanitizer-ci-setup": {
+      "source": "JimAKennedy/jk-standards",
+      "sourceType": "github",
+      "skillPath": "skills/sanitizer-ci-setup/SKILL.md",
+      "computedHash": "11e6342461772c27998956bae598893259eb804b57dffb7f438b73ce742d0177"
+    }
+  }
+}
