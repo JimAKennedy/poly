@@ -495,34 +495,44 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
         return;
     }
 
-    if (name == "exportRequest") {
-        controller_->beginEdit(ParamIDs::kExportTrigger);
-        controller_->setParamNormalized(ParamIDs::kExportTrigger, 1.0);
-        controller_->performEdit(ParamIDs::kExportTrigger, 1.0);
-        controller_->endEdit(ParamIDs::kExportTrigger);
+    // M051 S08: capture state machine drivers. notify() on the processor only
+    // latches an atomic command; process() applies it on the audio thread. Both
+    // ride the existing message channel (no kExportTrigger param edge — that
+    // WebUI prefetch path is retired here; the native VSTGUI variant keeps
+    // kExportTrigger until M053).
+    if (name == "armCapture") {
+        sendCaptureCommand("ArmCapture");
+        return;
+    }
+
+    if (name == "resetCapture") {
+        sendCaptureCommand("ResetCapture");
         return;
     }
 
     if (name == "exportSaveAs") {
-        // Native "Save As…" for the current 10-bar capture. If the drag
-        // cache is already fresh (S04 T01 prefetch) open the dialog now;
-        // otherwise arm savePending_ and let the next MidiExport tick from
-        // the processor open it. saveDialogOpen_ guards re-entrancy.
+        // Save-As is gated behind the capture state machine: only `complete`
+        // (captureState==3) guarantees a frozen, stable window (the processor
+        // set exportReady_ on the capturing->complete transition). In any other
+        // state there is nothing stable to export, so ignore the click.
         if (saveDialogOpen_)
             return;
-        if (controller_->hasDragSmf()) {
+        auto* snap = controller_->uiSnapshot();
+        const int capState = snap ? snap->captureState.load(std::memory_order_relaxed) : 0;
+        if (capState != 3 /* complete */)
+            return;
+
+        // freshExportPending_ is set when pushFrame saw a new capturing->complete
+        // edge: the drag cache (if any) holds a PREVIOUS capture's bytes, so force
+        // a fresh RequestMidiExport to pull the newly frozen window. Once the
+        // fresh bytes land, subsequent clicks (e.g. after a cancel) reuse the
+        // cache for the same complete window.
+        if (!freshExportPending_ && controller_->hasDragSmf()) {
             openSaveDialogFromCache();
         } else {
             savePending_ = true;
-            // Fire the kExportTrigger param edge so the processor snapshots the
-            // capture buffer and sets exportReady_; without it RequestMidiExport
-            // never gets a MidiExportData reply and dragSmfCache_ stays empty,
-            // so savePending_ never resolves and the dialog never opens.
-            controller_->beginEdit(ParamIDs::kExportTrigger);
-            controller_->setParamNormalized(ParamIDs::kExportTrigger, 1.0);
-            controller_->performEdit(ParamIDs::kExportTrigger, 1.0);
-            controller_->endEdit(ParamIDs::kExportTrigger);
-            requestBackgroundExport();
+            freshExportPending_ = false;
+            requestMidiExport();
         }
         return;
     }
@@ -834,6 +844,19 @@ void WebUIView::pushFrame() {
     int tsNum = snap ? snap->timeSigNumerator.load(std::memory_order_relaxed) : 4;
     int tsDen = snap ? snap->timeSigDenominator.load(std::memory_order_relaxed) : 4;
 
+    // M051 S08: capture state machine progression (T02's UISnapshot atomics).
+    // The Cloth timeline renders these directly (the visual is the receipt).
+    int capState = snap ? snap->captureState.load(std::memory_order_relaxed) : 0;
+    int capBars = snap ? snap->captureBars.load(std::memory_order_relaxed) : 8;
+    double capProg = snap ? snap->captureProgressBars.load(std::memory_order_relaxed) : 0.0;
+
+    // Detect the capturing->complete edge: a new window was just frozen, so any
+    // drag cache from a previous capture is now stale. Force the next Export to
+    // pull the fresh frozen bytes (see exportSaveAs).
+    if (capState == 3 && lastCaptureState_ != 3)
+        freshExportPending_ = true;
+    lastCaptureState_ = capState;
+
     double t8 = ppqNorm * 256.0;
 
     constexpr int kConvWindow = 120;
@@ -849,9 +872,11 @@ void WebUIView::pushFrame() {
     js.reserve(512);
     js += "{\"type\":\"frame\",\"frame\":{";
 
-    char buf[96];
-    std::snprintf(buf, sizeof(buf), "\"t8\":%.4f,\"playing\":%s,\"convLeft\":%d,\"tsNum\":%d,\"tsDen\":%d", t8,
-                  playing ? "true" : "false", convLeft, tsNum, tsDen);
+    char buf[160];
+    std::snprintf(buf, sizeof(buf),
+                  "\"t8\":%.4f,\"playing\":%s,\"convLeft\":%d,\"tsNum\":%d,\"tsDen\":%d,"
+                  "\"capState\":%d,\"capBars\":%d,\"capProg\":%.4f",
+                  t8, playing ? "true" : "false", convLeft, tsNum, tsDen, capState, capBars, capProg);
     js += buf;
 
     const auto& gs = controller_->activeScene();
@@ -870,26 +895,27 @@ void WebUIView::pushFrame() {
 
     // Deferred save dialog: user clicked Export while cache was empty. As
     // soon as the processor's MidiExport notify populates dragSmfCache_ we
-    // open the panel with the fresh bytes.
+    // open the panel with the fresh bytes. The S06 500ms background prefetch
+    // loop is retired for the WebUI variant — Export is now driven by the
+    // explicit arm->capture->complete state machine, so a fresh RequestMidiExport
+    // is issued on demand from exportSaveAs when the window is `complete`.
     if (savePending_ && controller_->hasDragSmf()) {
         savePending_ = false;
         openSaveDialogFromCache();
     }
+}
 
-    // Background prefetch: keep dragSmfCache_ fresh so a subsequent Export
-    // click is instant. Frame timer runs at 33ms; fire every 15 ticks
-    // (~500ms) — matches the S04 T01 native-VSTGUI prefetch cadence.
-    if (++prefetchTickCounter_ >= 15) {
-        prefetchTickCounter_ = 0;
-        if (!savePending_ && !saveDialogOpen_) {
-            requestBackgroundExport();
-        }
+void WebUIView::requestMidiExport() {
+    if (auto* msg = controller_->allocateMessage()) {
+        msg->setMessageID("RequestMidiExport");
+        controller_->sendMessage(msg);
+        msg->release();
     }
 }
 
-void WebUIView::requestBackgroundExport() {
+void WebUIView::sendCaptureCommand(const char* messageId) {
     if (auto* msg = controller_->allocateMessage()) {
-        msg->setMessageID("RequestMidiExport");
+        msg->setMessageID(messageId);
         controller_->sendMessage(msg);
         msg->release();
     }

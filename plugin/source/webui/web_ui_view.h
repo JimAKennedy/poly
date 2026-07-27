@@ -44,7 +44,8 @@ private:
     void startFrameTimer();
     void stopFrameTimer();
     void resizeWebviewToRect(const Steinberg::ViewRect& r);
-    void requestBackgroundExport();
+    void requestMidiExport();
+    void sendCaptureCommand(const char* messageId);
     void openSaveDialogFromCache();
     std::string suggestedExportName() const;
 
@@ -61,13 +62,17 @@ private:
     // its NSSavePanel / IFileSaveDialog to the correct window.
     void* parentView_ = nullptr;
     // If the user clicks Export while dragSmfCache_ is empty, we fire a
-    // background export and open the dialog on the frame tick that sees
+    // MidiExport request and open the dialog on the frame tick that sees
     // the cache filled. saveDialogOpen_ prevents re-entrancy.
     bool savePending_ = false;
     bool saveDialogOpen_ = false;
-    // Frame-tick counter for periodic background export prefetch (30 Hz frame
-    // timer). Fires ~every 500ms while capture is ready and no save is pending.
-    int prefetchTickCounter_ = 0;
+    // M051 S08: capture state machine mirror (values match UISnapshot::captureState:
+    // 0=idle, 1=armed, 2=capturing, 3=complete). Tracked so pushFrame can detect the
+    // capturing->complete edge and invalidate any stale drag cache: each fresh
+    // `complete` freezes a NEW window, so the next Export must pull the fresh frozen
+    // bytes rather than a previous capture's leftover cache.
+    int lastCaptureState_ = 0;
+    bool freshExportPending_ = false;
 };
 
 } // namespace poly
