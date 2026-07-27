@@ -113,7 +113,15 @@ if(POLY_WEB_UI)
         source/webui/bridge_params.h
         source/webui/bridge_serialization.h
         source/webui/bridge_serialization.cpp
+        source/webui/platform_save_dialog.h
     )
+    if(APPLE)
+        target_sources(poly_plugin PRIVATE source/webui/platform_save_dialog_mac.mm)
+        target_link_libraries(poly_plugin PRIVATE "-framework AppKit" "-framework Foundation")
+    elseif(WIN32)
+        target_sources(poly_plugin PRIVATE source/webui/platform_save_dialog_win.cpp)
+        target_link_libraries(poly_plugin PRIVATE ole32 shell32 shlwapi)
+    endif()
     target_include_directories(poly_plugin PRIVATE
         ${choc_SOURCE_DIR}
         ${CMAKE_CURRENT_BINARY_DIR}/generated

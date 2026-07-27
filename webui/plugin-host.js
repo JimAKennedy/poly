@@ -53,6 +53,8 @@
       _fc++;
       frameSubs.forEach((cb) => cb(msg.frame));
       if (_fc % 30 === 0) _updateDbg(`SC:${_sc} FC:${_fc} t8:${msg.frame?.t8?.toFixed(1) ?? '?'} P:${msg.frame?.playing ? 'Y' : 'N'}`);
+    } else if (msg.type === 'exportResult') {
+      window.dispatchEvent(new CustomEvent('polyExportResult', { detail: { savedPath: msg.savedPath || '' } }));
     }
   };
 
