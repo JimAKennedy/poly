@@ -3,6 +3,17 @@
 # =============================================================================
 
 # -----------------------------------------------------------------------------
+# Vendored jk-standards skills (installed via `jk-standards install-skills`;
+# pinned by skills-lock.json). Named explicitly so the tracked poly-local
+# .claude/skills/poly-site skill stays under version control.
+# -----------------------------------------------------------------------------
+.claude/skills/branch-discipline/
+.claude/skills/ci-hygiene/
+.claude/skills/doc-anti-drift/
+.claude/skills/escape-hatch-discipline/
+.claude/skills/sanitizer-ci-setup/
+
+# -----------------------------------------------------------------------------
 # Build Directories
 # -----------------------------------------------------------------------------
 build/

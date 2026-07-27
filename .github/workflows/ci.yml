@@ -358,7 +358,11 @@ jobs:
         working-directory: site
         run: npm ci
       - name: Install jk-standards
-        run: pip install "git+https://github.com/JimAKennedy/jk-standards@v0.1.0"
+        run: pip install "git+https://github.com/JimAKennedy/jk-standards@v0.3.0"
+      - name: Install and verify vendored jk-standards skills
+        run: |
+          jk-standards install-skills --dest .claude/skills
+          jk-standards install-skills --dest .claude/skills --check
       - name: Regenerate params.json from engine headers (M048 S05 input)
         run: node site/scripts/generate-params-json.mjs
       - name: Doc discipline checks (M048 S01/S02/S05/S06/S09/S10/S11 via jk-standards)
