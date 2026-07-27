@@ -13,12 +13,44 @@ Everything you need to use Poly in one place: installation, MIDI routing, the pl
 
 ### Install
 
-Copy the `Poly.vst3` bundle to your system's VST3 plugin folder:
+Poly ships in two formats: a **VST3** (all platforms) and an **Audio Unit** (macOS only). Both wrap the same engine — pick whichever your DAW prefers. Logic Pro only loads Audio Units, so macOS Logic users need the `.component`.
+
+**VST3** — copy the `Poly.vst3` bundle to your system's VST3 plugin folder:
 
 - **macOS:** `~/Library/Audio/Plug-Ins/VST3/`
 - **Windows:** `C:\Program Files\Common Files\VST3\`
 
-Restart your DAW so it rescans for new plugins.
+**Audio Unit (macOS)** — copy the `Poly.component` bundle to your Components folder:
+
+- **macOS:** `~/Library/Audio/Plug-Ins/Components/`
+
+The Audio Unit is an AUv2 instrument (`aumu` music-device) that wraps the VST3, exposing the identical engine to AU hosts. It registers under the manufacturer **jk.digital** as **Poly**.
+
+Restart your DAW so it rescans for new plugins. On macOS, if a freshly installed AU does not appear in Logic, quit Logic and run `killall -9 AudioComponentRegistrar` in Terminal to force the system to re-scan the Components folder, then relaunch.
+
+### Build from Source
+
+Prebuilt binaries aside, both formats build from the repository with CMake. The VST3 builds on any platform with the standard Ninja configuration. The Audio Unit is macOS-only and requires the **Xcode generator** (the Steinberg AU wrapper is gated behind it):
+
+```sh
+# VST3 (all platforms)
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build build
+
+# Audio Unit (macOS, Xcode generator required)
+cmake -S . -B build-au -G Xcode -DSMTG_ENABLE_AUV2_BUILDS=ON
+cmake --build build-au --config Release
+```
+
+The AU build emits `Poly.component`. Copy it into `~/Library/Audio/Plug-Ins/Components/` as described above.
+
+**Validate the Audio Unit** with Apple's `auval` tool, which loads the component end-to-end and confirms the host will accept it:
+
+```sh
+auval -v aumu Poly JkDl
+```
+
+A clean run ends in `* * PASS`. The four-character codes are Poly's AU identity: type `aumu` (music device / instrument), subtype `Poly`, manufacturer `JkDl`. If `auval` reports the component is not found, re-run `killall -9 AudioComponentRegistrar` and try again — the AU registry caches aggressively.
 
 ### Load Poly
 
