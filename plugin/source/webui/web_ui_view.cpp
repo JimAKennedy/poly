@@ -16,6 +16,7 @@
 #include "choc/gui/choc_MessageLoop.h"
 #include "choc/gui/choc_WebView.h"
 #include "choc/text/choc_JSON.h"
+#include "platform_save_dialog.h"
 #include "poly/euclidean.h"
 #include "poly/params_def.h"
 #include "poly/presets.h"
@@ -70,6 +71,7 @@ Steinberg::tresult PLUGIN_API WebUIView::isPlatformTypeSupported(Steinberg::FIDS
 }
 
 Steinberg::tresult PLUGIN_API WebUIView::attached(void* parent, Steinberg::FIDString type) {
+    parentView_ = parent;
     choc::ui::WebView::Options options;
     options.enableDebugMode = true;
     options.fetchResource = [](const std::string& path) -> std::optional<choc::ui::WebView::Options::Resource> {
@@ -127,6 +129,7 @@ Steinberg::tresult PLUGIN_API WebUIView::attached(void* parent, Steinberg::FIDSt
 Steinberg::tresult PLUGIN_API WebUIView::removed() {
     stopFrameTimer();
     webview_.reset();
+    parentView_ = nullptr;
     return CPluginView::removed();
 }
 
@@ -471,6 +474,22 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
         return;
     }
 
+    if (name == "exportSaveAs") {
+        // Native "Save As…" for the current 10-bar capture. If the drag
+        // cache is already fresh (S04 T01 prefetch) open the dialog now;
+        // otherwise arm savePending_ and let the next MidiExport tick from
+        // the processor open it. saveDialogOpen_ guards re-entrancy.
+        if (saveDialogOpen_)
+            return;
+        if (controller_->hasDragSmf()) {
+            openSaveDialogFromCache();
+        } else {
+            savePending_ = true;
+            requestBackgroundExport();
+        }
+        return;
+    }
+
     if (name == "setAccent") {
         int lane = payload["lane"].get<int32_t>();
         int step = payload["step"].get<int32_t>();
@@ -806,6 +825,77 @@ void WebUIView::pushFrame() {
     js += "]}}";
 
     webview_->evaluateJavascript("window.polyHostPush(" + js + ")");
+
+    // Deferred save dialog: user clicked Export while cache was empty. As
+    // soon as the processor's MidiExport notify populates dragSmfCache_ we
+    // open the panel with the fresh bytes.
+    if (savePending_ && controller_->hasDragSmf()) {
+        savePending_ = false;
+        openSaveDialogFromCache();
+    }
+
+    // Background prefetch: keep dragSmfCache_ fresh so a subsequent Export
+    // click is instant. Frame timer runs at 33ms; fire every 15 ticks
+    // (~500ms) — matches the S04 T01 native-VSTGUI prefetch cadence.
+    if (++prefetchTickCounter_ >= 15) {
+        prefetchTickCounter_ = 0;
+        if (!savePending_ && !saveDialogOpen_) {
+            requestBackgroundExport();
+        }
+    }
+}
+
+void WebUIView::requestBackgroundExport() {
+    if (auto* msg = controller_->allocateMessage()) {
+        msg->setMessageID("RequestMidiExport");
+        controller_->sendMessage(msg);
+        msg->release();
+    }
+}
+
+std::string WebUIView::suggestedExportName() const {
+    std::string name = "poly";
+    if (!currentPresetName_.empty()) {
+        name += '-';
+        // Sanitise preset name to a filesystem-friendly slug: lowercase,
+        // spaces → '-', drop non-alphanumeric-non-hyphen.
+        for (char c : currentPresetName_) {
+            if (c >= 'A' && c <= 'Z')
+                name += static_cast<char>(c - 'A' + 'a');
+            else if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-')
+                name += c;
+            else if (c == ' ' || c == '_')
+                name += '-';
+        }
+    }
+    const auto& gs = controller_->activeScene();
+    char seedBuf[24];
+    std::snprintf(seedBuf, sizeof(seedBuf), "-%llu", static_cast<unsigned long long>(gs.seed));
+    name += seedBuf;
+    name += ".mid";
+    return name;
+}
+
+void WebUIView::openSaveDialogFromCache() {
+    if (!controller_->hasDragSmf())
+        return;
+    saveDialogOpen_ = true;
+    auto bytes = controller_->dragSmfData();
+    openMidiSaveDialog(parentView_, suggestedExportName(), bytes, [this](const std::string& savedPath) {
+        saveDialogOpen_ = false;
+        if (!webview_ || !webviewReady_)
+            return;
+        // Notify the WebUI so it can toast success or clear
+        // its "…" pending indicator. Empty path = cancelled.
+        std::string js = "window.polyHostPush({\"type\":\"exportResult\",\"savedPath\":";
+        if (savedPath.empty()) {
+            js += "\"\"";
+        } else {
+            js += choc::json::getEscapedQuotedString(savedPath);
+        }
+        js += "})";
+        webview_->evaluateJavascript(js);
+    });
 }
 
 void WebUIView::startFrameTimer() {

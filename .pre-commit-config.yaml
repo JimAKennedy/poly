@@ -7,6 +7,10 @@ repos:
       - id: end-of-file-fixer
         exclude: '^(\.gsd/|\.bg-shell/|.*\.uidesc$)'
       - id: check-yaml
+        # .clang-format uses a multi-document YAML stream (--- separates the
+        # Cpp and ObjC language sections). clang-format is its real validator
+        # and passes; the generic single-document check-yaml would reject it.
+        exclude: '^\.clang-format$'
       - id: check-added-large-files
         args: ['--maxkb=1000']
       - id: check-merge-conflict

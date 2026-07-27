@@ -38,6 +38,10 @@ private:
     bool exportPending_ = false;
     bool dragTracking_ = false;
     VSTGUI::CPoint dragStartPos_;
+    // Ticks (100ms each) since last background export request. Every 5 ticks
+    // (~500ms) while captureReady, kick a RequestMidiExport so dragSmfCache_
+    // stays fresh — makes grab-and-drop instant, no prior click required.
+    int prefetchTickCounter_ = 0;
 };
 
 } // namespace poly

@@ -125,7 +125,17 @@ bool ExportControlsView::attached(VSTGUI::CView* parent) {
                     exportPending_ = false;
                     openSaveDialog();
                 } else {
+                    // Background export tick landed: pendingSmfData_ drained here,
+                    // dragSmfCache_ already populated by controller notify() path.
                     ctrl->consumeSmfData();
+                }
+            }
+            // Prefetch: keep dragSmfCache_ fresh while capture is ready so the
+            // Export button is drag-ready with zero prior interaction.
+            if (++prefetchTickCounter_ >= 5) {
+                prefetchTickCounter_ = 0;
+                if (captureReady() && !exportPending_ && !dragTracking_) {
+                    sendExportRequest();
                 }
             }
             invalid();

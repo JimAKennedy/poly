@@ -188,13 +188,33 @@
     else buildChainPopover();
   });
 
-  /* --- export button (plugin-only) --- */
+  /* --- export button (plugin-only) — opens a native Save As… dialog for
+       the current 10-bar MIDI capture. Result arrives via polyHostPush
+       {type:'exportResult'}. Cancels resolve silently. */
   if (host.capabilities && host.capabilities.canExport) {
-    document.getElementById('exportBtn').addEventListener('click', () => {
-      host.action('exportRequest', {});
-      const btn = document.getElementById('exportBtn');
+    const btn = document.getElementById('exportBtn');
+    btn.title = 'Save the current 10-bar MIDI capture as a .mid file';
+    btn.addEventListener('click', () => {
+      host.action('exportSaveAs', {});
       btn.classList.add('on');
-      setTimeout(() => btn.classList.remove('on'), 600);
+    });
+    window.addEventListener('polyExportResult', (e) => {
+      btn.classList.remove('on');
+      const path = (e && e.detail && e.detail.savedPath) || '';
+      if (!path) return;
+      // Lightweight toast — auto-clears after 3s.
+      let toast = document.getElementById('exportToast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'exportToast';
+        toast.style.cssText = 'position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(20,17,13,.92);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:8px 14px;font-size:11px;letter-spacing:.06em;z-index:60;pointer-events:none;';
+        document.getElementById('win').appendChild(toast);
+      }
+      const name = path.split('/').pop().split('\\').pop();
+      toast.textContent = 'Saved ' + name;
+      toast.style.opacity = '1';
+      clearTimeout(toast._t);
+      toast._t = setTimeout(() => { toast.style.opacity = '0'; toast.style.transition = 'opacity .4s'; }, 3000);
     });
   } else {
     document.getElementById('exportBtn').style.display = 'none';
@@ -602,7 +622,7 @@
         window.addEventListener('pointerup', up, { once: true });
       });
     });
-    desk.style.gridTemplateColumns = `repeat(${S.lanes.length}, 1fr) 196px`;
+    desk.style.gridTemplateColumns = `repeat(${S.lanes.length}, 1fr) 160px`;
   }
   function expandStrip(li) {
     expanded = li;
@@ -610,9 +630,9 @@
     const n = S.lanes.length;
     const wide = n >= 6 ? '4fr' : '2.9fr';
     const narrow = n >= 6 ? '.38fr' : '.62fr';
-    const master = n >= 6 ? '160px' : '176px';
+    const master = n >= 6 ? '148px' : '160px';
     desk.style.gridTemplateColumns = li < 0
-      ? `repeat(${n}, 1fr) 196px`
+      ? `repeat(${n}, 1fr) 160px`
       : S.lanes.map((_, i) => (i === li ? wide : narrow)).join(' ') + ` ${master}`;
     if (li >= 0) buildPanes(li);
   }
