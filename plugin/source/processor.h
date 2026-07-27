@@ -146,6 +146,15 @@ public:
     void pushCapturedNoteForTesting(const NoteEvent& note) { captureBuffer_.push(note); }
     size_t captureBufferCount() const { return captureBuffer_.count(); }
 
+    // M051 S08: test-only accessors for the arm->capture->complete state machine.
+    // captureStateForTesting reads the audio-thread-owned state directly (single
+    // threaded in host tests); exportReady/exportEvents let a test prove the
+    // frozen window is populated at `complete` and byte-stable after further play.
+    int captureStateForTesting() const { return static_cast<int>(captureState_); }
+    bool exportReadyForTesting() const { return exportReady_.load(std::memory_order_acquire); }
+    size_t exportEventCountForTesting() const { return exportEventCount_; }
+    const NoteEvent* exportEventsForTesting() const { return exportEvents_.data(); }
+
     static Steinberg::FUnknown* createInstance(void*) {
         return static_cast<Steinberg::Vst::IAudioProcessor*>(
             new PolyProcessor()); // ownership-transfer — RT-SAFE-OK: host factory, not audio thread
@@ -167,6 +176,10 @@ private:
     void outputParameterFeedback(Steinberg::Vst::ProcessData& data, const GrooveState& resolved);
     void bounceExportTriggerZero(Steinberg::Vst::IParameterChanges* outParams);
     void sendSnapshotPointer();
+    // M051 S08 capture state machine helpers (all run on the audio thread).
+    void applyCaptureCommand();
+    void updateCaptureMachine();
+    void publishCaptureSnapshot();
     bool applySceneParameter(Steinberg::Vst::ParamID id, double normalized);
     bool applyLaneParameter(Steinberg::Vst::ParamID id, double normalized, GrooveState& gs);
 
@@ -183,6 +196,19 @@ private:
     bool exportTriggered_ = false;
     bool wasPlaying_ = false;
     int captureLengthBars_ = MidiCaptureBuffer::kDefaultCaptureBars;
+
+    // M051 S08: WebUI arm->capture->complete state machine. Distinct from the
+    // native VSTGUI export path (exportTriggered_/exportReady_, kept until M053):
+    // reaching Complete freezes an exact bar window into exportEvents_ and sets
+    // exportReady_, reusing the RequestMidiExport/MidiExportData reply path
+    // (Decision D005) rather than allocating a message inside process() (MEM003).
+    enum class CaptureState : int { Idle = 0, Armed = 1, Capturing = 2, Complete = 3 };
+    CaptureState captureState_ = CaptureState::Idle; // audio-thread owned
+    double captureStartPpq_ = -1.0;                  // latched bar boundary (absolute PPQ)
+    double captureTempo_ = 0.0;                      // tempo at latch; change mid-capture cancels
+    // Message-thread -> audio-thread command: 0=none, 1=arm, 2=reset. Set in
+    // notify() (ArmCapture/ResetCapture), consumed via exchange() in process().
+    std::atomic<uint8_t> captureCommand_{0};
     double expectedNextPpq_ = -1.0;
     MacroSmoother macroSmoother_{};
     SceneChainState chainState_{};

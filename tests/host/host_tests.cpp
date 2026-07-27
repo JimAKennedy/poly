@@ -1452,3 +1452,198 @@ TEST(HostTests, OutputEvents_SortedBySampleOffset) {
 
     host.teardown();
 }
+
+// --- M051 S08 T02: arm -> capture -> complete state machine ---
+//
+// The processor gates WebUI MIDI export behind an explicit four-state machine
+// (idle -> armed -> capturing -> complete, Reset from any state). These tests
+// drive it headlessly through the ArmCapture/ResetCapture notify() surface the
+// WebUI bridge (T03) will use, and assert every transition, Reset from each
+// state, that the frozen export window is populated only in `complete`, that it
+// is byte-stable after further play (the whole S08 promise), and the transport
+// stop-pauses / jump-cancels / tempo-change-cancels policies. Absolute-PPQ
+// timing throughout (MEM005) — the latch and N-bar window derive from
+// projectTimeMusic, never an accumulated block counter.
+
+namespace {
+
+// kCaptureLength normalized value for an N-bar window. The processor maps
+// captureLengthBars_ = 1 + round(norm * 31), so norm = (N-1)/31.
+double captureLenNorm(int bars) {
+    return static_cast<double>(bars - 1) / 31.0;
+}
+
+// Play forward from `startPpq` in contiguous blocks until `pred()` is true (or
+// the guard trips). Returns the ppq of the block following the last processed.
+template <typename Pred>
+double playUntil(PolyTestHost& host, double startPpq, double tempo, Pred pred, int maxBlocks = 4000) {
+    double ppq = startPpq;
+    const double step = host.ppqPerBlock(tempo);
+    for (int i = 0; i < maxBlocks && !pred(); ++i) {
+        host.processBlock(ppq, tempo, /*playing=*/true);
+        ppq += step;
+    }
+    return ppq;
+}
+
+// Drives a fresh host to `capturing` with a 2-bar window: apply capture length,
+// prime the transport, arm mid-bar, then play across the next bar boundary so the
+// machine latches. Returns the ppq for the next contiguous block.
+double armAndReachCapturing(PolyTestHost& host, double tempo) {
+    host.injectParamChangeThroughProcess(poly::ParamIDs::kCaptureLength, captureLenNorm(2));
+    host.processBlock(0.0, tempo, /*playing=*/false); // apply capture length, idle
+    host.processBlock(0.0, tempo, /*playing=*/true);  // prime transport continuity
+    host.armCapture();
+    host.processBlock(host.ppqPerBlock(tempo), tempo, true); // consume arm -> armed
+    return playUntil(host, 2 * host.ppqPerBlock(tempo), tempo, [&] { return host.captureState() == 2; });
+}
+
+} // namespace
+
+TEST(HostTests, CaptureStateMachine_ArmCaptureComplete_GatesExportReady) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+    const double tempo = 120.0;
+
+    host.injectParamChangeThroughProcess(poly::ParamIDs::kCaptureLength, captureLenNorm(2));
+    host.processBlock(0.0, tempo, /*playing=*/false);
+    EXPECT_EQ(host.captureState(), 0) << "machine starts idle";
+    EXPECT_FALSE(host.exportReady());
+
+    host.processBlock(0.0, tempo, /*playing=*/true); // prime transport continuity (idle)
+    host.armCapture();
+    host.processBlock(host.ppqPerBlock(tempo), tempo, /*playing=*/true); // consume arm
+    EXPECT_EQ(host.captureState(), 1) << "armed; waits for the next bar boundary";
+    EXPECT_FALSE(host.exportReady()) << "export not ready while armed";
+
+    double ppq = playUntil(host, 2 * host.ppqPerBlock(tempo), tempo, [&] { return host.captureState() == 2; });
+    ASSERT_EQ(host.captureState(), 2) << "latched to capturing on a bar boundary";
+    EXPECT_FALSE(host.exportReady()) << "export not ready mid-capture";
+
+    playUntil(host, ppq, tempo, [&] { return host.captureState() == 3; });
+    ASSERT_EQ(host.captureState(), 3) << "N-bar window elapsed -> complete";
+    EXPECT_TRUE(host.exportReady()) << "export ready ONLY in complete";
+    EXPECT_GT(host.frozenEventCount(), 0u) << "frozen window populated at complete";
+
+    host.teardown();
+}
+
+TEST(HostTests, CaptureReset_FromArmed) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+    host.armCapture();
+    host.processBlock(0.0, 120.0, /*playing=*/false);
+    ASSERT_EQ(host.captureState(), 1);
+    host.resetCapture();
+    host.processBlock(0.0, 120.0, /*playing=*/false);
+    EXPECT_EQ(host.captureState(), 0) << "Reset from armed -> idle";
+    host.teardown();
+}
+
+TEST(HostTests, CaptureReset_FromCapturing) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+    double ppq = armAndReachCapturing(host, 120.0);
+    ASSERT_EQ(host.captureState(), 2);
+    host.resetCapture();
+    host.processBlock(ppq, 120.0, /*playing=*/true);
+    EXPECT_EQ(host.captureState(), 0) << "Reset from capturing -> idle";
+    EXPECT_FALSE(host.exportReady());
+    host.teardown();
+}
+
+TEST(HostTests, CaptureReset_FromComplete) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+    const double tempo = 120.0;
+    double ppq = armAndReachCapturing(host, tempo);
+    ppq = playUntil(host, ppq, tempo, [&] { return host.captureState() == 3; });
+    ASSERT_EQ(host.captureState(), 3);
+    ASSERT_TRUE(host.exportReady());
+    host.resetCapture();
+    host.processBlock(ppq, tempo, /*playing=*/true);
+    EXPECT_EQ(host.captureState(), 0) << "Reset from complete -> idle";
+    EXPECT_FALSE(host.exportReady()) << "Reset clears the frozen-ready flag";
+    host.teardown();
+}
+
+TEST(HostTests, FrozenWindowStableAfterFurtherPlay) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+    const double tempo = 120.0;
+    double ppq = armAndReachCapturing(host, tempo);
+    ppq = playUntil(host, ppq, tempo, [&] { return host.captureState() == 3; });
+    ASSERT_EQ(host.captureState(), 3);
+
+    auto frozen = host.frozenEvents();
+    ASSERT_GT(frozen.size(), 0u) << "frozen window must be populated at complete";
+
+    // Keep playing well past the captured window; the frozen snapshot the SMF is
+    // built from must be byte-stable regardless of continued playback (S08 promise).
+    const double step = host.ppqPerBlock(tempo);
+    for (int i = 0; i < 400; ++i) {
+        host.processBlock(ppq, tempo, /*playing=*/true);
+        ppq += step;
+    }
+
+    auto after = host.frozenEvents();
+    ASSERT_EQ(after.size(), frozen.size()) << "frozen window event count changed after further play";
+    // Field-by-field comparison (MEM031: NoteEvent padding makes memcmp unreliable).
+    for (size_t i = 0; i < frozen.size(); ++i) {
+        EXPECT_DOUBLE_EQ(after[i].ppqPosition, frozen[i].ppqPosition) << "event " << i << " ppq drifted";
+        EXPECT_EQ(after[i].pitch, frozen[i].pitch) << "event " << i << " pitch drifted";
+        EXPECT_FLOAT_EQ(after[i].velocity, frozen[i].velocity) << "event " << i << " velocity drifted";
+    }
+    EXPECT_EQ(host.captureState(), 3) << "stays complete across further play";
+    host.teardown();
+}
+
+TEST(HostTests, TransportStopMidCapture_RetainsCapturingState) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+    const double tempo = 120.0;
+    double ppq = armAndReachCapturing(host, tempo);
+    ASSERT_EQ(host.captureState(), 2);
+
+    // Stop mid-capture: several non-playing blocks at the frozen playhead. Per the
+    // pause policy the capturing state must be RETAINED, not lost or completed.
+    for (int i = 0; i < 5; ++i)
+        host.processBlock(ppq, tempo, /*playing=*/false);
+    EXPECT_EQ(host.captureState(), 2) << "stop mid-capture pauses, retaining capturing state";
+    EXPECT_FALSE(host.exportReady());
+
+    // Resume contiguously (next block after the frozen stretch) -> not a seek, so
+    // capture continues and can still reach complete.
+    ppq = playUntil(host, ppq + host.ppqPerBlock(tempo), tempo, [&] { return host.captureState() == 3; });
+    EXPECT_EQ(host.captureState(), 3) << "resume from pause continues to complete";
+    host.teardown();
+}
+
+TEST(HostTests, TransportJumpMidCapture_CancelsToArmed) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+    const double tempo = 120.0;
+    double ppq = armAndReachCapturing(host, tempo);
+    ASSERT_EQ(host.captureState(), 2);
+
+    // Seek far forward (no loop active) mid-capture -> jump detected -> cancel back
+    // to armed so the user re-arms for a clean contiguous window.
+    host.processBlock(ppq + 64.0, tempo, /*playing=*/true);
+    EXPECT_EQ(host.captureState(), 1) << "seek mid-capture cancels to armed";
+    EXPECT_FALSE(host.exportReady());
+    host.teardown();
+}
+
+TEST(HostTests, TempoChangeMidCapture_CancelsToArmed) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+    double ppq = armAndReachCapturing(host, 120.0);
+    ASSERT_EQ(host.captureState(), 2);
+
+    // Tempo change mid-capture corrupts the SMF beats-to-time math -> cancel to
+    // armed. Same contiguous ppq so this isolates the tempo delta from a seek.
+    host.processBlock(ppq, 140.0, /*playing=*/true);
+    EXPECT_EQ(host.captureState(), 1) << "tempo change mid-capture cancels to armed";
+    EXPECT_FALSE(host.exportReady());
+    host.teardown();
+}

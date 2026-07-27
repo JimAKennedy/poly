@@ -177,6 +177,20 @@ public:
     void pushCapturedNote(const NoteEvent& note);
     size_t capturedNoteCount() const;
 
+    // --- M051 S08: arm->capture->complete state machine drivers/observers ---
+    // armCapture/resetCapture dispatch the ArmCapture/ResetCapture notify()
+    // messages the WebUI bridge will send (T03); the command is applied on the
+    // next processBlock(). captureState reads the processor's runtime state
+    // (0=idle, 1=armed, 2=capturing, 3=complete). exportReady/frozenEventCount/
+    // frozenEvents expose the frozen export window so a test can prove it is
+    // populated at `complete` and byte-stable after further play.
+    void armCapture();
+    void resetCapture();
+    int captureState() const;
+    bool exportReady() const;
+    size_t frozenEventCount() const;
+    std::vector<poly::NoteEvent> frozenEvents() const;
+
     // T03: Read-only handshake applied counter snapshot. Incremented by the RT reader
     // on every successful consume(). Paired with handshakeDrops() to prove the
     // no-silent-loss invariant: issued == applied + drops.
