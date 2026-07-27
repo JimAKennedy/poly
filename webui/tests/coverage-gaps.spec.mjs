@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { setupWithActionLog, getActions, clearActions, getEdits, clearEdits, expandStrip, pageUrl } from './test-helpers.mjs';
+import { setupWithActionLog, getActions, clearActions, getEdits, clearEdits, expandStrip, pageUrl, bootEmbedded, pushEmbeddedState, pushEmbeddedFrame, driveRoutingDwell } from './test-helpers.mjs';
 
 test.describe('master macros section', () => {
   test.beforeEach(async ({ page }) => {
@@ -641,5 +641,83 @@ test.describe('embedded mode hardening', () => {
     await page.waitForSelector(`.strip[data-lane="0"].expanded`);
     await page.keyboard.press('Escape');
     expect(await page.locator('.strip.expanded').count()).toBe(0);
+  });
+});
+
+// The routing banner is Poly's first-run "why is there no sound?" diagnostic:
+// a MIDI-only instrument makes no audio until its output is routed to a drum
+// instrument, and the plugin has no audio-feedback path. Its whole value is
+// firing in exactly the right window (embedded + transport playing + an active
+// lane emitting a hit, after a wall-clock dwell) and never anywhere else. These
+// specs are the CI-covered proof of both — positive, dismiss persistence, and
+// the three negative guarantees. bannerMs is shortened to 50ms via bootEmbedded
+// so the dwell is exercised without a slow real-time wait.
+test.describe('first-run MIDI-routing diagnostic banner', () => {
+  test('appears in embedded mode after play + emitting dwell, with routing copy', async ({ page }) => {
+    await bootEmbedded(page, { bannerMs: 50 });
+    await pushEmbeddedState(page);
+
+    // The first play+emit frame only ARMS the dwell — the banner must not show yet.
+    await pushEmbeddedFrame(page, { playing: true });
+    await expect(page.locator('#routingBanner')).toHaveCount(0);
+
+    // After the wall-clock dwell elapses and a further emitting frame arrives, it fires.
+    await page.waitForTimeout(150);
+    await pushEmbeddedFrame(page, { playing: true });
+
+    const banner = page.locator('#routingBanner');
+    await expect(banner).toBeVisible();
+    // Accessible live-region diagnostic, not a decorative element.
+    await expect(banner).toHaveAttribute('role', 'status');
+    await expect(banner).toHaveAttribute('aria-live', 'polite');
+    // Copy mirrors the canonical docs routing wording.
+    await expect(banner).toContainText('MIDI');
+    await expect(banner).toContainText('Groove Agent');
+    await expect(banner.locator('.routing-banner-dismiss')).toBeVisible();
+  });
+
+  test("'Don't show again' dismisses, persists to localStorage, and stays hidden after reload", async ({ page }) => {
+    await bootEmbedded(page, { bannerMs: 50 });
+    await pushEmbeddedState(page);
+    await driveRoutingDwell(page, { playing: true });
+    await expect(page.locator('#routingBanner')).toBeVisible();
+
+    await page.click('.routing-banner-dismiss');
+    await expect(page.locator('#routingBanner')).toHaveCount(0);
+
+    // Dismissal is persisted so a plugin reopen / re-trigger never re-nags.
+    const flag = await page.evaluate(() => localStorage.getItem('poly.routingBannerDismissed'));
+    expect(flag).toBe('1');
+
+    // Reload re-runs the init script (embedded + short dwell); the persisted flag
+    // must keep the banner hidden even though play+emit would otherwise re-fire it.
+    await page.reload();
+    await pushEmbeddedState(page);
+    await driveRoutingDwell(page, { playing: true });
+    await expect(page.locator('#routingBanner')).toHaveCount(0);
+  });
+
+  test('never appears in standalone (non-embedded) mode while playing', async ({ page }) => {
+    // No __POLY_EMBEDDED__: the browser Web Audio host makes real sound, so the
+    // diagnostic is meaningless and must never show, even after a long play window.
+    await page.addInitScript(() => { window.__POLY_ROUTING_BANNER_MS = 50; });
+    await setupWithActionLog(page);
+    await page.evaluate(() => window.PolyMockHost.action('togglePlay', {}));
+    await page.waitForTimeout(200);
+    await expect(page.locator('#routingBanner')).toHaveCount(0);
+  });
+
+  test('never appears in embedded mode when transport is stopped', async ({ page }) => {
+    await bootEmbedded(page, { bannerMs: 50 });
+    await pushEmbeddedState(page);
+    await driveRoutingDwell(page, { playing: false });
+    await expect(page.locator('#routingBanner')).toHaveCount(0);
+  });
+
+  test('never appears in embedded mode when no active lane emits a hit', async ({ page }) => {
+    await bootEmbedded(page, { bannerMs: 50 });
+    await pushEmbeddedState(page, { muteAllLanes: true });
+    await driveRoutingDwell(page, { playing: true });
+    await expect(page.locator('#routingBanner')).toHaveCount(0);
   });
 });
