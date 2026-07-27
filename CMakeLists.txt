@@ -27,6 +27,15 @@ option(ENABLE_COVERAGE "Enable code coverage" OFF)
 option(BUILD_VISUAL_TESTS "Build visual regression tests" OFF)
 option(BUILD_INTERACTION_TESTS "Build headless UI interaction tests" OFF)
 
+# Phase 1 of the jk-standards warning-flags adoption: consume the standard's
+# diagnostic roster now, but do not yet promote it to fatal. Adopting the full
+# set surfaces ~242 pre-existing signedness/float-conversion warnings across the
+# engine and tests; making them fatal today would leave the build red. This
+# option keeps them visible-but-non-fatal until the burndown lands, at which
+# point flipping the default to ON completes conformance. Tracked in the
+# adoption PR / follow-up issue.
+option(POLY_WARNINGS_FATAL "Treat the jk-standards warning set as errors (-Werror/-WX)" OFF)
+
 if(ENABLE_ASAN)
     add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
     add_link_options(-fsanitize=address)
@@ -44,7 +53,41 @@ if(ENABLE_COVERAGE)
 endif()
 
 # --- Warnings ---
+# cmake/jk_warnings.cmake is VENDORED verbatim from jk-standards
+# (conventions/warning-flags.md), the reference implementation of the gated
+# warning-flags standard, adopted via the copy-with-checksum path. The checksum
+# keeps the vendored copy honest: a local edit silently forks poly's warning set
+# from the standard, and the fork stays invisible until a diagnostic that should
+# have failed a build quietly does not. To update, re-vendor from the upstream
+# tag and refresh JK_WARNINGS_SHA256.
+#   Upstream: https://github.com/JimAKennedy/jk-standards cmake/jk_warnings.cmake @ v0.5.0
+set(JK_WARNINGS_SHA256 "cde085e90f2efe9feb84cbb9f79d43a29e21b8d3169efc83fb996f336008701b")
+file(SHA256 "${CMAKE_CURRENT_SOURCE_DIR}/cmake/jk_warnings.cmake" _jk_warnings_actual_sha)
+if(NOT _jk_warnings_actual_sha STREQUAL JK_WARNINGS_SHA256)
+    message(FATAL_ERROR
+        "cmake/jk_warnings.cmake has drifted from the pinned jk-standards module "
+        "(expected ${JK_WARNINGS_SHA256}, got ${_jk_warnings_actual_sha}). "
+        "Re-vendor from the upstream tag and update JK_WARNINGS_SHA256.")
+endif()
 include(cmake/jk_warnings.cmake)
+
+# Phase-1 wrapper: apply the standard's roster, then demote -Werror/-WX to
+# non-fatal until POLY_WARNINGS_FATAL is turned on. CMake exposes the just-
+# defined jk_target_warnings under the _jk_target_warnings alias when we
+# override the name, so we delegate to the vendored implementation and only add
+# the demotion flags. Flip POLY_WARNINGS_FATAL ON (or make it the default) once
+# the warning burndown is complete to reach full conformance with the standard.
+function(jk_target_warnings target)
+    _jk_target_warnings(${target})
+    if(NOT POLY_WARNINGS_FATAL AND TARGET ${target})
+        get_target_property(_jkw_type ${target} TYPE)
+        if(NOT _jkw_type STREQUAL "INTERFACE_LIBRARY")
+            target_compile_options(${target} PRIVATE
+                $<$<CXX_COMPILER_ID:MSVC>:/WX->
+                $<$<OR:$<CXX_COMPILER_ID:Clang>,$<CXX_COMPILER_ID:AppleClang>,$<CXX_COMPILER_ID:GNU>>:-Wno-error>)
+        endif()
+    endif()
+endfunction()
 
 if(NOT POLY_ENGINE_ONLY)
     # --- VST3 SDK via FetchContent ---
@@ -61,7 +104,18 @@ if(NOT POLY_ENGINE_ONLY)
     set(SMTG_CREATE_PLUGIN_LINK           OFF CACHE BOOL "" FORCE)
 
     FetchContent_MakeAvailable(vst3sdk)
-    jk_suppress_sdk_warnings()
+
+    # Isolate the third-party VST3 SDK targets from the first-party warning set.
+    # The jk-standards module's jk_suppress_sdk_warnings() takes one target (it
+    # FATAL_ERRORs on a non-target), so iterate the SDK targets we build and
+    # suppress only the ones this configuration actually defined.
+    foreach(_sdk_target
+        vstgui vstgui_uidescription vstgui_support
+        sdk sdk_common sdk_hosting base pluginterfaces)
+        if(TARGET ${_sdk_target})
+            jk_suppress_sdk_warnings(${_sdk_target})
+        endif()
+    endforeach()
 endif()
 
 # --- Subdirectories ---
