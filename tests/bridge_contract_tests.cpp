@@ -605,7 +605,7 @@ TEST(BridgeActionContract, AllSchemaActionsHaveCppHandler) {
     std::set<std::string> cppHandlers = {
         "toggleStep",   "setEuclid",   "setCells",      "setFixedStep",   "setMicroTiming", "setEnvelope",
         "selectScene",  "applyPreset", "exportRequest", "setAccent",      "chainAddEntry",  "chainRemoveEntry",
-        "resetNoteMap", "setNoteMap",  "setLaneName",   "setCaptureBars",
+        "resetNoteMap", "setNoteMap",  "setLaneName",   "setCaptureBars", "beginMidiDrag",
     };
     std::set<std::string> mockOnly = {"togglePlay"};
 

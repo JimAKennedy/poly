@@ -99,7 +99,10 @@ if(NOT POLY_ENGINE_ONLY)
 
     set(SMTG_ENABLE_VST3_HOSTING_EXAMPLES OFF CACHE BOOL "" FORCE)
     set(SMTG_ENABLE_VST3_PLUGIN_EXAMPLES  OFF CACHE BOOL "" FORCE)
-    set(SMTG_ENABLE_VSTGUI_SUPPORT        ON  CACHE BOOL "" FORCE)
+    # No first-party target links VSTGUI after M053/S05 (native editor deleted;
+    # WebUI is choc-webview). Turn SDK VSTGUI support off so the vstgui/
+    # vstgui_uidescription/vstgui_support targets are never configured or built.
+    set(SMTG_ENABLE_VSTGUI_SUPPORT        OFF CACHE BOOL "" FORCE)
     set(SMTG_RUN_VST_VALIDATOR            OFF CACHE BOOL "Run VST3 validator as post-build step")
     set(SMTG_CREATE_PLUGIN_LINK           OFF CACHE BOOL "" FORCE)
 
