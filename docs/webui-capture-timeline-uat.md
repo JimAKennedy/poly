@@ -1,4 +1,13 @@
+---
+class: archived
+---
+
 # WebUI capture-timeline export — UAT
+
+> **Archived (2026-07-28)** — this is a frozen UAT record for M051 S08: the automated-proof
+> snapshot below reflects the checkout it was run against, and the operator checklist is the
+> manual DAW leg to tick during a live session. It is a point-in-time verification artifact,
+> not a living contract; the current capture-machine behavior lives in the code and its tests.
 
 **Date:** 2026-07-28
 **Slice:** M051 S08 (Cloth as export timeline — arm → capture → complete)
@@ -11,17 +20,17 @@ MIDI export in the WebUI is gated behind an explicit four-state capture machine 
 from the Cloth header, replacing the S06 `kExportTrigger` edge + 500 ms background prefetch:
 
 - **Processor** — `CaptureState { Idle, Armed, Capturing, Complete }`
-  (`plugin/source/processor.h:205`). `Armed → Capturing` latches `captureStartPpq_`
-  (`processor.h:207`) on the next absolute-PPQ bar boundary; `Capturing → Complete`
+  (in `plugin/source/processor.h`). `Armed → Capturing` latches `captureStartPpq_`
+  on the next absolute-PPQ bar boundary; `Capturing → Complete`
   freezes the `[captureStartPpq_, captureStartPpq_ + N·ppqPerBar)` window into the
-  pre-allocated `exportEvents_` buffer (`processor.h:192`) and sets `exportReady_`
-  (`processor.h:195`), reusing the existing `RequestMidiExport`/`MidiExportData` reply path.
+  pre-allocated `exportEvents_` buffer and sets `exportReady_`,
+  reusing the existing `RequestMidiExport`/`MidiExportData` reply path.
 - **UISnapshot atomics** — `captureState`, `captureBars`, `captureProgressBars`
-  (`plugin/source/ui_snapshot.h:32,35,38`) surface the progression to the UI. No new
+  (in `plugin/source/ui_snapshot.h`) surface the progression to the UI. No new
   logging surfaces; the Cloth timeline is the receipt.
 - **WebUI bridge** — `armCapture`/`resetCapture` actions send `ArmCapture`/`ResetCapture`
-  messages (`web_ui_view.cpp:503,508`); `exportSaveAs` opens the Save-As dialog only when
-  `captureState == 3` / Complete (`web_ui_view.cpp:513,521`).
+  messages (in `web_ui_view.cpp`); `exportSaveAs` opens the Save-As dialog only when
+  `captureState == 3` / Complete.
 - **Cloth** — bar-anchored capture timeline (X = bars 1..N, Y = lanes, L→R playhead
   during Capturing, note-tick overlay, gold selvage at bar N) plus the header cluster
   (bars picker {4,8,16,32} bound to `kCaptureLength`, Arm/Reset chip, state-driven Export chip).

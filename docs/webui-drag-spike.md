@@ -1,4 +1,13 @@
+---
+class: archived
+---
+
 # WebUI drag-to-DAW spike — finding
+
+> **Archived (2026-07-27)** — this is a frozen spike finding recording the M051 S06
+> investigation and its decision. The current delivery mechanism is the WebUI Save-As
+> path; drag-to-DAW remains deferred to M067. Update this doc only if a future drag
+> spike is run (see the closing section).
 
 **Date:** 2026-07-27
 **Slice:** M051 S06 (WebUI MIDI export)
@@ -28,7 +37,7 @@ That is high-effort, fragile across macOS versions (private-ish interception of 
 
 ## Why the native VSTGUI variant is not a shortcut
 
-The **native VSTGUI editor already has working drag-to-DAW** — `ExportControlsView::startDrag()` (`plugin/source/ui/export_controls_view.cpp:325`) writes `dragSmfData()` to `std::filesystem::temp_directory_path()/poly-drag-export.mid`, wraps the path in a `VSTGUI::CDropSource(..., IDataPackage::kFilePath)`, and calls `doDrag()`. Cubase accepts that drop.
+The **native VSTGUI editor already has working drag-to-DAW** — `ExportControlsView::startDrag()` (in `plugin/source/ui/export_controls_view.cpp`) writes `dragSmfData()` to `std::filesystem::temp_directory_path()/poly-drag-export.mid`, wraps the path in a `VSTGUI::CDropSource(..., IDataPackage::kFilePath)`, and calls `doDrag()`. Cubase accepts that drop.
 
 But this does **not** transfer to the WebUI variant: `doDrag()` is driven by VSTGUI's own mouse-event pipeline on a `CView`. The WebUI variant has no `CView` under the mouse — the choc `WKWebView` is in the way and owns the events. The two UI stacks don't share a drag pipeline.
 
