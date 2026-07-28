@@ -593,8 +593,9 @@ TEST(BridgeActionContract, AllSchemaActionsHaveCppHandler) {
     auto actionNames = schema["definitions"]["msgAction"]["properties"]["name"]["enum"];
 
     std::set<std::string> cppHandlers = {
-        "toggleStep",  "setEuclid",     "setCells",  "setFixedStep",  "setMicroTiming",   "setEnvelope",  "selectScene",
-        "applyPreset", "exportRequest", "setAccent", "chainAddEntry", "chainRemoveEntry", "resetNoteMap", "setNoteMap",
+        "toggleStep",    "setEuclid",        "setCells",     "setFixedStep",  "setMicroTiming",
+        "setEnvelope",   "selectScene",      "applyPreset",  "exportRequest", "setAccent",
+        "chainAddEntry", "chainRemoveEntry", "resetNoteMap", "setNoteMap",    "setLaneName",
     };
     std::set<std::string> mockOnly = {"togglePlay"};
 
