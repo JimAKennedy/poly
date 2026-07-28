@@ -197,12 +197,24 @@
        which the processor has frozen a stable, exportable window. */
   if (host.capabilities && host.capabilities.canExport) {
     const btn = document.getElementById('exportBtn');
-    btn.title = 'Save the captured MIDI window as a .mid file (available once capture is complete)';
+    btn.title = 'Save the captured MIDI window as a .mid file, or drag it straight into your DAW (available once capture is complete)';
     btn.addEventListener('click', () => {
       if ((lastFrame.capState | 0) !== 3) return; // active only in `complete`
       host.action('exportSaveAs', {});
       btn.classList.add('on');
     });
+    // M053 S03d (G06): the Export chip doubles as a drag source. A click runs
+    // the Save-As path above; dragging it opens the native drag-source window
+    // (platform_drag_source) that carries the frozen .mid straight into the DAW.
+    // Gated identically on capState===3 (complete) — a drag begun in any other
+    // state is cancelled so the affordance is inert until a window is frozen.
+    btn.setAttribute('draggable', 'true');
+    btn.addEventListener('dragstart', (e) => {
+      if ((lastFrame.capState | 0) !== 3) { e.preventDefault(); return; }
+      host.action('beginMidiDrag', {});
+      btn.classList.add('dragging');
+    });
+    btn.addEventListener('dragend', () => btn.classList.remove('dragging'));
     window.addEventListener('polyExportResult', (e) => {
       btn.classList.remove('on');
       const path = (e && e.detail && e.detail.savedPath) || '';

@@ -70,7 +70,8 @@
   #capBars.locked { opacity: .4; pointer-events: none; }        /* window frozen — kCaptureLength no longer editable */
   #armBtn.on { color: var(--ground); background: var(--accent); border-color: var(--accent); }  /* armed/capturing/complete -> Reset */
   #exportBtn { opacity: .45; }                                  /* dim in idle/armed/capturing */
-  #exportBtn.capReady { opacity: 1; }                           /* active only in `complete` */
+  #exportBtn.capReady { opacity: 1; cursor: grab; }             /* active only in `complete`; G06 drag-to-DAW */
+  #exportBtn.dragging { cursor: grabbing; }                     /* M053 S03d: native drag-source window open */
   #modes { display: flex; gap: 4px; margin-left: 4px; flex-shrink: 0; }
   #chrome .right { margin-left: auto; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
   #conv { text-align: right; font-variant-numeric: tabular-nums; }

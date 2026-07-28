@@ -848,6 +848,13 @@
       case 'exportRequest':
         console.info('[mock-host] exportRequest — native host runs the SMF export path here');
         break;
+      case 'beginMidiDrag':
+        // G06: the native host opens a platform drag-source window here
+        // (platform_drag_source_mac.mm / _win.cpp) carrying the frozen .mid.
+        // The mock has no native surface — record the intent (via the wrapped
+        // action log in tests) and change no state.
+        console.info('[mock-host] beginMidiDrag — native host opens the drag-source window here');
+        return;
       default:
         console.warn('[mock-host] unknown action', name, payload);
         return;
@@ -855,9 +862,16 @@
     if (name !== 'togglePlay') emitState();
   }
 
+  // M053 S03d (G06): the mock has no SMF/drag export path, so canExport is
+  // false by default (site preview + the standing capExport specs rely on
+  // that). A `?export=1` query seam flips it true so the drag-to-DAW affordance
+  // and its Playwright spec can exercise the beginMidiDrag gating standalone,
+  // without a native plugin build.
+  const canExport = /[?&]export=1(?:&|$)/.test(window.location.search);
+
   window.PolyMockHost = {
     schemaVersion: window.POLY_SCHEMA_VERSION,
-    capabilities: { canExport: false },
+    capabilities: { canExport },
     getState: () => state,
     onState: (cb) => stateSubs.push(cb),
     edit: (paramId, value, gesture) => {
