@@ -6,7 +6,7 @@ class: gated
 
 # Poly Preset Taxonomy
 
-The 43 factory presets are grouped into 10 categories. This grouping is the source of truth for both the plugin's nested `Category > Preset` menu (`plugin/source/ui/header_view.cpp`) and the site's Try It category filter row.
+The 43 factory presets are grouped into 10 categories. This grouping is the source of truth for both the plugin's web UI preset browser (grouped `Category > Preset`) and the site's Try It category filter row.
 
 The category enum lives in the engine as `kFactoryPresetCategories[]` in `engine/src/presets.cpp`, and each `PresetInfo` entry in `kInfos[]` carries a `category` field that indexes into it. The JSON emitter (`engine/tools/emit_presets.cpp`) exports both the enum and each preset's category as `schemaVersion: 2`.
 

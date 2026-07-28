@@ -37,9 +37,10 @@ what *only Cubase* can break.
 ```
 
 What exists today: L1 is strong (engine tests, golden determinism, state-IO
-fuzzing, sanitize tests); the webui Playwright suite (8 tests) exists but
-is not in CI; the VSTGUI visual/interaction harness covers the legacy
-editor; the VST3 validator is available but disabled
+fuzzing, sanitize tests); the webui Playwright suite (`webui/tests/`) now
+guards the shipping web UI editor — the native VSTGUI visual/interaction
+harness that formerly covered the legacy editor was removed in M053 S05;
+the VST3 validator is available but disabled
 (`SMTG_RUN_VST_VALIDATOR OFF`); nothing exercises a real host.
 
 ## 1. L2 — Bridge contract testing (web UI ↔ C++, no Cubase, no webview)
@@ -231,7 +232,7 @@ probe JSONL shows the changed pattern.
 
 **macOS:** WKWebView exposes no CDP. Options, in order of pragmatism:
 (a) Windows-only for true Playwright e2e; macOS relies on L2 + L3 + a
-native editor-open smoke; (b) later, compile a small WebSocket test hook
+webview editor-open smoke; (b) later, compile a small WebSocket test hook
 into debug UI bundles so a custom driver can dispatch DOM events. Start
 with (a).
 

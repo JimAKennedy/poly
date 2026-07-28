@@ -98,10 +98,10 @@ The `ci.yml` workflow runs the full pipeline on every push to main and every PR.
 
 The parallel `build` matrix runs the C++ tests across macOS-14, ubuntu-latest, and windows-2022, so an MSVC-only transitive-include bug can't hide behind a Clang-only PR check. The `pluginval` job runs the JUCE validator against the built `.vst3` on both macOS and Linux runners.
 
-A dedicated-machine CI stage for VSTGUI visual regression is deferred to a later milestone — visual baselines are macOS-version-sensitive, and the current shared runners don't produce stable pixel diffs.
+Visual and interaction regression for the plugin's web UI runs in the Playwright suite (`webui/tests/`, Chromium); the former dedicated-machine stage for native VSTGUI pixel-baseline visual regression was retired when the native editor was decommissioned in M053 S05.
 
 ## What the pyramid does not cover
 
-Two categories are deliberately outside this test surface. Cubase-in-the-loop integration testing (an actual DAW hosting the plugin under automated control) is deferred to a later testing milestone — the harness for that is non-trivial and out of scope for M044. Visual regression across desktop OS variants uses the platform-specific baselines the RT-safety scanner cannot check, and the CI-on-dedicated-machine stage above is the intended home for it.
+Cubase-in-the-loop integration testing (an actual DAW hosting the plugin under automated control) is deliberately outside this test surface — it is deferred to a later testing milestone because the harness for that is non-trivial and was out of scope for M044.
 
-Everything else — engine correctness, audio-thread safety, preset data integrity, site-deployed audio behavior, cross-surface parity — is caught by one of the layers above before a change can reach main.
+Everything else — engine correctness, audio-thread safety, preset data integrity, site-deployed audio behavior, cross-surface parity, and the web UI's Playwright interaction/visual coverage — is caught by one of the layers above before a change can reach main.
