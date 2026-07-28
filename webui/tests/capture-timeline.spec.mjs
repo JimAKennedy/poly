@@ -100,3 +100,60 @@ test('setCaptureBars only takes the supported {4,8,16,32} lengths before latch',
   await page.evaluate(() => window.PolyMockHost.action('setCaptureBars', { bars: 8 }));
   expect(await page.evaluate(() => window.PolyMockHost._getCapture().bars)).toBe(16);
 });
+
+// --- M051 S08 T05: header capture controls (bars picker, Arm/Reset, Export) ---
+
+test('the capture control cluster is Cloth-only', async ({ page }) => {
+  // beforeEach leaves us in Cloth mode.
+  await expect(page.locator('#capCtl')).toHaveClass(/show/);
+  await page.click('#mDesk');
+  await expect(page.locator('#capCtl')).not.toHaveClass(/show/);
+  await page.click('#mCloth');
+  await expect(page.locator('#capCtl')).toHaveClass(/show/);
+});
+
+test('the bars picker cycles kCaptureLength through {4,8,16,32} and reflects host truth', async ({ page }) => {
+  const bars = page.locator('#capBars');
+  await expect(bars).toHaveText('8 bars');
+  await bars.click(); // 8 -> 16
+  await expect(bars).toHaveText('16 bars');
+  expect(await page.evaluate(() => window.PolyMockHost._getCapture().bars)).toBe(16);
+  await bars.click(); // 16 -> 32
+  await expect(bars).toHaveText('32 bars');
+  await bars.click(); // 32 -> 4 (wrap)
+  await expect(bars).toHaveText('4 bars');
+  expect(await page.evaluate(() => window.PolyMockHost._getCapture().bars)).toBe(4);
+});
+
+test('the Arm chip flips to Reset and drives the machine, Reset returns to idle', async ({ page }) => {
+  const arm = page.locator('#armBtn');
+  await expect(arm).toHaveText('Arm');
+  await expect(arm).not.toHaveClass(/on/);
+  await arm.click();
+  expect(await page.evaluate(() => window.PolyMockHost._getCapture().state)).toBe(1);
+  await expect(arm).toHaveText('Reset');
+  await expect(arm).toHaveClass(/on/); // armed -> Reset affordance is active
+  await arm.click();
+  expect(await page.evaluate(() => window.PolyMockHost._getCapture().state)).toBe(0);
+  await expect(arm).toHaveText('Arm');
+});
+
+test('the bars picker locks once capture latches (state >= 2)', async ({ page }) => {
+  await setCapture(page, { state: 2, bars: 8, prog: 1 });
+  await expect(page.locator('#capBars')).toHaveClass(/locked/);
+  // Click is a no-op while the window is frozen.
+  await page.locator('#capBars').click({ force: true });
+  expect(await page.evaluate(() => window.PolyMockHost._getCapture().bars)).toBe(8);
+});
+
+test('the Export chip is state-driven: capReady only in complete', async ({ page }) => {
+  const exp = page.locator('#exportBtn');
+  await setCapture(page, { state: 0, bars: 8 });
+  await expect(exp).not.toHaveClass(/capReady/);
+  await setCapture(page, { state: 1, bars: 8 });
+  await expect(exp).not.toHaveClass(/capReady/);
+  await setCapture(page, { state: 2, bars: 8, prog: 4 });
+  await expect(exp).not.toHaveClass(/capReady/);
+  await setCapture(page, { state: 3, bars: 8 });
+  await expect(exp).toHaveClass(/capReady/);
+});

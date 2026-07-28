@@ -190,13 +190,16 @@
     else buildChainPopover();
   });
 
-  /* --- export button (plugin-only) — opens a native Save As… dialog for
-       the current 10-bar MIDI capture. Result arrives via polyHostPush
-       {type:'exportResult'}. Cancels resolve silently. */
+  /* --- export button (plugin-only) — opens a native Save As… dialog for the
+       frozen MIDI capture window. Result arrives via polyHostPush
+       {type:'exportResult'}. Cancels resolve silently. M051 S08: gated on the
+       capture machine reaching `complete` (capState===3) — the only state in
+       which the processor has frozen a stable, exportable window. */
   if (host.capabilities && host.capabilities.canExport) {
     const btn = document.getElementById('exportBtn');
-    btn.title = 'Save the current 10-bar MIDI capture as a .mid file';
+    btn.title = 'Save the captured MIDI window as a .mid file (available once capture is complete)';
     btn.addEventListener('click', () => {
+      if ((lastFrame.capState | 0) !== 3) return; // active only in `complete`
       host.action('exportSaveAs', {});
       btn.classList.add('on');
     });
@@ -220,6 +223,50 @@
     });
   } else {
     document.getElementById('exportBtn').style.display = 'none';
+  }
+
+  /* --- M051 S08 T05: capture header controls (Cloth-only cluster) ---------
+     The bars picker cycles the kCaptureLength window {4,8,16,32}; the Arm chip
+     flips to Reset once the machine leaves idle; the Export chip above reads
+     state-driven (active only in `complete`). All three reflect host truth
+     from the feedback frame (lastFrame.capState/capBars) — never local state —
+     so the header and the Cloth timeline can never disagree about the machine. */
+  const CAP_BARS_STEPS = [4, 8, 16, 32];
+  const capCtl = document.getElementById('capCtl');
+  const capBarsBtn = document.getElementById('capBars');
+  const armBtn = document.getElementById('armBtn');
+  const exportChip = document.getElementById('exportBtn');
+
+  if (capBarsBtn) {
+    capBarsBtn.addEventListener('click', () => {
+      // Locked once capture latches (state >= 2): the window is frozen and
+      // kCaptureLength no longer applies until Reset.
+      if ((lastFrame.capState | 0) >= 2) return;
+      const cur = lastFrame.capBars || 8;
+      const i = CAP_BARS_STEPS.indexOf(cur);
+      const next = CAP_BARS_STEPS[(i + 1) % CAP_BARS_STEPS.length];
+      host.action('setCaptureBars', { bars: next });
+    });
+  }
+  if (armBtn) {
+    armBtn.addEventListener('click', () => {
+      host.action((lastFrame.capState | 0) === 0 ? 'armCapture' : 'resetCapture', {});
+    });
+  }
+  // Reflect the capture machine onto the header chips. Called every frame from
+  // onFrame so the labels/classes track host truth without a second timer.
+  function updateCaptureChips() {
+    const st = lastFrame.capState | 0;
+    if (capBarsBtn) {
+      capBarsBtn.textContent = `${lastFrame.capBars || 8} bars`;
+      capBarsBtn.classList.toggle('locked', st >= 2);
+    }
+    if (armBtn) {
+      armBtn.textContent = st === 0 ? 'Arm' : 'Reset';
+      armBtn.setAttribute('aria-label', st === 0 ? 'Arm capture' : 'Reset capture');
+      armBtn.classList.toggle('on', st >= 1);
+    }
+    if (exportChip) exportChip.classList.toggle('capReady', st === 3);
   }
 
   /* --- note map modal --- */
@@ -424,6 +471,8 @@
     document.getElementById('desk').classList.toggle('on', m === 'desk');
     document.getElementById('mCloth').classList.toggle('on', m === 'cloth');
     document.getElementById('mDesk').classList.toggle('on', m === 'desk');
+    // Arm/Reset + bars picker are capture-timeline controls — Cloth mode only.
+    if (capCtl) capCtl.classList.toggle('show', m === 'cloth');
     if (m === 'cloth') sizeLoom();
     if (m === 'desk' && focus >= 0) expandStrip(focus);
   }
@@ -1259,6 +1308,7 @@
     if (REDUCED) frame = Object.assign({}, frame, { t8: Math.floor(frame.t8) });
     lastFrame = frame;
     updateRoutingBanner(frame);
+    updateCaptureChips();
     document.getElementById('picon').setAttribute('d',
       frame.playing ? 'M2.5 2 H5.5 V12 H2.5 Z M8.5 2 H11.5 V12 H8.5 Z' : 'M3 2 L12 7 L3 12 Z');
     document.querySelector('#conv b').textContent = Math.ceil(frame.convLeft / 12);
