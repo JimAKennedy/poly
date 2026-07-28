@@ -1109,6 +1109,13 @@
         b.addEventListener('pointermove', mv);
         b.addEventListener('pointerup', () => b.removeEventListener('pointermove', mv), { once: true });
       });
+      // G08: double-click resets this step's micro-timing to zero (matches native
+      // micro_timing_editor_view's one-gesture reset) via the same setMicroTiming path.
+      b.addEventListener('dblclick', () => {
+        host.action('setMicroTiming', { lane: li, step: i, ms: 0 });
+        paint(i);
+        mtv.textContent = `step ${i + 1}: 0 ms`;
+      });
     });
 
     /* ENVELOPES */
