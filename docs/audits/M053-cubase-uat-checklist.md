@@ -1,3 +1,7 @@
+---
+class: gated
+---
+
 # M053 Cubase UAT Checklist — WebUI Parity Go-Signal
 
 > **Status:** UAT script (human-run). Fill the Result/Notes columns in Cubase, then attach this file as the Integration + UAT verification-class evidence for M053 close.

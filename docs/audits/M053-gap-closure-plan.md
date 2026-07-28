@@ -1,4 +1,14 @@
+---
+class: archived
+---
+
 # M053 WebUI ↔ Native Gap-Closure Plan
+
+> **Archived (2026-07-28)** — frozen decision artifact from M053/S02. Its
+> `file:line` citations reference `plugin/source/ui/*`, the native VSTGUI views
+> deleted in M053/S05; they are pinned to the pre-S05 commit, not `HEAD`. The
+> `close-all` go decision it records has already been actioned into the S03–S06
+> roadmap. Not maintained against the current tree.
 
 > **Status:** Gap ledger complete (T01); timeline-reachability flag resolved and Go Decision recorded — **close-all / proceed with native decommission** (T02). **Owner amendment (2026-07-28):** milestone owner (human) directed that **G06 (drag-and-drop MIDI export) be closed, not accepted-as-divergence** — via a native drag-source window opened on export, additive to the existing Save-As path. Ledger + Go Decision below updated accordingly; all 9 capability gaps now close.
 > **Lifecycle:** Decision artifact — sizes every native-only capability/affordance from the S01 parity matrix and records the close-all-vs-keep-both go decision that drives the S03–S06 roadmap reassessment.
@@ -75,9 +85,9 @@ Each row is one native-only capability/affordance. `Size` holds exactly one toke
 
 Reachability chain (all in `webui/ui.js`):
 
-1. **Deep pane opens unconditionally.** Each lane strip renders an expand affordance (`.ex` button, `ui.js:726`) whose click calls `expandStrip()` (`ui.js:789`). The `pattern` pane is the default-active pane (`<div class="pane on" data-pane="pattern">`, `ui.js:709`). No lane-mode or config predicate guards the expand or the pane — any lane can open its pattern pane.
-2. **Timeline-mode toggle is always rendered and enabled.** `buildPanes()` renders the `Timeline mode` switch in *both* branches — timeline-on (`ui.js:865`) and timeline-off (`ui.js:869`) — so the toggle is present regardless of current mode. Its handler (`ui.js:880-886`) edits the real `lane.<li>.timeline` param (begin/perform/end), i.e. it is live-wired, not a display stub.
-3. **Per-step editing is reachable two ways once timeline is on.** (a) The strip **ladder** buttons attach a `toggleStep` action when `l.timeline` is true (`buildLadder()`, `ui.js:846-847`); (b) the deep pane's **fixed-pulse row** (`data-fixed` buttons) attaches a `setFixedStep` action (`ui.js:888-893`). Both drive the engine through the bridge — genuine step editing, matching native `timeline_step_editor_view`.
+1. **Deep pane opens unconditionally.** Each lane strip renders an expand affordance (`.ex` button, `ui.js:726`) whose click calls `expandStrip()` (`ui.js:789`). The `pattern` pane is the default-active pane (`<div class="pane on" data-pane="pattern">`, `ui.js:709`). No lane-mode or config predicate guards the expand or the pane — any lane can open its pattern pane. <!-- [file-line-ok]: audit snapshot; refs pinned to the pre-S05 commit (native plugin/source/ui/* since deleted) -->
+2. **Timeline-mode toggle is always rendered and enabled.** `buildPanes()` renders the `Timeline mode` switch in *both* branches — timeline-on (`ui.js:865`) and timeline-off (`ui.js:869`) — so the toggle is present regardless of current mode. Its handler (`ui.js:880-886`) edits the real `lane.<li>.timeline` param (begin/perform/end), i.e. it is live-wired, not a display stub. <!-- [file-line-ok]: audit snapshot; refs pinned to the pre-S05 commit (native plugin/source/ui/* since deleted) -->
+3. **Per-step editing is reachable two ways once timeline is on.** (a) The strip **ladder** buttons attach a `toggleStep` action when `l.timeline` is true (`buildLadder()`, `ui.js:846-847`); (b) the deep pane's **fixed-pulse row** (`data-fixed` buttons) attaches a `setFixedStep` action (`ui.js:888-893`). Both drive the engine through the bridge — genuine step editing, matching native `timeline_step_editor_view`. <!-- [file-line-ok]: audit snapshot; refs pinned to the pre-S05 commit (native plugin/source/ui/* since deleted) -->
 
 Grep-anchored negative check: `grep -in "cfg.timeline" webui/ui.js` returns nothing; the only `timeline` gating in the file is per-lane runtime state (`l.timeline`), not a build/config feature flag. The `parity` verdict is therefore trusted for the go decision below; full DAW-runtime confirmation of the pane remains explicitly deferred to the downstream execution slices (S02 is a static-analysis slice, per its Proof Level).
 
