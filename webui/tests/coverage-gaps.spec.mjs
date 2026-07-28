@@ -724,3 +724,153 @@ test.describe('first-run MIDI-routing diagnostic banner', () => {
     await expect(page.locator('#routingBanner')).toHaveCount(0);
   });
 });
+
+// G04 — WebUI env deep pane parity. The native envelope_curve_view drags depth
+// continuously and right-clicks to reset; the WebUI curve must do the same via
+// the EXISTING setEnvelope bridge (no new bridge action). Default preset lane 0
+// ("Bell") ships one envelope at depth 0.35, so it is the drag target. These
+// specs assert the emitted setEnvelope payload (mock host action log) AND the
+// in-pane live readout (depth label + aria-valuenow) that native has and the old
+// read-only "depth NN%" label lacked.
+async function openEnvPane(page, lane = 0) {
+  await expandStrip(page, lane);
+  await page.click(`.strip[data-lane="${lane}"] [data-tab="env"]`);
+  await page.waitForSelector(`.strip[data-lane="${lane}"] [data-pane="env"].on [data-envdepth="0"]`);
+}
+
+test.describe('G04 — envelope depth drag + reset (setEnvelope bridge)', () => {
+  test.beforeEach(async ({ page }) => {
+    await setupWithActionLog(page);
+  });
+
+  test('vertical drag up scrubs depth deeper and emits setEnvelope', async ({ page }) => {
+    await openEnvPane(page, 0);
+    const svg = page.locator('.strip[data-lane="0"] [data-envdepth="0"]');
+    await expect(svg).toBeVisible();
+    // Baseline: mock host lane 0 envelope depth is 0.35 → "35%".
+    const label = page.locator('.strip[data-lane="0"] [data-envdepthval="0"]');
+    await expect(label).toHaveText('35%');
+
+    await clearActions(page);
+    const box = await svg.boundingBox();
+    // Press at vertical center, drag toward the top (up = deeper depth).
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width / 2, box.y + 1, { steps: 6 });
+    await page.mouse.up();
+
+    const envActs = (await getActions(page)).filter((a) => a.name === 'setEnvelope');
+    expect(envActs.length).toBeGreaterThan(0);
+    const last = envActs[envActs.length - 1];
+    expect(last.payload.lane).toBe(0);
+    expect(last.payload.index).toBe(0);
+    // Dragging up must increase depth above the 0.35 baseline (native parity:
+    // continuous, not the hard-coded 0.3 the old add-path used).
+    expect(last.payload.envelope.depth).toBeGreaterThan(0.35);
+    expect(last.payload.envelope.depth).toBeLessThanOrEqual(1);
+    // Live readout tracked the drag.
+    const shownPct = parseInt(await label.textContent(), 10);
+    expect(shownPct).toBeGreaterThan(35);
+    expect(await svg.getAttribute('aria-valuenow')).toBe(String(shownPct));
+  });
+
+  test('right-click resets depth to 100% and emits setEnvelope depth 1', async ({ page }) => {
+    await openEnvPane(page, 0);
+    const svg = page.locator('.strip[data-lane="0"] [data-envdepth="0"]');
+    const label = page.locator('.strip[data-lane="0"] [data-envdepthval="0"]');
+    await expect(label).toHaveText('35%');
+
+    await clearActions(page);
+    await svg.click({ button: 'right' });
+
+    const envActs = (await getActions(page)).filter((a) => a.name === 'setEnvelope');
+    expect(envActs.length).toBe(1);
+    expect(envActs[0].payload.lane).toBe(0);
+    expect(envActs[0].payload.index).toBe(0);
+    expect(envActs[0].payload.envelope.depth).toBe(1);
+    // Curve repainted its readout to 100% immediately (no state round-trip).
+    await expect(label).toHaveText('100%');
+    expect(await svg.getAttribute('aria-valuenow')).toBe('100');
+  });
+
+  test('curve exposes an accessible slider role for the depth control', async ({ page }) => {
+    await openEnvPane(page, 0);
+    const svg = page.locator('.strip[data-lane="0"] [data-envdepth="0"]');
+    await expect(svg).toHaveAttribute('role', 'slider');
+    await expect(svg).toHaveAttribute('aria-valuemin', '0');
+    await expect(svg).toHaveAttribute('aria-valuemax', '100');
+    await expect(svg).toHaveAttribute('aria-valuenow', '35');
+  });
+});
+
+// G05 — WebUI note-map modal parity. Native note_map_view shows named GM drums
+// and a lane-association view; the WebUI modal previously listed 128 raw rows
+// with no names. These specs prove (a) GM names now label the note rows, (b) the
+// lane-scoped view renders one row per lane with the lane's source-note drum
+// name, and (c) edits in the lane view still route through the EXISTING
+// setNoteMap bridge keyed on the lane's source note (no new bridge action).
+test.describe('G05 — GM drum names + lane-scoped note-map view', () => {
+  test.beforeEach(async ({ page }) => {
+    await setupWithActionLog(page);
+  });
+
+  test('notes view labels rows with General MIDI drum names', async ({ page }) => {
+    await page.click('#noteMapBtn');
+    await expect(page.locator('.notemap-modal')).toBeVisible();
+    await expect(page.locator('.notemap-row[data-note="36"] .nm-name')).toHaveText('Kick 1');
+    await expect(page.locator('.notemap-row[data-note="38"] .nm-name')).toHaveText('Snare');
+    await expect(page.locator('.notemap-row[data-note="46"] .nm-name')).toHaveText('Open HH');
+    // Notes outside the GM percussion range (35-81) have no drum name.
+    await expect(page.locator('.notemap-row[data-note="0"] .nm-name')).toHaveText('');
+  });
+
+  test('view toggle switches to a lane-scoped view with one row per lane', async ({ page }) => {
+    await page.click('#noteMapBtn');
+    // Default view is the 128-row notes grid; toggle button offers "Lanes".
+    await expect(page.locator('[data-nmview]')).toHaveText('Lanes');
+    await expect(page.locator('.notemap-lanes')).toHaveCount(0);
+
+    await page.click('[data-nmview]');
+    await expect(page.locator('.notemap-lanes')).toBeVisible();
+    // Default preset (Afrobeat 12/8) has 5 lanes → 5 lane-scoped rows.
+    await expect(page.locator('.notemap-lanes .notemap-row')).toHaveCount(5);
+    // Lane 0 source note is 56 (Cowbell); its GM name is shown.
+    await expect(page.locator('.notemap-lanes .notemap-row[data-lane="0"] .nm-name')).toHaveText('Cowbell');
+    await expect(page.locator('.notemap-lanes .notemap-row[data-lane="0"] .ni')).toHaveText('56');
+    // Toggle label flipped to offer the return trip to Notes.
+    await expect(page.locator('[data-nmview]')).toHaveText('Notes');
+  });
+
+  test('lane-scoped edit routes through setNoteMap keyed on the source note', async ({ page }) => {
+    await page.click('#noteMapBtn');
+    await page.click('[data-nmview]');
+    await expect(page.locator('.notemap-lanes')).toBeVisible();
+
+    await clearActions(page);
+    await page.click('.notemap-lanes .notemap-row[data-lane="0"] [data-lnminc="56"]');
+    const acts = await getActions(page);
+    expect(acts).toContainEqual(
+      expect.objectContaining({ name: 'setNoteMap', payload: { note: 56, output: 57 } })
+    );
+
+    // The inc above set noteMap[56]=57 (mock host applied + re-pushed state), so
+    // a subsequent dec steps from the live value 57 back to 56 — proving the lane
+    // stepper reads current state, not a stale baseline.
+    await clearActions(page);
+    await page.click('.notemap-lanes .notemap-row[data-lane="0"] [data-lnmdec="56"]');
+    const acts2 = await getActions(page);
+    expect(acts2).toContainEqual(
+      expect.objectContaining({ name: 'setNoteMap', payload: { note: 56, output: 56 } })
+    );
+  });
+
+  test('lane view survives a state push while the modal is open', async ({ page }) => {
+    await page.click('#noteMapBtn');
+    await page.click('[data-nmview]');
+    await expect(page.locator('.notemap-lanes')).toBeVisible();
+    await page.evaluate(() => window.PolyMockHost._pushState());
+    // View mode persists across the refreshAll close+reopen cycle.
+    await expect(page.locator('.notemap-lanes')).toBeVisible();
+    await expect(page.locator('.notemap-lanes .notemap-row')).toHaveCount(5);
+  });
+});
