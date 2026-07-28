@@ -1045,27 +1045,66 @@
     });
 
     /* ENVELOPES */
-    const curve = (e, id) => {
+    const envPath = (depth) => {
       let d = 'M0 15';
       for (let x = 0; x <= 74; x += 2)
-        d += ` L${x} ${(15 - Math.sin((x / 74) * Math.PI * 2) * 11 * e.depth).toFixed(1)}`;
-      return `<svg viewBox="0 0 74 30" aria-hidden="true"><path d="${d}" fill="none" stroke="${l.hue}" stroke-width="1.4" opacity="${e.on ? 0.95 : 0.3}"/><line data-envph="${id}" x1="0" y1="2" x2="0" y2="28" stroke="#F0EADF" stroke-width="1" opacity="${e.on ? 0.7 : 0}"/></svg>`;
+        d += ` L${x} ${(15 - Math.sin((x / 74) * Math.PI * 2) * 11 * depth).toFixed(1)}`;
+      return d;
     };
+    const curve = (e, id) =>
+      `<svg class="envcurve" data-envdepth="${id}" viewBox="0 0 74 30" role="slider" tabindex="0" aria-label="Envelope ${id + 1} depth (drag up/down, right-click to reset)" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(e.depth * 100)}"><path d="${envPath(e.depth)}" fill="none" stroke="${l.hue}" stroke-width="1.4" opacity="${e.on ? 0.95 : 0.3}"/><line data-envph="${id}" x1="0" y1="2" x2="0" y2="28" stroke="#F0EADF" stroke-width="1" opacity="${e.on ? 0.7 : 0}"/></svg>`;
     env.innerHTML =
       l.envs.map((e, i) => `
         <div class="envrow">
           <div class="t">${e.target} · <span style="color:var(--dim)">${e.period} bars · sine</span></div>
           ${curve(e, i)}
-          <div class="m">depth ${Math.round(e.depth * 100)}% <button data-envon="${i}" class="chip ${e.on ? 'on' : ''}" style="padding:2px 8px">${e.on ? 'ON' : 'OFF'}</button></div>
+          <div class="m">depth <span data-envdepthval="${i}">${Math.round(e.depth * 100)}%</span> <button data-envon="${i}" class="chip ${e.on ? 'on' : ''}" style="padding:2px 8px">${e.on ? 'ON' : 'OFF'}</button></div>
         </div>`).join('') +
       `<button class="addenv">+ add envelope</button>
-       <div class="hint">envelopes superimpose — different periods create multiphase motion</div>`;
+       <div class="hint">drag a curve up/down to set depth · right-click resets to 100% · envelopes superimpose</div>`;
     env.querySelectorAll('[data-envon]').forEach((b) =>
       b.addEventListener('click', () => {
         const i = +b.dataset.envon;
         const e = Object.assign({}, l.envs[i], { on: !l.envs[i].on });
         host.action('setEnvelope', { lane: li, index: i, envelope: e });
       }));
+    // Continuous depth editing: vertical drag scrubs depth (up = deeper),
+    // right-click resets to 1.0 — mirrors native envelope_curve_view (setEnvelope bridge).
+    env.querySelectorAll('[data-envdepth]').forEach((svg) => {
+      const i = +svg.dataset.envdepth;
+      const path = svg.querySelector('path');
+      const valSpan = env.querySelector(`[data-envdepthval="${i}"]`);
+      const emit = (depth) => {
+        const e = Object.assign({}, l.envs[i], { depth });
+        l.envs[i] = e;
+        host.action('setEnvelope', { lane: li, index: i, envelope: e });
+      };
+      const repaint = (depth) => {
+        path.setAttribute('d', envPath(depth));
+        if (valSpan) valSpan.textContent = `${Math.round(depth * 100)}%`;
+        svg.setAttribute('aria-valuenow', String(Math.round(depth * 100)));
+      };
+      svg.addEventListener('contextmenu', (ev) => {
+        ev.preventDefault();
+        repaint(1);
+        emit(1);
+      });
+      svg.addEventListener('pointerdown', (ev) => {
+        if (ev.button !== 0) return;
+        ev.preventDefault();
+        svg.setPointerCapture(ev.pointerId);
+        const startY = ev.clientY;
+        const startDepth = l.envs[i].depth;
+        const h = svg.getBoundingClientRect().height || 30;
+        const move = (e2) => {
+          const depth = Math.max(0, Math.min(1, startDepth + (startY - e2.clientY) / h));
+          repaint(depth);
+          emit(depth);
+        };
+        svg.addEventListener('pointermove', move);
+        svg.addEventListener('pointerup', () => svg.removeEventListener('pointermove', move), { once: true });
+      });
+    });
     env.querySelector('.addenv').addEventListener('click', () =>
       host.action('setEnvelope', {
         lane: li,
