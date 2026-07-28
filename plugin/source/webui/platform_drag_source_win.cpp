@@ -224,8 +224,11 @@ void beginDrag(HWND window) {
     if (!state || state->path.empty())
         return;
 
-    auto* data = new PolyDataObject(state->path);
-    auto* source = new PolyDropSource();
+    // ownership-transfer — COM objects are refcount-managed (initial ref 1);
+    // ownership passes to DoDragDrop and is released below, so a smart pointer
+    // would fight the AddRef/Release protocol.
+    auto* data = new PolyDataObject(state->path); // ownership-transfer
+    auto* source = new PolyDropSource();          // ownership-transfer
 
     DWORD effect = DROPEFFECT_NONE;
     DoDragDrop(data, source, DROPEFFECT_COPY, &effect);
@@ -286,7 +289,10 @@ void ensureClassRegistered() {
     wc.style = CS_HREDRAW | CS_VREDRAW;
     wc.lpfnWndProc = dragWndProc;
     wc.hInstance = thisModule();
-    wc.hCursor = LoadCursorW(nullptr, IDC_HAND);
+    // IDC_HAND expands via MAKEINTRESOURCE, which is the ANSI (LPSTR) form when
+    // the TU is built without UNICODE defined; cast the integer atom to LPCWSTR
+    // so it matches the explicit LoadCursorW signature.
+    wc.hCursor = LoadCursorW(nullptr, reinterpret_cast<LPCWSTR>(IDC_HAND));
     wc.hbrBackground = reinterpret_cast<HBRUSH>(COLOR_WINDOW + 1);
     wc.lpszClassName = kDragWindowClass;
     RegisterClassExW(&wc); // Idempotent enough; a second call just fails harmlessly.
@@ -308,7 +314,9 @@ void beginMidiDragExport(void* parentView, const std::string& suggestedName, con
 
     ensureClassRegistered();
 
-    auto* state = new DragWindowState();
+    // ownership-transfer — ownership passes to the HWND via SetWindowLongPtrW
+    // below and is reclaimed in the WM_NCDESTROY handler.
+    auto* state = new DragWindowState(); // ownership-transfer
     state->label = utf8ToWide(suggestedName);
     if (state->label.empty())
         state->label = L"poly.mid";
