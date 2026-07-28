@@ -1,6 +1,6 @@
 // Web UI view — hosts the webui/ bundle in a choc::ui::WebView and
-// bridges to the controller per webui/bridge-schema.md. Compiled only
-// with -DPOLY_WEB_UI=ON.
+// bridges to the controller per webui/bridge-schema.md. Compiled only on
+// the choc-webview platforms (defined(__APPLE__) || defined(_WIN32)).
 
 #include "web_ui_view.h"
 

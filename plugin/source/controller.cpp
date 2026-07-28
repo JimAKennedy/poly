@@ -15,7 +15,7 @@
 #include "ui/scene_bar_view.h"
 #include "ui/timeline_step_editor_view.h"
 #include "ui/velocity_view.h"
-#ifdef POLY_WEB_UI
+#if defined(__APPLE__) || defined(_WIN32)
 #include "webui/web_ui_view.h"
 #endif
 
@@ -23,7 +23,7 @@ namespace poly {
 
 Steinberg::IPlugView* PLUGIN_API PolyController::createView(Steinberg::FIDString name) {
     if (Steinberg::FIDStringsEqual(name, Steinberg::Vst::ViewType::kEditor)) {
-#ifdef POLY_WEB_UI
+#if defined(__APPLE__) || defined(_WIN32)
         return new WebUIView(this); // ownership-transfer
 #else
         auto* view = new VSTGUI::VST3Editor(this, "view", "poly.uidesc"); // ownership-transfer

@@ -1,8 +1,8 @@
 #pragma once
 
 // Web UI editor — hosts the webui/ bundle in a choc::ui::WebView and
-// bridges it to the controller per webui/bridge-schema.md. Built with
-// -DPOLY_WEB_UI=ON; the default build keeps the VSTGUI editor.
+// bridges it to the controller per webui/bridge-schema.md. Compiled on the
+// choc-webview platforms (Apple/Windows); Linux keeps the VSTGUI editor.
 
 #include <memory>
 #include <optional>
