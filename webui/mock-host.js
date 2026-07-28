@@ -753,6 +753,15 @@
         l.cells = payload.cells ? payload.cells.map((c) => Math.max(1, Math.min(16, c))) : null;
         l.mt = new Array(l.cells ? l.cells.length : l.steps).fill(0);
         break;
+      case 'setLaneName': {
+        // Mirror the native/bridge clamp-and-ignore invariant (web_ui_view.cpp
+        // setLaneName + lane_edit_view.cpp commitNameEdit): accept only a
+        // non-empty name of at most LaneEditView::kMaxNameLength (15) chars;
+        // empty/oversized/non-string payloads are dropped silently.
+        const nm = typeof payload.name === 'string' ? payload.name : '';
+        if (l && nm.length >= 1 && nm.length <= 15) l.name = nm;
+        break;
+      }
       case 'setFixedStep':
         if (l.fixed) {
           l.fixed[payload.step] = payload.on ? 1 : 0;

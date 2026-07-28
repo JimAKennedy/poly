@@ -675,6 +675,41 @@
     parent.appendChild(e);
     return e;
   }
+  // G02: inline lane rename. Mirrors the native double-click-name gesture
+  // (lane_edit_view.cpp beginNameEdit/commitNameEdit): prefill with the current
+  // name, cap at 15 chars, commit non-empty on Enter/blur, discard on Escape.
+  // The setLaneName action round-trips through the bridge; the resulting state
+  // push rebuilds the strip head (buildDesk) with the committed name, so no
+  // manual DOM update is needed on a successful commit.
+  function beginLaneRename(li, nameEl) {
+    if (nameEl.querySelector('input')) return; // already editing
+    const current = (S.lanes[li] && S.lanes[li].name) || '';
+    const input = document.createElement('input');
+    input.className = 'nm-edit';
+    input.type = 'text';
+    input.maxLength = 15;
+    input.value = current;
+    input.setAttribute('aria-label', `Rename lane ${li + 1}`);
+    nameEl.textContent = '';
+    nameEl.appendChild(input);
+    input.focus();
+    input.select();
+    let done = false;
+    const finish = (commit) => {
+      if (done) return;
+      done = true;
+      const name = input.value.trim().slice(0, 15);
+      // Non-empty names commit through the bridge (empty is dropped, matching
+      // the native/bridge invariant); anything else restores the prior label.
+      if (commit && name) host.action('setLaneName', { lane: li, name });
+      else nameEl.textContent = current;
+    };
+    input.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter') { ev.preventDefault(); finish(true); }
+      else if (ev.key === 'Escape') { ev.preventDefault(); finish(false); }
+    });
+    input.addEventListener('blur', () => finish(true));
+  }
   function buildDesk() {
     desk.innerHTML = '';
     strips = []; rings = []; hands = []; ladders = []; vus = [];
@@ -724,6 +759,11 @@
       ladders.push(s.querySelector('.ladder'));
       vus.push(s.querySelector('.vu i'));
       s.querySelector('.ex').addEventListener('click', () => expandStrip(expanded === li ? -1 : li));
+      const nameEl = s.querySelector('.nm b');
+      if (nameEl) {
+        nameEl.title = 'Double-click to rename';
+        nameEl.addEventListener('dblclick', () => beginLaneRename(li, nameEl));
+      }
       s.querySelector('[data-mute]').addEventListener('click', () => {
         const active = S.lanes[li].active;
         host.edit(`lane.${li}.active`, active ? 0 : 1, 'begin');
