@@ -1240,6 +1240,12 @@
       { field: 'phraseOffset', label: 'Offset', norm: l.phraseOffset / 64,
         fmt: (v) => Math.round(v * 64) + ' bars' },
     ];
+    // Gap/Offset are inert while Length is Off (the lane never rests), so
+    // disable them to match native phrase_edit_view. Derived purely from
+    // l.phraseLength — the fmt reads Off when Math.round(l.phraseLength)===0.
+    const phraseOff = Math.round(l.phraseLength) === 0;
+    PHRASE[1].disabled = phraseOff; // Gap
+    PHRASE[2].disabled = phraseOff; // Offset
     const MUTATION = [
       { field: 'mutationRate', label: 'Mutation', norm: l.mutationRate,
         fmt: (v) => Math.round(v * 100) + '%' },
@@ -1255,7 +1261,7 @@
     const ALL_ADV = [...PHRASE, ...MUTATION, ...MORE];
     const SUBS = [1, 2, 4, 8, 16];
     const sliderHtml = (arr) => arr.map((p) =>
-      `<div class="param-slider"><label>${p.label}</label>` +
+      `<div class="param-slider${p.disabled ? ' phrase-disabled' : ''}"><label>${p.label}</label>` +
       `<div class="slider-track" data-field="${p.field}"><i style="width:${(p.norm * 100).toFixed(1)}%"></i></div>` +
       `<span class="v">${p.fmt(p.norm)}</span></div>`
     ).join('');
@@ -1288,6 +1294,8 @@
       };
       const paint = (v) => { fill.style.width = `${(v * 100).toFixed(1)}%`; vSpan.textContent = p.fmt(v); };
       track.addEventListener('pointerdown', (e) => {
+        // Gap/Offset are disabled while phrase Length is Off — ignore the drag.
+        if (track.closest('.param-slider').classList.contains('phrase-disabled')) return;
         e.preventDefault();
         let lastV = calc(e); paint(lastV);
         host.edit(paramId, lastV, 'begin');
