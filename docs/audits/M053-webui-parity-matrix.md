@@ -1,8 +1,9 @@
 # M053 WebUI ↔ Native Feature Parity Matrix
 
-> **Status:** In progress (scaffolded by S01/T01, 2026-07-28)
+> **Status:** Complete (all 15 native views verdicted; S01/T06, 2026-07-28)
 > **Lifecycle:** Audit snapshot — reflects the tree at the commit that closes M053/S01. Re-verify any row by opening its cited `file:line`.
 > **Purpose:** Enumerate every native VSTGUI capability and its WebUI status so S02 can size each gap and make the close-all-native vs keep-both decision. This doc is the sole input to S02.
+> **Completeness:** Mechanically enforced by `docs/audits/parity-matrix.test.mjs` (`node --test`) — asserts all 15 native views carry a verdicted row, every verdict cell holds one `{parity, gap, webui-only, divergent}` token, and no `_pending_` placeholder survives.
 
 ## How to read this matrix
 
