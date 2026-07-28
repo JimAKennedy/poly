@@ -270,43 +270,95 @@
   }
 
   /* --- note map modal --- */
+  // GM drum names (General MIDI percussion, notes 35-81) ported verbatim from
+  // plugin/source/ui/note_map_view.cpp kDrumNames so the WebUI note-map picker
+  // shows the same named drums as the native note_map_view (G05 parity).
+  const NM_DRUM_NAMES = {
+    35: 'Kick 2', 36: 'Kick 1', 37: 'Side Stick', 38: 'Snare', 39: 'Clap',
+    40: 'Elec Snare', 41: 'Floor Tom L', 42: 'Closed HH', 43: 'Floor Tom H', 44: 'Pedal HH',
+    45: 'Low Tom', 46: 'Open HH', 47: 'Low-Mid Tom', 48: 'Hi-Mid Tom', 49: 'Crash 1',
+    50: 'High Tom', 51: 'Ride 1', 52: 'China', 53: 'Ride Bell', 54: 'Tambourine',
+    55: 'Splash', 56: 'Cowbell', 57: 'Crash 2', 58: 'Vibraslap', 59: 'Ride 2',
+    60: 'Hi Bongo', 61: 'Lo Bongo', 62: 'Mute Conga H', 63: 'Open Conga H', 64: 'Low Conga',
+    65: 'Hi Timbale', 66: 'Lo Timbale', 67: 'Hi Agogo', 68: 'Lo Agogo', 69: 'Cabasa',
+    70: 'Maracas', 71: 'Whistle S', 72: 'Whistle L', 73: 'Guiro S', 74: 'Guiro L',
+    75: 'Claves', 76: 'Woodblock H', 77: 'Woodblock L', 78: 'Cuica Mute', 79: 'Cuica Open',
+    80: 'Triangle M', 81: 'Triangle O',
+  };
   let noteMapModal = null;
   let noteMapDismiss = null;
+  // View mode persists across modal rebuilds (refreshAll closes+reopens on every
+  // state change). 'notes' = full 128-row view; 'lanes' = 8 lane source-note rows.
+  let noteMapMode = 'notes';
+  function nmDrumLabel(n) {
+    return NM_DRUM_NAMES[n] || `N${n}`;
+  }
   function buildNoteMapModal() {
     if (noteMapModal) { closeNoteMapModal(); return; }
     const nm = S.noteMap || [];
-    const pop = document.createElement('div');
-    pop.className = 'notemap-modal open';
-    pop.innerHTML = `<div class="notemap-inner">
-      <div class="notemap-header"><h4>Note Map</h4><button class="notemap-reset">Reset</button><button class="notemap-close">✕</button></div>
-      <div class="notemap-grid">${Array.from({ length: 128 }, (_, i) =>
+    let gridHtml;
+    if (noteMapMode === 'lanes') {
+      // Lane-scoped view: one row per lane (mirrors native note_map_view LANE
+      // column). Source = S.lanes[li].note; destination = noteMap[source]. Edits
+      // route through setNoteMap keyed on the lane's source note.
+      const lanes = S.lanes || [];
+      gridHtml = `<div class="notemap-grid notemap-lanes">${lanes.map((lane, li) => {
+        const src = lane.note;
+        const dst = nm[src] ?? src;
+        return `<div class="notemap-row" data-lane="${li}" data-src="${src}">` +
+          `<span class="nl">L${li + 1}</span>` +
+          `<span class="nm-name">${nmDrumLabel(src)}</span>` +
+          `<span class="ni">${src}</span>` +
+          `<button data-lnmdec="${src}">−</button>` +
+          `<span class="no">${dst}</span>` +
+          `<button data-lnminc="${src}">+</button>` +
+          `${src !== dst ? '<span class="nm-mod">✦</span>' : ''}` +
+          `</div>`;
+      }).join('')}</div>`;
+    } else {
+      gridHtml = `<div class="notemap-grid">${Array.from({ length: 128 }, (_, i) =>
         `<div class="notemap-row" data-note="${i}">` +
         `<span class="ni">${i}</span>` +
+        `<span class="nm-name">${NM_DRUM_NAMES[i] || ''}</span>` +
         `<button data-nmdec="${i}">−</button>` +
         `<span class="no">${nm[i] ?? i}</span>` +
         `<button data-nminc="${i}">+</button>` +
         `${nm[i] !== i ? '<span class="nm-mod">✦</span>' : ''}` +
-        `</div>`).join('')}
-      </div></div>`;
+        `</div>`).join('')}</div>`;
+    }
+    const pop = document.createElement('div');
+    pop.className = 'notemap-modal open';
+    pop.innerHTML = `<div class="notemap-inner">
+      <div class="notemap-header"><h4>Note Map</h4>` +
+      `<button class="notemap-view" data-nmview>${noteMapMode === 'notes' ? 'Lanes' : 'Notes'}</button>` +
+      `<button class="notemap-reset">Reset</button><button class="notemap-close">✕</button></div>
+      ${gridHtml}</div>`;
     document.getElementById('win').appendChild(pop);
     noteMapModal = pop;
 
     pop.querySelector('.notemap-close').addEventListener('click', closeNoteMapModal);
+    pop.querySelector('[data-nmview]').addEventListener('click', (e) => {
+      e.stopPropagation();
+      noteMapMode = noteMapMode === 'notes' ? 'lanes' : 'notes';
+      closeNoteMapModal();
+      buildNoteMapModal();
+    });
     pop.querySelector('.notemap-reset').addEventListener('click', () => {
       host.action('resetNoteMap', {});
     });
+    const stepNoteMap = (src, delta) => {
+      const cur = S.noteMap ? (S.noteMap[src] ?? src) : src;
+      const next = cur + delta;
+      if (next >= 0 && next <= 127) host.action('setNoteMap', { note: src, output: next });
+    };
     pop.querySelectorAll('[data-nmdec]').forEach((b) =>
-      b.addEventListener('click', () => {
-        const ni = parseInt(b.dataset.nmdec);
-        const cur = S.noteMap ? S.noteMap[ni] : ni;
-        if (cur > 0) host.action('setNoteMap', { note: ni, output: cur - 1 });
-      }));
+      b.addEventListener('click', () => stepNoteMap(parseInt(b.dataset.nmdec), -1)));
     pop.querySelectorAll('[data-nminc]').forEach((b) =>
-      b.addEventListener('click', () => {
-        const ni = parseInt(b.dataset.nminc);
-        const cur = S.noteMap ? S.noteMap[ni] : ni;
-        if (cur < 127) host.action('setNoteMap', { note: ni, output: cur + 1 });
-      }));
+      b.addEventListener('click', () => stepNoteMap(parseInt(b.dataset.nminc), +1)));
+    pop.querySelectorAll('[data-lnmdec]').forEach((b) =>
+      b.addEventListener('click', () => stepNoteMap(parseInt(b.dataset.lnmdec), -1)));
+    pop.querySelectorAll('[data-lnminc]').forEach((b) =>
+      b.addEventListener('click', () => stepNoteMap(parseInt(b.dataset.lnminc), +1)));
 
     const dismiss = (e) => {
       if (noteMapModal && !noteMapModal.querySelector('.notemap-inner').contains(e.target) &&

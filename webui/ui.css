@@ -278,6 +278,11 @@
   .notemap-row button { width: 20px; height: 20px; border-radius: 4px; border: 1px solid var(--line); background: var(--surface2); font-size: 11px; line-height: 1; display: grid; place-items: center; }
   .notemap-row button:hover { border-color: var(--dim); }
   .notemap-row .nm-mod { color: var(--accent); font-size: 8px; margin-left: 2px; }
+  .notemap-view { border: 1px solid var(--line); background: transparent; border-radius: 5px; padding: 3px 10px; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); }
+  .notemap-view:hover { color: var(--text); border-color: var(--dim); }
+  .notemap-row .nm-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--dim); font-size: 10px; }
+  .notemap-lanes .notemap-row .nl { min-width: 24px; color: var(--accent); font-weight: 600; }
+  .notemap-lanes .notemap-row .nm-name { color: var(--text); }
 
   /* ---- chip rows ---- */
   .chip-row { display: flex; gap: 4px; flex-wrap: wrap; }
