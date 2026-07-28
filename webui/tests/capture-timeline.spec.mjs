@@ -89,16 +89,21 @@ test('armCapture action drives the mock machine idle -> armed', async ({ page })
   expect(cap2.state).toBe(0);
 });
 
-test('setCaptureBars only takes the supported {4,8,16,32} lengths before latch', async ({ page }) => {
-  await page.evaluate(() => window.PolyMockHost.action('setCaptureBars', { bars: 16 }));
-  expect(await page.evaluate(() => window.PolyMockHost._getCapture().bars)).toBe(16);
-  // Unsupported value ignored.
-  await page.evaluate(() => window.PolyMockHost.action('setCaptureBars', { bars: 7 }));
-  expect(await page.evaluate(() => window.PolyMockHost._getCapture().bars)).toBe(16);
-  // Not editable once capturing has latched.
+test('setCaptureBars accepts any integer 1-32 before latch and rejects out-of-range', async ({ page }) => {
+  const set = (bars) => page.evaluate((b) => window.PolyMockHost.action('setCaptureBars', { bars: b }), bars);
+  const bars = () => page.evaluate(() => window.PolyMockHost._getCapture().bars);
+  // G07: kCaptureLength is a 1-32 param, so any integer in [1,32] latches —
+  // including odd lengths the old fixed {4,8,16,32} picker could never reach.
+  await set(16); expect(await bars()).toBe(16);
+  await set(7); expect(await bars()).toBe(7);
+  await set(1); expect(await bars()).toBe(1);
+  await set(32); expect(await bars()).toBe(32);
+  // Out-of-range values are rejected (window stays at 32).
+  await set(0); expect(await bars()).toBe(32);
+  await set(33); expect(await bars()).toBe(32);
+  // Not editable once capturing has latched (state >= 2).
   await page.evaluate(() => window.PolyMockHost._setCapture({ state: 2 }));
-  await page.evaluate(() => window.PolyMockHost.action('setCaptureBars', { bars: 8 }));
-  expect(await page.evaluate(() => window.PolyMockHost._getCapture().bars)).toBe(16);
+  await set(8); expect(await bars()).toBe(32);
 });
 
 // --- M051 S08 T05: header capture controls (bars picker, Arm/Reset, Export) ---
@@ -112,17 +117,15 @@ test('the capture control cluster is Cloth-only', async ({ page }) => {
   await expect(page.locator('#capCtl')).toHaveClass(/show/);
 });
 
-test('the bars picker cycles kCaptureLength through {4,8,16,32} and reflects host truth', async ({ page }) => {
+test('the bars picker is a 1-32 stepper and reflects host truth', async ({ page }) => {
   const bars = page.locator('#capBars');
   await expect(bars).toHaveText('8 bars');
-  await bars.click(); // 8 -> 16
-  await expect(bars).toHaveText('16 bars');
-  expect(await page.evaluate(() => window.PolyMockHost._getCapture().bars)).toBe(16);
-  await bars.click(); // 16 -> 32
-  await expect(bars).toHaveText('32 bars');
-  await bars.click(); // 32 -> 4 (wrap)
-  await expect(bars).toHaveText('4 bars');
-  expect(await page.evaluate(() => window.PolyMockHost._getCapture().bars)).toBe(4);
+  await bars.click(); // 8 -> 9 (step +1, not a {4,8,16,32} jump)
+  await expect(bars).toHaveText('9 bars');
+  expect(await page.evaluate(() => window.PolyMockHost._getCapture().bars)).toBe(9);
+  await bars.click({ button: 'right' }); // 9 -> 8 (step -1 via contextmenu)
+  await expect(bars).toHaveText('8 bars');
+  expect(await page.evaluate(() => window.PolyMockHost._getCapture().bars)).toBe(8);
 });
 
 test('the Arm chip flips to Reset and drives the machine, Reset returns to idle', async ({ page }) => {

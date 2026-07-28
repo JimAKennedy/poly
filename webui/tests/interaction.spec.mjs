@@ -621,9 +621,18 @@ test.describe('advanced tab — phrase', () => {
     expect(state.lanes[0].phraseLength).toBeGreaterThan(0);
   });
 
+  // G15 (M053 S03c): Gap/Offset are disabled while phrase Length is Off, so these
+  // specs first raise Length above 0 to make the sliders live before dragging.
+  async function enablePhrase(page) {
+    const len = page.locator('.strip[data-lane="0"] [data-pane="adv"] .slider-track[data-field="phraseLength"]');
+    const lbox = await len.boundingBox();
+    await page.mouse.click(lbox.x + lbox.width * 0.5, lbox.y + lbox.height / 2);
+  }
+
   test('phrase gap slider updates model', async ({ page }) => {
     await expandStrip(page, 0);
     await page.click('.strip[data-lane="0"] [data-tab="adv"]');
+    await enablePhrase(page);
     await clearEdits(page);
     const track = page.locator('.strip[data-lane="0"] [data-pane="adv"] .slider-track[data-field="phraseGap"]');
     const box = await track.boundingBox();
@@ -637,6 +646,7 @@ test.describe('advanced tab — phrase', () => {
   test('phrase offset slider updates model', async ({ page }) => {
     await expandStrip(page, 0);
     await page.click('.strip[data-lane="0"] [data-tab="adv"]');
+    await enablePhrase(page);
     await clearEdits(page);
     const track = page.locator('.strip[data-lane="0"] [data-pane="adv"] .slider-track[data-field="phraseOffset"]');
     const box = await track.boundingBox();
