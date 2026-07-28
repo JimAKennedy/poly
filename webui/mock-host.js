@@ -750,7 +750,7 @@
         break;
       }
       case 'setCells':
-        l.cells = payload.cells ? payload.cells.map((c) => Math.max(1, Math.min(4, c))) : null;
+        l.cells = payload.cells ? payload.cells.map((c) => Math.max(1, Math.min(16, c))) : null;
         l.mt = new Array(l.cells ? l.cells.length : l.steps).fill(0);
         break;
       case 'setFixedStep':

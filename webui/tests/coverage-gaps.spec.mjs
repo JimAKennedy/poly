@@ -259,14 +259,16 @@ test.describe('boundary values', () => {
     expect(cellAction.payload.cells).toHaveLength(2);
   });
 
-  test('cell value cycles 2 → 3 → 4 → 2', async ({ page }) => {
+  test('cell value steps +1 across the full 1–16 range (no 2·3·4 cap)', async ({ page }) => {
     await expandStrip(page, 4);
     const strip = page.locator('.strip[data-lane="4"]');
     await strip.locator('[data-cl]').click();
 
-    const cellBtn = strip.locator('[data-cells] button[data-i="0"]');
+    const cellBtn = strip.locator('[data-cells] button[data-cellstep="0"]');
     await clearActions(page);
 
+    // Additive cell 0 starts at 2; a plain click steps +1. The old behavior
+    // capped at 4 (4 → 2). Parity means it climbs past 4 toward the 1–16 max.
     await cellBtn.click();
     let acts = await getActions(page);
     let ca = acts.filter((a) => a.name === 'setCells').pop();
@@ -282,7 +284,8 @@ test.describe('boundary values', () => {
     await cellBtn.click();
     acts = await getActions(page);
     ca = acts.filter((a) => a.name === 'setCells').pop();
-    expect(ca.payload.cells[0]).toBe(2);
+    // Old cap would have wrapped 4 → 2 here; parity climbs to 5.
+    expect(ca.payload.cells[0]).toBe(5);
   });
 });
 

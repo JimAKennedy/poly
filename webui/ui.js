@@ -872,8 +872,8 @@
         <div class="prow"><label>Rotation</label><span class="stepper"><button data-rt="-1">−</button><span class="v">${l.rot}</span><button data-rt="1">+</button></span></div>
         <div class="prow"><label>Additive cells</label><span class="switch"><button ${l.cells ? 'class="on"' : ''} data-cl aria-label="Additive cells"><i></i></button></span></div>`;
       if (l.cells)
-        html += `<div class="cells" data-cells>${l.cells.map((c, i) => `<button class="onc" style="flex:${c} 1 0" data-i="${i}">${c}</button>`).join('')}<button data-addcell style="flex:.6 1 0">+</button></div>
-          <div class="hint">aksak grouping — click a cell to cycle 2·3·4 · cycle = ${cyc8(l)}♪ (${l.cells.join('+')})</div>`;
+        html += `<div class="cells" data-cells>${l.cells.map((c, i) => `<button class="onc" style="flex:${c} 1 0" data-cellstep="${i}" data-i="${i}" title="drag up/down · scroll · click to set 1-16">${c}</button>`).join('')}<button data-addcell style="flex:.6 1 0">+</button></div>
+          <div class="hint">aksak grouping — drag a cell up/down or scroll to set 1-16 · cycle = ${cyc8(l)}♪ (${l.cells.join('+')})</div>`;
     }
     pat.innerHTML = html;
     const tlBtn = pat.querySelector('[data-tl]');
@@ -904,13 +904,52 @@
           host.action('setCells', { lane: li, cells: l.cells ? null : [2, 2, 3] }));
       const cellsEl = pat.querySelector('[data-cells]');
       if (cellsEl) {
-        cellsEl.querySelectorAll('button[data-i]').forEach((b) =>
-          b.addEventListener('click', () => {
-            const i = +b.dataset.i;
-            const next = l.cells.slice();
-            next[i] = next[i] >= 4 ? 2 : next[i] + 1;
-            host.action('setCells', { lane: li, cells: next });
-          }));
+        // Additive cells are editable across the full 1–16 range (native parity),
+        // replacing the old three-value click-cycle. Each cell supports vertical drag
+        // (bottom = 1, top = 16), scroll-wheel stepping, and a plain click that
+        // steps +1 (wrapping 16→1). Reads/writes go through the live global state
+        // (S.lanes[li]) rather than the render-closure `l`, so a mid-drag state
+        // re-render (which rebuilds this row) can't leave us acting on stale data.
+        const setCell = (i, val) => {
+          const cur = S.lanes[li] && S.lanes[li].cells;
+          if (!cur) return;
+          const v = Math.max(1, Math.min(16, val));
+          if (cur[i] === v) return;
+          const next = cur.slice();
+          next[i] = v;
+          host.action('setCells', { lane: li, cells: next });
+        };
+        cellsEl.querySelectorAll('button[data-cellstep]').forEach((b) => {
+          const i = +b.dataset.cellstep;
+          const dragSet = (e) => {
+            const live = document.querySelector(`[data-cells] button[data-cellstep="${i}"]`) || b;
+            const r = live.getBoundingClientRect();
+            if (!r.height) return;
+            const f = Math.max(0, Math.min(1, (r.bottom - e.clientY) / r.height));
+            setCell(i, Math.round(1 + f * 15));
+          };
+          b.addEventListener('pointerdown', (e) => {
+            b.setPointerCapture(e.pointerId);
+            const startY = e.clientY;
+            let moved = false;
+            const mv = (ev) => {
+              if (!moved && Math.abs(ev.clientY - startY) < 4) return;
+              moved = true;
+              dragSet(ev);
+            };
+            b.addEventListener('pointermove', mv);
+            b.addEventListener('pointerup', () => {
+              b.removeEventListener('pointermove', mv);
+              const cur = S.lanes[li] && S.lanes[li].cells;
+              if (!moved && cur) setCell(i, cur[i] >= 16 ? 1 : cur[i] + 1);
+            }, { once: true });
+          });
+          b.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const cur = S.lanes[li] && S.lanes[li].cells;
+            if (cur) setCell(i, cur[i] + (e.deltaY < 0 ? 1 : -1));
+          }, { passive: false });
+        });
         cellsEl.querySelector('[data-addcell]').addEventListener('click', () => {
           const next = l.cells.length < 6 ? l.cells.concat([2]) : l.cells.slice(0, 2);
           host.action('setCells', { lane: li, cells: next });
