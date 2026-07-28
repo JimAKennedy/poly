@@ -1,10 +1,10 @@
 # M053 WebUI ↔ Native Gap-Closure Plan
 
-> **Status:** Gap ledger complete (T01); Go Decision _pending_ (T02).
+> **Status:** Gap ledger complete (T01); timeline-reachability flag resolved and Go Decision recorded — **close-all / proceed with native decommission** (T02).
 > **Lifecycle:** Decision artifact — sizes every native-only capability/affordance from the S01 parity matrix and records the close-all-vs-keep-both go decision that drives the S03–S06 roadmap reassessment.
 > **Purpose:** Turn each native-only delta surfaced by `docs/audits/M053-webui-parity-matrix.md` (S01) into an effort-sized, per-gap recommendation row, then let the milestone owner decide whether to close the WebUI gaps (native decommission) or keep both surfaces and document the divergence.
 > **Upstream input:** `docs/audits/M053-webui-parity-matrix.md` (the S01 parity matrix — sole source for the rows below).
-> **Completeness:** Mechanically enforced by `docs/audits/gap-closure-plan.test.mjs` (`node --test`) — asserts the doc is non-empty, every gap-ledger row carries exactly one valid size token, no `_pending_` placeholder survives, a Go Decision token is present, and the roadmap-reassessment section exists.
+> **Completeness:** Mechanically enforced by `docs/audits/gap-closure-plan.test.mjs` (`node --test`) — asserts the doc is non-empty, every gap-ledger row carries exactly one valid size token, no unresolved placeholder token survives, a Go Decision token is present, and the roadmap-reassessment section exists.
 
 ## How to read this ledger
 
@@ -70,12 +70,41 @@ Each row is one native-only capability/affordance. `Size` holds exactly one toke
 
 ## Timeline reachability (MEM036)
 
-_pending_ — resolved in T02: static reachability audit of `webui/ui.js` (deep pattern pane render + `cfg.timeline` gating) confirming whether the `timeline_step_editor_view` `parity` verdict holds (deep pane / ladder actually reachable and enabled in the shipping WebUI).
+**Verdict: RESOLVED — the S01 `timeline_step_editor_view` `parity` verdict holds.** Static reachability audit of `webui/ui.js` confirms the deep pattern pane, the Timeline-mode toggle, and per-step editing are all reachable and enabled in the shipping WebUI, with **no `cfg.timeline` (or any config) gate** hiding or disabling them.
+
+Reachability chain (all in `webui/ui.js`):
+
+1. **Deep pane opens unconditionally.** Each lane strip renders an expand affordance (`.ex` button, `ui.js:726`) whose click calls `expandStrip()` (`ui.js:789`). The `pattern` pane is the default-active pane (`<div class="pane on" data-pane="pattern">`, `ui.js:709`). No lane-mode or config predicate guards the expand or the pane — any lane can open its pattern pane.
+2. **Timeline-mode toggle is always rendered and enabled.** `buildPanes()` renders the `Timeline mode` switch in *both* branches — timeline-on (`ui.js:865`) and timeline-off (`ui.js:869`) — so the toggle is present regardless of current mode. Its handler (`ui.js:880-886`) edits the real `lane.<li>.timeline` param (begin/perform/end), i.e. it is live-wired, not a display stub.
+3. **Per-step editing is reachable two ways once timeline is on.** (a) The strip **ladder** buttons attach a `toggleStep` action when `l.timeline` is true (`buildLadder()`, `ui.js:846-847`); (b) the deep pane's **fixed-pulse row** (`data-fixed` buttons) attaches a `setFixedStep` action (`ui.js:888-893`). Both drive the engine through the bridge — genuine step editing, matching native `timeline_step_editor_view`.
+
+Grep-anchored negative check: `grep -in "cfg.timeline" webui/ui.js` returns nothing; the only `timeline` gating in the file is per-lane runtime state (`l.timeline`), not a build/config feature flag. The `parity` verdict is therefore trusted for the go decision below; full DAW-runtime confirmation of the pane remains explicitly deferred to the downstream execution slices (S02 is a static-analysis slice, per its Proof Level).
 
 ## Go Decision
 
-_pending_ — recorded in T02: close-all (proceed with native decommission, decompose S03 per-gap) vs keep-both-document-divergence (shrink M053 to documentation-only), with rationale grounded in the ledger above.
+**Decision: `close-all` — proceed with native-UI decommission (S03–S06).** (Milestone owner: autonomous default, per the S02 plan.)
+
+The two options were `close-all` (build the missing WebUI affordances, then delete the native VSTGUI surface) versus `keep-both-document-divergence` (shrink M053 to a documentation-only outcome and maintain both UIs indefinitely).
+
+Rationale, grounded in the gap ledger above:
+
+- **The capability gaps are small and finite.** Of the 9 genuine `capability-gap` rows, 8 are recommended `close-in-webui` and every one of them is sized `S` or `M` — no `L`, no `XL`. Specifically: `S` ×4 (G03, G07, G08, G15) and `M` ×4 (G01, G02, G04, G05). None requires a new host API or an architectural change; each is a WebUI control + (at most) one new bridge action. Closing them is a bounded batch of work, not open-ended.
+- **The one expensive capability gap is carved out, not blocking.** G06 (drag-and-drop MIDI export, `L`) is the sole capability gap the ledger recommends `document-as-acceptable-divergence`, because the WebView sandbox cannot initiate a native file-drag into the host DAW. Save-As export remains available in the WebUI, so decommission does not strand the user — this gap is accepted-as-documented, not closed.
+- **Every remaining gap is cosmetic.** The 7 `cosmetic/viz-divergence` rows (G09–G14, G16) lose no capability — the underlying data/action is already reachable in the WebUI; only a richer native *visualization* differs. All are `document-as-acceptable-divergence`. They impose zero decommission-blocking work.
+- **The timeline flag is clear.** MEM036 is resolved above: timeline step editing genuinely reaches parity in the shipping WebUI, so there is no hidden capability gap lurking behind the `parity` verdict.
+- **Payoff justifies the small cost.** Decommissioning the native VSTGUI surface removes an entire parallel UI codebase (15 native views), drops the VSTGUI dependency, and collapses the project to a single UI to maintain and test. The maintenance win outweighs the bounded close-in-webui batch.
+
+Net: because the only work required to reach *capability* parity is 8 small/medium WebUI controls (with G06 and all cosmetic deltas explicitly accepted as documented divergences), the sensible call is to close the gaps and retire the native UI rather than carry two surfaces forever.
 
 ## Roadmap reassessment recommendation
 
-_pending_ — recorded in T02: names which of S03–S06 survive the go decision.
+The `close-all` decision keeps the full decommission chain: **all of S03, S04, S05, and S06 survive.** (Under `keep-both`, S03–S06 would have been removed and M053 reduced to this document; that path was not taken.)
+
+| Slice | Disposition under `close-all` | Note |
+|---|---|---|
+| S03 — Close parity gaps (per-gap batch, `[sketch]`) | **Survives; decompose per-gap.** | Refine into per-gap slices covering only the 8 `close-in-webui` capability gaps: G01, G02, G03, G04, G05, G07, G08, G15. G06 and all `cosmetic/viz-divergence` rows (G09–G14, G16) are explicitly **out of scope** — accepted as documented divergences, no build work. |
+| S04 — Remove `POLY_WEB_UI` CMake option + build scripts | **Survives.** | Runs after S03 lands the closed gaps. |
+| S05 — Delete native `plugin/source/ui/*`, drop VSTGUI dep, update CMakeLists | **Survives.** | The core payoff of the decommission. |
+| S06 — Docs: rewrite chapter 18 for WebUI-only, archive native-UI refs | **Survives.** | Must also record G06 + the 7 cosmetic divergences as the intentional, accepted WebUI-vs-native deltas. |
+
+Actioning this reassessment (the `gsd_reassess_roadmap` write that decomposes S03 and confirms S04–S06) is owned by the post-slice orchestrator, not this task.
