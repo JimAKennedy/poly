@@ -509,6 +509,26 @@ bool PolyTestHost::feedComponentState(const poly::SceneState& scene) {
     return controller_->setComponentState(&stream) == kResultOk;
 }
 
+bool PolyTestHost::setControllerScene(poly::SceneSelect select) {
+    if (!controller_)
+        return false;
+    controller_->mutableCachedState().select = select;
+    return true;
+}
+
+bool PolyTestHost::setControllerPresetLabel(const std::string& label) {
+    if (!controller_)
+        return false;
+    controller_->setPresetLabel(label);
+    return true;
+}
+
+std::string PolyTestHost::controllerPresetLabel() const {
+    if (!controller_)
+        return {};
+    return controller_->presetLabel();
+}
+
 void PolyTestHost::injectPendingNoteOff(double ppqOff, int16_t pitch, int16_t channel) {
     if (!processor_)
         return;
@@ -532,6 +552,53 @@ size_t PolyTestHost::capturedNoteCount() const {
     if (!processor_)
         return 0;
     return static_cast<PolyProcessor*>(processor_)->captureBufferCount();
+}
+
+void PolyTestHost::armCapture() {
+    if (!processor_)
+        return;
+    auto* msg = new HostMessage; // ownership-transfer to local refcount
+    msg->setMessageID("ArmCapture");
+    processor_->notify(msg);
+    msg->release();
+}
+
+void PolyTestHost::resetCapture() {
+    if (!processor_)
+        return;
+    auto* msg = new HostMessage; // ownership-transfer to local refcount
+    msg->setMessageID("ResetCapture");
+    processor_->notify(msg);
+    msg->release();
+}
+
+int PolyTestHost::captureState() const {
+    if (!processor_)
+        return -1;
+    return static_cast<PolyProcessor*>(processor_)->captureStateForTesting();
+}
+
+bool PolyTestHost::exportReady() const {
+    if (!processor_)
+        return false;
+    return static_cast<PolyProcessor*>(processor_)->exportReadyForTesting();
+}
+
+size_t PolyTestHost::frozenEventCount() const {
+    if (!processor_)
+        return 0;
+    return static_cast<PolyProcessor*>(processor_)->exportEventCountForTesting();
+}
+
+std::vector<poly::NoteEvent> PolyTestHost::frozenEvents() const {
+    std::vector<poly::NoteEvent> out;
+    if (!processor_)
+        return out;
+    auto* proc = static_cast<PolyProcessor*>(processor_);
+    const size_t n = proc->exportEventCountForTesting();
+    const poly::NoteEvent* e = proc->exportEventsForTesting();
+    out.assign(e, e + n);
+    return out;
 }
 
 PolyTestHost::HandshakeDropSnapshot PolyTestHost::handshakeDrops() const {

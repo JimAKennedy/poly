@@ -70,6 +70,36 @@ endif()
 jk_target_warnings(poly_plugin)
 
 # -----------------------------------------------------------------------------
+# AudioUnit v2 target — wraps the SAME poly_plugin VST3 as an aumu music device.
+# Gated on XCODE + SMTG_ENABLE_AUV2_BUILDS exactly like the SDK's own AU wrapper
+# (see cmake/modules/SMTG_AddVST3AuV2.cmake). The root CMakeLists fetches Apple's
+# AudioUnitSDK and flips SMTG_ENABLE_AUV2_BUILDS on under the Xcode generator, so
+# this never activates in the Ninja VST3/test/pluginval legs.
+#
+# Identity contract (must match plugin/resource/au-info.plist and the CI auval
+# invocation `auval -v aumu Poly JkDl`):
+#   type=aumu  subtype=Poly  manufacturer=JkDl  factoryFunction=AUWrapperFactory
+# -----------------------------------------------------------------------------
+if(APPLE AND XCODE AND SMTG_ENABLE_AUV2_BUILDS)
+    # The VST3 SDK appends its cmake/modules to CMAKE_MODULE_PATH inside its own
+    # FetchContent subdirectory scope, which does not propagate back to this
+    # scope — so include(SMTG_AddVST3AuV2) by bare name is not resolvable here.
+    # Re-add the SDK module dir explicitly before the include.
+    list(APPEND CMAKE_MODULE_PATH "${vst3sdk_SOURCE_DIR}/cmake/modules")
+    # public_sdk_SOURCE_DIR is likewise a plain variable set in the SDK's own
+    # subdirectory scope (points at the auwrapper .mm sources the macro compiles);
+    # it is empty here, so re-derive it before smtg_target_add_auv2 or the macro
+    # creates poly_au with no sources.
+    set(public_sdk_SOURCE_DIR "${vst3sdk_SOURCE_DIR}/public.sdk")
+    include(SMTG_AddVST3AuV2)
+    smtg_target_add_auv2(poly_au
+        BUNDLE_NAME Poly
+        BUNDLE_IDENTIFIER digital.jk.poly.audiounit
+        INFO_PLIST_TEMPLATE ${CMAKE_CURRENT_SOURCE_DIR}/resource/au-info.plist
+        VST3_PLUGIN_TARGET poly_plugin)
+endif()
+
+# -----------------------------------------------------------------------------
 # choc-webview web UI — the shipping DAW editor as of M052 (2026-07-20).
 # Flip to OFF to build the legacy native VSTGUI editor from plugin/source/ui/*;
 # M053 will decommission that path entirely after a full feature-parity audit.

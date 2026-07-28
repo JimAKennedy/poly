@@ -16,6 +16,14 @@
     display: grid; grid-template-rows: 54px 1fr; overflow: hidden; position: relative;
   }
 
+  /* Embedded in the DAW plugin iframe: fill the whole viewport with no
+     centering gutter, standalone-window chrome (border/radius/shadow) or
+     min-height that would leave a top/bottom border around the plugin. */
+  body.embedded { min-height: 0; height: 100vh; display: block; place-items: initial; }
+  body.embedded #win {
+    width: 100vw; height: 100vh; border: none; border-radius: 0; box-shadow: none;
+  }
+
   /* ---- chrome ---- */
   #chrome { display: flex; align-items: center; flex-wrap: nowrap; gap: 10px; padding: 0 12px; border-bottom: 1px solid var(--line); background: var(--surface); z-index: 5; }
   #chrome > * { flex-shrink: 0; }
@@ -31,6 +39,15 @@
   #presetName::after { content: '▾'; position: absolute; right: 7px; top: 50%; transform: translateY(-50%); font-size: 10px; color: var(--dim); pointer-events: none; }
   #presetName:hover { background: rgba(240,234,223,.10); border-color: rgba(240,234,223,.20); }
   #presetName[aria-expanded="true"] { border-color: var(--accent); }
+  /* Morph mode: selecting a preset is meaningless (the output is a blend of A
+     and B), so the dropdown is disabled. Opacity/cursor only — no box-model
+     change, so its vertical height stays identical to the enabled state. */
+  #presetName[aria-disabled="true"] { opacity: .4; cursor: default; pointer-events: none; }
+  #presetName[aria-disabled="true"]:hover { background: rgba(240,234,223,.06); border-color: rgba(240,234,223,.12); }
+  /* Morph mode: hide the entire preset group (label + dropdown + seed) so the
+     morph slider has room in the nowrap chrome — otherwise the seed overlaps
+     the Cloth chip. display:none frees the flex width entirely. */
+  #chrome .preset.preset-hidden { display: none; }
   .preset-menu { display: none; position: absolute; top: 48px; left: 0; min-width: 280px; max-height: 420px; overflow-y: auto; background: #1E1A15; border: 1px solid rgba(240,234,223,.16); border-radius: 8px; box-shadow: 0 12px 40px rgba(0,0,0,.6); z-index: 50; padding: 4px 0; }
   .preset-menu.open { display: block; }
   .preset-menu [role="option"] { display: block; width: 100%; border: none; background: none; text-align: left; padding: 7px 14px; font-size: 12px; color: var(--text); cursor: pointer; letter-spacing: .02em; }
@@ -47,6 +64,13 @@
   .preset-menu [role="option"].preset-hidden { display: none; }
   .chip { border: 1px solid var(--line); background: transparent; border-radius: 6px; padding: 4px 8px; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); flex-shrink: 0; white-space: nowrap; }
   .chip.on { color: var(--ground); background: var(--text); border-color: var(--text); }
+  /* M051 S08 T05: capture header controls. Cluster hidden outside Cloth mode. */
+  #capCtl { display: none; align-items: center; gap: 4px; }
+  #capCtl.show { display: flex; }
+  #capBars.locked { opacity: .4; pointer-events: none; }        /* window frozen — kCaptureLength no longer editable */
+  #armBtn.on { color: var(--ground); background: var(--accent); border-color: var(--accent); }  /* armed/capturing/complete -> Reset */
+  #exportBtn { opacity: .45; }                                  /* dim in idle/armed/capturing */
+  #exportBtn.capReady { opacity: 1; }                           /* active only in `complete` */
   #modes { display: flex; gap: 4px; margin-left: 4px; flex-shrink: 0; }
   #chrome .right { margin-left: auto; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
   #conv { text-align: right; font-variant-numeric: tabular-nums; }
@@ -256,3 +280,21 @@
   .chip-row { display: flex; gap: 4px; flex-wrap: wrap; }
 
   #note { position: fixed; bottom: 6px; left: 0; right: 0; text-align: center; font-size: 9px; letter-spacing: .18em; text-transform: uppercase; color: #57503F; }
+
+  /* ---- first-run MIDI-routing diagnostic banner (embedded plugin only) ---- */
+  .routing-banner {
+    position: absolute; left: 12px; right: 12px; bottom: 12px; z-index: 70;
+    display: flex; align-items: flex-start; gap: 14px;
+    background: rgba(28,24,20,.97); border: 1px solid var(--accent);
+    border-left-width: 3px; border-radius: 8px;
+    box-shadow: 0 14px 44px rgba(0,0,0,.6); padding: 12px 14px;
+  }
+  .routing-banner-body { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
+  .routing-banner-body strong { font-size: 12px; letter-spacing: .04em; color: var(--accent); font-weight: 600; }
+  .routing-banner-body span { font-size: 11px; line-height: 1.5; color: var(--text); }
+  .routing-banner-dismiss {
+    flex: none; align-self: center; border: 1px solid var(--line); background: var(--surface2);
+    border-radius: 5px; padding: 7px 12px; font-size: 10px; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--dim); white-space: nowrap;
+  }
+  .routing-banner-dismiss:hover { color: var(--text); border-color: var(--dim); }

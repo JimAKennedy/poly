@@ -34,6 +34,8 @@
   // after modal open keep working.
   playBtn.addEventListener('click', () => { if (!embedded) host.action('togglePlay', {}); });
   if (embedded) {
+    // Fill the plugin iframe: no centered gutter / border / radius / shadow.
+    document.body.classList.add('embedded');
     playBtn.style.opacity = '0.35';
     playBtn.style.cursor = 'default';
     playBtn.title = 'Transport controlled by host DAW';
@@ -188,13 +190,16 @@
     else buildChainPopover();
   });
 
-  /* --- export button (plugin-only) — opens a native Save As… dialog for
-       the current 10-bar MIDI capture. Result arrives via polyHostPush
-       {type:'exportResult'}. Cancels resolve silently. */
+  /* --- export button (plugin-only) — opens a native Save As… dialog for the
+       frozen MIDI capture window. Result arrives via polyHostPush
+       {type:'exportResult'}. Cancels resolve silently. M051 S08: gated on the
+       capture machine reaching `complete` (capState===3) — the only state in
+       which the processor has frozen a stable, exportable window. */
   if (host.capabilities && host.capabilities.canExport) {
     const btn = document.getElementById('exportBtn');
-    btn.title = 'Save the current 10-bar MIDI capture as a .mid file';
+    btn.title = 'Save the captured MIDI window as a .mid file (available once capture is complete)';
     btn.addEventListener('click', () => {
+      if ((lastFrame.capState | 0) !== 3) return; // active only in `complete`
       host.action('exportSaveAs', {});
       btn.classList.add('on');
     });
@@ -218,6 +223,50 @@
     });
   } else {
     document.getElementById('exportBtn').style.display = 'none';
+  }
+
+  /* --- M051 S08 T05: capture header controls (Cloth-only cluster) ---------
+     The bars picker cycles the kCaptureLength window {4,8,16,32}; the Arm chip
+     flips to Reset once the machine leaves idle; the Export chip above reads
+     state-driven (active only in `complete`). All three reflect host truth
+     from the feedback frame (lastFrame.capState/capBars) — never local state —
+     so the header and the Cloth timeline can never disagree about the machine. */
+  const CAP_BARS_STEPS = [4, 8, 16, 32];
+  const capCtl = document.getElementById('capCtl');
+  const capBarsBtn = document.getElementById('capBars');
+  const armBtn = document.getElementById('armBtn');
+  const exportChip = document.getElementById('exportBtn');
+
+  if (capBarsBtn) {
+    capBarsBtn.addEventListener('click', () => {
+      // Locked once capture latches (state >= 2): the window is frozen and
+      // kCaptureLength no longer applies until Reset.
+      if ((lastFrame.capState | 0) >= 2) return;
+      const cur = lastFrame.capBars || 8;
+      const i = CAP_BARS_STEPS.indexOf(cur);
+      const next = CAP_BARS_STEPS[(i + 1) % CAP_BARS_STEPS.length];
+      host.action('setCaptureBars', { bars: next });
+    });
+  }
+  if (armBtn) {
+    armBtn.addEventListener('click', () => {
+      host.action((lastFrame.capState | 0) === 0 ? 'armCapture' : 'resetCapture', {});
+    });
+  }
+  // Reflect the capture machine onto the header chips. Called every frame from
+  // onFrame so the labels/classes track host truth without a second timer.
+  function updateCaptureChips() {
+    const st = lastFrame.capState | 0;
+    if (capBarsBtn) {
+      capBarsBtn.textContent = `${lastFrame.capBars || 8} bars`;
+      capBarsBtn.classList.toggle('locked', st >= 2);
+    }
+    if (armBtn) {
+      armBtn.textContent = st === 0 ? 'Arm' : 'Reset';
+      armBtn.setAttribute('aria-label', st === 0 ? 'Arm capture' : 'Reset capture');
+      armBtn.classList.toggle('on', st >= 1);
+    }
+    if (exportChip) exportChip.classList.toggle('capReady', st === 3);
   }
 
   /* --- note map modal --- */
@@ -278,6 +327,7 @@
   });
 
   /* --- preset dropdown --- */
+  const presetTrigger = document.getElementById('presetTrigger');
   const presetBtn = document.getElementById('presetName');
   const presetMenu = document.getElementById('presetMenu');
   let presetMenuBuilt = false;
@@ -405,6 +455,7 @@
 
   presetBtn.addEventListener('click', (e) => {
     e.stopPropagation();
+    if (presetBtn.getAttribute('aria-disabled') === 'true') return;
     if (presetMenu.classList.contains('open')) closePresetMenu();
     else openPresetMenu();
   });
@@ -420,6 +471,8 @@
     document.getElementById('desk').classList.toggle('on', m === 'desk');
     document.getElementById('mCloth').classList.toggle('on', m === 'cloth');
     document.getElementById('mDesk').classList.toggle('on', m === 'desk');
+    // Arm/Reset + bars picker are capture-timeline controls — Cloth mode only.
+    if (capCtl) capCtl.classList.toggle('show', m === 'cloth');
     if (m === 'cloth') sizeLoom();
     if (m === 'desk' && focus >= 0) expandStrip(focus);
   }
@@ -427,6 +480,15 @@
   /* ================= cloth ================= */
   const loom = document.getElementById('loom');
   const tags = document.getElementById('tags');
+  const clothEl = document.getElementById('cloth');
+  const clothAnns = ['annA', 'annB', 'annC'].map((id) => document.getElementById(id));
+  const capline = clothEl ? clothEl.querySelector('.capline') : null;
+  // Eighth-note ticks per bar from the host meter (4/4 -> 8). Feedback frames
+  // carry tsNum/tsDen; fall back to 4/4 on legacy hosts.
+  function eighthsPerBar() {
+    const num = lastFrame.tsNum || 4, den = lastFrame.tsDen || 4;
+    return Math.max(1, Math.round(num * (8 / den)));
+  }
   loom.addEventListener('click', (e) => {
     const r = loom.getBoundingClientRect();
     setMode('desk', Math.min(S.lanes.length - 1, Math.floor(((e.clientY - r.top) / r.height) * S.lanes.length)));
@@ -448,11 +510,33 @@
       tags.appendChild(t);
     });
   }
+  // M051 S08: Cloth is a capture timeline whose visual IS the export receipt.
+  // In idle it keeps the decorative convergence weave; once armed it becomes a
+  // bar-anchored timeline (X = bars 1..N, Y = lanes) with an L->R playhead
+  // during capturing and a gold selvage marking bar N at complete.
   function drawLoom(t8) {
     const g = loom.getContext('2d');
     if (!g || !S) return;
     const W = loom.width, H = loom.height, dp = devicePixelRatio;
     g.clearRect(0, 0, W, H);
+    const capState = lastFrame.capState | 0;
+    const bars = Math.max(1, lastFrame.capBars || 8);
+    const prog = Math.max(0, Math.min(bars, lastFrame.capProg || 0));
+    updateClothChrome(capState, bars, prog);
+    if (capState >= 1) drawCaptureTimeline(g, W, H, dp, bars, capState, prog);
+    else drawConvergence(g, W, H, dp, t8);
+    // Receipt hook: the capture progression is directly observable (the visual
+    // is the receipt). Consumed by webui/tests/capture-timeline.spec.mjs.
+    window.__polyClothState = {
+      capState, bars,
+      mode: capState >= 1 ? 'timeline' : 'convergence',
+      playhead: capState === 2 ? prog / bars : capState === 3 ? 1 : 0,
+    };
+  }
+
+  // Idle decorative weave: lanes stacked over the convergence window with the
+  // step grid, per-lane cycle markers, gold selvage and a sweeping playhead.
+  function drawConvergence(g, W, H, dp, t8) {
     const bandH = H / S.lanes.length, colW = W / CONV;
     S.lanes.forEach((l, li) => {
       const y0 = li * bandH;
@@ -503,6 +587,84 @@
     g.lineTo(sx + 1 * dp, 14 * dp);
     g.closePath();
     g.fill();
+  }
+
+  // Bar-anchored capture timeline. Note ticks are the emitted notes (the engine
+  // emits exactly the lane pattern, so laneHitAt over the window IS the emitted
+  // stream); captured ticks are solid, not-yet-woven ticks are dimmed.
+  function drawCaptureTimeline(g, W, H, dp, bars, capState, prog) {
+    const bandH = H / S.lanes.length;
+    const barW = W / bars;
+    const ticks = bars * eighthsPerBar();
+    const tickW = W / ticks;
+    S.lanes.forEach((l, li) => {
+      const y0 = li * bandH;
+      g.fillStyle = li % 2 ? '#222E52' : '#26335A';
+      g.fillRect(0, y0, W, bandH);
+      g.fillStyle = 'rgba(240,234,223,.05)';
+      for (let e = 0; e < ticks; e++) g.fillRect(e * tickW, y0, 1 * dp, bandH);
+      for (let e = 0; e < ticks; e++) {
+        const hit = laneHitAt(l, e);
+        if (!hit) continue;
+        // A tick is "woven" once the playhead has passed it (or always, at
+        // complete). Ahead-of-playhead ticks are faint to read as pending.
+        const woven = capState === 3 || e / ticks <= prog / bars;
+        const vn = hitVelocity(l, li, e, hit);
+        const bw = Math.max(2 * dp, tickW * 0.7);
+        const bh = bandH * Math.min(0.9, 0.32 + vn * 0.5);
+        const x = e * tickW + (tickW - bw) / 2;
+        const y = y0 + (bandH - bh) / 2;
+        g.globalAlpha = woven ? 1 : 0.18;
+        g.fillStyle = l.hue;
+        g.fillRect(x, y, bw, bh);
+        g.globalAlpha = 1;
+      }
+      g.fillStyle = 'rgba(14,21,38,.55)';
+      g.fillRect(0, y0 + bandH - 2 * dp, W, 2 * dp);
+    });
+    // Bar dividers + bar-number ruler (X = bars 1..N).
+    g.fillStyle = 'rgba(240,234,223,.20)';
+    for (let b = 1; b < bars; b++) g.fillRect(b * barW, 0, 1 * dp, H);
+    g.fillStyle = 'rgba(240,234,223,.6)';
+    g.font = `${11 * dp}px system-ui, -apple-system, sans-serif`;
+    g.textBaseline = 'top';
+    for (let b = 0; b < bars; b++) g.fillText(String(b + 1), b * barW + 3 * dp, 2 * dp);
+    // Gold selvage marks bar N — brighter/thicker once the window is frozen.
+    const complete = capState === 3;
+    g.fillStyle = complete ? '#F0C24A' : '#D9A441';
+    const selW = (complete ? 6 : 4) * dp;
+    g.fillRect(W - selW, 0, selW, H);
+    // Playhead sweeps L->R while capturing.
+    if (capState === 2) {
+      const px = (prog / bars) * W;
+      g.fillStyle = 'rgba(240,234,223,.92)';
+      g.fillRect(px, 0, 2 * dp, H);
+      g.beginPath();
+      g.moveTo(px - 9 * dp, 0);
+      g.lineTo(px + 11 * dp, 0);
+      g.lineTo(px + 1 * dp, 14 * dp);
+      g.closePath();
+      g.fill();
+    }
+  }
+
+  // Cloth chrome reflects the capture state: annotations are the idle story, so
+  // they hide once the cloth becomes a functional capture timeline. The capline
+  // narrates the arm->capture->complete progression.
+  function updateClothChrome(capState, bars, prog) {
+    if (clothEl) {
+      clothEl.classList.toggle('capArmed', capState === 1);
+      clothEl.classList.toggle('capturing', capState === 2);
+      clothEl.classList.toggle('capComplete', capState === 3);
+    }
+    const timeline = capState >= 1;
+    clothAnns.forEach((a) => { if (a) a.style.display = timeline ? 'none' : ''; });
+    if (capline) {
+      if (capState === 1) capline.innerHTML = `Armed · <b>${bars} bars</b> · waiting for bar 1`;
+      else if (capState === 2) capline.innerHTML = `Capturing · bar <b>${Math.min(bars, Math.floor(prog) + 1)}/${bars}</b>`;
+      else if (capState === 3) capline.innerHTML = `Complete · <b>${bars} bars</b> · drag cloth to DAW`;
+      else capline.innerHTML = `Capture · <b>${bars} bars</b> · arm to weave`;
+    }
   }
 
   /* ================= desk ================= */
@@ -971,6 +1133,14 @@
     document.getElementById('scA').classList.toggle('on', S.scene === 'A');
     document.getElementById('scB').classList.toggle('on', S.scene === 'B');
     document.getElementById('scM').classList.toggle('on', S.scene === 'Morph');
+    // In Morph the output is a blend of A and B, so applying a preset is
+    // meaningless. Hide the whole preset group (label + dropdown + seed) rather
+    // than just disabling it: that frees the horizontal space the morph slider
+    // needs, so the seed no longer overlaps the Cloth chip in the nowrap chrome.
+    const morphing = S.scene === 'Morph';
+    presetTrigger.classList.toggle('preset-hidden', morphing);
+    presetBtn.setAttribute('aria-disabled', morphing ? 'true' : 'false');
+    if (morphing) closePresetMenu();
     morphSlider.style.display = S.scene === 'Morph' ? 'flex' : 'none';
     morphFill.style.width = `${((S.morph || 0) * 100).toFixed(1)}%`;
     const chain = S.chain || { enabled: false };
@@ -1057,10 +1227,88 @@
     }
   }
 
+  /* ================= first-run MIDI-routing diagnostic banner =================
+     Poly is a MIDI-only instrument: it makes no sound until its output is routed
+     to a drum instrument in the DAW, and the plugin has no audio-feedback path
+     to prove that routing exists. The only viable fix for the "plugin makes no
+     sound; is it broken?" support case is in-plugin guidance shown exactly in
+     the failure window — transport playing while at least one active lane is
+     emitting hits, yet no audio is guaranteed. The banner fires once after a
+     wall-clock dwell (Date.now(), not a frame count, so it is robust to frame
+     rate), is dismissible, and persists the dismissal to localStorage so it
+     never re-nags. It NEVER appears in non-embedded (mock/standalone) mode —
+     there the browser Web Audio host makes real sound, so the diagnostic is
+     meaningless. Copy mirrors the routing wording in
+     site/src/content/docs/guide-using-poly.mdx and docs/cubase-workflow.md. */
+  const ROUTING_BANNER_KEY = 'poly.routingBannerDismissed';
+  // Wall-clock dwell before the banner appears. Overridable via
+  // window.__POLY_ROUTING_BANNER_MS so Playwright can shrink the production
+  // window (a few seconds) to a few frames without a slow real-time wait.
+  const ROUTING_BANNER_MS = (typeof window.__POLY_ROUTING_BANNER_MS === 'number')
+    ? window.__POLY_ROUTING_BANNER_MS : 4000;
+  let routingEmitSince = 0;      // Date.now() when play+emit began; 0 = not counting
+  let routingBanner = null;      // banner DOM node once shown
+  let routingBannerDone = false; // shown or dismissed this session — never re-trigger
+
+  function routingDismissed() {
+    // localStorage can throw (private mode / disabled storage) — treat any
+    // failure as "not dismissed" so the diagnostic still helps the user.
+    try { return localStorage.getItem(ROUTING_BANNER_KEY) === '1'; } catch (_) { return false; }
+  }
+  // A lane "emits hits" when it is active and its pattern actually produces
+  // onsets — mirrors the VU `active` gate (cells lanes always emit; euclid /
+  // timeline lanes emit only with >=1 hit). A muted or empty lane makes no MIDI.
+  function laneEmitsHits(l) {
+    if (!l || !l.active) return false;
+    if (l.cells) return true;
+    if (l.timeline) return Array.isArray(l.fixed) && l.fixed.some(Boolean);
+    return Array.isArray(l.pattern) && l.pattern.some(Boolean);
+  }
+  function showRoutingBanner() {
+    if (routingBanner) return;
+    const b = document.createElement('div');
+    b.id = 'routingBanner';
+    b.className = 'routing-banner';
+    b.setAttribute('role', 'status');
+    b.setAttribute('aria-live', 'polite');
+    b.innerHTML =
+      `<div class="routing-banner-body">` +
+      `<strong>No sound? Route Poly's MIDI to a drum instrument.</strong>` +
+      `<span>Poly generates MIDI only — it produces no audio on its own. ` +
+      `Route its output to a drum sound source (Groove Agent, Battery, Kontakt, ` +
+      `Drum Rack, or any GM-compatible drum plugin) to hear the groove. ` +
+      `See the Poly guide for your DAW's MIDI routing steps.</span>` +
+      `</div>` +
+      `<button type="button" class="routing-banner-dismiss" ` +
+      `aria-label="Dismiss routing help and don't show again">Don't show again</button>`;
+    document.getElementById('win').appendChild(b);
+    routingBanner = b;
+    b.querySelector('.routing-banner-dismiss').addEventListener('click', dismissRoutingBanner);
+  }
+  function dismissRoutingBanner() {
+    routingBannerDone = true;
+    try { localStorage.setItem(ROUTING_BANNER_KEY, '1'); } catch (_) { /* storage disabled — best effort */ }
+    if (routingBanner) { routingBanner.remove(); routingBanner = null; }
+  }
+  function updateRoutingBanner(frame) {
+    if (!embedded || routingBannerDone) return;
+    if (routingDismissed()) { routingBannerDone = true; return; }
+    const emitting = !!(frame && frame.playing) && !!(S && S.lanes && S.lanes.some(laneEmitsHits));
+    if (!emitting) { routingEmitSince = 0; return; }
+    const now = Date.now();
+    if (routingEmitSince === 0) { routingEmitSince = now; return; }
+    if (now - routingEmitSince >= ROUTING_BANNER_MS) {
+      routingBannerDone = true; // latch before showing so it fires exactly once
+      showRoutingBanner();
+    }
+  }
+
   host.onFrame((frame) => {
     if (!S) return;
     if (REDUCED) frame = Object.assign({}, frame, { t8: Math.floor(frame.t8) });
     lastFrame = frame;
+    updateRoutingBanner(frame);
+    updateCaptureChips();
     document.getElementById('picon').setAttribute('d',
       frame.playing ? 'M2.5 2 H5.5 V12 H2.5 Z M8.5 2 H11.5 V12 H8.5 Z' : 'M3 2 L12 7 L3 12 Z');
     document.querySelector('#conv b').textContent = Math.ceil(frame.convLeft / 12);

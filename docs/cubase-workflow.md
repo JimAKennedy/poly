@@ -48,6 +48,7 @@ Poly derives all timing from Cubase's transport:
 - **Loop**: Seamless — Poly recalculates from the loop-start PPQ position with no drift
 - **Tempo changes**: Take effect immediately since timing is PPQ-based, not sample-based
 - **Position jumps**: Correct output from the new position (no accumulated state to reset)
+- **Time signature**: Poly reads Cubase's active time signature and derives its bar length from it, so scene-chain bar boundaries, envelope periods, and MIDI capture all follow the host meter rather than a hardcoded four-four. If the host publishes no valid signature, Poly falls back to 4/4.
 
 ### Determinism
 

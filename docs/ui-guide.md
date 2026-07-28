@@ -53,6 +53,8 @@ Displays the plugin name **POLY** (blue), a **preset selector dropdown**, and th
 
 After loading, the preset name displays in the header. All knobs, bars, and visualizations update immediately.
 
+**Per-scene labels:** The header label tracks the *currently selected scene*, because a preset applies to the active scene rather than the plugin as a whole. Loading a preset while Scene A is selected labels Scene A; selecting Scene B shows Scene B's own preset label. During **Morph** the label is blank — a live interpolation of A and B is not itself a named preset. Both scenes default to "Init" until a preset is loaded into each.
+
 ### Lanes
 
 Eight drum lanes, each representing an independent rhythmic voice. This is the primary interactive area.

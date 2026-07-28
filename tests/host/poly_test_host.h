@@ -4,10 +4,12 @@
 #include <cstddef>
 #include <cstdint>
 #include <optional>
+#include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
+#include "poly/scene.h"
 #include "poly/types.h"
 
 namespace Steinberg {
@@ -143,6 +145,16 @@ public:
     // controller_base.cpp:225 hardcodes `cachedState_.sceneA` instead of activeScene().
     bool feedComponentState(const SceneState& scene);
 
+    // --- M051 S06: preset-label persistence (v3 controller state) ---
+    // Sets/reads the controller's cosmetic preset label for the CURRENTLY selected
+    // scene so tests can prove it survives the controller getState/setState
+    // round-trip (project reload) and that A and B stay independent. Returns
+    // false / empty when no controller is attached. setControllerScene switches
+    // which scene the label accessors target.
+    bool setControllerScene(poly::SceneSelect select);
+    bool setControllerPresetLabel(const std::string& label);
+    std::string controllerPresetLabel() const;
+
     // --- M046 S04 P5/P6: note-off integrity injector + counter ---
     // injectPendingNoteOff pokes a synthetic entry straight into the processor's
     // pendingNoteOffs_ buffer. Used to (a) reproduce the P5 "straggler emits below
@@ -164,6 +176,20 @@ public:
     // notes survive.
     void pushCapturedNote(const NoteEvent& note);
     size_t capturedNoteCount() const;
+
+    // --- M051 S08: arm->capture->complete state machine drivers/observers ---
+    // armCapture/resetCapture dispatch the ArmCapture/ResetCapture notify()
+    // messages the WebUI bridge will send (T03); the command is applied on the
+    // next processBlock(). captureState reads the processor's runtime state
+    // (0=idle, 1=armed, 2=capturing, 3=complete). exportReady/frozenEventCount/
+    // frozenEvents expose the frozen export window so a test can prove it is
+    // populated at `complete` and byte-stable after further play.
+    void armCapture();
+    void resetCapture();
+    int captureState() const;
+    bool exportReady() const;
+    size_t frozenEventCount() const;
+    std::vector<poly::NoteEvent> frozenEvents() const;
 
     // T03: Read-only handshake applied counter snapshot. Incremented by the RT reader
     // on every successful consume(). Paired with handshakeDrops() to prove the

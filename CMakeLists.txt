@@ -103,6 +103,43 @@ if(NOT POLY_ENGINE_ONLY)
     set(SMTG_RUN_VST_VALIDATOR            OFF CACHE BOOL "Run VST3 validator as post-build step")
     set(SMTG_CREATE_PLUGIN_LINK           OFF CACHE BOOL "" FORCE)
 
+    # --- AudioUnit v2 support (macOS + Xcode generator ONLY) ---
+    # The Steinberg AU wrapper (public.sdk/source/vst/auwrapper) is hard-gated on
+    # `XCODE AND SMTG_ENABLE_AUV2_BUILDS` in SMTG_AddVST3AuV2.cmake, and the SDK's
+    # setupCoreAudioSupport() only enables AUv2 when it can locate an AudioUnitSDK.
+    # We fetch Apple's AudioUnitSDK and point SMTG_AUDIOUNIT_SDK_PATH at it BEFORE
+    # the vst3sdk is made available, so its setupCoreAudioSupport() picks it up and
+    # flips SMTG_ENABLE_AUV2_BUILDS on. This whole block is skipped under the Ninja
+    # generator (XCODE is false there), so the existing VST3/test/pluginval CI legs
+    # are completely unaffected — the AU path is purely additive.
+    if(XCODE)
+        FetchContent_Declare(audiounitsdk
+            GIT_REPOSITORY https://github.com/apple/AudioUnitSDK.git
+            # Apple tags releases as `AudioUnitSDK-<ver>`, not a bare `<ver>` —
+            # the bare `1.1.0` is not a valid ref and the clone fails once the
+            # FetchContent cache misses (see M051 CI: cache-miss surfaced it).
+            GIT_TAG        AudioUnitSDK-1.1.0
+            # AudioUnitSDK is consumed as a source tree (its AudioUnitSDK.xcodeproj is
+            # built by the wrapper's PRE_BUILD step). Steer FetchContent away from
+            # add_subdirectory so it never injects its own targets into our build.
+            SOURCE_SUBDIR  do-not-add-this-subdir
+        )
+        FetchContent_MakeAvailable(audiounitsdk)
+        set(SMTG_AUDIOUNIT_SDK_PATH "${audiounitsdk_SOURCE_DIR}" CACHE PATH "" FORCE)
+        set(SMTG_ENABLE_AUV2_BUILDS ON CACHE BOOL "" FORCE)
+        # The AU CI leg configures with -DCMAKE_OSX_ARCHITECTURES=arm64 (single
+        # arch), but the SDK defaults SMTG_BUILD_UNIVERSAL_BINARY=ON, which forces
+        # x86_64;arm64 onto the SDK/plugin/AU targets via smtg_target_setup_universal_binary.
+        # poly_engine honours the arm64-only global, so the plugin's x86_64 slice
+        # fails to find poly_engine symbols at link. Force single-arch to match.
+        set(SMTG_BUILD_UNIVERSAL_BINARY OFF CACHE BOOL "" FORCE)
+        # Ship the component ad-hoc signed (per D004 — no Developer-ID/notarization
+        # yet, and GitHub runners have no "Apple Development" identity). The SDK's
+        # default codesign identity would fail the poly_au post-build codesign; "-"
+        # selects ad-hoc, matching the -adhoc_codesign already applied at link.
+        set(SMTG_CODE_SIGN_IDENTITY_MAC "-" CACHE STRING "" FORCE)
+    endif()
+
     FetchContent_MakeAvailable(vst3sdk)
 
     # Isolate the third-party VST3 SDK targets from the first-party warning set.

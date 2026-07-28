@@ -66,6 +66,14 @@ Steinberg::tresult PLUGIN_API PolyProcessor::setActive(Steinberg::TBool state) {
         noteBuffer_.clear();
         captureBuffer_.clear();
         exportTriggered_ = false;
+        // M051 S08: capture state machine is runtime-only — reset to idle on
+        // (re)activation so a project reload never restores a stale capture.
+        captureState_ = CaptureState::Idle;
+        captureStartPpq_ = -1.0;
+        captureTempo_ = 0.0;
+        captureCommand_.store(0, std::memory_order_release);
+        exportEventCount_ = 0;
+        exportReady_.store(false, std::memory_order_release);
         expectedNextPpq_ = -1.0;
         macroSmoother_.initialized = false;
         chainState_.reset();
@@ -177,6 +185,17 @@ void PolyProcessor::updateTransportContext(const Steinberg::Vst::ProcessData& da
 void PolyProcessor::handleTransportJump(Steinberg::Vst::IEventList* outputEvents) {
     if (!tc_.jumped)
         return;
+
+    // M051 S08: a transport jump (seek, loop wrap, tempo-driven discontinuity)
+    // mid-capture breaks the contiguous N-bar window — cancel back to Armed and
+    // clear so the user re-arms for a clean capture. Only fires while Capturing;
+    // an Armed or Idle machine is unaffected (it simply re-latches next boundary).
+    if (captureState_ == CaptureState::Capturing) {
+        captureState_ = CaptureState::Armed;
+        captureStartPpq_ = -1.0;
+        captureTempo_ = 0.0;
+        captureBuffer_.clear();
+    }
 
     // M046 S06 P9: preserve capture across natural loop wraps. Genuine scrubs
     // (jumped=true, wrappedLoop=false) still clear so stragglers don't leak
@@ -300,6 +319,87 @@ void PolyProcessor::bounceExportTriggerZero(Steinberg::Vst::IParameterChanges* o
         Steinberg::int32 ptIdx;
         queue->addPoint(0, 0.0, ptIdx);
     }
+}
+
+void PolyProcessor::applyCaptureCommand() {
+    // M051 S08: drain the message-thread arm/reset command. exchange() guarantees
+    // we act on at most one command per block and never miss the clear. Both arm
+    // and reset clear the capture buffer + frozen window so the next capture is
+    // clean; arm moves to Armed (waiting for a bar boundary), reset returns to Idle.
+    const uint8_t cmd = captureCommand_.exchange(0, std::memory_order_acquire);
+    if (cmd == 0)
+        return;
+    captureBuffer_.clear();
+    captureStartPpq_ = -1.0;
+    captureTempo_ = 0.0;
+    exportEventCount_ = 0;
+    exportReady_.store(false, std::memory_order_release);
+    captureState_ = (cmd == 1) ? CaptureState::Armed : CaptureState::Idle;
+}
+
+void PolyProcessor::updateCaptureMachine() {
+    // Runs on the audio thread in the playing path, after this block's notes have
+    // been pushed into captureBuffer_. All timing derives from absolute PPQ
+    // (projectTimeMusic via tc_), never an accumulated block counter (MEM005), so
+    // the latch and the N-bar window are stable across loop/tempo/seek.
+    const double ppb = tc_.ppqPerBar();
+    if (ppb <= 0.0)
+        return;
+
+    if (captureState_ == CaptureState::Armed) {
+        // Latch on the next bar boundary that falls within this block. The small
+        // epsilon lets a ppqStart sitting a hair above an exact boundary still
+        // latch at that boundary rather than skipping a whole bar.
+        constexpr double kEps = 1e-9;
+        const double boundary = std::ceil(tc_.ppqStart / ppb - kEps) * ppb;
+        if (boundary < tc_.ppqEnd) {
+            captureStartPpq_ = boundary;
+            captureTempo_ = tc_.tempo;
+            captureState_ = CaptureState::Capturing;
+        }
+    }
+
+    if (captureState_ == CaptureState::Capturing) {
+        // A tempo change mid-capture corrupts the SMF's beats-to-time math — cancel
+        // back to Armed (same policy as a transport jump, handled in
+        // handleTransportJump) so the user re-arms for a clean window.
+        if (captureTempo_ > 0.0 && std::abs(tc_.tempo - captureTempo_) > 1e-6) {
+            captureState_ = CaptureState::Armed;
+            captureStartPpq_ = -1.0;
+            captureTempo_ = 0.0;
+            captureBuffer_.clear();
+            return;
+        }
+        // Freeze once the whole [start, start + N bars) window has elapsed. Using
+        // ppqEnd guarantees the block covering the window's end has already pushed
+        // its notes. extract() over the absolute window is byte-stable after
+        // further push()es beyond it (proven at the engine boundary in T01).
+        const double endPpq = captureStartPpq_ + static_cast<double>(captureLengthBars_) * ppb;
+        if (tc_.ppqEnd >= endPpq) {
+            exportEventCount_ =
+                captureBuffer_.extract(captureStartPpq_, endPpq, exportEvents_.data(), exportEvents_.size());
+            exportTempo_ = tc_.tempo;
+            exportReady_.store(true, std::memory_order_release);
+            captureState_ = CaptureState::Complete;
+        }
+    }
+}
+
+void PolyProcessor::publishCaptureSnapshot() {
+    // Surface the capture progression to the UISnapshot atomics for the WebUI
+    // Cloth timeline. Relaxed stores — single writer, 30fps reader, no ordering
+    // requirement with the other transport fields.
+    const double ppb = tc_.ppqPerBar();
+    double progressBars = 0.0;
+    if (captureState_ == CaptureState::Capturing && captureStartPpq_ >= 0.0 && ppb > 0.0) {
+        progressBars =
+            std::clamp((tc_.ppqStart - captureStartPpq_) / ppb, 0.0, static_cast<double>(captureLengthBars_));
+    } else if (captureState_ == CaptureState::Complete) {
+        progressBars = static_cast<double>(captureLengthBars_);
+    }
+    uiSnapshot_.captureState.store(static_cast<int>(captureState_), std::memory_order_relaxed);
+    uiSnapshot_.captureBars.store(captureLengthBars_, std::memory_order_relaxed);
+    uiSnapshot_.captureProgressBars.store(progressBars, std::memory_order_relaxed);
 }
 
 static void outputLaneVisualization(Steinberg::Vst::IParameterChanges* outParams, const LaneConfig& cfg, int lane,
@@ -488,8 +588,13 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
 
     updateTransportContext(data);
 
+    // M051 S08: apply any pending arm/reset command before branching on transport
+    // so the WebUI can arm/reset while stopped (state latches on the next play).
+    applyCaptureCommand();
+
     if (!tc_.playing) {
         uiSnapshot_.playing.store(false, std::memory_order_relaxed);
+        publishCaptureSnapshot();
         if (!uiSnapshot_.stateReady.load(std::memory_order_acquire)) {
             uiSnapshot_.state = sceneState_;
             uiSnapshot_.stateReady.store(true, std::memory_order_release);
@@ -576,6 +681,11 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
         mapped.pitch = sceneState_.noteMap.apply(mapped.pitch);
         captureBuffer_.push(mapped);
     }
+
+    // M051 S08: advance the WebUI capture state machine now that this block's
+    // notes are in captureBuffer_, then surface the progression to the UISnapshot.
+    updateCaptureMachine();
+    publishCaptureSnapshot();
 
     if (exportTriggered_ && !exportReady_.load(std::memory_order_acquire)) {
         exportTriggered_ = false;
@@ -947,6 +1057,18 @@ Steinberg::tresult PLUGIN_API PolyProcessor::notify(Steinberg::Vst::IMessage* me
                     handshakeDrops_.accentMask.fetch_add(1, std::memory_order_relaxed);
             }
         }
+        return Steinberg::kResultOk;
+    }
+
+    // M051 S08: WebUI arm/reset actions. notify() runs on the message thread, so
+    // we only latch an atomic command; process() applies it on the audio thread
+    // (no captureBuffer_/state mutation from this thread).
+    if (Steinberg::FIDStringsEqual(message->getMessageID(), "ArmCapture")) {
+        captureCommand_.store(1, std::memory_order_release);
+        return Steinberg::kResultOk;
+    }
+    if (Steinberg::FIDStringsEqual(message->getMessageID(), "ResetCapture")) {
+        captureCommand_.store(2, std::memory_order_release);
         return Steinberg::kResultOk;
     }
 

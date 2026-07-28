@@ -25,6 +25,18 @@ struct UISnapshot {
     std::atomic<int16_t> timeSigNumerator{4};
     std::atomic<int16_t> timeSigDenominator{4};
 
+    // M051 S08: capture state machine surfaced to the WebUI Cloth timeline so
+    // the arm->capture->complete progression is directly observable (the visual
+    // is the receipt). All relaxed — single writer (audio thread), 30fps reader.
+    //   captureState: 0=idle, 1=armed, 2=capturing, 3=complete.
+    std::atomic<int> captureState{0};
+    //   captureBars: target window length in bars (mirrors captureLengthBars_ /
+    //   kCaptureLength). Default 8 = MidiCaptureBuffer::kDefaultCaptureBars.
+    std::atomic<int> captureBars{8};
+    //   captureProgressBars: bars elapsed within the window, 0..captureBars.
+    //   Drives the Cloth playhead (playhead = captureProgressBars / captureBars).
+    std::atomic<double> captureProgressBars{0.0};
+
     // Full state — flag-guarded exchange
     SceneState state{};
     std::atomic<bool> stateReady{false};

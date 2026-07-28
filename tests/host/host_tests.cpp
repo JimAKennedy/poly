@@ -349,6 +349,88 @@ TEST(HostTests, SetParamOnController_NoProcess_ThenGetState_ReflectsChange) {
     host.teardown();
 }
 
+// --- M051 S06: preset-label persistence across project reload ---
+//
+// Regression for the UAT finding "plugin keeps opening with Init instead of the
+// last-used preset". The cosmetic preset label lived only on the WebUIView
+// (runtime, reset to "Init" on reload) and was never serialized. It now lives on
+// the controller as v3 state fields (one per scene). This proves the SELECTED
+// scene's label survives the controller getState/setState round-trip a DAW does
+// on project save/reload.
+TEST(HostTests, PresetLabel_SurvivesFullPluginStateRoundTrip) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+
+    // Default before any preset is applied (scene A selected).
+    EXPECT_EQ(host.controllerPresetLabel(), "Init");
+
+    // Apply a preset label (as applyPreset does) and save.
+    ASSERT_TRUE(host.setControllerPresetLabel("Tresillo Fire"));
+    ASSERT_EQ(host.controllerPresetLabel(), "Tresillo Fire");
+
+    auto bytes = host.saveFullPluginState();
+    ASSERT_FALSE(bytes.empty());
+
+    // Mutate the label to force restore to do real work, then reload.
+    ASSERT_TRUE(host.setControllerPresetLabel("Something Else"));
+    ASSERT_EQ(host.controllerPresetLabel(), "Something Else");
+
+    ASSERT_TRUE(host.loadFullPluginState(bytes));
+
+    EXPECT_EQ(host.controllerPresetLabel(), "Tresillo Fire")
+        << "Preset label was lost on save->reload — the header would revert to a stale/Init "
+           "value instead of the last-applied preset. v3 controller state must round-trip it.";
+
+    host.teardown();
+}
+
+// --- M051 S06: per-scene preset labels (A and B independent, Morph blank) ---
+//
+// Regression for the UAT finding that a single per-plugin label is misleading:
+// switching between scenes A and B showed the other scene's preset name. Labels
+// are now tracked per scene. This proves A and B are independent, that the
+// accessor tracks the selected scene, that Morph shows a blank label (an
+// interpolation is not "a preset"), and that BOTH survive project reload.
+TEST(HostTests, PresetLabel_PerSceneIndependentAndSurvivesReload) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+
+    // Label scene A, then switch to B and label it differently.
+    ASSERT_TRUE(host.setControllerScene(poly::SceneSelect::A));
+    ASSERT_TRUE(host.setControllerPresetLabel("Tresillo Fire"));
+    ASSERT_TRUE(host.setControllerScene(poly::SceneSelect::B));
+    ASSERT_TRUE(host.setControllerPresetLabel("Gamelan Drift"));
+
+    // Each scene reports its OWN label — no bleed-through.
+    ASSERT_TRUE(host.setControllerScene(poly::SceneSelect::A));
+    EXPECT_EQ(host.controllerPresetLabel(), "Tresillo Fire");
+    ASSERT_TRUE(host.setControllerScene(poly::SceneSelect::B));
+    EXPECT_EQ(host.controllerPresetLabel(), "Gamelan Drift");
+
+    // Morph is a blend of A and B, not a preset — label is blank.
+    ASSERT_TRUE(host.setControllerScene(poly::SceneSelect::Morph));
+    EXPECT_EQ(host.controllerPresetLabel(), "")
+        << "During Morph the header must not claim to be showing a single preset.";
+
+    auto bytes = host.saveFullPluginState();
+    ASSERT_FALSE(bytes.empty());
+
+    // Corrupt both labels, then reload and confirm each scene's label restored.
+    ASSERT_TRUE(host.setControllerScene(poly::SceneSelect::A));
+    ASSERT_TRUE(host.setControllerPresetLabel("Wrong A"));
+    ASSERT_TRUE(host.setControllerScene(poly::SceneSelect::B));
+    ASSERT_TRUE(host.setControllerPresetLabel("Wrong B"));
+
+    ASSERT_TRUE(host.loadFullPluginState(bytes));
+
+    ASSERT_TRUE(host.setControllerScene(poly::SceneSelect::A));
+    EXPECT_EQ(host.controllerPresetLabel(), "Tresillo Fire") << "Scene A label lost on reload.";
+    ASSERT_TRUE(host.setControllerScene(poly::SceneSelect::B));
+    EXPECT_EQ(host.controllerPresetLabel(), "Gamelan Drift") << "Scene B label lost on reload.";
+
+    host.teardown();
+}
+
 // --- M046 S01a T02: pluginval-mimic corpus sweep ---
 //
 // Broad guard against the whole class of controller/processor param-sync bugs the
@@ -1368,5 +1450,200 @@ TEST(HostTests, OutputEvents_SortedBySampleOffset) {
         prevSample = ev.sampleOffset;
     }
 
+    host.teardown();
+}
+
+// --- M051 S08 T02: arm -> capture -> complete state machine ---
+//
+// The processor gates WebUI MIDI export behind an explicit four-state machine
+// (idle -> armed -> capturing -> complete, Reset from any state). These tests
+// drive it headlessly through the ArmCapture/ResetCapture notify() surface the
+// WebUI bridge (T03) will use, and assert every transition, Reset from each
+// state, that the frozen export window is populated only in `complete`, that it
+// is byte-stable after further play (the whole S08 promise), and the transport
+// stop-pauses / jump-cancels / tempo-change-cancels policies. Absolute-PPQ
+// timing throughout (MEM005) — the latch and N-bar window derive from
+// projectTimeMusic, never an accumulated block counter.
+
+namespace {
+
+// kCaptureLength normalized value for an N-bar window. The processor maps
+// captureLengthBars_ = 1 + round(norm * 31), so norm = (N-1)/31.
+double captureLenNorm(int bars) {
+    return static_cast<double>(bars - 1) / 31.0;
+}
+
+// Play forward from `startPpq` in contiguous blocks until `pred()` is true (or
+// the guard trips). Returns the ppq of the block following the last processed.
+template <typename Pred>
+double playUntil(PolyTestHost& host, double startPpq, double tempo, Pred pred, int maxBlocks = 4000) {
+    double ppq = startPpq;
+    const double step = host.ppqPerBlock(tempo);
+    for (int i = 0; i < maxBlocks && !pred(); ++i) {
+        host.processBlock(ppq, tempo, /*playing=*/true);
+        ppq += step;
+    }
+    return ppq;
+}
+
+// Drives a fresh host to `capturing` with a 2-bar window: apply capture length,
+// prime the transport, arm mid-bar, then play across the next bar boundary so the
+// machine latches. Returns the ppq for the next contiguous block.
+double armAndReachCapturing(PolyTestHost& host, double tempo) {
+    host.injectParamChangeThroughProcess(poly::ParamIDs::kCaptureLength, captureLenNorm(2));
+    host.processBlock(0.0, tempo, /*playing=*/false); // apply capture length, idle
+    host.processBlock(0.0, tempo, /*playing=*/true);  // prime transport continuity
+    host.armCapture();
+    host.processBlock(host.ppqPerBlock(tempo), tempo, true); // consume arm -> armed
+    return playUntil(host, 2 * host.ppqPerBlock(tempo), tempo, [&] { return host.captureState() == 2; });
+}
+
+} // namespace
+
+TEST(HostTests, CaptureStateMachine_ArmCaptureComplete_GatesExportReady) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+    const double tempo = 120.0;
+
+    host.injectParamChangeThroughProcess(poly::ParamIDs::kCaptureLength, captureLenNorm(2));
+    host.processBlock(0.0, tempo, /*playing=*/false);
+    EXPECT_EQ(host.captureState(), 0) << "machine starts idle";
+    EXPECT_FALSE(host.exportReady());
+
+    host.processBlock(0.0, tempo, /*playing=*/true); // prime transport continuity (idle)
+    host.armCapture();
+    host.processBlock(host.ppqPerBlock(tempo), tempo, /*playing=*/true); // consume arm
+    EXPECT_EQ(host.captureState(), 1) << "armed; waits for the next bar boundary";
+    EXPECT_FALSE(host.exportReady()) << "export not ready while armed";
+
+    double ppq = playUntil(host, 2 * host.ppqPerBlock(tempo), tempo, [&] { return host.captureState() == 2; });
+    ASSERT_EQ(host.captureState(), 2) << "latched to capturing on a bar boundary";
+    EXPECT_FALSE(host.exportReady()) << "export not ready mid-capture";
+
+    playUntil(host, ppq, tempo, [&] { return host.captureState() == 3; });
+    ASSERT_EQ(host.captureState(), 3) << "N-bar window elapsed -> complete";
+    EXPECT_TRUE(host.exportReady()) << "export ready ONLY in complete";
+    EXPECT_GT(host.frozenEventCount(), 0u) << "frozen window populated at complete";
+
+    host.teardown();
+}
+
+TEST(HostTests, CaptureReset_FromArmed) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+    host.armCapture();
+    host.processBlock(0.0, 120.0, /*playing=*/false);
+    ASSERT_EQ(host.captureState(), 1);
+    host.resetCapture();
+    host.processBlock(0.0, 120.0, /*playing=*/false);
+    EXPECT_EQ(host.captureState(), 0) << "Reset from armed -> idle";
+    host.teardown();
+}
+
+TEST(HostTests, CaptureReset_FromCapturing) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+    double ppq = armAndReachCapturing(host, 120.0);
+    ASSERT_EQ(host.captureState(), 2);
+    host.resetCapture();
+    host.processBlock(ppq, 120.0, /*playing=*/true);
+    EXPECT_EQ(host.captureState(), 0) << "Reset from capturing -> idle";
+    EXPECT_FALSE(host.exportReady());
+    host.teardown();
+}
+
+TEST(HostTests, CaptureReset_FromComplete) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+    const double tempo = 120.0;
+    double ppq = armAndReachCapturing(host, tempo);
+    ppq = playUntil(host, ppq, tempo, [&] { return host.captureState() == 3; });
+    ASSERT_EQ(host.captureState(), 3);
+    ASSERT_TRUE(host.exportReady());
+    host.resetCapture();
+    host.processBlock(ppq, tempo, /*playing=*/true);
+    EXPECT_EQ(host.captureState(), 0) << "Reset from complete -> idle";
+    EXPECT_FALSE(host.exportReady()) << "Reset clears the frozen-ready flag";
+    host.teardown();
+}
+
+TEST(HostTests, FrozenWindowStableAfterFurtherPlay) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+    const double tempo = 120.0;
+    double ppq = armAndReachCapturing(host, tempo);
+    ppq = playUntil(host, ppq, tempo, [&] { return host.captureState() == 3; });
+    ASSERT_EQ(host.captureState(), 3);
+
+    auto frozen = host.frozenEvents();
+    ASSERT_GT(frozen.size(), 0u) << "frozen window must be populated at complete";
+
+    // Keep playing well past the captured window; the frozen snapshot the SMF is
+    // built from must be byte-stable regardless of continued playback (S08 promise).
+    const double step = host.ppqPerBlock(tempo);
+    for (int i = 0; i < 400; ++i) {
+        host.processBlock(ppq, tempo, /*playing=*/true);
+        ppq += step;
+    }
+
+    auto after = host.frozenEvents();
+    ASSERT_EQ(after.size(), frozen.size()) << "frozen window event count changed after further play";
+    // Field-by-field comparison (MEM031: NoteEvent padding makes memcmp unreliable).
+    for (size_t i = 0; i < frozen.size(); ++i) {
+        EXPECT_DOUBLE_EQ(after[i].ppqPosition, frozen[i].ppqPosition) << "event " << i << " ppq drifted";
+        EXPECT_EQ(after[i].pitch, frozen[i].pitch) << "event " << i << " pitch drifted";
+        EXPECT_FLOAT_EQ(after[i].velocity, frozen[i].velocity) << "event " << i << " velocity drifted";
+    }
+    EXPECT_EQ(host.captureState(), 3) << "stays complete across further play";
+    host.teardown();
+}
+
+TEST(HostTests, TransportStopMidCapture_RetainsCapturingState) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+    const double tempo = 120.0;
+    double ppq = armAndReachCapturing(host, tempo);
+    ASSERT_EQ(host.captureState(), 2);
+
+    // Stop mid-capture: several non-playing blocks at the frozen playhead. Per the
+    // pause policy the capturing state must be RETAINED, not lost or completed.
+    for (int i = 0; i < 5; ++i)
+        host.processBlock(ppq, tempo, /*playing=*/false);
+    EXPECT_EQ(host.captureState(), 2) << "stop mid-capture pauses, retaining capturing state";
+    EXPECT_FALSE(host.exportReady());
+
+    // Resume contiguously (next block after the frozen stretch) -> not a seek, so
+    // capture continues and can still reach complete.
+    ppq = playUntil(host, ppq + host.ppqPerBlock(tempo), tempo, [&] { return host.captureState() == 3; });
+    EXPECT_EQ(host.captureState(), 3) << "resume from pause continues to complete";
+    host.teardown();
+}
+
+TEST(HostTests, TransportJumpMidCapture_CancelsToArmed) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+    const double tempo = 120.0;
+    double ppq = armAndReachCapturing(host, tempo);
+    ASSERT_EQ(host.captureState(), 2);
+
+    // Seek far forward (no loop active) mid-capture -> jump detected -> cancel back
+    // to armed so the user re-arms for a clean contiguous window.
+    host.processBlock(ppq + 64.0, tempo, /*playing=*/true);
+    EXPECT_EQ(host.captureState(), 1) << "seek mid-capture cancels to armed";
+    EXPECT_FALSE(host.exportReady());
+    host.teardown();
+}
+
+TEST(HostTests, TempoChangeMidCapture_CancelsToArmed) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+    double ppq = armAndReachCapturing(host, 120.0);
+    ASSERT_EQ(host.captureState(), 2);
+
+    // Tempo change mid-capture corrupts the SMF beats-to-time math -> cancel to
+    // armed. Same contiguous ppq so this isolates the tempo delta from a seek.
+    host.processBlock(ppq, 140.0, /*playing=*/true);
+    EXPECT_EQ(host.captureState(), 1) << "tempo change mid-capture cancels to armed";
+    EXPECT_FALSE(host.exportReady());
     host.teardown();
 }

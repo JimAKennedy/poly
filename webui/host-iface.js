@@ -37,6 +37,10 @@
  *   //                                          source: site/src/generated/presets.json)
  *   //   'togglePlay'      {}            (mock only; native transport is host-owned)
  *   //   'exportRequest'   {}
+ *   //   'armCapture'      {}            (M051 S08: arm the capture state machine)
+ *   //   'resetCapture'    {}            (M051 S08: reset to idle from any state)
+ *   //   'setCaptureBars'  {bars}        (M051 S08: bar window length, bound to
+ *   //                                    kCaptureLength; {4,8,16,32})
  *
  *   // --- capabilities ---
  *   capabilities: {
@@ -64,7 +68,11 @@
  * Env = { target, period, depth, on }
  * Frame = {
  *   t8: number, playing: bool, convLeft: number,
- *   lanes: [{ ph: 0..1, step: int }]
+ *   lanes: [{ ph: 0..1, step: int }],
+ *   // M051 S08 — capture state machine (native: UISnapshot atomics):
+ *   capState?: 0|1|2|3,   // idle | armed | capturing | complete
+ *   capBars?: number,     // bar-window length N (default 8)
+ *   capProg?: number      // capture progress in bars, 0..N (float)
  * }
  */
 window.POLY_SCHEMA_VERSION = 1;

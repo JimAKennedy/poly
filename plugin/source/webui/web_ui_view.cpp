@@ -5,8 +5,10 @@
 #include "web_ui_view.h"
 
 #include <algorithm>
+#include <chrono>
 #include <cmath>
 #include <cstdio>
+#include <ctime>
 #include <string>
 
 #include "../controller.h"
@@ -45,6 +47,15 @@ static const char* kWebPresetLaneNames[kFactoryPresetCount][kMaxLanes] = {
     {"Mridangam Lo", "Mridangam Hi", "Ghatam", "Kanjira", "Tom Hi", "Tom Lo", "Ride", "Crash"},
     {"Kick", "Snare", "Hi-Hat", "Perc", "Glitch", "Tom Lo", "Ride", "Crash"},
 };
+
+// The table is intentionally sparse: only presets with bespoke lane labels
+// carry a row; the rest (index >= the initialised rows) zero-fill to null and
+// fall back to default lane names at the applyPreset call site. The null-guard
+// there is load-bearing — do NOT setLaneName() a raw kWebPresetLaneNames entry
+// without checking it first. The declared extent stays pinned to the preset
+// count so index arithmetic can never read past the array.
+static_assert(sizeof(kWebPresetLaneNames) / sizeof(kWebPresetLaneNames[0]) == kFactoryPresetCount,
+              "kWebPresetLaneNames must be dimensioned to kFactoryPresetCount");
 
 // --- WebUIView implementation ---
 
@@ -358,6 +369,11 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
         controller_->setParamNormalized(ParamIDs::kSceneSelect, val);
         controller_->performEdit(ParamIDs::kSceneSelect, val);
         controller_->endEdit(ParamIDs::kSceneSelect);
+        // The preset label is per-scene and lives on the controller; re-push so the
+        // header shows the newly-selected scene's label (blank during Morph) instead
+        // of the previous scene's name. Runs on the WebView message thread, same as
+        // pushState's other callers.
+        pushState();
         return;
     }
 
@@ -373,6 +389,7 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
 
         if (index == -1) {
             currentPresetName_ = "Init";
+            controller_->setPresetLabel(currentPresetName_);
             GrooveState init{};
             init.activeLaneCount = kMaxLanes;
             static constexpr int kInitSteps[] = {4, 4, 8, 5, 7, 3, 6, 9};
@@ -403,9 +420,21 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
         } else if (index >= 0 && index < kFactoryPresetCount) {
             auto state = makeFactoryPreset(index);
             currentPresetName_ = getFactoryPresetInfo(index).name;
+            controller_->setPresetLabel(currentPresetName_);
             controller_->mutableActiveScene() = state;
-            for (int lane = 0; lane < kMaxLanes; ++lane)
-                controller_->setLaneName(lane, kWebPresetLaneNames[index][lane]);
+            // kWebPresetLaneNames only carries explicit rows for the first
+            // batch of factory presets; later presets (index >= the number of
+            // initialised rows) have all-null entries. Reset to sane defaults
+            // first, then override only where a non-null label exists — passing
+            // a null const char* into setLaneName() would construct
+            // std::string(nullptr) and crash the host in strlen(). See L4/L6:
+            // the preset inventory grew from 14 to 43 without extending this
+            // table.
+            controller_->resetLaneNames();
+            for (int lane = 0; lane < kMaxLanes; ++lane) {
+                if (const char* label = kWebPresetLaneNames[index][lane])
+                    controller_->setLaneName(lane, label);
+            }
 
             for (int lane = 0; lane < kMaxLanes; ++lane) {
                 const auto& cfg = state.lanes[lane];
@@ -466,26 +495,44 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
         return;
     }
 
-    if (name == "exportRequest") {
-        controller_->beginEdit(ParamIDs::kExportTrigger);
-        controller_->setParamNormalized(ParamIDs::kExportTrigger, 1.0);
-        controller_->performEdit(ParamIDs::kExportTrigger, 1.0);
-        controller_->endEdit(ParamIDs::kExportTrigger);
+    // M051 S08: capture state machine drivers. notify() on the processor only
+    // latches an atomic command; process() applies it on the audio thread. Both
+    // ride the existing message channel (no kExportTrigger param edge — that
+    // WebUI prefetch path is retired here; the native VSTGUI variant keeps
+    // kExportTrigger until M053).
+    if (name == "armCapture") {
+        sendCaptureCommand("ArmCapture");
+        return;
+    }
+
+    if (name == "resetCapture") {
+        sendCaptureCommand("ResetCapture");
         return;
     }
 
     if (name == "exportSaveAs") {
-        // Native "Save As…" for the current 10-bar capture. If the drag
-        // cache is already fresh (S04 T01 prefetch) open the dialog now;
-        // otherwise arm savePending_ and let the next MidiExport tick from
-        // the processor open it. saveDialogOpen_ guards re-entrancy.
+        // Save-As is gated behind the capture state machine: only `complete`
+        // (captureState==3) guarantees a frozen, stable window (the processor
+        // set exportReady_ on the capturing->complete transition). In any other
+        // state there is nothing stable to export, so ignore the click.
         if (saveDialogOpen_)
             return;
-        if (controller_->hasDragSmf()) {
+        auto* snap = controller_->uiSnapshot();
+        const int capState = snap ? snap->captureState.load(std::memory_order_relaxed) : 0;
+        if (capState != 3 /* complete */)
+            return;
+
+        // freshExportPending_ is set when pushFrame saw a new capturing->complete
+        // edge: the drag cache (if any) holds a PREVIOUS capture's bytes, so force
+        // a fresh RequestMidiExport to pull the newly frozen window. Once the
+        // fresh bytes land, subsequent clicks (e.g. after a cancel) reuse the
+        // cache for the same complete window.
+        if (!freshExportPending_ && controller_->hasDragSmf()) {
             openSaveDialogFromCache();
         } else {
             savePending_ = true;
-            requestBackgroundExport();
+            freshExportPending_ = false;
+            requestMidiExport();
         }
         return;
     }
@@ -749,6 +796,11 @@ void WebUIView::pushState() {
 
     const auto& ss = controller_->cachedState();
     const auto& gs = controller_->activeScene();
+    // The controller holds the persisted preset label (restored from v3 state on
+    // reload). Sync our working copy from it so a project reload shows the
+    // last-applied preset name instead of the constructor default "Init", and so
+    // suggestedExportName() slugs from the restored name too.
+    currentPresetName_ = controller_->presetLabel();
     auto nameFn = [](int lane, void* ctx) -> const std::string& {
         return static_cast<PolyController*>(ctx)->laneName(lane);
     };
@@ -792,6 +844,19 @@ void WebUIView::pushFrame() {
     int tsNum = snap ? snap->timeSigNumerator.load(std::memory_order_relaxed) : 4;
     int tsDen = snap ? snap->timeSigDenominator.load(std::memory_order_relaxed) : 4;
 
+    // M051 S08: capture state machine progression (T02's UISnapshot atomics).
+    // The Cloth timeline renders these directly (the visual is the receipt).
+    int capState = snap ? snap->captureState.load(std::memory_order_relaxed) : 0;
+    int capBars = snap ? snap->captureBars.load(std::memory_order_relaxed) : 8;
+    double capProg = snap ? snap->captureProgressBars.load(std::memory_order_relaxed) : 0.0;
+
+    // Detect the capturing->complete edge: a new window was just frozen, so any
+    // drag cache from a previous capture is now stale. Force the next Export to
+    // pull the fresh frozen bytes (see exportSaveAs).
+    if (capState == 3 && lastCaptureState_ != 3)
+        freshExportPending_ = true;
+    lastCaptureState_ = capState;
+
     double t8 = ppqNorm * 256.0;
 
     constexpr int kConvWindow = 120;
@@ -807,9 +872,11 @@ void WebUIView::pushFrame() {
     js.reserve(512);
     js += "{\"type\":\"frame\",\"frame\":{";
 
-    char buf[96];
-    std::snprintf(buf, sizeof(buf), "\"t8\":%.4f,\"playing\":%s,\"convLeft\":%d,\"tsNum\":%d,\"tsDen\":%d", t8,
-                  playing ? "true" : "false", convLeft, tsNum, tsDen);
+    char buf[160];
+    std::snprintf(buf, sizeof(buf),
+                  "\"t8\":%.4f,\"playing\":%s,\"convLeft\":%d,\"tsNum\":%d,\"tsDen\":%d,"
+                  "\"capState\":%d,\"capBars\":%d,\"capProg\":%.4f",
+                  t8, playing ? "true" : "false", convLeft, tsNum, tsDen, capState, capBars, capProg);
     js += buf;
 
     const auto& gs = controller_->activeScene();
@@ -828,26 +895,27 @@ void WebUIView::pushFrame() {
 
     // Deferred save dialog: user clicked Export while cache was empty. As
     // soon as the processor's MidiExport notify populates dragSmfCache_ we
-    // open the panel with the fresh bytes.
+    // open the panel with the fresh bytes. The S06 500ms background prefetch
+    // loop is retired for the WebUI variant — Export is now driven by the
+    // explicit arm->capture->complete state machine, so a fresh RequestMidiExport
+    // is issued on demand from exportSaveAs when the window is `complete`.
     if (savePending_ && controller_->hasDragSmf()) {
         savePending_ = false;
         openSaveDialogFromCache();
     }
+}
 
-    // Background prefetch: keep dragSmfCache_ fresh so a subsequent Export
-    // click is instant. Frame timer runs at 33ms; fire every 15 ticks
-    // (~500ms) — matches the S04 T01 native-VSTGUI prefetch cadence.
-    if (++prefetchTickCounter_ >= 15) {
-        prefetchTickCounter_ = 0;
-        if (!savePending_ && !saveDialogOpen_) {
-            requestBackgroundExport();
-        }
+void WebUIView::requestMidiExport() {
+    if (auto* msg = controller_->allocateMessage()) {
+        msg->setMessageID("RequestMidiExport");
+        controller_->sendMessage(msg);
+        msg->release();
     }
 }
 
-void WebUIView::requestBackgroundExport() {
+void WebUIView::sendCaptureCommand(const char* messageId) {
     if (auto* msg = controller_->allocateMessage()) {
-        msg->setMessageID("RequestMidiExport");
+        msg->setMessageID(messageId);
         controller_->sendMessage(msg);
         msg->release();
     }
@@ -872,6 +940,23 @@ std::string WebUIView::suggestedExportName() const {
     char seedBuf[24];
     std::snprintf(seedBuf, sizeof(seedBuf), "-%llu", static_cast<unsigned long long>(gs.seed));
     name += seedBuf;
+
+    // Wall-clock timestamp disambiguator. Poly is deterministic — the same
+    // preset+seed produces byte-identical MIDI, so without this two exports
+    // collide on one filename and the second silently offers to overwrite the
+    // first. This runs on the UI/message thread at dialog-open time (not the
+    // audio thread), so a wall-clock read here is RT-safe by placement.
+    const std::time_t now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    std::tm tmBuf{};
+#ifdef _WIN32
+    localtime_s(&tmBuf, &now);
+#else
+    localtime_r(&now, &tmBuf);
+#endif
+    char tsBuf[20];
+    if (std::strftime(tsBuf, sizeof(tsBuf), "-%Y%m%d-%H%M%S", &tmBuf) > 0)
+        name += tsBuf;
+
     name += ".mid";
     return name;
 }
