@@ -1,8 +1,19 @@
 ---
-class: gated
+class: archived
 ---
 
 # Poly UI Guide
+
+> **Archived (2026-07-28)** — this document describes the native VSTGUI plugin
+> window (the fixed 600×870px layout below), which was deleted in M053 S05. The
+> shipping UI is now the WebUI editor (`webui/` bundle in a native webview); see
+> [Chapter 18 — Editors and Views](../site/src/content/docs/18-editors-and-views.mdx)
+> for the current editor workflow. The parameter reference in this file remains
+> accurate but is maintained authoritatively in
+> [preset-taxonomy.md](preset-taxonomy.md),
+> [appendix-parameters.mdx](../site/src/content/docs/appendix-parameters.mdx), and
+> [midi-note-mapping.md](midi-note-mapping.md). Do not treat any "plugin window
+> layout" or native-widget claim below as current.
 
 Reference for the Poly VST3 plugin interface. Poly is a polymetric drum pattern generator that outputs MIDI.
 
