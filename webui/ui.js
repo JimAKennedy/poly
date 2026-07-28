@@ -714,7 +714,7 @@
           </div>
         </div>
         <div class="feel"></div>
-        <div class="stat">CH ${l.ch} · N${l.note}</div>`;
+        <div class="stat">${l.ch === 0 ? 'Auto' : 'CH ' + l.ch} · N${l.note}</div>`;
       desk.appendChild(s);
       strips.push(s);
       const svg = s.querySelector('svg.ring');
@@ -1044,7 +1044,7 @@
       { field: 'humanize', label: 'Humanize', norm: l.humanize / 50, fmt: (v) => Math.round(v * 50) + 'ms' },
       { field: 'duration', label: 'Duration', norm: l.duration / 4, fmt: (v) => (v * 4).toFixed(1) },
       { field: 'note', label: 'Note', norm: l.note / 127, fmt: (v) => 'N' + Math.round(v * 127) },
-      { field: 'channel', label: 'Channel', norm: (l.ch - 1) / 15, fmt: (v) => 'CH ' + (Math.round(v * 15) + 1) },
+      { field: 'channel', label: 'Channel', norm: l.ch / 16, fmt: (v) => { const c = Math.round(v * 16); return c === 0 ? 'Auto' : 'CH ' + c; } },
     ];
     expr.innerHTML = PARAMS.map((p) =>
       `<div class="param-slider"><label>${p.label}</label>` +
