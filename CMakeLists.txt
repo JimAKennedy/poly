@@ -115,7 +115,10 @@ if(NOT POLY_ENGINE_ONLY)
     if(XCODE)
         FetchContent_Declare(audiounitsdk
             GIT_REPOSITORY https://github.com/apple/AudioUnitSDK.git
-            GIT_TAG        1.1.0
+            # Apple tags releases as `AudioUnitSDK-<ver>`, not a bare `<ver>` —
+            # the bare `1.1.0` is not a valid ref and the clone fails once the
+            # FetchContent cache misses (see M051 CI: cache-miss surfaced it).
+            GIT_TAG        AudioUnitSDK-1.1.0
             # AudioUnitSDK is consumed as a source tree (its AudioUnitSDK.xcodeproj is
             # built by the wrapper's PRE_BUILD step). Steer FetchContent away from
             # add_subdirectory so it never injects its own targets into our build.
