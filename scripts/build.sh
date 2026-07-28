@@ -60,7 +60,7 @@ fi
 
 if [[ ! -f "$BUILD_DIR/CMakeCache.txt" ]] || [[ $FORCE_CONFIGURE -eq 1 ]]; then
     echo "=== Configure ($BUILD_TYPE) ==="
-    cmake -S "$PROJECT_DIR" -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE="$BUILD_TYPE" -DPOLY_WEB_UI=ON
+    cmake -S "$PROJECT_DIR" -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE="$BUILD_TYPE"
 fi
 
 echo "=== Build ($BUILD_TYPE) ==="

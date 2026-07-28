@@ -230,6 +230,13 @@ if(NOT POLY_ENGINE_ONLY)
             ${CMAKE_SOURCE_DIR}/engine/include
         )
 
+        # This harness exercises the native VSTGUI editor via controller.cpp.
+        # On macOS/Windows controller.cpp defaults to the choc-webview editor
+        # (which needs a live webview and cannot run headless), so force the
+        # native editor path here. This is a test-only define; the shipping
+        # poly_plugin target never sets it (see plugin/source/controller.cpp).
+        target_compile_definitions(poly_visual_tests PRIVATE POLY_UI_TEST_NATIVE_EDITOR=1)
+
         target_compile_features(poly_visual_tests PRIVATE cxx_std_20)
         jk_target_warnings(poly_visual_tests)
         gtest_discover_tests(poly_visual_tests)
@@ -260,6 +267,11 @@ if(NOT POLY_ENGINE_ONLY)
 
         target_compile_definitions(poly_interaction_tests PRIVATE
             UIDESC_RESOURCE_DIR="${CMAKE_SOURCE_DIR}/plugin/resource"
+            # Force the native VSTGUI editor in controller.cpp: this headless
+            # harness calls controller->createView(kEditor), which on macOS/Windows
+            # would otherwise return the choc-webview editor that cannot run
+            # headless. Test-only; never set on the shipping poly_plugin target.
+            POLY_UI_TEST_NATIVE_EDITOR=1
         )
 
         # On Linux/Windows, vstgui_support requires VST3 module init symbols

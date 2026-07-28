@@ -1,7 +1,7 @@
 # Poly Web UI ↔ Native Bridge Schema (v1)
 
 Wire format between `plugin-host.js` and the native webview shell
-(`plugin/source/webui/`, built with `-DPOLY_WEB_UI=ON`). Every message is a
+(`plugin/source/webui/`, compiled on macOS and Windows). Every message is a
 single JSON object with a `v` (schema version) field. Unknown fields must be
 ignored; unknown message types must be logged and dropped, never crash.
 

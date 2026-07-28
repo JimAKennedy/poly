@@ -11,7 +11,7 @@ class: archived
 
 **Date:** 2026-07-28
 **Slice:** M051 S08 (Cloth as export timeline — arm → capture → complete)
-**Scope:** WebUI variant only (`-DPOLY_WEB_UI=ON`). The native VSTGUI export path
+**Scope:** WebUI variant only (the macOS/Windows editor). The native VSTGUI export path
 (`export_controls_view.*`, `kExportTrigger`) is unchanged and out of scope until M053.
 
 ## What this slice ships
@@ -37,10 +37,16 @@ from the Cloth header, replacing the S06 `kExportTrigger` edge + 500 ms backgrou
 
 ## Automated proof (this checkout, 2026-07-28)
 
+> **Editorial note (M053 S04, 2026-07-28):** the build commands below originally used a
+> `-D` UI-selection flag to pick the WebUI vs native VSTGUI editor on one machine. That
+> flag was retired in M053 S04 — the WebUI editor is now the macOS/Windows default and the
+> native VSTGUI editor the Linux default (platform-gated in `plugin/CMakeLists.txt`). The
+> commands are shown de-flagged; the recorded pass/fail results are unchanged.
+
 | Gate | Command | Result |
 |------|---------|--------|
-| WebUI build | `cmake -S . -B build -DPOLY_WEB_UI=ON && cmake --build build` | pass (0) |
-| Native build | `cmake -S . -B build-native -DPOLY_WEB_UI=OFF && cmake --build build-native` | pass (0) |
+| WebUI build | `cmake -S . -B build && cmake --build build` (macOS default) | pass (0) |
+| Native build | native VSTGUI build (now the Linux default; formerly flag-forced) | pass (0) |
 | Full ctest | `ctest --test-dir build --output-on-failure` | **450/450 pass** |
 | RT safety | `bash scripts/check-realtime-safety.sh` | pass (0) |
 | Snippet regions | `bash scripts/check-snippet-regions.sh` | 38 references OK |

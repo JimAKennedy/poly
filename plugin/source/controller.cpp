@@ -15,7 +15,13 @@
 #include "ui/scene_bar_view.h"
 #include "ui/timeline_step_editor_view.h"
 #include "ui/velocity_view.h"
-#if defined(__APPLE__) || defined(_WIN32)
+// The shipping macOS/Windows plugin uses the choc-webview editor; the platform
+// predicate is the selector (see plugin/CMakeLists.txt). POLY_UI_TEST_NATIVE_EDITOR
+// is a test-only escape hatch that lets the headless UI test harness compile the
+// native VSTGUI editor path on macOS/Windows without pulling in the choc/webview
+// stack — it is never defined for the shipping poly_plugin target, so it cannot
+// cause the local/CI editor divergence M053 S04 removed.
+#if (defined(__APPLE__) || defined(_WIN32)) && !defined(POLY_UI_TEST_NATIVE_EDITOR)
 #include "webui/web_ui_view.h"
 #endif
 
@@ -23,7 +29,7 @@ namespace poly {
 
 Steinberg::IPlugView* PLUGIN_API PolyController::createView(Steinberg::FIDString name) {
     if (Steinberg::FIDStringsEqual(name, Steinberg::Vst::ViewType::kEditor)) {
-#if defined(__APPLE__) || defined(_WIN32)
+#if (defined(__APPLE__) || defined(_WIN32)) && !defined(POLY_UI_TEST_NATIVE_EDITOR)
         return new WebUIView(this); // ownership-transfer
 #else
         auto* view = new VSTGUI::VST3Editor(this, "view", "poly.uidesc"); // ownership-transfer
