@@ -71,10 +71,10 @@ One row per native view/control. Verdict cells are filled by the per-lane audit 
 
 | Native View | Native Path (file:line) | WebUI Path (file:line) | Parity Verdict | Evidence / Notes |
 |---|---|---|---|---|
-| `lane_edit_view` | `plugin/source/ui/lane_edit_view.cpp` | _tbd_ | _pending_ | Filled by T03. |
-| `cross_rhythm_view` | `plugin/source/ui/cross_rhythm_view.cpp` | _tbd_ | _pending_ | Filled by T03. |
-| `phase_alignment_view` | `plugin/source/ui/phase_alignment_view.cpp` | _tbd_ | _pending_ | Filled by T03. |
-| `phrase_edit_view` | `plugin/source/ui/phrase_edit_view.cpp` | _tbd_ | _pending_ | Filled by T03. |
+| `lane_edit_view` | `plugin/source/ui/lane_edit_view.cpp:27-49` (12 lane + 6 phrase knob defs), `:443-471` (draw knobs + phrase), `:476-560` (tab select + vertical-drag edit), name edit `:562-657` | Pattern steppers `webui/ui.js:870-872`→`setEuclid` `:895-900`; subdivision chips `:1077-1078`,`:1112-1118`; kotekan chips `:1080-1085`,`:1119-1125`; voice sliders (vel/ghost/spread/swing/humanize/duration/note/channel) `webui/ui.js:999-1039`; probability `:1001`; bridge map `plugin/source/webui/bridge_params.h:27-46` | `divergent` | Every one of the 12 lane knobs (Steps, Subdiv, Hits, Rot, Note, Vel, Ghost, Spread, Swing, Hum, Kotek, Ch) and 6 phrase knobs is reachable in the WebUI with matching normalized ranges, but the single native radial-knob cluster is **reorganized** across three WebUI surfaces (desk-strip pattern steppers + `expr` sliders + `adv` sliders/chips). Two genuine native-only deltas: (1) **inline lane rename** (`lane_edit_view.cpp:562-657` keyboard edit → `setLaneName`) has **no WebUI handler** — lane names are display-only in `webui/ui.js` (`:509`,`:691`,`:814`); (2) MIDI channel **"Auto"** (ch index 0, `lane_edit_view.cpp:211-216`) is unreachable from the WebUI channel slider which maps `(l.ch-1)/15` = CH 1–16 only (`webui/ui.js:1008`). Same data model, materially different affordances + two capability gaps → divergent. |
+| `cross_rhythm_view` | `plugin/source/ui/cross_rhythm_view.cpp:68-530` (draw): per-lane step dots on a shared LCM-derived PPQ span `:177-206`, convergence detection + diamonds `:229-453`, playhead `:501-521`, countdown label `:455-499`, kotekan ghost dots `:370-421`, humanize whiskers `:324-336`, swing offset `:306-311` | WebUI cloth/loom convergence weave `webui/ui.js:517-590` (`drawLoom`/`drawConvergence`): stacked lane bands + step grid `:547-567`, per-lane cycle markers `:569`, gold selvage `:573`, sweeping playhead `:581-589`; numeric convergence countdown `#conv` `:1314` and `#cmeter` fill `:1344-1345` fed by `frame.convLeft` | `divergent` | Both surfaces visualize the multi-lane polyrhythm and the convergence horizon (read-only; no editing on either). Materially different renderings: native lays each lane's hits on one shared PPQ timeline with LCM-based bar span, explicit gold convergence diamonds/lines, a beats-away countdown, kotekan ghost circles, humanize whiskers and swing displacement; the WebUI weave stacks lanes as coloured bands over a fixed 120-eighth window with cycle-boundary ticks and a single numeric convergence countdown, and has **no** convergence-diamond/kotekan-ghost/humanize-whisker overlays. Same underlying data, different visualization → divergent. |
+| `phase_alignment_view` | `plugin/source/ui/phase_alignment_view.cpp:44-180` (draw): concentric per-lane rings `:91-127`, live phase dot from `lanePhaseOutput` `:129-160`, phrase play/gap arcs from `phrasePhaseOutput` `:96-119`, drift trails from `kDriftRate` `:134-154`, selected-lane emphasis | WebUI per-strip SVG rings `webui/ui.js:697` (markup), `:817-835` (`drawRing` onset geometry), live needle rotated by `frame.lanes[li].ph` `:1328` | `divergent` | Both surfaces show each lane's live phase (native = a moving dot on concentric rings; WebUI = a needle rotating on each desk strip's ring, updated every frame from `frame.lanes[li].ph`). But the native view's **phase-relationship framing** — all lanes on one concentric plot to read relative alignment — plus its **drift-rate trails** (`:134-154`) and **phrase play/gap arcs** (`:96-119`) have no WebUI equivalent; the WebUI ring shows only static onset geometry + a live needle per isolated strip. Same live-phase capability, materially different presentation and missing overlays → divergent. |
+| `phrase_edit_view` | `plugin/source/ui/phrase_edit_view.cpp:24-31` (6 knob defs), `:297-355` (draw tabs + knobs + cycle schematic), `:357-417` (tab select + vertical-drag edit), gating `:339-345` (Gap/Ofs disabled when Length off) | WebUI `adv` pane sliders `webui/ui.js:1043-1050` (Length/Gap/Offset), `:1051-1056` (Mutation/Drift), `:1057-1062` (T.Offset), wired `:1087-1111`; bridge map `plugin/source/webui/bridge_params.h:33-38` | `parity` | All six phrase knobs (Length, Gap, Offset, Mutation, Drift, Timing-Offset) are editable in the WebUI `adv` pane with identical normalized ranges and formatting. `phrase_edit_view` is a standalone native panel that duplicates the phrase knobs already in `lane_edit_view`; the WebUI consolidates them into one `adv` section. Two cosmetic/minor deltas, not capability gaps: the native **phrase cycle schematic** bar (`drawPhraseSchematic`, `:184-295`) has no WebUI counterpart, and the WebUI sliders do not disable Gap/Offset when Length is off (native gates them at `:339-345`,`:375-379`). Editing surface matches → parity. |
 
 ### Lane C — per-note expression (T04)
 
@@ -109,10 +109,10 @@ All 15 native views must resolve to at least one non-`_pending_` row before S01 
 - [x] `lane_grid_view`
 - [x] `timeline_step_editor_view`
 - [x] `micro_timing_editor_view`
-- [ ] `lane_edit_view`
-- [ ] `cross_rhythm_view`
-- [ ] `phase_alignment_view`
-- [ ] `phrase_edit_view`
+- [x] `lane_edit_view`
+- [x] `cross_rhythm_view`
+- [x] `phase_alignment_view`
+- [x] `phrase_edit_view`
 - [ ] `envelope_curve_view`
 - [ ] `velocity_view`
 - [ ] `note_map_view`
