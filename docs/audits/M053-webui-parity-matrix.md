@@ -62,10 +62,10 @@ One row per native view/control. Verdict cells are filled by the per-lane audit 
 
 | Native View | Native Path (file:line) | WebUI Path (file:line) | Parity Verdict | Evidence / Notes |
 |---|---|---|---|---|
-| `lane_grid_view` | `plugin/source/ui/lane_grid_view.cpp` | _tbd_ | _pending_ | Filled by T02. |
-| `cell_editor_view` | `plugin/source/ui/cell_editor_view.cpp` | _tbd_ | _pending_ | Filled by T02. |
-| `timeline_step_editor_view` | `plugin/source/ui/timeline_step_editor_view.cpp` | _tbd_ | _pending_ | Filled by T02. |
-| `micro_timing_editor_view` | `plugin/source/ui/micro_timing_editor_view.cpp` | _tbd_ | _pending_ | Filled by T02. |
+| `lane_grid_view` | `plugin/source/ui/lane_grid_view.cpp:48-157` (draw), `:187-246` (select / active toggle / probability drag) | `webui/ui.js:684-798` (desk strips), active toggle `:728-731`, live phase ring `:817-835`,`:1322-1332`, mode badge `:812`, probability slider `webui/ui.js:998-1030` | `divergent` | Both surfaces expose the full per-lane overview: name, active toggle, live phase, mode indicator, probability. Native = one compact grid row per lane with an inline probability drag-bar (`lane_grid_view.cpp:122-129`,`:216-223`) and an orbit-dot phase indicator (`:131-153`). WebUI = vertical strips with an SVG ring phase indicator + ladder, and probability lives in the `expr` deep-pane slider (`ui.js:1001`). No capability gap; layout and affordances differ materially → divergent. |
+| `cell_editor_view` | `plugin/source/ui/cell_editor_view.cpp:61-158` (draw / +/- buttons), `:243-257` (drag-size → `sendCellSizes`) | `webui/ui.js:873-918` (additive-cells toggle + per-cell edit), bridge `plugin/source/webui/web_ui_view.cpp:280-300` (`setCells` → `sendCellSizes`) | `divergent` | Both edit the additive `cellCount`/`cellSizes` data surface and call `sendCellSizes`. Native: `+`/`−` buttons add/remove cells and a **vertical drag** sets each cell size continuously 1–16 (`cell_editor_view.cpp:247-253`). WebUI: clicking a cell **cycles** it 2→3→4→2 and `+` appends a cell (`ui.js:908-917`); WebUI size range is limited to 2–4 vs native's 1–16. Same data model, materially different affordance and range → divergent. |
+| `timeline_step_editor_view` | `plugin/source/ui/timeline_step_editor_view.cpp:77-150` (draw + `onMouseDown` toggle), gated on `cfg.timeline` (`:65`,`:93`) → `sendTimelinePattern` (`:147`) | `webui/ui.js:846-847` (ladder step → `toggleStep`), `:864-893` (deep pattern pane `data-fixed` → `setFixedStep`); bridge `plugin/source/webui/web_ui_view.cpp:234-244` (`toggleStep`, gated on `cfg.timeline`) & `:303-312` (`setFixedStep`) → `sendTimelinePattern` | `parity` | WebUI reproduces the native fixed-pattern step toggle, gated identically on timeline mode, wired end-to-end through the **real native bridge** (not only `webui/mock-host.js`) to `sendTimelinePattern`. **This contradicts the milestone's motivating premise that timeline editing is "unreachable in shipping WebUI":** both `toggleStep` and `setFixedStep` are handled in `web_ui_view.cpp`. Static evidence = parity; S02 should confirm at runtime that the deep pane / ladder is visually reachable and enabled. |
+| `micro_timing_editor_view` | `plugin/source/ui/micro_timing_editor_view.cpp:88-154` (draw), `:156-199` (drag ±20 ms, double-click reset, → `sendMicroTiming`) | `webui/ui.js:936-957` (`.mtbars` drag ±20 ms + live ms readout), bridge `plugin/source/webui/web_ui_view.cpp:314-322` (`setMicroTiming`, clamps ±20 → `sendMicroTiming`) | `parity` | Both provide per-step ±20 ms micro-timing via vertical drag with a live ms readout, calling `sendMicroTiming`. Same data surface (`microTimingMs`) and range. Minor delta: native adds a **double-click-to-zero** reset gesture (`micro_timing_editor_view.cpp:164-171`) that the WebUI lacks (drag toward centre only) — a convenience affordance, not a capability gap → parity. |
 
 ### Lane B — lane config and rhythm generation (T03)
 
@@ -99,16 +99,16 @@ Capabilities present in `webui/ui.js` with **no** native equivalent. Populated d
 
 | Capability | WebUI Path (file:line) | Native equivalent | Verdict | Notes |
 |---|---|---|---|---|
-| _to be populated by lane audits_ | | none | `webui-only` | |
+| Per-step live emission overlay on the desk ladder (Lane A grid) | `webui/ui.js:1188-1223` | none | `webui-only` | M045 desk emission overlay marks the ladder step that most recently emitted a note per lane (kind-diffed for cheap redraws). Native `lane_grid_view` draws only the base pattern + a single orbit-dot phase indicator; it has no per-step live-emission marker. |
 
 ## Coverage checklist
 
 All 15 native views must resolve to at least one non-`_pending_` row before S01 closes:
 
-- [ ] `cell_editor_view`
-- [ ] `lane_grid_view`
-- [ ] `timeline_step_editor_view`
-- [ ] `micro_timing_editor_view`
+- [x] `cell_editor_view`
+- [x] `lane_grid_view`
+- [x] `timeline_step_editor_view`
+- [x] `micro_timing_editor_view`
 - [ ] `lane_edit_view`
 - [ ] `cross_rhythm_view`
 - [ ] `phase_alignment_view`
