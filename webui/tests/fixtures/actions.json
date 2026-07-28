@@ -114,6 +114,12 @@
       "type": "action", "v": 1,
       "name": "setCaptureBars",
       "payload": { "bars": 16 }
+    },
+    {
+      "label": "begin MIDI drag (G06)",
+      "type": "action", "v": 1,
+      "name": "beginMidiDrag",
+      "payload": {}
     }
   ]
 }

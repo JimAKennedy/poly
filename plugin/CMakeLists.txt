@@ -144,12 +144,17 @@ if(POLY_WEB_UI)
         source/webui/bridge_serialization.h
         source/webui/bridge_serialization.cpp
         source/webui/platform_save_dialog.h
+        source/webui/platform_drag_source.h
     )
     if(APPLE)
-        target_sources(poly_plugin PRIVATE source/webui/platform_save_dialog_mac.mm)
+        target_sources(poly_plugin PRIVATE
+            source/webui/platform_save_dialog_mac.mm
+            source/webui/platform_drag_source_mac.mm)
         target_link_libraries(poly_plugin PRIVATE "-framework AppKit" "-framework Foundation")
     elseif(WIN32)
-        target_sources(poly_plugin PRIVATE source/webui/platform_save_dialog_win.cpp)
+        target_sources(poly_plugin PRIVATE
+            source/webui/platform_save_dialog_win.cpp
+            source/webui/platform_drag_source_win.cpp)
         target_link_libraries(poly_plugin PRIVATE ole32 shell32 shlwapi)
     endif()
     target_include_directories(poly_plugin PRIVATE

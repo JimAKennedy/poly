@@ -170,7 +170,7 @@
           "toggleStep", "setEuclid", "setCells", "setLaneName", "setFixedStep", "setMicroTiming",
           "setEnvelope", "selectScene", "applyPreset", "togglePlay", "exportRequest",
           "chainAddEntry", "chainRemoveEntry", "resetNoteMap", "setNoteMap", "setAccent",
-          "setCaptureBars"
+          "setCaptureBars", "beginMidiDrag"
         ] },
         "payload": { "type": "object" }
       },
@@ -337,7 +337,7 @@
     },
 
     "payloadEmpty": {
-      "description": "Empty payload for: togglePlay, exportRequest, chainAddEntry, resetNoteMap",
+      "description": "Empty payload for: togglePlay, exportRequest, chainAddEntry, resetNoteMap, beginMidiDrag",
       "type": "object",
       "additionalProperties": false
     }

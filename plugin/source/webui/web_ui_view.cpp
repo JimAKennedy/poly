@@ -18,6 +18,7 @@
 #include "choc/gui/choc_MessageLoop.h"
 #include "choc/gui/choc_WebView.h"
 #include "choc/text/choc_JSON.h"
+#include "platform_drag_source.h"
 #include "platform_save_dialog.h"
 #include "poly/euclidean.h"
 #include "poly/params_def.h"
@@ -572,6 +573,32 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
         return;
     }
 
+    if (name == "beginMidiDrag") {
+        // G06: drag-and-drop MIDI export. Additive sibling to exportSaveAs —
+        // same capture-state gating (only `complete`/captureState==3 has a
+        // stable frozen window) and the same frozen-bytes dragSmf cache path.
+        // Instead of a Save-As panel, this opens a small native drag-source
+        // window (NSPasteboard / OLE CF_HDROP, via the platform_drag_source
+        // seam) holding a temp .mid the user drags straight into the DAW.
+        auto* snap = controller_->uiSnapshot();
+        const int capState = snap ? snap->captureState.load(std::memory_order_relaxed) : 0;
+        if (capState != 3 /* complete */)
+            return;
+
+        // Mirror exportSaveAs: a fresh capturing->complete edge means any
+        // existing drag cache holds a PREVIOUS window's bytes, so force a fresh
+        // RequestMidiExport and open the drag window when the new bytes land
+        // (see the dragPending_ handling in pushFrame).
+        if (!freshExportPending_ && controller_->hasDragSmf()) {
+            beginDragFromCache();
+        } else {
+            dragPending_ = true;
+            freshExportPending_ = false;
+            requestMidiExport();
+        }
+        return;
+    }
+
     if (name == "setAccent") {
         int lane = payload["lane"].get<int32_t>();
         int step = payload["step"].get<int32_t>();
@@ -938,6 +965,14 @@ void WebUIView::pushFrame() {
         savePending_ = false;
         openSaveDialogFromCache();
     }
+
+    // G06 sibling of the deferred-save path: user triggered drag-to-DAW while
+    // the cache was empty; open the native drag-source window now that the
+    // fresh frozen bytes have landed.
+    if (dragPending_ && controller_->hasDragSmf()) {
+        dragPending_ = false;
+        beginDragFromCache();
+    }
 }
 
 void WebUIView::requestMidiExport() {
@@ -994,6 +1029,17 @@ std::string WebUIView::suggestedExportName() const {
 
     name += ".mid";
     return name;
+}
+
+void WebUIView::beginDragFromCache() {
+    // G06: open the native drag-source window over the frozen SMF bytes. Unlike
+    // the Save-As panel this is non-modal (no saveDialogOpen_ re-entrancy guard):
+    // beginMidiDragExport writes a temp .mid and hands off to the OS drag
+    // pasteboard, returning immediately.
+    if (!controller_->hasDragSmf())
+        return;
+    auto bytes = controller_->dragSmfData();
+    beginMidiDragExport(parentView_, suggestedExportName(), bytes);
 }
 
 void WebUIView::openSaveDialogFromCache() {

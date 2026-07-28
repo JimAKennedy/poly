@@ -47,6 +47,7 @@ private:
     void requestMidiExport();
     void sendCaptureCommand(const char* messageId);
     void openSaveDialogFromCache();
+    void beginDragFromCache();
     std::string suggestedExportName() const;
 
     PolyController* controller_ = nullptr;
@@ -66,6 +67,10 @@ private:
     // the cache filled. saveDialogOpen_ prevents re-entrancy.
     bool savePending_ = false;
     bool saveDialogOpen_ = false;
+    // G06: user triggered drag-to-DAW while the drag cache was empty (or stale
+    // after a fresh capture edge). Deferred like savePending_ — pushFrame opens
+    // the native drag-source window on the tick that sees the fresh frozen bytes.
+    bool dragPending_ = false;
     // M051 S08: capture state machine mirror (values match UISnapshot::captureState:
     // 0=idle, 1=armed, 2=capturing, 3=complete). Tracked so pushFrame can detect the
     // capturing->complete edge and invalidate any stale drag cache: each fresh

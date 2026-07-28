@@ -38,6 +38,9 @@
  *   //                                          source: site/src/generated/presets.json)
  *   //   'togglePlay'      {}            (mock only; native transport is host-owned)
  *   //   'exportRequest'   {}
+ *   //   'beginMidiDrag'   {}            (G06: open native drag-source window for
+ *   //                                    drag-to-DAW; canExport-gated, plugin only,
+ *   //                                    fires only when capState===3/complete)
  *   //   'armCapture'      {}            (M051 S08: arm the capture state machine)
  *   //   'resetCapture'    {}            (M051 S08: reset to idle from any state)
  *   //   'setCaptureBars'  {bars}        (M051 S08: bar window length, bound to
