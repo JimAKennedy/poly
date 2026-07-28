@@ -254,9 +254,9 @@ start immediately; items 1+4 are half-day wins.
 
 ## 6. Retirement and ownership notes
 
-- The VSTGUI visual/interaction harness (`tests/ui/`) is superseded by L2
-  Playwright once the web UI becomes the shipping editor (migration W6);
-  until then it keeps guarding the legacy editor.
+- The VSTGUI visual/interaction harness (formerly `tests/ui/`) was removed in
+  M053 S05 when the native VSTGUI editor was decommissioned; the web UI is now
+  the shipping editor and L2 Playwright (`webui/tests/`) guards it.
 - Golden MIDI files are the shared truth between L3 and L4 flow #1 —
   regenerate only via the test host with a recorded reason in the commit.
 - Fixture `.cpr` files are per-Cubase-version artifacts; opening one in a
