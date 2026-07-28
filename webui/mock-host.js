@@ -837,10 +837,12 @@
         capture.startT8 = null;
         break;
       case 'setCaptureBars': {
-        // Bound to kCaptureLength; the picker offers {4,8,16,32}. Only editable
-        // before capture latches (idle/armed).
+        // G07: bound to kCaptureLength, a 1-32 bar param. The picker is now a
+        // 1-32 stepper (native parity), so any integer in [1,32] is accepted;
+        // 0/33/non-latch values are rejected. Only editable before capture
+        // latches (idle/armed, state <= 1).
         const b = Math.round(payload.bars);
-        if ([4, 8, 16, 32].includes(b) && capture.state <= 1) capture.bars = b;
+        if (Number.isInteger(b) && b >= 1 && b <= 32 && capture.state <= 1) capture.bars = b;
         break;
       }
       case 'exportRequest':

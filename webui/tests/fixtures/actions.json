@@ -108,6 +108,12 @@
       "type": "action", "v": 1,
       "name": "exportRequest",
       "payload": {}
+    },
+    {
+      "label": "set capture bars (G07)",
+      "type": "action", "v": 1,
+      "name": "setCaptureBars",
+      "payload": { "bars": 16 }
     }
   ]
 }

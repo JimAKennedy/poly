@@ -226,27 +226,42 @@
   }
 
   /* --- M051 S08 T05: capture header controls (Cloth-only cluster) ---------
-     The bars picker cycles the kCaptureLength window {4,8,16,32}; the Arm chip
-     flips to Reset once the machine leaves idle; the Export chip above reads
-     state-driven (active only in `complete`). All three reflect host truth
-     from the feedback frame (lastFrame.capState/capBars) — never local state —
-     so the header and the Cloth timeline can never disagree about the machine. */
-  const CAP_BARS_STEPS = [4, 8, 16, 32];
+     G07: the bars picker is a 1-32 stepper over the kCaptureLength window
+     (native export_controls_view parity), replacing the old fixed {4,8,16,32}
+     cycle. The Arm chip flips to Reset once the machine leaves idle; the Export
+     chip above reads state-driven (active only in `complete`). All three reflect
+     host truth from the feedback frame (lastFrame.capState/capBars) — never
+     local state — so the header and the Cloth timeline can never disagree. */
+  const CAP_BARS_MIN = 1;
+  const CAP_BARS_MAX = 32;
   const capCtl = document.getElementById('capCtl');
   const capBarsBtn = document.getElementById('capBars');
   const armBtn = document.getElementById('armBtn');
   const exportChip = document.getElementById('exportBtn');
 
   if (capBarsBtn) {
-    capBarsBtn.addEventListener('click', () => {
-      // Locked once capture latches (state >= 2): the window is frozen and
-      // kCaptureLength no longer applies until Reset.
+    // Step the capture window by ±1 bar, wrapping across the 1-32 domain so any
+    // integer length is reachable. Left-click / wheel-up increments; right-click
+    // / wheel-down decrements. Locked once capture latches (state >= 2): the
+    // window is frozen and kCaptureLength no longer applies until Reset. Reads
+    // host truth (lastFrame.capBars) — never a local counter.
+    const stepCaptureBars = (delta) => {
       if ((lastFrame.capState | 0) >= 2) return;
-      const cur = lastFrame.capBars || 8;
-      const i = CAP_BARS_STEPS.indexOf(cur);
-      const next = CAP_BARS_STEPS[(i + 1) % CAP_BARS_STEPS.length];
+      const cur = Math.min(CAP_BARS_MAX, Math.max(CAP_BARS_MIN, lastFrame.capBars || 8));
+      let next = cur + delta;
+      if (next > CAP_BARS_MAX) next = CAP_BARS_MIN;
+      else if (next < CAP_BARS_MIN) next = CAP_BARS_MAX;
       host.action('setCaptureBars', { bars: next });
+    };
+    capBarsBtn.addEventListener('click', () => stepCaptureBars(1));
+    capBarsBtn.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      stepCaptureBars(-1);
     });
+    capBarsBtn.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      stepCaptureBars(e.deltaY < 0 ? 1 : -1);
+    }, { passive: false });
   }
   if (armBtn) {
     armBtn.addEventListener('click', () => {

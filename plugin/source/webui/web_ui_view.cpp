@@ -341,6 +341,22 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
         return;
     }
 
+    if (name == "setCaptureBars") {
+        // G07: capture-window length is the global kCaptureLength param, a 1-32
+        // bar integer. processor.cpp maps norm -> 1 + round(norm * 31), so the
+        // inverse is norm = (bars - 1) / 31. Clamp to the 1-32 domain and drive
+        // the real parameter through begin/perform/end just like selectScene.
+        if (!payload.hasObjectMember("bars"))
+            return;
+        int bars = std::clamp(payload["bars"].get<int32_t>(), 1, 32);
+        const double norm = static_cast<double>(bars - 1) / 31.0;
+        controller_->beginEdit(ParamIDs::kCaptureLength);
+        controller_->setParamNormalized(ParamIDs::kCaptureLength, norm);
+        controller_->performEdit(ParamIDs::kCaptureLength, norm);
+        controller_->endEdit(ParamIDs::kCaptureLength);
+        return;
+    }
+
     if (name == "setEnvelope") {
         int lane = payload["lane"].get<int32_t>();
         int index = payload["index"].get<int32_t>();

@@ -1429,6 +1429,13 @@
       case 'exportRequest':
         console.info('[wasm-host] exportRequest — web mode, no-op');
         break;
+      case 'setCaptureBars':
+        // G07: kCaptureLength is a native capture-window param. Web mode has no
+        // MIDI capture buffer (no capState/capBars in the frame), so this is a
+        // graceful no-op — mirrored here only to keep the action off the
+        // unknown-action path. The native bridge (web_ui_view.cpp) is authoritative.
+        console.info('[wasm-host] setCaptureBars — web mode, no capture buffer, no-op');
+        break;
       default:
         console.warn('[wasm-host] unknown action', name, payload);
         return;

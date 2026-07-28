@@ -167,6 +167,18 @@ test.describe('outbound action contract', () => {
     expect(validate(msg), JSON.stringify(validate.errors)).toBe(true);
   });
 
+  test('setCaptureBars action has correct shape (G07)', async ({ page }) => {
+    const actions = await page.evaluate(() => {
+      window.PolyHost.action('setCaptureBars', { bars: 16 });
+      return window.__actionLog.slice();
+    });
+    expect(actions.length).toBe(1);
+    expect(actions[0].name).toBe('setCaptureBars');
+    expect(actions[0].payload).toEqual({ bars: 16 });
+    const msg = { type: 'action', v: 1, ...actions[0] };
+    expect(validate(msg), JSON.stringify(validate.errors)).toBe(true);
+  });
+
   test('noteMap actions have correct shape', async ({ page }) => {
     const actions = await page.evaluate(() => {
       window.PolyHost.action('setNoteMap', { note: 36, output: 48 });
