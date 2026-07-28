@@ -156,6 +156,7 @@ if(APPLE OR WIN32)
         target_link_libraries(poly_plugin PRIVATE ole32 shell32 shlwapi)
     endif()
     target_include_directories(poly_plugin PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}/source/webui
         ${choc_SOURCE_DIR}
         ${CMAKE_CURRENT_BINARY_DIR}/generated
     )
