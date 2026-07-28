@@ -7,46 +7,12 @@ smtg_add_vst3plugin(poly_plugin
     source/controller_base.h
     source/controller_base.cpp
     source/plugids.h
-    source/ui/cell_editor_view.h
-    source/ui/cell_editor_view.cpp
-    source/ui/cross_rhythm_view.h
-    source/ui/cross_rhythm_view.cpp
-    source/ui/envelope_curve_view.h
-    source/ui/envelope_curve_view.cpp
-    source/ui/header_view.h
-    source/ui/header_view.cpp
-    source/ui/lane_edit_view.h
-    source/ui/lane_edit_view.cpp
-    source/ui/lane_grid_view.h
-    source/ui/lane_grid_view.cpp
-    source/ui/phase_alignment_view.h
-    source/ui/phase_alignment_view.cpp
-    source/ui/chain_popover_view.h
-    source/ui/chain_popover_view.cpp
-    source/ui/scene_bar_view.h
-    source/ui/scene_bar_view.cpp
-    source/ui/micro_timing_editor_view.h
-    source/ui/micro_timing_editor_view.cpp
-    source/ui/note_map_view.h
-    source/ui/note_map_view.cpp
-    source/ui/timeline_step_editor_view.h
-    source/ui/timeline_step_editor_view.cpp
-    source/ui/velocity_view.h
-    source/ui/velocity_view.cpp
-    source/ui/export_controls_view.h
-    source/ui/export_controls_view.cpp
-)
-
-smtg_target_add_plugin_resources(poly_plugin
-    RESOURCES
-        resource/poly.uidesc
 )
 
 target_link_libraries(poly_plugin
     PRIVATE
         poly_engine
         sdk
-        vstgui_support
 )
 
 if(APPLE)
@@ -105,9 +71,10 @@ endif()
 #
 # Platform-gated: built for macOS+Windows (the shipping targets), skipped on
 # Linux until choc's WebKitGTK backend is wired up in CI (M054). Poly does not
-# ship a Linux VST3 — the Ubuntu build is a portability sanity check, so it
-# stays on the native VSTGUI editor path (plugin/source/ui/*) for now. The
-# native editor path is scheduled for decommission in a later M053 slice.
+# ship a Linux VST3 — the Ubuntu build is a portability sanity check. The native
+# VSTGUI editor was removed in M053/S05, so on Linux the plugin ships no editor
+# (controller.cpp's createView returns nullptr) until the choc WebKitGTK backend
+# lands in M054.
 #
 # There is intentionally no build flag here: the platform condition IS the
 # selector, so local dev and CI cannot diverge on which editor ships. The same
