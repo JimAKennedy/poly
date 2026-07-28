@@ -34,6 +34,7 @@ param IDs.
 | `toggleStep` | `payloadToggleStep` | `lane`, `step` |  |
 | `setEuclid` | `payloadSetEuclid` | `lane` |  |
 | `setCells` | `payloadSetCells` | `lane`, `cells` |  |
+| `setLaneName` | `payloadSetLaneName` | `lane`, `name` |  |
 | `setFixedStep` | `payloadSetFixedStep` | `lane`, `step`, `on` |  |
 | `setMicroTiming` | `payloadSetMicroTiming` | `lane`, `step`, `ms` |  |
 | `setEnvelope` | `payloadSetEnvelope` | `lane`, `index` |  |
@@ -64,7 +65,7 @@ param IDs.
 |---|---|---|---|
 | `msgReady` | JS → C++ | `type`: `"ready"`<br>`v`: integer | `type`, `v` |
 | `msgEdit` | JS → C++ | `type`: `"edit"`<br>`v`: integer<br>`paramId`: string<br>`value`: number<br>`gesture`: `begin`\|`perform`\|`end` | `type`, `v`, `paramId`, `value`, `gesture` |
-| `msgAction` | JS → C++ | `type`: `"action"`<br>`v`: integer<br>`name`: `toggleStep`\|`setEuclid`\|`setCells`\|`setFixedStep`\|`setMicroTiming`\|`setEnvelope`\|`selectScene`\|`applyPreset`\|`togglePlay`\|`exportRequest`\|`chainAddEntry`\|`chainRemoveEntry`\|`resetNoteMap`\|`setNoteMap`\|`setAccent`<br>`payload`: object | `type`, `v`, `name`, `payload` |
+| `msgAction` | JS → C++ | `type`: `"action"`<br>`v`: integer<br>`name`: `toggleStep`\|`setEuclid`\|`setCells`\|`setLaneName`\|`setFixedStep`\|`setMicroTiming`\|`setEnvelope`\|`selectScene`\|`applyPreset`\|`togglePlay`\|`exportRequest`\|`chainAddEntry`\|`chainRemoveEntry`\|`resetNoteMap`\|`setNoteMap`\|`setAccent`<br>`payload`: object | `type`, `v`, `name`, `payload` |
 | `msgState` | C++ → JS | `type`: `"state"`<br>`state`: `state` | `type`, `state` |
 | `msgFrame` | C++ → JS | `type`: `"frame"`<br>`frame`: `frame` | `type`, `frame` |
 <!-- END GENERATED: messages -->

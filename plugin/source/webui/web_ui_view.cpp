@@ -300,6 +300,25 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
         return;
     }
 
+    if (name == "setLaneName") {
+        int lane = payload["lane"].get<int32_t>();
+        if (lane < 0 || lane >= kMaxLanes)
+            return;
+        if (!payload.hasObjectMember("name") || !payload["name"].isString())
+            return;
+        auto laneName = payload["name"].toString();
+        // Mirror the native inline-rename invariant (lane_edit_view.cpp): reject
+        // empty names and cap length at LaneEditView::kMaxNameLength (15). Empty or
+        // oversized payloads are dropped silently per the clamp-and-ignore rule
+        // shared by setCells/setEuclid. laneName lands in the pushed state JSON via
+        // nameFn (controller_->laneName) and persists through controller_base
+        // getState serialization, exactly like the native rename gesture.
+        if (laneName.empty() || laneName.size() > 15)
+            return;
+        controller_->setLaneName(lane, laneName);
+        return;
+    }
+
     if (name == "setFixedStep") {
         int lane = payload["lane"].get<int32_t>();
         int step = payload["step"].get<int32_t>();

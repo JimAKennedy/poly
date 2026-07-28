@@ -28,6 +28,7 @@
  *   //   'toggleStep'      {lane, step}
  *   //   'setEuclid'       {lane, steps?, hits?, rotation?}
  *   //   'setCells'        {lane, cells: number[] | null}
+ *   //   'setLaneName'     {lane, name}    (1..15 chars; empty/oversized dropped)
  *   //   'setFixedStep'    {lane, step, on}
  *   //   'setMicroTiming'  {lane, step, ms}
  *   //   'setEnvelope'     {lane, index, envelope | null}

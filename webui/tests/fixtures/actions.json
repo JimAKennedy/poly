@@ -26,6 +26,12 @@
       "payload": { "lane": 0, "cells": null }
     },
     {
+      "label": "set lane name",
+      "type": "action", "v": 1,
+      "name": "setLaneName",
+      "payload": { "lane": 0, "name": "Kick" }
+    },
+    {
       "label": "set fixed step on timeline lane",
       "type": "action", "v": 1,
       "name": "setFixedStep",

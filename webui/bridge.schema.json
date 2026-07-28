@@ -167,7 +167,7 @@
         "type":    { "const": "action" },
         "v":       { "type": "integer" },
         "name":    { "type": "string", "enum": [
-          "toggleStep", "setEuclid", "setCells", "setFixedStep", "setMicroTiming",
+          "toggleStep", "setEuclid", "setCells", "setLaneName", "setFixedStep", "setMicroTiming",
           "setEnvelope", "selectScene", "applyPreset", "togglePlay", "exportRequest",
           "chainAddEntry", "chainRemoveEntry", "resetNoteMap", "setNoteMap", "setAccent"
         ] },
@@ -223,6 +223,16 @@
         "cells": { "oneOf": [{ "type": "null" }, { "type": "array", "items": { "type": "integer", "minimum": 1 } }] }
       },
       "required": ["lane", "cells"],
+      "additionalProperties": false
+    },
+
+    "payloadSetLaneName": {
+      "type": "object",
+      "properties": {
+        "lane": { "type": "integer", "minimum": 0, "maximum": 7 },
+        "name": { "type": "string", "minLength": 1, "maxLength": 15 }
+      },
+      "required": ["lane", "name"],
       "additionalProperties": false
     },
 
