@@ -127,6 +127,17 @@ if(NOT POLY_ENGINE_ONLY)
         FetchContent_MakeAvailable(audiounitsdk)
         set(SMTG_AUDIOUNIT_SDK_PATH "${audiounitsdk_SOURCE_DIR}" CACHE PATH "" FORCE)
         set(SMTG_ENABLE_AUV2_BUILDS ON CACHE BOOL "" FORCE)
+        # The AU CI leg configures with -DCMAKE_OSX_ARCHITECTURES=arm64 (single
+        # arch), but the SDK defaults SMTG_BUILD_UNIVERSAL_BINARY=ON, which forces
+        # x86_64;arm64 onto the SDK/plugin/AU targets via smtg_target_setup_universal_binary.
+        # poly_engine honours the arm64-only global, so the plugin's x86_64 slice
+        # fails to find poly_engine symbols at link. Force single-arch to match.
+        set(SMTG_BUILD_UNIVERSAL_BINARY OFF CACHE BOOL "" FORCE)
+        # Ship the component ad-hoc signed (per D004 — no Developer-ID/notarization
+        # yet, and GitHub runners have no "Apple Development" identity). The SDK's
+        # default codesign identity would fail the poly_au post-build codesign; "-"
+        # selects ad-hoc, matching the -adhoc_codesign already applied at link.
+        set(SMTG_CODE_SIGN_IDENTITY_MAC "-" CACHE STRING "" FORCE)
     endif()
 
     FetchContent_MakeAvailable(vst3sdk)

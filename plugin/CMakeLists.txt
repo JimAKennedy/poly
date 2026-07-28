@@ -81,6 +81,16 @@ jk_target_warnings(poly_plugin)
 #   type=aumu  subtype=Poly  manufacturer=JkDl  factoryFunction=AUWrapperFactory
 # -----------------------------------------------------------------------------
 if(APPLE AND XCODE AND SMTG_ENABLE_AUV2_BUILDS)
+    # The VST3 SDK appends its cmake/modules to CMAKE_MODULE_PATH inside its own
+    # FetchContent subdirectory scope, which does not propagate back to this
+    # scope — so include(SMTG_AddVST3AuV2) by bare name is not resolvable here.
+    # Re-add the SDK module dir explicitly before the include.
+    list(APPEND CMAKE_MODULE_PATH "${vst3sdk_SOURCE_DIR}/cmake/modules")
+    # public_sdk_SOURCE_DIR is likewise a plain variable set in the SDK's own
+    # subdirectory scope (points at the auwrapper .mm sources the macro compiles);
+    # it is empty here, so re-derive it before smtg_target_add_auv2 or the macro
+    # creates poly_au with no sources.
+    set(public_sdk_SOURCE_DIR "${vst3sdk_SOURCE_DIR}/public.sdk")
     include(SMTG_AddVST3AuV2)
     smtg_target_add_auv2(poly_au
         BUNDLE_NAME Poly
