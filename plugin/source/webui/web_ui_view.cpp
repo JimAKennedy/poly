@@ -1,6 +1,6 @@
 // Web UI view — hosts the webui/ bundle in a choc::ui::WebView and
-// bridges to the controller per webui/bridge-schema.md. Compiled only
-// with -DPOLY_WEB_UI=ON.
+// bridges to the controller per webui/bridge-schema.md. Compiled only on
+// the choc-webview platforms (defined(__APPLE__) || defined(_WIN32)).
 
 #include "web_ui_view.h"
 
@@ -18,6 +18,7 @@
 #include "choc/gui/choc_MessageLoop.h"
 #include "choc/gui/choc_WebView.h"
 #include "choc/text/choc_JSON.h"
+#include "platform_drag_source.h"
 #include "platform_save_dialog.h"
 #include "poly/euclidean.h"
 #include "poly/params_def.h"
@@ -300,6 +301,25 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
         return;
     }
 
+    if (name == "setLaneName") {
+        int lane = payload["lane"].get<int32_t>();
+        if (lane < 0 || lane >= kMaxLanes)
+            return;
+        if (!payload.hasObjectMember("name") || !payload["name"].isString())
+            return;
+        auto laneName = payload["name"].toString();
+        // Mirror the native inline-rename invariant (lane_edit_view.cpp): reject
+        // empty names and cap length at LaneEditView::kMaxNameLength (15). Empty or
+        // oversized payloads are dropped silently per the clamp-and-ignore rule
+        // shared by setCells/setEuclid. laneName lands in the pushed state JSON via
+        // nameFn (controller_->laneName) and persists through controller_base
+        // getState serialization, exactly like the native rename gesture.
+        if (laneName.empty() || laneName.size() > 15)
+            return;
+        controller_->setLaneName(lane, laneName);
+        return;
+    }
+
     if (name == "setFixedStep") {
         int lane = payload["lane"].get<int32_t>();
         int step = payload["step"].get<int32_t>();
@@ -319,6 +339,22 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
         auto ms = static_cast<float>(payload["ms"].get<double>());
         scene.lanes[lane].microTimingMs[step] = std::clamp(ms, -20.0f, 20.0f);
         controller_->sendMicroTiming(lane);
+        return;
+    }
+
+    if (name == "setCaptureBars") {
+        // G07: capture-window length is the global kCaptureLength param, a 1-32
+        // bar integer. processor.cpp maps norm -> 1 + round(norm * 31), so the
+        // inverse is norm = (bars - 1) / 31. Clamp to the 1-32 domain and drive
+        // the real parameter through begin/perform/end just like selectScene.
+        if (!payload.hasObjectMember("bars"))
+            return;
+        int bars = std::clamp(payload["bars"].get<int32_t>(), 1, 32);
+        const double norm = static_cast<double>(bars - 1) / 31.0;
+        controller_->beginEdit(ParamIDs::kCaptureLength);
+        controller_->setParamNormalized(ParamIDs::kCaptureLength, norm);
+        controller_->performEdit(ParamIDs::kCaptureLength, norm);
+        controller_->endEdit(ParamIDs::kCaptureLength);
         return;
     }
 
@@ -531,6 +567,32 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
             openSaveDialogFromCache();
         } else {
             savePending_ = true;
+            freshExportPending_ = false;
+            requestMidiExport();
+        }
+        return;
+    }
+
+    if (name == "beginMidiDrag") {
+        // G06: drag-and-drop MIDI export. Additive sibling to exportSaveAs —
+        // same capture-state gating (only `complete`/captureState==3 has a
+        // stable frozen window) and the same frozen-bytes dragSmf cache path.
+        // Instead of a Save-As panel, this opens a small native drag-source
+        // window (NSPasteboard / OLE CF_HDROP, via the platform_drag_source
+        // seam) holding a temp .mid the user drags straight into the DAW.
+        auto* snap = controller_->uiSnapshot();
+        const int capState = snap ? snap->captureState.load(std::memory_order_relaxed) : 0;
+        if (capState != 3 /* complete */)
+            return;
+
+        // Mirror exportSaveAs: a fresh capturing->complete edge means any
+        // existing drag cache holds a PREVIOUS window's bytes, so force a fresh
+        // RequestMidiExport and open the drag window when the new bytes land
+        // (see the dragPending_ handling in pushFrame).
+        if (!freshExportPending_ && controller_->hasDragSmf()) {
+            beginDragFromCache();
+        } else {
+            dragPending_ = true;
             freshExportPending_ = false;
             requestMidiExport();
         }
@@ -903,6 +965,14 @@ void WebUIView::pushFrame() {
         savePending_ = false;
         openSaveDialogFromCache();
     }
+
+    // G06 sibling of the deferred-save path: user triggered drag-to-DAW while
+    // the cache was empty; open the native drag-source window now that the
+    // fresh frozen bytes have landed.
+    if (dragPending_ && controller_->hasDragSmf()) {
+        dragPending_ = false;
+        beginDragFromCache();
+    }
 }
 
 void WebUIView::requestMidiExport() {
@@ -959,6 +1029,17 @@ std::string WebUIView::suggestedExportName() const {
 
     name += ".mid";
     return name;
+}
+
+void WebUIView::beginDragFromCache() {
+    // G06: open the native drag-source window over the frozen SMF bytes. Unlike
+    // the Save-As panel this is non-modal (no saveDialogOpen_ re-entrancy guard):
+    // beginMidiDragExport writes a temp .mid and hands off to the OS drag
+    // pasteboard, returning immediately.
+    if (!controller_->hasDragSmf())
+        return;
+    auto bytes = controller_->dragSmfData();
+    beginMidiDragExport(parentView_, suggestedExportName(), bytes);
 }
 
 void WebUIView::openSaveDialogFromCache() {

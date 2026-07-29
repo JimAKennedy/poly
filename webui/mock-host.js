@@ -750,9 +750,18 @@
         break;
       }
       case 'setCells':
-        l.cells = payload.cells ? payload.cells.map((c) => Math.max(1, Math.min(4, c))) : null;
+        l.cells = payload.cells ? payload.cells.map((c) => Math.max(1, Math.min(16, c))) : null;
         l.mt = new Array(l.cells ? l.cells.length : l.steps).fill(0);
         break;
+      case 'setLaneName': {
+        // Mirror the native/bridge clamp-and-ignore invariant (web_ui_view.cpp
+        // setLaneName + lane_edit_view.cpp commitNameEdit): accept only a
+        // non-empty name of at most LaneEditView::kMaxNameLength (15) chars;
+        // empty/oversized/non-string payloads are dropped silently.
+        const nm = typeof payload.name === 'string' ? payload.name : '';
+        if (l && nm.length >= 1 && nm.length <= 15) l.name = nm;
+        break;
+      }
       case 'setFixedStep':
         if (l.fixed) {
           l.fixed[payload.step] = payload.on ? 1 : 0;
@@ -828,15 +837,24 @@
         capture.startT8 = null;
         break;
       case 'setCaptureBars': {
-        // Bound to kCaptureLength; the picker offers {4,8,16,32}. Only editable
-        // before capture latches (idle/armed).
+        // G07: bound to kCaptureLength, a 1-32 bar param. The picker is now a
+        // 1-32 stepper (native parity), so any integer in [1,32] is accepted;
+        // 0/33/non-latch values are rejected. Only editable before capture
+        // latches (idle/armed, state <= 1).
         const b = Math.round(payload.bars);
-        if ([4, 8, 16, 32].includes(b) && capture.state <= 1) capture.bars = b;
+        if (Number.isInteger(b) && b >= 1 && b <= 32 && capture.state <= 1) capture.bars = b;
         break;
       }
       case 'exportRequest':
         console.info('[mock-host] exportRequest — native host runs the SMF export path here');
         break;
+      case 'beginMidiDrag':
+        // G06: the native host opens a platform drag-source window here
+        // (platform_drag_source_mac.mm / _win.cpp) carrying the frozen .mid.
+        // The mock has no native surface — record the intent (via the wrapped
+        // action log in tests) and change no state.
+        console.info('[mock-host] beginMidiDrag — native host opens the drag-source window here');
+        return;
       default:
         console.warn('[mock-host] unknown action', name, payload);
         return;
@@ -844,9 +862,16 @@
     if (name !== 'togglePlay') emitState();
   }
 
+  // M053 S03d (G06): the mock has no SMF/drag export path, so canExport is
+  // false by default (site preview + the standing capExport specs rely on
+  // that). A `?export=1` query seam flips it true so the drag-to-DAW affordance
+  // and its Playwright spec can exercise the beginMidiDrag gating standalone,
+  // without a native plugin build.
+  const canExport = /[?&]export=1(?:&|$)/.test(window.location.search);
+
   window.PolyMockHost = {
     schemaVersion: window.POLY_SCHEMA_VERSION,
-    capabilities: { canExport: false },
+    capabilities: { canExport },
     getState: () => state,
     onState: (cb) => stateSubs.push(cb),
     edit: (paramId, value, gesture) => {
@@ -914,7 +939,7 @@
           timingOffset: v => { lane.timingOffset = v * 40 - 20; },
           kotekanSource:v => { lane.kotekanSource = Math.round(v * 8) - 1; },
           note:         v => { lane.note = Math.round(v * 127); },
-          channel:      v => { lane.ch = Math.round(v * 15) + 1; },
+          channel:      v => { lane.ch = Math.round(v * 16); },
           steps:        v => {
             lane.steps = Math.round(v * 63) + 1;
             lane.hits = Math.min(lane.hits, lane.steps);

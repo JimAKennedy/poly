@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <fstream>
 #include <set>
 #include <string>
@@ -429,6 +430,15 @@ TEST(BridgeActionContract, SetMicroTimingPayload) {
     EXPECT_DOUBLE_EQ(p["ms"].get<double>(), -10.0);
 }
 
+TEST(BridgeActionContract, SetCaptureBarsPayload) {
+    auto msg = choc::json::parse(R"({"type":"action","v":1,"name":"setCaptureBars","payload":{"bars":16}})");
+    auto p = msg["payload"];
+    EXPECT_EQ(p["bars"].get<int32_t>(), 16);
+    // Inverse of processor's norm -> 1 + round(norm*31) mapping.
+    const double norm = static_cast<double>(p["bars"].get<int32_t>() - 1) / 31.0;
+    EXPECT_EQ(1 + static_cast<int>(std::round(norm * 31.0)), 16);
+}
+
 TEST(BridgeActionContract, SetEnvelopePayload) {
     auto msg = choc::json::parse(
         R"({"type":"action","v":1,"name":"setEnvelope","payload":{"lane":2,"index":0,"envelope":{"target":"Velocity","period":4.0,"depth":0.3,"on":true}}})");
@@ -593,8 +603,9 @@ TEST(BridgeActionContract, AllSchemaActionsHaveCppHandler) {
     auto actionNames = schema["definitions"]["msgAction"]["properties"]["name"]["enum"];
 
     std::set<std::string> cppHandlers = {
-        "toggleStep",  "setEuclid",     "setCells",  "setFixedStep",  "setMicroTiming",   "setEnvelope",  "selectScene",
-        "applyPreset", "exportRequest", "setAccent", "chainAddEntry", "chainRemoveEntry", "resetNoteMap", "setNoteMap",
+        "toggleStep",   "setEuclid",   "setCells",      "setFixedStep",   "setMicroTiming", "setEnvelope",
+        "selectScene",  "applyPreset", "exportRequest", "setAccent",      "chainAddEntry",  "chainRemoveEntry",
+        "resetNoteMap", "setNoteMap",  "setLaneName",   "setCaptureBars", "beginMidiDrag",
     };
     std::set<std::string> mockOnly = {"togglePlay"};
 

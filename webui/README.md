@@ -43,4 +43,4 @@ strip · ⤢ on a strip opens the deep editors (Pattern / Timing / Envelopes).
 
 Phase A of the spike: UI split from host, mock host complete, plugin host
 implemented against the schema but the native shell (Phase B,
-`-DPOLY_WEB_UI=ON`) is scaffolding — see `plugin/source/webui/`.
+compiled on macOS and Windows) is scaffolding — see `plugin/source/webui/`.

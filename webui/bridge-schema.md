@@ -1,7 +1,7 @@
 # Poly Web UI ↔ Native Bridge Schema (v1)
 
 Wire format between `plugin-host.js` and the native webview shell
-(`plugin/source/webui/`, built with `-DPOLY_WEB_UI=ON`). Every message is a
+(`plugin/source/webui/`, compiled on macOS and Windows). Every message is a
 single JSON object with a `v` (schema version) field. Unknown fields must be
 ignored; unknown message types must be logged and dropped, never crash.
 
@@ -34,18 +34,21 @@ param IDs.
 | `toggleStep` | `payloadToggleStep` | `lane`, `step` |  |
 | `setEuclid` | `payloadSetEuclid` | `lane` |  |
 | `setCells` | `payloadSetCells` | `lane`, `cells` |  |
+| `setLaneName` | `payloadSetLaneName` | `lane`, `name` |  |
 | `setFixedStep` | `payloadSetFixedStep` | `lane`, `step`, `on` |  |
 | `setMicroTiming` | `payloadSetMicroTiming` | `lane`, `step`, `ms` |  |
 | `setEnvelope` | `payloadSetEnvelope` | `lane`, `index` |  |
 | `selectScene` | `payloadSelectScene` | `scene` |  |
 | `applyPreset` | `payloadApplyPreset` | `index` | index=-1 loads Init (all lanes cleared). index>=0 selects a factory preset from the runtime inventory (site/src/generated/presets.json). No hard maximum here: bounds are enforced by the native side against the actual inventory. |
-| `togglePlay` | `payloadEmpty` | — | Empty payload for: togglePlay, exportRequest, chainAddEntry, resetNoteMap |
-| `exportRequest` | `payloadEmpty` | — | Empty payload for: togglePlay, exportRequest, chainAddEntry, resetNoteMap |
-| `chainAddEntry` | `payloadEmpty` | — | Empty payload for: togglePlay, exportRequest, chainAddEntry, resetNoteMap |
+| `togglePlay` | `payloadEmpty` | — | Empty payload for: togglePlay, exportRequest, chainAddEntry, resetNoteMap, beginMidiDrag |
+| `exportRequest` | `payloadEmpty` | — | Empty payload for: togglePlay, exportRequest, chainAddEntry, resetNoteMap, beginMidiDrag |
+| `chainAddEntry` | `payloadEmpty` | — | Empty payload for: togglePlay, exportRequest, chainAddEntry, resetNoteMap, beginMidiDrag |
 | `chainRemoveEntry` | `payloadChainRemoveEntry` | `index` |  |
-| `resetNoteMap` | `payloadEmpty` | — | Empty payload for: togglePlay, exportRequest, chainAddEntry, resetNoteMap |
+| `resetNoteMap` | `payloadEmpty` | — | Empty payload for: togglePlay, exportRequest, chainAddEntry, resetNoteMap, beginMidiDrag |
 | `setNoteMap` | `payloadSetNoteMap` | `note`, `output` |  |
 | `setAccent` | `payloadSetAccent` | `lane`, `step`, `value` |  |
+| `setCaptureBars` | `payloadSetCaptureBars` | `bars` | G07: capture-window length in bars. Drives the global kCaptureLength param (1-32), mapped native-side to norm=(bars-1)/31. |
+| `beginMidiDrag` | `payloadEmpty` | — | Empty payload for: togglePlay, exportRequest, chainAddEntry, resetNoteMap, beginMidiDrag |
 <!-- END GENERATED: actions -->
 
 ## C++ → JS
@@ -64,7 +67,7 @@ param IDs.
 |---|---|---|---|
 | `msgReady` | JS → C++ | `type`: `"ready"`<br>`v`: integer | `type`, `v` |
 | `msgEdit` | JS → C++ | `type`: `"edit"`<br>`v`: integer<br>`paramId`: string<br>`value`: number<br>`gesture`: `begin`\|`perform`\|`end` | `type`, `v`, `paramId`, `value`, `gesture` |
-| `msgAction` | JS → C++ | `type`: `"action"`<br>`v`: integer<br>`name`: `toggleStep`\|`setEuclid`\|`setCells`\|`setFixedStep`\|`setMicroTiming`\|`setEnvelope`\|`selectScene`\|`applyPreset`\|`togglePlay`\|`exportRequest`\|`chainAddEntry`\|`chainRemoveEntry`\|`resetNoteMap`\|`setNoteMap`\|`setAccent`<br>`payload`: object | `type`, `v`, `name`, `payload` |
+| `msgAction` | JS → C++ | `type`: `"action"`<br>`v`: integer<br>`name`: `toggleStep`\|`setEuclid`\|`setCells`\|`setLaneName`\|`setFixedStep`\|`setMicroTiming`\|`setEnvelope`\|`selectScene`\|`applyPreset`\|`togglePlay`\|`exportRequest`\|`chainAddEntry`\|`chainRemoveEntry`\|`resetNoteMap`\|`setNoteMap`\|`setAccent`\|`setCaptureBars`\|`beginMidiDrag`<br>`payload`: object | `type`, `v`, `name`, `payload` |
 | `msgState` | C++ → JS | `type`: `"state"`<br>`state`: `state` | `type`, `state` |
 | `msgFrame` | C++ → JS | `type`: `"frame"`<br>`frame`: `frame` | `type`, `frame` |
 <!-- END GENERATED: messages -->

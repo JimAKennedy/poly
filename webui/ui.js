@@ -197,12 +197,24 @@
        which the processor has frozen a stable, exportable window. */
   if (host.capabilities && host.capabilities.canExport) {
     const btn = document.getElementById('exportBtn');
-    btn.title = 'Save the captured MIDI window as a .mid file (available once capture is complete)';
+    btn.title = 'Save the captured MIDI window as a .mid file, or drag it straight into your DAW (available once capture is complete)';
     btn.addEventListener('click', () => {
       if ((lastFrame.capState | 0) !== 3) return; // active only in `complete`
       host.action('exportSaveAs', {});
       btn.classList.add('on');
     });
+    // M053 S03d (G06): the Export chip doubles as a drag source. A click runs
+    // the Save-As path above; dragging it opens the native drag-source window
+    // (platform_drag_source) that carries the frozen .mid straight into the DAW.
+    // Gated identically on capState===3 (complete) — a drag begun in any other
+    // state is cancelled so the affordance is inert until a window is frozen.
+    btn.setAttribute('draggable', 'true');
+    btn.addEventListener('dragstart', (e) => {
+      if ((lastFrame.capState | 0) !== 3) { e.preventDefault(); return; }
+      host.action('beginMidiDrag', {});
+      btn.classList.add('dragging');
+    });
+    btn.addEventListener('dragend', () => btn.classList.remove('dragging'));
     window.addEventListener('polyExportResult', (e) => {
       btn.classList.remove('on');
       const path = (e && e.detail && e.detail.savedPath) || '';
@@ -226,27 +238,42 @@
   }
 
   /* --- M051 S08 T05: capture header controls (Cloth-only cluster) ---------
-     The bars picker cycles the kCaptureLength window {4,8,16,32}; the Arm chip
-     flips to Reset once the machine leaves idle; the Export chip above reads
-     state-driven (active only in `complete`). All three reflect host truth
-     from the feedback frame (lastFrame.capState/capBars) — never local state —
-     so the header and the Cloth timeline can never disagree about the machine. */
-  const CAP_BARS_STEPS = [4, 8, 16, 32];
+     G07: the bars picker is a 1-32 stepper over the kCaptureLength window
+     (native export_controls_view parity), replacing the old fixed {4,8,16,32}
+     cycle. The Arm chip flips to Reset once the machine leaves idle; the Export
+     chip above reads state-driven (active only in `complete`). All three reflect
+     host truth from the feedback frame (lastFrame.capState/capBars) — never
+     local state — so the header and the Cloth timeline can never disagree. */
+  const CAP_BARS_MIN = 1;
+  const CAP_BARS_MAX = 32;
   const capCtl = document.getElementById('capCtl');
   const capBarsBtn = document.getElementById('capBars');
   const armBtn = document.getElementById('armBtn');
   const exportChip = document.getElementById('exportBtn');
 
   if (capBarsBtn) {
-    capBarsBtn.addEventListener('click', () => {
-      // Locked once capture latches (state >= 2): the window is frozen and
-      // kCaptureLength no longer applies until Reset.
+    // Step the capture window by ±1 bar, wrapping across the 1-32 domain so any
+    // integer length is reachable. Left-click / wheel-up increments; right-click
+    // / wheel-down decrements. Locked once capture latches (state >= 2): the
+    // window is frozen and kCaptureLength no longer applies until Reset. Reads
+    // host truth (lastFrame.capBars) — never a local counter.
+    const stepCaptureBars = (delta) => {
       if ((lastFrame.capState | 0) >= 2) return;
-      const cur = lastFrame.capBars || 8;
-      const i = CAP_BARS_STEPS.indexOf(cur);
-      const next = CAP_BARS_STEPS[(i + 1) % CAP_BARS_STEPS.length];
+      const cur = Math.min(CAP_BARS_MAX, Math.max(CAP_BARS_MIN, lastFrame.capBars || 8));
+      let next = cur + delta;
+      if (next > CAP_BARS_MAX) next = CAP_BARS_MIN;
+      else if (next < CAP_BARS_MIN) next = CAP_BARS_MAX;
       host.action('setCaptureBars', { bars: next });
+    };
+    capBarsBtn.addEventListener('click', () => stepCaptureBars(1));
+    capBarsBtn.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      stepCaptureBars(-1);
     });
+    capBarsBtn.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      stepCaptureBars(e.deltaY < 0 ? 1 : -1);
+    }, { passive: false });
   }
   if (armBtn) {
     armBtn.addEventListener('click', () => {
@@ -270,43 +297,95 @@
   }
 
   /* --- note map modal --- */
+  // GM drum names (General MIDI percussion, notes 35-81) ported verbatim from
+  // plugin/source/ui/note_map_view.cpp kDrumNames so the WebUI note-map picker
+  // shows the same named drums as the native note_map_view (G05 parity).
+  const NM_DRUM_NAMES = {
+    35: 'Kick 2', 36: 'Kick 1', 37: 'Side Stick', 38: 'Snare', 39: 'Clap',
+    40: 'Elec Snare', 41: 'Floor Tom L', 42: 'Closed HH', 43: 'Floor Tom H', 44: 'Pedal HH',
+    45: 'Low Tom', 46: 'Open HH', 47: 'Low-Mid Tom', 48: 'Hi-Mid Tom', 49: 'Crash 1',
+    50: 'High Tom', 51: 'Ride 1', 52: 'China', 53: 'Ride Bell', 54: 'Tambourine',
+    55: 'Splash', 56: 'Cowbell', 57: 'Crash 2', 58: 'Vibraslap', 59: 'Ride 2',
+    60: 'Hi Bongo', 61: 'Lo Bongo', 62: 'Mute Conga H', 63: 'Open Conga H', 64: 'Low Conga',
+    65: 'Hi Timbale', 66: 'Lo Timbale', 67: 'Hi Agogo', 68: 'Lo Agogo', 69: 'Cabasa',
+    70: 'Maracas', 71: 'Whistle S', 72: 'Whistle L', 73: 'Guiro S', 74: 'Guiro L',
+    75: 'Claves', 76: 'Woodblock H', 77: 'Woodblock L', 78: 'Cuica Mute', 79: 'Cuica Open',
+    80: 'Triangle M', 81: 'Triangle O',
+  };
   let noteMapModal = null;
   let noteMapDismiss = null;
+  // View mode persists across modal rebuilds (refreshAll closes+reopens on every
+  // state change). 'notes' = full 128-row view; 'lanes' = 8 lane source-note rows.
+  let noteMapMode = 'notes';
+  function nmDrumLabel(n) {
+    return NM_DRUM_NAMES[n] || `N${n}`;
+  }
   function buildNoteMapModal() {
     if (noteMapModal) { closeNoteMapModal(); return; }
     const nm = S.noteMap || [];
-    const pop = document.createElement('div');
-    pop.className = 'notemap-modal open';
-    pop.innerHTML = `<div class="notemap-inner">
-      <div class="notemap-header"><h4>Note Map</h4><button class="notemap-reset">Reset</button><button class="notemap-close">✕</button></div>
-      <div class="notemap-grid">${Array.from({ length: 128 }, (_, i) =>
+    let gridHtml;
+    if (noteMapMode === 'lanes') {
+      // Lane-scoped view: one row per lane (mirrors native note_map_view LANE
+      // column). Source = S.lanes[li].note; destination = noteMap[source]. Edits
+      // route through setNoteMap keyed on the lane's source note.
+      const lanes = S.lanes || [];
+      gridHtml = `<div class="notemap-grid notemap-lanes">${lanes.map((lane, li) => {
+        const src = lane.note;
+        const dst = nm[src] ?? src;
+        return `<div class="notemap-row" data-lane="${li}" data-src="${src}">` +
+          `<span class="nl">L${li + 1}</span>` +
+          `<span class="nm-name">${nmDrumLabel(src)}</span>` +
+          `<span class="ni">${src}</span>` +
+          `<button data-lnmdec="${src}">−</button>` +
+          `<span class="no">${dst}</span>` +
+          `<button data-lnminc="${src}">+</button>` +
+          `${src !== dst ? '<span class="nm-mod">✦</span>' : ''}` +
+          `</div>`;
+      }).join('')}</div>`;
+    } else {
+      gridHtml = `<div class="notemap-grid">${Array.from({ length: 128 }, (_, i) =>
         `<div class="notemap-row" data-note="${i}">` +
         `<span class="ni">${i}</span>` +
+        `<span class="nm-name">${NM_DRUM_NAMES[i] || ''}</span>` +
         `<button data-nmdec="${i}">−</button>` +
         `<span class="no">${nm[i] ?? i}</span>` +
         `<button data-nminc="${i}">+</button>` +
         `${nm[i] !== i ? '<span class="nm-mod">✦</span>' : ''}` +
-        `</div>`).join('')}
-      </div></div>`;
+        `</div>`).join('')}</div>`;
+    }
+    const pop = document.createElement('div');
+    pop.className = 'notemap-modal open';
+    pop.innerHTML = `<div class="notemap-inner">
+      <div class="notemap-header"><h4>Note Map</h4>` +
+      `<button class="notemap-view" data-nmview>${noteMapMode === 'notes' ? 'Lanes' : 'Notes'}</button>` +
+      `<button class="notemap-reset">Reset</button><button class="notemap-close">✕</button></div>
+      ${gridHtml}</div>`;
     document.getElementById('win').appendChild(pop);
     noteMapModal = pop;
 
     pop.querySelector('.notemap-close').addEventListener('click', closeNoteMapModal);
+    pop.querySelector('[data-nmview]').addEventListener('click', (e) => {
+      e.stopPropagation();
+      noteMapMode = noteMapMode === 'notes' ? 'lanes' : 'notes';
+      closeNoteMapModal();
+      buildNoteMapModal();
+    });
     pop.querySelector('.notemap-reset').addEventListener('click', () => {
       host.action('resetNoteMap', {});
     });
+    const stepNoteMap = (src, delta) => {
+      const cur = S.noteMap ? (S.noteMap[src] ?? src) : src;
+      const next = cur + delta;
+      if (next >= 0 && next <= 127) host.action('setNoteMap', { note: src, output: next });
+    };
     pop.querySelectorAll('[data-nmdec]').forEach((b) =>
-      b.addEventListener('click', () => {
-        const ni = parseInt(b.dataset.nmdec);
-        const cur = S.noteMap ? S.noteMap[ni] : ni;
-        if (cur > 0) host.action('setNoteMap', { note: ni, output: cur - 1 });
-      }));
+      b.addEventListener('click', () => stepNoteMap(parseInt(b.dataset.nmdec), -1)));
     pop.querySelectorAll('[data-nminc]').forEach((b) =>
-      b.addEventListener('click', () => {
-        const ni = parseInt(b.dataset.nminc);
-        const cur = S.noteMap ? S.noteMap[ni] : ni;
-        if (cur < 127) host.action('setNoteMap', { note: ni, output: cur + 1 });
-      }));
+      b.addEventListener('click', () => stepNoteMap(parseInt(b.dataset.nminc), +1)));
+    pop.querySelectorAll('[data-lnmdec]').forEach((b) =>
+      b.addEventListener('click', () => stepNoteMap(parseInt(b.dataset.lnmdec), -1)));
+    pop.querySelectorAll('[data-lnminc]').forEach((b) =>
+      b.addEventListener('click', () => stepNoteMap(parseInt(b.dataset.lnminc), +1)));
 
     const dismiss = (e) => {
       if (noteMapModal && !noteMapModal.querySelector('.notemap-inner').contains(e.target) &&
@@ -675,6 +754,41 @@
     parent.appendChild(e);
     return e;
   }
+  // G02: inline lane rename. Mirrors the native double-click-name gesture
+  // (lane_edit_view.cpp beginNameEdit/commitNameEdit): prefill with the current
+  // name, cap at 15 chars, commit non-empty on Enter/blur, discard on Escape.
+  // The setLaneName action round-trips through the bridge; the resulting state
+  // push rebuilds the strip head (buildDesk) with the committed name, so no
+  // manual DOM update is needed on a successful commit.
+  function beginLaneRename(li, nameEl) {
+    if (nameEl.querySelector('input')) return; // already editing
+    const current = (S.lanes[li] && S.lanes[li].name) || '';
+    const input = document.createElement('input');
+    input.className = 'nm-edit';
+    input.type = 'text';
+    input.maxLength = 15;
+    input.value = current;
+    input.setAttribute('aria-label', `Rename lane ${li + 1}`);
+    nameEl.textContent = '';
+    nameEl.appendChild(input);
+    input.focus();
+    input.select();
+    let done = false;
+    const finish = (commit) => {
+      if (done) return;
+      done = true;
+      const name = input.value.trim().slice(0, 15);
+      // Non-empty names commit through the bridge (empty is dropped, matching
+      // the native/bridge invariant); anything else restores the prior label.
+      if (commit && name) host.action('setLaneName', { lane: li, name });
+      else nameEl.textContent = current;
+    };
+    input.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter') { ev.preventDefault(); finish(true); }
+      else if (ev.key === 'Escape') { ev.preventDefault(); finish(false); }
+    });
+    input.addEventListener('blur', () => finish(true));
+  }
   function buildDesk() {
     desk.innerHTML = '';
     strips = []; rings = []; hands = []; ladders = []; vus = [];
@@ -714,7 +828,7 @@
           </div>
         </div>
         <div class="feel"></div>
-        <div class="stat">CH ${l.ch} · N${l.note}</div>`;
+        <div class="stat">${l.ch === 0 ? 'Auto' : 'CH ' + l.ch} · N${l.note}</div>`;
       desk.appendChild(s);
       strips.push(s);
       const svg = s.querySelector('svg.ring');
@@ -724,6 +838,11 @@
       ladders.push(s.querySelector('.ladder'));
       vus.push(s.querySelector('.vu i'));
       s.querySelector('.ex').addEventListener('click', () => expandStrip(expanded === li ? -1 : li));
+      const nameEl = s.querySelector('.nm b');
+      if (nameEl) {
+        nameEl.title = 'Double-click to rename';
+        nameEl.addEventListener('dblclick', () => beginLaneRename(li, nameEl));
+      }
       s.querySelector('[data-mute]').addEventListener('click', () => {
         const active = S.lanes[li].active;
         host.edit(`lane.${li}.active`, active ? 0 : 1, 'begin');
@@ -872,8 +991,8 @@
         <div class="prow"><label>Rotation</label><span class="stepper"><button data-rt="-1">−</button><span class="v">${l.rot}</span><button data-rt="1">+</button></span></div>
         <div class="prow"><label>Additive cells</label><span class="switch"><button ${l.cells ? 'class="on"' : ''} data-cl aria-label="Additive cells"><i></i></button></span></div>`;
       if (l.cells)
-        html += `<div class="cells" data-cells>${l.cells.map((c, i) => `<button class="onc" style="flex:${c} 1 0" data-i="${i}">${c}</button>`).join('')}<button data-addcell style="flex:.6 1 0">+</button></div>
-          <div class="hint">aksak grouping — click a cell to cycle 2·3·4 · cycle = ${cyc8(l)}♪ (${l.cells.join('+')})</div>`;
+        html += `<div class="cells" data-cells>${l.cells.map((c, i) => `<button class="onc" style="flex:${c} 1 0" data-cellstep="${i}" data-i="${i}" title="drag up/down · scroll · click to set 1-16">${c}</button>`).join('')}<button data-addcell style="flex:.6 1 0">+</button></div>
+          <div class="hint">aksak grouping — drag a cell up/down or scroll to set 1-16 · cycle = ${cyc8(l)}♪ (${l.cells.join('+')})</div>`;
     }
     pat.innerHTML = html;
     const tlBtn = pat.querySelector('[data-tl]');
@@ -904,13 +1023,52 @@
           host.action('setCells', { lane: li, cells: l.cells ? null : [2, 2, 3] }));
       const cellsEl = pat.querySelector('[data-cells]');
       if (cellsEl) {
-        cellsEl.querySelectorAll('button[data-i]').forEach((b) =>
-          b.addEventListener('click', () => {
-            const i = +b.dataset.i;
-            const next = l.cells.slice();
-            next[i] = next[i] >= 4 ? 2 : next[i] + 1;
-            host.action('setCells', { lane: li, cells: next });
-          }));
+        // Additive cells are editable across the full 1–16 range (native parity),
+        // replacing the old three-value click-cycle. Each cell supports vertical drag
+        // (bottom = 1, top = 16), scroll-wheel stepping, and a plain click that
+        // steps +1 (wrapping 16→1). Reads/writes go through the live global state
+        // (S.lanes[li]) rather than the render-closure `l`, so a mid-drag state
+        // re-render (which rebuilds this row) can't leave us acting on stale data.
+        const setCell = (i, val) => {
+          const cur = S.lanes[li] && S.lanes[li].cells;
+          if (!cur) return;
+          const v = Math.max(1, Math.min(16, val));
+          if (cur[i] === v) return;
+          const next = cur.slice();
+          next[i] = v;
+          host.action('setCells', { lane: li, cells: next });
+        };
+        cellsEl.querySelectorAll('button[data-cellstep]').forEach((b) => {
+          const i = +b.dataset.cellstep;
+          const dragSet = (e) => {
+            const live = document.querySelector(`[data-cells] button[data-cellstep="${i}"]`) || b;
+            const r = live.getBoundingClientRect();
+            if (!r.height) return;
+            const f = Math.max(0, Math.min(1, (r.bottom - e.clientY) / r.height));
+            setCell(i, Math.round(1 + f * 15));
+          };
+          b.addEventListener('pointerdown', (e) => {
+            b.setPointerCapture(e.pointerId);
+            const startY = e.clientY;
+            let moved = false;
+            const mv = (ev) => {
+              if (!moved && Math.abs(ev.clientY - startY) < 4) return;
+              moved = true;
+              dragSet(ev);
+            };
+            b.addEventListener('pointermove', mv);
+            b.addEventListener('pointerup', () => {
+              b.removeEventListener('pointermove', mv);
+              const cur = S.lanes[li] && S.lanes[li].cells;
+              if (!moved && cur) setCell(i, cur[i] >= 16 ? 1 : cur[i] + 1);
+            }, { once: true });
+          });
+          b.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            const cur = S.lanes[li] && S.lanes[li].cells;
+            if (cur) setCell(i, cur[i] + (e.deltaY < 0 ? 1 : -1));
+          }, { passive: false });
+        });
         cellsEl.querySelector('[data-addcell]').addEventListener('click', () => {
           const next = l.cells.length < 6 ? l.cells.concat([2]) : l.cells.slice(0, 2);
           host.action('setCells', { lane: li, cells: next });
@@ -963,30 +1121,76 @@
         b.addEventListener('pointermove', mv);
         b.addEventListener('pointerup', () => b.removeEventListener('pointermove', mv), { once: true });
       });
+      // G08: double-click resets this step's micro-timing to zero (matches native
+      // micro_timing_editor_view's one-gesture reset) via the same setMicroTiming path.
+      b.addEventListener('dblclick', () => {
+        host.action('setMicroTiming', { lane: li, step: i, ms: 0 });
+        paint(i);
+        mtv.textContent = `step ${i + 1}: 0 ms`;
+      });
     });
 
     /* ENVELOPES */
-    const curve = (e, id) => {
+    const envPath = (depth) => {
       let d = 'M0 15';
       for (let x = 0; x <= 74; x += 2)
-        d += ` L${x} ${(15 - Math.sin((x / 74) * Math.PI * 2) * 11 * e.depth).toFixed(1)}`;
-      return `<svg viewBox="0 0 74 30" aria-hidden="true"><path d="${d}" fill="none" stroke="${l.hue}" stroke-width="1.4" opacity="${e.on ? 0.95 : 0.3}"/><line data-envph="${id}" x1="0" y1="2" x2="0" y2="28" stroke="#F0EADF" stroke-width="1" opacity="${e.on ? 0.7 : 0}"/></svg>`;
+        d += ` L${x} ${(15 - Math.sin((x / 74) * Math.PI * 2) * 11 * depth).toFixed(1)}`;
+      return d;
     };
+    const curve = (e, id) =>
+      `<svg class="envcurve" data-envdepth="${id}" viewBox="0 0 74 30" role="slider" tabindex="0" aria-label="Envelope ${id + 1} depth (drag up/down, right-click to reset)" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(e.depth * 100)}"><path d="${envPath(e.depth)}" fill="none" stroke="${l.hue}" stroke-width="1.4" opacity="${e.on ? 0.95 : 0.3}"/><line data-envph="${id}" x1="0" y1="2" x2="0" y2="28" stroke="#F0EADF" stroke-width="1" opacity="${e.on ? 0.7 : 0}"/></svg>`;
     env.innerHTML =
       l.envs.map((e, i) => `
         <div class="envrow">
           <div class="t">${e.target} · <span style="color:var(--dim)">${e.period} bars · sine</span></div>
           ${curve(e, i)}
-          <div class="m">depth ${Math.round(e.depth * 100)}% <button data-envon="${i}" class="chip ${e.on ? 'on' : ''}" style="padding:2px 8px">${e.on ? 'ON' : 'OFF'}</button></div>
+          <div class="m">depth <span data-envdepthval="${i}">${Math.round(e.depth * 100)}%</span> <button data-envon="${i}" class="chip ${e.on ? 'on' : ''}" style="padding:2px 8px">${e.on ? 'ON' : 'OFF'}</button></div>
         </div>`).join('') +
       `<button class="addenv">+ add envelope</button>
-       <div class="hint">envelopes superimpose — different periods create multiphase motion</div>`;
+       <div class="hint">drag a curve up/down to set depth · right-click resets to 100% · envelopes superimpose</div>`;
     env.querySelectorAll('[data-envon]').forEach((b) =>
       b.addEventListener('click', () => {
         const i = +b.dataset.envon;
         const e = Object.assign({}, l.envs[i], { on: !l.envs[i].on });
         host.action('setEnvelope', { lane: li, index: i, envelope: e });
       }));
+    // Continuous depth editing: vertical drag scrubs depth (up = deeper),
+    // right-click resets to 1.0 — mirrors native envelope_curve_view (setEnvelope bridge).
+    env.querySelectorAll('[data-envdepth]').forEach((svg) => {
+      const i = +svg.dataset.envdepth;
+      const path = svg.querySelector('path');
+      const valSpan = env.querySelector(`[data-envdepthval="${i}"]`);
+      const emit = (depth) => {
+        const e = Object.assign({}, l.envs[i], { depth });
+        l.envs[i] = e;
+        host.action('setEnvelope', { lane: li, index: i, envelope: e });
+      };
+      const repaint = (depth) => {
+        path.setAttribute('d', envPath(depth));
+        if (valSpan) valSpan.textContent = `${Math.round(depth * 100)}%`;
+        svg.setAttribute('aria-valuenow', String(Math.round(depth * 100)));
+      };
+      svg.addEventListener('contextmenu', (ev) => {
+        ev.preventDefault();
+        repaint(1);
+        emit(1);
+      });
+      svg.addEventListener('pointerdown', (ev) => {
+        if (ev.button !== 0) return;
+        ev.preventDefault();
+        svg.setPointerCapture(ev.pointerId);
+        const startY = ev.clientY;
+        const startDepth = l.envs[i].depth;
+        const h = svg.getBoundingClientRect().height || 30;
+        const move = (e2) => {
+          const depth = Math.max(0, Math.min(1, startDepth + (startY - e2.clientY) / h));
+          repaint(depth);
+          emit(depth);
+        };
+        svg.addEventListener('pointermove', move);
+        svg.addEventListener('pointerup', () => svg.removeEventListener('pointermove', move), { once: true });
+      });
+    });
     env.querySelector('.addenv').addEventListener('click', () =>
       host.action('setEnvelope', {
         lane: li,
@@ -1005,7 +1209,7 @@
       { field: 'humanize', label: 'Humanize', norm: l.humanize / 50, fmt: (v) => Math.round(v * 50) + 'ms' },
       { field: 'duration', label: 'Duration', norm: l.duration / 4, fmt: (v) => (v * 4).toFixed(1) },
       { field: 'note', label: 'Note', norm: l.note / 127, fmt: (v) => 'N' + Math.round(v * 127) },
-      { field: 'channel', label: 'Channel', norm: (l.ch - 1) / 15, fmt: (v) => 'CH ' + (Math.round(v * 15) + 1) },
+      { field: 'channel', label: 'Channel', norm: l.ch / 16, fmt: (v) => { const c = Math.round(v * 16); return c === 0 ? 'Auto' : 'CH ' + c; } },
     ];
     expr.innerHTML = PARAMS.map((p) =>
       `<div class="param-slider"><label>${p.label}</label>` +
@@ -1048,6 +1252,12 @@
       { field: 'phraseOffset', label: 'Offset', norm: l.phraseOffset / 64,
         fmt: (v) => Math.round(v * 64) + ' bars' },
     ];
+    // Gap/Offset are inert while Length is Off (the lane never rests), so
+    // disable them to match native phrase_edit_view. Derived purely from
+    // l.phraseLength — the fmt reads Off when Math.round(l.phraseLength)===0.
+    const phraseOff = Math.round(l.phraseLength) === 0;
+    PHRASE[1].disabled = phraseOff; // Gap
+    PHRASE[2].disabled = phraseOff; // Offset
     const MUTATION = [
       { field: 'mutationRate', label: 'Mutation', norm: l.mutationRate,
         fmt: (v) => Math.round(v * 100) + '%' },
@@ -1063,7 +1273,7 @@
     const ALL_ADV = [...PHRASE, ...MUTATION, ...MORE];
     const SUBS = [1, 2, 4, 8, 16];
     const sliderHtml = (arr) => arr.map((p) =>
-      `<div class="param-slider"><label>${p.label}</label>` +
+      `<div class="param-slider${p.disabled ? ' phrase-disabled' : ''}"><label>${p.label}</label>` +
       `<div class="slider-track" data-field="${p.field}"><i style="width:${(p.norm * 100).toFixed(1)}%"></i></div>` +
       `<span class="v">${p.fmt(p.norm)}</span></div>`
     ).join('');
@@ -1096,6 +1306,8 @@
       };
       const paint = (v) => { fill.style.width = `${(v * 100).toFixed(1)}%`; vSpan.textContent = p.fmt(v); };
       track.addEventListener('pointerdown', (e) => {
+        // Gap/Offset are disabled while phrase Length is Off — ignore the drag.
+        if (track.closest('.param-slider').classList.contains('phrase-disabled')) return;
         e.preventDefault();
         let lastV = calc(e); paint(lastV);
         host.edit(paramId, lastV, 'begin');

@@ -167,9 +167,10 @@
         "type":    { "const": "action" },
         "v":       { "type": "integer" },
         "name":    { "type": "string", "enum": [
-          "toggleStep", "setEuclid", "setCells", "setFixedStep", "setMicroTiming",
+          "toggleStep", "setEuclid", "setCells", "setLaneName", "setFixedStep", "setMicroTiming",
           "setEnvelope", "selectScene", "applyPreset", "togglePlay", "exportRequest",
-          "chainAddEntry", "chainRemoveEntry", "resetNoteMap", "setNoteMap", "setAccent"
+          "chainAddEntry", "chainRemoveEntry", "resetNoteMap", "setNoteMap", "setAccent",
+          "setCaptureBars", "beginMidiDrag"
         ] },
         "payload": { "type": "object" }
       },
@@ -223,6 +224,16 @@
         "cells": { "oneOf": [{ "type": "null" }, { "type": "array", "items": { "type": "integer", "minimum": 1 } }] }
       },
       "required": ["lane", "cells"],
+      "additionalProperties": false
+    },
+
+    "payloadSetLaneName": {
+      "type": "object",
+      "properties": {
+        "lane": { "type": "integer", "minimum": 0, "maximum": 7 },
+        "name": { "type": "string", "minLength": 1, "maxLength": 15 }
+      },
+      "required": ["lane", "name"],
       "additionalProperties": false
     },
 
@@ -315,8 +326,18 @@
       "additionalProperties": false
     },
 
+    "payloadSetCaptureBars": {
+      "description": "G07: capture-window length in bars. Drives the global kCaptureLength param (1-32), mapped native-side to norm=(bars-1)/31.",
+      "type": "object",
+      "properties": {
+        "bars": { "type": "integer", "minimum": 1, "maximum": 32 }
+      },
+      "required": ["bars"],
+      "additionalProperties": false
+    },
+
     "payloadEmpty": {
-      "description": "Empty payload for: togglePlay, exportRequest, chainAddEntry, resetNoteMap",
+      "description": "Empty payload for: togglePlay, exportRequest, chainAddEntry, resetNoteMap, beginMidiDrag",
       "type": "object",
       "additionalProperties": false
     }

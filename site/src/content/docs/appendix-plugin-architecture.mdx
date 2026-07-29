@@ -27,7 +27,7 @@ Poly is split into two libraries with a strict isolation boundary: a pure C++ en
    │ poly_plugin          │            │ poly_tests       │
    │ AudioEffect/Processor│            │ (off-host unit   │
    │ + EditController     │            │  + golden tests) │
-   │ + VSTGUI editor      │            └─────────────────┘
+   │ + Web UI editor      │            └─────────────────┘
    └──────────────────────┘
 ```
 
@@ -45,11 +45,12 @@ poly/
 │   ├── include/     # public headers (types, engine, envelope, scene, etc.)
 │   └── src/              # implementation
 ├── plugin/               # poly_plugin — VST3 instrument
-│   ├── source/           # processor, controller, factory, UI views
-│   └── resource/         # VSTGUI .uidesc layout
+│   ├── source/           # processor, controller, factory, web UI bridge
+│   └── resource/         # AU packaging metadata (au-info.plist)
+├── webui/                # web UI assets served into the plugin webview
 ├── tests/                # Google Test suite (runs without VST3 SDK)
 │   ├── golden/           # deterministic reference output files
-│   └── ui/               # visual regression and interaction tests
+│   └── host/             # off-host plugin + bridge integration tests
 └── tools/harness/        # headless CLI engine runner
 ```
 
@@ -71,7 +72,7 @@ The DAW calls `PolyProcessor::process()` on the audio thread at each buffer cycl
 
 ### UI Thread
 
-The VSTGUI editor runs on the UI thread. It reads parameter values for display (knob positions, lane states, visualization data) and writes parameter changes when the user interacts with controls. Communication between threads uses the VST3 parameter system — no custom locks or message queues.
+The plugin editor is a web UI hosted in a webview on the UI thread. It reads parameter values for display (knob positions, lane states, visualization data) and writes parameter changes when the user interacts with controls. Communication between threads uses the VST3 parameter system — no custom locks or message queues.
 
 ### Audio ↔ UI Handoff
 
@@ -215,7 +216,6 @@ The test suite runs entirely off-host using Google Test:
 - **Unit tests** — individual components (Euclidean generator, envelope evaluation, macro resolution, constraints, scene interpolation)
 - **Golden tests** — full engine rendering compared against recorded reference output
 - **Fuzz tests** — randomized `GrooveState` inputs fed to `renderRange()` checking for crashes
-- **UI interaction tests** — headless VSTGUI host verifying control behavior
-- **Visual regression tests** — pixel comparison of rendered UI (platform-specific baselines)
+- **Bridge contract tests** — the web UI ↔ C++ JSON bridge serialization round-trips (`tests/bridge_contract_tests.cpp`), with the web UI's own interaction and visual coverage in the Playwright suite (`webui/tests/`)
 
-All tests except visual regression are deterministic and platform-independent. The website and testing appendices go deeper into how each layer is wired up.
+All engine and bridge tests are deterministic and platform-independent. The website and testing appendices go deeper into how each layer is wired up.
