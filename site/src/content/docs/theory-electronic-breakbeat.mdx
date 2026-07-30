@@ -1,0 +1,70 @@
+---
+class: gated
+title: "Grid Counterpoint: Electronic & Breakbeat"
+description: "Explicit rules for machine-grid counterpoint — the immutable anchor, offbeat slot assignments, loop-length polymeter, house swing, and the half-time/double-time duality of jungle and drum & bass."
+---
+
+import PolyPatch from '../../components/PolyPatch.astro';
+
+*Companion to [Chapter 9: Electronic](/09-electronic/) and [Chapter 13: Drum & Bass](/13-drum-and-bass/). This page states the counterpoint rules of grid-based dance music explicitly.*
+
+## The System
+
+Electronic dance music's counterpoint is built *on top of* an absolute grid rather than against a played referent. Butler's analysis identifies its two core resources: **slot assignment** — each timbre owns a fixed position-class in the loop (kick on beats, clap on 2/4, open hat on offbeat eighths) — and **metrical dissonance from loop lengths** — layers whose loop durations differ create polymeter that unfolds over multiple bars while every individual layer stays rigidly periodic ([Butler 2006](/appendix-references/#fr-butler-2006)). Feel, where present, is *programmed*: uniform swing percentages descended from hardware sequencers <sup>[36](/appendix-references/#ref-36)</sup>, and micro-timing signatures applied consistently ([Danielsen 2010](/appendix-references/#fr-danielsen-2010)).
+
+Jungle and drum & bass add a third resource: **stratified rates**. The kick/snare skeleton implies a half-time groove while hats and chopped-break material run at double that rate, so the body and the ear track two tempi at once ([Reynolds 1998](/appendix-references/#fr-reynolds-1998); [Collins 2001](/appendix-references/#fr-collins-2001) formalises break-chopping as a generative system).
+
+## The Rules
+
+### Four-on-the-floor genres (techno, house)
+
+1. **The anchor is immutable.** The kick's E(4,4) takes no swing, no humanize, no mutation, no density modulation below 1.0. Every other liberty in the style is licensed *by* the anchor's absolute predictability.
+
+2. **Layers own slots.** Claps/snares live on 2 and 4; open hats on the offbeat eighths ("&"s); closed hats on sixteenth subdivisions; percussion in remaining gaps. A layer that wanders between slot classes reads as a mistake, not variation — machine idiom keeps each timbre's position-class fixed for the loop's lifetime (Rule of [Butler 2006](/appendix-references/#fr-butler-2006)'s textural analysis).
+
+3. **Polymeter is made from loop lengths, not free phase.** The idiomatic way to make a static grid breathe is a layer whose loop is 3, 5, 6, or 7 units against the 4-unit frame — rigid in itself, evolving in combination, resolving at the LCM. This is Poly's native operation; what the idiom adds is that the *anchor never joins the polymeter* (contrast the minimalist page, where all voices may drift).
+
+4. **Swing is a bus, not a per-note gesture.** House/garage shuffle applies one swing percentage to the off-sixteenths of *all* swung layers (hats, shakers, percussion) while kick (and usually clap) stay straight. Mixed swing percentages across layers is a legitimate advanced move (per-lane swing exists for this) but the default idiom is one global feel.
+
+5. **Arrangement is density automation.** Energy management happens by adding/removing layers and filtering, on 8/16/32-bar boundaries — the density curve of [Chapter 15](/15-compositional-grammar/) at its most literal. Within a section, loops repeat exactly; variation between repeats is a *break* or *fill event*, placed at boundary bars only.
+
+### Breakbeat genres (jungle, drum & bass)
+
+6. **The snare backbeat is the fixed stratum.** At ~170 BPM, the snare holds the half-time backbeat; it is the listener's anchor while everything else fractures. Displacing the *backbeat snare* is a marked, momentary edit — the ghost-snare layer, not the backbeat, carries the instability.
+
+7. **The kick syncopates against the snare, avoiding its slots.** Chopped-break kick patterns are dense in the first half of the bar, sidestep the snare positions, and vary at phrase boundaries. Kick landing on the backbeat slot is the "clash" error of break programming.
+
+8. **The ghost layer rolls continuously.** A near-continuous low-velocity sixteenth stream (ghost snares, chopped hat fragments) with high spread and mutation supplies the "played, chopped and recombined in real time" instability ([Collins 2001](/appendix-references/#fr-collins-2001)); its gaps — not its hits — are what read as edits.
+
+9. **Two-bar question and answer.** Break-based patterns are phrased in two-bar units: bar one states, bar two answers with a variation (an extra kick, a displaced hit, a fill into the next unit). Mutation confined to the second bar of each pair approximates this; uniform per-bar mutation does not.
+
+## Construction
+
+**Minimal techno/house:** anchor kick 4/4 straight (Rule 1); clap 16 steps/2 hits rotation 4; open hat 8 steps/4 hits rotation 1 (the "&"s) with swing if house (Rules 2, 4); one polymetric percussion lane at 7 steps (Rule 3); arrange by Density automation only (Rule 5).
+
+**Jungle:**
+
+<PolyPatch title="Rule-Checked Jungle Frame">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Velocity | Ghost | Spread | Mutation |
+|------|------|-------|------|----------|-------------|----------|-------|--------|----------|
+| 1 | Backbeat snare (fixed) | 4 | 2 | 1 | 1/4 | 105 | 0 | 10% | 0% |
+| 2 | Chopped kick | 16 | 5 | 3 | 1/16 | 110 | 0 | 20% | 10% |
+| 3 | Hat stream | 16 | 7 | 0 | 1/16 | 80 | 45 | 40% | 15% |
+| 4 | Ghost roll | 16 | 11 | 2 | 1/16 | 35 | 25 | 60% | 20% |
+
+</PolyPatch>
+
+Lane 1 takes zero mutation (Rule 6); lanes 2–4 hold the budget, and pushing lane 2's variation toward two-bar boundaries (via a FillLikelihood envelope with a 2-bar period) approximates Rule 9.
+
+## What Breaks the Idiom
+
+- **A humanized or swung four-on-the-floor kick** (Rule 1) — the genre's floor is its machine-precision.
+- **Slot promiscuity.** An open hat that migrates off the "&"s mid-loop (Rule 2).
+- **Backbeat-snare mutation** in D&B (Rule 6) — instability belongs to the ghost layer.
+- **Kick/snare collisions** in break programming (Rule 7).
+- **Continuous novelty.** Variation every bar, rather than at two-bar/section boundaries, dissolves the loop identity that dance-floor listening depends on (Rules 5, 9).
+
+## Sources
+
+Primary: [Butler 2006](/appendix-references/#fr-butler-2006) (EDM meter and texture theory), [Danielsen 2010](/appendix-references/#fr-danielsen-2010) (programmed microrhythm), [Collins 2001](/appendix-references/#fr-collins-2001) (algorithmic breakbeat), [Reynolds 1998](/appendix-references/#fr-reynolds-1998) (jungle's history and aesthetics). See also refs [36](/appendix-references/#ref-36)–[41](/appendix-references/#ref-41).

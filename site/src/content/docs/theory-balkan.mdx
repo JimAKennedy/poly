@@ -1,0 +1,68 @@
+---
+class: gated
+title: "Additive Counterpoint: Balkan"
+description: "Explicit rules for aksak-based textures — inviolable cell sequences, cell-head accents, the continuous quick pulse, tupan stroke grammar, and why swing and phase games are off-limits."
+---
+
+import PolyPatch from '../../components/PolyPatch.astro';
+
+*Companion to [Chapter 7: Balkan](/07-balkan/). This page states the rules of additive-meter counterpoint explicitly.*
+
+## The System
+
+Aksak meter — Brăiloiu's term, from the Turkish for "limping" — builds cycles by *concatenating* unequal cells of two and three quick pulses rather than dividing a whole into equal beats ([Brăiloiu 1951](/appendix-references/#fr-brailoiu-1951)). A rachenitsa is not "7/8" so much as it is the specific sequence **2+2+3**; kopanitsa is **2+2+3+2+2**; daichovo **2+2+2+3**. The cell sequence is the meter's identity, shared body-deep between musicians and dancers — dance steps map to cells, which is why the sequence is inviolable in a way even a clave is not ([Rice 1994](/appendix-references/#fr-rice-1994)). London's meter theory formalises these as *non-isochronous meters*: valid, stable metric hierarchies whose beats are unequal by construction ([London 2012](/appendix-references/#fr-london-2012)).
+
+Counterpoint in this system is **vertical, not phased**: all voices share the same additive grid and the same cycle length, differentiated by density stratum and by which cells they emphasise. The polymetric games of the African and minimalist pages are foreign here — the interest lives in the asymmetry itself, ridden in tight unison at often extreme tempo.
+
+## The Rules
+
+1. **The cell sequence is fixed and shared by every voice.** All lanes agree on where cell boundaries fall for the entire piece. Changing 2+2+3 to 2+3+2 mid-tune changes the dance — it is a different piece, not a variation. (In Poly: one `cells` definition, reused across lanes; rotation selects the variant *before* the music starts.)
+
+2. **Accents live on cell heads; the long cell's head is primary.** The first pulse of each cell takes the accent, and the three-cell's head carries the characteristic extra weight (or, in some dances, the *stretch* — see Rule 8). Accents inside cells are ornamental and light.
+
+3. **A continuous quick-pulse stratum runs underneath.** Some voice — tambura strum, gadulka bowing, hi-hat — articulates the fast pulse continuously, making the unequal beats *countable*. Without this stratum, listeners lose the additive grid; with it, even 13/8 feels inevitable.
+
+4. **The tupan speaks a two-stroke grammar.** The low open stroke (beater hand) marks cell heads — always the long cell, usually the cycle start; the high stick/switch hand fills between with subdivisions and rim strokes. Low = structure, high = motion; inverting this collapses the meter's audibility.
+
+5. **Density strata, same grid.** Voices are layered exactly as in the Manding same-cycle model: sparse structural low voice, mid-density response, dense surface — all on the shared additive grid (Rule 1), never on foreign cycle lengths. Cross-cycle polymeter against an aksak frame destroys the dance and is not part of the tradition.
+
+6. **No swing.** The asymmetry is *metric*, not micro-timing. Swing applied to an aksak cycle fights the cell structure ([Chapter 7](/07-balkan/) says this; here is the rule's reason: swing displaces alternate quick pulses, but the quick pulses are the units from which cells are counted — displacing them un-counts the meter).
+
+7. **Tight ensemble, minimal humanize.** Wedding-band aksak at 200+ BPM is played with near-mechanical unison; timing looseness reads as failure, not feel ([Rice 1994](/appendix-references/#fr-rice-1994)). Humanize ≤ 0.15.
+
+8. **The long beat is slightly *less* than 3:2 in practice.** Measured performances show three-cells compressed a shade below their notated proportion — a systematic, style-defining tendency, not sloppiness ([Goldberg 2015](/appendix-references/#fr-goldberg-2015); cf. [London 2012](/appendix-references/#fr-london-2012) on NI-meter tolerance ranges). Until Poly exposes a long-beat ratio control, this is unreproducible on the grid — know that the grid version is the *notated* aksak, slightly stiffer than the played one.
+
+9. **Ornaments anticipate the long cell.** Grace notes, drags, and melodic turns cluster just before the three-cell's head, spotlighting the asymmetry. Fills elsewhere are modest.
+
+## Construction
+
+1. **Define the cells once.** E.g. kopanitsa: `cells = [2,2,3,2,2]`, 11 quick pulses at 1/8 or 1/16. Every lane uses this grid (Rule 1).
+2. **Tupan pair.** Low lane: hits on cell heads only (5 hits for kopanitsa), strongest on the three-cell (Rules 2, 4). High lane: dense fill between heads, low velocity, rim timbre.
+3. **Quick-pulse stratum.** A lane with hits on all 11 pulses, quiet, even (Rule 3).
+4. **Melodic-rhythm proxy.** A mid-density lane (E(4,11) or E(7,11)) with rotation aligning its accents to cell heads (Rule 5), mutation 5–10% only.
+5. **Feel.** Swing 0 everywhere (Rule 6); Humanize ≤ 0.15 (Rule 7); ornament lane phrase-gated to appear before three-cells (Rule 9) if used.
+
+<PolyPatch title="Rule-Checked Kopanitsa (2+2+3+2+2)">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Velocity | Ghost | Mutation | Swing |
+|------|------|-------|------|----------|-------------|----------|-------|----------|-------|
+| 1 | Tupan low (cell heads) | 11 | 5 | 0 | 1/8 | 115 | 0 | 0% | 0 |
+| 2 | Tupan stick (fill) | 11 | 7 | 1 | 1/8 | 70 | 45 | 8% | 0 |
+| 3 | Quick pulse | 11 | 11 | 0 | 1/8 | 50 | 20 | 0% | 0 |
+| 4 | Melodic accents | 11 | 4 | 2 | 1/8 | 85 | 25 | 8% | 0 |
+
+</PolyPatch>
+
+Lane 1's five hits must land on pulses 0, 2, 4, 7, 9 — the cell heads of 2+2+3+2+2. E(5,11) happens to produce a different spacing, so use the additive-cells parameters (or timeline mode) rather than trusting the Euclidean default here: this is a case where the *cells*, not the even distribution, are the authority.
+
+## What Breaks the Idiom
+
+- **Any lane on a foreign cycle length.** An 8-step lane against an 11-pulse aksak is not fusion by default — it erases the dance (Rule 5). (Deliberate aksak-polymeter hybrids belong to [Chapter 14](/14-synthesis/)'s cross-tradition territory, done knowingly.)
+- **Swing** (Rule 6) and **heavy humanize** (Rule 7).
+- **Even accents.** All cell heads equal, or accents drifting inside cells — the limp disappears (Rule 2).
+- **Missing quick pulse.** Without the fast stratum, long cycles (11, 13) become uncountable to the listener (Rule 3).
+- **Euclidean-only thinking.** Several aksak accent patterns are *not* the E(k,n) distribution for their cycle (see the kopanitsa note above). The cell sequence is the ground truth; Euclidean patterns are a frequent but not universal match.
+
+## Sources
+
+Primary: [Brăiloiu 1951](/appendix-references/#fr-brailoiu-1951) (the aksak system), [Rice 1994](/appendix-references/#fr-rice-1994) (Bulgarian practice and dance linkage), [Goldberg 2015](/appendix-references/#fr-goldberg-2015) (measured long-beat timing), [London 2012](/appendix-references/#fr-london-2012) (non-isochronous meter theory), [Holzapfel 2015](/appendix-references/#fr-holzapfel-2015) (the related Turkish usul system). See also refs [26](/appendix-references/#ref-26)–[31](/appendix-references/#ref-31).

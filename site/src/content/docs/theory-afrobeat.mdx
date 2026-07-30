@@ -1,0 +1,63 @@
+---
+class: gated
+title: "Space and Breath: Afrobeat"
+description: "Explicit rules for Tony Allen-style ensemble counterpoint — subdivision-space ownership, the sparse asymmetric kick, accent-independent hats, and long-cycle breathing."
+---
+
+import PolyPatch from '../../components/PolyPatch.astro';
+
+*Companion to [Chapter 4: Afrobeat](/04-afrobeat/). This page states the counterpoint logic behind Tony Allen's drumming and Fela Kuti's ensemble arranging as explicit rules.*
+
+## The System
+
+Afrobeat's rhythmic system is a hybrid with a precise recipe: West African timeline logic (the E(7,12) bell, cycle-relative parts) transplanted into a funk-derived 4/4 sixteenth-note grid, stretched over song forms of ten minutes and more ([Veal 2000](/appendix-references/#fr-veal-2000)). Its counterpoint principle, articulated repeatedly by Tony Allen, is **space ownership**: every voice claims a distinct region of the subdivision grid and leaves the rest empty — "playing around the beat rather than on it" ([Allen & Veal 2013](/appendix-references/#fr-allen-veal-2013)). Where funk compresses its ensemble into a tight one-bar loop, Afrobeat distributes the same vocabulary across a wide, breathing texture in which parts enter and exit on independent multi-bar schedules.
+
+## The Rules
+
+1. **The bell keeps West African rules in a 4/4 world.** The 12-pulse timeline runs unchanged (Rule 1 of the [Sub-Saharan deep dive](/theory-sub-saharan-africa/) applies: no variation), but it now sits against a binary 16-grid rhythm section. The ternary-vs-binary friction is a *feature to preserve* — do not "correct" the bell to 16 steps.
+
+2. **One voice, one subdivision territory.** Kick, snare/cross-stick, hats, shekere, congas each own a characteristic set of grid positions and do not poach. Allen's kit playing treats the four limbs as four independent ostinato voices — closer to four percussionists than to a funk drummer's unified groove ([Allen & Veal 2013](/appendix-references/#fr-allen-veal-2013)).
+
+3. **The kick is sparse, asymmetric, and fixed.** Three to four hits per 16-step cycle, avoiding a regular four-on-the-floor, frequently sidestepping beat one. It does not vary bar to bar; its asymmetry *is* its content. The space it leaves is deliberately reserved for the bass guitar's ostinato.
+
+4. **The hi-hat is continuous but dynamically contoured.** Steady eighths or sixteenths whose *accent pattern* is an independent voice — the hat's louds and softs form their own cross-rhythm against the kick, rather than doubling it. In Poly terms: high hit count, moderate velocity, heavy ghost/spread so the accent contour, not the onsets, carries the line.
+
+5. **The snare whispers.** Cross-stick and ghost strokes, conversational, sparse; the backbeat as a *reference implied* rather than struck. A full backbeat on 2 and 4 pulls the texture back toward funk and out of Afrobeat.
+
+6. **Parts breathe on independent long cycles.** Beyond the core trio (bell, kick, hat), each voice follows its own enter/exit schedule measured in bars, with staggered phase — the ensemble self-arranges, thickening and thinning continuously (Chapter 4's phrase-gating architecture). No two gated voices should share the same Length+Gap+Offset triple.
+
+7. **Variation is a section event, not a bar event.** Within a section, ostinatos repeat with minimal mutation; the drama comes from which voices are present (Rule 6) and from horn/keyboard riffs layered above. Allen's fills mark section boundaries — rare, structural, and immediately answered by a texture change.
+
+8. **Restrained dynamics, long arc.** The dynamic range within any bar is modest (no explosive accents); the *form* carries the crescendo across minutes. Density and lane-count rise toward the montuno-like final sections.
+
+## Construction
+
+1. **Core trio, ungated.** Bell (12 steps, E(7,12), timeline mode), kick (16 steps, 3 hits, rotation chosen to dodge beat one), hat (16 steps, 13–14 hits, ghost 50+, spread 40%+). Rules 1–4.
+2. **Whispering snare.** 16 steps, 4–5 hits, low velocity, ghost-heavy, phrase-gated (Rule 5, 6).
+3. **Two or three colour voices** (shekere, congas, second bell) each with distinct Length/Gap/Offset so the breathing never synchronises (Rule 6). Mutation 10–25% concentrated here (Rule 7).
+4. **Form.** Automate Density slowly upward across the whole arrangement; reserve Complexity jumps for section boundaries (Rules 7–8).
+
+<PolyPatch title="Rule-Checked Afrobeat Texture">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Velocity | Ghost | Mutation | Phrase Len | Gap | Offset |
+|------|------|-------|------|----------|-------------|----------|-------|----------|------------|-----|--------|
+| 1 | Bell (timeline) | 12 | 7 | 0 | 1/8 | 105 | 0 | 0% | 0 | 0 | 0 |
+| 2 | Kick (fixed, asymmetric) | 16 | 3 | 3 | 1/16 | 110 | 0 | 0% | 0 | 0 | 0 |
+| 3 | Hat (accent voice) | 16 | 14 | 0 | 1/16 | 70 | 55 | 5% | 0 | 0 | 0 |
+| 4 | Cross-stick snare | 16 | 5 | 6 | 1/16 | 60 | 45 | 20% | 8 | 4 | 0 |
+| 5 | Shekere | 12 | 9 | 2 | 1/8 | 55 | 35 | 10% | 12 | 4 | 4 |
+| 6 | Conga | 8 | 3 | 1 | 1/8 | 75 | 50 | 25% | 6 | 6 | 8 |
+
+</PolyPatch>
+
+## What Breaks the Idiom
+
+- **A driving backbeat.** Loud snare on 2 and 4 converts the texture to funk (Rule 5).
+- **Four-on-the-floor kick.** Erases the reserved space that defines the style (Rule 3).
+- **Synchronised gating.** All colour voices entering/exiting together produces verse/chorus blocks instead of breathing (Rule 6).
+- **Per-bar fills and busy variation.** Afrobeat's ostinatos are patient; constant variation reads as fusion, not Afrobeat (Rule 7).
+- **Squaring the bell to the 16-grid.** Removes the ternary/binary friction that is the style's African signature (Rule 1).
+
+## Sources
+
+Primary: [Allen & Veal 2013](/appendix-references/#fr-allen-veal-2013) (Allen's own account of limb independence and space), [Veal 2000](/appendix-references/#fr-veal-2000) (ensemble arranging and form). See also refs [14](/appendix-references/#ref-14)–[17](/appendix-references/#ref-17) and the [Sub-Saharan deep dive](/theory-sub-saharan-africa/) for the timeline rules Afrobeat inherits.

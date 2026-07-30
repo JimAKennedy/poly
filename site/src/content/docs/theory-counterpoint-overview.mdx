@@ -1,0 +1,69 @@
+---
+class: gated
+title: "Counterpoint Theory: Overview"
+description: "How to use the theory deep dives — the shared framework of referent, complementarity, role hierarchy, convergence, and feel that governs idiomatic rhythmic counterpoint in every tradition Poly models."
+---
+
+The chapters of this guide are deliberately broad and shallow: each one introduces a tradition, shows its signature patterns, and gets you to a playing patch quickly. The theory deep dives in this section are the opposite — narrow and deep. Each one takes a single tradition and states, as explicitly as we can manage, the *rules* that make a multi-lane texture idiomatic in that tradition: what must stay fixed, what may vary and by how much, which relationships between voices are structural and which are decorative, and what specifically breaks the idiom.
+
+Two warnings before you dive in.
+
+**These are models, not the music.** Every rule set here is a compression of a living practice, written from the scholarship cited at the bottom of each page. A rule like "the timeline never varies" is true the way a grammar rule is true — real masters bend these rules knowingly, and the traditions themselves vary by region, era, and ensemble. Treat the deep dives as a rigorous starting point, follow the citations when a rule surprises you, and listen to the source music above all.
+
+**Validity and idiom are different tests.** Poly's engine guarantees *validity*: every patch is playable, deterministic, and internally consistent. It does not guarantee *idiom* — the engine will happily let you swing an aksak cycle or mutate a clave. These pages define the idiom layer: the constraints a knowledgeable musician applies on top of what the machine allows.
+
+## The Shared Framework
+
+Reading the eleven deep dives side by side, the same five structural questions organise every tradition. Each page answers them for its style; learning to ask them is the transferable skill.
+
+### 1. The referent
+
+Every tradition has a **referent**: a fixed part that everything else is heard against. The Ewe gankogui bell, the Cuban clave, the tabla theka, the jazz ride pattern, the techno four-on-the-floor kick, the samba surdo pair — functionally, these are the same object. The referent is not necessarily loud, and it is not always literally played (Cuban musicians *feel* clave whether or not anyone strikes it), but every other part is defined by its relationship to it.
+
+**In Poly:** identify the referent lane first, lock it (timeline mode, zero mutation, no phrase gating), and configure every other lane *relative* to it. A patch without a designated referent is the single most common cause of unidiomatic output.
+
+### 2. Complementarity
+
+Idiomatic parts occupy the spaces other parts leave open — by filling a referent's gaps (Balinese kotekan, Ewe support drums), by answering across a cycle (call-and-response), or by claiming a distinct subdivision stratum (Tony Allen's kick/hat/snare separation). Random overlap is the sound of a machine; structured complementarity is the sound of an ensemble.
+
+**In Poly:** the Kotekan parameter automates strict complementation; rotation, step-count choice, and phrase gating handle the looser forms.
+
+### 3. Role hierarchy and the variation budget
+
+Every ensemble distributes a fixed *variation budget* unevenly: the referent gets none, support parts get sanctioned micro-variations, and one designated voice (lead drum, jazz comping, conga quinto) gets nearly all of it. Traditions differ enormously in *where* the budget sits — funk repeats almost everything and jazz varies almost everything — but no tradition distributes it uniformly.
+
+**In Poly:** mutation, probability, and complexity-sensitivity are the budget. Concentrate them on one or two lanes; zero them on the referent.
+
+### 4. Convergence and cadence
+
+Independent lines must agree somewhere, and where they agree is structural: the Ewe cycle downbeat, tala's *sam*, the LCM convergence of phasing patterns, the four-bar phrase boundary of a jazz form. Idiomatic counterpoint doesn't just avoid the convergence point being random — it *aims* at it: fills, tihais, and lead phrases cadence there.
+
+**In Poly:** convergence emerges from cycle-length arithmetic (see the [Timing Model](/appendix-timing-model/)); phrase gating and envelope periods let you make it a target rather than an accident.
+
+### 5. The feel layer
+
+Beneath the pattern layer, every tradition has a *systematic* micro-timing and dynamics profile — samba's long-short-short-long sixteenths, jazz's tempo-dependent swing ratio, funk's push-pull pocket, the deliberate flatness of techno. Two facts matter: the profiles are consistent (not random jitter — see [Hennig et al. 2011](/appendix-references/#fr-hennig-2011)), and they are not interchangeable (applying swing to aksak breaks it).
+
+**In Poly:** per-lane swing, timing offset, per-step micro-timing, ghost floor, spread, and the Tension macro implement this layer. Each deep dive states the target profile.
+
+## The Deep Dives
+
+| Page | Tradition | Companion chapter |
+|------|-----------|-------------------|
+| [Timeline Counterpoint: Sub-Saharan Africa](/theory-sub-saharan-africa/) | Ewe and Manding ensemble drumming | [Chapter 2](/02-sub-saharan-africa/) |
+| [The Clave Matrix: Afro-Cuban](/theory-afro-cuban/) | Cuban son, rumba, timba | [Chapter 3](/03-afro-cuban/) |
+| [Space and Breath: Afrobeat](/theory-afrobeat/) | Tony Allen's ensemble logic | [Chapter 4](/04-afrobeat/) |
+| [Interlock and Nesting: Gamelan](/theory-gamelan/) | Balinese kotekan, Javanese colotomy | [Chapter 5](/05-gamelan/) |
+| [Tala Architecture: Indian Classical](/theory-indian-classical/) | Hindustani and Carnatic rhythm | [Chapter 6](/06-indian-classical/) |
+| [Additive Counterpoint: Balkan](/theory-balkan/) | Aksak dance meters | [Chapter 7](/07-balkan/) |
+| [Process Counterpoint: Minimalism](/theory-minimalism/) | Reich, Riley, Glass, Nancarrow | [Chapter 8](/08-minimalism/) |
+| [Grid Counterpoint: Electronic & Breakbeat](/theory-electronic-breakbeat/) | Techno, house, jungle, D&B | [Chapters 9](/09-electronic/) & [13](/13-drum-and-bass/) |
+| [The Batucada System: Brazilian](/theory-brazilian/) | Samba, bossa nova | [Chapter 10](/10-brazilian/) |
+| [Riff-Lock Counterpoint: Funk & Soul](/theory-funk-soul/) | James Brown to neo-soul | [Chapter 11](/11-funk-soul/) |
+| [Conversational Counterpoint: Jazz](/theory-jazz/) | Timekeeping and comping | [Chapter 12](/12-jazz/) |
+
+Each page follows the same structure: **The System** (what governs validity), **The Rules** (numbered, explicit, citable), **Construction** (a step-by-step procedure with a Poly patch), **What Breaks the Idiom** (the characteristic errors), and **Sources**.
+
+## A Note on Sources and Respect
+
+The rules on these pages are drawn from published scholarship and pedagogy — ethnomusicological fieldwork, performer autobiographies, measured timing studies — cited inline and collected in the [References appendix](/appendix-references/). Where scholars disagree, or where a "rule" is really one region's practice, the pages say so. None of this substitutes for listening to, learning from, and crediting the musicians who carry these traditions; the deep dives exist to make your borrowings informed rather than accidental.
