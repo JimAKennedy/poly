@@ -916,6 +916,20 @@
         return;
       }
 
+      if (paramId === 'activeLaneCount') {
+        // Mirror the engine: activeLaneCount = 1 + round(norm * 7), clamped 1..8.
+        // Grow by appending default lanes, shrink by truncating from the end —
+        // matches bridge_serialization.cpp emitting exactly activeLaneCount lanes.
+        const target = Math.max(1, Math.min(8, Math.round(value * 7) + 1));
+        while (state.lanes.length < target) {
+          const idx = state.lanes.length;
+          state.lanes.push(mkLane(`Lane ${idx + 1}`, 'Layer', 60, idx + 1, 16, 1, 4, 90));
+        }
+        if (state.lanes.length > target) state.lanes.length = target;
+        emitState();
+        return;
+      }
+
       const m = paramId.match(/^lane\.(\d+)\.(.+)$/);
       if (m) {
         const lane = state.lanes[parseInt(m[1])];

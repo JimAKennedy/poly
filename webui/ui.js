@@ -903,6 +903,36 @@
         window.addEventListener('pointerup', up, { once: true });
       });
     });
+
+    // M053 S07 (F1): lane add/remove. The desk previously rendered exactly the
+    // lanes a preset shipped, with no affordance to grow or shrink the ensemble,
+    // even though the activeLaneCount param (1..8 lanes) is wired end-to-end
+    // through the bridge (bridge_params.h -> web_ui_view.cpp -> processor.cpp).
+    // This footer edits that param; the host round-trips a new state with a
+    // different lane count and refreshAll() rebuilds the desk.
+    const laneCount = S.lanes.length;
+    const mgr = document.createElement('div');
+    mgr.className = 'lane-mgr';
+    mgr.innerHTML =
+      `<button class="lane-del" ${laneCount <= 1 ? 'disabled' : ''} aria-label="Remove last lane" title="Remove the last lane">− Lane</button>` +
+      `<span class="lane-count" aria-live="polite">${laneCount} / 8 lanes</span>` +
+      `<button class="lane-add" ${laneCount >= 8 ? 'disabled' : ''} aria-label="Add lane" title="Add a lane">+ Lane</button>`;
+    desk.appendChild(mgr);
+    const setLaneCount = (c) => {
+      const norm = (c - 1) / 7;
+      host.edit('activeLaneCount', norm, 'begin');
+      host.edit('activeLaneCount', norm, 'perform');
+      host.edit('activeLaneCount', norm, 'end');
+    };
+    mgr.querySelector('.lane-add').addEventListener('click', () => {
+      const c = S.lanes.length;
+      if (c < 8) setLaneCount(c + 1);
+    });
+    mgr.querySelector('.lane-del').addEventListener('click', () => {
+      const c = S.lanes.length;
+      if (c > 1) setLaneCount(c - 1);
+    });
+
     desk.style.gridTemplateColumns = `repeat(${S.lanes.length}, 1fr) 160px`;
   }
   function expandStrip(li) {
