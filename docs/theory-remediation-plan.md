@@ -7,8 +7,9 @@ those findings into an executable plan: the decisions to make first, seven phase
 work with concrete per-file tasks, ordering and dependencies, sizing, guardrails so the
 site cannot drift again, acceptance criteria, and a risk register.
 
-**How to read this.** Section 1 lists six decisions (D1–D6) that gate everything else —
-settle these before opening issues. Sections 2–8 are the phases (P0–P6); each task has a
+**How to read this.** Section 1 lists six gating decisions (D1–D6). **D1 is decided:
+Bjorklund is canonical** and P2.0 contains the explicit engine-change instructions;
+settle the remaining five before opening issues. Sections 2–8 are the phases (P0–P6); each task has a
 size (S ≈ ≤half day, M ≈ a day, L ≈ multi-day) and references the review's finding IDs
 (S1–S7 systemic causes, §2.x tradition tables, §4 authority defects). Section 9 maps
 phases onto a suggested milestone/issue breakdown; sections 10–11 are acceptance criteria
@@ -18,26 +19,36 @@ and risks.
 
 ## 1. Decisions required before work starts
 
-### D1. Which Euclidean convention is canonical? *(gates P2, parts of P0/P3)*
+### D1. Which Euclidean convention is canonical? — **DECIDED: Bjorklund** *(gates P2, parts of P0/P1/P3)*
 
-The engine (`engine/src/euclidean.cpp`) uses a Bresenham distribution
-(`(i·k) mod n < k`, rotation = right shift). The site's `EuclideanDiagram.astro` uses
-true Bjorklund. They produce different onset sets for the same E(k,n) (review S4), and
-chapter prose sometimes matches neither.
+**Decision (2026-07-30): the engine switches to Bjorklund.** The site's
+`EuclideanDiagram.astro:11-35` implementation is the normative reference; the engine's
+Bresenham rule (`(i·k) mod n < k`) is retired.
 
-- **Option A (recommended): engine is canonical.** Port `EuclideanDiagram.astro` to the
-  engine's Bresenham rule, then re-derive every printed pattern spelling from it. The
-  engine is what actually sounds; changing it instead would alter audible output for
-  every existing user and invalidate all golden tests.
-- **Option B: switch the engine to Bjorklund.** Musically, Bjorklund is the literature's
-  convention (Toussaint), and some chapter claims are only true under it (e.g. rachenitsa
-  E(3,7) rot 0 = 2+2+3). But this is a breaking change to every preset's audible output,
-  all golden fixtures, and possibly saved projects. Only choose this if pre-1.0 breakage
-  is acceptable and the musical argument matters more than churn.
+Background: the two algorithms produce the same maximally-even pattern for any E(k,n) —
+they differ only in which rotation each calls "rotation 0" (review S4). But the phase is
+load-bearing: the scholarship the site cites (Toussaint), the Euclidean reference
+appendix, and the rendered diagrams all use Bjorklund's phase, and under the engine's
+phase the site's "E(5,8) is the cinquillo"-class claims are false in the shipped
+instrument. Rationale for choosing Bjorklund over engine-canonical: Poly is pre-1.0 (the
+compatibility argument protects users who barely exist yet, and this is the last cheap
+moment to align), the pedagogy is the product (the instrument should play the pattern the
+docs teach), and the migration cost is small because the change is a per-(k,n) phase
+offset, not a new pattern (old saved states can be migrated losslessly by adjusting
+stored rotations — see P2.0 step 4).
 
-Whichever wins, the loser's convention must not survive anywhere: one generator, one
-rotation semantic, mirrored exactly in the diagram component and in
-`site/src/audio/preset-patterns.ts`.
+Reference phases under Bjorklund (rotation 0), for orientation:
+E(3,8) = {0,3,6} (tresillo) · E(5,8) = {0,2,3,5,6} (cinquillo) ·
+E(5,16) = {0,3,6,9,12} (bossa's necklace; the bossa figure {0,3,6,10,13} is rotation 10) ·
+E(3,7) = {0,2,4} (2+2+3 rachenitsa; rupak's 3+2+2 is rotation 3) ·
+E(4,9) = {0,2,4,6} (2+2+2+3 daichovo) · E(7,12) = {0,2,3,5,7,8,10} (the hard-coded Ewe
+bell {0,2,4,5,7,9,11} is rotation 9, *not* rotation 0 — the theory-SSA construction step
+needs updating accordingly in P0.8/P2.4).
+
+Execution instructions are **P2.0** below. One generator, one rotation semantic,
+mirrored exactly in the engine, the diagram component, and
+`site/src/audio/preset-patterns.ts`. P2.0 runs **before** P1, so preset fixes are
+authored once, under final semantics.
 
 ### D2. How do we lock a referent lane? *(gates P1)*
 
@@ -234,14 +245,75 @@ still pass.
 
 ---
 
-## 4. P2 — One Euclidean convention everywhere (D1)
+## 4. P2 — One Euclidean convention everywhere (D1: Bjorklund)
+
+### P2.0 Switch the engine generator to Bjorklund — size **M**, runs before P1
+
+Explicit instructions; the normative reference is the `bjorklund()` function in
+`site/src/components/EuclideanDiagram.astro:11-35`.
+
+1. **Replace the generator body** in `engine/src/euclidean.cpp`. Keep the public
+   signature `euclidean(int k, int n, int rotation, std::array<bool, kMaxSteps>&)` and
+   the existing guards unchanged (k≤0 or n≤0 → all false; n clamped to `kMaxSteps` = 64;
+   k ≥ n → all true — the reference component has the same k≥n branch). Replace the
+   Bresenham loop with Bjorklund's pairing/elimination algorithm: start with k groups
+   `[1]` and n−k groups `[0]`; while more than one remainder group exists, append one
+   remainder group to each of the first min(|pattern|, |remainder|) pattern groups, the
+   longer list's tail becoming the new remainder; concatenate. Engine output at
+   rotation 0 must equal the Astro function's output element-for-element for every
+   0 < k < n ≤ 64.
+   - **RT safety** (this runs on the audio path — `engine.cpp:99,106` — and must pass
+     `scripts/check-realtime-safety.sh`): no heap, no exceptions. Do not port the JS
+     array-of-arrays literally. Represent groups as counts/indices in fixed
+     `std::array<..., kMaxSteps>` buffers, or use bounded recursion (Euclid's algorithm
+     depth ≤ log₂ 64) with stack storage only.
+   - **Rotation semantics stay as-is**: apply the existing right-shift *after* generating
+     the base pattern (`out[i] = base[((i − rotation) % n + n) % n]`). Verified: the
+     Astro component's slice-based rotation is the same direction (onset at index j moves
+     to (j + r) mod n), so no doc or UI rotation value changes meaning beyond the phase
+     shift itself.
+   - The `// region:bjorklund` snippet marker in this file — currently a lie wrapping
+     Bresenham code — becomes truthful; keep it, update the interior comment, and confirm
+     `scripts/check-snippet-regions.sh` still passes (the region is embedded in site
+     docs via CodeSnippet).
+2. **Equality test (the contract):** add an engine test that reimplements the reference
+   algorithm in the most literal form (tests may allocate) and asserts engine ==
+   reference for **all** 1 ≤ k ≤ n ≤ 64 and every rotation 0…n−1. This is what makes
+   "diagrams show what the engine plays" a checked invariant rather than a hope.
+3. **Canon test (the literature):** pin Toussaint-known spellings at rotation 0 so a
+   future "optimisation" cannot silently reintroduce a phase shift:
+   E(3,8) = {0,3,6}; E(5,8) = {0,2,3,5,6}; E(5,16) = {0,3,6,9,12}; E(3,7) = {0,2,4};
+   E(4,9) = {0,2,4,6}; E(7,12) = {0,2,3,5,7,8,10}. Also pin the named rotations the
+   docs rely on: bossa = E(5,16) r10; rupak = E(3,7) r3; Ewe bell = E(7,12) r9.
+4. **Saved-state migration (lossless):** bump the state version (per the CLAUDE.md
+   serialization convention: version int first, branch in `setState`) and, when loading
+   a pre-switch state, for each non-timeline lane compute the phase delta
+   δ(k,n) = the shift for which `bjorklund(k,n) >> δ == bresenham(k,n)` (generate both,
+   find δ by scan — n ≤ 64, trivial at load time; keep a private `legacyBresenham()`
+   used only by the migration path), then store `rotation ← (rotation + δ) mod n`. Old
+   projects then sound **identical** under the new generator. Mirror the same migration
+   in the WebUI bridge path if states round-trip through
+   `plugin/source/webui/bridge_serialization.*`. Presets need no migration — their
+   rotations are re-authored in P1 under the new semantics.
+5. **Rebuild downstream artefacts:** golden determinism fixtures (one dedicated,
+   reviewed regeneration commit — D3); `presets.json` + `site/public/webui/presets.json`
+   via `generate-presets-json.mjs`; the WASM engine build consumed by the Try-It modal
+   (`webui/poly_engine.js`); re-run `site/tests-e2e/preset-consistency` and
+   `webui/tests/*` fixtures. CHANGELOG entry stating the phase change and the migration
+   guarantee.
+6. **Caveat for the later sweeps:** the review's pattern arithmetic (§2 tables) was
+   computed under the *engine's* old phase. After P2.0 those derivations flip in places —
+   e.g. ch. 06:82's E(3,7) spelling becomes correct as written while its rupak
+   attribution still needs r3, and theory-SSA's "E(7,12), rotation 0" construction step
+   no longer matches the hard-coded bell (r9). P2.3/P2.4 and the P0 fixes must re-derive
+   every value against Bjorklund — do not transcribe the review's onset lists.
 
 | Task | Size | Detail |
 |---|---|---|
-| P2.1 | S | Port `site/src/components/EuclideanDiagram.astro` to the D1 winner; delete the loser's implementation. Note the file's `// region:bjorklund` marker in `engine/src/euclidean.cpp` is already mislabelled (it's Bresenham) — rename the region marker with the snippet-region check in mind (`scripts/check-snippet-regions.sh`). |
-| P2.2 | S | Align `site/src/audio/preset-patterns.ts` (Try-It playback) with the same generator. |
-| P2.3 | L | Sweep every printed pattern: all `x . x` spellings, interval strings, onset lists, and `<EuclideanDiagram>` props in chapters 01–15 and both appendices; re-derive from the canonical generator. Known-wrong list to start from: bell spellings (02:28), E(3,7)/E(4,9) rachenitsa/daichovo (07:33-45), E(5,16) spellings (03:90, 10:51-53), E(5,8)/E(3,8) complement demo (05:29-31), E(3,7) rupak spelling (06:82), E(9,12) claim (08:31). |
-| P2.4 | M | Rotation-value sweep (S3): every patch-table rotation checked against the placement the prose claims, under engine semantics. Known-wrong list: funk snare rot 4→2 (ch. 11 ×2), samba surdo rot 1→0, SSA support rot 0→2/x, afrobeat kick rot 0→3, electronic open-hat rot 3→1 (8-step form), D&B "avoids beat 1" prose (13:50), balkan melodic rot 2→4. |
+| P2.1 | S | `EuclideanDiagram.astro` needs no algorithm change (it is the reference). Extract its `bjorklund()` into a small shared module (e.g. `site/src/audio/bjorklund.ts`) imported by both the component and `preset-patterns.ts`, so the site cannot fork internally; add a site test pinning the same canon table as P2.0 step 3. |
+| P2.2 | S | Align `site/src/audio/preset-patterns.ts` (Try-It playback) with the shared module from P2.1 — one generator on the site, byte-equal to the engine's. |
+| P2.3 | L | Sweep every printed pattern: all `x . x` spellings, interval strings, onset lists, and `<EuclideanDiagram>` props in chapters 01–15 and both appendices; re-derive from Bjorklund (per P2.0 step 6, not from the review's tables). Known-suspect list to start from: bell spellings (02:28), E(3,7)/E(4,9) rachenitsa/daichovo (07:33-45), E(5,16) spellings (03:90, 10:51-53), E(5,8)/E(3,8) complement demo (05:29-31), E(3,7) rupak spelling (06:82), E(9,12) claim (08:31). |
+| P2.4 | M | Rotation-value sweep (S3): every patch-table rotation checked against the placement the prose claims, under Bjorklund + right-shift semantics. Known-suspect list (target values to be re-derived post-P2.0): funk snare backbeat rotations (ch. 11 ×2 and theory-funk patch), samba surdo, SSA support offsets and the bell's r9, afrobeat kick, electronic open-hat "&"s, D&B "avoids beat 1" prose (13:50), balkan cell-head alignments. |
 
 ---
 
@@ -357,19 +429,26 @@ Size: **M** once D6 exists.
 ## 9. Suggested sequencing and milestone breakdown
 
 ```
-D1–D6 (decisions)  ──►  P0 (authority)  ──►  P2 (convention)  ──►  P3/P4 (content)
-                        │                                          ▲
-                        └──►  P1 (engine/presets) ── P1.4 ─────────┘ (P4.1 needs final presets)
+D2–D6 (decisions; D1 = Bjorklund, decided)
+        │
+        ├──►  P2.0 (engine → Bjorklund) ──►  P1 (presets, authored under final semantics) ── P1.4
+        │              │                                                                      │
+        └──►  P0 (authority — re-derive patterns post-P2.0)                                   │
+                       │                                                                      ▼
+                       └────────►  P2.1–P2.4 / P3 / P4 (content)  ◄── (P4.1 needs final presets)
 P5 after P3/P4 text stabilises.  P6.1 lands with P1; P6.2/P6.3 land with P4/P2; P6.4 last.
 ```
 
-- **Milestone A — "Authority & decisions"**: D1–D6 recorded (ADR-style note in `docs/`),
-  P0 complete. ~1 week of part-time work.
-- **Milestone B — "Presets conform"**: P1.1–P1.4 + P6.1. The largest engineering chunk;
+- **Milestone A — "One generator"**: remaining decisions D2–D6 recorded (ADR-style note
+  in `docs/`), then **P2.0** with its equality/canon tests and state migration. Small,
+  self-contained, unblocks everything — do this first.
+- **Milestone B — "Authority repaired"**: P0 complete, with all patterns re-derived
+  under Bjorklund. ~1 week of part-time work.
+- **Milestone C — "Presets conform"**: P1.1–P1.4 + P6.1. The largest engineering chunk;
   batch PRs by tradition (afrobeat+SSA, latin, minimalism, electronic+dnb, funk+jazz,
   indian+balkan+gamelan, synthesis).
-- **Milestone C — "One generator"**: P2 + P6.3 seed.
-- **Milestone D — "Content conforms"**: P3 (per-chapter PRs), P4, P5, P6.2, P6.4.
+- **Milestone D — "Content conforms"**: P2.1–P2.4, P3 (per-chapter PRs), P4, P5, P6.2,
+  P6.3, P6.4.
 
 Rough total: ~35–45 issue-sized tasks. The per-tradition P1/P3 pairs are independent of
 each other and parallelise cleanly.
@@ -381,8 +460,9 @@ each other and parallelise cleanly.
    with its shipped macro state (P6.1 green).
 3. `appendix-presets.mdx` contains zero hand-written parameter tables (P4.1).
 4. No MDX references a nonexistent preset name (P6.2 green).
-5. Site diagrams, Try-It playback, and engine output agree on every E(k,n) (P2, spot-checked
-   by P6.3).
+5. Site diagrams, Try-It playback, and engine output agree on every E(k,n) — enforced
+   exhaustively for all 1 ≤ k ≤ n ≤ 64 × all rotations by the P2.0 equality test, plus
+   the pinned Toussaint canon table (tresillo/cinquillo/bossa/etc.) at rotation 0.
 6. Zero remaining `contradiction`-class findings from the review; every remaining
    `idiom-breaking-suggestion` carries the D6 framing.
 7. Golden determinism tests pass with deliberately-reviewed new fixtures (D3).
@@ -392,7 +472,8 @@ each other and parallelise cleanly.
 | Risk | Impact | Mitigation |
 |---|---|---|
 | Preset fixes change audible output for existing users | User-facing surprise, golden churn | D3 policy: in-place pre-1.0, one reviewed fixture-regen commit per batch; CHANGELOG entries per preset |
-| D1 Option B (engine Bjorklund) chosen late | Invalidates P2/P3 work done under Option A | Decide D1 first; it is the plan's only ordering hard-block |
+| P2.0 phase switch mis-migrates saved states | Old projects change sound after update | Lossless δ-rotation migration (P2.0 step 4) + a round-trip test: load a pre-switch fixture state, assert identical NoteEvent output |
+| Doc sweeps reuse the review's engine-phase arithmetic | Wrong "corrections" written under the retired convention | P2.0 step 6 caveat; P6.3 doc-arithmetic test validates against the live generator, so stale derivations fail CI |
 | `timeline` lock hides lanes from WebUI editing | UX regression in Try-It modal and plugin UI | Verify WebUI rendering of timeline lanes before P1.1 batch 1; if poor, choose D2 Option B |
 | Emitter field additions ripple through bridge schema | `bridge.schema.json`, wasm host, webui tests | P4.1 scoped to the *emitter* JSON only (site-side), not the live bridge; keep the two schemas separate |
 | Post-macro lint (P6.1) is order-dependent on macro semantics | False confidence if `resolveMacros` changes later | Lint calls the real `resolveMacros`, not a re-implementation — it can't drift |
