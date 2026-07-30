@@ -1,0 +1,66 @@
+---
+class: gated
+title: "Riff-Lock Counterpoint: Funk & Soul"
+description: "Explicit rules for funk ensemble counterpoint — the One, the inviolable backbeat, ghost-note grammar, one-syncopator-at-a-time, and the push-pull pocket."
+---
+
+import PolyPatch from '../../components/PolyPatch.astro';
+
+*Companion to [Chapter 11: Funk & Soul](/11-funk-soul/). This page states the rules of funk's groove counterpoint explicitly. Everything below is summarised from the published scholarship listed under Sources — prior research restated in Poly's terms, not original theory.*
+
+## The System
+
+Funk counterpoint is **riff-lock**: every instrument distils to a short rhythmic cell, and the cells interlock into a one- or two-bar composite that repeats with near-total fidelity ([Danielsen 2006](/appendix-references/#fr-danielsen-2006)). Two absolute landmarks organise the loop: **the One** — the cycle downbeat, which James Brown made the gravitational centre every part answers to — and the **backbeat** (snare on 2 and 4), the style's inviolable middle stratum. Around those fixed points, the music's life is *textural*: ghost notes, velocity gradation, and systematic micro-timing displacement (the pocket), not pattern variation ([Stewart 2000](/appendix-references/#fr-stewart-2000) traces the sixteenth-note New Orleans lineage; [Iyer 2002](/appendix-references/#fr-iyer-2002) gives the embodied-cognition account of why the micro-scale carries the meaning).
+
+## The Rules
+
+1. **The One is sacred.** Whatever else a part does, it acknowledges the cycle downbeat — by striking it (kick, bass) or by conspicuously framing it (a horn stab releasing into it). Phrase tension is built *across* the bar and discharged on the One ([Danielsen 2006](/appendix-references/#fr-danielsen-2006)).
+
+2. **The backbeat does not move.** Snare accents on 2 and 4, full velocity, zero mutation, zero displacement games. Every funk liberty elsewhere is priced against this fixity.
+
+3. **The kick is sparse and phrase-shaped.** Three to five hits per cycle: the One, plus syncopated sixteenth placements ("e"s and "a"s) that dodge the backbeat slots and leave the bass guitar room. The kick pattern is *composed once* and repeated — its identity is the tune's identity ("the same pattern on every chorus" is a feature, not a limitation).
+
+4. **Ghost notes are grammar, not noise.** The snare's between-accent strokes sit at the extreme low end of the dynamic range and cluster *toward* the accents — filling the sixteenth positions leading into 2 and 4, so each backbeat arrives on a ramp ([Danielsen 2006](/appendix-references/#fr-danielsen-2006); [Stewart 2000](/appendix-references/#fr-stewart-2000)). Ghosts scattered uniformly across the bar miss the grammar: they should breathe in phrases that point at the accents.
+
+5. **One syncopator at a time.** The composite tolerates only limited simultaneous syncopation: if the kick is playing an intricate sixteenth figure, the hat straightens; if the hat pattern is the hook (as in disco's open-hat offbeats), the kick simplifies. Every classic JB groove assigns the "busy" role to one or two voices and holds the rest metronomic — space is the sound.
+
+6. **The pocket is a fixed displacement field.** Each voice sits at a *consistent* micro-offset: kick a few ms behind, snare at or slightly ahead, hat on top. The offsets are stable properties of the groove, not per-note expression ([Danielsen 2006](/appendix-references/#fr-danielsen-2006); refs [36](/appendix-references/#ref-36), [39](/appendix-references/#ref-39) document the machine-era equivalents). Randomizing them (heavy Humanize) produces sloppiness, not pocket.
+
+7. **Variation lives at phrase ends, in one voice.** Fills arrive every 4 or 8 bars, brief, usually on the kick or a single snare figure, resolving onto the One (Rule 1). Between fills, repetition *is* the aesthetic — "boredom" is solved by texture depth (Rules 4, 6), never by pattern churn.
+
+8. **Neo-soul relaxes Rule 6, not Rules 1–3.** The D'Angelo/Questlove idiom widens and loosens the displacement field (hats drifting late, kick in approximate zones) while the One and the backbeat stay planted. It is a *feel* mutation on the same structure — deeper offsets and higher Humanize, not freer patterns.
+
+## Construction
+
+1. **Backbeat lane.** 8 steps at 1/8, 2 hits, rotation to land on 2 and 4, velocity 105+, mutation 0, timing offset −2 ms (Rule 2, 6).
+2. **Kick lane.** 16 steps at 1/16, 3–4 hits including step 0, avoiding backbeat slots, mutation 0, offset +3 ms (Rules 1, 3, 6).
+3. **Ghost lane.** Same MIDI note as the snare, 16 steps, 9–11 hits, velocity ≤ 40, spread 60%+, hits concentrated before the backbeat positions — until position-aware ghosting ships, choose rotation so the Euclidean gaps fall just *after* 2 and 4 (Rule 4).
+4. **Hat lane.** Straight sixteenths or eighths, moderate ghost, *low* mutation — the metronomic voice while the kick syncopates (Rule 5).
+5. **Fill behaviour.** FillLikelihood envelope, period 4 bars, depth pushing fills into the last half-bar (Rule 7).
+6. **Tension macro 0.5–0.7** — the wide accent/ghost spread is the genre's dynamic signature.
+
+<PolyPatch title="Rule-Checked JB-Style Groove">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Velocity | Ghost | Spread | Mutation | Timing |
+|------|------|-------|------|----------|-------------|----------|-------|--------|----------|--------|
+| 1 | Kick (the One + syncopes) | 16 | 4 | 0 | 1/16 | 110 | 0 | 20% | 0% | +3ms |
+| 2 | Snare backbeat | 8 | 2 | 4 | 1/8 | 105 | 0 | 10% | 0% | −2ms |
+| 3 | Snare ghosts | 16 | 10 | 1 | 1/16 | 38 | 30 | 65% | 10% | +1ms |
+| 4 | Hat (metronomic) | 16 | 16 | 0 | 1/16 | 70 | 45 | 35% | 0% | 0ms |
+
+</PolyPatch>
+
+## What Breaks the Idiom
+
+- **A moving backbeat** — displaced or mutated 2/4 accents (Rule 2).
+- **An ignored One** — cycles that never discharge onto the downbeat read as fragments, not grooves (Rule 1).
+- **Uniform ghosts** — an even carpet instead of accent-directed phrases (Rule 4).
+- **Everybody syncopating** — three busy voices at once is fusion practice-room, not funk (Rule 5).
+- **Random pocket** — heavy Humanize instead of fixed per-voice offsets (Rule 6); and conversely, **zero offsets**, which leaves the notes right and the groove dead.
+- **Pattern churn** — mutation spread across lanes as an anti-boredom device (Rule 7).
+
+## Sources
+
+Primary: [Danielsen 2006](/appendix-references/#fr-danielsen-2006) (the One, riff-lock, pocket analysis), [Stewart 2000](/appendix-references/#fr-stewart-2000) (New Orleans → JB lineage of the sixteenth-note feel), [Iyer 2002](/appendix-references/#fr-iyer-2002) (microtiming as meaning). See also refs [36](/appendix-references/#ref-36)–[39](/appendix-references/#ref-39) and, for the timing-fluctuation science behind Rule 6, [Hennig et al. 2011](/appendix-references/#fr-hennig-2011).
+
+**Attribution:** the One, riff-lock, and the pocket-as-fixed-displacement analysis (Rules 1, 6, and the frame of Rule 4) are [Danielsen 2006](/appendix-references/#fr-danielsen-2006)'s, with the sixteenth-note lineage from [Stewart 2000](/appendix-references/#fr-stewart-2000). Rules 2–3, 5, 7, and 8 — including "one syncopator at a time" — are this guide's practical distillations of the canonical recordings read through those sources' analytical frames, not claims any single source states in rule form. All patch values are ours.

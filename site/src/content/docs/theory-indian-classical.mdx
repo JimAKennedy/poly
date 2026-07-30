@@ -1,0 +1,69 @@
+---
+class: gated
+title: "Tala Architecture: Indian Classical"
+description: "Explicit rules for tala-based counterpoint — theka as identity, sam as cadence, khali as negative space, layakari ratios, and the arithmetic of the tihai."
+---
+
+import PolyPatch from '../../components/PolyPatch.astro';
+
+*Companion to [Chapter 6: Indian Classical](/06-indian-classical/). This page states the structural rules of tala-based rhythm explicitly, principally from Hindustani (North Indian) practice with Carnatic parallels noted. Everything below is summarised from the published scholarship listed under Sources — prior research restated in Poly's terms, not original theory.*
+
+## The System
+
+A **tala** is a cyclic metric structure with named internal architecture: a fixed number of beats (*matras*), grouped into sections (*vibhags*), with a hierarchy of marked points — above all **sam**, beat one, the point of arrival and agreement ([Clayton 2000](/appendix-references/#fr-clayton-2000)) <sup>[21](/appendix-references/#ref-21), [22](/appendix-references/#ref-22)</sup>. Unlike a Western time signature, a tala also has a canonical *sounded form*: the **theka**, a fixed sequence of drum strokes (*bols*) that identifies the tala. Tintal's theka is not "a pattern in 16/4" — it *is* tintal, in the way E(7,12) *is* the Ewe bell.
+
+Counterpoint in this system is temporal rather than textural: typically one melodic line and one drummer, whose independence is measured in how far each departs from the cycle while always reconverging at sam. Tension is created by *departure* — cross-groupings, doubled speeds, phrases that straddle the cycle — and resolved by *arrival*.
+
+## The Rules
+
+1. **The theka is the referent, and its skeleton persists.** The tabla player elaborates the theka (filler strokes, flourishes) but its structural bols on the vibhag boundaries remain audible or clearly implied. Abandoning the theka entirely is a marked, sectional event (a solo passage), not ambient behaviour ([Kippen 1988](/appendix-references/#fr-kippen-1988)).
+
+2. **Sam is the cadence target of everything.** Phrases of any length, at any speed, however far they wander, must resolve on sam — arriving early or late is simply wrong, and the audience audibly reacts to a well-landed sam ([Clayton 2000](/appendix-references/#fr-clayton-2000)). In Poly terms: sam is the convergence point, and all phrase arithmetic works backward from it.
+
+3. **Khali is structural negative space.** The cycle's midpoint region (khali, "empty") is marked by *absence* — the tabla's low drum (bayan) falls silent or is damped, giving the wave shape: full → empty → full. Khali is not quiet sam; it is a different *timbre state*, and keeping it audible is what makes long cycles navigable.
+
+4. **Speed changes are exact ratios (layakari).** Elaboration runs at defined multiples of the base pulse — 2× (*dugun*), 3× (*tigun*), 4× (*chaugun*), and notably 1.5× (*adi laya* / *aad*) — never at free tempo. The base cycle length is invariant; only the subdivision multiplies <sup>[23](/appendix-references/#ref-23), [24](/appendix-references/#ref-24)</sup>.
+
+5. **Cross-groupings are laid over the cycle, then reconciled.** A standard tension device is phrasing in units foreign to the tala (groups of 4 over a 7-beat rupak; 3s over tintal's 4s) — sustained long enough to threaten the meter, then dissolved onto sam (Rule 2). The cross-grouping is a *loan*, always repaid.
+
+6. **The tihai is the cadential formula, and it is arithmetic.** A phrase repeated exactly three times whose final stroke lands on sam: `3 × phrase + 2 × gap ≡ remaining matras (mod cycle)`. The repetitions must be literal (same phrase, same internal timing); the arithmetic must be exact ([Nelson 2008](/appendix-references/#fr-nelson-2008) gives the Carnatic *mora* equivalent). A tihai whose third statement misses sam by half a beat is not a loose tihai — it is a failed one.
+
+7. **Theme-and-variation is the improvisation grammar.** Tabla solo forms (*kaida*) state a theme, then vary it by systematic permutation (doubling, substitution, displacement) while preserving its bol material, closing sections with a tihai ([Kippen 1988](/appendix-references/#fr-kippen-1988)). Variation means *transforming a stated theme*, not generating unrelated material — mutation with memory, not mutation as noise.
+
+8. **Dynamics mark architecture, not beats.** Sam takes weight; khali takes hollowness; vibhag boundaries take clarity. There is no backbeat and no even accent grid — the loudness contour *is* a map of the cycle.
+
+## Construction
+
+1. **Theka lane.** Steps = the tala's matra count (16 for tintal, 10 for jhaptal, 7 for rupak) at 1/4 or 1/8; timeline mode with the structural strokes; velocity contoured: strongest at step 0 (sam), reduced around the khali region (Rules 1, 3, 8).
+2. **Elaboration lanes at exact ratios.** One lane at 2× subdivision (dugun), one at 4× (chaugun), same step count — layered acceleration with the cycle invariant (Rule 4).
+3. **A cross-grouping lane.** Step count foreign to the tala (e.g. 6 against 16) — but phrase-gate it so it speaks for a few cycles and falls silent before sam-heavy passages: the loan repaid (Rule 5).
+4. **The tihai.** Phrase-gate a lane with `3 × Length + 2 × Gap = one full cycle` ending at step 0. Worked example over 16 matras: Length 5, Gap 0.5 → 3(5) + 2(0.5) = 16 ✓ (Rule 6).
+5. **Feel.** No swing. Precision is prized; humanize minimal. All expressive weight goes into the velocity architecture (Rule 8).
+
+<PolyPatch title="Rule-Checked Tintal Structure">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Velocity | Mutation | Phrase Len | Gap |
+|------|------|-------|------|----------|-------------|----------|----------|------------|-----|
+| 1 | Theka (timeline) | 16 | 8 | 0 | 1/4 | 100 | 0% | 0 | 0 |
+| 2 | Dugun elaboration | 16 | 9 | 2 | 1/8 | 70 | 10% | 0 | 0 |
+| 3 | Chaugun surface | 16 | 7 | 0 | 1/16 | 55 | 15% | 0 | 0 |
+| 4 | Cross-grouping (loan) | 6 | 4 | 0 | 1/8 | 75 | 10% | 24 | 8 |
+| 5 | Tihai phrase | 16 | 5 | 0 | 1/8 | 90 | 0% | 5 | 0.5 |
+
+</PolyPatch>
+
+Lane 1's velocity contour (sam strong, khali hollow) must currently be drawn with the accent mask — see [Chapter 18](/18-editors-and-views/) for the editor.
+
+## What Breaks the Idiom
+
+- **A missed sam.** Any phrase, fill, or tihai resolving off the convergence point (Rules 2, 6). This is the error the entire system exists to prevent.
+- **Uniform cycle weight.** No khali contour → the cycle loses its internal map (Rules 3, 8).
+- **Free-tempo layering.** Elaboration at non-ratio speeds (e.g. a 1.37× lane) breaks layakari; use exact multiples, including the deliberately tense 1.5× (Rule 4).
+- **Unresolved cross-groupings.** A foreign grouping that never reconciles reads as a mistake rather than tension (Rule 5).
+- **Approximate tihais.** "Three-ish repetitions, roughly landing" — the form's power is its audible exactness (Rule 6).
+
+## Sources
+
+Primary: [Clayton 2000](/appendix-references/#fr-clayton-2000) (tala theory, sam, cross-rhythm), [Kippen 1988](/appendix-references/#fr-kippen-1988) (theka elaboration, kaida grammar), [Nelson 2008](/appendix-references/#fr-nelson-2008) (Carnatic tihai/mora arithmetic). See also refs [21](/appendix-references/#ref-21)–[25](/appendix-references/#ref-25).
+
+**Attribution:** Rules 1–7 restate structures documented directly in the cited sources (tala architecture and sam: [Clayton 2000](/appendix-references/#fr-clayton-2000); theka elaboration and kaida grammar: [Kippen 1988](/appendix-references/#fr-kippen-1988); tihai arithmetic: [Nelson 2008](/appendix-references/#fr-nelson-2008)). Rule 8 is this guide's summary of the dynamic practice those sources describe. All Poly mappings, worked examples, and patch values are ours.

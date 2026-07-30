@@ -75,6 +75,27 @@ export default defineConfig({
 					],
 				},
 				{
+					label: 'Theory Deep Dives',
+					collapsed: true,
+					items: [
+						{ label: 'Overview', slug: 'theory-counterpoint-overview' },
+						{ label: 'Sub-Saharan Africa', slug: 'theory-sub-saharan-africa' },
+						{ label: 'Afro-Cuban', slug: 'theory-afro-cuban' },
+						{ label: 'Afrobeat', slug: 'theory-afrobeat' },
+						{ label: 'Gamelan', slug: 'theory-gamelan' },
+						{ label: 'Indian Classical', slug: 'theory-indian-classical' },
+						{ label: 'Balkan', slug: 'theory-balkan' },
+						{ label: 'Minimalism', slug: 'theory-minimalism' },
+						{
+							label: 'Electronic & Breakbeat',
+							slug: 'theory-electronic-breakbeat',
+						},
+						{ label: 'Brazilian', slug: 'theory-brazilian' },
+						{ label: 'Funk & Soul', slug: 'theory-funk-soul' },
+						{ label: 'Jazz', slug: 'theory-jazz' },
+					],
+				},
+				{
 					label: 'Appendices',
 					// region:starlight-appendix-sidebar
 					items: [

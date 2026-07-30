@@ -1,0 +1,75 @@
+---
+class: gated
+title: "Timeline Counterpoint: Sub-Saharan Africa"
+description: "Explicit rules for building idiomatic Ewe- and Manding-style polymetric textures — timeline inviolability, offbeat timing, cross-rhythm, role hierarchy, and the lead drum's variation budget."
+---
+
+import PolyPatch from '../../components/PolyPatch.astro';
+
+*Companion to [Chapter 2: Sub-Saharan Africa](/02-sub-saharan-africa/). This page assumes you know what the gankogui bell and E(7,12) are, and states the counterpoint rules explicitly. Everything below is summarised from the published scholarship listed under Sources — prior research restated in Poly's terms, not original theory.*
+
+## The System
+
+West African ensemble drumming — this page draws principally on Ewe practice (Ghana/Togo) and Manding practice (Mali/Guinea) — is organised around a **timeline**: a short, asymmetric ostinato, usually on a bell or other cutting timbre, that functions as the ensemble's shared clock <sup>[5](/appendix-references/#ref-5)</sup>. The timeline is not a melody and not a solo; it is a *referent*. Every other part is defined, learned, and heard by its relationship to the timeline, not by its relationship to an abstract "beat one" ([Arom 1991](/appendix-references/#fr-arom-1991); [Agawu 2006](/appendix-references/#fr-agawu-2006)).
+
+Beneath the timeline sits a second referent that Western transcription usually omits: the **dance beat** — the regular footfalls of the dancers, typically four even beats per 12-pulse cycle. The characteristic tension of the music is the continuous cross-rhythm between the ternary and binary readings of the same 12 pulses — the 3:2 relationship that Novotney argues is the generative core of the whole system ([Novotney 1998](/appendix-references/#fr-novotney-1998)).
+
+## The Rules
+
+1. **The timeline never varies.** Not in pattern, not in dynamics, not in placement. The bell player's virtue is constancy; variation in the timeline is not expressive, it is an error. (In Poly: timeline mode, mutation 0, no phrase gating, no envelope on the bell lane.)
+
+2. **Every part has a fixed point of entry against the timeline.** Parts are learned as "start *here* relative to the bell," and that phase relationship is part of the part's identity. Shifting a support drum's entry point does not create a variation — it creates a different (usually wrong) part. (In Poly: rotation is identity, not decoration. Set it once per lane and leave it.)
+
+3. **Support parts are placed off the dance beat, systematically.** Locke's analysis of southern Ewe drumming shows support patterns consistently displaced onto offbeats relative to the dance beat, creating sustained cross-rhythm rather than occasional syncopation ([Locke 1982](/appendix-references/#fr-locke-1982)). The displacement is structural: the part *lives* offbeat; it does not visit.
+
+4. **The 3:2 cross-rhythm is continuous, not an effect.** At any moment the texture supports both a ternary (12 = 3×4) and binary (12 = 4×3, or 6×2) hearing. Idiomatic parts commit to one stratum each; the *composite* carries the ambiguity. A single part that flip-flops between strata sounds amateur.
+
+5. **The variation budget is concentrated in the lead drum.** Timeline: zero variation. Support drums (kidi, sogo; sangban, dununba): small sanctioned variations from a known set, at low rate. Lead drum (atsimevu; djembe soloist): large vocabulary of phrases, freely sequenced — but drawn from a shared lexicon, cued to dancers, and cadencing onto the cycle's convergence point ([Chernoff 1979](/appendix-references/#fr-chernoff-1979)). Improvisation means *phrase selection and timing*, not free invention.
+
+6. **Lead phrases are cycle-shaped.** A lead phrase occupies one, two, or four timeline cycles and resolves at the cycle boundary. Mid-cycle entries are common; mid-cycle *endings* are not — the phrase lands where the cycles agree ([Anku 2000](/appendix-references/#fr-anku-2000) models this formally as rotation within a circle that must close).
+
+7. **Register and rate separate the voices.** Each part occupies a distinct combination of timbre, register, and note-rate: bell high and sparse-but-cutting, dunun low and sparse, accompaniment djembes mid and continuous, solo djembe high and bursty. Two parts in the same stratum at the same rate is doubling, and doubling is avoided — every voice must be individually audible.
+
+8. **Subdivision is felt, not isochronous.** Measured Malian jembe playing shows a stable short-medium-long subdivision profile that persists across tempi and players — a *feel* that is part of the style's identity, not expressive noise ([Polak 2010](/appendix-references/#fr-polak-2010); [Polak & London 2014](/appendix-references/#fr-polak-london-2014)). Straight-grid renditions are recognisably foreign to practitioners.
+
+9. **The ensemble converses.** Call-and-response operates at every scale: bell calls, drums respond; lead calls, chorus drum answers; drummers call, dancers answer. Structurally: when the lead speaks, support parts do *not* simultaneously vary. One voice varies at a time.
+
+## Construction
+
+A procedure for building an Ewe-style texture that respects the rules:
+
+1. **Lay the timeline.** 12 steps, E(7,12), rotation 0, 1/8 subdivision, timeline mode on, velocity high. This is Rule 1's fixed clock.
+2. **Lay the dance beat.** A low drum at 12 steps, 4 hits (E(4,12) = every third pulse), moderate velocity. You now have the 3:2 matrix (Rule 4): the bell articulates the ternary hearing, the feet the binary one.
+3. **Add one support drum per stratum.** Each at 12 steps (same cycle as the bell — Ewe support parts usually share the timeline's cycle), each with a rotation chosen so its hits fall *between* dance beats (Rule 3), each in a distinct register (Rule 7). Ghost values low; mutation 0–10%.
+4. **Add the lead.** Different cycle length is permissible here (7 or 5 steps for a roaming, phrase-like quality) or same-cycle with high mutation. Give this lane the entire variation budget: mutation 15–30%, phrase gating (Length one or two cycles, Gap one cycle) so it speaks and falls silent (Rules 5, 6, 9).
+5. **Apply the feel.** No swing. Small per-lane timing offsets (support lanes a few ms apart) and, until Poly ships subdivision-profile support, a light Humanize (≤0.15) as an admitted approximation of Rule 8.
+
+<PolyPatch title="Rule-Checked Ewe Texture">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Velocity | Ghost | Mutation | Phrase Len | Gap |
+|------|------|-------|------|----------|-------------|----------|-------|----------|------------|-----|
+| 1 | Gankogui (timeline) | 12 | 7 | 0 | 1/8 | 110 | 0 | 0% | 0 | 0 |
+| 2 | Dance beat (low) | 12 | 4 | 0 | 1/8 | 95 | 0 | 0% | 0 | 0 |
+| 3 | Kidi (support, offbeat) | 12 | 5 | 1 | 1/8 | 80 | 30 | 8% | 0 | 0 |
+| 4 | Sogo (support, offbeat) | 12 | 3 | 2 | 1/8 | 85 | 25 | 8% | 0 | 0 |
+| 5 | Atsimevu (lead) | 7 | 5 | 0 | 1/8 | 90 | 45 | 25% | 12 | 6 |
+
+</PolyPatch>
+
+Check the rules against the patch: lanes 1–2 fixed (Rules 1–2), lanes 3–4 rotated off the dance beat with a small budget (Rules 3, 5), lane 5 holds the budget and is phrase-gated so it converses rather than chatters (Rules 5, 6, 9), and every lane occupies its own register via distinct MIDI notes (Rule 7).
+
+For a Manding-style texture, keep all lanes on a shared cycle length and express the hierarchy through density and register instead (dunun sparse/low, sangban mid, djembe dense/high) — hocketing within one metric frame rather than stacked cycles.
+
+## What Breaks the Idiom
+
+- **A varying timeline.** Mutation, density modulation, or phrase gating on the bell lane. The single most damaging error.
+- **Western downbeat accenting.** Slamming velocity onto pulse 0 of every cycle. The cycle has a convergence point, not a backbeat; weight comes from coincidence of parts, not from one loud hit.
+- **Uniform variation.** Mutation spread evenly across all lanes. The result is texture soup — no fixed ground for the varying voice to speak against (violates Rules 5 and 9).
+- **Stratum collisions.** Two lanes at the same rate in the same register. Merge them or separate them.
+- **Swing.** The 12-pulse frame's interest is the 3:2 ambiguity; binary swing flattens it. The correct feel is the non-isochronous profile of Rule 8, which is not swing.
+
+## Sources
+
+Primary: [Arom 1991](/appendix-references/#fr-arom-1991) (referent theory), [Locke 1982](/appendix-references/#fr-locke-1982) (offbeat timing), [Locke 1998](/appendix-references/#fr-locke-1998) (complete transcriptions of a full Ewe repertoire piece), [Chernoff 1979](/appendix-references/#fr-chernoff-1979) (ensemble roles and conversation), [Anku 2000](/appendix-references/#fr-anku-2000) (circular structure), [Novotney 1998](/appendix-references/#fr-novotney-1998) (3:2 foundation), [Polak 2010](/appendix-references/#fr-polak-2010) / [Polak & London 2014](/appendix-references/#fr-polak-london-2014) (jembe timing), [Agawu 2006](/appendix-references/#fr-agawu-2006) (a critical check on over-formalising the "standard pattern"). See also refs [4](/appendix-references/#ref-4)–[9](/appendix-references/#ref-9).
+
+**Attribution:** Rules 1–6 and 8 restate claims made directly in the cited sources. Rules 7 (register/rate separation) and 9 (one voice varies at a time) are this guide's practical distillations of the ensemble practice described across [Chernoff 1979](/appendix-references/#fr-chernoff-1979) and [Locke 1998](/appendix-references/#fr-locke-1998), rather than statements any single source makes in that form. All Poly parameter mappings and patch values are ours.

@@ -1,0 +1,75 @@
+---
+class: gated
+title: "The Clave Matrix: Afro-Cuban"
+description: "Explicit rules for clave-aligned counterpoint — direction, the bombo and ponche, onbeat/offbeat sides, part archetypes, and what 'crossed' means precisely."
+---
+
+import PolyPatch from '../../components/PolyPatch.astro';
+
+*Companion to [Chapter 3: Afro-Cuban](/03-afro-cuban/). This page assumes you know the tresillo, cinquillo, and the son/rumba clave patterns, and states the alignment rules explicitly. Everything below is summarised from the published scholarship listed under Sources — prior research restated in Poly's terms, not original theory.*
+
+## The System
+
+Cuban popular music is governed by **clave**: a five-stroke, two-bar (16-pulse) pattern that functions as a matrix rather than a part <sup>[10](/appendix-references/#ref-10)</sup>. Peñalosa's synthesis of Cuban pedagogy states the core principle: every part in the ensemble is aligned with clave, whether or not clave is being played aloud — alignment is what makes a part *correct*, and misalignment ("crossed", *cruzado*) is a recognised, nameable error, not a stylistic choice ([Peñalosa 2009](/appendix-references/#fr-penalosa-2009)).
+
+The matrix has two halves with opposite characters:
+
+- **The three-side** (the bar containing three strokes) is the *offbeat* side — generative, tense, forward-leaning. Its three strokes are the tresillo skeleton, and two of them have names because parts target them: the **bombo** (second stroke, pulse 3 of 0–15) and the **ponche** (third stroke, pulse 6).
+- **The two-side** (the bar with two strokes) is the *onbeat* side — stable, grounded, resolving. Its strokes sit on or beside the main beats.
+
+A groove is "in 3-2" or "2-3" depending on which side the ensemble treats as bar one. Direction is a property of the *whole arrangement*: melody, bass, percussion all imply the same direction, and one part implying the opposite direction is what "crossed" means precisely.
+
+## The Rules
+
+1. **Declare the clave and its direction first.** Everything else is defined against it. The clave itself never varies — it is the referent, and like the Ewe bell it takes no ornamentation, no dynamics contour, no mutation. (Note the exact son and rumba claves are *non-Euclidean*; use the timeline-mode workflow from [Chapter 3](/03-afro-cuban/) to get the true pattern.)
+
+2. **Match tension to sides.** Parts place their offbeat, syncopated activity on the three-side and their grounded, onbeat activity on the two-side. This is the master alignment rule: a part whose busy half sits against the two-side implies the reversed clave and is crossed ([Peñalosa 2009](/appendix-references/#fr-penalosa-2009); [Mauleón 1993](/appendix-references/#fr-mauleon-1993)).
+
+3. **The bass tumbao avoids the downbeat and targets bombo and ponche.** The classic son bass sounds on the bombo (pulse 3) and ponche (pulse 6) of the three-side and sustains across bar lines. Beat-one bass is not neutral — it audibly shifts the style toward son montuno's older *danzón* ancestors or toward non-Cuban pop ([Mauleón 1993](/appendix-references/#fr-mauleon-1993)).
+
+4. **Each percussion voice has an archetype part, and the archetype is clave-locked.** Cáscara/palito patterns, the timbale bell, the bongó *martillo*, the conga *marcha* (tumbao) are fixed patterns with defined clave alignment — learned as wholes, varied only in sanctioned ways ([Uribe 1996](/appendix-references/#fr-uribe-1996)). The conga marcha places its paired open tones in the second half of each bar, leading across the barline; the quinto (in rumba) is the designated free voice.
+
+5. **The variation budget belongs to one voice at a time.** In son: the bongosero moves between martillo and bell, and improvised *repiques* are momentary. In rumba: the quinto improvises continuously while salidor and tres golpes hold their parts. Either way, the low parts and the clave never join the improvisation.
+
+6. **Density complements across parts, not within them.** The composite of clave + cáscara + tumbao + marcha covers most of the 16 pulses with almost no doubled strong accents — parts interlock around each other's strokes (the cinquillo fills the tresillo's gaps). When adding a lane, place its accents in composite gaps, not on existing accents.
+
+7. **The feel is a lilt, not straight and not swung.** Cuban subdivision sits between straight sixteenths and triplets — roughly 0.2–0.3 on Poly's Swing parameter — applied ensemble-wide with per-part micro-differences. (See <sup>[39](/appendix-references/#ref-39)</sup> for measured groove-genre timing.)
+
+8. **Crossing is a deliberate, temporary device or an error — nothing in between.** Modern timba deliberately "crosses" for sections (*gears*, bomba sections) and resolves back; what it never does is drift ambiguously. If a part contradicts the matrix, it should be obvious, sectional, and resolved ([Washburne 1997](/appendix-references/#fr-washburne-1997) traces the same logic into jazz).
+
+## Construction
+
+1. **Clave lane.** 16 steps at 1/16, timeline mode with the exact son clave (hits 0, 3, 6, 10, 12 for 3-2). Decide the direction now (rotate for 2-3).
+2. **Bass/tumbao lane.** Hits at bombo and ponche positions; long note durations; no beat-one hit (Rule 3).
+3. **Cáscara lane.** The shell pattern, its dense half against the three-side (Rule 2).
+4. **Marcha lane.** Conga, mid density, open-tone pair placed late in each bar (Rule 4), ghost floor for the filler strokes between accents.
+5. **One free voice.** Quinto-like lane holding the mutation budget (Rule 5), ideally with fills weighted toward the two-side's space so answers land against the stable half.
+6. **Feel.** Swing 0.2–0.3 ensemble-wide, slight per-lane offsets (Rule 7). Check the composite for doubled accents (Rule 6) and for any lane whose busy half fights the declared direction (Rule 2).
+
+<PolyPatch title="Rule-Checked Son Ensemble (3-2)">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Velocity | Ghost | Mutation | Swing |
+|------|------|-------|------|----------|-------------|----------|-------|----------|-------|
+| 1 | Clave (timeline, exact) | 16 | 5 | — | 1/16 | 100 | 0 | 0% | 0.25 |
+| 2 | Tumbao bass | 8 | 3 | 0 | 1/8 | 95 | 0 | 0% | 0.20 |
+| 3 | Cáscara | 8 | 5 | 1 | 1/8 | 80 | 40 | 5% | 0.25 |
+| 4 | Conga marcha | 16 | 7 | 2 | 1/16 | 85 | 55 | 10% | 0.30 |
+| 5 | Quinto (free voice) | 16 | 5 | 5 | 1/16 | 88 | 45 | 30% | 0.25 |
+
+</PolyPatch>
+
+Lane 1 uses the timeline-mode exact clave, not the E(5,16) approximation — the one-pulse difference at the ponche end of the pattern is precisely where crossing is felt.
+
+## What Breaks the Idiom
+
+- **The approximate clave.** E(5,16) is bossa's pattern, not Cuba's. Shipping it as "clave" is the most common generator error; the fifth hit's position (13 vs 12) changes the two-side's meaning.
+- **Crossed parts.** A lane whose accent pattern implies the opposite direction — most often a two-bar part built without deciding which bar is which. Test: mute everything but clave and the suspect lane; if the busy half sits on the two-side, it's crossed (Rule 2).
+- **Beat-one bass.** Instantly un-Cuban (Rule 3).
+- **A second free voice.** Two lanes improvising simultaneously dissolves the matrix's figure/ground relationship (Rule 5).
+- **Straight-grid feel or jazz-triplet swing.** Both miss the 0.2–0.3 zone (Rule 7).
+
+## Sources
+
+Primary: [Peñalosa 2009](/appendix-references/#fr-penalosa-2009) (the matrix, direction, bombo/ponche, crossing), [Mauleón 1993](/appendix-references/#fr-mauleon-1993) (part archetypes and arranging), [Uribe 1996](/appendix-references/#fr-uribe-1996) (percussion-part detail), [Washburne 1997](/appendix-references/#fr-washburne-1997) (clave logic beyond Cuba). See also refs [10](/appendix-references/#ref-10)–[13](/appendix-references/#ref-13).
+
+**Attribution:** the matrix concept, direction, bombo/ponche, and the "crossed" category (Rules 1–4, 8) are [Peñalosa 2009](/appendix-references/#fr-penalosa-2009)'s and [Mauleón 1993](/appendix-references/#fr-mauleon-1993)'s analyses summarised; Rule 6 (complementary density) is this guide's distillation of the part relationships those sources document; Rule 7's swing-zone values are our Poly-specific calibration, not measured claims from the literature. All patch values are ours.

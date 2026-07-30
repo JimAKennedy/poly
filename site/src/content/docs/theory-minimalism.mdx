@@ -1,0 +1,72 @@
+---
+class: gated
+title: "Process Counterpoint: Minimalism"
+description: "Explicit rules for phase, additive, and tempo-ratio counterpoint — pattern choice for rich rotation spaces, audible process, resultant patterns, and Nancarrow's convergence arithmetic."
+---
+
+import PolyPatch from '../../components/PolyPatch.astro';
+
+*Companion to [Chapter 8: Minimalism](/08-minimalism/). This page states the compositional rules behind phasing, additive process, and multi-tempo counterpoint. Everything below is summarised from the published scholarship listed under Sources — prior research restated in Poly's terms, not original theory.*
+
+## The System
+
+Minimalist counterpoint replaces the referent-and-response model of the ethnic traditions with **process**: a rule applied gradually to identical or near-identical material, with the listener meant to hear the rule operating ([Reich 2002](/appendix-references/#fr-reich-2002)). The counterpoint is *emergent* — Reich's phased voices produce composite accents ("resultant patterns") that neither voice contains; Nancarrow's tempo strata produce convergence structures no single line implies. The craft is in choosing material and rates such that the emergent layer is rich, and in keeping the process itself audible rather than decorative.
+
+Cohn's beat-class analysis of Reich's phase works supplies the formal core: treating a pattern as a set of onset positions in a cyclic universe, phasing is rotation, and the interest of each phase configuration can be analysed (and predicted) from the pattern's interval structure ([Cohn 1992](/appendix-references/#fr-cohn-1992)).
+
+## The Rules
+
+1. **One process at a time, moving one variable.** The defining constraint. A phase piece changes *phase only*; an additive piece changes *length only*; a tempo canon changes *rate only*. Stacking simultaneous processes hides all of them ([Reich 2002](/appendix-references/#fr-reich-2002): the process should be perceptible).
+
+2. **Choose patterns whose rotations differ.** Phasing a rotationally symmetric pattern (E(4,8), E(6,12)) wastes the process — several phase positions sound identical. Rich phasing wants patterns with low rotational symmetry and varied interval content, so each of the n phase positions yields a distinct composite ([Cohn 1992](/appendix-references/#fr-cohn-1992)). Reich's Clapping Music pattern — deliberately *not* the Euclidean E(8,12) — breaks the symmetry that would have made several of its twelve shifts redundant (see [Chapter 8](/08-minimalism/) on that pattern's non-Euclidean opening cluster).
+
+3. **The process must be slow enough to inhabit, fast enough to remember.** Each phase configuration needs long enough for the listener to hear its resultant pattern (bars, not beats), but the previous configuration must remain in memory for the *change* to register. Reich's choice: shift by one unit, dwell, shift again. In Poly: Drift rates around 0.25 steps/bar dwell ~4 bars per configuration on a 12-step pattern — a good default.
+
+4. **Voices are dynamically flat and timbrally near-identical.** Resultant patterns are constructed *by the listener* from the interference of equals. Accenting one voice, or timbrally separating them strongly, pre-digests the composite and kills the emergent layer. (This directly inverts the African/Cuban stratum rules — process counterpoint is the one system where voices should *not* be individually distinct.)
+
+5. **An anchor is optional but changes the piece.** Phasing two voices alone yields a floating, referent-less shimmer; adding a fixed pulse (Chapter 8's Lane 3) re-frames every phase position against a ground. Both are idiomatic — decide which piece you are writing.
+
+6. **Additive process grows and shrinks by units, cyclically.** Glass's grammar: extend a cell by one unit, repeat the new length, extend again; contract the same way. The audible object is the changing cycle length itself. In Poly, approximate with Complexity/Density sweeps (hit-count change) or step-count scene morphs; the rule is *unit* change, never jumps.
+
+7. **Tempo-ratio counterpoint is convergence arithmetic.** For simultaneous tempi (Nancarrow), the ratio chooses the piece: small-integer ratios (3:2, 4:3) converge often and read as cross-rhythm; large coprime ratios (17:18…20) converge rarely, producing long spans of controlled non-alignment with occasional structural meetings ([Gann 1995](/appendix-references/#fr-gann-1995)). Compute the convergence period first (LCM of cycle durations); it *is* your form.
+
+8. **Determinism is the aesthetic.** Process music forswears both improvisation and randomness: given the material and the rule, the piece is fixed ([Reich 2002](/appendix-references/#fr-reich-2002); [Potter 2000](/appendix-references/#fr-potter-2000)). Mutation and probability have no role in a strict process patch — their controlled unpredictability belongs to the conversational traditions.
+
+## Construction
+
+**A phase study:**
+
+1. One pattern, 12 steps, 5–8 hits, chosen for low rotational symmetry (test: rotate it mentally through several positions — do they differ?) (Rule 2).
+2. Two lanes with that identical pattern, identical velocity, same or adjacent MIDI notes (Rule 4). Lane 2: Drift +0.25 steps/bar (Rule 3).
+3. Optional third lane: fixed pulse anchor (Rule 5).
+4. Mutation 0, probability 1.0, humanize 0 everywhere (Rules 1, 8). Let it run 48+ bars — the full rotation is the piece.
+
+**A tempo canon:**
+
+1. One pattern on three or four lanes, identical steps and hits.
+2. Tempo Mult set by desired form: 1.0 / 1.5 / 2.0 for frequent convergence; 1.0 / 1.1 / 1.2 (approximating high coprime ratios) for the Nancarrow long-form effect (Rule 7).
+3. Again: flat dynamics, no stochastic parameters.
+
+<PolyPatch title="Rule-Checked Phase Study">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Drift | Velocity | Mutation |
+|------|------|-------|------|----------|-------------|-------|----------|----------|
+| 1 | Fixed voice | 12 | 7 | 0 | 1/8 | 0 | 85 | 0% |
+| 2 | Phasing voice | 12 | 7 | 0 | 1/8 | +0.25 | 85 | 0% |
+| 3 | Anchor (optional) | 4 | 4 | 0 | 1/4 | 0 | 65 | 0% |
+
+</PolyPatch>
+
+## What Breaks the Idiom
+
+- **Multiple simultaneous processes** — drift + mutation + density automation at once is texture, not process (Rule 1).
+- **Symmetric patterns** — half the phase journey duplicates the other half (Rule 2).
+- **Expressive dynamics** on the process voices (Rule 4).
+- **Stochastic parameters.** Mutation/probability convert inevitability into noise (Rule 8).
+- **Impatience.** Drift ≥ 1 step/bar turns gradual process into a fast rotation effect — sometimes wanted, but it is no longer Reich's idiom (Rule 3).
+
+## Sources
+
+Primary: [Reich 2002](/appendix-references/#fr-reich-2002) (the process manifesto and its revisions), [Cohn 1992](/appendix-references/#fr-cohn-1992) (beat-class theory of phasing), [Potter 2000](/appendix-references/#fr-potter-2000) (Riley, Reich, Glass compared), [Gann 1995](/appendix-references/#fr-gann-1995) (Nancarrow's tempo structures), [Scherzinger 2010](/appendix-references/#fr-scherzinger-2010) (phasing's African resonances). See also refs [32](/appendix-references/#ref-32)–[35](/appendix-references/#ref-35).
+
+**Attribution:** Rules 1, 4, and 8 restate Reich's published positions ([Reich 2002](/appendix-references/#fr-reich-2002)); Rule 2 summarises [Cohn 1992](/appendix-references/#fr-cohn-1992)'s beat-class analysis; Rule 7 summarises [Gann 1995](/appendix-references/#fr-gann-1995). Rule 3's dwell-time guidance and all specific Drift/tempo-multiplier values are this guide's Poly-specific advice, and Rules 5–6 are our compressions of practice described in [Potter 2000](/appendix-references/#fr-potter-2000). All patch values are ours.

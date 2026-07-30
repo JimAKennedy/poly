@@ -1,0 +1,76 @@
+---
+class: gated
+title: "Interlock and Nesting: Gamelan"
+description: "Explicit rules for Balinese kotekan and Javanese colotomic counterpoint — composite continuity, playability constraints, structural overlap, stroke-rate hierarchy, and end-weighted cycles."
+---
+
+import PolyPatch from '../../components/PolyPatch.astro';
+
+*Companion to [Chapter 5: Gamelan](/05-gamelan/). This page states the interlocking and nesting rules explicitly, and is the theoretical background for Poly's Kotekan parameter. Everything below is summarised from the published scholarship listed under Sources — prior research restated in Poly's terms, not original theory.*
+
+## The System
+
+Gamelan offers two distinct counterpoint systems that Poly models separately. **Balinese kotekan** is micro-level interlock: two parts (*polos* and *sangsih*) divide a rapid figuration between them so that their composite is a continuous stream neither player could sustain alone ([Vitale 1990](/appendix-references/#fr-vitale-1990); [Tenzer 2000](/appendix-references/#fr-tenzer-2000)). **Javanese colotomic structure** is macro-level nesting: instruments mark points in a long cycle at stroke rates related by powers of two, producing a temporal hierarchy in which the largest gong subsumes all smaller cycles ([Sumarsam 1995](/appendix-references/#fr-sumarsam-1995)) <sup>[18](/appendix-references/#ref-18), [19](/appendix-references/#ref-19)</sup>.
+
+Both systems share one deep property: the cycle is **end-weighted**. The gong stroke and the kotekan cadence tone fall on the *completion* of the cycle, which is simultaneously the start of the next — arrival, not departure. This inverts the Western downbeat instinct and governs where every part places its weight.
+
+## The Rules
+
+### Kotekan (Bali)
+
+1. **The composite must be continuous.** At the interlock's subdivision rate, (almost) every pulse is struck by exactly one of the pair. Gaps in the composite are errors; the whole point is a stream faster than one player's hand.
+
+2. **Each part alone must be playable and idiomatic.** Parts avoid long same-hand runs at maximum speed; each is a sparse, syncopated figure with its own kinetic logic. If one "part" of your pair is an unplayable near-continuous stream, you have written a melody plus an echo, not kotekan.
+
+3. **Polos leans onbeat, sangsih leans offbeat.** The division of labour is not arbitrary: polos ("basic") carries more of the beat-coincident strokes; sangsih ("differing") carries the off-positions and the higher notes where the parts differ in pitch ([Vitale 1990](/appendix-references/#fr-vitale-1990)).
+
+4. **The parts overlap at structural tones.** Strict complementation is only the textbook case. In practice both players strike together at cadence points, phrase joins, and *angsel* (break) figures — the overlap marks structure ([Tenzer 2000](/appendix-references/#fr-tenzer-2000)). A pair with empty intersection everywhere sounds mechanical. (Poly's Kotekan `L1` implements the strict case; add deliberate doublings via a third lane or accent masks until kotekan modes ship.)
+
+5. **The style of interlock is a named choice.** *Norot* oscillates around neighbouring tones; *kotekan telu* shares three-pulse cells; *kotekan empat* four; *nyog cag* alternates strictly. Each has a different composite texture — choose one and keep it; mixing interlock styles mid-phrase is not idiomatic.
+
+6. **The interlock serves a melody.** Kotekan elaborates a slower core melody (*pokok*). Its accents must land on the pokok tones at the pokok's rate — the fast surface is an ornamentation system, not free figuration.
+
+### Colotomy (Java, and the Balinese gong cycle)
+
+7. **Stroke rates halve as instruments deepen.** If the ketuk marks every unit, the kempul marks every 2, kenong every 4, gong every 8 (or deeper). Ratios are powers of two; a 3:1 layer belongs to a different system.
+
+8. **Weight accrues to coincidence, and the gong takes all.** The more layers coincide on a stroke, the heavier it is; the gong stroke — where everything coincides — is the heaviest event and falls at the cycle's *end/beginning*. Nothing competes with it: texture typically thins just before it and re-blooms after.
+
+9. **Density scales with register, inversely.** The lowest instruments play slowest, the highest fastest (the kotekan sits at the top of this pyramid). A low, fast voice or a high, slow voice inverts the pyramid and reads as foreign.
+
+10. **Tempo and density trade off (irama).** When the beat slows, elaborating parts double their subdivision so surface density stays roughly constant. In Poly: halving tempo should be paired with doubling elaborating lanes' step counts or subdivision — the surface stream is the invariant.
+
+## Construction
+
+1. **Colotomic frame.** Four lanes, one hit each, steps 4/8/16/32 at 1/4 (Rule 7), velocity increasing with depth (Rule 8), rotations aligned so all coincide at the cycle boundary.
+2. **Pokok.** A mid-register lane, 8 steps, 4–8 hits, even and calm (Rule 6's melody proxy).
+3. **Kotekan pair.** Polos: 8 or 16 steps, 5 hits, biased onbeat (Rule 3). Sangsih: Kotekan `L{polos}` for the strict complement (Rule 1). Check polos alone for playability (Rule 2).
+4. **Structural overlap.** Add doubled strokes at the cycle boundary — accent masks on both pair lanes, or a sparse third lane striking with both at the gong point (Rule 4).
+5. **Feel.** No swing, no humanize: gamelan ensembles prize unison precision. Dynamics terraced by register, not contoured within parts.
+
+<PolyPatch title="Rule-Checked Kotekan Over Colotomy">
+
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Velocity | Kotekan |
+|------|------|-------|------|----------|-------------|----------|---------|
+| 1 | Gong (cycle) | 32 | 1 | 0 | 1/4 | 115 | off |
+| 2 | Kenong | 16 | 1 | 0 | 1/4 | 95 | off |
+| 3 | Kempul | 8 | 1 | 0 | 1/4 | 85 | off |
+| 4 | Pokok melody | 8 | 4 | 0 | 1/4 | 75 | off |
+| 5 | Polos | 16 | 9 | 0 | 1/16 | 80 | off |
+| 6 | Sangsih | 16 | 7 | 0 | 1/16 | 75 | L5 |
+
+</PolyPatch>
+
+## What Breaks the Idiom
+
+- **Gaps in the kotekan composite** (Rule 1) — usually caused by editing polos after setting the complement; re-derive sangsih after any polos change.
+- **An unplayable polos.** Dense polos + sparse sangsih is a melody with decoration, not interlock (Rule 2).
+- **Front-weighted cycles.** Accenting pulse 0 as a Western downbeat instead of weighting the cycle's completion (Rule 8's end-weighting).
+- **Non-binary colotomic ratios** (Rule 7) — a 3-layer belongs to the African/Cuban pages, not here.
+- **Swing or humanize.** Gamelan's precision is the aesthetic; looseness reads as error, not warmth.
+
+## Sources
+
+Primary: [Tenzer 2000](/appendix-references/#fr-tenzer-2000) (kotekan typology, kebyar structure), [Vitale 1990](/appendix-references/#fr-vitale-1990) (kotekan mechanics from a performer-composer), [Sumarsam 1995](/appendix-references/#fr-sumarsam-1995) (Javanese colotomy and irama). See also refs [18](/appendix-references/#ref-18)–[20](/appendix-references/#ref-20).
+
+**Attribution:** the kotekan typology, overlap-at-structure, and onbeat/offbeat division (Rules 3–6) summarise [Tenzer 2000](/appendix-references/#fr-tenzer-2000) and [Vitale 1990](/appendix-references/#fr-vitale-1990); the colotomic hierarchy (Rules 7–8, 10) summarises [Sumarsam 1995](/appendix-references/#fr-sumarsam-1995). Rules 1–2 and 9 are this guide's compressions of performance constraints those sources describe at length rather than rules they state in this form. All patch values are ours.
