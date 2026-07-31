@@ -191,26 +191,23 @@
   });
 
   /* --- export button (plugin-only) — opens a native Save As… dialog for the
-       frozen MIDI capture window. Result arrives via polyHostPush
-       {type:'exportResult'}. Cancels resolve silently. M051 S08: gated on the
-       capture machine reaching `complete` (capState===3) — the only state in
-       which the processor has frozen a stable, exportable window. */
+       CURRENT pattern. Result arrives via polyHostPush {type:'exportResult'}.
+       Cancels resolve silently. M053 S11: ungated — the native side renders the
+       current pattern offline (poly::renderPatternToSMF) on every click/drag,
+       so Export works regardless of DAW transport or capture state. */
   if (host.capabilities && host.capabilities.canExport) {
     const btn = document.getElementById('exportBtn');
-    btn.title = 'Save the captured MIDI window as a .mid file, or drag it straight into your DAW (available once capture is complete)';
+    btn.title = 'Save the current pattern as a .mid file, or drag it straight into your DAW';
     btn.addEventListener('click', () => {
-      if ((lastFrame.capState | 0) !== 3) return; // active only in `complete`
       host.action('exportSaveAs', {});
       btn.classList.add('on');
     });
     // M053 S03d (G06): the Export chip doubles as a drag source. A click runs
     // the Save-As path above; dragging it opens the native drag-source window
-    // (platform_drag_source) that carries the frozen .mid straight into the DAW.
-    // Gated identically on capState===3 (complete) — a drag begun in any other
-    // state is cancelled so the affordance is inert until a window is frozen.
+    // (platform_drag_source) that carries the .mid straight into the DAW.
+    // M053 S11: ungated — the native offline render always has a pattern to emit.
     btn.setAttribute('draggable', 'true');
-    btn.addEventListener('dragstart', (e) => {
-      if ((lastFrame.capState | 0) !== 3) { e.preventDefault(); return; }
+    btn.addEventListener('dragstart', () => {
       host.action('beginMidiDrag', {});
       btn.classList.add('dragging');
     });
@@ -241,7 +238,7 @@
      G07: the bars picker is a 1-32 stepper over the kCaptureLength window
      (native export_controls_view parity), replacing the old fixed {4,8,16,32}
      cycle. The Arm chip flips to Reset once the machine leaves idle; the Export
-     chip above reads state-driven (active only in `complete`). All three reflect
+     chip above is ungated (M053 S11 offline render). The Arm/bars chips reflect
      host truth from the feedback frame (lastFrame.capState/capBars) — never
      local state — so the header and the Cloth timeline can never disagree. */
   const CAP_BARS_MIN = 1;
