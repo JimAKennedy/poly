@@ -552,6 +552,8 @@
     document.getElementById('mDesk').classList.toggle('on', m === 'desk');
     // Arm/Reset + bars picker are capture-timeline controls — Cloth mode only.
     if (capCtl) capCtl.classList.toggle('show', m === 'cloth');
+    // Learn only reveals annotations inside #cloth — gate the chip to Cloth.
+    document.getElementById('learnBtn').classList.toggle('mode-hidden', m !== 'cloth');
     if (m === 'cloth') sizeLoom();
     if (m === 'desk' && focus >= 0) expandStrip(focus);
   }

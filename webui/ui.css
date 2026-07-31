@@ -72,6 +72,10 @@
   #exportBtn { opacity: .45; }                                  /* dim in idle/armed/capturing */
   #exportBtn.capReady { opacity: 1; cursor: grab; }             /* active only in `complete`; G06 drag-to-DAW */
   #exportBtn.dragging { cursor: grabbing; }                     /* M053 S03d: native drag-source window open */
+  /* M053 S10: Learn only reveals annotations inside #cloth, so the chip is a
+     no-op in Desk. Gate the affordance to Cloth (mirrors #capCtl). The L/l
+     keyboard shortcut stays live in both modes. */
+  #learnBtn.mode-hidden { display: none; }
   #modes { display: flex; gap: 4px; margin-left: 4px; flex-shrink: 0; }
   #chrome .right { margin-left: auto; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
   #conv { text-align: right; font-variant-numeric: tabular-nums; }

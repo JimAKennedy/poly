@@ -20,6 +20,8 @@ test.describe('chrome controls', () => {
   });
 
   test('learn button toggles body class', async ({ page }) => {
+    // Learn is gated to Cloth (M053 S10) — reveal the chip before clicking it.
+    await page.click('#mCloth');
     await expect(page.locator('body')).not.toHaveClass(/learn/);
     await page.click('#learnBtn');
     await expect(page.locator('body')).toHaveClass(/learn/);
@@ -27,7 +29,19 @@ test.describe('chrome controls', () => {
     await expect(page.locator('body')).not.toHaveClass(/learn/);
   });
 
+  test('learn chip is Cloth-only across mode toggles', async ({ page }) => {
+    // Default Desk: chip hidden (its only effect reveals #cloth annotations).
+    await expect(page.locator('#learnBtn')).toBeHidden();
+    // Cloth: chip revealed.
+    await page.click('#mCloth');
+    await expect(page.locator('#learnBtn')).toBeVisible();
+    // Back to Desk: chip hidden again.
+    await page.click('#mDesk');
+    await expect(page.locator('#learnBtn')).toBeHidden();
+  });
+
   test('L key toggles learn mode', async ({ page }) => {
+    // The L/l shortcut stays live in both modes even though the chip is gated.
     await page.keyboard.press('l');
     await expect(page.locator('body')).toHaveClass(/learn/);
     await page.keyboard.press('l');
