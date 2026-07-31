@@ -7,7 +7,7 @@
  * for the most distinct presets.
  */
 (function () {
-  const { euclid, rotArr, cyc8, onsets, laneHitAt, hitVelocity } = window.PolyGrooveMath;
+  const { euclid, rotArr, cyc8, onsets, driftOffset, laneHitAt, hitVelocity } = window.PolyGrooveMath;
 
   const HUES = ['#F5B54A', '#E4604E', '#5AC8DA', '#9BC46B', '#B48AE0', '#E8A33D', '#4EBBE0', '#D47AB8'];
 
@@ -640,13 +640,36 @@
       o.connect(g); g.connect(ctx.destination); o.start(when); o.stop(when + 0.13);
     }
   }
+  // Drifted hit lookup: mirrors laneHitAt but reads the pattern at the drifted
+  // cycle step, matching engine.cpp computeDriftedCycleStep. Without this the
+  // mock stored driftRate but never applied it, so standalone audio ignored
+  // drift while the viz (drifted playhead) implied otherwise. The onset grid is
+  // unchanged; only which pattern step each grid tick consults is rotated.
+  function driftedHitAt(l, tick, drift) {
+    if (l.cells) {
+      const cyc = cyc8(l);
+      const tin = ((tick % cyc) + cyc) % cyc;
+      const os = onsets(l);
+      const idx = os.indexOf(tin);
+      if (idx < 0) return null;
+      const n = l.cells.length;
+      const step = (((idx + drift) % n) + n) % n;
+      return { step, acc: step === 0 };
+    }
+    if (tick % l.stepLen) return null;
+    const n = l.steps;
+    const raw = (((tick / l.stepLen) % n) + n) % n;
+    const step = (((raw + drift) % n) + n) % n;
+    return l.pattern[step] ? { step, acc: step === 0 } : null;
+  }
   function schedule() {
     const ahead = ctx.currentTime + 0.14;
     const step = eighthSec();
     while (startAt + nextTick * step < ahead) {
       state.lanes.forEach((l, li) => {
         if (!l.active) return;
-        const hit = laneHitAt(l, nextTick);
+        const drift = driftOffset(l, nextTick / 8);
+        const hit = drift ? driftedHitAt(l, nextTick, drift) : laneHitAt(l, nextTick);
         if (!hit) return;
         const vel = hitVelocity(l, li, nextTick, hit);
         const mtMs = (l.mt && l.mt[hit.step]) || 0;
@@ -719,7 +742,15 @@
         } else {
           step = Math.floor(tin / l.stepLen);
         }
-        return { ph: (t8 / cyc) % 1, step };
+        // Drift the playhead by the same offset the engine applies
+        // (engine.cpp computeDriftedCycleStep, mirrored by PolyGrooveMath.driftOffset).
+        // barPos = t8/8: 2 eighths/quarter * kPpqPerBar(4) quarters/drift-bar.
+        // The drifted step is what the mock scheduler now plays (schedule()),
+        // and driftOffset feeds the ring rotation in ui.js (T03).
+        const steps = l.cells ? l.cells.length : l.steps;
+        const drift = driftOffset(l, t8 / 8);
+        if (steps) step = (((step + drift) % steps) + steps) % steps;
+        return { ph: (t8 / cyc) % 1, step, driftOffset: drift };
       }),
     };
     frameSubs.forEach((cb) => cb(frame));

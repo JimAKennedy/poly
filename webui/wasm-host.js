@@ -9,7 +9,7 @@
  * is identical — ui.js doesn't know or care which host is active.
  */
 (function () {
-  const { euclid, rotArr, cyc8, onsets, laneHitAt, hitVelocity } = window.PolyGrooveMath;
+  const { euclid, rotArr, cyc8, onsets, driftOffset, laneHitAt, hitVelocity } = window.PolyGrooveMath;
 
   const HUES = ['#F5B54A', '#E4604E', '#5AC8DA', '#9BC46B', '#B48AE0', '#E8A33D', '#4EBBE0', '#D47AB8'];
   const ROLES = ['Anchor pulse', 'Backbeat', 'Shimmer', 'Accent', 'Ghost', 'Ornament', 'Fill', 'Custom'];
@@ -1147,7 +1147,14 @@
         } else {
           step = Math.floor(tin / l.stepLen);
         }
-        return { ph: (t8 / cyc) % 1, step };
+        // Mirror the drift the C++ engine already applies to audio
+        // (engine.cpp computeDriftedCycleStep) so the viz playhead lands on
+        // the same drifted step the engine reads. barPos = t8/8 (2 eighths/
+        // quarter * kPpqPerBar(4)). driftOffset feeds ring rotation in ui.js (T03).
+        const steps = l.cells ? l.cells.length : l.steps;
+        const drift = driftOffset(l, t8 / 8);
+        if (steps) step = (((step + drift) % steps) + steps) % steps;
+        return { ph: (t8 / cyc) % 1, step, driftOffset: drift };
       }),
     };
     frameSubs.forEach((cb) => cb(frame));
