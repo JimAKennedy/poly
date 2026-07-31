@@ -17,6 +17,8 @@
 
 #include "plugids.h"
 #include "poly/bridge.h"
+#include "poly/euclidean.h"
+#include "poly/params_def.h"
 #include "poly/scene.h"
 #include "poly/state_io.h"
 #include "poly/types.h"
@@ -1645,5 +1647,94 @@ TEST(HostTests, TempoChangeMidCapture_CancelsToArmed) {
     host.processBlock(ppq, 140.0, /*playing=*/true);
     EXPECT_EQ(host.captureState(), 1) << "tempo change mid-capture cancels to armed";
     EXPECT_FALSE(host.exportReady());
+    host.teardown();
+}
+
+// --- M053 S08 T01: timeline false->true edge seeds fixedPattern in the processor ---
+// The audio-thread processor's kCoreTimeline case must seed fixedPattern[] from the
+// current Euclidean state on the false->true edge, mirroring the controller cache in
+// web_ui_view.cpp. Without this the lane emits from an empty fixedPattern until the
+// async sendTimelinePattern->timelineSlot_ handshake lands (~1s), an audible self-blank.
+namespace {
+// Drives a lane's core params through the real IParameterChanges->process() path.
+void setLaneCoreParam(PolyTestHost& host, int lane, int offset, double engineValue) {
+    const uint32_t id = poly::ParamIDs::laneCoreParam(lane, offset);
+    host.injectParamChangeThroughProcess(id,
+                                         poly::params::engineToNormCore(static_cast<uint32_t>(offset), engineValue));
+}
+} // namespace
+
+TEST(HostTests, TimelineEdgeSeedsFixedPatternInProcessor) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+
+    // Establish a non-trivial Euclidean pattern: 3 hits over 8 steps, no rotation.
+    // euclidean(3,8,0) has exactly 3 of 8 steps on, so a stale/empty fixedPattern
+    // would be trivially distinguishable from a correctly seeded one.
+    const int kSteps = 8, kHits = 3, kRot = 0;
+    setLaneCoreParam(host, 0, poly::ParamIDs::kCoreSteps, kSteps);
+    setLaneCoreParam(host, 0, poly::ParamIDs::kCoreHits, kHits);
+    setLaneCoreParam(host, 0, poly::ParamIDs::kCoreRotation, kRot);
+    host.processBlock(0.0, 120.0, /*playing=*/false);
+
+    // Flip timeline off->on. This is the false->true edge that must seed fixedPattern.
+    setLaneCoreParam(host, 0, poly::ParamIDs::kCoreTimeline, 1.0);
+    host.processBlock(0.0, 120.0, /*playing=*/false);
+
+    auto scene = deserializeSceneState(host.saveState());
+    const auto& lane = scene.sceneA.lanes[0];
+
+    std::array<bool, poly::kMaxSteps> expected{};
+    poly::euclidean(kHits, kSteps, kRot, expected);
+
+    ASSERT_TRUE(lane.timeline) << "timeline flag should be set after the edge";
+    EXPECT_EQ(lane.fixedPatternLength, kSteps) << "fixedPatternLength defaulted from 0 to cycle.steps on the edge";
+    int onCount = 0;
+    for (int s = 0; s < kSteps; ++s) {
+        EXPECT_EQ(lane.fixedPattern[static_cast<size_t>(s)], expected[static_cast<size_t>(s)])
+            << "step " << s << " should match the seeded Euclidean pattern";
+        if (lane.fixedPattern[static_cast<size_t>(s)])
+            ++onCount;
+    }
+    EXPECT_EQ(onCount, kHits) << "seeded pattern must carry the Euclidean hits, not an empty grid";
+
+    host.teardown();
+}
+
+TEST(HostTests, TimelineReSeedDoesNotClobberManualEdits) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+
+    setLaneCoreParam(host, 0, poly::ParamIDs::kCoreSteps, 8);
+    setLaneCoreParam(host, 0, poly::ParamIDs::kCoreHits, 3);
+    host.processBlock(0.0, 120.0, /*playing=*/false);
+
+    // Enter timeline mode (seeds the Euclidean pattern).
+    setLaneCoreParam(host, 0, poly::ParamIDs::kCoreTimeline, 1.0);
+    host.processBlock(0.0, 120.0, /*playing=*/false);
+
+    // Simulate a manual edit landing via the async handshake: an all-on pattern that
+    // is distinct from euclidean(3,8,0) (which has only 3 steps on).
+    std::array<bool, poly::kMaxSteps> manual{};
+    for (int s = 0; s < 8; ++s)
+        manual[static_cast<size_t>(s)] = true;
+    host.injectTimelinePattern(0, manual, 8);
+    host.processBlock(0.0, 120.0, /*playing=*/false);
+
+    // Re-apply timeline=true. Already-on means no false->true edge, so the processor
+    // must NOT re-seed the Euclidean pattern over the manual edit.
+    setLaneCoreParam(host, 0, poly::ParamIDs::kCoreTimeline, 1.0);
+    host.processBlock(0.0, 120.0, /*playing=*/false);
+
+    auto scene = deserializeSceneState(host.saveState());
+    const auto& lane = scene.sceneA.lanes[0];
+
+    int onCount = 0;
+    for (int s = 0; s < 8; ++s)
+        if (lane.fixedPattern[static_cast<size_t>(s)])
+            ++onCount;
+    EXPECT_EQ(onCount, 8) << "re-applying timeline=true with no edge must preserve the manual all-on "
+                             "edit, not clobber it back to the 3-hit Euclidean seed";
+
     host.teardown();
 }

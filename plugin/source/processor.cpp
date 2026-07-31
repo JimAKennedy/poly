@@ -12,6 +12,7 @@
 #include "plugids.h"
 #include "poly/constraint.h"
 #include "poly/envelope.h"
+#include "poly/euclidean.h"
 #include "poly/macro.h"
 #include "poly/params_def.h"
 #include "poly/scene.h"
@@ -797,9 +798,25 @@ static bool applyCoreParam(Steinberg::Vst::ParamID id, double normalized, Groove
     case kCoreCellCount:
         cfg.cellCount = static_cast<int>(eng);
         break;
-    case kCoreTimeline:
-        cfg.timeline = (eng > 0.5);
+    case kCoreTimeline: {
+        const bool next = (eng > 0.5);
+        // M053 S08 T01: seed fixedPattern[] directly in the audio-thread processor
+        // on the false→true edge, mirroring web_ui_view.cpp's controller-cache seeding.
+        // Without this the processor plays from a stale/empty fixedPattern until the
+        // async sendTimelinePattern→timelineSlot_ handshake lands — an audible ~1s
+        // self-blank. Seeding here makes the async pattern non-load-bearing for the
+        // initial frame. On true→false edge fixedPattern is left intact so re-enabling
+        // timeline mode restores manual edits.
+        // RT-safe: poly::euclidean fills a pre-allocated std::array (no heap, locks, exceptions, or I/O).
+        if (next && !cfg.timeline) {
+            poly::euclidean(cfg.hitCount, cfg.cycle.steps, cfg.rotation, cfg.fixedPattern);
+            if (cfg.fixedPatternLength == 0) {
+                cfg.fixedPatternLength = cfg.cycle.steps;
+            }
+        }
+        cfg.timeline = next;
         break;
+    }
     case kCoreFixedPatternLen:
         cfg.fixedPatternLength = static_cast<int>(eng);
         break;
