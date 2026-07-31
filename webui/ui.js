@@ -1012,8 +1012,7 @@
     let html = '';
     if (l.timeline) {
       html += `<div class="prow"><label>Timeline mode</label><span class="switch"><button class="on" data-tl aria-label="Timeline mode"><i></i></button></span></div>
-        <div class="hint">Fixed pattern — immune to macros. The bell is law.</div>
-        <div class="hrow" data-fixed>${l.fixed.map((h, i) => `<button class="${h ? 'hit' : ''}" data-i="${i}" aria-label="pulse ${i + 1}"></button>`).join('')}</div>`;
+        <div class="hint">Fixed pattern — immune to macros. The bell is law. Edit steps on the ladder above.</div>`;
     } else {
       html += `<div class="prow"><label>Timeline mode</label><span class="switch"><button data-tl aria-label="Timeline mode"><i></i></button></span></div>
         <div class="prow"><label>Steps</label><span class="stepper"><button data-st="-1">−</button><span class="v">${l.steps} × ${l.stepLen === 2 ? '♩' : '♪'}</span><button data-st="1">+</button></span></div>
@@ -1034,13 +1033,7 @@
         host.edit(`lane.${li}.timeline`, next, 'end');
       });
     }
-    if (l.timeline) {
-      pat.querySelectorAll('[data-fixed] button').forEach((b) =>
-        b.addEventListener('click', () => {
-          const i = +b.dataset.i;
-          host.action('setFixedStep', { lane: li, step: i, on: !l.fixed[i] });
-        }));
-    } else {
+    if (!l.timeline) {
       pat.querySelectorAll('[data-st]').forEach((b) =>
         b.addEventListener('click', () => host.action('setEuclid', { lane: li, steps: l.steps + +b.dataset.st })));
       pat.querySelectorAll('[data-ht]').forEach((b) =>

@@ -219,19 +219,14 @@ test.describe('expanded strip — pattern tab', () => {
     expect(cellAction.payload.cells).toHaveLength(4);
   });
 
-  test('timeline fixed step toggle dispatches setFixedStep', async ({ page }) => {
+  test('timeline deep pane has no duplicate fixed step row', async ({ page }) => {
     await expandStrip(page, 0); // Bell: timeline mode
     const strip = page.locator('.strip[data-lane="0"]');
 
-    // fixed[1] = 0, so toggling gives on: true
-    await strip.locator('[data-fixed] button[data-i="1"]').click();
-    const acts = await getActions(page);
-    expect(acts).toContainEqual(
-      expect.objectContaining({
-        name: 'setFixedStep',
-        payload: expect.objectContaining({ lane: 0, step: 1, on: true }),
-      })
-    );
+    // Defect 1 fix: the deep-pane duplicate horizontal step row is removed.
+    // The always-visible core ladder is the single timeline step editor
+    // (covered by "timeline lane ladder buttons dispatch toggleStep").
+    await expect(strip.locator('[data-fixed]')).toHaveCount(0);
   });
 });
 
