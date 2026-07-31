@@ -110,3 +110,16 @@ export async function driveRoutingDwell(page, { playing = true } = {}) {
   await page.waitForTimeout(150);
   await pushEmbeddedFrame(page, { playing });
 }
+
+// Independent reference implementation of engine.cpp computeDriftedCycleStep's
+// drift term (engine.cpp:361-364). Kept structurally separate from the
+// PolyGrooveMath.driftOffset under test so the parity spec compares two
+// independently-written expressions of the same formula rather than one helper
+// against itself. barPos = ppq / kPpqPerBar (kPpqPerBar = 4.0 in the engine).
+export function engineDriftOffsetRef(steps, driftRate, barPos) {
+  if (steps <= 0 || driftRate === 0) return 0;
+  const driftSteps = Math.floor(barPos * driftRate);
+  let m = driftSteps % steps;
+  if (m < 0) m += steps;
+  return m === 0 ? 0 : m; // normalize JS -0 (e.g. -9 % 3) to +0
+}
