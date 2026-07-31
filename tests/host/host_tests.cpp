@@ -1738,3 +1738,72 @@ TEST(HostTests, TimelineReSeedDoesNotClobberManualEdits) {
 
     host.teardown();
 }
+
+// M053 S09: "Add Envelope" in the plugin/DAW path must grow LaneConfig::envelopeCount
+// so the newly added envelope is actually evaluated by the engine (audible/rendered),
+// matching the WASM reference (poly_action_set_envelope, covered by
+// wasm_api_envelope_gap_slot_tests.cpp). This exercises the REAL audio-thread mutation
+// site — processor.cpp envelopeSlot_.consume — through the same EnvelopeUpdate notify()
+// -> process() handshake a controller drives via sendEnvelopeUpdate. Before T01 the
+// consume wrote the envelope fields but left envelopeCount unchanged, so an added
+// envelope was silent and lost on save/reload.
+//
+// A stopped process block drains the handshake and republishes stateSnapshot_, so
+// saveState()/getState() reflects the grown count.
+TEST(HostTests, AddEnvelopeAtCurrentCountGrowsEnvelopeCount) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+
+    // Baseline: the default scene's lane 0 carries no envelopes.
+    {
+        auto baseline = deserializeSceneState(host.saveState());
+        ASSERT_FALSE(baseline.sceneA.lanes.empty());
+        EXPECT_EQ(baseline.sceneA.lanes[0].envelopeCount, 0)
+            << "precondition: default lane starts with envelopeCount == 0";
+    }
+
+    // Add an envelope at index == current count (0) — the "Add Envelope" action.
+    poly::Envelope env{};
+    env.target = poly::EnvTarget::Velocity;
+    env.periodBars = 1.0f;
+    env.depth = 0.5f;
+    host.injectEnvelope(/*laneIndex=*/0, /*envelopeIndex=*/0, /*active=*/true, env);
+    host.processBlock(0.0, 120.0, /*playing=*/false);
+
+    auto scene = deserializeSceneState(host.saveState());
+    const auto& lane = scene.sceneA.lanes[0];
+    EXPECT_EQ(lane.envelopeCount, 1)
+        << "Add Envelope at index==count must grow envelopeCount so the engine evaluates the new slot";
+    EXPECT_TRUE(lane.envelopes[0].active) << "the added envelope must be active";
+    EXPECT_EQ(static_cast<uint8_t>(lane.envelopes[0].envelope.target), static_cast<uint8_t>(poly::EnvTarget::Velocity))
+        << "the added envelope's payload must survive the handshake";
+
+    host.teardown();
+}
+
+// M053 S09 parity with the M049 S01 E1 gap-slot fix, on the plugin path: adding an
+// envelope at an index past the current count grows envelopeCount AND initializes the
+// intervening gap slots inactive. EnvelopeAssign{} defaults to active=true, so without
+// the gap clear the audio thread would resurrect phantom full-depth Velocity LFOs at
+// slots [count, index).
+TEST(HostTests, AddEnvelopeAtGapIndexGrowsCountAndLeavesGapSlotsInactive) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+
+    // Jump straight to slot 2 from an empty lane. Slots 0 and 1 are intervening gaps.
+    poly::Envelope env{};
+    env.target = poly::EnvTarget::Density;
+    env.periodBars = 8.0f;
+    env.depth = 0.5f;
+    host.injectEnvelope(/*laneIndex=*/0, /*envelopeIndex=*/2, /*active=*/true, env);
+    host.processBlock(0.0, 120.0, /*playing=*/false);
+
+    auto scene = deserializeSceneState(host.saveState());
+    const auto& lane = scene.sceneA.lanes[0];
+    EXPECT_EQ(lane.envelopeCount, 3) << "writing slot 2 from empty must grow envelopeCount to index+1";
+    EXPECT_FALSE(lane.envelopes[0].active) << "gap slot 0 must be inactive (no phantom Velocity LFO)";
+    EXPECT_FALSE(lane.envelopes[1].active) << "gap slot 1 must be inactive (no phantom Velocity LFO)";
+    EXPECT_TRUE(lane.envelopes[2].active) << "the added envelope at slot 2 must be active";
+
+    host.teardown();
+}
