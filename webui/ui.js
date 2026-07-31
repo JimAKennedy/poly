@@ -1560,6 +1560,21 @@
         // reads as no motion, not just dimmer motion.
         const laneOn = !!l.active;
         hands[li].setAttribute('transform', `rotate(${laneOn ? fl.ph * 360 : 0} 32 32)`);
+        // M053 S12 T03: rotate the ring <g> per frame by the engine's drift offset
+        // so the circular display tracks the audible drifted cycle step
+        // (engine.cpp computeDriftedCycleStep, mirrored by PolyGrooveMath.driftOffset
+        // and carried on fl.driftOffset by both host pumps). Freeze at 0 when muted so
+        // a disabled lane reads as no motion. drawRing() only rewrites innerHTML, so
+        // this transform survives ring rebuilds.
+        //
+        // D008: the ring is geometrically INVARIANT under subdivision (stepLen). Dot
+        // angles are fractions of the cycle (i/steps or onset/cyc8), which a stepLen
+        // change does not alter, so subdivision never rotates or reshapes the ring —
+        // only drift does. Subdivision motion is shown on the convergence timeline /
+        // ladder instead. This divergence is intentional, not a missing cue.
+        const ringSteps = l.cells ? l.cells.length : l.steps;
+        const ringDrift = laneOn && ringSteps ? ((fl.driftOffset || 0) / ringSteps) * 360 : 0;
+        rings[li].setAttribute('transform', `rotate(${ringDrift} 32 32)`);
         ladders[li].querySelectorAll('button').forEach((b, i) =>
           b.classList.toggle('now', laneOn && frame.playing && i === fl.step));
         updateEmissionOverlay(li);
