@@ -21,6 +21,7 @@
 #include "platform_drag_source.h"
 #include "platform_save_dialog.h"
 #include "poly/euclidean.h"
+#include "poly/offline_render.h"
 #include "poly/params_def.h"
 #include "poly/presets.h"
 #include "poly_webui_assets.h" // generated: jk_embed_assets(webui/*)
@@ -559,55 +560,23 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
     }
 
     if (name == "exportSaveAs") {
-        // Save-As is gated behind the capture state machine: only `complete`
-        // (captureState==3) guarantees a frozen, stable window (the processor
-        // set exportReady_ on the capturing->complete transition). In any other
-        // state there is nothing stable to export, so ignore the click.
+        // M053 S11: offline export. Render the CURRENT pattern to SMF directly
+        // (fabricated playing transport, no DAW involvement) and open the Save-As
+        // panel over those bytes. No capture-state gate and no processor
+        // round-trip — the Export chip works from a stopped preview.
+        // saveDialogOpen_ still guards against re-entrant panels.
         if (saveDialogOpen_)
             return;
-        auto* snap = controller_->uiSnapshot();
-        const int capState = snap ? snap->captureState.load(std::memory_order_relaxed) : 0;
-        if (capState != 3 /* complete */)
-            return;
-
-        // freshExportPending_ is set when pushFrame saw a new capturing->complete
-        // edge: the drag cache (if any) holds a PREVIOUS capture's bytes, so force
-        // a fresh RequestMidiExport to pull the newly frozen window. Once the
-        // fresh bytes land, subsequent clicks (e.g. after a cancel) reuse the
-        // cache for the same complete window.
-        if (!freshExportPending_ && controller_->hasDragSmf()) {
-            openSaveDialogFromCache();
-        } else {
-            savePending_ = true;
-            freshExportPending_ = false;
-            requestMidiExport();
-        }
+        openMidiExportDialog(renderCurrentPatternSmf());
         return;
     }
 
     if (name == "beginMidiDrag") {
-        // G06: drag-and-drop MIDI export. Additive sibling to exportSaveAs —
-        // same capture-state gating (only `complete`/captureState==3 has a
-        // stable frozen window) and the same frozen-bytes dragSmf cache path.
-        // Instead of a Save-As panel, this opens a small native drag-source
+        // M053 S11: offline drag-to-DAW sibling of exportSaveAs. Render the
+        // current pattern offline and hand the bytes to the native drag-source
         // window (NSPasteboard / OLE CF_HDROP, via the platform_drag_source
-        // seam) holding a temp .mid the user drags straight into the DAW.
-        auto* snap = controller_->uiSnapshot();
-        const int capState = snap ? snap->captureState.load(std::memory_order_relaxed) : 0;
-        if (capState != 3 /* complete */)
-            return;
-
-        // Mirror exportSaveAs: a fresh capturing->complete edge means any
-        // existing drag cache holds a PREVIOUS window's bytes, so force a fresh
-        // RequestMidiExport and open the drag window when the new bytes land
-        // (see the dragPending_ handling in pushFrame).
-        if (!freshExportPending_ && controller_->hasDragSmf()) {
-            beginDragFromCache();
-        } else {
-            dragPending_ = true;
-            freshExportPending_ = false;
-            requestMidiExport();
-        }
+        // seam). No capture gating — works from a stopped preview.
+        beginDragExport(renderCurrentPatternSmf());
         return;
     }
 
@@ -924,13 +893,6 @@ void WebUIView::pushFrame() {
     int capBars = snap ? snap->captureBars.load(std::memory_order_relaxed) : 8;
     double capProg = snap ? snap->captureProgressBars.load(std::memory_order_relaxed) : 0.0;
 
-    // Detect the capturing->complete edge: a new window was just frozen, so any
-    // drag cache from a previous capture is now stale. Force the next Export to
-    // pull the fresh frozen bytes (see exportSaveAs).
-    if (capState == 3 && lastCaptureState_ != 3)
-        freshExportPending_ = true;
-    lastCaptureState_ = capState;
-
     double t8 = ppqNorm * 256.0;
 
     constexpr int kConvWindow = 120;
@@ -966,33 +928,6 @@ void WebUIView::pushFrame() {
     js += "]}}";
 
     webview_->evaluateJavascript("window.polyHostPush(" + js + ")");
-
-    // Deferred save dialog: user clicked Export while cache was empty. As
-    // soon as the processor's MidiExport notify populates dragSmfCache_ we
-    // open the panel with the fresh bytes. The S06 500ms background prefetch
-    // loop is retired for the WebUI variant — Export is now driven by the
-    // explicit arm->capture->complete state machine, so a fresh RequestMidiExport
-    // is issued on demand from exportSaveAs when the window is `complete`.
-    if (savePending_ && controller_->hasDragSmf()) {
-        savePending_ = false;
-        openSaveDialogFromCache();
-    }
-
-    // G06 sibling of the deferred-save path: user triggered drag-to-DAW while
-    // the cache was empty; open the native drag-source window now that the
-    // fresh frozen bytes have landed.
-    if (dragPending_ && controller_->hasDragSmf()) {
-        dragPending_ = false;
-        beginDragFromCache();
-    }
-}
-
-void WebUIView::requestMidiExport() {
-    if (auto* msg = controller_->allocateMessage()) {
-        msg->setMessageID("RequestMidiExport");
-        controller_->sendMessage(msg);
-        msg->release();
-    }
 }
 
 void WebUIView::sendCaptureCommand(const char* messageId) {
@@ -1043,22 +978,30 @@ std::string WebUIView::suggestedExportName() const {
     return name;
 }
 
-void WebUIView::beginDragFromCache() {
-    // G06: open the native drag-source window over the frozen SMF bytes. Unlike
-    // the Save-As panel this is non-modal (no saveDialogOpen_ re-entrancy guard):
-    // beginMidiDragExport writes a temp .mid and hands off to the OS drag
+std::vector<uint8_t> WebUIView::renderCurrentPatternSmf() const {
+    // M053 S11: render the CURRENT pattern (controller cachedState) to an SMF
+    // blob with no DAW transport. Bars come from the capture-length mirror
+    // (kCaptureLength) and timesig from the UI snapshot. Tempo has no UI-thread
+    // source, so a 120 BPM fallback is used — it only affects the SMF tempo meta
+    // event, not the PPQ note positions, and matches the engine render defaults
+    // (see 53-11-RESEARCH.md). Runs on the message thread; allocation is fine.
+    auto* snap = controller_->uiSnapshot();
+    const int bars = snap ? snap->captureBars.load(std::memory_order_relaxed) : 8;
+    const int tsNum = snap ? snap->timeSigNumerator.load(std::memory_order_relaxed) : 4;
+    const int tsDen = snap ? snap->timeSigDenominator.load(std::memory_order_relaxed) : 4;
+    return renderPatternToSMF(controller_->cachedState(), bars, 120.0, tsNum, tsDen);
+}
+
+void WebUIView::beginDragExport(const std::vector<uint8_t>& bytes) {
+    // Open the native drag-source window over the offline-rendered SMF bytes.
+    // Unlike the Save-As panel this is non-modal (no saveDialogOpen_ re-entrancy
+    // guard): beginMidiDragExport writes a temp .mid and hands off to the OS drag
     // pasteboard, returning immediately.
-    if (!controller_->hasDragSmf())
-        return;
-    auto bytes = controller_->dragSmfData();
     beginMidiDragExport(parentView_, suggestedExportName(), bytes);
 }
 
-void WebUIView::openSaveDialogFromCache() {
-    if (!controller_->hasDragSmf())
-        return;
+void WebUIView::openMidiExportDialog(const std::vector<uint8_t>& bytes) {
     saveDialogOpen_ = true;
-    auto bytes = controller_->dragSmfData();
     openMidiSaveDialog(parentView_, suggestedExportName(), bytes, [this](const std::string& savedPath) {
         saveDialogOpen_ = false;
         if (!webview_ || !webviewReady_)
