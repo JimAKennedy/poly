@@ -90,15 +90,86 @@ export async function pushEmbeddedState(page, { muteAllLanes = false } = {}) {
 
 // Push one feedback frame through the embedded bridge with a lanes array sized
 // to the current state so the desk-mode frame handler never dereferences undefined.
-export async function pushEmbeddedFrame(page, { playing = true } = {}) {
-  await page.evaluate((pl) => {
+//
+// driftOffsets/steps are optional index-aligned overrides so a spec can drive a
+// deterministic per-lane drift offset (and drifted playhead step) into the desk
+// frame pump — the ring <g> rotates by driftOffset/steps*360 (M053 S12 T03/T04).
+// Both default to 0, so existing callers see the same {ph:0, step:0} frame.
+export async function pushEmbeddedFrame(
+  page,
+  { playing = true, driftOffsets = null, steps = null } = {},
+) {
+  await page.evaluate(({ pl, drifts, stps }) => {
     const st = window.PolyMockHost.getState();
-    const lanes = (st && st.lanes ? st.lanes : []).map(() => ({ ph: 0, step: 0 }));
+    const lanes = (st && st.lanes ? st.lanes : []).map((_, i) => ({
+      ph: 0,
+      step: stps && stps[i] != null ? stps[i] : 0,
+      driftOffset: drifts && drifts[i] != null ? drifts[i] : 0,
+    }));
     window.polyHostPush(JSON.stringify({
       type: 'frame',
       frame: { t8: 0, playing: pl, convLeft: 120, tsNum: 4, tsDen: 4, lanes },
     }));
-  }, playing);
+  }, { pl: playing, drifts: driftOffsets, stps: steps });
+}
+
+// Read the rotate() angle (degrees) off the ring <g> for a lane in the desk view.
+// The ring group is the <g> inside svg.ring; the frame pump sets
+// transform="rotate(<deg> 32 32)" on it (ui.js). Returns 0 when no transform is
+// set yet (a freshly built desk before the first frame).
+export async function ringRotation(page, lane) {
+  return page.evaluate((li) => {
+    const g = document.querySelector(`.strip[data-lane="${li}"] svg.ring g`);
+    if (!g) return null;
+    const t = g.getAttribute('transform');
+    if (!t) return 0;
+    const m = /rotate\(\s*(-?[\d.]+)/.exec(t);
+    return m ? parseFloat(m[1]) : 0;
+  }, lane);
+}
+
+// Snapshot the ring's dot geometry (cx/cy/r of every <circle> in the ring <g>)
+// for a lane. Ring dots sit at cycle fractions (i/steps or onset/cyc8), so this
+// is the geometry that D008 says is invariant under a subdivision (stepLen) edit.
+export async function ringDots(page, lane) {
+  return page.evaluate((li) => {
+    const g = document.querySelector(`.strip[data-lane="${li}"] svg.ring g`);
+    if (!g) return null;
+    return [...g.querySelectorAll('circle')].map((c) => ({
+      cx: c.getAttribute('cx'),
+      cy: c.getAttribute('cy'),
+      r: c.getAttribute('r'),
+    }));
+  }, lane);
+}
+
+// Edit one lane parameter on the mock host through the real begin/perform/end
+// gesture the UI uses, so state mutates and re-renders exactly as a user drag would.
+export async function editLaneParam(page, lane, field, value) {
+  await page.evaluate(({ li, f, v }) => {
+    const id = `lane.${li}.${f}`;
+    window.PolyMockHost.edit(id, v, 'begin');
+    window.PolyMockHost.edit(id, v, 'perform');
+    window.PolyMockHost.edit(id, v, 'end');
+  }, { li: lane, f: field, v: value });
+}
+
+// Fingerprint the convergence-timeline canvas (#loom) so a spec can prove its
+// geometry changed (or did not) across an edit. Returns canvas dims plus a cheap
+// rolling hash of the pixel buffer and a count of non-transparent pixels.
+export async function loomFingerprint(page) {
+  return page.evaluate(() => {
+    const c = document.getElementById('loom');
+    const g = c.getContext('2d');
+    const d = g.getImageData(0, 0, c.width, c.height).data;
+    let hash = 0;
+    let painted = 0;
+    for (let i = 0; i < d.length; i += 4) {
+      hash = (hash * 31 + d[i] + d[i + 1] * 7 + d[i + 2] * 13 + d[i + 3] * 17) >>> 0;
+      if (d[i + 3] !== 0) painted++;
+    }
+    return { w: c.width, h: c.height, hash, painted };
+  });
 }
 
 // Drive the routing banner's wall-clock dwell: the first frame arms the timer,
