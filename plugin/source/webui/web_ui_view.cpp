@@ -363,7 +363,8 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
         int index = payload["index"].get<int32_t>();
         if (lane < 0 || lane >= kMaxLanes || index < 0 || index >= kMaxEnvelopesPerLane)
             return;
-        auto& ea = scene.lanes[lane].envelopes[index];
+        auto& laneCfg = scene.lanes[lane];
+        auto& ea = laneCfg.envelopes[index];
         if (payload.hasObjectMember("envelope") && !payload["envelope"].isVoid()) {
             auto env = payload["envelope"];
             if (env.hasObjectMember("target")) {
@@ -381,6 +382,17 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
                 ea.envelope.depth = static_cast<float>(env["depth"].get<double>());
             if (env.hasObjectMember("on"))
                 ea.active = env["on"].getBool();
+            // E1 parity (M049 S01, wasm_api.cpp poly_action_set_envelope): if the
+            // caller adds an envelope past the current count, clear any gap slots
+            // [envelopeCount, index) — EnvelopeAssign{} defaults to active=true, so
+            // without this the engine would resurrect phantom full-depth Velocity
+            // LFOs — then grow envelopeCount so the new envelope is evaluated.
+            for (int i = laneCfg.envelopeCount; i < index; ++i) {
+                laneCfg.envelopes[i].envelope = Envelope{};
+                laneCfg.envelopes[i].active = false;
+            }
+            if (index >= laneCfg.envelopeCount)
+                laneCfg.envelopeCount = index + 1;
         } else {
             ea = EnvelopeAssign{};
             ea.active = false;

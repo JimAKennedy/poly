@@ -579,8 +579,19 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
         handshakeApplied_.microTiming.fetch_add(1, std::memory_order_relaxed);
     if (envelopeSlot_.consume([&activeScene](const PendingEnvelope& p) {
             auto& lane = activeScene.lanes[p.laneIndex];
+            // E1 parity (M049 S01, wasm_api.cpp poly_action_set_envelope): clear any
+            // gap slots [envelopeCount, envelopeIndex) inactive before growing the
+            // count. EnvelopeAssign{} defaults to active=true, so skipping this would
+            // resurrect phantom full-depth Velocity envelopes on the audio thread.
+            // Plain field assignments into pre-sized arrays only; RT-safe.
+            for (int i = lane.envelopeCount; i < p.envelopeIndex; ++i) {
+                lane.envelopes[i].envelope = Envelope{};
+                lane.envelopes[i].active = false;
+            }
             lane.envelopes[p.envelopeIndex].envelope = p.envelope;
             lane.envelopes[p.envelopeIndex].active = p.active;
+            if (p.envelopeIndex >= lane.envelopeCount)
+                lane.envelopeCount = p.envelopeIndex + 1;
         }))
         handshakeApplied_.envelope.fetch_add(1, std::memory_order_relaxed);
     if (accentMaskSlot_.consume(
