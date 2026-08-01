@@ -612,8 +612,81 @@
     };
   }
 
+  // M073 S05: fold the engine's per-lane emission ring (host.getLaneEmissions,
+  // classified base/ghost/add/drop by the engine and drained in wasm-host.js)
+  // into a step->kind map, newest emission per step winning — the same reduction
+  // the desk ladder overlay (updateEmissionOverlay) applies. The cloth timeline
+  // is a second consumer of that single source of truth, so probability culls,
+  // mutation drops, ghosts, and macro-resolved adds render truthfully instead of
+  // the drift-prone laneHitAt re-derivation. Returns null when the host exposes
+  // no emission accessor or the lane's stream is empty (mock default / DAW /
+  // stopped playback): callers then fall back to positional-pattern-only via
+  // laneHitAt and MUST NOT draw a drop/ghost marker — never claim an
+  // unobservable drop. Mirrors the overlay's empty-return degradation contract.
+  function laneStepKind(li) {
+    if (!host.getLaneEmissions) return null;
+    const emissions = host.getLaneEmissions(li) || [];
+    if (!emissions.length) return null;
+    const m = new Map();
+    for (let i = 0; i < emissions.length; i++) {
+      const e = emissions[i];
+      if (e && e.step >= 0) m.set(e.step, e.kind);
+    }
+    return m;
+  }
+  // Tick (window column) where a lane step fires, so an off-grid add emission can
+  // be placed. Pattern lanes fire step s at tick s*stepLen; cells lanes fire onset
+  // index s at its aksak tick. -1 when the step has no position in this window.
+  function tickForStep(l, step) {
+    if (l.cells) { const os = onsets(l); return step >= 0 && step < os.length ? os[step] : -1; }
+    return step * l.stepLen;
+  }
+  // A dropped on-pattern step: the engine expected a hit here but culled it
+  // (probability / mutation). Draw a hollow strike "hole" — never a solid tick —
+  // so a drop reads as visibly distinct from an emitted hit.
+  function drawDropMarker(g, cellX, cellW, y0, bandH, dp, woven) {
+    const mw = Math.max(2 * dp, cellW * 0.6);
+    const mh = bandH * 0.5;
+    const mx = cellX + (cellW - mw) / 2;
+    const my = y0 + (bandH - mh) / 2;
+    g.globalAlpha = woven ? 0.9 : 0.18;
+    g.strokeStyle = 'rgba(240,234,223,.75)';
+    g.lineWidth = 1.5 * dp;
+    g.strokeRect(mx, my, mw, mh);
+    g.beginPath();
+    g.moveTo(mx, my);
+    g.lineTo(mx + mw, my + mh);
+    g.stroke();
+    g.globalAlpha = 1;
+  }
+  // Macro/mutation-resolved add hits fire off the base positional grid. Draw them
+  // at the step's tick where laneHitAt has no onset, capped so they read as extra
+  // off-grid hits rather than base pattern. No-op when stepKind is null (no stream).
+  function drawEmissionAdds(g, l, stepKind, cellW, tickCount, y0, bandH, dp, wovenFn) {
+    if (!stepKind) return;
+    stepKind.forEach((kind, step) => {
+      if (kind !== 'add') return;
+      const e = tickForStep(l, step);
+      if (e < 0 || e >= tickCount) return;
+      if (laneHitAt(l, e)) return; // already drawn on the positional grid
+      const woven = wovenFn(e);
+      const bw = Math.max(2 * dp, cellW * 0.45);
+      const bh = bandH * 0.45;
+      const x = e * cellW + (cellW - bw) / 2;
+      const y = y0 + (bandH - bh) / 2;
+      g.globalAlpha = woven ? 0.85 : 0.18;
+      g.fillStyle = l.hue;
+      g.fillRect(x, y, bw, bh);
+      g.fillStyle = 'rgba(240,234,223,.6)';
+      g.fillRect(x, y - 2 * dp, bw, 1.5 * dp); // off-grid cap tick
+      g.globalAlpha = 1;
+    });
+  }
+
   // Idle decorative weave: lanes stacked over the convergence window with the
   // step grid, per-lane cycle markers, gold selvage and a sweeping playhead.
+  // M073 S05: consults the engine emission stream (laneStepKind) so drops render
+  // as holes and ghosts dim even in the idle weave; empty stream => positional only.
   function drawConvergence(g, W, H, dp, t8) {
     const bandH = H / S.lanes.length, colW = W / CONV;
     S.lanes.forEach((l, li) => {
@@ -622,28 +695,36 @@
       g.fillRect(0, y0, W, bandH);
       g.fillStyle = 'rgba(240,234,223,.05)';
       for (let x = 0; x < CONV; x += 2) g.fillRect(x * colW, y0, 1 * dp, bandH);
+      const stepKind = laneStepKind(li);
       for (let e = 0; e < CONV; e++) {
         const hit = laneHitAt(l, e);
         if (!hit) continue;
+        const kind = stepKind ? stepKind.get(hit.step) : undefined;
+        // Emission-truthful drop: engine culled this on-pattern step. Draw a
+        // hole, not a tick. Guarded by stepKind (a muted lane records no
+        // emission, so it never reaches here and is never drawn as a drop).
+        if (kind === 'drop') { drawDropMarker(g, e * colW, colW, y0, bandH, dp, true); continue; }
         const vn = hitVelocity(l, li, e, hit);
         if (vn <= 0) continue; // baseVelocity 0 mutes the lane: draw no hit (M073 S01)
+        const ghost = kind === 'ghost'; // ghost emissions render dimmed vs base
         const wUnits = l.cells ? l.cells[hit.step] : l.stepLen;
         const bw = colW * wUnits * 0.86;
         const bh = bandH * Math.min(0.92, 0.3 + vn * 0.52);
         const x = e * colW + colW * wUnits * 0.07;
         const y = y0 + (bandH - bh) / 2;
-        g.globalAlpha = hit.step === 0 ? 1 : 0.86;
+        g.globalAlpha = (hit.step === 0 ? 1 : 0.86) * (ghost ? 0.4 : 1);
         g.fillStyle = l.hue;
         g.fillRect(x, y, bw, bh);
-        g.globalAlpha = 0.22;
+        g.globalAlpha = 0.22 * (ghost ? 0.4 : 1);
         g.fillStyle = '#0E1526';
         for (let ty = y + 3 * dp; ty < y + bh; ty += 6 * dp) g.fillRect(x, ty, bw, 1.5 * dp);
         g.globalAlpha = 1;
-        if (hit.step === 0) {
+        if (hit.step === 0 && !ghost) {
           g.fillStyle = 'rgba(240,234,223,.85)';
           g.fillRect(x, y0 + bandH * 0.08, 2 * dp, bandH * 0.84);
         }
       }
+      drawEmissionAdds(g, l, stepKind, colW, CONV, y0, bandH, dp, () => true);
       g.fillStyle = 'rgba(240,234,223,.16)';
       for (let e = 0; e < CONV; e += cyc8(l)) g.fillRect(e * colW, y0, 1.5 * dp, bandH);
       g.fillStyle = 'rgba(14,21,38,.55)';
@@ -668,37 +749,49 @@
     g.fill();
   }
 
-  // Bar-anchored capture timeline. Note ticks are the emitted notes (the engine
-  // emits exactly the lane pattern, so laneHitAt over the window IS the emitted
-  // stream); captured ticks are solid, not-yet-woven ticks are dimmed.
+  // Bar-anchored capture timeline. M073 S05: ticks render the engine emission
+  // stream (host.getLaneEmissions via laneStepKind) — a dropped on-pattern step
+  // draws a hole, ghosts dim, macro-resolved adds appear off the positional grid.
+  // Where the stream is absent (mock default / DAW / stopped) it degrades to the
+  // positional pattern via laneHitAt and draws no drop/ghost marker (never claims
+  // an unobservable drop). Captured ticks are solid, not-yet-woven ticks dimmed.
   function drawCaptureTimeline(g, W, H, dp, bars, capState, prog) {
     const bandH = H / S.lanes.length;
     const barW = W / bars;
     const ticks = bars * eighthsPerBar();
     const tickW = W / ticks;
+    // A tick is "woven" once the playhead has passed it (or always, at complete).
+    const isWoven = (e) => capState === 3 || e / ticks <= prog / bars;
     S.lanes.forEach((l, li) => {
       const y0 = li * bandH;
       g.fillStyle = li % 2 ? '#222E52' : '#26335A';
       g.fillRect(0, y0, W, bandH);
       g.fillStyle = 'rgba(240,234,223,.05)';
       for (let e = 0; e < ticks; e++) g.fillRect(e * tickW, y0, 1 * dp, bandH);
+      const stepKind = laneStepKind(li);
       for (let e = 0; e < ticks; e++) {
         const hit = laneHitAt(l, e);
         if (!hit) continue;
-        // A tick is "woven" once the playhead has passed it (or always, at
-        // complete). Ahead-of-playhead ticks are faint to read as pending.
-        const woven = capState === 3 || e / ticks <= prog / bars;
+        // Ahead-of-playhead ticks are faint to read as pending.
+        const woven = isWoven(e);
+        const kind = stepKind ? stepKind.get(hit.step) : undefined;
+        // Emission-truthful drop: engine culled this on-pattern step. Draw a
+        // hole, not a tick. Guarded by stepKind, so a muted lane (no recorded
+        // emission => empty stream => null stepKind) is never drawn as a drop.
+        if (kind === 'drop') { drawDropMarker(g, e * tickW, tickW, y0, bandH, dp, woven); continue; }
         const vn = hitVelocity(l, li, e, hit);
         if (vn <= 0) continue; // baseVelocity 0 mutes the lane: draw no hit (M073 S01)
+        const ghost = kind === 'ghost'; // ghost emissions render dimmed vs base
         const bw = Math.max(2 * dp, tickW * 0.7);
         const bh = bandH * Math.min(0.9, 0.32 + vn * 0.5);
         const x = e * tickW + (tickW - bw) / 2;
         const y = y0 + (bandH - bh) / 2;
-        g.globalAlpha = woven ? 1 : 0.18;
+        g.globalAlpha = (woven ? 1 : 0.18) * (ghost ? 0.4 : 1);
         g.fillStyle = l.hue;
         g.fillRect(x, y, bw, bh);
         g.globalAlpha = 1;
       }
+      drawEmissionAdds(g, l, stepKind, tickW, ticks, y0, bandH, dp, isWoven);
       g.fillStyle = 'rgba(14,21,38,.55)';
       g.fillRect(0, y0 + bandH - 2 * dp, W, 2 * dp);
     });
