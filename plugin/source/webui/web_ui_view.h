@@ -4,9 +4,11 @@
 // bridges it to the controller per webui/bridge-schema.md. Compiled on the
 // choc-webview platforms (Apple/Windows); Linux keeps the VSTGUI editor.
 
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
+#include <vector>
 
 #include "pluginterfaces/vst/vsttypes.h"
 #include "public.sdk/source/common/pluginview.h"
@@ -44,10 +46,13 @@ private:
     void startFrameTimer();
     void stopFrameTimer();
     void resizeWebviewToRect(const Steinberg::ViewRect& r);
-    void requestMidiExport();
     void sendCaptureCommand(const char* messageId);
-    void openSaveDialogFromCache();
-    void beginDragFromCache();
+    // M053 S11: offline MIDI export helpers. renderCurrentPatternSmf renders the
+    // controller's live cachedState to an SMF blob with no DAW transport; the two
+    // sinks feed those bytes to the Save-As panel / native drag source.
+    std::vector<uint8_t> renderCurrentPatternSmf() const;
+    void openMidiExportDialog(const std::vector<uint8_t>& bytes);
+    void beginDragExport(const std::vector<uint8_t>& bytes);
     std::string suggestedExportName() const;
 
     PolyController* controller_ = nullptr;
@@ -62,22 +67,10 @@ private:
     // HWND on Windows). Captured in attached() so exportSaveAs can anchor
     // its NSSavePanel / IFileSaveDialog to the correct window.
     void* parentView_ = nullptr;
-    // If the user clicks Export while dragSmfCache_ is empty, we fire a
-    // MidiExport request and open the dialog on the frame tick that sees
-    // the cache filled. saveDialogOpen_ prevents re-entrancy.
-    bool savePending_ = false;
+    // Re-entrancy guard for the modal Save-As panel: exportSaveAs ignores clicks
+    // while a panel is already open (openMidiExportDialog clears it in the
+    // completion callback).
     bool saveDialogOpen_ = false;
-    // G06: user triggered drag-to-DAW while the drag cache was empty (or stale
-    // after a fresh capture edge). Deferred like savePending_ — pushFrame opens
-    // the native drag-source window on the tick that sees the fresh frozen bytes.
-    bool dragPending_ = false;
-    // M051 S08: capture state machine mirror (values match UISnapshot::captureState:
-    // 0=idle, 1=armed, 2=capturing, 3=complete). Tracked so pushFrame can detect the
-    // capturing->complete edge and invalidate any stale drag cache: each fresh
-    // `complete` freezes a NEW window, so the next Export must pull the fresh frozen
-    // bytes rather than a previous capture's leftover cache.
-    int lastCaptureState_ = 0;
-    bool freshExportPending_ = false;
 };
 
 } // namespace poly

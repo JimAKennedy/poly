@@ -10,12 +10,11 @@ import { pageUrl, getActions, clearActions } from './test-helpers.mjs';
 //   - The Export chip becomes a drag source ONLY under the canExport capability
 //     (surfaced in the mock via the ?export=1 seam; true unconditionally in the
 //     native plugin host).
-//   - A dragstart fires the `beginMidiDrag` bridge action ONLY when the capture
-//     machine has latched `complete` (capState===3). In idle/armed/capturing the
-//     drag is cancelled (preventDefault) and no action reaches the host — so the
-//     native window can never open over a half-frozen / empty capture window.
-// This mirrors the Save-As gating already covered elsewhere; the two share the
-// capState===3 gate but are independent affordances on the same chip.
+//   - A dragstart fires the `beginMidiDrag` bridge action in EVERY capture state.
+//     M053 S11 removed the capState===3 gate: the native side renders the current
+//     pattern offline (poly::renderPatternToSMF) on every drag, so Export works
+//     regardless of DAW transport or capture state.
+// This mirrors the ungated Save-As click path on the same chip.
 
 const exportUrl = pageUrl + '?export=1';
 
@@ -77,20 +76,19 @@ test.describe('G06 — drag-to-DAW export trigger gating', () => {
     await expect(btn).toHaveAttribute('draggable', 'true');
   });
 
-  test('dragstart is inert until the capture machine is complete', async ({ page }) => {
+  test('dragstart fires beginMidiDrag even from an idle capture machine', async ({ page }) => {
     await setupExport(page);
-    // Boot state is idle (capState 0): dragging the chip must be cancelled and
-    // must NOT reach the host — otherwise the native window would open over an
-    // empty capture buffer.
+    // M053 S11: boot state is idle (capState 0), yet the ungated drag path still
+    // fires beginMidiDrag — the native side renders the current pattern offline,
+    // so there is no empty-buffer concern to gate against.
     await setCapState(page, 0);
     await clearActions(page);
     const res = await fireDragStart(page);
-    expect(res.defaultPrevented).toBe(true);
-    expect(res.dragging).toBe(false);
+    expect(res.defaultPrevented).toBe(false);
+    expect(res.dragging).toBe(true);
     const acts = await getActions(page);
-    expect(acts.filter((a) => a.name === 'beginMidiDrag')).toEqual([]);
-    // The chip carries no in-flight drag marker.
-    await expect(page.locator('#exportBtn')).not.toHaveClass(/dragging/);
+    expect(acts.filter((a) => a.name === 'beginMidiDrag')).toHaveLength(1);
+    await expect(page.locator('#exportBtn')).toHaveClass(/dragging/);
   });
 
   test('dragstart fires beginMidiDrag once capture latches complete', async ({ page }) => {
@@ -125,23 +123,18 @@ test.describe('G06 — drag-to-DAW export trigger gating', () => {
     await expect(page.locator('#exportBtn')).not.toHaveClass(/dragging/);
   });
 
-  test('every non-complete capture state cancels the drag; only complete fires it', async ({
+  test('every capture state fires the drag (S11 ungated export)', async ({
     page,
   }) => {
     await setupExport(page);
     // Boundary sweep across the whole capState domain: 0 idle, 1 armed,
-    // 2 capturing must all be inert; 3 complete is the sole state that triggers.
-    for (const state of [0, 1, 2]) {
+    // 2 capturing, 3 complete — S11 removed the gate, so all four fire.
+    for (const state of [0, 1, 2, 3]) {
       await setCapState(page, state);
       await clearActions(page);
       const res = await fireDragStart(page);
-      expect(res.defaultPrevented, `capState ${state} should cancel the drag`).toBe(true);
-      expect(await getActions(page)).toEqual([]);
+      expect(res.defaultPrevented, `capState ${state} should NOT cancel the drag`).toBe(false);
+      expect((await getActions(page)).map((a) => a.name)).toEqual(['beginMidiDrag']);
     }
-    await setCapState(page, 3);
-    await clearActions(page);
-    const done = await fireDragStart(page);
-    expect(done.defaultPrevented).toBe(false);
-    expect((await getActions(page)).map((a) => a.name)).toEqual(['beginMidiDrag']);
   });
 });

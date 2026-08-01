@@ -12,6 +12,7 @@
 #include "plugids.h"
 #include "poly/constraint.h"
 #include "poly/envelope.h"
+#include "poly/euclidean.h"
 #include "poly/macro.h"
 #include "poly/params_def.h"
 #include "poly/scene.h"
@@ -578,8 +579,19 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
         handshakeApplied_.microTiming.fetch_add(1, std::memory_order_relaxed);
     if (envelopeSlot_.consume([&activeScene](const PendingEnvelope& p) {
             auto& lane = activeScene.lanes[p.laneIndex];
+            // E1 parity (M049 S01, wasm_api.cpp poly_action_set_envelope): clear any
+            // gap slots [envelopeCount, envelopeIndex) inactive before growing the
+            // count. EnvelopeAssign{} defaults to active=true, so skipping this would
+            // resurrect phantom full-depth Velocity envelopes on the audio thread.
+            // Plain field assignments into pre-sized arrays only; RT-safe.
+            for (int i = lane.envelopeCount; i < p.envelopeIndex; ++i) {
+                lane.envelopes[i].envelope = Envelope{};
+                lane.envelopes[i].active = false;
+            }
             lane.envelopes[p.envelopeIndex].envelope = p.envelope;
             lane.envelopes[p.envelopeIndex].active = p.active;
+            if (p.envelopeIndex >= lane.envelopeCount)
+                lane.envelopeCount = p.envelopeIndex + 1;
         }))
         handshakeApplied_.envelope.fetch_add(1, std::memory_order_relaxed);
     if (accentMaskSlot_.consume(
@@ -797,9 +809,25 @@ static bool applyCoreParam(Steinberg::Vst::ParamID id, double normalized, Groove
     case kCoreCellCount:
         cfg.cellCount = static_cast<int>(eng);
         break;
-    case kCoreTimeline:
-        cfg.timeline = (eng > 0.5);
+    case kCoreTimeline: {
+        const bool next = (eng > 0.5);
+        // M053 S08 T01: seed fixedPattern[] directly in the audio-thread processor
+        // on the false→true edge, mirroring web_ui_view.cpp's controller-cache seeding.
+        // Without this the processor plays from a stale/empty fixedPattern until the
+        // async sendTimelinePattern→timelineSlot_ handshake lands — an audible ~1s
+        // self-blank. Seeding here makes the async pattern non-load-bearing for the
+        // initial frame. On true→false edge fixedPattern is left intact so re-enabling
+        // timeline mode restores manual edits.
+        // RT-safe: poly::euclidean fills a pre-allocated std::array (no heap, locks, exceptions, or I/O).
+        if (next && !cfg.timeline) {
+            poly::euclidean(cfg.hitCount, cfg.cycle.steps, cfg.rotation, cfg.fixedPattern);
+            if (cfg.fixedPatternLength == 0) {
+                cfg.fixedPatternLength = cfg.cycle.steps;
+            }
+        }
+        cfg.timeline = next;
         break;
+    }
     case kCoreFixedPatternLen:
         cfg.fixedPatternLength = static_cast<int>(eng);
         break;

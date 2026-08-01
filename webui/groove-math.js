@@ -25,6 +25,23 @@
     }
     return o;
   };
+  // Pure mirror of engine.cpp computeDriftedCycleStep (D009): the drift the
+  // engine applies to a lane's cycle step is floor(barPos * driftRate) reduced
+  // into [0, steps). Returning just the offset (not the drifted step) lets the
+  // ring rotate by driftOffset/steps*360deg and the playhead land on
+  // (cycleStep + driftOffset) % steps — algebraically identical to the engine's
+  // (cycleStep + driftSteps) mod stepsInCycle. barPos is ppq / kPpqPerBar (4.0).
+  // steps mirrors ctx.stepsInCycle: cells.length for additive lanes, else steps.
+  function driftSteps(l) {
+    return l.cells ? l.cells.length : l.steps;
+  }
+  function driftOffset(l, barPos) {
+    const steps = driftSteps(l);
+    const rate = l.driftRate || 0;
+    if (!steps || rate === 0) return 0;
+    const off = Math.floor(barPos * rate);
+    return ((off % steps) + steps) % steps;
+  }
   function shade(li, tick) {
     let h = ((li * 2654435761) ^ (tick * 40503)) >>> 0;
     h = ((h ^ (h >>> 13)) * 0x5bd1e995) >>> 0;
@@ -59,5 +76,5 @@
     vel *= envVelFactor(l, tick);
     return Math.min(1, vel);
   }
-  window.PolyGrooveMath = { euclid, rotArr, cyc8, onsets, shade, envVelFactor, laneHitAt, hitVelocity };
+  window.PolyGrooveMath = { euclid, rotArr, cyc8, onsets, driftOffset, shade, envVelFactor, laneHitAt, hitVelocity };
 })();

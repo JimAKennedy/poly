@@ -191,26 +191,23 @@
   });
 
   /* --- export button (plugin-only) — opens a native Save As… dialog for the
-       frozen MIDI capture window. Result arrives via polyHostPush
-       {type:'exportResult'}. Cancels resolve silently. M051 S08: gated on the
-       capture machine reaching `complete` (capState===3) — the only state in
-       which the processor has frozen a stable, exportable window. */
+       CURRENT pattern. Result arrives via polyHostPush {type:'exportResult'}.
+       Cancels resolve silently. M053 S11: ungated — the native side renders the
+       current pattern offline (poly::renderPatternToSMF) on every click/drag,
+       so Export works regardless of DAW transport or capture state. */
   if (host.capabilities && host.capabilities.canExport) {
     const btn = document.getElementById('exportBtn');
-    btn.title = 'Save the captured MIDI window as a .mid file, or drag it straight into your DAW (available once capture is complete)';
+    btn.title = 'Save the current pattern as a .mid file, or drag it straight into your DAW';
     btn.addEventListener('click', () => {
-      if ((lastFrame.capState | 0) !== 3) return; // active only in `complete`
       host.action('exportSaveAs', {});
       btn.classList.add('on');
     });
     // M053 S03d (G06): the Export chip doubles as a drag source. A click runs
     // the Save-As path above; dragging it opens the native drag-source window
-    // (platform_drag_source) that carries the frozen .mid straight into the DAW.
-    // Gated identically on capState===3 (complete) — a drag begun in any other
-    // state is cancelled so the affordance is inert until a window is frozen.
+    // (platform_drag_source) that carries the .mid straight into the DAW.
+    // M053 S11: ungated — the native offline render always has a pattern to emit.
     btn.setAttribute('draggable', 'true');
-    btn.addEventListener('dragstart', (e) => {
-      if ((lastFrame.capState | 0) !== 3) { e.preventDefault(); return; }
+    btn.addEventListener('dragstart', () => {
       host.action('beginMidiDrag', {});
       btn.classList.add('dragging');
     });
@@ -241,7 +238,7 @@
      G07: the bars picker is a 1-32 stepper over the kCaptureLength window
      (native export_controls_view parity), replacing the old fixed {4,8,16,32}
      cycle. The Arm chip flips to Reset once the machine leaves idle; the Export
-     chip above reads state-driven (active only in `complete`). All three reflect
+     chip above is ungated (M053 S11 offline render). The Arm/bars chips reflect
      host truth from the feedback frame (lastFrame.capState/capBars) — never
      local state — so the header and the Cloth timeline can never disagree. */
   const CAP_BARS_MIN = 1;
@@ -552,6 +549,8 @@
     document.getElementById('mDesk').classList.toggle('on', m === 'desk');
     // Arm/Reset + bars picker are capture-timeline controls — Cloth mode only.
     if (capCtl) capCtl.classList.toggle('show', m === 'cloth');
+    // Learn only reveals annotations inside #cloth — gate the chip to Cloth.
+    document.getElementById('learnBtn').classList.toggle('mode-hidden', m !== 'cloth');
     if (m === 'cloth') sizeLoom();
     if (m === 'desk' && focus >= 0) expandStrip(focus);
   }
@@ -903,6 +902,36 @@
         window.addEventListener('pointerup', up, { once: true });
       });
     });
+
+    // M053 S07 (F1): lane add/remove. The desk previously rendered exactly the
+    // lanes a preset shipped, with no affordance to grow or shrink the ensemble,
+    // even though the activeLaneCount param (1..8 lanes) is wired end-to-end
+    // through the bridge (bridge_params.h -> web_ui_view.cpp -> processor.cpp).
+    // This footer edits that param; the host round-trips a new state with a
+    // different lane count and refreshAll() rebuilds the desk.
+    const laneCount = S.lanes.length;
+    const mgr = document.createElement('div');
+    mgr.className = 'lane-mgr';
+    mgr.innerHTML =
+      `<button class="lane-del" ${laneCount <= 1 ? 'disabled' : ''} aria-label="Remove last lane" title="Remove the last lane">− Lane</button>` +
+      `<span class="lane-count" aria-live="polite">${laneCount} / 8 lanes</span>` +
+      `<button class="lane-add" ${laneCount >= 8 ? 'disabled' : ''} aria-label="Add lane" title="Add a lane">+ Lane</button>`;
+    desk.appendChild(mgr);
+    const setLaneCount = (c) => {
+      const norm = (c - 1) / 7;
+      host.edit('activeLaneCount', norm, 'begin');
+      host.edit('activeLaneCount', norm, 'perform');
+      host.edit('activeLaneCount', norm, 'end');
+    };
+    mgr.querySelector('.lane-add').addEventListener('click', () => {
+      const c = S.lanes.length;
+      if (c < 8) setLaneCount(c + 1);
+    });
+    mgr.querySelector('.lane-del').addEventListener('click', () => {
+      const c = S.lanes.length;
+      if (c > 1) setLaneCount(c - 1);
+    });
+
     desk.style.gridTemplateColumns = `repeat(${S.lanes.length}, 1fr) 160px`;
   }
   function expandStrip(li) {
@@ -982,8 +1011,7 @@
     let html = '';
     if (l.timeline) {
       html += `<div class="prow"><label>Timeline mode</label><span class="switch"><button class="on" data-tl aria-label="Timeline mode"><i></i></button></span></div>
-        <div class="hint">Fixed pattern — immune to macros. The bell is law.</div>
-        <div class="hrow" data-fixed>${l.fixed.map((h, i) => `<button class="${h ? 'hit' : ''}" data-i="${i}" aria-label="pulse ${i + 1}"></button>`).join('')}</div>`;
+        <div class="hint">Fixed pattern — immune to macros. The bell is law. Edit steps on the ladder above.</div>`;
     } else {
       html += `<div class="prow"><label>Timeline mode</label><span class="switch"><button data-tl aria-label="Timeline mode"><i></i></button></span></div>
         <div class="prow"><label>Steps</label><span class="stepper"><button data-st="-1">−</button><span class="v">${l.steps} × ${l.stepLen === 2 ? '♩' : '♪'}</span><button data-st="1">+</button></span></div>
@@ -1004,13 +1032,7 @@
         host.edit(`lane.${li}.timeline`, next, 'end');
       });
     }
-    if (l.timeline) {
-      pat.querySelectorAll('[data-fixed] button').forEach((b) =>
-        b.addEventListener('click', () => {
-          const i = +b.dataset.i;
-          host.action('setFixedStep', { lane: li, step: i, on: !l.fixed[i] });
-        }));
-    } else {
+    if (!l.timeline) {
       pat.querySelectorAll('[data-st]').forEach((b) =>
         b.addEventListener('click', () => host.action('setEuclid', { lane: li, steps: l.steps + +b.dataset.st })));
       pat.querySelectorAll('[data-ht]').forEach((b) =>
@@ -1538,6 +1560,21 @@
         // reads as no motion, not just dimmer motion.
         const laneOn = !!l.active;
         hands[li].setAttribute('transform', `rotate(${laneOn ? fl.ph * 360 : 0} 32 32)`);
+        // M053 S12 T03: rotate the ring <g> per frame by the engine's drift offset
+        // so the circular display tracks the audible drifted cycle step
+        // (engine.cpp computeDriftedCycleStep, mirrored by PolyGrooveMath.driftOffset
+        // and carried on fl.driftOffset by both host pumps). Freeze at 0 when muted so
+        // a disabled lane reads as no motion. drawRing() only rewrites innerHTML, so
+        // this transform survives ring rebuilds.
+        //
+        // D008: the ring is geometrically INVARIANT under subdivision (stepLen). Dot
+        // angles are fractions of the cycle (i/steps or onset/cyc8), which a stepLen
+        // change does not alter, so subdivision never rotates or reshapes the ring —
+        // only drift does. Subdivision motion is shown on the convergence timeline /
+        // ladder instead. This divergence is intentional, not a missing cue.
+        const ringSteps = l.cells ? l.cells.length : l.steps;
+        const ringDrift = laneOn && ringSteps ? ((fl.driftOffset || 0) / ringSteps) * 360 : 0;
+        rings[li].setAttribute('transform', `rotate(${ringDrift} 32 32)`);
         ladders[li].querySelectorAll('button').forEach((b, i) =>
           b.classList.toggle('now', laneOn && frame.playing && i === fl.step));
         updateEmissionOverlay(li);

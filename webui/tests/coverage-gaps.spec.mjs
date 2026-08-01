@@ -563,6 +563,9 @@ test.describe('cross-feature regression', () => {
   });
 
   test('learn mode toggles body class via button and keyboard', async ({ page }) => {
+    // Learn is gated to Cloth (M053 S10) — reveal the chip before clicking it.
+    // The keyboard shortcut keeps working after switching back to Desk.
+    await page.click('#mCloth');
     await page.click('#learnBtn');
     await expect(page.locator('body')).toHaveClass(/learn/);
     await page.keyboard.press('l');

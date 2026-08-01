@@ -72,6 +72,10 @@
   #exportBtn { opacity: .45; }                                  /* dim in idle/armed/capturing */
   #exportBtn.capReady { opacity: 1; cursor: grab; }             /* active only in `complete`; G06 drag-to-DAW */
   #exportBtn.dragging { cursor: grabbing; }                     /* M053 S03d: native drag-source window open */
+  /* M053 S10: Learn only reveals annotations inside #cloth, so the chip is a
+     no-op in Desk. Gate the affordance to Cloth (mirrors #capCtl). The L/l
+     keyboard shortcut stays live in both modes. */
+  #learnBtn.mode-hidden { display: none; }
   #modes { display: flex; gap: 4px; margin-left: 4px; flex-shrink: 0; }
   #chrome .right { margin-left: auto; display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
   #conv { text-align: right; font-variant-numeric: tabular-nums; }
@@ -205,6 +209,12 @@
   .param-slider.phrase-disabled .slider-track { cursor: not-allowed; }
 
   #master { background: linear-gradient(#201B16, #1A1511); border: 1px solid #322A21; border-radius: 8px; padding: 15px 14px; display: flex; flex-direction: column; gap: 12px; min-height: 0; overflow-y: auto; }
+  /* M053 S07 (F1): full-width lane add/remove footer under the lane row. */
+  .lane-mgr { grid-column: 1 / -1; display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 2px; padding: 7px 10px; background: #191512; border: 1px dashed #322A21; border-radius: 8px; }
+  .lane-mgr button { background: #201B16; color: #F0EADF; border: 1px solid #3A3128; border-radius: 6px; padding: 4px 14px; font: inherit; cursor: pointer; }
+  .lane-mgr button:hover:not(:disabled) { border-color: #4A4030; background: #262019; }
+  .lane-mgr button:disabled { opacity: 0.4; cursor: not-allowed; }
+  .lane-mgr .lane-count { opacity: 0.72; font-variant-numeric: tabular-nums; min-width: 6ch; text-align: center; }
   #master h3 { margin: 0; font-size: 9px; letter-spacing: .28em; color: #C4A96A; text-transform: uppercase; font-weight: 600; }
   .macro { padding: 3px 0; }
   .macro .t { display: flex; justify-content: space-between; font-size: 9.5px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); font-variant-numeric: tabular-nums; }
