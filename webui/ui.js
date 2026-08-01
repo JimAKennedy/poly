@@ -15,7 +15,7 @@
   let lastFrame = { t8: 0, playing: false, convLeft: CONV, lanes: [] };
   let mode = 'desk';
   let expanded = -1;
-  let strips = [], rings = [], hands = [], ladders = [], vus = [];
+  let strips = [], rings = [], hands = [], ladders = [], vus = [], playeds = [];
   const tabState = {};
   // M045 S01 T03: per-lane, per-step overlay class diff cache. Populated by
   // updateEmissionOverlay each frame; reset in buildDesk when the ladder DOM
@@ -885,7 +885,7 @@
   }
   function buildDesk() {
     desk.innerHTML = '';
-    strips = []; rings = []; hands = []; ladders = []; vus = [];
+    strips = []; rings = []; hands = []; ladders = []; vus = []; playeds = [];
     // M045 S01 T03: ladder DOM was just recreated — invalidate the overlay
     // diff cache so the next onFrame paints classes onto the fresh buttons.
     overlayLastKind.length = 0;
@@ -903,7 +903,10 @@
         <div class="body2">
           <div class="core">
             <svg class="ring" viewBox="0 0 64 64" aria-hidden="true"></svg>
-            <div class="ladder" role="group" aria-label="${l.name} steps"></div>
+            <div class="laddwrap">
+              <div class="ladder" role="group" aria-label="${l.name} steps"></div>
+              <div class="played" aria-hidden="true" title="What's actually played — dots sit at the real onset (syncopation, swing, humanize shift them off the grid)"></div>
+            </div>
             <div class="vu"><i></i></div>
           </div>
           <div class="deep">
@@ -930,6 +933,7 @@
       rings.push(el('g', {}, svg));
       hands.push(el('line', { x1: 32, y1: 32, x2: 32, y2: 9, stroke: '#F0EADF', 'stroke-width': 1.2, opacity: 0.85 }, svg));
       ladders.push(s.querySelector('.ladder'));
+      playeds.push(s.querySelector('.played'));
       vus.push(s.querySelector('.vu i'));
       s.querySelector('.ex').addEventListener('click', () => expandStrip(expanded === li ? -1 : li));
       const nameEl = s.querySelector('.nm b');
@@ -1657,6 +1661,84 @@
     }
   }
 
+  /* Desk "played" timeline (expanded strip only). A second vertical column
+     beside the ladder that shows WHAT IS ACTUALLY PLAYED, as a rolling window
+     scrolling with the transport. The ladder shows pattern intent (fixed grid
+     rows); this column reads the engine emission stream (host.getLaneEmissions →
+     {ppq, shiftedPpq, step, kind}) and places each hit by how recently it fired
+     relative to the playhead, so it is genuinely time-positioned, NOT quantized
+     to the grid: a swung / syncopated / humanized / offset hit enters the window
+     at its real shifted onset, off its grid row — tying what the user sees to
+     what they hear.
+
+     Rolling window (the fix for "dots accumulate and fill the column"): each dot
+     is positioned by its AGE in eighth-ticks behind the current playhead,
+     ageT8 = frame.t8 − onsetT8 (onsetT8 = onset ppq × 2, since t8 = 2·ppq). The
+     freshest hit (age 0) sits at the top by the playhead; as the transport
+     advances the dot scrolls down and, once its age exceeds PLAYED_WINDOW_T8, it
+     drops off entirely — so the column shows only the last window of hits and
+     self-clears instead of filling up. Orientation matches the ladder
+     (column-reverse): bottom = (1 − age/window)·100%, freshest at top.
+
+     Kind coloring mirrors the ladder overlay vocabulary: base = lane hue,
+     ghost = dimmed, add = accent (off-grid mutation/macro add), drop = hollow.
+     Drops never schedule a note, so they use the grid ppq (no shifted onset);
+     fired hits use the shifted onset (fall back to grid ppq for legacy 4-field
+     builds without shiftedPpq).
+
+     Empty stream (mock default, DAW, or stopped playback) clears the column and
+     draws nothing — never claims an onset it can't observe, mirroring the
+     overlay's empty-return degradation contract. */
+  // Per-kind base opacity (matches the old ladder-overlay reading: ghost + drop
+  // sit dimmer than a base/add hit). Multiplied by the age fade in updatePlayed.
+  const PLAYED_KIND_OPACITY = { base: 1, add: 1, ghost: 0.42, drop: 0.55 };
+  function updatePlayed(li, t8) {
+    const col = playeds[li];
+    if (!col) return;
+    // Only meaningful in the expanded strip; collapsed strips keep it hidden via
+    // CSS, so skip the work entirely to avoid per-frame churn on every lane.
+    if (expanded !== li) { if (col.childElementCount) col.replaceChildren(); return; }
+    const l = S.lanes[li];
+    if (!host.getLaneEmissions || !l || !l.active) { if (col.childElementCount) col.replaceChildren(); return; }
+    const emissions = host.getLaneEmissions(li) || [];
+    if (!emissions.length) { if (col.childElementCount) col.replaceChildren(); return; }
+    // Rolling window = one cycle of the lane in eighth-ticks (cyc8), so exactly
+    // one lap of the pattern is visible at a time. cyc8 is already in eighths
+    // (t8 units), matching frame.t8. Guard against a degenerate zero-length lane.
+    const win = cyc8(l);
+    if (!(win > 0)) { if (col.childElementCount) col.replaceChildren(); return; }
+    const now = typeof t8 === 'number' ? t8 : 0;
+    // Newest emission per (step,kind) wins so a re-fired step replaces its prior
+    // mark rather than stacking dots as the ring wraps. Keyed by step+kind but
+    // positioned by absolute age, so the SAME step re-fired a cycle later moves.
+    const byKey = new Map();
+    for (let i = 0; i < emissions.length; i++) {
+      const e = emissions[i];
+      if (!e) continue;
+      const isDrop = e.kind === 'drop';
+      const ppq = isDrop ? e.ppq : (typeof e.shiftedPpq === 'number' ? e.shiftedPpq : e.ppq);
+      // onset in eighth-ticks; age behind the playhead. Fresh hits (age→0) at the
+      // top, older ones scroll down; past the window they drop off (self-clear).
+      const ageT8 = now - ppq * 2;
+      if (!(ageT8 >= 0 && ageT8 <= win)) continue;
+      byKey.set(e.step + ':' + e.kind, { age: ageT8, kind: e.kind });
+    }
+    const frag = document.createDocumentFragment();
+    byKey.forEach((d) => {
+      const dot = document.createElement('i');
+      dot.className = 'pdot p-' + d.kind;
+      // Freshest (age 0) at top (bottom 100%), oldest (age=win) at bottom (0%).
+      const frac = 1 - d.age / win;
+      dot.style.bottom = (frac * 100).toFixed(2) + '%';
+      // Opacity = age fade × the kind's base opacity (ghost/drop read dimmer than
+      // base/add even when fresh). Inline so CSS never fights the fade.
+      const fade = Math.max(0.15, 1 - d.age / win);
+      dot.style.opacity = (fade * (PLAYED_KIND_OPACITY[d.kind] || 1)).toFixed(2);
+      frag.appendChild(dot);
+    });
+    col.replaceChildren(frag);
+  }
+
   /* ================= first-run MIDI-routing diagnostic banner =================
      Poly is a MIDI-only instrument: it makes no sound until its output is routed
      to a drum instrument in the DAW, and the plugin has no audio-feedback path
@@ -1774,6 +1856,7 @@
         ladders[li].querySelectorAll('button').forEach((b, i) =>
           b.classList.toggle('now', laneOn && frame.playing && i === fl.step));
         updateEmissionOverlay(li);
+        updatePlayed(li, frame.t8);
         const active = laneOn && frame.playing && (l.cells ? true : !!l.pattern[fl.step]) && frame.t8 % 1 < 0.5;
         vus[li].style.width = active ? `${(l.vel / 127) * 100}%` : '4%';
         if (expanded === li) {

@@ -14,6 +14,29 @@
   const frameSubs = [];
   let lastState = null;
 
+  // M073: per-lane emission stream carried on each feedback frame (the native
+  // processor drains the engine EmissionEventBuffer into UISnapshot rings and
+  // web_ui_view.cpp serializes them into frame.lanes[i].emissions). Mirrors the
+  // WASM host's getLaneEmissions so the desk overlay + played timeline light up
+  // in the DAW, not just the browser preview. kind arrives as the int
+  // EmissionKind; map it to the base/ghost/add/drop label the UI expects.
+  const EMISSION_KIND_LABELS = ['base', 'ghost', 'add', 'drop'];
+  let laneEmissions = [];
+  function captureFrameEmissions(frame) {
+    const lanes = frame && frame.lanes;
+    if (!Array.isArray(lanes)) { laneEmissions = []; return; }
+    laneEmissions = lanes.map((l) => {
+      const em = l && l.emissions;
+      if (!Array.isArray(em) || !em.length) return [];
+      return em.map((e) => ({
+        ppq: e.ppq,
+        shiftedPpq: typeof e.shiftedPpq === 'number' ? e.shiftedPpq : e.ppq,
+        step: e.step,
+        kind: EMISSION_KIND_LABELS[e.kind] || 'base',
+      }));
+    });
+  }
+
   function send(msg) {
     msg.v = window.POLY_SCHEMA_VERSION;
     if (typeof window.polyHostCall === 'function') {
@@ -51,6 +74,7 @@
       _updateDbg(`SC:${_sc} FC:${_fc} lanes:${msg.state?.lanes?.length ?? '?'}`);
     } else if (msg.type === 'frame') {
       _fc++;
+      captureFrameEmissions(msg.frame);
       frameSubs.forEach((cb) => cb(msg.frame));
       if (_fc % 30 === 0) _updateDbg(`SC:${_sc} FC:${_fc} t8:${msg.frame?.t8?.toFixed(1) ?? '?'} P:${msg.frame?.playing ? 'Y' : 'N'}`);
     } else if (msg.type === 'exportResult') {
@@ -69,6 +93,11 @@
     edit: (paramId, value, gesture) => send({ type: 'edit', paramId, value, gesture }),
     action: (name, payload) => send({ type: 'action', name, payload }),
     onFrame: (cb) => frameSubs.push(cb),
+    // M073: expose the per-lane emission stream carried on the latest frame so
+    // ui.js's desk overlay (updateEmissionOverlay) and played timeline
+    // (updatePlayed) work in the DAW. Returns [] for an out-of-range lane or
+    // before the first frame, matching the WASM/mock empty-stream contract.
+    getLaneEmissions: (li) => (laneEmissions[li] ? laneEmissions[li].slice() : []),
   };
 
   // Announce readiness so the native side pushes the initial state.

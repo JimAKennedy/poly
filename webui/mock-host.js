@@ -727,7 +727,10 @@
   }
 
   function pump() {
-    const t8 = now8();
+    // Headless (no audio clock) now8() is 0. Tests drive a deterministic
+    // playhead via window.__POLY_FORCE_T8 so the rolling played-timeline window
+    // (which positions dots by age behind t8) can be exercised without audio.
+    const t8 = typeof window.__POLY_FORCE_T8 === 'number' ? window.__POLY_FORCE_T8 : now8();
     advanceCapture(t8);
     const convLeft = playing ? (CONV - (Math.floor(t8) % CONV)) % CONV || CONV : CONV;
     const frame = {

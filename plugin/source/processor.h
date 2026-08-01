@@ -180,12 +180,19 @@ private:
     void applyCaptureCommand();
     void updateCaptureMachine();
     void publishCaptureSnapshot();
+    // M073: drain emissionBuffer_ into the per-lane UISnapshot emission rings.
+    void publishEmissions();
     bool applySceneParameter(Steinberg::Vst::ParamID id, double normalized);
     bool applyLaneParameter(Steinberg::Vst::ParamID id, double normalized, GrooveState& gs);
 
     Engine engine_;
     SceneState sceneState_{};
     NoteEventBuffer noteBuffer_{};
+    // M073: per-block emission classification, drained into uiSnapshot_ rings
+    // after each render so the WebUI desk overlay + played timeline light up in
+    // the DAW. Pre-allocated (fixed-cap array inside EmissionEventBuffer) — no
+    // RT allocation. Passed to renderRange only when publishing to the UI.
+    EmissionEventBuffer emissionBuffer_{};
     TransportContext tc_{};
     PendingNoteOffBuffer pendingNoteOffs_{};
     MidiCaptureBuffer captureBuffer_;

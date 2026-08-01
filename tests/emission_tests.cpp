@@ -188,10 +188,73 @@ TEST(EmissionClassification, DeterministicUnderSameSeed) {
     ASSERT_EQ(first.size(), second.size());
     for (size_t i = 0; i < first.size(); ++i) {
         EXPECT_DOUBLE_EQ(first[i].ppqPosition, second[i].ppqPosition);
+        EXPECT_DOUBLE_EQ(first[i].shiftedPpqPosition, second[i].shiftedPpqPosition);
         EXPECT_EQ(first[i].cycleStep, second[i].cycleStep);
         EXPECT_EQ(first[i].laneIndex, second[i].laneIndex);
         EXPECT_EQ(first[i].kind, second[i].kind);
     }
+}
+
+TEST(EmissionClassification, ShiftedPpqMatchesAudibleOnsetUnderSyncopation) {
+    // The desk "played" timeline reads EmissionEvent::shiftedPpqPosition to land
+    // a dot where the note actually SOUNDS, not where its grid step sits. Prove
+    // that a lane with a timing shift produces a shifted onset that (a) differs
+    // from the grid ppq for at least one fired step, and (b) equals the audible
+    // NoteEvent onset for every fired step. Syncopation shifts even-index steps.
+    poly::GrooveState state{};
+    state.activeLaneCount = 1;
+    state.seed = 7;
+    auto& lane = state.lanes[0];
+    lane.id = 0;
+    lane.midiNote = 36;
+    lane.cycle = {.steps = 8, .subdivision = 8}; // 8 eighth-note steps = 1 bar
+    lane.hitCount = 8;                           // every step fires — no drops
+    lane.baseVelocity = 100;
+    lane.probability = 1.0f;
+    lane.mutationRate = 0.0f;
+    lane.emphasisProb = 1.0f;
+    lane.velocitySpread = 0.0f;
+    lane.ghostFloor = 0;
+    lane.syncopationOffset = 1.0f; // push even steps late
+    lane.active = true;
+
+    poly::Engine engine;
+    poly::NoteEventBuffer notes;
+    poly::EmissionEventBuffer emissions;
+    poly::TransportContext tc{};
+    tc.ppqStart = 0.0;
+    tc.ppqEnd = 4.0;
+    tc.tempo = 120.0;
+    tc.playing = true;
+    engine.renderRange(tc, state, notes, &emissions);
+
+    // Every fired emission's shifted onset must match a NoteEvent onset exactly,
+    // and at least one must differ from the grid ppq (the syncopation shift).
+    bool sawShift = false;
+    int matched = 0;
+    for (size_t i = 0; i < emissions.count; ++i) {
+        const auto& ee = emissions.events[i];
+        if (static_cast<poly::EmissionKind>(ee.kind) == poly::EmissionKind::Drop) {
+            // A drop never fires — its shifted onset is the grid position.
+            EXPECT_DOUBLE_EQ(ee.shiftedPpqPosition, ee.ppqPosition);
+            continue;
+        }
+        if (ee.shiftedPpqPosition != ee.ppqPosition)
+            sawShift = true;
+        bool found = false;
+        for (size_t j = 0; j < notes.count; ++j) {
+            if (notes.events[j].laneIndex == ee.laneIndex && notes.events[j].ppqPosition == ee.shiftedPpqPosition) {
+                found = true;
+                break;
+            }
+        }
+        EXPECT_TRUE(found) << "fired emission at shifted ppq " << ee.shiftedPpqPosition
+                           << " has no matching NoteEvent onset";
+        if (found)
+            ++matched;
+    }
+    EXPECT_TRUE(sawShift) << "syncopationOffset should shift at least one fired onset off the grid";
+    EXPECT_GT(matched, 0);
 }
 
 TEST(EmissionClassification, ZeroMutationYieldsOnlyBaseHits) {

@@ -30,9 +30,12 @@ POLY_EXPORT int poly_event_count(PolyContext ctx);
 POLY_EXPORT double* poly_event_buffer(PolyContext ctx);
 
 // M045 S01 T01: emission classification stream. Populated by the most recent
-// poly_render call. Each emission is 4 doubles: [ppqPosition, laneIndex,
-// cycleStep, kind]. kind: 0=Base, 1=Ghost, 2=Add, 3=Drop. The JS host drains
-// this per render pass and pushes into a per-lane ring for the desk overlay.
+// poly_render call. Each emission is 5 doubles: [ppqPosition (grid), laneIndex,
+// cycleStep, kind, shiftedPpqPosition]. kind: 0=Base, 1=Ghost, 2=Add, 3=Drop.
+// shiftedPpqPosition is the post-timing-shift audible onset (== ppqPosition for
+// Drop). Field count is poly_emission_fields_per_event(); drain reads that, not
+// a hardcoded stride. The JS host drains this per render pass and pushes into a
+// per-lane ring for the desk overlay and "played" timeline.
 POLY_EXPORT int poly_emission_count(PolyContext ctx);
 POLY_EXPORT double* poly_emission_buffer(PolyContext ctx);
 POLY_EXPORT int poly_emission_fields_per_event();

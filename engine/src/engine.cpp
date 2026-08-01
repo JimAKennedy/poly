@@ -448,6 +448,18 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
             StepOutcome outcome =
                 classifyStep(cfg, state, absStep, cycleStep, isPatternStep, isAnchor, mods, ctx.stepsInCycle);
 
+            // Post-timing-shift onset for the audible note. A Drop never fires,
+            // so it has no shifted onset — the display shows it at its grid ppq.
+            // Fired outcomes carry the swing/syncopation/micro-timing/humanize/
+            // offset-shifted ppq so the desk "played" timeline lands the dot
+            // where the note actually sounds. Computed here (before recording)
+            // so the emission carries the shifted onset; buildNoteEvent below
+            // reuses the same value, keeping NoteEvent output byte-identical.
+            bool willFire = (outcome != StepOutcome::Drop && outcome != StepOutcome::Silent);
+            double shiftedPpq = ppq;
+            if (willFire)
+                shiftedPpq = applyTimingShifts(cfg, tc, state, ppq, stepDurPpq, absStep, cycleStep, mods.humanize);
+
             // Record classification for the display, but only for steps whose
             // pre-timing-shift ppq falls inside the current render window —
             // otherwise the outer safety margin double-counts across block
@@ -455,18 +467,19 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
             if (emissions != nullptr && outcome != StepOutcome::Silent && ppq >= tc.ppqStart && ppq < tc.ppqEnd) {
                 EmissionEvent ee{};
                 ee.ppqPosition = ppq;
+                ee.shiftedPpqPosition = shiftedPpq;
                 ee.cycleStep = static_cast<int16_t>(cycleStep);
                 ee.laneIndex = static_cast<int16_t>(lane);
                 ee.kind = static_cast<uint8_t>(outcome);
                 emissions->push(ee);
             }
 
-            if (outcome == StepOutcome::Drop || outcome == StepOutcome::Silent)
+            if (!willFire)
                 continue;
 
             bool mutatedToGhost = (outcome == StepOutcome::Ghost);
             float vel = computeStepVelocity(cfg, state, absStep, cycleStep, mods, mutatedToGhost);
-            ppq = applyTimingShifts(cfg, tc, state, ppq, stepDurPpq, absStep, cycleStep, mods.humanize);
+            ppq = shiftedPpq;
             if (ppq < tc.ppqStart || ppq >= tc.ppqEnd)
                 continue;
 

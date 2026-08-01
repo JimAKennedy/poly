@@ -403,6 +403,31 @@ void PolyProcessor::publishCaptureSnapshot() {
     uiSnapshot_.captureProgressBars.store(progressBars, std::memory_order_relaxed);
 }
 
+void PolyProcessor::publishEmissions() {
+    // M073: append this block's engine emissions into the per-lane UISnapshot
+    // rings for the WebUI desk overlay + played timeline. Runs on the audio
+    // thread and is RT-safe: only relaxed atomic POD stores into a preallocated
+    // fixed array, with no heap use, no locking, no throwing, and no IO.
+    // Emissions carry the drifted cycle step and both the grid ppq and the
+    // post-timing-shift onset (shiftedPpqPosition).
+    constexpr int cap = UISnapshot::kEmissionRingCap;
+    for (size_t i = 0; i < emissionBuffer_.count; ++i) {
+        const auto& ee = emissionBuffer_.events[i];
+        const int lane = ee.laneIndex;
+        if (lane < 0 || lane >= kMaxLanes)
+            continue;
+        const uint64_t head = uiSnapshot_.emissionHead[lane].load(std::memory_order_relaxed);
+        auto& slot = uiSnapshot_.emissionRing[lane][static_cast<int>(head % cap)];
+        // Store the payload BEFORE bumping head (release) so the reader that
+        // acquires head sees a fully-written slot for the newest entry.
+        slot.ppq.store(ee.ppqPosition, std::memory_order_relaxed);
+        slot.shiftedPpq.store(ee.shiftedPpqPosition, std::memory_order_relaxed);
+        slot.step.store(ee.cycleStep, std::memory_order_relaxed);
+        slot.kind.store(ee.kind, std::memory_order_relaxed);
+        uiSnapshot_.emissionHead[lane].store(head + 1, std::memory_order_release);
+    }
+}
+
 static void outputLaneVisualization(Steinberg::Vst::IParameterChanges* outParams, const LaneConfig& cfg, int lane,
                                     double ppqStart, double ppqPerBar, UISnapshot& snap) {
     auto additive = computeAdditiveCells(cfg);
@@ -646,6 +671,14 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
             exportReady_.store(true, std::memory_order_release);
             bounceExportTriggerZero(data.outputParameterChanges);
         }
+        // M073: transport idle — clear the emission rings so the desk overlay +
+        // played timeline don't linger on stale marks (mirrors the WASM host's
+        // resetLaneEmissions on Stop). Reset head to 0; the reader then reports
+        // an empty stream and degrades to positional-pattern-only.
+        if (wasPlaying_) {
+            for (int lane = 0; lane < kMaxLanes; ++lane)
+                uiSnapshot_.emissionHead[lane].store(0, std::memory_order_release);
+        }
         wasPlaying_ = false;
         return Steinberg::kResultOk;
     }
@@ -680,7 +713,14 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
     base.macros = macroSmoother_.current;
 
     GrooveState resolved = resolveConstraints(base, resolveMacros(base));
-    engine_.renderRange(tc_, resolved, noteBuffer_);
+    // M073: pass the emission buffer so the engine classifies each step
+    // (Base/Ghost/Add/Drop) with grid + post-timing-shift onset; drained into
+    // the UISnapshot rings below for the WebUI desk overlay + played timeline.
+    // Byte-identical NoteEvent output — the emission stream is a display-only
+    // side channel (the null-buffer contract proves the notes are unchanged).
+    emissionBuffer_.clear();
+    engine_.renderRange(tc_, resolved, noteBuffer_, &emissionBuffer_);
+    publishEmissions();
     // endregion:process-render
 
     if (!data.outputEvents)

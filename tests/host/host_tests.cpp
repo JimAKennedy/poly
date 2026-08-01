@@ -23,6 +23,7 @@
 #include "poly/state_io.h"
 #include "poly/types.h"
 #include "poly_test_host.h"
+#include "ui_snapshot.h" // M073: full UISnapshot for the emission-ring test
 
 using poly::test::MidiEvent;
 using poly::test::PolyTestHost;
@@ -1927,5 +1928,61 @@ TEST(HostTests, EnvelopePeriodBarsRoundTripsThroughProcessAndPersists) {
            "(de)serialization or setState path";
 
     restored.teardown();
+    host.teardown();
+}
+
+// M073: the desk emission overlay + played timeline read host.getLaneEmissions,
+// which in the DAW is fed by the processor draining the engine
+// EmissionEventBuffer into the per-lane UISnapshot rings (publishEmissions),
+// serialized to the frame by web_ui_view.cpp. This proves that native handoff
+// end-to-end: after a playing block the rings hold classified emissions with a
+// valid shifted onset, and a stopped block clears them (mirroring the WASM
+// host's resetLaneEmissions on Stop, so the overlay degrades to empty).
+TEST(HostTests, EmissionRingsPopulatedOnPlayAndClearedOnStop) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+
+    poly::UISnapshot* snap = host.controllerUiSnapshot();
+    ASSERT_NE(snap, nullptr) << "fixture broken: connect never populated the UISnapshot pointer";
+
+    // Before any playing block the rings are empty — no emission published.
+    for (int lane = 0; lane < poly::kMaxLanes; ++lane)
+        EXPECT_EQ(snap->emissionHead[lane].load(std::memory_order_acquire), 0u)
+            << "lane " << lane << " ring should be empty before playback";
+
+    // Play a full bar. The default render scene has active lanes with hits, so
+    // the engine emits Base classifications the processor drains into the rings.
+    host.processBlock(0.0, 120.0, /*playing=*/true);
+
+    uint64_t totalEmitted = 0;
+    constexpr int cap = poly::UISnapshot::kEmissionRingCap;
+    for (int lane = 0; lane < poly::kMaxLanes; ++lane) {
+        uint64_t head = snap->emissionHead[lane].load(std::memory_order_acquire);
+        totalEmitted += head;
+        int n = head < static_cast<uint64_t>(cap) ? static_cast<int>(head) : cap;
+        for (int k = 0; k < n; ++k) {
+            const auto& slot = snap->emissionRing[lane][k];
+            int kind = slot.kind.load(std::memory_order_relaxed);
+            EXPECT_GE(kind, 0);
+            EXPECT_LE(kind, 3) << "kind must be a valid EmissionKind (0..3)";
+            // Fired kinds (Base/Ghost/Add) carry a real shifted onset; a Drop
+            // never schedules a note so its shifted onset equals the grid ppq.
+            double ppq = slot.ppq.load(std::memory_order_relaxed);
+            double shifted = slot.shiftedPpq.load(std::memory_order_relaxed);
+            EXPECT_GE(ppq, 0.0);
+            EXPECT_GE(shifted, 0.0);
+            if (kind == static_cast<int>(poly::EmissionKind::Drop))
+                EXPECT_DOUBLE_EQ(shifted, ppq) << "a Drop has no shifted onset — must equal the grid ppq";
+        }
+    }
+    EXPECT_GT(totalEmitted, 0u) << "a playing bar with active hit lanes must publish at least one emission";
+
+    // Stop. The stopped-path clears the rings so the overlay reads empty and
+    // degrades to positional-pattern-only (no lingering stale marks).
+    host.processBlock(4.0, 120.0, /*playing=*/false);
+    for (int lane = 0; lane < poly::kMaxLanes; ++lane)
+        EXPECT_EQ(snap->emissionHead[lane].load(std::memory_order_acquire), 0u)
+            << "lane " << lane << " ring must clear on Stop";
+
     host.teardown();
 }
