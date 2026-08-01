@@ -984,7 +984,7 @@
           timingOffset: v => { lane.timingOffset = v * 40 - 20; },
           kotekanSource:v => { lane.kotekanSource = Math.round(v * 8) - 1; },
           note:         v => { lane.note = Math.round(v * 127); },
-          channel:      v => { lane.ch = Math.round(v * 16); },
+          channel:      v => { lane.ch = Math.round(v * 16) - 1; },
           steps:        v => {
             lane.steps = Math.round(v * 63) + 1;
             lane.hits = Math.min(lane.hits, lane.steps);

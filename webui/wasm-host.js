@@ -166,7 +166,7 @@
       name: laneNames[laneIdx] || `Lane ${laneIdx + 1}`,
       role: laneRoles[laneIdx] || 'Custom',
       note: li(engineCtx, laneIdx, LaneFieldInt.MidiNote),
-      ch: li(engineCtx, laneIdx, LaneFieldInt.MidiChannel) + 1,
+      ch: li(engineCtx, laneIdx, LaneFieldInt.MidiChannel),
       steps,
       subdivision,
       stepLen,
@@ -1261,7 +1261,7 @@
 
     const INT_EDITS = {
       note:         v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.MidiNote, Math.round(v * 127)),
-      channel:      v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.MidiChannel, Math.round(v * 15)),
+      channel:      v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.MidiChannel, Math.round(v * 16) - 1),
       velocity:     v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.BaseVelocity, Math.round(v * 127)),
       ghostFloor:   v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.GhostFloor, Math.round(v * 127)),
       active:       v => {
