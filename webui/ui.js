@@ -1033,7 +1033,7 @@
     expanded = li;
     strips.forEach((s, i) => s.classList.toggle('expanded', i === li));
     const n = S.lanes.length;
-    const wide = n >= 6 ? '4fr' : '2.9fr';
+    const wide = n >= 6 ? '2.55fr' : '1.9fr';
     const narrow = n >= 6 ? '.38fr' : '.62fr';
     const master = n >= 6 ? '148px' : '160px';
     desk.style.gridTemplateColumns = li < 0
