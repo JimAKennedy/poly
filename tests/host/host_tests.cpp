@@ -1986,3 +1986,44 @@ TEST(HostTests, EmissionRingsPopulatedOnPlayAndClearedOnStop) {
 
     host.teardown();
 }
+
+// M073 fix regression guard: the WebUI played timeline ages each dot against the
+// frame's NORMALIZED t8 (= fmod(ppqStart, 128)/128 · 256). The processor must
+// therefore store emission onsets on that SAME wrapped 128-beat timeline, NOT as
+// raw absolute project ppq — otherwise, once the transport passes ppq 128, every
+// stored onset dwarfs the normalized t8, every dot ages out of the [0, cyc8]
+// window, and the DAW column renders blank while the engine keeps emitting. This
+// plays a block WELL past the 128-beat wrap and asserts every stored onset lands
+// in [0, 128): raw absolute onsets (~192) would fail; wrapped ones (~64) pass.
+TEST(HostTests, EmissionOnsetsNormalizedToFrameTimeline) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+    poly::UISnapshot* snap = host.controllerUiSnapshot();
+    ASSERT_NE(snap, nullptr) << "fixture broken: connect never populated the UISnapshot pointer";
+
+    // Play a block starting at ppq 192 — 1.5 laps into the 128-beat wrap window,
+    // so absolute onsets (~192.x) and wrapped onsets (~64.x) are unambiguously
+    // distinguishable (192 vs 64 straddle the 128 boundary).
+    const double startPpq = 192.0;
+    host.processBlock(startPpq, 120.0, /*playing=*/true);
+
+    constexpr int cap = poly::UISnapshot::kEmissionRingCap;
+    uint64_t totalEmitted = 0;
+    for (int lane = 0; lane < poly::kMaxLanes; ++lane) {
+        uint64_t head = snap->emissionHead[lane].load(std::memory_order_acquire);
+        totalEmitted += head;
+        int n = head < static_cast<uint64_t>(cap) ? static_cast<int>(head) : cap;
+        for (int k = 0; k < n; ++k) {
+            const auto& slot = snap->emissionRing[lane][k];
+            double ppq = slot.ppq.load(std::memory_order_relaxed);
+            double shifted = slot.shiftedPpq.load(std::memory_order_relaxed);
+            EXPECT_GE(ppq, 0.0);
+            EXPECT_LT(ppq, 128.0) << "onset must be wrapped onto the frame timeline, not raw absolute ppq";
+            EXPECT_GE(shifted, 0.0);
+            EXPECT_LT(shifted, 128.0) << "shifted onset must be wrapped onto the frame timeline";
+        }
+    }
+    EXPECT_GT(totalEmitted, 0u) << "a playing bar past the wrap must still publish emissions";
+
+    host.teardown();
+}

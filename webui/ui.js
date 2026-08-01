@@ -1252,11 +1252,18 @@
     });
 
     /* ENVELOPES */
-    // Curve scales horizontally with period: a longer period draws more sine
-    // cycles (direction reversals) across the fixed preview width, so the shape
-    // visibly encodes duration instead of always showing a single 1-bar cycle.
+    // The preview box shows a FIXED WINDOW of PERIOD_MAX bars of timeline, so
+    // one cycle's WAVELENGTH is directly proportional to the period: a longer
+    // period draws a physically WIDER wave (fewer humps across the box), a
+    // shorter period a tighter one (more humps). At period == PERIOD_MAX exactly
+    // one full cycle fills the width; at period 1 there are PERIOD_MAX cycles.
+    // This keeps frequency intuitive — more bars visibly means a slower, wider
+    // wave — matching the playhead (data-envph), which also sweeps the box once
+    // per PERIOD_MAX bars so a longer-period cycle takes proportionally longer.
+    const PERIOD_MAX = 16;
     const envPath = (depth, period) => {
-      const cycles = Math.max(1, period || 1);
+      // cyclesInBox = PERIOD_MAX / period → wavelength ∝ period.
+      const cycles = PERIOD_MAX / Math.max(1, period || 1);
       let d = 'M0 15';
       for (let x = 0; x <= 74; x += 1)
         d += ` L${x} ${(15 - Math.sin((x / 74) * Math.PI * 2 * cycles) * 11 * depth).toFixed(1)}`;
@@ -1264,7 +1271,6 @@
     };
     // Period is edited as an integer bar count in [1, PERIOD_MAX]; the clamp
     // (Math.max(1, …)) guarantees the emitted setEnvelope never carries period<=0.
-    const PERIOD_MAX = 16;
     const periodToNorm = (p) => Math.max(0, Math.min(1, (Math.max(1, p || 1) - 1) / (PERIOD_MAX - 1)));
     const normToPeriod = (n) => Math.max(1, Math.round(1 + Math.max(0, Math.min(1, n)) * (PERIOD_MAX - 1)));
     // Display the stored period as a clamped integer bar count in [1, PERIOD_MAX].
@@ -1674,11 +1680,12 @@
      Rolling window (the fix for "dots accumulate and fill the column"): each dot
      is positioned by its AGE in eighth-ticks behind the current playhead,
      ageT8 = frame.t8 − onsetT8 (onsetT8 = onset ppq × 2, since t8 = 2·ppq). The
-     freshest hit (age 0) sits at the top by the playhead; as the transport
-     advances the dot scrolls down and, once its age exceeds PLAYED_WINDOW_T8, it
+     freshest hit (age 0) sits at the bottom by the playhead; as the transport
+     advances the dot scrolls UP and, once its age exceeds the window, it
      drops off entirely — so the column shows only the last window of hits and
      self-clears instead of filling up. Orientation matches the ladder
-     (column-reverse): bottom = (1 − age/window)·100%, freshest at top.
+     (column-reverse), so both vertical timelines move the same direction and
+     read as complementary: bottom = (age/window)·100%, freshest at bottom.
 
      Kind coloring mirrors the ladder overlay vocabulary: base = lane hue,
      ghost = dimmed, add = accent (off-grid mutation/macro add), drop = hollow.
@@ -1718,7 +1725,7 @@
       const isDrop = e.kind === 'drop';
       const ppq = isDrop ? e.ppq : (typeof e.shiftedPpq === 'number' ? e.shiftedPpq : e.ppq);
       // onset in eighth-ticks; age behind the playhead. Fresh hits (age→0) at the
-      // top, older ones scroll down; past the window they drop off (self-clear).
+      // bottom, older ones scroll up; past the window they drop off (self-clear).
       const ageT8 = now - ppq * 2;
       if (!(ageT8 >= 0 && ageT8 <= win)) continue;
       byKey.set(e.step + ':' + e.kind, { age: ageT8, kind: e.kind });
@@ -1727,8 +1734,10 @@
     byKey.forEach((d) => {
       const dot = document.createElement('i');
       dot.className = 'pdot p-' + d.kind;
-      // Freshest (age 0) at top (bottom 100%), oldest (age=win) at bottom (0%).
-      const frac = 1 - d.age / win;
+      // Freshest (age 0) at bottom (0%), oldest (age=win) at top (100%) — dots
+      // scroll UPWARD, matching the column-reverse ladder beside it so both
+      // vertical timelines read as complementary (moving the same direction).
+      const frac = d.age / win;
       dot.style.bottom = (frac * 100).toFixed(2) + '%';
       // Opacity = age fade × the kind's base opacity (ghost/drop read dimmer than
       // base/add even when fresh). Inline so CSS never fights the fade.
@@ -1863,7 +1872,12 @@
           strips[li].querySelectorAll('[data-envph]').forEach((ln, i) => {
             const e = l.envs[i];
             if (!e) return;
-            const x = (((frame.t8 / 12) / e.period) % 1) * 74;
+            // The box is a fixed PERIOD_MAX-bar window (see envPath), so the
+            // playhead sweeps it once per PERIOD_MAX bars regardless of the
+            // envelope's own period. A longer-period wave then visibly takes
+            // more of the sweep to complete one cycle — the intuitive slower/
+            // wider reading. (PERIOD_MAX=16, mirrored from the curve builder.)
+            const x = (((frame.t8 / 12) / 16) % 1) * 74;
             ln.setAttribute('x1', x.toFixed(1));
             ln.setAttribute('x2', x.toFixed(1));
           });

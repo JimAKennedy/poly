@@ -1,5 +1,19 @@
 cmake_minimum_required(VERSION 3.14.0)
 
+# The vendored VST3 SDK (fetched below) still ships sub-project CMakeLists with
+# `cmake_minimum_required(VERSION 3.x)` where x < 3.10 (e.g. base/CMakeLists.txt),
+# which CMake >= 3.31 flags with a deprecation warning and CMake 4.x will hard-
+# error on. We do not control those third-party files (FetchContent re-fetches
+# them), so raise the *minimum* policy version any stale `cmake_minimum_required`
+# is allowed to request. 3.10 is the lowest value that clears the deprecation
+# without silently upgrading policies we haven't audited. This propagates into
+# the FetchContent sub-builds, so no per-configure -D flag is needed in the build
+# script or CI workflows. Our own policies stay governed by the 3.14 line above.
+if(NOT DEFINED CMAKE_POLICY_VERSION_MINIMUM)
+    set(CMAKE_POLICY_VERSION_MINIMUM 3.10 CACHE STRING
+        "Minimum policy version for stale third-party cmake_minimum_required calls")
+endif()
+
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "")
 
 project(poly

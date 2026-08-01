@@ -403,13 +403,32 @@ void PolyProcessor::publishCaptureSnapshot() {
     uiSnapshot_.captureProgressBars.store(progressBars, std::memory_order_relaxed);
 }
 
+// M073: the WebUI played timeline positions each dot by its AGE behind the
+// playhead (ageT8 = frame.t8 − onset·2). The frame's t8 is the NORMALIZED
+// transport phase (ppqNorm·256, where ppqNorm = fmod(ppqStart, 128)/128), so
+// the emission onsets MUST live on the SAME wrapped 128-beat timeline or the
+// subtraction mixes an absolute ppq against a normalized one and every dot ages
+// out of the [0, cyc8] window — the DAW column then renders blank even while the
+// engine is emitting. Wrapping both onto fmod(ppq, 128) keeps them on one clock;
+// hits older than the wrap simply fall outside the rolling window (correct — the
+// window is only a few eighths), so the seam is imperceptible and self-heals.
+static constexpr double kEmissionPpqWrap = 128.0;
+static double normalizeEmissionPpq(double ppq) {
+    double n = std::fmod(ppq, kEmissionPpqWrap);
+    if (n < 0.0)
+        n += kEmissionPpqWrap;
+    return n;
+}
+
 void PolyProcessor::publishEmissions() {
     // M073: append this block's engine emissions into the per-lane UISnapshot
     // rings for the WebUI desk overlay + played timeline. Runs on the audio
     // thread and is RT-safe: only relaxed atomic POD stores into a preallocated
     // fixed array, with no heap use, no locking, no throwing, and no IO.
     // Emissions carry the drifted cycle step and both the grid ppq and the
-    // post-timing-shift onset (shiftedPpqPosition).
+    // post-timing-shift onset (shiftedPpqPosition), each normalized onto the same
+    // wrapped 128-beat timeline as the frame's t8 so the played-timeline age math
+    // lines up (see normalizeEmissionPpq above).
     constexpr int cap = UISnapshot::kEmissionRingCap;
     for (size_t i = 0; i < emissionBuffer_.count; ++i) {
         const auto& ee = emissionBuffer_.events[i];
@@ -420,8 +439,8 @@ void PolyProcessor::publishEmissions() {
         auto& slot = uiSnapshot_.emissionRing[lane][static_cast<int>(head % cap)];
         // Store the payload BEFORE bumping head (release) so the reader that
         // acquires head sees a fully-written slot for the newest entry.
-        slot.ppq.store(ee.ppqPosition, std::memory_order_relaxed);
-        slot.shiftedPpq.store(ee.shiftedPpqPosition, std::memory_order_relaxed);
+        slot.ppq.store(normalizeEmissionPpq(ee.ppqPosition), std::memory_order_relaxed);
+        slot.shiftedPpq.store(normalizeEmissionPpq(ee.shiftedPpqPosition), std::memory_order_relaxed);
         slot.step.store(ee.cycleStep, std::memory_order_relaxed);
         slot.kind.store(ee.kind, std::memory_order_relaxed);
         uiSnapshot_.emissionHead[lane].store(head + 1, std::memory_order_release);

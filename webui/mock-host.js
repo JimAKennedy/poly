@@ -560,6 +560,21 @@
   // Keyed by lane index; a lane with no injected stream degrades to [] (the
   // empty-return contract the desk ladder overlay already relies on).
   const laneEmissions = new Map();
+  // M073 follow-up: the mock has no engine, so the played timeline was blank in
+  // the standalone web preview during real playback. Feed it from the scheduler:
+  // every fired hit is recorded here (per lane) as { ppq, shiftedPpq, step,
+  // kind } — the same shape getLaneEmissions returns from the WASM/native rings.
+  // Rolling cap so the ring self-clears; the played column's own age window
+  // (updatePlayed) drops anything older than one cycle. Cleared on Stop.
+  const EMISSION_CAP = 32;
+  const scheduledEmissions = new Map(); // li -> array (rolling, cap EMISSION_CAP)
+  function recordEmission(li, ppq, shiftedPpq, step, kind) {
+    let ring = scheduledEmissions.get(li);
+    if (!ring) { ring = []; scheduledEmissions.set(li, ring); }
+    ring.push({ ppq, shiftedPpq, step, kind });
+    if (ring.length > EMISSION_CAP) ring.shift();
+  }
+  function clearScheduledEmissions() { scheduledEmissions.clear(); }
   const eighthsPerBar = () =>
     Math.max(1, Math.round(state.timeSigNumerator * (8 / state.timeSigDenominator)));
 
@@ -684,6 +699,14 @@
         const mtMs = (l.mt && l.mt[hit.step]) || 0;
         const t = startAt + nextTick * step + (l.push + mtMs) / 1000;
         voice(l, Math.max(ctx.currentTime + 0.001, t), vel);
+        // Record this hit for the played timeline. Grid onset in ppq (quarters)
+        // is nextTick/2 (t8 = 2·ppq). The audible onset shifts by push + micro-
+        // timing (ms) — convert to ppq so a swung / pushed hit lands off its grid
+        // row in the column, exactly like the engine's shiftedPpqPosition.
+        const gridPpq = nextTick / 2;
+        const shiftMs = l.push + mtMs;
+        const shiftedPpq = gridPpq + (shiftMs / 1000) / step / 2;
+        recordEmission(li, gridPpq, shiftedPpq, hit.step, 'base');
       });
       nextTick++;
     }
@@ -702,6 +725,9 @@
       if (ctx) schedTimer = setInterval(schedule, 30);
     } else {
       clearInterval(schedTimer);
+      // Playback-scoped: drop scheduled hits so the played column clears on Stop
+      // instead of lingering on the last window of marks.
+      clearScheduledEmissions();
     }
   }
 
@@ -1072,8 +1098,15 @@
     // per-lane stream via _setEmissions; absent injection this returns [] so the
     // timeline degrades to positional-pattern-only (never claims a fake drop).
     getLaneEmissions: (li) => {
-      const em = laneEmissions.get(li);
-      return em ? em.slice() : [];
+      // A test-injected stream (_setEmissions) takes priority so specs can
+      // exercise drop/ghost/add kinds deterministically. Otherwise return the
+      // hits the scheduler recorded this run, so the standalone web preview's
+      // played timeline lights up during real playback (base hits only — the
+      // mock has no mutation engine to classify ghost/add/drop).
+      const injected = laneEmissions.get(li);
+      if (injected) return injected.slice();
+      const ring = scheduledEmissions.get(li);
+      return ring ? ring.slice() : [];
     },
     // M073 S05 T01: Playwright hook to inject a per-lane emission stream,
     // mirroring what the native engine ring would report. Pass an array of

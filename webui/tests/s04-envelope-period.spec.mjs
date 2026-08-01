@@ -69,25 +69,54 @@ test.describe('S04 — editable envelope period (setEnvelope bridge)', () => {
     await expect(page.locator('.strip[data-lane="0"] [data-envmeta="0"]')).toHaveText('16 bars · sine');
   });
 
-  test('the curve path rescales horizontally when the period changes', async ({ page }) => {
+  test('the curve wavelength scales with period — more bars draw a wider, gentler wave', async ({ page }) => {
     await openEnvPane(page, 0);
     const path = page.locator('.strip[data-lane="0"] [data-envdepth="0"] path');
     const track = page.locator('.strip[data-lane="0"] [data-envperiod="0"]');
 
+    // Count sine humps (local direction reversals) in the path's y-samples: a
+    // longer wavelength means fewer reversals across the fixed box width.
+    const humpCount = async () => page.evaluate(() => {
+      const p = document.querySelector('.strip[data-lane="0"] [data-envdepth="0"] path');
+      const ys = p.getAttribute('d').split('L').slice(1).map((seg) => parseFloat(seg.trim().split(/\s+/)[1]));
+      let reversals = 0;
+      for (let i = 1; i < ys.length - 1; i++) {
+        const a = ys[i] - ys[i - 1];
+        const b = ys[i + 1] - ys[i];
+        if (a !== 0 && b !== 0 && Math.sign(a) !== Math.sign(b)) reversals++;
+      }
+      return reversals;
+    });
+
+    // The box is a fixed PERIOD_MAX(=16)-bar window, so cycles = 16/period:
+    // wavelength ∝ period. A LONGER period must draw FEWER humps (a wider,
+    // slower-reading wave); a shorter period more humps. This is the intuitive
+    // frequency reading — the inverse of the old "more bars = more humps" bug.
     const before = await path.getAttribute('d');
     expect(before).toBeTruthy();
 
-    // Grow the period from 4 → 16 bars. The curve draws more sine cycles across
-    // the fixed 74px preview, so the path d-attribute must change.
-    await dragTrackTo(page, track, 1);
+    await dragTrackTo(page, track, 1); // grow to 16 bars → widest wave (1 cycle)
     const afterGrow = await path.getAttribute('d');
     expect(afterGrow).not.toBe(before);
+    const humpsAt16 = await humpCount();
 
-    // Shrink the period to the 1-bar minimum. The path must change again and
-    // differ from the 16-bar shape (more direction reversals at 16 than at 1).
-    await dragTrackTo(page, track, 0);
+    await dragTrackTo(page, track, 0); // shrink to 1 bar → tightest wave (16 cycles)
     const afterShrink = await path.getAttribute('d');
     expect(afterShrink).not.toBe(afterGrow);
+    const humpsAt1 = await humpCount();
+
+    // Longer period → fewer humps (wider wavelength); shorter → more.
+    expect(humpsAt16).toBeLessThan(humpsAt1);
+
+    // At the maximum period the box holds exactly one full cycle: the curve
+    // returns to the y=15 midline at its halfway point.
+    await dragTrackTo(page, track, 1); // back to 16 bars
+    const midY = await page.evaluate(() => {
+      const p = document.querySelector('.strip[data-lane="0"] [data-envdepth="0"] path');
+      const total = p.getTotalLength();
+      return p.getPointAtLength(total / 2).y;
+    });
+    expect(midY).toBeCloseTo(15, 0);
   });
 
   test('non-positive period is clamped — setEnvelope never emits period <= 0', async ({ page }) => {

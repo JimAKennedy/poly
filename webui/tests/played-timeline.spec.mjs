@@ -86,13 +86,14 @@ test.beforeEach(async ({ page }) => {
 test('a syncopated hit lands the played dot at its shifted onset, not the grid step', async ({ page }) => {
   // Playhead at t8=8. Grid step 2 sits at ppq 2.0 (onset t8=4.0), but the audible
   // onset is shifted late to ppq 2.8 (onset t8=5.6). age = 8−5.6 = 2.4 →
-  // bottom = (1−2.4/8)·100 = 70%. The grid step would give age 4 → 50%.
+  // bottom = (2.4/8)·100 = 30% (age fraction, freshest at bottom). The grid step
+  // would give age 4 → 50%.
   await setEmissions(page, LANE, [{ ppq: 2.0, shiftedPpq: 2.8, step: 2, kind: 'base' }]);
 
   const dots = await playedDots(page, LANE);
   expect(dots).toHaveLength(1);
   expect(dots[0].kind).toBe('p-base');
-  expect(dots[0].bottom).toBe(70); // shifted onset
+  expect(dots[0].bottom).toBe(30); // shifted onset
   expect(dots[0].bottom).not.toBe(50); // NOT the grid step
 });
 
@@ -101,48 +102,48 @@ test('positions are continuous in time, not quantized to grid steps', async ({ p
   // shifted onsets 1.0 vs 1.25 quarters (t8 2.0 vs 2.5) land at DIFFERENT
   // fractional positions — proving the column reads real time, not the step grid.
   await setEmissions(page, LANE, [{ ppq: 1.0, shiftedPpq: 1.0, step: 1, kind: 'base' }]);
-  const a = (await playedDots(page, LANE))[0].bottom; // age 8−2=6 → 25%
-  expect(a).toBe(25);
+  const a = (await playedDots(page, LANE))[0].bottom; // age 8−2=6 → 75%
+  expect(a).toBe(75);
 
   await setEmissions(page, LANE, [{ ppq: 1.0, shiftedPpq: 1.25, step: 1, kind: 'base' }]);
-  const b = (await playedDots(page, LANE))[0].bottom; // age 8−2.5=5.5 → 31.25 → 31.3
-  expect(b).toBeCloseTo(31.3, 1);
+  const b = (await playedDots(page, LANE))[0].bottom; // age 8−2.5=5.5 → 68.75 → 68.8
+  expect(b).toBeCloseTo(68.8, 1);
   expect(b).not.toBe(a); // a quarter-step time shift moves the dot
 });
 
 test('kinds map to distinct dot classes; a drop uses its grid position', async ({ page }) => {
   await setEmissions(page, LANE, [
-    { ppq: 0.0, shiftedPpq: 0.0, step: 0, kind: 'base' }, // age 8 → drops off (== win)
-    { ppq: 1.0, shiftedPpq: 1.4, step: 1, kind: 'ghost' }, // onset t8 2.8, age 5.2 → 35%
+    { ppq: 0.0, shiftedPpq: 0.0, step: 0, kind: 'base' }, // age 8 → oldest, at the top (100%)
+    { ppq: 1.0, shiftedPpq: 1.4, step: 1, kind: 'ghost' }, // onset t8 2.8, age 5.2 → 65%
     { ppq: 2.0, shiftedPpq: 2.0, step: 2, kind: 'add' }, // onset t8 4.0, age 4 → 50%
-    { ppq: 3.0, shiftedPpq: 3.0, step: 3, kind: 'drop' }, // grid onset t8 6.0, age 2 → 75%
+    { ppq: 3.0, shiftedPpq: 3.0, step: 3, kind: 'drop' }, // grid onset t8 6.0, age 2 → 25%
   ]);
 
   const dots = await playedDots(page, LANE);
   const byKind = Object.fromEntries(dots.map((d) => [d.kind, d.bottom]));
-  // base at age==win is at the far edge (bottom 0) — still just visible.
-  expect(byKind['p-base']).toBe(0);
-  expect(byKind['p-ghost']).toBe(35);
+  // base at age==win is at the far edge (bottom 100%, the top) — still just visible.
+  expect(byKind['p-base']).toBe(100);
+  expect(byKind['p-ghost']).toBe(65);
   expect(byKind['p-add']).toBe(50);
-  expect(byKind['p-drop']).toBe(75); // grid ppq, not a shifted onset
+  expect(byKind['p-drop']).toBe(25); // grid ppq, not a shifted onset
   expect(new Set(dots.map((d) => d.kind)).size).toBe(4);
 });
 
 test('a hit fades as it ages and drops off past one cycle (no accumulation)', async ({ page }) => {
   const hit = [{ ppq: 3.0, shiftedPpq: 3.0, step: 3, kind: 'base' }]; // onset t8 = 6.0
 
-  // Fresh: playhead just past the onset (t8=6.2, age 0.2) → near the top, near full opacity.
+  // Fresh: playhead just past the onset (t8=6.2, age 0.2) → near the bottom, near full opacity.
   await forceT8(page, 6.2);
   await setEmissions(page, LANE, hit);
   const fresh = (await playedDots(page, LANE))[0];
-  expect(fresh.bottom).toBeGreaterThan(90);
+  expect(fresh.bottom).toBeLessThan(10);
   expect(fresh.opacity).toBeGreaterThan(0.9);
 
-  // Older: playhead advanced (t8=11, age 5) → scrolled down and dimmer.
+  // Older: playhead advanced (t8=11, age 5) → scrolled UP and dimmer.
   await forceT8(page, 11);
   await setEmissions(page, LANE, hit);
   const old = (await playedDots(page, LANE))[0];
-  expect(old.bottom).toBeLessThan(fresh.bottom);
+  expect(old.bottom).toBeGreaterThan(fresh.bottom);
   expect(old.opacity).toBeLessThan(fresh.opacity);
 
   // Past one full cycle behind the playhead (t8=15, age 9 > win 8) → gone.
@@ -157,6 +158,31 @@ test('an empty stream draws no dots (never claims an unobservable onset)', async
 
   await setEmissions(page, LANE, []);
   expect(await playedDots(page, LANE)).toHaveLength(0);
+});
+
+// Regression: the standalone web preview (mock host, no WASM engine) must feed
+// the played timeline from its OWN scheduler during real playback. Before this,
+// getLaneEmissions only ever returned test-injected data, so the column stayed
+// blank whenever the user actually pressed Play in the browser. The scheduler
+// now records each fired hit into a rolling ring; getLaneEmissions returns it.
+test('mock scheduler feeds the played column during real playback', async ({ page }) => {
+  // The strip is already expanded by beforeEach. Release the forced playhead so
+  // the mock scheduler's real audio clock (Chromium AudioContext) drives both
+  // the fired hits AND the played-timeline age window.
+  await page.evaluate(() => { delete window.__POLY_FORCE_T8; });
+  await page.evaluate(() => window.PolyMockHost.action('togglePlay'));
+  await page.waitForTimeout(1200); // ~1s of scheduled hits
+
+  const em = await page.evaluate((li) => window.PolyMockHost.getLaneEmissions(li), LANE);
+  expect(em.length).toBeGreaterThan(0);
+  expect(em.every((e) => e.kind === 'base' && typeof e.ppq === 'number')).toBe(true);
+  // And those recorded hits render as dots on the column behind the playhead.
+  expect((await playedDots(page, LANE)).length).toBeGreaterThan(0);
+
+  // Stop clears the ring so the column doesn't linger on stale marks.
+  await page.evaluate(() => window.PolyMockHost.action('togglePlay'));
+  await waitRedraw(page);
+  expect(await page.evaluate((li) => window.PolyMockHost.getLaneEmissions(li), LANE)).toHaveLength(0);
 });
 
 test('the played column only shows in the expanded strip', async ({ page }) => {
@@ -256,8 +282,8 @@ test.describe('plugin-host emission bridge (native DAW path)', () => {
 
     // Native wire shape: int kind (2 = add), grid + shifted onset. Playhead t8=8.
     const em = { [LANE]: [
-      { ppq: 3.0, shiftedPpq: 3.0, step: 3, kind: 0 }, // base, grid onset t8=6, age 2 → 75%
-      { ppq: 2.0, shiftedPpq: 2.8, step: 2, kind: 2 }, // add, shifted late, onset t8=5.6, age 2.4 → 70%
+      { ppq: 3.0, shiftedPpq: 3.0, step: 3, kind: 0 }, // base, grid onset t8=6, age 2 → 25%
+      { ppq: 2.0, shiftedPpq: 2.8, step: 2, kind: 2 }, // add, shifted late, onset t8=5.6, age 2.4 → 30%
     ] };
     await pushFrameWithEmissions(page, em, WIN);
 
@@ -272,8 +298,8 @@ test.describe('plugin-host emission bridge (native DAW path)', () => {
     const dots = await playedDots(page, LANE);
     expect(dots).toHaveLength(2);
     const byKind = Object.fromEntries(dots.map((d) => [d.kind, d.bottom]));
-    expect(byKind['p-base']).toBe(75); // grid onset ppq 3.0
-    expect(byKind['p-add']).toBe(70); // shifted onset ppq 2.8, not the 2.0 grid
+    expect(byKind['p-base']).toBe(25); // grid onset ppq 3.0
+    expect(byKind['p-add']).toBe(30); // shifted onset ppq 2.8, not the 2.0 grid
   });
 
   test('an absent emissions array degrades to an empty stream (legacy frame)', async ({ page }) => {
