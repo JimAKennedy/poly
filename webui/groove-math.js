@@ -5,6 +5,14 @@
  * position-hash velocity shading echoing rng.h).
  */
 (function () {
+  // M073 S02: preview mirror of the engine's deterministic explicit-accent boost
+  // (engine.cpp kAccentVelocityBoost). One numerically-identical proportional-
+  // headroom formula on both sides: vel += accentVal * ACCENT_VELOCITY_BOOST *
+  // (1 - vel). Always boosts a set step, seed-independent, and never saturates a
+  // mid-velocity lane (result stays strictly below 1 for vel < 1). The engine's
+  // separate probabilistic-emphasis layer is RNG-driven and not modelled by this
+  // decorative preview.
+  const ACCENT_VELOCITY_BOOST = 0.6;
   function euclid(k, n) {
     const p = [];
     for (let i = 0; i < n; i++) p.push(Math.floor((i * k) / n) !== Math.floor(((i - 1) * k) / n) ? 1 : 0);
@@ -74,6 +82,12 @@
     if (l.vel === 0) return 0;
     let vel = l.vel / 127;
     if (l.spread) vel *= 1 - l.spread * 1.5 + l.spread * 3 * shade(li, tick);
+    // Deterministic explicit accent: mirrors engine computeStepVelocity — applied
+    // to the base+spread velocity, unconditionally boosting a set step by the
+    // proportional-headroom amount so toggling the accent visibly raises the drawn
+    // hit bar. accents is index-aligned to cycle steps (hit.step); absent/zero => no boost.
+    const accentVal = l.accents ? l.accents[hit.step] || 0 : 0;
+    if (accentVal > 0) vel += accentVal * ACCENT_VELOCITY_BOOST * (1 - vel);
     if (l.ghost) vel *= hit.step === 0 ? 1 : 0.55 + 0.2 * shade(li, tick);
     if (l.timeline && (hit.step === 0 || hit.step === 7)) vel *= 1.12;
     if (l.cells) vel *= hit.acc ? 1.1 : 0.8;
