@@ -1807,3 +1807,64 @@ TEST(HostTests, AddEnvelopeAtGapIndexGrowsCountAndLeavesGapSlotsInactive) {
 
     host.teardown();
 }
+
+// --- M073 S03 T03: MIDI-channel -1 Auto sentinel + explicit channel survive save/restore ---
+//
+// Pins the symmetric -1<->Auto encoding through the real host param->process->save->restore
+// path the DAW drives. The WebUI JS defect (S03 T01/T02) was a read/write asymmetry that
+// never emitted the -1 sentinel; the C++ native/state path already encodes it as
+// engine = round(norm * 16) - 1 (Kind::MidiChannel, params_def.h:132) yielding -1..15.
+// This test proves that contract end-to-end so any future regression on the C++ side that
+// re-introduces an off-by-one (explicit N stored as N+1) or drops the Auto sentinel (stored
+// as 0 or an explicit channel) fails here — the same user-visible symptom the Cubase UAT
+// (MEM063) reported, now guarded on the plugin surface the WebUI shares state with.
+TEST(HostTests, MidiChannel_AutoSentinelAndExplicitSurviveSaveRestore) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+
+    const uint32_t lane0Channel = poly::ParamIDs::laneCoreParam(0, poly::ParamIDs::kCoreMidiChannel);
+    const uint32_t lane1Channel = poly::ParamIDs::laneCoreParam(1, poly::ParamIDs::kCoreMidiChannel);
+
+    // Normalized encodings the controller/native path use: norm = (channel + 1) / 16, so
+    // round(norm * 16) - 1 recovers the channel. Auto is norm 0.0 -> -1.
+    const double kAutoNorm = 0.0;                    // round(0)  - 1 = -1 (Auto sentinel)
+    const double kChannel7Norm = (7.0 + 1.0) / 16.0; // round(8)  - 1 =  7
+    const double kChannel9Norm = (9.0 + 1.0) / 16.0; // round(10) - 1 =  9
+
+    // Stamp lane 0 with an EXPLICIT channel first. The lane's struct default is already -1
+    // (types.h:200), so without this precondition a later "reads back -1" assertion could pass
+    // trivially on an untouched lane. Proving explicit 7 lands, THEN overwriting with Auto and
+    // reading back -1, shows the write path genuinely emits the sentinel.
+    host.injectParamChangeThroughProcess(lane0Channel, kChannel7Norm);
+    host.processBlock(0.0, 120.0, /*playing=*/true);
+    {
+        auto pre = deserializeSceneState(host.saveState());
+        ASSERT_EQ(pre.sceneA.lanes[0].midiChannel, 7)
+            << "precondition: explicit channel 7 must land through the param->process path before "
+               "we overwrite lane 0 with Auto";
+    }
+
+    // Now set lane 0 back to Auto (-1) and lane 1 to explicit channel 9 in the same block.
+    host.injectParamChangeThroughProcess(lane0Channel, kAutoNorm);
+    host.injectParamChangeThroughProcess(lane1Channel, kChannel9Norm);
+    host.processBlock(0.0, 120.0, /*playing=*/true);
+
+    auto bytes = host.saveState();
+    ASSERT_FALSE(bytes.empty()) << "saveState() should produce a non-empty buffer";
+
+    // Reload into a fresh processor (the DAW project-reload path) and drain setState.
+    PolyTestHost restored;
+    ASSERT_TRUE(restored.setup(44100.0, 512));
+    ASSERT_TRUE(restored.loadState(bytes)) << "loadState() should accept a valid saveState() buffer";
+    restored.processBlock(0.0, 120.0, /*playing=*/false);
+
+    auto scene = deserializeSceneState(restored.saveState());
+    EXPECT_EQ(scene.sceneA.lanes[0].midiChannel, -1)
+        << "Auto lane must round-trip as the -1 sentinel, not 0 or an explicit channel. A value of "
+           "0 would mean the Auto encoding collapsed to 'channel 1'; the symptom MEM063 reported.";
+    EXPECT_EQ(scene.sceneA.lanes[1].midiChannel, 9)
+        << "Explicit channel 9 must round-trip with no off-by-one (10 would be the classic +1 bug).";
+
+    restored.teardown();
+    host.teardown();
+}
