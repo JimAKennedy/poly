@@ -1155,23 +1155,34 @@
     });
 
     /* ENVELOPES */
-    const envPath = (depth) => {
+    // Curve scales horizontally with period: a longer period draws more sine
+    // cycles (direction reversals) across the fixed preview width, so the shape
+    // visibly encodes duration instead of always showing a single 1-bar cycle.
+    const envPath = (depth, period) => {
+      const cycles = Math.max(1, period || 1);
       let d = 'M0 15';
-      for (let x = 0; x <= 74; x += 2)
-        d += ` L${x} ${(15 - Math.sin((x / 74) * Math.PI * 2) * 11 * depth).toFixed(1)}`;
+      for (let x = 0; x <= 74; x += 1)
+        d += ` L${x} ${(15 - Math.sin((x / 74) * Math.PI * 2 * cycles) * 11 * depth).toFixed(1)}`;
       return d;
     };
+    // Period is edited as an integer bar count in [1, PERIOD_MAX]; the clamp
+    // (Math.max(1, …)) guarantees the emitted setEnvelope never carries period<=0.
+    const PERIOD_MAX = 16;
+    const periodToNorm = (p) => Math.max(0, Math.min(1, (Math.max(1, p || 1) - 1) / (PERIOD_MAX - 1)));
+    const normToPeriod = (n) => Math.max(1, Math.round(1 + Math.max(0, Math.min(1, n)) * (PERIOD_MAX - 1)));
     const curve = (e, id) =>
-      `<svg class="envcurve" data-envdepth="${id}" viewBox="0 0 74 30" role="slider" tabindex="0" aria-label="Envelope ${id + 1} depth (drag up/down, right-click to reset)" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(e.depth * 100)}"><path d="${envPath(e.depth)}" fill="none" stroke="${l.hue}" stroke-width="1.4" opacity="${e.on ? 0.95 : 0.3}"/><line data-envph="${id}" x1="0" y1="2" x2="0" y2="28" stroke="#F0EADF" stroke-width="1" opacity="${e.on ? 0.7 : 0}"/></svg>`;
+      `<svg class="envcurve" data-envdepth="${id}" viewBox="0 0 74 30" role="slider" tabindex="0" aria-label="Envelope ${id + 1} depth (drag up/down, right-click to reset)" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(e.depth * 100)}"><path d="${envPath(e.depth, e.period)}" fill="none" stroke="${l.hue}" stroke-width="1.4" opacity="${e.on ? 0.95 : 0.3}"/><line data-envph="${id}" x1="0" y1="2" x2="0" y2="28" stroke="#F0EADF" stroke-width="1" opacity="${e.on ? 0.7 : 0}"/></svg>`;
     env.innerHTML =
       l.envs.map((e, i) => `
         <div class="envrow">
-          <div class="t">${e.target} · <span style="color:var(--dim)">${e.period} bars · sine</span></div>
+          <div class="t">${e.target} · <span style="color:var(--dim)" data-envmeta="${i}">${normToPeriod(e.period)} bars · sine</span></div>
           ${curve(e, i)}
           <div class="m">depth <span data-envdepthval="${i}">${Math.round(e.depth * 100)}%</span> <button data-envon="${i}" class="chip ${e.on ? 'on' : ''}" style="padding:2px 8px">${e.on ? 'ON' : 'OFF'}</button></div>
+          <div class="param-slider envctl"><label>Period</label><div class="slider-track" data-envperiod="${i}" role="slider" tabindex="0" aria-label="Envelope ${i + 1} period in bars" aria-valuemin="1" aria-valuemax="${PERIOD_MAX}" aria-valuenow="${normToPeriod(e.period)}"><i style="width:${(periodToNorm(e.period) * 100).toFixed(1)}%"></i></div><span class="v" data-envperiodval="${i}">${normToPeriod(e.period)} bars</span></div>
+          <div class="param-slider envctl"><label>Depth</label><div class="slider-track" data-envdepthslider="${i}" role="slider" tabindex="0" aria-label="Envelope ${i + 1} depth" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(e.depth * 100)}"><i style="width:${(e.depth * 100).toFixed(1)}%"></i></div><span class="v" data-envdepthsliderval="${i}">${Math.round(e.depth * 100)}%</span></div>
         </div>`).join('') +
       `<button class="addenv">+ add envelope</button>
-       <div class="hint">drag a curve up/down to set depth · right-click resets to 100% · envelopes superimpose</div>`;
+       <div class="hint">drag a curve up/down to set depth · right-click resets to 100% · edit period and depth with the sliders · envelopes superimpose</div>`;
     env.querySelectorAll('[data-envon]').forEach((b) =>
       b.addEventListener('click', () => {
         const i = +b.dataset.envon;
@@ -1184,15 +1195,23 @@
       const i = +svg.dataset.envdepth;
       const path = svg.querySelector('path');
       const valSpan = env.querySelector(`[data-envdepthval="${i}"]`);
+      const slider = env.querySelector(`[data-envdepthslider="${i}"]`);
+      const sliderFill = slider ? slider.querySelector('i') : null;
+      const sliderVal = env.querySelector(`[data-envdepthsliderval="${i}"]`);
       const emit = (depth) => {
         const e = Object.assign({}, l.envs[i], { depth });
         l.envs[i] = e;
         host.action('setEnvelope', { lane: li, index: i, envelope: e });
       };
       const repaint = (depth) => {
-        path.setAttribute('d', envPath(depth));
-        if (valSpan) valSpan.textContent = `${Math.round(depth * 100)}%`;
-        svg.setAttribute('aria-valuenow', String(Math.round(depth * 100)));
+        const pct = Math.round(depth * 100);
+        path.setAttribute('d', envPath(depth, l.envs[i].period));
+        if (valSpan) valSpan.textContent = `${pct}%`;
+        svg.setAttribute('aria-valuenow', String(pct));
+        // Keep the explicit depth slider in lock-step with the curve drag.
+        if (sliderFill) sliderFill.style.width = `${(depth * 100).toFixed(1)}%`;
+        if (sliderVal) sliderVal.textContent = `${pct}%`;
+        if (slider) slider.setAttribute('aria-valuenow', String(pct));
       };
       svg.addEventListener('contextmenu', (ev) => {
         ev.preventDefault();
@@ -1221,6 +1240,75 @@
         index: l.envs.length,
         envelope: { target: 'Velocity', period: [1, 4, 7, 16][l.envs.length % 4], depth: 0.3, on: true },
       }));
+    // Explicit, discoverable period control: horizontal drag picks an integer
+    // bar count (1..PERIOD_MAX), rescales the curve horizontally, and emits the
+    // same setEnvelope bridge action carrying envelope.period (MEM040 — no new action).
+    env.querySelectorAll('[data-envperiod]').forEach((track) => {
+      const i = +track.dataset.envperiod;
+      const fill = track.querySelector('i');
+      const valSpan = env.querySelector(`[data-envperiodval="${i}"]`);
+      const meta = env.querySelector(`[data-envmeta="${i}"]`);
+      const svg = env.querySelector(`[data-envdepth="${i}"]`);
+      const path = svg ? svg.querySelector('path') : null;
+      const calc = (e) => {
+        const r = track.getBoundingClientRect();
+        return Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+      };
+      const apply = (norm) => {
+        const period = normToPeriod(norm); // clamped >= 1, never <= 0
+        fill.style.width = `${(periodToNorm(period) * 100).toFixed(1)}%`;
+        if (valSpan) valSpan.textContent = `${period} bars`;
+        track.setAttribute('aria-valuenow', String(period));
+        if (meta) meta.textContent = `${period} bars · sine`;
+        if (path) path.setAttribute('d', envPath(l.envs[i].depth, period));
+        const e = Object.assign({}, l.envs[i], { period });
+        l.envs[i] = e;
+        host.action('setEnvelope', { lane: li, index: i, envelope: e });
+      };
+      track.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        track.setPointerCapture?.(e.pointerId);
+        apply(calc(e));
+        const mv = (ev) => apply(calc(ev));
+        track.addEventListener('pointermove', mv);
+        track.addEventListener('pointerup', () => track.removeEventListener('pointermove', mv), { once: true });
+      });
+    });
+    // Explicit, discoverable depth slider mirrors the curve-drag depth edit
+    // through the same setEnvelope bridge, giving an accessible labeled control.
+    env.querySelectorAll('[data-envdepthslider]').forEach((track) => {
+      const i = +track.dataset.envdepthslider;
+      const fill = track.querySelector('i');
+      const valSpan = env.querySelector(`[data-envdepthsliderval="${i}"]`);
+      const svg = env.querySelector(`[data-envdepth="${i}"]`);
+      const path = svg ? svg.querySelector('path') : null;
+      const curveVal = env.querySelector(`[data-envdepthval="${i}"]`);
+      const calc = (e) => {
+        const r = track.getBoundingClientRect();
+        return Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+      };
+      const apply = (depth) => {
+        const pct = Math.round(depth * 100);
+        fill.style.width = `${(depth * 100).toFixed(1)}%`;
+        if (valSpan) valSpan.textContent = `${pct}%`;
+        track.setAttribute('aria-valuenow', String(pct));
+        // Keep the curve preview + its depth readout in sync with the slider.
+        if (path) path.setAttribute('d', envPath(depth, l.envs[i].period));
+        if (curveVal) curveVal.textContent = `${pct}%`;
+        if (svg) svg.setAttribute('aria-valuenow', String(pct));
+        const e = Object.assign({}, l.envs[i], { depth });
+        l.envs[i] = e;
+        host.action('setEnvelope', { lane: li, index: i, envelope: e });
+      };
+      track.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        track.setPointerCapture?.(e.pointerId);
+        apply(calc(e));
+        const mv = (ev) => apply(calc(ev));
+        track.addEventListener('pointermove', mv);
+        track.addEventListener('pointerup', () => track.removeEventListener('pointermove', mv), { once: true });
+      });
+    });
 
     /* EXPRESSION */
     const expr = s.querySelector('[data-pane="expr"]');
