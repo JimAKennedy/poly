@@ -68,6 +68,10 @@
     return l.pattern[step] ? { step, acc: step === 0 } : null;
   }
   function hitVelocity(l, li, tick, hit) {
+    // baseVelocity 0 mutes the lane entirely (mirrors engine classifyStep's
+    // Silent short-circuit, M073 S01): overrides ghost/spread/env shaping so a
+    // zero-velocity lane draws no hit bar. Any nonzero vel falls through unchanged.
+    if (l.vel === 0) return 0;
     let vel = l.vel / 127;
     if (l.spread) vel *= 1 - l.spread * 1.5 + l.spread * 3 * shade(li, tick);
     if (l.ghost) vel *= hit.step === 0 ? 1 : 0.55 + 0.2 * shade(li, tick);

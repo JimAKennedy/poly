@@ -626,6 +626,7 @@
         const hit = laneHitAt(l, e);
         if (!hit) continue;
         const vn = hitVelocity(l, li, e, hit);
+        if (vn <= 0) continue; // baseVelocity 0 mutes the lane: draw no hit (M073 S01)
         const wUnits = l.cells ? l.cells[hit.step] : l.stepLen;
         const bw = colW * wUnits * 0.86;
         const bh = bandH * Math.min(0.92, 0.3 + vn * 0.52);
@@ -688,6 +689,7 @@
         // complete). Ahead-of-playhead ticks are faint to read as pending.
         const woven = capState === 3 || e / ticks <= prog / bars;
         const vn = hitVelocity(l, li, e, hit);
+        if (vn <= 0) continue; // baseVelocity 0 mutes the lane: draw no hit (M073 S01)
         const bw = Math.max(2 * dp, tickW * 0.7);
         const bh = bandH * Math.min(0.9, 0.32 + vn * 0.5);
         const x = e * tickW + (tickW - bw) / 2;
