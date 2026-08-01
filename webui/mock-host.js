@@ -551,6 +551,15 @@
   // so Cloth's capture timeline can be developed and CI-tested standalone.
   //   state: 0 idle | 1 armed | 2 capturing | 3 complete
   const capture = { state: 0, bars: 8, prog: 0, startT8: null };
+
+  // M073 S05 T01: per-lane emission stream mirror. The native engine classifies
+  // every step (base/ghost/add/drop) into a 32-slot ring drained via
+  // wasm-host.js; getLaneEmissions(li) exposes it ordered oldest->newest. The
+  // mock has no engine, so _setEmissions lets a Playwright test inject a stream
+  // (with drops/ghosts/adds) to exercise the cloth timeline emission surface.
+  // Keyed by lane index; a lane with no injected stream degrades to [] (the
+  // empty-return contract the desk ladder overlay already relies on).
+  const laneEmissions = new Map();
   const eighthsPerBar = () =>
     Math.max(1, Math.round(state.timeSigNumerator * (8 / state.timeSigDenominator)));
 
@@ -1056,8 +1065,25 @@
     // Real plugin gets meter from Vst::ProcessContext; mock has none.
     _setTimeSig: (num, den) => { state.timeSigNumerator = num; state.timeSigDenominator = den; },
     // M045 S01 T03: mock host has no engine emission stream — desk overlay
-    // silently no-ops when this returns [].
-    getLaneEmissions: () => [],
+    // silently no-ops when this returns []. M073 S05 T01: a test may inject a
+    // per-lane stream via _setEmissions; absent injection this returns [] so the
+    // timeline degrades to positional-pattern-only (never claims a fake drop).
+    getLaneEmissions: (li) => {
+      const em = laneEmissions.get(li);
+      return em ? em.slice() : [];
+    },
+    // M073 S05 T01: Playwright hook to inject a per-lane emission stream,
+    // mirroring what the native engine ring would report. Pass an array of
+    // { ppq, step, kind } (kind: base|ghost|add|drop) to set a lane's stream, or
+    // null/undefined/[] to clear it back to the empty-return degradation path.
+    _setEmissions: (li, emissions) => {
+      if (emissions && emissions.length) laneEmissions.set(li, emissions.slice());
+      else laneEmissions.delete(li);
+    },
+    _getEmissions: (li) => {
+      const em = laneEmissions.get(li);
+      return em ? em.slice() : [];
+    },
     // M051 S08: Playwright hook to force a capture-machine state without a
     // running audio clock. Mirrors what the native UISnapshot atomics would
     // report; the next rAF frame carries these values to Cloth.
