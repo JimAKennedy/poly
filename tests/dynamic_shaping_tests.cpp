@@ -207,6 +207,54 @@ TEST(DynamicShaping, GhostFloorNoReduceHigh) {
     }
 }
 
+// --- Velocity Zero Mutes Lane (M073 S01) ---
+
+TEST(DynamicShaping, BaseVelocityZeroMutesLane) {
+    auto cfg = makeBasicLane();
+    cfg.baseVelocity = 0;
+    cfg.ghostFloor = 40; // ghost-floor clamp must NOT resurrect the muted lane
+
+    auto events = renderLane(cfg);
+    EXPECT_TRUE(events.empty()) << "A lane with baseVelocity 0 must emit zero NoteEvents";
+}
+
+TEST(DynamicShaping, ZeroVelocityLaneDoesNotSilenceSibling) {
+    poly::LaneConfig muted = makeBasicLane();
+    muted.id = 0;
+    muted.baseVelocity = 0;
+    muted.ghostFloor = 40;
+
+    poly::LaneConfig audible = makeBasicLane();
+    audible.id = 1;
+    audible.midiNote = 38;
+    audible.baseVelocity = 100;
+
+    poly::Engine engine;
+    poly::GrooveState state{};
+    state.activeLaneCount = 2;
+    state.seed = 42;
+    state.lanes[0] = muted;
+    state.lanes[1] = audible;
+
+    poly::NoteEventBuffer buf;
+    poly::TransportContext tc{};
+    tc.ppqStart = 0.0;
+    tc.ppqEnd = 4.0;
+    tc.tempo = 120.0;
+    tc.playing = true;
+    engine.renderRange(tc, state, buf);
+
+    int mutedCount = 0, audibleCount = 0;
+    for (size_t i = 0; i < buf.count; ++i) {
+        if (buf.events[i].laneIndex == 0)
+            mutedCount++;
+        else if (buf.events[i].laneIndex == 1)
+            audibleCount++;
+    }
+    EXPECT_EQ(mutedCount, 0) << "Muted lane (baseVelocity 0) must emit nothing";
+    EXPECT_GT(audibleCount, 0) << "Nonzero sibling lane must still emit its notes";
+}
+
 // --- Combined Pipeline ---
 
 TEST(DynamicShaping, AccentPlusFloor) {

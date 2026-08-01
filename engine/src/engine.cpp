@@ -138,6 +138,17 @@ enum class StepOutcome : uint8_t {
 
 static StepOutcome classifyStep(const LaneConfig& cfg, const GrooveState& state, int64_t absStep, int64_t cycleStep,
                                 bool isPatternStep, bool isAnchor, const EnvelopeMods& mods, int stepsInCycle) {
+    // M073 S01: A base velocity of exactly zero mutes the lane entirely. The
+    // emission decision below never consults velocity magnitude, and
+    // computeStepVelocity's ghost-floor clamp can raise a 0 back up — so
+    // without this short-circuit a muted lane would still emit NoteEvents
+    // (violating R002). Returning Silent (not Drop) also records no phantom
+    // EmissionEvent, keeping the truthful-display contract intact. The gate is
+    // on baseVelocity == 0 (pre-clamp), not the post-ghost-floor value, and
+    // triggers only at exactly 0 so nonzero output is byte-identical.
+    if (cfg.baseVelocity == 0)
+        return StepOutcome::Silent;
+
     const bool wasPatternStep = isPatternStep;
     bool mutatedToGhost = false;
 
