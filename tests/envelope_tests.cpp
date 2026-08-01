@@ -310,6 +310,12 @@ TEST(EnvelopeTargets, ProbabilityModulation) {
     EXPECT_NE(noEnv.size(), withEnv.size());
 }
 
+// M073 S02: AccentBias biases the *probabilistic emphasis* layer, which is now a
+// separate additive nudge on top of the deterministic explicit accent. Baseline
+// (emphasisProb=0, no AccentBias envelope) applies only the deterministic accent, so
+// every set step gets an identical boost above base. Adding an AccentBias ramp raises
+// the effective emphasis over time, so the emphasis roll fires on some steps and lifts
+// them strictly above that deterministic baseline.
 TEST(EnvelopeTargets, AccentBiasModulation) {
     auto cfg = makeEnvelopeLane();
     cfg.emphasisProb = 0.0f;
@@ -318,10 +324,14 @@ TEST(EnvelopeTargets, AccentBiasModulation) {
     cfg.baseVelocity = 80;
     cfg.velocitySpread = 0.0f;
 
-    auto noAccent = renderOneLane(cfg, 0.0, 16.0);
+    auto baseline = renderOneLane(cfg, 0.0, 16.0);
     float baseVel = 80.0f / 127.0f;
-    for (const auto& e : noAccent)
-        EXPECT_NEAR(e.velocity, baseVel, 0.01f);
+    ASSERT_FALSE(baseline.empty());
+    for (const auto& e : baseline) {
+        // Explicit accent boosts deterministically even with emphasis fully off.
+        EXPECT_GT(e.velocity, baseVel + 0.05f);
+        EXPECT_FLOAT_EQ(e.velocity, baseline[0].velocity);
+    }
 
     cfg.envelopes[0].envelope.target = poly::EnvTarget::AccentBias;
     cfg.envelopes[0].envelope.periodBars = 4.0f;
@@ -330,14 +340,16 @@ TEST(EnvelopeTargets, AccentBiasModulation) {
     cfg.envelopes[0].active = true;
     cfg.envelopeCount = 1;
 
-    auto withAccent = renderOneLane(cfg, 0.0, 16.0);
-    ASSERT_FALSE(withAccent.empty());
-    bool anyBoosted = false;
-    for (const auto& e : withAccent) {
-        if (e.velocity > baseVel + 0.01f)
-            anyBoosted = true;
+    auto withBias = renderOneLane(cfg, 0.0, 16.0);
+    ASSERT_EQ(withBias.size(), baseline.size());
+    bool anyBoostedAboveBaseline = false;
+    for (size_t i = 0; i < withBias.size(); ++i) {
+        // The emphasis layer only ever adds, never subtracts, from the accent baseline.
+        EXPECT_GE(withBias[i].velocity, baseline[i].velocity - 1e-5f);
+        if (withBias[i].velocity > baseline[i].velocity + 1e-4f)
+            anyBoostedAboveBaseline = true;
     }
-    EXPECT_TRUE(anyBoosted);
+    EXPECT_TRUE(anyBoostedAboveBaseline) << "AccentBias must raise effective emphasis on some steps";
 }
 
 TEST(EnvelopeTargets, NoteLengthModulation) {

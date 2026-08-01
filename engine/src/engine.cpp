@@ -14,7 +14,15 @@ static constexpr double kMsPerMinute = 60000.0;
 static constexpr float kMidiVelocityMax = 127.0f;
 static constexpr float kMutationDropThreshold = 0.4f;
 static constexpr float kMutationGhostThreshold = 0.7f;
-static constexpr float kAccentVelocityBoost = 0.15f;
+// M073 S02: Explicit per-step accents apply this deterministic proportional-headroom
+// boost (accentVal * boost * remaining-headroom) unconditionally — decoupled from the
+// emphasisProb roll. The headroom factor keeps a mid-velocity lane strictly below 1.0
+// (never saturates) while staying proportional to the graduated accent value.
+static constexpr float kAccentVelocityBoost = 0.6f;
+// Probabilistic emphasis is a *separate*, additive nudge (driven by emphasisProb and
+// the AccentBias envelope) that stacks on top of the deterministic accent but never
+// gates it.
+static constexpr float kEmphasisVelocityBoost = 0.15f;
 static constexpr float kHumanizeEnvelopeScale = 10.0f;
 static constexpr double kTimingSafetyMarginMs = 20.0;
 static constexpr double kDefaultDurationFraction = 0.5;
@@ -211,10 +219,20 @@ static float computeStepVelocity(const LaneConfig& cfg, const GrooveState& state
 
     float accentVal = cfg.accents.steps[static_cast<size_t>(cycleStep)];
     if (accentVal > 0.0f) {
+        // Deterministic explicit accent: always boosts a set step, independent of the
+        // emphasisProb roll and of the seed. Proportional-headroom form so a
+        // mid-velocity lane lands strictly between its base and 1.0 (no saturation).
+        vel += accentVal * kAccentVelocityBoost * (1.0f - vel);
+
+        // Probabilistic emphasis remains a separate additive layer that stacks on top
+        // of the deterministic accent (never gates it): the emphasisProb roll, biased
+        // by the AccentBias envelope, occasionally adds a further nudge.
         float effectiveEmphasis = std::clamp(cfg.emphasisProb + mods.accent, 0.0f, 1.0f);
-        float emphRoll = deterministicRand(state.seed, cfg.id, absStep, 2);
-        if (emphRoll < effectiveEmphasis) {
-            vel += accentVal * kAccentVelocityBoost;
+        if (effectiveEmphasis > 0.0f) {
+            float emphRoll = deterministicRand(state.seed, cfg.id, absStep, 2);
+            if (emphRoll < effectiveEmphasis) {
+                vel += accentVal * kEmphasisVelocityBoost * (1.0f - vel);
+            }
         }
     }
 

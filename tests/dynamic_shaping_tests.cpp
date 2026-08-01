@@ -107,18 +107,54 @@ TEST(DynamicShaping, GraduatedAccentVelocity) {
     EXPECT_NEAR(events[2].velocity, baseVel, 0.01f);
 }
 
+// M073 S02: a user-toggled explicit accent must apply deterministically (identical
+// across seeds because it is decoupled from the emphasisProb roll), strictly boost the
+// set step above an unaccented one, and never saturate a mid-velocity lane.
+TEST(DynamicShaping, ExplicitAccentDeterministicNoSaturate) {
+    auto cfg = makeBasicLane();
+    cfg.baseVelocity = 64;       // mid-velocity lane: headroom exists but is limited
+    cfg.emphasisProb = 0.0f;     // probabilistic emphasis fully off -> pure explicit accent
+    cfg.accents.steps[1] = 1.0f; // accent only step 1; steps 0,2,3 stay unaccented
+
+    float baseVel = 64.0f / 127.0f;
+    float accentedVel = -1.0f;
+    const uint64_t seeds[] = {1, 7, 42, 1000, 999983};
+    for (uint64_t seed : seeds) {
+        auto events = renderLane(cfg, seed);
+        ASSERT_GE(events.size(), 4u);
+        // Step 1 is the accented one; steps 0/2/3 are unaccented references.
+        float thisAccented = events[1].velocity;
+        EXPECT_GT(thisAccented, events[0].velocity) << "accented step must exceed an unaccented step";
+        EXPECT_NEAR(events[0].velocity, baseVel, 0.01f) << "unaccented steps stay at base";
+        EXPECT_LT(thisAccented, 1.0f) << "mid-velocity lane must not saturate to 1.0";
+        if (accentedVel < 0.0f)
+            accentedVel = thisAccented;
+        else
+            EXPECT_FLOAT_EQ(thisAccented, accentedVel) << "accent boost must be seed-independent";
+    }
+}
+
 // --- Emphasis Probability ---
 
-TEST(DynamicShaping, EmphasisZeroSuppressesAccent) {
+// M073 S02: emphasisProb no longer GATES the explicit accent. With emphasisProb = 0
+// the probabilistic emphasis layer is fully off, yet an explicitly set accent still
+// boosts deterministically — proving the accent is decoupled from the emphasis roll.
+TEST(DynamicShaping, EmphasisZeroStillExpressesExplicitAccent) {
     auto cfg = makeBasicLane();
     for (int i = 0; i < 4; ++i)
         cfg.accents.steps[i] = 1.0f;
     cfg.emphasisProb = 0.0f;
 
     auto events = renderLane(cfg);
+    ASSERT_GE(events.size(), 4u);
     float baseVel = 100.0f / 127.0f;
     for (const auto& e : events) {
-        EXPECT_NEAR(e.velocity, baseVel, 0.01f);
+        EXPECT_GT(e.velocity, baseVel + 0.1f) << "explicit accent must boost even at emphasisProb=0";
+        EXPECT_LT(e.velocity, 1.0f) << "proportional-headroom boost must not saturate";
+    }
+    // Deterministic: emphasis off, so every accented step gets the identical boost.
+    for (const auto& e : events) {
+        EXPECT_FLOAT_EQ(e.velocity, events[0].velocity);
     }
 }
 
@@ -135,7 +171,11 @@ TEST(DynamicShaping, EmphasisOneAlwaysExpresses) {
     }
 }
 
-TEST(DynamicShaping, EmphasisPartialMix) {
+// M073 S02: with explicit accents set and a partial emphasisProb, every set step is
+// deterministically accented (>= the pure-accent floor), and the separate probabilistic
+// emphasis layer adds a further nudge to a subset — so the velocities split into at
+// least two distinct levels rather than one flat value.
+TEST(DynamicShaping, EmphasisPartialAddsSeparateLayer) {
     auto cfg = makeBasicLane();
     cfg.cycle = {.steps = 16, .subdivision = 16};
     cfg.hitCount = 16;
@@ -158,15 +198,18 @@ TEST(DynamicShaping, EmphasisPartialMix) {
     engine.renderRange(tc, state, buf);
 
     float baseVel = 100.0f / 127.0f;
-    int accented = 0, plain = 0;
+    ASSERT_GT(buf.count, 0u);
+    float minVel = buf.events[0].velocity;
+    float maxVel = buf.events[0].velocity;
     for (size_t i = 0; i < buf.count; ++i) {
-        if (buf.events[i].velocity > baseVel + 0.1f)
-            accented++;
-        else
-            plain++;
+        // Every set step is deterministically accented regardless of the emphasis roll.
+        EXPECT_GT(buf.events[i].velocity, baseVel + 0.1f) << "explicit accent must always boost";
+        minVel = std::min(minVel, buf.events[i].velocity);
+        maxVel = std::max(maxVel, buf.events[i].velocity);
     }
-    EXPECT_GT(accented, 0) << "Expected some accented notes";
-    EXPECT_GT(plain, 0) << "Expected some unaccented notes";
+    // The probabilistic emphasis layer still fires on some steps, producing a second,
+    // higher velocity level on top of the deterministic accent floor.
+    EXPECT_GT(maxVel, minVel + 0.005f) << "probabilistic emphasis must add a separate nudge";
 }
 
 // --- Ghost Floor ---
