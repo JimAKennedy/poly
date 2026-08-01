@@ -20,6 +20,8 @@ test.describe('chrome controls', () => {
   });
 
   test('learn button toggles body class', async ({ page }) => {
+    // Learn is gated to Cloth (M053 S10) — reveal the chip before clicking it.
+    await page.click('#mCloth');
     await expect(page.locator('body')).not.toHaveClass(/learn/);
     await page.click('#learnBtn');
     await expect(page.locator('body')).toHaveClass(/learn/);
@@ -27,7 +29,19 @@ test.describe('chrome controls', () => {
     await expect(page.locator('body')).not.toHaveClass(/learn/);
   });
 
+  test('learn chip is Cloth-only across mode toggles', async ({ page }) => {
+    // Default Desk: chip hidden (its only effect reveals #cloth annotations).
+    await expect(page.locator('#learnBtn')).toBeHidden();
+    // Cloth: chip revealed.
+    await page.click('#mCloth');
+    await expect(page.locator('#learnBtn')).toBeVisible();
+    // Back to Desk: chip hidden again.
+    await page.click('#mDesk');
+    await expect(page.locator('#learnBtn')).toBeHidden();
+  });
+
   test('L key toggles learn mode', async ({ page }) => {
+    // The L/l shortcut stays live in both modes even though the chip is gated.
     await page.keyboard.press('l');
     await expect(page.locator('body')).toHaveClass(/learn/);
     await page.keyboard.press('l');
@@ -219,19 +233,14 @@ test.describe('expanded strip — pattern tab', () => {
     expect(cellAction.payload.cells).toHaveLength(4);
   });
 
-  test('timeline fixed step toggle dispatches setFixedStep', async ({ page }) => {
+  test('timeline deep pane has no duplicate fixed step row', async ({ page }) => {
     await expandStrip(page, 0); // Bell: timeline mode
     const strip = page.locator('.strip[data-lane="0"]');
 
-    // fixed[1] = 0, so toggling gives on: true
-    await strip.locator('[data-fixed] button[data-i="1"]').click();
-    const acts = await getActions(page);
-    expect(acts).toContainEqual(
-      expect.objectContaining({
-        name: 'setFixedStep',
-        payload: expect.objectContaining({ lane: 0, step: 1, on: true }),
-      })
-    );
+    // Defect 1 fix: the deep-pane duplicate horizontal step row is removed.
+    // The always-visible core ladder is the single timeline step editor
+    // (covered by "timeline lane ladder buttons dispatch toggleStep").
+    await expect(strip.locator('[data-fixed]')).toHaveCount(0);
   });
 });
 

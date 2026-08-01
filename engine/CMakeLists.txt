@@ -6,6 +6,7 @@ add_library(poly_engine STATIC
     src/euclidean.cpp
     src/macro.cpp
     src/midi_capture.cpp
+    src/offline_render.cpp
     src/presets.cpp
     src/sanitize.cpp
     src/scene.cpp
