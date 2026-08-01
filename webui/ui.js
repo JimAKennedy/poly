@@ -1170,15 +1170,19 @@
     const PERIOD_MAX = 16;
     const periodToNorm = (p) => Math.max(0, Math.min(1, (Math.max(1, p || 1) - 1) / (PERIOD_MAX - 1)));
     const normToPeriod = (n) => Math.max(1, Math.round(1 + Math.max(0, Math.min(1, n)) * (PERIOD_MAX - 1)));
+    // Display the stored period as a clamped integer bar count in [1, PERIOD_MAX].
+    // (normToPeriod maps a 0..1 norm, not a bar count, so a bar count must not be
+    // passed to it for display — that would misread e.g. period 4 as "16 bars".)
+    const clampPeriod = (p) => Math.max(1, Math.min(PERIOD_MAX, Math.round(p || 1)));
     const curve = (e, id) =>
       `<svg class="envcurve" data-envdepth="${id}" viewBox="0 0 74 30" role="slider" tabindex="0" aria-label="Envelope ${id + 1} depth (drag up/down, right-click to reset)" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(e.depth * 100)}"><path d="${envPath(e.depth, e.period)}" fill="none" stroke="${l.hue}" stroke-width="1.4" opacity="${e.on ? 0.95 : 0.3}"/><line data-envph="${id}" x1="0" y1="2" x2="0" y2="28" stroke="#F0EADF" stroke-width="1" opacity="${e.on ? 0.7 : 0}"/></svg>`;
     env.innerHTML =
       l.envs.map((e, i) => `
         <div class="envrow">
-          <div class="t">${e.target} · <span style="color:var(--dim)" data-envmeta="${i}">${normToPeriod(e.period)} bars · sine</span></div>
+          <div class="t">${e.target} · <span style="color:var(--dim)" data-envmeta="${i}">${clampPeriod(e.period)} bars · sine</span></div>
           ${curve(e, i)}
           <div class="m">depth <span data-envdepthval="${i}">${Math.round(e.depth * 100)}%</span> <button data-envon="${i}" class="chip ${e.on ? 'on' : ''}" style="padding:2px 8px">${e.on ? 'ON' : 'OFF'}</button></div>
-          <div class="param-slider envctl"><label>Period</label><div class="slider-track" data-envperiod="${i}" role="slider" tabindex="0" aria-label="Envelope ${i + 1} period in bars" aria-valuemin="1" aria-valuemax="${PERIOD_MAX}" aria-valuenow="${normToPeriod(e.period)}"><i style="width:${(periodToNorm(e.period) * 100).toFixed(1)}%"></i></div><span class="v" data-envperiodval="${i}">${normToPeriod(e.period)} bars</span></div>
+          <div class="param-slider envctl"><label>Period</label><div class="slider-track" data-envperiod="${i}" role="slider" tabindex="0" aria-label="Envelope ${i + 1} period in bars" aria-valuemin="1" aria-valuemax="${PERIOD_MAX}" aria-valuenow="${clampPeriod(e.period)}"><i style="width:${(periodToNorm(e.period) * 100).toFixed(1)}%"></i></div><span class="v" data-envperiodval="${i}">${clampPeriod(e.period)} bars</span></div>
           <div class="param-slider envctl"><label>Depth</label><div class="slider-track" data-envdepthslider="${i}" role="slider" tabindex="0" aria-label="Envelope ${i + 1} depth" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(e.depth * 100)}"><i style="width:${(e.depth * 100).toFixed(1)}%"></i></div><span class="v" data-envdepthsliderval="${i}">${Math.round(e.depth * 100)}%</span></div>
         </div>`).join('') +
       `<button class="addenv">+ add envelope</button>
@@ -1250,10 +1254,10 @@
       const meta = env.querySelector(`[data-envmeta="${i}"]`);
       const svg = env.querySelector(`[data-envdepth="${i}"]`);
       const path = svg ? svg.querySelector('path') : null;
-      const calc = (e) => {
-        const r = track.getBoundingClientRect();
-        return Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
-      };
+      // Rect is passed in (captured once at pointerdown) rather than re-measured
+      // per move: emitting setEnvelope re-renders and detaches this track, after
+      // which getBoundingClientRect() reads 0 and the norm collapses to 1.
+      const calc = (e, r) => Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
       const apply = (norm) => {
         const period = normToPeriod(norm); // clamped >= 1, never <= 0
         fill.style.width = `${(periodToNorm(period) * 100).toFixed(1)}%`;
@@ -1265,13 +1269,18 @@
         l.envs[i] = e;
         host.action('setEnvelope', { lane: li, index: i, envelope: e });
       };
+      // Window-level pointermove/up (matching the macro/expression sliders) so a
+      // drag keeps tracking even when the pointer leaves the 14px-tall track. The
+      // track geometry is fixed for the gesture, so the pointerdown rect stays
+      // valid even after the setEnvelope re-render detaches the original element.
       track.addEventListener('pointerdown', (e) => {
         e.preventDefault();
-        track.setPointerCapture?.(e.pointerId);
-        apply(calc(e));
-        const mv = (ev) => apply(calc(ev));
-        track.addEventListener('pointermove', mv);
-        track.addEventListener('pointerup', () => track.removeEventListener('pointermove', mv), { once: true });
+        const r = track.getBoundingClientRect();
+        apply(calc(e, r));
+        const mv = (ev) => apply(calc(ev, r));
+        const up = () => window.removeEventListener('pointermove', mv);
+        window.addEventListener('pointermove', mv);
+        window.addEventListener('pointerup', up, { once: true });
       });
     });
     // Explicit, discoverable depth slider mirrors the curve-drag depth edit
@@ -1283,10 +1292,9 @@
       const svg = env.querySelector(`[data-envdepth="${i}"]`);
       const path = svg ? svg.querySelector('path') : null;
       const curveVal = env.querySelector(`[data-envdepthval="${i}"]`);
-      const calc = (e) => {
-        const r = track.getBoundingClientRect();
-        return Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
-      };
+      // Rect is passed in (captured once at pointerdown); see the period slider
+      // above — the setEnvelope re-render detaches the track mid-drag.
+      const calc = (e, r) => Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
       const apply = (depth) => {
         const pct = Math.round(depth * 100);
         fill.style.width = `${(depth * 100).toFixed(1)}%`;
@@ -1300,13 +1308,18 @@
         l.envs[i] = e;
         host.action('setEnvelope', { lane: li, index: i, envelope: e });
       };
+      // Window-level pointermove/up (matching the macro/expression sliders) so a
+      // drag keeps tracking even when the pointer leaves the 14px-tall track. The
+      // track geometry is fixed for the gesture, so the pointerdown rect stays
+      // valid even after the setEnvelope re-render detaches the original element.
       track.addEventListener('pointerdown', (e) => {
         e.preventDefault();
-        track.setPointerCapture?.(e.pointerId);
-        apply(calc(e));
-        const mv = (ev) => apply(calc(ev));
-        track.addEventListener('pointermove', mv);
-        track.addEventListener('pointerup', () => track.removeEventListener('pointermove', mv), { once: true });
+        const r = track.getBoundingClientRect();
+        apply(calc(e, r));
+        const mv = (ev) => apply(calc(ev, r));
+        const up = () => window.removeEventListener('pointermove', mv);
+        window.addEventListener('pointermove', mv);
+        window.addEventListener('pointerup', up, { once: true });
       });
     });
 
