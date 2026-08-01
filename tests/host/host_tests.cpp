@@ -1868,3 +1868,64 @@ TEST(HostTests, MidiChannel_AutoSentinelAndExplicitSurviveSaveRestore) {
     restored.teardown();
     host.teardown();
 }
+
+// --- M073 S04 T03: envelope periodBars round-trips through notify()->process() and persists ---
+//
+// S04 makes the envelope period (duration in bars) editable in the WebUI, routed through the
+// EXISTING setEnvelope bridge with NO C++/serialization change — periodBars is already a real
+// engine field (types.h:170), already carried by the EnvelopeUpdate notify()->process()
+// handshake (the same path injectEnvelope drives, mirroring AddEnvelopeAtCurrentCountGrowsEnvelopeCount
+// above), and already serialized in v15 state (state_io_envelope.h). This test is the plugin-path
+// proof the slice success criterion demands: a non-DEFAULT period (7.0; the struct default is 4.0,
+// types.h:170) survives the real DAW handshake AND a fresh save/restore cycle. Any future regression
+// that drops periodBars from the audio-thread consume or from (de)serialization fails here with a
+// visible mismatch, not a silent reset to the 4.0 default. Per MEM051, this must live in
+// poly_host_tests (processor.cpp + SDK) — poly_tests links only poly_engine and cannot reach the
+// notify()/process() mutation site.
+TEST(HostTests, EnvelopePeriodBarsRoundTripsThroughProcessAndPersists) {
+    constexpr float kNonDefaultPeriod = 7.0f; // deliberately != the 4.0 struct default (types.h:170)
+
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+
+    // Add an envelope carrying a non-default period through the same EnvelopeUpdate handshake a
+    // controller drives via sendEnvelopeUpdate / the setEnvelope bridge action.
+    poly::Envelope env{};
+    env.target = poly::EnvTarget::Velocity;
+    env.periodBars = kNonDefaultPeriod;
+    env.depth = 0.5f;
+    host.injectEnvelope(/*laneIndex=*/0, /*envelopeIndex=*/0, /*active=*/true, env);
+    host.processBlock(0.0, 120.0, /*playing=*/false);
+
+    // Snapshot the saved state once (a drained, stopped block republished stateSnapshot_).
+    auto bytes = host.saveState();
+    ASSERT_FALSE(bytes.empty()) << "saveState() should produce a non-empty buffer";
+
+    // 1) The period survives the notify()->process() handshake and is published in the snapshot.
+    {
+        auto scene = deserializeSceneState(bytes);
+        const auto& lane = scene.sceneA.lanes[0];
+        ASSERT_EQ(lane.envelopeCount, 1) << "the injected envelope must land in slot 0";
+        ASSERT_TRUE(lane.envelopes[0].active) << "the injected envelope must be active";
+        EXPECT_FLOAT_EQ(lane.envelopes[0].envelope.periodBars, kNonDefaultPeriod)
+            << "period must round-trip through the audio-thread consume, not reset to the 4.0 default";
+    }
+
+    // 2) Persistence: reload the saved bytes into a FRESH processor (the DAW project-reload path)
+    //    and confirm the non-default period is still there after setState + a draining block.
+
+    PolyTestHost restored;
+    ASSERT_TRUE(restored.setup(44100.0, 512));
+    ASSERT_TRUE(restored.loadState(bytes)) << "loadState() should accept a valid saveState() buffer";
+    restored.processBlock(0.0, 120.0, /*playing=*/false);
+
+    auto scene = deserializeSceneState(restored.saveState());
+    const auto& lane = scene.sceneA.lanes[0];
+    ASSERT_EQ(lane.envelopeCount, 1) << "the envelope must survive save/restore";
+    EXPECT_FLOAT_EQ(lane.envelopes[0].envelope.periodBars, kNonDefaultPeriod)
+        << "period must persist across save/restore; a 4.0 here means the field was dropped on the "
+           "(de)serialization or setState path";
+
+    restored.teardown();
+    host.teardown();
+}
