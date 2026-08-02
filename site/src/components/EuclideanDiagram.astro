@@ -8,34 +8,14 @@ interface Props {
 
 const { steps, hits, rotation = 0, radius = 80 } = Astro.props;
 
-function bjorklund(steps: number, hits: number): boolean[] {
-  if (hits >= steps) return Array(steps).fill(true);
-  if (hits <= 0) return Array(steps).fill(false);
-
-  let pattern: number[][] = [];
-  for (let i = 0; i < hits; i++) pattern.push([1]);
-  let remainder: number[][] = [];
-  for (let i = 0; i < steps - hits; i++) remainder.push([0]);
-
-  while (remainder.length > 1) {
-    const newPattern: number[][] = [];
-    const minLen = Math.min(pattern.length, remainder.length);
-    for (let i = 0; i < minLen; i++) {
-      newPattern.push([...pattern[i], ...remainder[i]]);
-    }
-    const leftover = pattern.length > remainder.length
-      ? pattern.slice(minLen)
-      : remainder.slice(minLen);
-    pattern = newPattern;
-    remainder = leftover;
-  }
-
-  const flat = [...pattern, ...remainder].flat();
-  return flat.map(v => v === 1);
-}
+// Shared single-source generator — see site/src/audio/bjorklund.ts. The engine
+// (engine/src/euclidean.cpp) mirrors this phase, enforced by the exhaustive
+// equality test in tests/euclidean_tests.cpp, so diagrams show what the engine
+// plays.
+import { bjorklund, rotateRight } from '../audio/bjorklund.ts';
 
 const onsets = bjorklund(steps, hits);
-const rotated = [...onsets.slice(onsets.length - rotation), ...onsets.slice(0, onsets.length - rotation)];
+const rotated = rotateRight(onsets, rotation);
 
 const size = radius * 2 + 40;
 const cx = size / 2;

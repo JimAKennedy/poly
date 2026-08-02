@@ -10,6 +10,7 @@
 #include <nlohmann/json.hpp>
 
 #include "choc/text/choc_JSON.h"
+#include "poly/euclidean.h"
 #include "poly/presets.h"
 #include "poly/scene.h"
 #include "webui/bridge_params.h"
@@ -346,6 +347,77 @@ TEST(BridgeContract, EscapeJsonStringSpecialChars) {
     EXPECT_EQ(poly::escapeJsonString("a\\b"), "\"a\\\\b\"");
     EXPECT_EQ(poly::escapeJsonString("a\nb"), "\"a\\nb\"");
     EXPECT_EQ(poly::escapeJsonString(""), "\"\"");
+}
+
+// ---------------------------------------------------------------------------
+// M068 S03 T02: Saved-state migration mirrored through the WebUI bridge
+// ---------------------------------------------------------------------------
+// The pre-Bjorklund -> Bjorklund migration (euclideanMigrationDelta) is applied
+// exactly once, in the shared readLaneConfig funnel that feeds BOTH native
+// setState (PolyProcessor) and the controller state the WebUI serializes
+// (PolyControllerBase::setComponentState -> cachedState -> pushState). The
+// bridge is therefore downstream of an already-migrated GrooveState — applying
+// the delta again here would double-migrate. These tests pin the invariant that
+// makes that placement correct: the bridge emits the SAME euclidean() pattern
+// the engine renders, so a migrated rotation surfaces byte-identically through
+// the bridge as it does through the native path.
+
+static json serializeSingleLane(int steps, int hits, int rotation) {
+    poly::GrooveState gs{};
+    gs.activeLaneCount = 1;
+    gs.lanes[0].id = 0;
+    gs.lanes[0].cycle = {steps, 16};
+    gs.lanes[0].hitCount = hits;
+    gs.lanes[0].rotation = rotation;
+    gs.lanes[0].midiNote = 36;
+    gs.lanes[0].baseVelocity = 100;
+    gs.lanes[0].probability = 1.0f;
+
+    poly::SceneState ss{};
+    auto names = kDefaultLaneNames;
+    std::string jsonStr = poly::grooveStateToJson(gs, ss, testLaneName, &names, "Test");
+    return json::parse(jsonStr)["state"]["lanes"][static_cast<size_t>(0)];
+}
+
+// The bridge's serialized pattern must equal the engine's euclidean() output for
+// the same (hits, steps, rotation). This is the consistency guarantee: whatever
+// rotation the shared migration produces, the bridge shows what the engine plays.
+TEST(BridgeMigration, BridgePatternMatchesEngineEuclidean) {
+    for (int steps = 2; steps <= 16; ++steps) {
+        for (int hits = 1; hits < steps; ++hits) {
+            for (int rot = 0; rot < steps; ++rot) {
+                auto lane = serializeSingleLane(steps, hits, rot);
+                std::array<bool, poly::kMaxSteps> expected{};
+                poly::euclidean(hits, steps, rot, expected);
+                ASSERT_EQ(lane["pattern"].size(), static_cast<size_t>(steps));
+                for (int i = 0; i < steps; ++i) {
+                    EXPECT_EQ(lane["pattern"][static_cast<size_t>(i)].get<int>(), expected[i] ? 1 : 0)
+                        << "steps=" << steps << " hits=" << hits << " rot=" << rot << " i=" << i;
+                }
+            }
+        }
+    }
+}
+
+// End-to-end mirror of the migration through the bridge: a pre-switch lane stored
+// rotation 0 under the retired Bresenham generator (step i pulses iff
+// (i*k) mod n < k). The migration rewrites its rotation to euclideanMigrationDelta.
+// Fed that migrated rotation, the bridge must emit exactly the legacy pattern —
+// proving a pre-switch project loaded via the bridge path renders as it always did.
+TEST(BridgeMigration, MigratedRotationSerializesToLegacyBresenhamPattern) {
+    for (int steps = 2; steps <= 16; ++steps) {
+        for (int hits = 1; hits < steps; ++hits) {
+            const int delta = poly::euclideanMigrationDelta(hits, steps);
+            const int migratedRot = ((0 + delta) % steps + steps) % steps;
+            auto lane = serializeSingleLane(steps, hits, migratedRot);
+            ASSERT_EQ(lane["pattern"].size(), static_cast<size_t>(steps));
+            for (int i = 0; i < steps; ++i) {
+                const bool legacy = ((i * hits) % steps) < hits;
+                EXPECT_EQ(lane["pattern"][static_cast<size_t>(i)].get<int>(), legacy ? 1 : 0)
+                    << "steps=" << steps << " hits=" << hits << " i=" << i;
+            }
+        }
+    }
 }
 
 // ---------------------------------------------------------------------------
