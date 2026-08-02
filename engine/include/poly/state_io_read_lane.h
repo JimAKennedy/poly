@@ -3,6 +3,7 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "poly/euclidean.h"
 #include "poly/state_io_envelope.h"
 #include "poly/types.h"
 
@@ -149,6 +150,19 @@ template <typename ReadFn> [[nodiscard]] bool readLaneConfig(ReadFn&& read, Lane
     if (version >= 15) {
         if (!read(&lane.midiChannel, sizeof(lane.midiChannel)))
             return false;
+    }
+
+    // M068 S03: pre-Bjorklund states (< v16) authored rotation against the
+    // retired Bresenham generator. Rotate each non-timeline lane by the delta
+    // that maps Bjorklund onto the legacy pattern so playback stays
+    // byte-identical. Timeline lanes carry an explicit fixedPattern and are
+    // immune to the generator swap; presets are re-authored separately (M070).
+    if (version < kBjorklundGeneratorStateVersion && !lane.timeline) {
+        const int n = lane.cycle.steps;
+        if (n > 0) {
+            const int delta = euclideanMigrationDelta(lane.hitCount, n);
+            lane.rotation = ((lane.rotation + delta) % n + n) % n;
+        }
     }
 
     return true;

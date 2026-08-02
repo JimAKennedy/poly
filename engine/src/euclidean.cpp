@@ -94,4 +94,55 @@ void euclidean(int k, int n, int rotation, std::array<bool, kMaxSteps>& out) {
 }
 // endregion:bjorklund
 
+namespace {
+// region:legacy-bresenham
+// The retired rotation-0 generator: step i is a pulse iff `(i*k) mod n < k`.
+// Kept only to compute the migration delta below — the audio path no longer
+// uses it (replaced by Bjorklund in M068 S02). Not exported.
+void legacyBresenham(int k, int n, std::array<bool, kMaxSteps>& out) {
+    out.fill(false);
+    if (n <= 0 || k <= 0)
+        return;
+    if (n > kMaxSteps)
+        n = kMaxSteps;
+    if (k >= n) {
+        for (int i = 0; i < n; ++i)
+            out[i] = true;
+        return;
+    }
+    for (int i = 0; i < n; ++i)
+        out[i] = ((i * k) % n) < k;
+}
+// endregion:legacy-bresenham
+} // namespace
+
+// region:migration-delta
+int euclideanMigrationDelta(int k, int n) {
+    if (n <= 0 || k <= 0)
+        return 0;
+    if (n > kMaxSteps)
+        n = kMaxSteps;
+    if (k >= n)
+        return 0; // saturated pattern: every step pulses, rotation-invariant
+
+    std::array<bool, kMaxSteps> legacy{};
+    legacyBresenham(k, n, legacy);
+
+    std::array<bool, kMaxSteps> shifted{};
+    for (int d = 0; d < n; ++d) {
+        euclidean(k, n, d, shifted);
+        bool match = true;
+        for (int i = 0; i < n; ++i) {
+            if (shifted[i] != legacy[i]) {
+                match = false;
+                break;
+            }
+        }
+        if (match)
+            return d;
+    }
+    return 0; // no exact shift (unexpected): leave rotation unchanged
+}
+// endregion:migration-delta
+
 } // namespace poly
