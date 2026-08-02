@@ -37,6 +37,33 @@ struct UISnapshot {
     //   Drives the Cloth playhead (playhead = captureProgressBars / captureBars).
     std::atomic<double> captureProgressBars{0.0};
 
+    // M073: per-lane emission ring surfaced to the WebUI desk overlay + played
+    // timeline. The engine emits a per-block EmissionEventBuffer classifying
+    // every step Base/Ghost/Add/Drop with its grid ppq and post-timing-shift
+    // onset (shiftedPpqPosition). The audio thread appends each block's
+    // emissions into these fixed-cap per-lane rings; the UI thread (30fps)
+    // drains them in publish order for getLaneEmissions(li).
+    //
+    // RT-safety: the writer (audio thread) only stores POD fields into a
+    // pre-allocated array and bumps a relaxed atomic head counter — no alloc,
+    // lock, throw, or IO. The reader tolerates a slightly torn view (a slot
+    // being overwritten as it reads); at 30fps a one-frame-stale emission is
+    // imperceptible and the ring self-heals on the next drain. This mirrors the
+    // WASM host's per-lane emission ring (webui/wasm-host.js) so both surfaces
+    // present the same shape.
+    static constexpr int kEmissionRingCap = 64;
+    struct EmissionSlot {
+        std::atomic<double> ppq{0.0};
+        std::atomic<double> shiftedPpq{0.0};
+        std::atomic<int> step{0};
+        std::atomic<int> kind{0}; // EmissionKind
+    };
+    // head[lane] is the monotonically-increasing total emission count for the
+    // lane; (head-1) mod cap is the newest slot. The reader reads head, then
+    // walks back min(head, cap) slots oldest→newest to reconstruct the ring.
+    std::atomic<uint64_t> emissionHead[kMaxLanes]{};
+    EmissionSlot emissionRing[kMaxLanes][kEmissionRingCap]{};
+
     // Full state — flag-guarded exchange
     SceneState state{};
     std::atomic<bool> stateReady{false};

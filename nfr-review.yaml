@@ -3,6 +3,14 @@ exclude_paths:
   - "build-release*/**"
   - "graphify-out/**"
   - "site/dist/**"
+  # Emscripten-generated WASM glue — machine-emitted, not hand-authored. The
+  # minified output trips nodejs-floating-promise / nodejs-callback-error-ignored
+  # on emscripten's own readAsync()/instantiate() patterns, which we cannot edit
+  # without regenerating from the toolchain. Same rationale as build*/site/dist:
+  # exclude generated artifacts. The hand-written host bridges (mock-host.js,
+  # wasm-host.js, plugin-host.js, ui.js) are still scanned.
+  - "webui/poly_engine.js"
+  - "**/webui/poly_engine.js"
 
 exclude_test_paths: false
 

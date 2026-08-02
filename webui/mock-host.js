@@ -551,6 +551,30 @@
   // so Cloth's capture timeline can be developed and CI-tested standalone.
   //   state: 0 idle | 1 armed | 2 capturing | 3 complete
   const capture = { state: 0, bars: 8, prog: 0, startT8: null };
+
+  // M073 S05 T01: per-lane emission stream mirror. The native engine classifies
+  // every step (base/ghost/add/drop) into a 32-slot ring drained via
+  // wasm-host.js; getLaneEmissions(li) exposes it ordered oldest->newest. The
+  // mock has no engine, so _setEmissions lets a Playwright test inject a stream
+  // (with drops/ghosts/adds) to exercise the cloth timeline emission surface.
+  // Keyed by lane index; a lane with no injected stream degrades to [] (the
+  // empty-return contract the desk ladder overlay already relies on).
+  const laneEmissions = new Map();
+  // M073 follow-up: the mock has no engine, so the played timeline was blank in
+  // the standalone web preview during real playback. Feed it from the scheduler:
+  // every fired hit is recorded here (per lane) as { ppq, shiftedPpq, step,
+  // kind } — the same shape getLaneEmissions returns from the WASM/native rings.
+  // Rolling cap so the ring self-clears; the played column's own age window
+  // (updatePlayed) drops anything older than one cycle. Cleared on Stop.
+  const EMISSION_CAP = 32;
+  const scheduledEmissions = new Map(); // li -> array (rolling, cap EMISSION_CAP)
+  function recordEmission(li, ppq, shiftedPpq, step, kind) {
+    let ring = scheduledEmissions.get(li);
+    if (!ring) { ring = []; scheduledEmissions.set(li, ring); }
+    ring.push({ ppq, shiftedPpq, step, kind });
+    if (ring.length > EMISSION_CAP) ring.shift();
+  }
+  function clearScheduledEmissions() { scheduledEmissions.clear(); }
   const eighthsPerBar = () =>
     Math.max(1, Math.round(state.timeSigNumerator * (8 / state.timeSigDenominator)));
 
@@ -675,6 +699,14 @@
         const mtMs = (l.mt && l.mt[hit.step]) || 0;
         const t = startAt + nextTick * step + (l.push + mtMs) / 1000;
         voice(l, Math.max(ctx.currentTime + 0.001, t), vel);
+        // Record this hit for the played timeline. Grid onset in ppq (quarters)
+        // is nextTick/2 (t8 = 2·ppq). The audible onset shifts by push + micro-
+        // timing (ms) — convert to ppq so a swung / pushed hit lands off its grid
+        // row in the column, exactly like the engine's shiftedPpqPosition.
+        const gridPpq = nextTick / 2;
+        const shiftMs = l.push + mtMs;
+        const shiftedPpq = gridPpq + (shiftMs / 1000) / step / 2;
+        recordEmission(li, gridPpq, shiftedPpq, hit.step, 'base');
       });
       nextTick++;
     }
@@ -693,6 +725,9 @@
       if (ctx) schedTimer = setInterval(schedule, 30);
     } else {
       clearInterval(schedTimer);
+      // Playback-scoped: drop scheduled hits so the played column clears on Stop
+      // instead of lingering on the last window of marks.
+      clearScheduledEmissions();
     }
   }
 
@@ -718,7 +753,10 @@
   }
 
   function pump() {
-    const t8 = now8();
+    // Headless (no audio clock) now8() is 0. Tests drive a deterministic
+    // playhead via window.__POLY_FORCE_T8 so the rolling played-timeline window
+    // (which positions dots by age behind t8) can be exercised without audio.
+    const t8 = typeof window.__POLY_FORCE_T8 === 'number' ? window.__POLY_FORCE_T8 : now8();
     advanceCapture(t8);
     const convLeft = playing ? (CONV - (Math.floor(t8) % CONV)) % CONV || CONV : CONV;
     const frame = {
@@ -984,7 +1022,7 @@
           timingOffset: v => { lane.timingOffset = v * 40 - 20; },
           kotekanSource:v => { lane.kotekanSource = Math.round(v * 8) - 1; },
           note:         v => { lane.note = Math.round(v * 127); },
-          channel:      v => { lane.ch = Math.round(v * 16); },
+          channel:      v => { lane.ch = Math.round(v * 16) - 1; },
           steps:        v => {
             lane.steps = Math.round(v * 63) + 1;
             lane.hits = Math.min(lane.hits, lane.steps);
@@ -1056,8 +1094,32 @@
     // Real plugin gets meter from Vst::ProcessContext; mock has none.
     _setTimeSig: (num, den) => { state.timeSigNumerator = num; state.timeSigDenominator = den; },
     // M045 S01 T03: mock host has no engine emission stream — desk overlay
-    // silently no-ops when this returns [].
-    getLaneEmissions: () => [],
+    // silently no-ops when this returns []. M073 S05 T01: a test may inject a
+    // per-lane stream via _setEmissions; absent injection this returns [] so the
+    // timeline degrades to positional-pattern-only (never claims a fake drop).
+    getLaneEmissions: (li) => {
+      // A test-injected stream (_setEmissions) takes priority so specs can
+      // exercise drop/ghost/add kinds deterministically. Otherwise return the
+      // hits the scheduler recorded this run, so the standalone web preview's
+      // played timeline lights up during real playback (base hits only — the
+      // mock has no mutation engine to classify ghost/add/drop).
+      const injected = laneEmissions.get(li);
+      if (injected) return injected.slice();
+      const ring = scheduledEmissions.get(li);
+      return ring ? ring.slice() : [];
+    },
+    // M073 S05 T01: Playwright hook to inject a per-lane emission stream,
+    // mirroring what the native engine ring would report. Pass an array of
+    // { ppq, step, kind } (kind: base|ghost|add|drop) to set a lane's stream, or
+    // null/undefined/[] to clear it back to the empty-return degradation path.
+    _setEmissions: (li, emissions) => {
+      if (emissions && emissions.length) laneEmissions.set(li, emissions.slice());
+      else laneEmissions.delete(li);
+    },
+    _getEmissions: (li) => {
+      const em = laneEmissions.get(li);
+      return em ? em.slice() : [];
+    },
     // M051 S08: Playwright hook to force a capture-machine state without a
     // running audio clock. Mirrors what the native UISnapshot atomics would
     // report; the next rAF frame carries these values to Cloth.

@@ -108,6 +108,13 @@ enum class EmissionKind : uint8_t {
 
 struct EmissionEvent {
     double ppqPosition = 0.0;
+    // Post-timing-shift onset (swing, syncopation, per-step micro-timing,
+    // humanize, and the lane timing offset applied) — the ppq the audible note
+    // actually fires at. Equals ppqPosition for Drop emissions, which never
+    // schedule a note and so have no shifted onset. Consumed by the desk
+    // "played" timeline so a syncopated/delayed hit is shown where it sounds,
+    // not where its grid step sits.
+    double shiftedPpqPosition = 0.0;
     int16_t cycleStep = 0;
     int16_t laneIndex = 0;
     uint8_t kind = 0; // EmissionKind

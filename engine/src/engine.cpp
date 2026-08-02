@@ -14,7 +14,15 @@ static constexpr double kMsPerMinute = 60000.0;
 static constexpr float kMidiVelocityMax = 127.0f;
 static constexpr float kMutationDropThreshold = 0.4f;
 static constexpr float kMutationGhostThreshold = 0.7f;
-static constexpr float kAccentVelocityBoost = 0.15f;
+// M073 S02: Explicit per-step accents apply this deterministic proportional-headroom
+// boost (accentVal * boost * remaining-headroom) unconditionally — decoupled from the
+// emphasisProb roll. The headroom factor keeps a mid-velocity lane strictly below 1.0
+// (never saturates) while staying proportional to the graduated accent value.
+static constexpr float kAccentVelocityBoost = 0.6f;
+// Probabilistic emphasis is a *separate*, additive nudge (driven by emphasisProb and
+// the AccentBias envelope) that stacks on top of the deterministic accent but never
+// gates it.
+static constexpr float kEmphasisVelocityBoost = 0.15f;
 static constexpr float kHumanizeEnvelopeScale = 10.0f;
 static constexpr double kTimingSafetyMarginMs = 20.0;
 static constexpr double kDefaultDurationFraction = 0.5;
@@ -138,6 +146,17 @@ enum class StepOutcome : uint8_t {
 
 static StepOutcome classifyStep(const LaneConfig& cfg, const GrooveState& state, int64_t absStep, int64_t cycleStep,
                                 bool isPatternStep, bool isAnchor, const EnvelopeMods& mods, int stepsInCycle) {
+    // M073 S01: A base velocity of exactly zero mutes the lane entirely. The
+    // emission decision below never consults velocity magnitude, and
+    // computeStepVelocity's ghost-floor clamp can raise a 0 back up — so
+    // without this short-circuit a muted lane would still emit NoteEvents
+    // (violating R002). Returning Silent (not Drop) also records no phantom
+    // EmissionEvent, keeping the truthful-display contract intact. The gate is
+    // on baseVelocity == 0 (pre-clamp), not the post-ghost-floor value, and
+    // triggers only at exactly 0 so nonzero output is byte-identical.
+    if (cfg.baseVelocity == 0)
+        return StepOutcome::Silent;
+
     const bool wasPatternStep = isPatternStep;
     bool mutatedToGhost = false;
 
@@ -200,10 +219,20 @@ static float computeStepVelocity(const LaneConfig& cfg, const GrooveState& state
 
     float accentVal = cfg.accents.steps[static_cast<size_t>(cycleStep)];
     if (accentVal > 0.0f) {
+        // Deterministic explicit accent: always boosts a set step, independent of the
+        // emphasisProb roll and of the seed. Proportional-headroom form so a
+        // mid-velocity lane lands strictly between its base and 1.0 (no saturation).
+        vel += accentVal * kAccentVelocityBoost * (1.0f - vel);
+
+        // Probabilistic emphasis remains a separate additive layer that stacks on top
+        // of the deterministic accent (never gates it): the emphasisProb roll, biased
+        // by the AccentBias envelope, occasionally adds a further nudge.
         float effectiveEmphasis = std::clamp(cfg.emphasisProb + mods.accent, 0.0f, 1.0f);
-        float emphRoll = deterministicRand(state.seed, cfg.id, absStep, 2);
-        if (emphRoll < effectiveEmphasis) {
-            vel += accentVal * kAccentVelocityBoost;
+        if (effectiveEmphasis > 0.0f) {
+            float emphRoll = deterministicRand(state.seed, cfg.id, absStep, 2);
+            if (emphRoll < effectiveEmphasis) {
+                vel += accentVal * kEmphasisVelocityBoost * (1.0f - vel);
+            }
         }
     }
 
@@ -419,6 +448,18 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
             StepOutcome outcome =
                 classifyStep(cfg, state, absStep, cycleStep, isPatternStep, isAnchor, mods, ctx.stepsInCycle);
 
+            // Post-timing-shift onset for the audible note. A Drop never fires,
+            // so it has no shifted onset — the display shows it at its grid ppq.
+            // Fired outcomes carry the swing/syncopation/micro-timing/humanize/
+            // offset-shifted ppq so the desk "played" timeline lands the dot
+            // where the note actually sounds. Computed here (before recording)
+            // so the emission carries the shifted onset; buildNoteEvent below
+            // reuses the same value, keeping NoteEvent output byte-identical.
+            bool willFire = (outcome != StepOutcome::Drop && outcome != StepOutcome::Silent);
+            double shiftedPpq = ppq;
+            if (willFire)
+                shiftedPpq = applyTimingShifts(cfg, tc, state, ppq, stepDurPpq, absStep, cycleStep, mods.humanize);
+
             // Record classification for the display, but only for steps whose
             // pre-timing-shift ppq falls inside the current render window —
             // otherwise the outer safety margin double-counts across block
@@ -426,18 +467,19 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
             if (emissions != nullptr && outcome != StepOutcome::Silent && ppq >= tc.ppqStart && ppq < tc.ppqEnd) {
                 EmissionEvent ee{};
                 ee.ppqPosition = ppq;
+                ee.shiftedPpqPosition = shiftedPpq;
                 ee.cycleStep = static_cast<int16_t>(cycleStep);
                 ee.laneIndex = static_cast<int16_t>(lane);
                 ee.kind = static_cast<uint8_t>(outcome);
                 emissions->push(ee);
             }
 
-            if (outcome == StepOutcome::Drop || outcome == StepOutcome::Silent)
+            if (!willFire)
                 continue;
 
             bool mutatedToGhost = (outcome == StepOutcome::Ghost);
             float vel = computeStepVelocity(cfg, state, absStep, cycleStep, mods, mutatedToGhost);
-            ppq = applyTimingShifts(cfg, tc, state, ppq, stepDurPpq, absStep, cycleStep, mods.humanize);
+            ppq = shiftedPpq;
             if (ppq < tc.ppqStart || ppq >= tc.ppqEnd)
                 continue;
 

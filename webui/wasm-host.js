@@ -166,7 +166,7 @@
       name: laneNames[laneIdx] || `Lane ${laneIdx + 1}`,
       role: laneRoles[laneIdx] || 'Custom',
       note: li(engineCtx, laneIdx, LaneFieldInt.MidiNote),
-      ch: li(engineCtx, laneIdx, LaneFieldInt.MidiChannel) + 1,
+      ch: li(engineCtx, laneIdx, LaneFieldInt.MidiChannel),
       steps,
       subdivision,
       stepLen,
@@ -213,7 +213,7 @@
   function initLaneEmissions(lane) {
     const ring = new Array(EMISSION_CAP);
     for (let i = 0; i < EMISSION_CAP; i++) {
-      ring[i] = { ppq: 0, step: 0, kind: 'base' };
+      ring[i] = { ppq: 0, shiftedPpq: 0, step: 0, kind: 'base' };
     }
     lane.emissions = ring;
     lane._emHead = 0;
@@ -233,7 +233,7 @@
     const out = new Array(lane._emCount);
     for (let i = 0; i < lane._emCount; i++) {
       const src = lane.emissions[(start + i) % cap];
-      out[i] = { ppq: src.ppq, step: src.step, kind: src.kind };
+      out[i] = { ppq: src.ppq, shiftedPpq: src.shiftedPpq, step: src.step, kind: src.kind };
     }
     return out;
   }
@@ -256,6 +256,11 @@
       slot.step = Module.HEAPF64[off + 2] | 0;
       const kindIdx = Module.HEAPF64[off + 3] | 0;
       slot.kind = EMISSION_KIND_LABELS[kindIdx] || 'base';
+      // [4]=post-timing-shift onset (swing/syncopation/micro-timing/humanize/
+      // offset applied). Falls back to grid ppq if a legacy 4-field build is
+      // loaded (fpe===4 → HEAPF64[off+4] would read the next event's ppq, so
+      // guard on stride).
+      slot.shiftedPpq = fpe > 4 ? Module.HEAPF64[off + 4] : slot.ppq;
       lane._emHead = (lane._emHead + 1) % EMISSION_CAP;
       if (lane._emCount < EMISSION_CAP) lane._emCount++;
     }
@@ -1261,7 +1266,7 @@
 
     const INT_EDITS = {
       note:         v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.MidiNote, Math.round(v * 127)),
-      channel:      v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.MidiChannel, Math.round(v * 15)),
+      channel:      v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.MidiChannel, Math.round(v * 16) - 1),
       velocity:     v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.BaseVelocity, Math.round(v * 127)),
       ghostFloor:   v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.GhostFloor, Math.round(v * 127)),
       active:       v => {

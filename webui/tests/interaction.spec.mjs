@@ -432,7 +432,8 @@ test.describe('expanded strip — expression tab', () => {
     await track.click({ position: { x: box.width * 0.5, y: box.height / 2 } });
 
     const state = await page.evaluate(() => window.PolyMockHost.getState());
-    expect(state.lanes[1].ch).toBe(8);
+    // Unified -1↔Auto encoding (R003): click at 50% → round(0.5*16)-1 = 7 (CH 7).
+    expect(state.lanes[1].ch).toBe(7);
   });
 
   test('preset load resets expression tab values', async ({ page }) => {

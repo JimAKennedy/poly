@@ -169,14 +169,15 @@ Optional per-step classification for the desk UI. Populated when `renderRange()`
 enum class EmissionKind : uint8_t { Base, Ghost, Add, Drop };
 
 struct EmissionEvent {
-    double ppqPosition;
+    double ppqPosition;         // grid step position
+    double shiftedPpqPosition;  // post-timing-shift audible onset (== ppqPosition for Drop)
     int16_t cycleStep;
     int16_t laneIndex;
     uint8_t kind;    // EmissionKind
 };
 ```
 
-`Silent` outcomes are omitted (nothing to render). The buffer holds up to `kMaxEmissionsPerBlock=512` entries per block; overflow bumps `droppedCount` and is safe.
+`ppqPosition` is the grid step; `shiftedPpqPosition` is where the note actually sounds after swing, syncopation, per-step micro-timing, humanize, and the lane timing offset are applied — so the desk "played" timeline can place a syncopated/delayed hit where it is heard, not where its grid step sits. A `Drop` never schedules a note, so its `shiftedPpqPosition` equals `ppqPosition`. `Silent` outcomes are omitted (nothing to render). The buffer holds up to `kMaxEmissionsPerBlock=512` entries per block; overflow bumps `droppedCount` and is safe.
 
 ## Deterministic RNG
 

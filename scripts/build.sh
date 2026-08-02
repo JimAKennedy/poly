@@ -13,6 +13,9 @@ usage() {
 Usage: $(basename "$0") [options]
 
 Options:
+  --deploy      Build + install the VST3 to the user plugin folder for Cubase
+                testing ($HOME/Library/Audio/Plug-Ins/VST3). This is the default,
+                so the flag is mainly for explicitness in Cubase-testing workflows.
   --clean       Remove build directory and reconfigure from scratch
   --configure   Force CMake reconfigure (picks up asset changes)
   --no-deploy   Build only, skip copying to VST3 folder
@@ -21,7 +24,7 @@ Options:
   -j N          Parallel jobs (default: auto)
   -h, --help    Show this help
 
-Without flags, does an incremental build + deploy.
+Without flags, does an incremental build + deploy (same as --deploy).
 EOF
     exit 0
 }
@@ -36,6 +39,7 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         --clean)       CLEAN=1; shift ;;
         --configure)   FORCE_CONFIGURE=1; shift ;;
+        --deploy)      DEPLOY=1; shift ;;
         --no-deploy)   DEPLOY=0; shift ;;
         --debug)       BUILD_TYPE=Debug; shift ;;
         --test)        RUN_TESTS=1; shift ;;
@@ -73,11 +77,23 @@ fi
 
 if [[ $DEPLOY -eq 1 ]]; then
     if [[ -d "$VST3_BUNDLE" ]]; then
-        echo "=== Deploy ==="
+        echo "=== Deploy (Cubase) ==="
         mkdir -p "$INSTALL_DIR"
         rm -rf "$INSTALL_DIR/poly_plugin.vst3"
         cp -R "$VST3_BUNDLE" "$INSTALL_DIR/"
+        # Report both sizes so a stale install (the M073 "disappearing column"
+        # scare — a fresh build that never reached the system folder) is caught
+        # here instead of during a confusing Cubase session. These must match.
+        built_sz=$(find "$VST3_BUNDLE" -type f -exec cat {} + | wc -c | tr -d ' ')
+        inst_sz=$(find "$INSTALL_DIR/poly_plugin.vst3" -type f -exec cat {} + | wc -c | tr -d ' ')
         echo "Installed: $INSTALL_DIR/poly_plugin.vst3"
+        echo "  built size:     $built_sz bytes"
+        echo "  installed size: $inst_sz bytes"
+        if [[ "$built_sz" != "$inst_sz" ]]; then
+            echo "ERROR: installed size does not match built bundle — install may be stale" >&2
+            exit 1
+        fi
+        echo "Rescan Poly in Cubase to pick up this build."
     else
         echo "WARNING: Bundle not found at $VST3_BUNDLE — skipping deploy"
     fi

@@ -905,7 +905,9 @@ void WebUIView::pushFrame() {
     }
 
     std::string js;
-    js.reserve(512);
+    // M073: emissions add up to kEmissionRingCap entries/lane (~60 chars each);
+    // reserve generously so the per-frame build stays a single allocation.
+    js.reserve(4096);
     js += "{\"type\":\"frame\",\"frame\":{";
 
     char buf[160];
@@ -922,8 +924,27 @@ void WebUIView::pushFrame() {
             js += ',';
         double phase = snap ? snap->lanePhases[i].load(std::memory_order_relaxed) : 0.0;
         int step = static_cast<int>(phase * gs.lanes[i].cycle.steps) % gs.lanes[i].cycle.steps;
-        std::snprintf(buf, sizeof(buf), "{\"ph\":%.4f,\"step\":%d}", phase, step);
+        std::snprintf(buf, sizeof(buf), "{\"ph\":%.4f,\"step\":%d,\"emissions\":[", phase, step);
         js += buf;
+        // M073: drain the lane's UISnapshot emission ring (oldest→newest) so the
+        // desk overlay + played timeline light up in the DAW. kind is the int
+        // EmissionKind; plugin-host.js maps it to the base/ghost/add/drop label.
+        if (snap && i < kMaxLanes) {
+            constexpr int cap = UISnapshot::kEmissionRingCap;
+            uint64_t head = snap->emissionHead[i].load(std::memory_order_acquire);
+            int n = head < static_cast<uint64_t>(cap) ? static_cast<int>(head) : cap;
+            uint64_t startIdx = head - static_cast<uint64_t>(n);
+            for (int k = 0; k < n; ++k) {
+                const auto& slot = snap->emissionRing[i][static_cast<int>((startIdx + k) % cap)];
+                if (k > 0)
+                    js += ',';
+                std::snprintf(buf, sizeof(buf), "{\"ppq\":%.4f,\"shiftedPpq\":%.4f,\"step\":%d,\"kind\":%d}",
+                              slot.ppq.load(std::memory_order_relaxed), slot.shiftedPpq.load(std::memory_order_relaxed),
+                              slot.step.load(std::memory_order_relaxed), slot.kind.load(std::memory_order_relaxed));
+                js += buf;
+            }
+        }
+        js += "]}";
     }
     js += "]}}";
 

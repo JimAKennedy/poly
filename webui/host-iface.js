@@ -53,7 +53,16 @@
  *
  *   // --- feedback (~30-60 Hz visual frame; never authoritative) ---
  *   onFrame(cb: (Frame) => void): void
+ *
+ *   // --- emission stream (M073: what the engine actually played) ---
+ *   // Per-lane ordered ring of classified emissions for the desk overlay +
+ *   // played timeline. base/ghost/add/drop with grid ppq and post-timing-shift
+ *   // onset. [] for an out-of-range lane, before the first frame, or when the
+ *   // host carries no stream (degrade to positional-pattern-only).
+ *   getLaneEmissions(li: number): Emission[]
  * }
+ * Emission = { ppq: number, shiftedPpq: number, step: number,
+ *              kind: 'base'|'ghost'|'add'|'drop' }
  *
  * State = {
  *   preset: string, seed: number, tempo: number,
@@ -72,7 +81,10 @@
  * Env = { target, period, depth, on }
  * Frame = {
  *   t8: number, playing: bool, convLeft: number,
- *   lanes: [{ ph: 0..1, step: int }],
+ *   // M073: each lane carries its ordered emission stream (native: drained from
+ *   // the UISnapshot rings; kind is the int EmissionKind mapped to a label by
+ *   // plugin-host.js). Absent on legacy hosts → getLaneEmissions returns [].
+ *   lanes: [{ ph: 0..1, step: int, emissions?: Emission[] }],
  *   // M051 S08 — capture state machine (native: UISnapshot atomics):
  *   capState?: 0|1|2|3,   // idle | armed | capturing | complete
  *   capBars?: number,     // bar-window length N (default 8)

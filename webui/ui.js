@@ -15,7 +15,7 @@
   let lastFrame = { t8: 0, playing: false, convLeft: CONV, lanes: [] };
   let mode = 'desk';
   let expanded = -1;
-  let strips = [], rings = [], hands = [], ladders = [], vus = [];
+  let strips = [], rings = [], hands = [], ladders = [], vus = [], playeds = [];
   const tabState = {};
   // M045 S01 T03: per-lane, per-step overlay class diff cache. Populated by
   // updateEmissionOverlay each frame; reset in buildDesk when the ladder DOM
@@ -612,8 +612,81 @@
     };
   }
 
+  // M073 S05: fold the engine's per-lane emission ring (host.getLaneEmissions,
+  // classified base/ghost/add/drop by the engine and drained in wasm-host.js)
+  // into a step->kind map, newest emission per step winning — the same reduction
+  // the desk ladder overlay (updateEmissionOverlay) applies. The cloth timeline
+  // is a second consumer of that single source of truth, so probability culls,
+  // mutation drops, ghosts, and macro-resolved adds render truthfully instead of
+  // the drift-prone laneHitAt re-derivation. Returns null when the host exposes
+  // no emission accessor or the lane's stream is empty (mock default / DAW /
+  // stopped playback): callers then fall back to positional-pattern-only via
+  // laneHitAt and MUST NOT draw a drop/ghost marker — never claim an
+  // unobservable drop. Mirrors the overlay's empty-return degradation contract.
+  function laneStepKind(li) {
+    if (!host.getLaneEmissions) return null;
+    const emissions = host.getLaneEmissions(li) || [];
+    if (!emissions.length) return null;
+    const m = new Map();
+    for (let i = 0; i < emissions.length; i++) {
+      const e = emissions[i];
+      if (e && e.step >= 0) m.set(e.step, e.kind);
+    }
+    return m;
+  }
+  // Tick (window column) where a lane step fires, so an off-grid add emission can
+  // be placed. Pattern lanes fire step s at tick s*stepLen; cells lanes fire onset
+  // index s at its aksak tick. -1 when the step has no position in this window.
+  function tickForStep(l, step) {
+    if (l.cells) { const os = onsets(l); return step >= 0 && step < os.length ? os[step] : -1; }
+    return step * l.stepLen;
+  }
+  // A dropped on-pattern step: the engine expected a hit here but culled it
+  // (probability / mutation). Draw a hollow strike "hole" — never a solid tick —
+  // so a drop reads as visibly distinct from an emitted hit.
+  function drawDropMarker(g, cellX, cellW, y0, bandH, dp, woven) {
+    const mw = Math.max(2 * dp, cellW * 0.6);
+    const mh = bandH * 0.5;
+    const mx = cellX + (cellW - mw) / 2;
+    const my = y0 + (bandH - mh) / 2;
+    g.globalAlpha = woven ? 0.9 : 0.18;
+    g.strokeStyle = 'rgba(240,234,223,.75)';
+    g.lineWidth = 1.5 * dp;
+    g.strokeRect(mx, my, mw, mh);
+    g.beginPath();
+    g.moveTo(mx, my);
+    g.lineTo(mx + mw, my + mh);
+    g.stroke();
+    g.globalAlpha = 1;
+  }
+  // Macro/mutation-resolved add hits fire off the base positional grid. Draw them
+  // at the step's tick where laneHitAt has no onset, capped so they read as extra
+  // off-grid hits rather than base pattern. No-op when stepKind is null (no stream).
+  function drawEmissionAdds(g, l, stepKind, cellW, tickCount, y0, bandH, dp, wovenFn) {
+    if (!stepKind) return;
+    stepKind.forEach((kind, step) => {
+      if (kind !== 'add') return;
+      const e = tickForStep(l, step);
+      if (e < 0 || e >= tickCount) return;
+      if (laneHitAt(l, e)) return; // already drawn on the positional grid
+      const woven = wovenFn(e);
+      const bw = Math.max(2 * dp, cellW * 0.45);
+      const bh = bandH * 0.45;
+      const x = e * cellW + (cellW - bw) / 2;
+      const y = y0 + (bandH - bh) / 2;
+      g.globalAlpha = woven ? 0.85 : 0.18;
+      g.fillStyle = l.hue;
+      g.fillRect(x, y, bw, bh);
+      g.fillStyle = 'rgba(240,234,223,.6)';
+      g.fillRect(x, y - 2 * dp, bw, 1.5 * dp); // off-grid cap tick
+      g.globalAlpha = 1;
+    });
+  }
+
   // Idle decorative weave: lanes stacked over the convergence window with the
   // step grid, per-lane cycle markers, gold selvage and a sweeping playhead.
+  // M073 S05: consults the engine emission stream (laneStepKind) so drops render
+  // as holes and ghosts dim even in the idle weave; empty stream => positional only.
   function drawConvergence(g, W, H, dp, t8) {
     const bandH = H / S.lanes.length, colW = W / CONV;
     S.lanes.forEach((l, li) => {
@@ -622,27 +695,36 @@
       g.fillRect(0, y0, W, bandH);
       g.fillStyle = 'rgba(240,234,223,.05)';
       for (let x = 0; x < CONV; x += 2) g.fillRect(x * colW, y0, 1 * dp, bandH);
+      const stepKind = laneStepKind(li);
       for (let e = 0; e < CONV; e++) {
         const hit = laneHitAt(l, e);
         if (!hit) continue;
+        const kind = stepKind ? stepKind.get(hit.step) : undefined;
+        // Emission-truthful drop: engine culled this on-pattern step. Draw a
+        // hole, not a tick. Guarded by stepKind (a muted lane records no
+        // emission, so it never reaches here and is never drawn as a drop).
+        if (kind === 'drop') { drawDropMarker(g, e * colW, colW, y0, bandH, dp, true); continue; }
         const vn = hitVelocity(l, li, e, hit);
+        if (vn <= 0) continue; // baseVelocity 0 mutes the lane: draw no hit (M073 S01)
+        const ghost = kind === 'ghost'; // ghost emissions render dimmed vs base
         const wUnits = l.cells ? l.cells[hit.step] : l.stepLen;
         const bw = colW * wUnits * 0.86;
         const bh = bandH * Math.min(0.92, 0.3 + vn * 0.52);
         const x = e * colW + colW * wUnits * 0.07;
         const y = y0 + (bandH - bh) / 2;
-        g.globalAlpha = hit.step === 0 ? 1 : 0.86;
+        g.globalAlpha = (hit.step === 0 ? 1 : 0.86) * (ghost ? 0.4 : 1);
         g.fillStyle = l.hue;
         g.fillRect(x, y, bw, bh);
-        g.globalAlpha = 0.22;
+        g.globalAlpha = 0.22 * (ghost ? 0.4 : 1);
         g.fillStyle = '#0E1526';
         for (let ty = y + 3 * dp; ty < y + bh; ty += 6 * dp) g.fillRect(x, ty, bw, 1.5 * dp);
         g.globalAlpha = 1;
-        if (hit.step === 0) {
+        if (hit.step === 0 && !ghost) {
           g.fillStyle = 'rgba(240,234,223,.85)';
           g.fillRect(x, y0 + bandH * 0.08, 2 * dp, bandH * 0.84);
         }
       }
+      drawEmissionAdds(g, l, stepKind, colW, CONV, y0, bandH, dp, () => true);
       g.fillStyle = 'rgba(240,234,223,.16)';
       for (let e = 0; e < CONV; e += cyc8(l)) g.fillRect(e * colW, y0, 1.5 * dp, bandH);
       g.fillStyle = 'rgba(14,21,38,.55)';
@@ -667,36 +749,49 @@
     g.fill();
   }
 
-  // Bar-anchored capture timeline. Note ticks are the emitted notes (the engine
-  // emits exactly the lane pattern, so laneHitAt over the window IS the emitted
-  // stream); captured ticks are solid, not-yet-woven ticks are dimmed.
+  // Bar-anchored capture timeline. M073 S05: ticks render the engine emission
+  // stream (host.getLaneEmissions via laneStepKind) — a dropped on-pattern step
+  // draws a hole, ghosts dim, macro-resolved adds appear off the positional grid.
+  // Where the stream is absent (mock default / DAW / stopped) it degrades to the
+  // positional pattern via laneHitAt and draws no drop/ghost marker (never claims
+  // an unobservable drop). Captured ticks are solid, not-yet-woven ticks dimmed.
   function drawCaptureTimeline(g, W, H, dp, bars, capState, prog) {
     const bandH = H / S.lanes.length;
     const barW = W / bars;
     const ticks = bars * eighthsPerBar();
     const tickW = W / ticks;
+    // A tick is "woven" once the playhead has passed it (or always, at complete).
+    const isWoven = (e) => capState === 3 || e / ticks <= prog / bars;
     S.lanes.forEach((l, li) => {
       const y0 = li * bandH;
       g.fillStyle = li % 2 ? '#222E52' : '#26335A';
       g.fillRect(0, y0, W, bandH);
       g.fillStyle = 'rgba(240,234,223,.05)';
       for (let e = 0; e < ticks; e++) g.fillRect(e * tickW, y0, 1 * dp, bandH);
+      const stepKind = laneStepKind(li);
       for (let e = 0; e < ticks; e++) {
         const hit = laneHitAt(l, e);
         if (!hit) continue;
-        // A tick is "woven" once the playhead has passed it (or always, at
-        // complete). Ahead-of-playhead ticks are faint to read as pending.
-        const woven = capState === 3 || e / ticks <= prog / bars;
+        // Ahead-of-playhead ticks are faint to read as pending.
+        const woven = isWoven(e);
+        const kind = stepKind ? stepKind.get(hit.step) : undefined;
+        // Emission-truthful drop: engine culled this on-pattern step. Draw a
+        // hole, not a tick. Guarded by stepKind, so a muted lane (no recorded
+        // emission => empty stream => null stepKind) is never drawn as a drop.
+        if (kind === 'drop') { drawDropMarker(g, e * tickW, tickW, y0, bandH, dp, woven); continue; }
         const vn = hitVelocity(l, li, e, hit);
+        if (vn <= 0) continue; // baseVelocity 0 mutes the lane: draw no hit (M073 S01)
+        const ghost = kind === 'ghost'; // ghost emissions render dimmed vs base
         const bw = Math.max(2 * dp, tickW * 0.7);
         const bh = bandH * Math.min(0.9, 0.32 + vn * 0.5);
         const x = e * tickW + (tickW - bw) / 2;
         const y = y0 + (bandH - bh) / 2;
-        g.globalAlpha = woven ? 1 : 0.18;
+        g.globalAlpha = (woven ? 1 : 0.18) * (ghost ? 0.4 : 1);
         g.fillStyle = l.hue;
         g.fillRect(x, y, bw, bh);
         g.globalAlpha = 1;
       }
+      drawEmissionAdds(g, l, stepKind, tickW, ticks, y0, bandH, dp, isWoven);
       g.fillStyle = 'rgba(14,21,38,.55)';
       g.fillRect(0, y0 + bandH - 2 * dp, W, 2 * dp);
     });
@@ -790,7 +885,7 @@
   }
   function buildDesk() {
     desk.innerHTML = '';
-    strips = []; rings = []; hands = []; ladders = []; vus = [];
+    strips = []; rings = []; hands = []; ladders = []; vus = []; playeds = [];
     // M045 S01 T03: ladder DOM was just recreated — invalidate the overlay
     // diff cache so the next onFrame paints classes onto the fresh buttons.
     overlayLastKind.length = 0;
@@ -808,7 +903,10 @@
         <div class="body2">
           <div class="core">
             <svg class="ring" viewBox="0 0 64 64" aria-hidden="true"></svg>
-            <div class="ladder" role="group" aria-label="${l.name} steps"></div>
+            <div class="laddwrap">
+              <div class="ladder" role="group" aria-label="${l.name} steps"></div>
+              <div class="played" aria-hidden="true" title="What's actually played — dots sit at the real onset (syncopation, swing, humanize shift them off the grid)"></div>
+            </div>
             <div class="vu"><i></i></div>
           </div>
           <div class="deep">
@@ -827,7 +925,7 @@
           </div>
         </div>
         <div class="feel"></div>
-        <div class="stat">${l.ch === 0 ? 'Auto' : 'CH ' + l.ch} · N${l.note}</div>`;
+        <div class="stat">${l.ch < 0 ? 'Auto' : 'CH ' + l.ch} · N${l.note}</div>`;
       desk.appendChild(s);
       strips.push(s);
       const svg = s.querySelector('svg.ring');
@@ -835,6 +933,7 @@
       rings.push(el('g', {}, svg));
       hands.push(el('line', { x1: 32, y1: 32, x2: 32, y2: 9, stroke: '#F0EADF', 'stroke-width': 1.2, opacity: 0.85 }, svg));
       ladders.push(s.querySelector('.ladder'));
+      playeds.push(s.querySelector('.played'));
       vus.push(s.querySelector('.vu i'));
       s.querySelector('.ex').addEventListener('click', () => expandStrip(expanded === li ? -1 : li));
       const nameEl = s.querySelector('.nm b');
@@ -938,7 +1037,7 @@
     expanded = li;
     strips.forEach((s, i) => s.classList.toggle('expanded', i === li));
     const n = S.lanes.length;
-    const wide = n >= 6 ? '4fr' : '2.9fr';
+    const wide = n >= 6 ? '2.55fr' : '1.9fr';
     const narrow = n >= 6 ? '.38fr' : '.62fr';
     const master = n >= 6 ? '148px' : '160px';
     desk.style.gridTemplateColumns = li < 0
@@ -1153,23 +1252,44 @@
     });
 
     /* ENVELOPES */
-    const envPath = (depth) => {
+    // The preview box shows a FIXED WINDOW of PERIOD_MAX bars of timeline, so
+    // one cycle's WAVELENGTH is directly proportional to the period: a longer
+    // period draws a physically WIDER wave (fewer humps across the box), a
+    // shorter period a tighter one (more humps). At period == PERIOD_MAX exactly
+    // one full cycle fills the width; at period 1 there are PERIOD_MAX cycles.
+    // This keeps frequency intuitive — more bars visibly means a slower, wider
+    // wave — matching the playhead (data-envph), which also sweeps the box once
+    // per PERIOD_MAX bars so a longer-period cycle takes proportionally longer.
+    const PERIOD_MAX = 16;
+    const envPath = (depth, period) => {
+      // cyclesInBox = PERIOD_MAX / period → wavelength ∝ period.
+      const cycles = PERIOD_MAX / Math.max(1, period || 1);
       let d = 'M0 15';
-      for (let x = 0; x <= 74; x += 2)
-        d += ` L${x} ${(15 - Math.sin((x / 74) * Math.PI * 2) * 11 * depth).toFixed(1)}`;
+      for (let x = 0; x <= 74; x += 1)
+        d += ` L${x} ${(15 - Math.sin((x / 74) * Math.PI * 2 * cycles) * 11 * depth).toFixed(1)}`;
       return d;
     };
+    // Period is edited as an integer bar count in [1, PERIOD_MAX]; the clamp
+    // (Math.max(1, …)) guarantees the emitted setEnvelope never carries period<=0.
+    const periodToNorm = (p) => Math.max(0, Math.min(1, (Math.max(1, p || 1) - 1) / (PERIOD_MAX - 1)));
+    const normToPeriod = (n) => Math.max(1, Math.round(1 + Math.max(0, Math.min(1, n)) * (PERIOD_MAX - 1)));
+    // Display the stored period as a clamped integer bar count in [1, PERIOD_MAX].
+    // (normToPeriod maps a 0..1 norm, not a bar count, so a bar count must not be
+    // passed to it for display — that would misread e.g. period 4 as "16 bars".)
+    const clampPeriod = (p) => Math.max(1, Math.min(PERIOD_MAX, Math.round(p || 1)));
     const curve = (e, id) =>
-      `<svg class="envcurve" data-envdepth="${id}" viewBox="0 0 74 30" role="slider" tabindex="0" aria-label="Envelope ${id + 1} depth (drag up/down, right-click to reset)" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(e.depth * 100)}"><path d="${envPath(e.depth)}" fill="none" stroke="${l.hue}" stroke-width="1.4" opacity="${e.on ? 0.95 : 0.3}"/><line data-envph="${id}" x1="0" y1="2" x2="0" y2="28" stroke="#F0EADF" stroke-width="1" opacity="${e.on ? 0.7 : 0}"/></svg>`;
+      `<svg class="envcurve" data-envdepth="${id}" viewBox="0 0 74 30" role="slider" tabindex="0" aria-label="Envelope ${id + 1} depth (drag up/down, right-click to reset)" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(e.depth * 100)}"><path d="${envPath(e.depth, e.period)}" fill="none" stroke="${l.hue}" stroke-width="1.4" opacity="${e.on ? 0.95 : 0.3}"/><line data-envph="${id}" x1="0" y1="2" x2="0" y2="28" stroke="#F0EADF" stroke-width="1" opacity="${e.on ? 0.7 : 0}"/></svg>`;
     env.innerHTML =
       l.envs.map((e, i) => `
         <div class="envrow">
-          <div class="t">${e.target} · <span style="color:var(--dim)">${e.period} bars · sine</span></div>
+          <div class="t">${e.target} · <span style="color:var(--dim)" data-envmeta="${i}">${clampPeriod(e.period)} bars · sine</span></div>
           ${curve(e, i)}
           <div class="m">depth <span data-envdepthval="${i}">${Math.round(e.depth * 100)}%</span> <button data-envon="${i}" class="chip ${e.on ? 'on' : ''}" style="padding:2px 8px">${e.on ? 'ON' : 'OFF'}</button></div>
+          <div class="param-slider envctl"><label>Period</label><div class="slider-track" data-envperiod="${i}" role="slider" tabindex="0" aria-label="Envelope ${i + 1} period in bars" aria-valuemin="1" aria-valuemax="${PERIOD_MAX}" aria-valuenow="${clampPeriod(e.period)}"><i style="width:${(periodToNorm(e.period) * 100).toFixed(1)}%"></i></div><span class="v" data-envperiodval="${i}">${clampPeriod(e.period)} bars</span></div>
+          <div class="param-slider envctl"><label>Depth</label><div class="slider-track" data-envdepthslider="${i}" role="slider" tabindex="0" aria-label="Envelope ${i + 1} depth" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(e.depth * 100)}"><i style="width:${(e.depth * 100).toFixed(1)}%"></i></div><span class="v" data-envdepthsliderval="${i}">${Math.round(e.depth * 100)}%</span></div>
         </div>`).join('') +
       `<button class="addenv">+ add envelope</button>
-       <div class="hint">drag a curve up/down to set depth · right-click resets to 100% · envelopes superimpose</div>`;
+       <div class="hint">drag a curve up/down to set depth · right-click resets to 100% · edit period and depth with the sliders · envelopes superimpose</div>`;
     env.querySelectorAll('[data-envon]').forEach((b) =>
       b.addEventListener('click', () => {
         const i = +b.dataset.envon;
@@ -1182,15 +1302,23 @@
       const i = +svg.dataset.envdepth;
       const path = svg.querySelector('path');
       const valSpan = env.querySelector(`[data-envdepthval="${i}"]`);
+      const slider = env.querySelector(`[data-envdepthslider="${i}"]`);
+      const sliderFill = slider ? slider.querySelector('i') : null;
+      const sliderVal = env.querySelector(`[data-envdepthsliderval="${i}"]`);
       const emit = (depth) => {
         const e = Object.assign({}, l.envs[i], { depth });
         l.envs[i] = e;
         host.action('setEnvelope', { lane: li, index: i, envelope: e });
       };
       const repaint = (depth) => {
-        path.setAttribute('d', envPath(depth));
-        if (valSpan) valSpan.textContent = `${Math.round(depth * 100)}%`;
-        svg.setAttribute('aria-valuenow', String(Math.round(depth * 100)));
+        const pct = Math.round(depth * 100);
+        path.setAttribute('d', envPath(depth, l.envs[i].period));
+        if (valSpan) valSpan.textContent = `${pct}%`;
+        svg.setAttribute('aria-valuenow', String(pct));
+        // Keep the explicit depth slider in lock-step with the curve drag.
+        if (sliderFill) sliderFill.style.width = `${(depth * 100).toFixed(1)}%`;
+        if (sliderVal) sliderVal.textContent = `${pct}%`;
+        if (slider) slider.setAttribute('aria-valuenow', String(pct));
       };
       svg.addEventListener('contextmenu', (ev) => {
         ev.preventDefault();
@@ -1219,6 +1347,84 @@
         index: l.envs.length,
         envelope: { target: 'Velocity', period: [1, 4, 7, 16][l.envs.length % 4], depth: 0.3, on: true },
       }));
+    // Explicit, discoverable period control: horizontal drag picks an integer
+    // bar count (1..PERIOD_MAX), rescales the curve horizontally, and emits the
+    // same setEnvelope bridge action carrying envelope.period (MEM040 — no new action).
+    env.querySelectorAll('[data-envperiod]').forEach((track) => {
+      const i = +track.dataset.envperiod;
+      const fill = track.querySelector('i');
+      const valSpan = env.querySelector(`[data-envperiodval="${i}"]`);
+      const meta = env.querySelector(`[data-envmeta="${i}"]`);
+      const svg = env.querySelector(`[data-envdepth="${i}"]`);
+      const path = svg ? svg.querySelector('path') : null;
+      // Rect is passed in (captured once at pointerdown) rather than re-measured
+      // per move: emitting setEnvelope re-renders and detaches this track, after
+      // which getBoundingClientRect() reads 0 and the norm collapses to 1.
+      const calc = (e, r) => Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+      const apply = (norm) => {
+        const period = normToPeriod(norm); // clamped >= 1, never <= 0
+        fill.style.width = `${(periodToNorm(period) * 100).toFixed(1)}%`;
+        if (valSpan) valSpan.textContent = `${period} bars`;
+        track.setAttribute('aria-valuenow', String(period));
+        if (meta) meta.textContent = `${period} bars · sine`;
+        if (path) path.setAttribute('d', envPath(l.envs[i].depth, period));
+        const e = Object.assign({}, l.envs[i], { period });
+        l.envs[i] = e;
+        host.action('setEnvelope', { lane: li, index: i, envelope: e });
+      };
+      // Window-level pointermove/up (matching the macro/expression sliders) so a
+      // drag keeps tracking even when the pointer leaves the 14px-tall track. The
+      // track geometry is fixed for the gesture, so the pointerdown rect stays
+      // valid even after the setEnvelope re-render detaches the original element.
+      track.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        const r = track.getBoundingClientRect();
+        apply(calc(e, r));
+        const mv = (ev) => apply(calc(ev, r));
+        const up = () => window.removeEventListener('pointermove', mv);
+        window.addEventListener('pointermove', mv);
+        window.addEventListener('pointerup', up, { once: true });
+      });
+    });
+    // Explicit, discoverable depth slider mirrors the curve-drag depth edit
+    // through the same setEnvelope bridge, giving an accessible labeled control.
+    env.querySelectorAll('[data-envdepthslider]').forEach((track) => {
+      const i = +track.dataset.envdepthslider;
+      const fill = track.querySelector('i');
+      const valSpan = env.querySelector(`[data-envdepthsliderval="${i}"]`);
+      const svg = env.querySelector(`[data-envdepth="${i}"]`);
+      const path = svg ? svg.querySelector('path') : null;
+      const curveVal = env.querySelector(`[data-envdepthval="${i}"]`);
+      // Rect is passed in (captured once at pointerdown); see the period slider
+      // above — the setEnvelope re-render detaches the track mid-drag.
+      const calc = (e, r) => Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+      const apply = (depth) => {
+        const pct = Math.round(depth * 100);
+        fill.style.width = `${(depth * 100).toFixed(1)}%`;
+        if (valSpan) valSpan.textContent = `${pct}%`;
+        track.setAttribute('aria-valuenow', String(pct));
+        // Keep the curve preview + its depth readout in sync with the slider.
+        if (path) path.setAttribute('d', envPath(depth, l.envs[i].period));
+        if (curveVal) curveVal.textContent = `${pct}%`;
+        if (svg) svg.setAttribute('aria-valuenow', String(pct));
+        const e = Object.assign({}, l.envs[i], { depth });
+        l.envs[i] = e;
+        host.action('setEnvelope', { lane: li, index: i, envelope: e });
+      };
+      // Window-level pointermove/up (matching the macro/expression sliders) so a
+      // drag keeps tracking even when the pointer leaves the 14px-tall track. The
+      // track geometry is fixed for the gesture, so the pointerdown rect stays
+      // valid even after the setEnvelope re-render detaches the original element.
+      track.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        const r = track.getBoundingClientRect();
+        apply(calc(e, r));
+        const mv = (ev) => apply(calc(ev, r));
+        const up = () => window.removeEventListener('pointermove', mv);
+        window.addEventListener('pointermove', mv);
+        window.addEventListener('pointerup', up, { once: true });
+      });
+    });
 
     /* EXPRESSION */
     const expr = s.querySelector('[data-pane="expr"]');
@@ -1231,7 +1437,7 @@
       { field: 'humanize', label: 'Humanize', norm: l.humanize / 50, fmt: (v) => Math.round(v * 50) + 'ms' },
       { field: 'duration', label: 'Duration', norm: l.duration / 4, fmt: (v) => (v * 4).toFixed(1) },
       { field: 'note', label: 'Note', norm: l.note / 127, fmt: (v) => 'N' + Math.round(v * 127) },
-      { field: 'channel', label: 'Channel', norm: l.ch / 16, fmt: (v) => { const c = Math.round(v * 16); return c === 0 ? 'Auto' : 'CH ' + c; } },
+      { field: 'channel', label: 'Channel', norm: (l.ch + 1) / 16, fmt: (v) => { const c = Math.round(v * 16) - 1; return c < 0 ? 'Auto' : 'CH ' + c; } },
     ];
     expr.innerHTML = PARAMS.map((p) =>
       `<div class="param-slider"><label>${p.label}</label>` +
@@ -1461,6 +1667,87 @@
     }
   }
 
+  /* Desk "played" timeline (expanded strip only). A second vertical column
+     beside the ladder that shows WHAT IS ACTUALLY PLAYED, as a rolling window
+     scrolling with the transport. The ladder shows pattern intent (fixed grid
+     rows); this column reads the engine emission stream (host.getLaneEmissions →
+     {ppq, shiftedPpq, step, kind}) and places each hit by how recently it fired
+     relative to the playhead, so it is genuinely time-positioned, NOT quantized
+     to the grid: a swung / syncopated / humanized / offset hit enters the window
+     at its real shifted onset, off its grid row — tying what the user sees to
+     what they hear.
+
+     Rolling window (the fix for "dots accumulate and fill the column"): each dot
+     is positioned by its AGE in eighth-ticks behind the current playhead,
+     ageT8 = frame.t8 − onsetT8 (onsetT8 = onset ppq × 2, since t8 = 2·ppq). The
+     freshest hit (age 0) sits at the bottom by the playhead; as the transport
+     advances the dot scrolls UP and, once its age exceeds the window, it
+     drops off entirely — so the column shows only the last window of hits and
+     self-clears instead of filling up. Orientation matches the ladder
+     (column-reverse), so both vertical timelines move the same direction and
+     read as complementary: bottom = (age/window)·100%, freshest at bottom.
+
+     Kind coloring mirrors the ladder overlay vocabulary: base = lane hue,
+     ghost = dimmed, add = accent (off-grid mutation/macro add), drop = hollow.
+     Drops never schedule a note, so they use the grid ppq (no shifted onset);
+     fired hits use the shifted onset (fall back to grid ppq for legacy 4-field
+     builds without shiftedPpq).
+
+     Empty stream (mock default, DAW, or stopped playback) clears the column and
+     draws nothing — never claims an onset it can't observe, mirroring the
+     overlay's empty-return degradation contract. */
+  // Per-kind base opacity (matches the old ladder-overlay reading: ghost + drop
+  // sit dimmer than a base/add hit). Multiplied by the age fade in updatePlayed.
+  const PLAYED_KIND_OPACITY = { base: 1, add: 1, ghost: 0.42, drop: 0.55 };
+  function updatePlayed(li, t8) {
+    const col = playeds[li];
+    if (!col) return;
+    // Only meaningful in the expanded strip; collapsed strips keep it hidden via
+    // CSS, so skip the work entirely to avoid per-frame churn on every lane.
+    if (expanded !== li) { if (col.childElementCount) col.replaceChildren(); return; }
+    const l = S.lanes[li];
+    if (!host.getLaneEmissions || !l || !l.active) { if (col.childElementCount) col.replaceChildren(); return; }
+    const emissions = host.getLaneEmissions(li) || [];
+    if (!emissions.length) { if (col.childElementCount) col.replaceChildren(); return; }
+    // Rolling window = one cycle of the lane in eighth-ticks (cyc8), so exactly
+    // one lap of the pattern is visible at a time. cyc8 is already in eighths
+    // (t8 units), matching frame.t8. Guard against a degenerate zero-length lane.
+    const win = cyc8(l);
+    if (!(win > 0)) { if (col.childElementCount) col.replaceChildren(); return; }
+    const now = typeof t8 === 'number' ? t8 : 0;
+    // Newest emission per (step,kind) wins so a re-fired step replaces its prior
+    // mark rather than stacking dots as the ring wraps. Keyed by step+kind but
+    // positioned by absolute age, so the SAME step re-fired a cycle later moves.
+    const byKey = new Map();
+    for (let i = 0; i < emissions.length; i++) {
+      const e = emissions[i];
+      if (!e) continue;
+      const isDrop = e.kind === 'drop';
+      const ppq = isDrop ? e.ppq : (typeof e.shiftedPpq === 'number' ? e.shiftedPpq : e.ppq);
+      // onset in eighth-ticks; age behind the playhead. Fresh hits (age→0) at the
+      // bottom, older ones scroll up; past the window they drop off (self-clear).
+      const ageT8 = now - ppq * 2;
+      if (!(ageT8 >= 0 && ageT8 <= win)) continue;
+      byKey.set(e.step + ':' + e.kind, { age: ageT8, kind: e.kind });
+    }
+    const frag = document.createDocumentFragment();
+    byKey.forEach((d) => {
+      const dot = document.createElement('i');
+      dot.className = 'pdot p-' + d.kind;
+      // Freshest (age 0) at bottom (0%), oldest (age=win) at top (100%) — dots
+      // scroll UPWARD, matching the column-reverse ladder beside it so both
+      // vertical timelines read as complementary (moving the same direction).
+      const frac = d.age / win;
+      dot.style.bottom = (frac * 100).toFixed(2) + '%';
+      // Opacity = age fade × the kind's base opacity (ghost/drop read dimmer than
+      // base/add even when fresh). Inline so CSS never fights the fade.
+      const fade = Math.max(0.15, 1 - d.age / win);
+      dot.style.opacity = (fade * (PLAYED_KIND_OPACITY[d.kind] || 1)).toFixed(2);
+      frag.appendChild(dot);
+    });
+    col.replaceChildren(frag);
+  }
+
   /* ================= first-run MIDI-routing diagnostic banner =================
      Poly is a MIDI-only instrument: it makes no sound until its output is routed
      to a drum instrument in the DAW, and the plugin has no audio-feedback path
@@ -1578,13 +1865,19 @@
         ladders[li].querySelectorAll('button').forEach((b, i) =>
           b.classList.toggle('now', laneOn && frame.playing && i === fl.step));
         updateEmissionOverlay(li);
+        updatePlayed(li, frame.t8);
         const active = laneOn && frame.playing && (l.cells ? true : !!l.pattern[fl.step]) && frame.t8 % 1 < 0.5;
         vus[li].style.width = active ? `${(l.vel / 127) * 100}%` : '4%';
         if (expanded === li) {
           strips[li].querySelectorAll('[data-envph]').forEach((ln, i) => {
             const e = l.envs[i];
             if (!e) return;
-            const x = (((frame.t8 / 12) / e.period) % 1) * 74;
+            // The box is a fixed PERIOD_MAX-bar window (see envPath), so the
+            // playhead sweeps it once per PERIOD_MAX bars regardless of the
+            // envelope's own period. A longer-period wave then visibly takes
+            // more of the sweep to complete one cycle — the intuitive slower/
+            // wider reading. (PERIOD_MAX=16, mirrored from the curve builder.)
+            const x = (((frame.t8 / 12) / 16) % 1) * 74;
             ln.setAttribute('x1', x.toFixed(1));
             ln.setAttribute('x2', x.toFixed(1));
           });

@@ -23,6 +23,7 @@
 #include "poly/state_io.h"
 #include "poly/types.h"
 #include "poly_test_host.h"
+#include "ui_snapshot.h" // M073: full UISnapshot for the emission-ring test
 
 using poly::test::MidiEvent;
 using poly::test::PolyTestHost;
@@ -1804,6 +1805,225 @@ TEST(HostTests, AddEnvelopeAtGapIndexGrowsCountAndLeavesGapSlotsInactive) {
     EXPECT_FALSE(lane.envelopes[0].active) << "gap slot 0 must be inactive (no phantom Velocity LFO)";
     EXPECT_FALSE(lane.envelopes[1].active) << "gap slot 1 must be inactive (no phantom Velocity LFO)";
     EXPECT_TRUE(lane.envelopes[2].active) << "the added envelope at slot 2 must be active";
+
+    host.teardown();
+}
+
+// --- M073 S03 T03: MIDI-channel -1 Auto sentinel + explicit channel survive save/restore ---
+//
+// Pins the symmetric -1<->Auto encoding through the real host param->process->save->restore
+// path the DAW drives. The WebUI JS defect (S03 T01/T02) was a read/write asymmetry that
+// never emitted the -1 sentinel; the C++ native/state path already encodes it as
+// engine = round(norm * 16) - 1 (Kind::MidiChannel, params_def.h:132) yielding -1..15.
+// This test proves that contract end-to-end so any future regression on the C++ side that
+// re-introduces an off-by-one (explicit N stored as N+1) or drops the Auto sentinel (stored
+// as 0 or an explicit channel) fails here — the same user-visible symptom the Cubase UAT
+// (MEM063) reported, now guarded on the plugin surface the WebUI shares state with.
+TEST(HostTests, MidiChannel_AutoSentinelAndExplicitSurviveSaveRestore) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+
+    const uint32_t lane0Channel = poly::ParamIDs::laneCoreParam(0, poly::ParamIDs::kCoreMidiChannel);
+    const uint32_t lane1Channel = poly::ParamIDs::laneCoreParam(1, poly::ParamIDs::kCoreMidiChannel);
+
+    // Normalized encodings the controller/native path use: norm = (channel + 1) / 16, so
+    // round(norm * 16) - 1 recovers the channel. Auto is norm 0.0 -> -1.
+    const double kAutoNorm = 0.0;                    // round(0)  - 1 = -1 (Auto sentinel)
+    const double kChannel7Norm = (7.0 + 1.0) / 16.0; // round(8)  - 1 =  7
+    const double kChannel9Norm = (9.0 + 1.0) / 16.0; // round(10) - 1 =  9
+
+    // Stamp lane 0 with an EXPLICIT channel first. The lane's struct default is already -1
+    // (types.h:200), so without this precondition a later "reads back -1" assertion could pass
+    // trivially on an untouched lane. Proving explicit 7 lands, THEN overwriting with Auto and
+    // reading back -1, shows the write path genuinely emits the sentinel.
+    host.injectParamChangeThroughProcess(lane0Channel, kChannel7Norm);
+    host.processBlock(0.0, 120.0, /*playing=*/true);
+    {
+        auto pre = deserializeSceneState(host.saveState());
+        ASSERT_EQ(pre.sceneA.lanes[0].midiChannel, 7)
+            << "precondition: explicit channel 7 must land through the param->process path before "
+               "we overwrite lane 0 with Auto";
+    }
+
+    // Now set lane 0 back to Auto (-1) and lane 1 to explicit channel 9 in the same block.
+    host.injectParamChangeThroughProcess(lane0Channel, kAutoNorm);
+    host.injectParamChangeThroughProcess(lane1Channel, kChannel9Norm);
+    host.processBlock(0.0, 120.0, /*playing=*/true);
+
+    auto bytes = host.saveState();
+    ASSERT_FALSE(bytes.empty()) << "saveState() should produce a non-empty buffer";
+
+    // Reload into a fresh processor (the DAW project-reload path) and drain setState.
+    PolyTestHost restored;
+    ASSERT_TRUE(restored.setup(44100.0, 512));
+    ASSERT_TRUE(restored.loadState(bytes)) << "loadState() should accept a valid saveState() buffer";
+    restored.processBlock(0.0, 120.0, /*playing=*/false);
+
+    auto scene = deserializeSceneState(restored.saveState());
+    EXPECT_EQ(scene.sceneA.lanes[0].midiChannel, -1)
+        << "Auto lane must round-trip as the -1 sentinel, not 0 or an explicit channel. A value of "
+           "0 would mean the Auto encoding collapsed to 'channel 1'; the symptom MEM063 reported.";
+    EXPECT_EQ(scene.sceneA.lanes[1].midiChannel, 9)
+        << "Explicit channel 9 must round-trip with no off-by-one (10 would be the classic +1 bug).";
+
+    restored.teardown();
+    host.teardown();
+}
+
+// --- M073 S04 T03: envelope periodBars round-trips through notify()->process() and persists ---
+//
+// S04 makes the envelope period (duration in bars) editable in the WebUI, routed through the
+// EXISTING setEnvelope bridge with NO C++/serialization change — periodBars is already a real
+// engine field (types.h:170), already carried by the EnvelopeUpdate notify()->process()
+// handshake (the same path injectEnvelope drives, mirroring AddEnvelopeAtCurrentCountGrowsEnvelopeCount
+// above), and already serialized in v15 state (state_io_envelope.h). This test is the plugin-path
+// proof the slice success criterion demands: a non-DEFAULT period (7.0; the struct default is 4.0,
+// types.h:170) survives the real DAW handshake AND a fresh save/restore cycle. Any future regression
+// that drops periodBars from the audio-thread consume or from (de)serialization fails here with a
+// visible mismatch, not a silent reset to the 4.0 default. Per MEM051, this must live in
+// poly_host_tests (processor.cpp + SDK) — poly_tests links only poly_engine and cannot reach the
+// notify()/process() mutation site.
+TEST(HostTests, EnvelopePeriodBarsRoundTripsThroughProcessAndPersists) {
+    constexpr float kNonDefaultPeriod = 7.0f; // deliberately != the 4.0 struct default (types.h:170)
+
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+
+    // Add an envelope carrying a non-default period through the same EnvelopeUpdate handshake a
+    // controller drives via sendEnvelopeUpdate / the setEnvelope bridge action.
+    poly::Envelope env{};
+    env.target = poly::EnvTarget::Velocity;
+    env.periodBars = kNonDefaultPeriod;
+    env.depth = 0.5f;
+    host.injectEnvelope(/*laneIndex=*/0, /*envelopeIndex=*/0, /*active=*/true, env);
+    host.processBlock(0.0, 120.0, /*playing=*/false);
+
+    // Snapshot the saved state once (a drained, stopped block republished stateSnapshot_).
+    auto bytes = host.saveState();
+    ASSERT_FALSE(bytes.empty()) << "saveState() should produce a non-empty buffer";
+
+    // 1) The period survives the notify()->process() handshake and is published in the snapshot.
+    {
+        auto scene = deserializeSceneState(bytes);
+        const auto& lane = scene.sceneA.lanes[0];
+        ASSERT_EQ(lane.envelopeCount, 1) << "the injected envelope must land in slot 0";
+        ASSERT_TRUE(lane.envelopes[0].active) << "the injected envelope must be active";
+        EXPECT_FLOAT_EQ(lane.envelopes[0].envelope.periodBars, kNonDefaultPeriod)
+            << "period must round-trip through the audio-thread consume, not reset to the 4.0 default";
+    }
+
+    // 2) Persistence: reload the saved bytes into a FRESH processor (the DAW project-reload path)
+    //    and confirm the non-default period is still there after setState + a draining block.
+
+    PolyTestHost restored;
+    ASSERT_TRUE(restored.setup(44100.0, 512));
+    ASSERT_TRUE(restored.loadState(bytes)) << "loadState() should accept a valid saveState() buffer";
+    restored.processBlock(0.0, 120.0, /*playing=*/false);
+
+    auto scene = deserializeSceneState(restored.saveState());
+    const auto& lane = scene.sceneA.lanes[0];
+    ASSERT_EQ(lane.envelopeCount, 1) << "the envelope must survive save/restore";
+    EXPECT_FLOAT_EQ(lane.envelopes[0].envelope.periodBars, kNonDefaultPeriod)
+        << "period must persist across save/restore; a 4.0 here means the field was dropped on the "
+           "(de)serialization or setState path";
+
+    restored.teardown();
+    host.teardown();
+}
+
+// M073: the desk emission overlay + played timeline read host.getLaneEmissions,
+// which in the DAW is fed by the processor draining the engine
+// EmissionEventBuffer into the per-lane UISnapshot rings (publishEmissions),
+// serialized to the frame by web_ui_view.cpp. This proves that native handoff
+// end-to-end: after a playing block the rings hold classified emissions with a
+// valid shifted onset, and a stopped block clears them (mirroring the WASM
+// host's resetLaneEmissions on Stop, so the overlay degrades to empty).
+TEST(HostTests, EmissionRingsPopulatedOnPlayAndClearedOnStop) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+
+    poly::UISnapshot* snap = host.controllerUiSnapshot();
+    ASSERT_NE(snap, nullptr) << "fixture broken: connect never populated the UISnapshot pointer";
+
+    // Before any playing block the rings are empty — no emission published.
+    for (int lane = 0; lane < poly::kMaxLanes; ++lane)
+        EXPECT_EQ(snap->emissionHead[lane].load(std::memory_order_acquire), 0u)
+            << "lane " << lane << " ring should be empty before playback";
+
+    // Play a full bar. The default render scene has active lanes with hits, so
+    // the engine emits Base classifications the processor drains into the rings.
+    host.processBlock(0.0, 120.0, /*playing=*/true);
+
+    uint64_t totalEmitted = 0;
+    constexpr int cap = poly::UISnapshot::kEmissionRingCap;
+    for (int lane = 0; lane < poly::kMaxLanes; ++lane) {
+        uint64_t head = snap->emissionHead[lane].load(std::memory_order_acquire);
+        totalEmitted += head;
+        int n = head < static_cast<uint64_t>(cap) ? static_cast<int>(head) : cap;
+        for (int k = 0; k < n; ++k) {
+            const auto& slot = snap->emissionRing[lane][k];
+            int kind = slot.kind.load(std::memory_order_relaxed);
+            EXPECT_GE(kind, 0);
+            EXPECT_LE(kind, 3) << "kind must be a valid EmissionKind (0..3)";
+            // Fired kinds (Base/Ghost/Add) carry a real shifted onset; a Drop
+            // never schedules a note so its shifted onset equals the grid ppq.
+            double ppq = slot.ppq.load(std::memory_order_relaxed);
+            double shifted = slot.shiftedPpq.load(std::memory_order_relaxed);
+            EXPECT_GE(ppq, 0.0);
+            EXPECT_GE(shifted, 0.0);
+            if (kind == static_cast<int>(poly::EmissionKind::Drop))
+                EXPECT_DOUBLE_EQ(shifted, ppq) << "a Drop has no shifted onset — must equal the grid ppq";
+        }
+    }
+    EXPECT_GT(totalEmitted, 0u) << "a playing bar with active hit lanes must publish at least one emission";
+
+    // Stop. The stopped-path clears the rings so the overlay reads empty and
+    // degrades to positional-pattern-only (no lingering stale marks).
+    host.processBlock(4.0, 120.0, /*playing=*/false);
+    for (int lane = 0; lane < poly::kMaxLanes; ++lane)
+        EXPECT_EQ(snap->emissionHead[lane].load(std::memory_order_acquire), 0u)
+            << "lane " << lane << " ring must clear on Stop";
+
+    host.teardown();
+}
+
+// M073 fix regression guard: the WebUI played timeline ages each dot against the
+// frame's NORMALIZED t8 (= fmod(ppqStart, 128)/128 · 256). The processor must
+// therefore store emission onsets on that SAME wrapped 128-beat timeline, NOT as
+// raw absolute project ppq — otherwise, once the transport passes ppq 128, every
+// stored onset dwarfs the normalized t8, every dot ages out of the [0, cyc8]
+// window, and the DAW column renders blank while the engine keeps emitting. This
+// plays a block WELL past the 128-beat wrap and asserts every stored onset lands
+// in [0, 128): raw absolute onsets (~192) would fail; wrapped ones (~64) pass.
+TEST(HostTests, EmissionOnsetsNormalizedToFrameTimeline) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+    poly::UISnapshot* snap = host.controllerUiSnapshot();
+    ASSERT_NE(snap, nullptr) << "fixture broken: connect never populated the UISnapshot pointer";
+
+    // Play a block starting at ppq 192 — 1.5 laps into the 128-beat wrap window,
+    // so absolute onsets (~192.x) and wrapped onsets (~64.x) are unambiguously
+    // distinguishable (192 vs 64 straddle the 128 boundary).
+    const double startPpq = 192.0;
+    host.processBlock(startPpq, 120.0, /*playing=*/true);
+
+    constexpr int cap = poly::UISnapshot::kEmissionRingCap;
+    uint64_t totalEmitted = 0;
+    for (int lane = 0; lane < poly::kMaxLanes; ++lane) {
+        uint64_t head = snap->emissionHead[lane].load(std::memory_order_acquire);
+        totalEmitted += head;
+        int n = head < static_cast<uint64_t>(cap) ? static_cast<int>(head) : cap;
+        for (int k = 0; k < n; ++k) {
+            const auto& slot = snap->emissionRing[lane][k];
+            double ppq = slot.ppq.load(std::memory_order_relaxed);
+            double shifted = slot.shiftedPpq.load(std::memory_order_relaxed);
+            EXPECT_GE(ppq, 0.0);
+            EXPECT_LT(ppq, 128.0) << "onset must be wrapped onto the frame timeline, not raw absolute ppq";
+            EXPECT_GE(shifted, 0.0);
+            EXPECT_LT(shifted, 128.0) << "shifted onset must be wrapped onto the frame timeline";
+        }
+    }
+    EXPECT_GT(totalEmitted, 0u) << "a playing bar past the wrap must still publish emissions";
 
     host.teardown();
 }

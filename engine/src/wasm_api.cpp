@@ -17,8 +17,11 @@ namespace {
 
 static constexpr int kFieldsPerEvent = 6;
 // M045 S01 T01: layout of poly_emission_buffer per emission.
-// [0]=ppqPosition, [1]=laneIndex, [2]=cycleStep, [3]=kind (0=Base,1=Ghost,2=Add,3=Drop).
-static constexpr int kFieldsPerEmission = 4;
+// [0]=ppqPosition (grid), [1]=laneIndex, [2]=cycleStep,
+// [3]=kind (0=Base,1=Ghost,2=Add,3=Drop),
+// [4]=shiftedPpqPosition (post-timing-shift onset; == [0] for Drop). Consumed by
+// the desk "played" timeline so a syncopated/delayed hit shows where it sounds.
+static constexpr int kFieldsPerEmission = 5;
 
 struct Context {
     poly::Engine engine;
@@ -212,6 +215,7 @@ int poly_render(PolyContext ctx, double ppqStart, double ppqEnd, double tempo, d
         c->flatEmissions[offset + 1] = static_cast<double>(ee.laneIndex);
         c->flatEmissions[offset + 2] = static_cast<double>(ee.cycleStep);
         c->flatEmissions[offset + 3] = static_cast<double>(ee.kind);
+        c->flatEmissions[offset + 4] = ee.shiftedPpqPosition;
     }
 
     return static_cast<int>(c->eventBuffer.count);
