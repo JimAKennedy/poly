@@ -213,6 +213,42 @@ TEST(Euclidean, ExhaustiveMatchesReference) {
     }
 }
 
+namespace {
+
+// Collect the onset step indices of a rotation-0..n pattern into a set, so canon
+// spellings can be pinned as human-readable {position, ...} literals.
+std::set<int> onsetSet(int k, int n, int rotation) {
+    std::array<bool, poly::kMaxSteps> p{};
+    poly::euclidean(k, n, rotation, p);
+    std::set<int> onsets;
+    for (int i = 0; i < n; ++i)
+        if (p[i])
+            onsets.insert(i);
+    return onsets;
+}
+
+} // namespace
+
+// Canon test: pin the documented Toussaint spellings so a future optimisation of
+// euclidean() cannot silently reintroduce a phase shift. Rotation-0 spellings are
+// the maximally-even forms from Toussaint's "The Euclidean Algorithm Generates
+// Traditional Musical Rhythms"; the named rotations pin famous world rhythms to
+// their conventional starting phase (right-shift rotation).
+TEST(Euclidean, ToussaintCanonSpellings) {
+    // Rotation-0 canonical spellings.
+    EXPECT_EQ(onsetSet(3, 8, 0), (std::set<int>{0, 3, 6})) << "E(3,8)";
+    EXPECT_EQ(onsetSet(5, 8, 0), (std::set<int>{0, 2, 3, 5, 6})) << "E(5,8)";
+    EXPECT_EQ(onsetSet(5, 16, 0), (std::set<int>{0, 3, 6, 9, 12})) << "E(5,16)";
+    EXPECT_EQ(onsetSet(3, 7, 0), (std::set<int>{0, 2, 4})) << "E(3,7)";
+    EXPECT_EQ(onsetSet(4, 9, 0), (std::set<int>{0, 2, 4, 6})) << "E(4,9)";
+    EXPECT_EQ(onsetSet(7, 12, 0), (std::set<int>{0, 2, 3, 5, 7, 8, 10})) << "E(7,12)";
+
+    // Named world rhythms at their conventional rotation.
+    EXPECT_EQ(onsetSet(5, 16, 10), (std::set<int>{0, 3, 6, 10, 13})) << "bossa-nova E(5,16) r10";
+    EXPECT_EQ(onsetSet(3, 7, 3), (std::set<int>{0, 3, 5})) << "rupak E(3,7) r3";
+    EXPECT_EQ(onsetSet(7, 12, 9), (std::set<int>{0, 2, 4, 5, 7, 9, 11})) << "Ewe bell E(7,12) r9";
+}
+
 // --- Additive / Aksak cell tests ---
 
 namespace {
