@@ -92,7 +92,7 @@ A hands-on guide to every rhythmic feature in Poly, with UI references, paramete
 
 Poly distributes **k** hits across **n** steps using the Bjorklund/Euclidean algorithm. The result is the most evenly-spaced rhythm possible for a given density.
 
-**How it works:** Step *i* is a hit when `(i × k) mod n < k`. The **rotation** parameter shifts the entire pattern cyclically.
+**How it works:** Poly uses Bjorklund's algorithm, which recursively pairs pulses with empty steps to spread **k** hits as evenly as possible across **n** steps — the same maximally-even distribution the ethnomusicology literature (Toussaint) catalogues. The **rotation** parameter then shifts the entire pattern cyclically.
 
 ### Key Parameters (Lane Edit → PATTERN group, zone C)
 
@@ -113,9 +113,9 @@ Select a lane tab in zone C, then dial the PATTERN knobs:
 |-------------|-------|------|-----|---------------|
 | Tresillo | 8 | 3 | 0 | Classic Afro-Cuban cell: `x..x..x.` |
 | Cinquillo | 8 | 5 | 0 | Dense Cuban rhythm: `x.xx.xx.` |
-| Son clave 3-side | 8 | 3 | 3 | Rotated tresillo: `..x..x.x` |
+| Rotated tresillo | 8 | 3 | 3 | Tresillo shifted 3 steps: `.x.x..x.` |
 | 7 in 12 | 12 | 7 | 0 | West African bell: `x.xx.x.xx.x.` |
-| 5 in 16 | 16 | 5 | 0 | Bossa nova feel: `x..x..x..x..x..` |
+| 5 in 16 | 16 | 5 | 0 | Bossa nova feel: `x..x..x..x..x...` |
 | 4 in 4 | 4 | 4 | 0 | Four-on-the-floor |
 
 *Use the **Complexity** and **Density** macros (zone E) to reshape hit counts and rotations in real time. At Complexity = 0.5 and Density = 0.5, the base values pass through unchanged.*
