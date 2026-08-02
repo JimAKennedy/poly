@@ -132,6 +132,87 @@ TEST(Euclidean, MaximallyEvenSpacing) {
     EXPECT_LE(maxGap - minGap, 1);
 }
 
+namespace {
+
+// Literal port of the normative bjorklund() in
+// site/src/components/EuclideanDiagram.astro. Tests may allocate, so this keeps
+// the reference's array-of-arrays shape verbatim rather than the engine's
+// heap-free reformulation — the point is an independent oracle.
+std::vector<bool> referenceBjorklund(int steps, int hits) {
+    if (hits >= steps)
+        return std::vector<bool>(steps, true);
+    if (hits <= 0)
+        return std::vector<bool>(steps, false);
+
+    std::vector<std::vector<int>> pattern;
+    for (int i = 0; i < hits; ++i)
+        pattern.push_back({1});
+    std::vector<std::vector<int>> remainder;
+    for (int i = 0; i < steps - hits; ++i)
+        remainder.push_back({0});
+
+    while (remainder.size() > 1) {
+        std::vector<std::vector<int>> newPattern;
+        const int minLen = static_cast<int>(std::min(pattern.size(), remainder.size()));
+        for (int i = 0; i < minLen; ++i) {
+            std::vector<int> merged = pattern[i];
+            merged.insert(merged.end(), remainder[i].begin(), remainder[i].end());
+            newPattern.push_back(std::move(merged));
+        }
+        std::vector<std::vector<int>> leftover;
+        if (pattern.size() > remainder.size())
+            leftover.assign(pattern.begin() + minLen, pattern.end());
+        else
+            leftover.assign(remainder.begin() + minLen, remainder.end());
+        pattern = std::move(newPattern);
+        remainder = std::move(leftover);
+    }
+
+    std::vector<bool> flat;
+    for (const auto& grp : pattern)
+        for (int v : grp)
+            flat.push_back(v == 1);
+    for (const auto& grp : remainder)
+        for (int v : grp)
+            flat.push_back(v == 1);
+    return flat;
+}
+
+// Right-shift rotation, verbatim from the reference component's `rotated` slice.
+std::vector<bool> referenceRotated(const std::vector<bool>& onsets, int rotation) {
+    const int n = static_cast<int>(onsets.size());
+    std::vector<bool> rotated;
+    for (int i = n - rotation; i < n; ++i)
+        rotated.push_back(onsets[i]);
+    for (int i = 0; i < n - rotation; ++i)
+        rotated.push_back(onsets[i]);
+    return rotated;
+}
+
+} // namespace
+
+// Exhaustive proof that the engine's RT-safe Bjorklund emits exactly the phase
+// the site's EuclideanDiagram reference draws — for every k, n, and rotation in
+// range. Makes "diagrams show what the engine plays" a checked invariant.
+TEST(Euclidean, ExhaustiveMatchesReference) {
+    for (int n = 1; n <= poly::kMaxSteps; ++n) {
+        for (int k = 1; k <= n; ++k) {
+            const std::vector<bool> base = referenceBjorklund(n, k);
+            for (int rotation = 0; rotation < n; ++rotation) {
+                const std::vector<bool> expected = referenceRotated(base, rotation);
+
+                std::array<bool, poly::kMaxSteps> actual{};
+                poly::euclidean(k, n, rotation, actual);
+
+                for (int i = 0; i < n; ++i) {
+                    ASSERT_EQ(actual[i], expected[i])
+                        << "mismatch at k=" << k << " n=" << n << " rotation=" << rotation << " step=" << i;
+                }
+            }
+        }
+    }
+}
+
 // --- Additive / Aksak cell tests ---
 
 namespace {
