@@ -1,3 +1,7 @@
+---
+class: gated
+---
+
 # Windows Test-Runner Setup — Known Issues & Remediation Backlog
 
 > **Purpose:** Captures issues discovered during hands-on Windows test-runner
@@ -35,7 +39,9 @@ installed and HTML loads), but the UI has no data.
    `SetParent`, the style must be changed to `WS_CHILD` — otherwise the window
    doesn't clip to the parent bounds and can fail to render content inside the
    host window. choc's own `DesktopWindow::setContent` does this
-   (`choc_DesktopWindow.h:806-809`), but Poly's reparenting code was missing it.
+   (`choc_DesktopWindow.h:806-809` [file-line-ok]: pinned into the vendored
+   choc header at the version Poly fetches), but Poly's reparenting code was
+   missing it.
 
 On macOS/Linux these don't apply: WebKit/GTK init synchronously, and NSView
 reparenting works without style changes.
@@ -49,7 +55,8 @@ the test runner. This is resolved (runtime installed, runbook updated).
   asynchronously on Windows after WebView2 finishes init).
 - Added `WS_POPUP → WS_CHILD` style change via `SetWindowLongPtr` before
   `SetParent`, plus explicit `ShowWindow(child, SW_SHOW)`.
-- Changes in `plugin/source/webui/web_ui_view.cpp` lines 108-148.
+- Changes in `WebUIView::attached()` / the Windows reparenting path of
+  `plugin/source/webui/web_ui_view.cpp`.
 
 **Current status:**
 - [x] Root cause identified — two bugs, both fixed
@@ -78,8 +85,8 @@ the plugin header strip) shows no presets for Poly.
 
 **Root cause:** Poly does not implement the VST3 `ProgramList` API. There are
 no `getProgramListCount`, `getProgramName`, or `UnitInfo` with program list IDs
-in the controller. The 43 factory presets are internal-only, applied via the web
-UI bridge (`applyPreset` action in `web_ui_view.cpp` lines 429-544).
+in the controller. The factory presets <!-- counts-ok: incidental reference to the internal preset inventory, not a count this doc owns --> are internal-only, applied via the web
+UI bridge (the `applyPreset` action in `web_ui_view.cpp`'s `handleAction`).
 
 **Current impact:** This is **by design** — presets are accessible from Poly's
 own web UI preset picker. However, it's undocumented and may confuse Cubase
@@ -91,7 +98,7 @@ users who expect the standard preset workflow.
    presets are accessed from Poly's internal UI, not the DAW's preset browser.
 
 2. **Expose presets via ProgramList (feature work):** Implement `ProgramList`
-   in `PolyControllerBase::initialize()` to register the 43 factory presets
+   in `PolyControllerBase::initialize()` to register the factory presets <!-- counts-ok: incidental reference to the internal preset inventory, not a count this doc owns -->
    with the DAW. This would make presets appear in Cubase's browser and enable
    DAW-level preset recall (e.g. MIDI program change). Non-trivial — requires
    wiring `programChange` into the existing `applyPreset` path and testing
