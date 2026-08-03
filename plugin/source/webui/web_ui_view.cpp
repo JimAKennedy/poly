@@ -105,14 +105,19 @@ Steinberg::tresult PLUGIN_API WebUIView::attached(void* parent, Steinberg::FIDSt
         }
         return res;
     };
+    // On Windows, WebView2 initialises asynchronously — addInitScript/bind
+    // fail if called before the core is ready.  Defer them to webviewIsReady
+    // which fires synchronously on macOS/Linux and after the async callback
+    // on Windows.
+    options.webviewIsReady = [this](choc::ui::WebView& wv) {
+        wv.addInitScript("window.__POLY_EMBEDDED__ = true;");
+        wv.bind("polyHostCall", [this](const choc::value::ValueView& args) -> choc::value::Value {
+            if (args.isArray() && args.size() > 0)
+                handleHostCall(std::string(args[0].getString()));
+            return {};
+        });
+    };
     webview_ = std::make_unique<choc::ui::WebView>(options);
-
-    webview_->addInitScript("window.__POLY_EMBEDDED__ = true;");
-    webview_->bind("polyHostCall", [this](const choc::value::ValueView& args) -> choc::value::Value {
-        if (args.isArray() && args.size() > 0)
-            handleHostCall(std::string(args[0].getString()));
-        return {};
-    });
     // Reparent the webview child into the host-provided parent view.
     void* handle = webview_->getViewHandle();
     if (handle && parent) {
