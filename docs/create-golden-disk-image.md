@@ -1,3 +1,7 @@
+---
+class: gated
+---
+
 # Golden Windows Image with Sysprep + DISM
 
 Step-by-step guide for creating a deployable Windows golden image using the
