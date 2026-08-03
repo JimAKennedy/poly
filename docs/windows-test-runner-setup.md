@@ -370,8 +370,10 @@ machine** without re-activating Cubase.
 
 ## Part 9 — Register the self-hosted GitHub Actions runner
 
-Now wire the machine into CI. The nightly workflow (authored in S07) targets the
-`cubase` label.
+Now wire the machine into CI. The nightly workflow
+(`.github/workflows/cubase-nightly.yml`) targets the `cubase` label and calls
+the launch/quit machinery in `scripts/cubase/` (see that directory's
+`README.md`).
 
 - ☐ In GitHub: **repo → Settings → Actions → Runners → New self-hosted runner →
   Windows x64.** GitHub shows a per-runner token and download commands.
@@ -399,11 +401,12 @@ Scheduler), not as a service.
 
 A self-hosted runner runs whatever a workflow tells it to. Lock it down.
 
-- ☐ **The nightly workflow (S07) must be gated to `schedule` +
-  `workflow_dispatch` on `main` only — NEVER `pull_request`.** A `pull_request`
-  trigger would let any fork's PR run arbitrary code on your licensed box. (This
-  is encoded in the workflow YAML in S07; the machine's job is to not be
-  reachable in the first place.)
+- ☐ **The nightly workflow (`.github/workflows/cubase-nightly.yml`) is gated to
+  `schedule` + `workflow_dispatch` only — NEVER `pull_request`.** A
+  `pull_request` trigger would let any fork's PR run arbitrary code on your
+  licensed box. (This is encoded in the workflow YAML — a `pull_request` trigger
+  is asserted-absent in the T01 verify; the machine's job is to not be reachable
+  in the first place.)
 - ☐ **LAN-only, no inbound exposure.** No port-forwarding, no public IP. The
   runner makes *outbound* long-poll connections to GitHub; it needs no inbound.
 - ☐ **Repo-scoped runner** (registered against `JimAKennedy/poly`, done in
@@ -421,16 +424,21 @@ ports). The runner still shows online in GitHub (outbound-only works).
 The S07 "done" signal: *nightly triggers → runner picks up → Cubase launches and
 quits cleanly.* Prove the machine can do that manually before the scheduled run.
 
-- ☐ From the repo Actions tab, once the S07 workflow exists, use
-  **`workflow_dispatch`** to trigger it manually against `main`.
+- ☐ From the repo Actions tab, select **Cubase Nightly (L4)** and use
+  **`workflow_dispatch` → Run workflow** against `main`.
 - ☐ Watch: the `cubase`-labelled runner picks up the job; the job builds/installs
-  Poly, launches Cubase with the fixture `.cpr`, and quits Cubase cleanly (via
-  key command) at the end.
-- ☐ Confirm artifacts (probe JSONL, logs, and on failure the screen recording)
-  upload.
+  Poly (MSVC), runs `ctest`, then the `scripts/cubase/` machinery kills stale
+  Cubase, launches it (empty project in S07 — the fixture `.cpr` slots in at
+  S08), waits for its main window, and quits it (graceful `CloseMainWindow` with
+  a hard-kill fallback).
+- ☐ Confirm the `cubase-nightly-artifacts` upload contains
+  `cubase-run-status.jsonl` (one line per phase) and — on failure —
+  `cubase-last-error.json`. Read the status JSONL to see which phase failed.
 
 **Verify:** A manual `workflow_dispatch` run completes green on the `cubase`
 runner, with Cubase having launched and quit without a hung process left behind.
+This run is the **S07 exit-criterion evidence** — capture the run URL for the
+slice's UAT record.
 
 ---
 

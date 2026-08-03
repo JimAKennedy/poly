@@ -1,0 +1,11 @@
+# actionlint config. Registers custom self-hosted runner labels so
+# actionlint's runner-label check recognises them instead of flagging them as
+# unknown (they are real labels on our self-hosted runners, not typos).
+self-hosted-runner:
+  labels:
+    # M042 S07: the Windows box with Cubase activated + interactive desktop
+    # that runs the Cubase-in-the-loop nightly (see
+    # docs/windows-test-runner-setup.md). Registered here so
+    # `.github/workflows/cubase-nightly.yml`'s `runs-on: [self-hosted, cubase]`
+    # passes actionlint.
+    - cubase

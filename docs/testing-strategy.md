@@ -204,6 +204,11 @@ That — and only that — is L4's job.
 - A test run is: kill stale Cubase → launch with fixture → wait for the
   MIDI Remote script's "ready" ping → driver executes scenario →
   assert on probe JSONL → quit Cubase via key command → archive logs.
+  Implemented (M042 S07) as `.github/workflows/cubase-nightly.yml` calling the
+  phase scripts in `scripts/cubase/` (kill-stale / launch / wait-for-ready /
+  quit / archive). S07 lands the launch→quit skeleton against an empty project;
+  the fixture, mido driver, MIDI Remote "ready" ping, and probe assertions are
+  S08.
 
 ### 3.3 The golden flows (keep it to ~5–10)
 
