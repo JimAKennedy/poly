@@ -1,0 +1,195 @@
+name: Cubase Nightly (L4)
+
+# M042 S07: Cubase-in-the-loop nightly. Runs on the self-hosted Windows runner
+# (label `cubase`) — the only machine with Cubase activated and an interactive
+# desktop. It builds Poly with MSVC (CI parity), runs the below-Cubase pyramid
+# (ctest), installs the .vst3, then drives the launch -> wait-ready -> quit
+# cycle via the scripts/cubase/ PowerShell machinery and archives artifacts.
+#
+# SECURITY (testing-strategy.md §3.2, non-negotiable): the self-hosted runner
+# executes repository code. This workflow triggers ONLY on `schedule` and
+# manual `workflow_dispatch` — NEVER `pull_request`. A pull_request trigger
+# would let any fork's PR run arbitrary code on the licensed box. Do not add
+# one.
+#
+# S07 scope: this workflow proves the machine can trigger -> build -> launch
+# Cubase -> quit cleanly and upload artifacts. It does NOT yet drive transport
+# or assert on probe output — the mido driver + MIDI Remote script + fixture
+# .cpr land in S08 and slot into the `POLY_FIXTURE_CPR` env below.
+
+on:
+  schedule:
+    # 02:00 UTC nightly — offset from the 03:00 sanitizer/NFR nightlies so the
+    # single self-hosted runner isn't contended.
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+
+# Only one Cubase run at a time — there is a single self-hosted runner and
+# Cubase/loopMIDI/interactive-desktop state is machine-global. Newer runs wait
+# for the in-flight one rather than colliding on it.
+concurrency:
+  group: cubase-nightly
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  cubase-nightly:
+    name: Cubase launch/quit smoke
+    runs-on: [self-hosted, cubase]
+    # The launch/quit cycle has a hard ceiling; if Cubase hangs, fail the job
+    # rather than pinning the single runner indefinitely.
+    timeout-minutes: 30
+    env:
+      # Where the built plugin is installed for Cubase to load.
+      POLY_VST3_INSTALL_DIR: "C:\\Program Files\\Common Files\\VST3"
+      # Probe output path — the launch script exports this so poly_midi_probe
+      # (S06) flushes JSONL here on Cubase deactivate.
+      POLY_PROBE_OUTPUT: "${{ github.workspace }}\\_artifacts\\probe.jsonl"
+      # Staging dir the scripts archive logs/recordings/probe output into.
+      POLY_ARTIFACT_DIR: "${{ github.workspace }}\\_artifacts"
+      # S07: no fixture project yet — the launch script opens Cubase with no
+      # project and confirms a clean launch/quit. S08 sets this to the
+      # committed fixture .cpr and the smoke becomes a transport+probe run.
+      POLY_FIXTURE_CPR: ""
+      # Cubase major version the runner has installed and activated (M042 S07
+      # decision: Cubase 14). Scripts use this to resolve the Cubase.exe path
+      # and prefs/log directories.
+      POLY_CUBASE_VERSION: "14"
+    steps:
+      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+
+      - name: Prepare artifact staging dir
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path "${{ env.POLY_ARTIFACT_DIR }}" | Out-Null
+
+      # --- Below-Cubase pyramid on the runner (CI parity with ci.yml build leg) ---
+      - name: Configure (MSVC, validator ON)
+        shell: pwsh
+        run: cmake -S . -B build -G "Visual Studio 17 2022" -DSMTG_RUN_VST_VALIDATOR=ON
+
+      - name: Build
+        shell: pwsh
+        run: cmake --build build --config Release --parallel
+
+      - name: Test (ctest)
+        shell: pwsh
+        run: ctest --test-dir build --build-config Release --output-on-failure
+
+      - name: Install plugin for Cubase
+        shell: pwsh
+        run: |
+          $src = Get-ChildItem -Path build -Recurse -Filter poly_plugin.vst3 -Directory |
+            Select-Object -First 1
+          if (-not $src) {
+            Write-Error "poly_plugin.vst3 bundle not found under build/"
+            exit 1
+          }
+          $dest = Join-Path "${{ env.POLY_VST3_INSTALL_DIR }}" "poly_plugin.vst3"
+          if (Test-Path $dest) { Remove-Item -Recurse -Force $dest }
+          Copy-Item -Recurse -Force $src.FullName $dest
+          Write-Host "Installed $($src.FullName) -> $dest"
+
+      # --- L4 Cubase launch/quit cycle (scripts/cubase machinery from T02) ---
+      - name: Kill stale Cubase
+        shell: pwsh
+        run: ./scripts/cubase/kill-stale-cubase.ps1
+
+      - name: Launch Cubase
+        shell: pwsh
+        run: >-
+          ./scripts/cubase/launch-cubase.ps1
+          -CubaseVersion "${{ env.POLY_CUBASE_VERSION }}"
+          -FixtureCpr "${{ env.POLY_FIXTURE_CPR }}"
+          -ProbeOutput "${{ env.POLY_PROBE_OUTPUT }}"
+
+      - name: Wait for Cubase ready
+        shell: pwsh
+        run: >-
+          ./scripts/cubase/wait-for-ready.ps1
+          -TimeoutSeconds 120
+
+      - name: Quit Cubase
+        # Always attempt a clean quit even if wait-for-ready failed, so a hung
+        # Cubase is torn down rather than left for the next run.
+        if: always()
+        shell: pwsh
+        run: ./scripts/cubase/quit-cubase.ps1
+
+      - name: Archive logs and probe output
+        if: always()
+        shell: pwsh
+        run: >-
+          ./scripts/cubase/archive-logs.ps1
+          -CubaseVersion "${{ env.POLY_CUBASE_VERSION }}"
+          -ArtifactDir "${{ env.POLY_ARTIFACT_DIR }}"
+
+      - name: Upload run artifacts
+        if: always()
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with:
+          name: cubase-nightly-artifacts
+          path: ${{ env.POLY_ARTIFACT_DIR }}
+          retention-days: 14
+          if-no-files-found: warn
+
+  notify:
+    name: Failure notification
+    needs: [cubase-nightly]
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Check for failure
+        id: check
+        run: |
+          if [[ "${{ needs.cubase-nightly.result }}" != "success" ]]; then
+            echo "has_failure=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_failure=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Create or update issue on failure
+        if: steps.check.outputs.has_failure == 'true'
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        with:
+          script: |
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const result = '${{ needs.cubase-nightly.result }}';
+            const title = 'Cubase nightly failure';
+            const body = [
+              `The Cubase-in-the-loop nightly ended with result: **${result}**.`,
+              '',
+              'Check the run artifacts (Cubase/runner logs, probe JSONL, and any',
+              'screen recording) for diagnosis — the launch/quit scripts log each',
+              'phase so a hung-Cubase failure is traceable without shelling in.',
+              '',
+              `[View workflow run](${runUrl})`,
+            ].join('\n');
+
+            const existing = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'cubase-nightly-failure',
+              state: 'open',
+            });
+
+            if (existing.data.length > 0) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existing.data[0].number,
+                body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ['cubase-nightly-failure'],
+              });
+            }
