@@ -54,7 +54,7 @@ jobs:
       - name: Test
         run: ctest --test-dir build --build-config Release --output-on-failure
       - name: Upload plugin
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: plugin-${{ matrix.os }}
           path: build/**/*.vst3
@@ -115,7 +115,7 @@ jobs:
       - name: Validate AU (auval)
         run: auval -v aumu Poly JkDl
       - name: Upload AU component
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: poly-au-macos-14
           path: build-au/**/*.component
@@ -185,7 +185,7 @@ jobs:
         with:
           files: coverage.filtered.info
           fail_ci_if_error: false
-      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: coverage-report
           path: coverage-report/
@@ -219,7 +219,7 @@ jobs:
         run: npx playwright test
       - name: Upload HTML report
         if: always()
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: webui-html-report
           path: webui/playwright-report/
@@ -227,7 +227,7 @@ jobs:
           if-no-files-found: ignore
       - name: Upload test results
         if: failure()
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: webui-test-results
           path: webui/test-results/
@@ -235,7 +235,7 @@ jobs:
           if-no-files-found: ignore
       - name: Upload UI screenshots
         if: always()
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: webui-screenshots
           path: webui/test-results/screenshots/
@@ -383,7 +383,7 @@ jobs:
           echo "- \`poly_engine.wasm\`: ${WASM_SIZE} bytes" >> "$GITHUB_STEP_SUMMARY"
           echo "- \`poly_engine.js\`: ${JS_SIZE} bytes" >> "$GITHUB_STEP_SUMMARY"
       - name: Upload WASM artifact
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: wasm-build
           path: |
@@ -468,7 +468,7 @@ jobs:
       # endregion:site-e2e-job
       - name: Upload Playwright report
         if: always()
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: site-local-verify-report
           path: site/playwright-report/
@@ -476,7 +476,7 @@ jobs:
           if-no-files-found: ignore
       - name: Upload test results
         if: failure()
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: site-local-verify-test-results
           path: site/test-results/
@@ -484,7 +484,7 @@ jobs:
           if-no-files-found: ignore
       - name: Upload local-verify summary artifacts
         if: always()
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: site-local-verify-summaries
           path: .gsd/artifacts/
