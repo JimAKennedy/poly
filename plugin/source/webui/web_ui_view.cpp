@@ -105,14 +105,19 @@ Steinberg::tresult PLUGIN_API WebUIView::attached(void* parent, Steinberg::FIDSt
         }
         return res;
     };
+    // On Windows, WebView2 initialises asynchronously — addInitScript/bind
+    // fail if called before the core is ready.  Defer them to webviewIsReady
+    // which fires synchronously on macOS/Linux and after the async callback
+    // on Windows.
+    options.webviewIsReady = [this](choc::ui::WebView& wv) {
+        wv.addInitScript("window.__POLY_EMBEDDED__ = true;");
+        wv.bind("polyHostCall", [this](const choc::value::ValueView& args) -> choc::value::Value {
+            if (args.isArray() && args.size() > 0)
+                handleHostCall(std::string(args[0].getString()));
+            return {};
+        });
+    };
     webview_ = std::make_unique<choc::ui::WebView>(options);
-
-    webview_->addInitScript("window.__POLY_EMBEDDED__ = true;");
-    webview_->bind("polyHostCall", [this](const choc::value::ValueView& args) -> choc::value::Value {
-        if (args.isArray() && args.size() > 0)
-            handleHostCall(std::string(args[0].getString()));
-        return {};
-    });
     // Reparent the webview child into the host-provided parent view.
     void* handle = webview_->getViewHandle();
     if (handle && parent) {
@@ -125,13 +130,16 @@ Steinberg::tresult PLUGIN_API WebUIView::attached(void* parent, Steinberg::FIDSt
         // Resize child to fill parent bounds
         resizeWebviewToRect(rect);
 #elif defined(_WIN32)
-        SetParent(static_cast<HWND>(handle), static_cast<HWND>(parent));
-        RECT r;
-        r.left = rect.left;
-        r.top = rect.top;
-        r.right = rect.right;
-        r.bottom = rect.bottom;
-        MoveWindow(static_cast<HWND>(handle), 0, 0, r.right - r.left, r.bottom - r.top, TRUE);
+        // choc creates the wrapper HWND as WS_POPUP; switch to WS_CHILD
+        // before reparenting so it clips to the host window and renders
+        // correctly inside the DAW (mirrors choc DesktopWindow::setContent).
+        auto child = static_cast<HWND>(handle);
+        auto flags = GetWindowLongPtr(child, GWL_STYLE);
+        flags = (flags & ~static_cast<decltype(flags)>(WS_POPUP)) | static_cast<decltype(flags)>(WS_CHILD);
+        SetWindowLongPtr(child, GWL_STYLE, flags);
+        SetParent(child, static_cast<HWND>(parent));
+        MoveWindow(child, 0, 0, rect.right - rect.left, rect.bottom - rect.top, TRUE);
+        ShowWindow(child, SW_SHOW);
 #endif
     }
 

@@ -149,13 +149,26 @@ what `.github/workflows/ci.yml` runs.
   ```powershell
   winget install --id Ninja-build.Ninja -e --source winget
   ```
+- ☐ **Microsoft Edge WebView2 Runtime** (Poly's UI is a WebView2 web view;
+  without the runtime the plugin opens to a blank window with no error):
+  ```powershell
+  winget install --id Microsoft.EdgeWebView2Runtime -e --source winget
+  ```
+  Modern Windows 11 usually has this via Windows Update, but fresh installs
+  and stripped images may not. Verify with:
+  ```powershell
+  reg query "HKLM\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}" /v pv
+  ```
+  If the key exists and `pv` has a version string, the runtime is installed.
 - ☐ **Close and reopen PowerShell** so PATH updates land.
 
-**Verify — all four must print versions:**
+**Verify — all five must succeed:**
 ```powershell
 git --version; cmake --version; ninja --version
 # MSVC: from a "Developer PowerShell for VS 2022" (Start menu), run:
 cl
+# WebView2 Runtime:
+reg query "HKLM\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}" /v pv
 ```
 
 ---
