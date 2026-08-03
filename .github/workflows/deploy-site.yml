@@ -109,7 +109,7 @@ jobs:
         run: bash scripts/site-verify-remote.sh "${{ needs.deploy.outputs.page_url }}"
       - name: Upload Playwright report
         if: always()
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: site-remote-verify-report
           path: site/playwright-report/
@@ -117,7 +117,7 @@ jobs:
           if-no-files-found: ignore
       - name: Upload test results
         if: failure()
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: site-remote-verify-test-results
           path: site/test-results/
@@ -125,7 +125,7 @@ jobs:
           if-no-files-found: ignore
       - name: Upload remote-verify summary artifacts
         if: always()
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: site-remote-verify-summaries
           path: .gsd/artifacts/
