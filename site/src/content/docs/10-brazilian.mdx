@@ -2,6 +2,12 @@
 class: gated
 title: "10. Brazilian: Samba, Bossa Nova, and Syncopated Flow"
 description: "The rhythmic engine of Brazilian music — how samba's layered surdo-tamborim-agogô patterns and bossa nova's displaced bass line map to Euclidean distribution and swing."
+patternClaims:
+  - label: "Bossa nova bass E(5,16)"
+    pattern: "x . . x . . x . . x . . x . . ."
+    isEuclidean: { k: 5, n: 16, rotation: 0 }
+    gapSequence: [3, 3, 3, 3, 4]
+    reference: "line 53 prose pattern and line 71 gaps — canonical E(5,16) at the rotation 0 diagram and bass lane (M071 S02 T01)"
 ---
 
 import PolyPatch from '../../components/PolyPatch.astro';
@@ -28,7 +34,7 @@ In Poly, you model this by assigning each role to a lane with a distinct step co
 
 E(7,16) with rotation 2 produces a tamborim-style pattern — dense enough to drive forward but irregular enough to pull against the surdo's steady pulse. The rotation shifts the accent away from beat 1, which is characteristic of Brazilian syncopation: the emphasis falls around the beat, not on it.
 
-<PolyPatch title="Samba Batucada Ensemble" preset="Brazilian: Batucada">
+<PolyPatch title="Samba Batucada Ensemble" preset="Samba Batucada">
 
 | Lane | Role | Steps | Hits | Rotation | Subdivision | Note | Velocity | Ghost | Swing |
 |------|------|-------|------|----------|-------------|------|----------|-------|-------|
@@ -50,7 +56,7 @@ The bossa nova revolution of the late 1950s took samba's rhythmic vocabulary and
 
 <EuclideanDiagram steps={16} hits={5} />
 
-E(5,16) is the bossa nova bass cell. Toussaint identified it as a paradigmatic example of Euclidean rhythm — five onsets distributed as evenly as possible across sixteen pulses, producing the pattern `[x . . x . . x . . . x . . x . .]`. This pattern sits against a straight 4/4 pulse and creates a perpetual sense of displacement. The bass never quite lands where you expect, yet it never feels wrong.
+E(5,16) is the bossa nova bass cell. Toussaint identified it as a paradigmatic example of Euclidean rhythm — five onsets distributed as evenly as possible across sixteen pulses, producing the pattern `[x . . x . . x . . x . . x . . .]`. This pattern sits against a straight 4/4 pulse and creates a perpetual sense of displacement. The bass never quite lands where you expect, yet it never feels wrong.
 
 In Poly, you set one lane to E(5,16) at a low note for the bass, add a ride cymbal holding steady quarter or eighth notes, and introduce a ghost brush layer to provide the wash of texture that bossa recordings carry. The result is spare and spacious, the opposite of batucada's density, but built from the same Euclidean logic.
 
@@ -68,7 +74,7 @@ In Poly, you set one lane to E(5,16) at a low note for the bass, add a ride cymb
 
 <ListenFor>
 
-Play the bossa patch at 130-140 BPM and focus on the bass lane. The five hits of E(5,16) create a pattern that constantly crosses the barline — it groups into intervals of 3-3-4-3-3, which means the accents shift relative to the quarter-note pulse on every beat. This perpetual displacement is the bossa feel. Against the steady ride, it sounds effortless. Against a straight kick, it sounds radical.
+Play the bossa patch at 130-140 BPM and focus on the bass lane. The five hits of E(5,16) create a pattern that constantly crosses the barline — it groups into intervals of 3-3-3-3-4, which means the accents shift relative to the quarter-note pulse on every beat. This perpetual displacement is the bossa feel. Against the steady ride, it sounds effortless. Against a straight kick, it sounds radical.
 
 </ListenFor>
 

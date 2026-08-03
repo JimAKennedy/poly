@@ -2,6 +2,12 @@
 class: gated
 title: "1. Foundations: Euclidean Rhythms and Cycle Independence"
 description: The mathematical basis of polymetric pattern generation — Bjorklund's algorithm, cycle ratios, and why even distribution matters.
+patternClaims:
+  - label: "West African bell E(7,12)"
+    pattern: "x . x x . x . x x . x ."
+    isEuclidean: { k: 7, n: 12, rotation: 0 }
+    gapSequence: [2, 1, 2, 2, 1, 2, 2]
+    reference: "line 19 prose — canonical E(7,12) at the rotation 0 diagram below (M071 S02 T01)"
 ---
 
 import PolyPatch from '../../components/PolyPatch.astro';
@@ -14,9 +20,9 @@ Every pattern Poly generates starts from a single principle: distribute *k* onse
 
 ## The Bjorklund Algorithm
 
-In 2004, Godfried Toussaint demonstrated that Bjorklund's algorithm for distributing neutron beam pulses produces the same onset patterns found in traditional West African, Afro-Cuban, and Middle Eastern percussion.<sup>[1](/appendix-references/#ref-1)</sup> The connection is not metaphorical — the algorithm is mathematically identical.
+In 2005, Godfried Toussaint demonstrated that Bjorklund's algorithm for distributing neutron beam pulses produces the same onset patterns found in traditional West African, Afro-Cuban, and Middle Eastern percussion.<sup>[1](/appendix-references/#ref-1)</sup> The connection is not metaphorical — the algorithm is mathematically identical.
 
-Given `steps = 12` and `hits = 7`, the algorithm produces the pattern `[x . x . x x . x . x x .]` — seven onsets distributed as evenly as possible across twelve positions. This is the standard West African bell timeline, found identically in Ewe, Yoruba, and Afrobeat contexts.
+Given `steps = 12` and `hits = 7`, the algorithm produces the pattern `[x . x x . x . x x . x .]` — seven onsets distributed as evenly as possible across twelve positions. This is the standard West African bell timeline, found identically in Ewe, Yoruba, and Afrobeat contexts.
 
 <EuclideanDiagram steps={12} hits={7} rotation={0} />
 
@@ -50,7 +56,7 @@ There is no "master lane": every lane locks directly to the DAW's quarter-note g
 
 The `rotation` parameter shifts the onset pattern around the cycle without changing which steps are hits. `E(7, 12, 0)` and `E(7, 12, 3)` have the same rhythmic *content* but different *phase relationships* with the other lanes.
 
-This matters because many traditional rhythms are defined not just by their onset count but by their rotational position relative to a timeline. The Ewe bell at rotation 0 is the standard; at rotation 5, it becomes the Cuban cinquillo variant.
+This matters because many traditional rhythms are defined not just by their onset count but by their rotational position relative to a timeline. The Ewe bell at rotation 0 is the standard orientation; rotating it does not change the seven onsets (that is what rotation means — see above), it only shifts where the cycle begins, so the same timeline can lock to a different downbeat relative to the other lanes.
 
 <PolyPatch title="Foundations: Two-Lane Polymetric Demonstration">
 

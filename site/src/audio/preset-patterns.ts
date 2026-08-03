@@ -25,6 +25,31 @@ interface JsonLane {
   rotation: number;
   velocity: number;
   probability: number;
+  // schemaVersion 3 (M071 S04): D026 parameter-table fields. The card runtime
+  // ignores these — they exist so the appendix PresetTable renders engine truth.
+  ghostFloor: number;
+  swingAmount: number;
+  mutationRate: number;
+  driftRate: number;
+  humanizeMs: number;
+  timingOffsetMs: number;
+  hasMicroTiming: boolean;
+  timeline: boolean;
+  fixedPatternLength: number;
+  kotekanSourceLane: number;
+  phraseLength: number;
+  phraseGap: number;
+  phraseOffset: number;
+  cellCount: number;
+  cellSizes: number[];
+}
+interface JsonMacros {
+  density: number;
+  complexity: number;
+  syncopation: number;
+  swing: number;
+  tension: number;
+  humanize: number;
 }
 interface JsonPreset {
   index: number;
@@ -33,6 +58,7 @@ interface JsonPreset {
   activeLaneCount: number;
   notesInBar: number;
   seed: number;
+  macros: JsonMacros;
   lanes: JsonLane[];
 }
 interface JsonSchema {

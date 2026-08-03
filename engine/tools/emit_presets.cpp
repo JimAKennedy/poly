@@ -4,9 +4,13 @@
 // source of truth for factory preset lane data so the card runtime, the WASM
 // host, the alias map, and the chapter documentation cannot drift.
 //
-// Schema:
+// Schema (schemaVersion 3 — M071 S04 added the D026 parameter-table fields:
+// per-preset `macros`, and per-lane ghostFloor/swingAmount/mutationRate/
+// driftRate/humanizeMs/timingOffsetMs/hasMicroTiming/timeline/
+// fixedPatternLength/kotekanSourceLane/phrase{Length,Gap,Offset}/cellCount/
+// cellSizes, so the appendix-presets tables render from engine truth):
 // {
-//   "schemaVersion": 2,
+//   "schemaVersion": 3,
 //   "presetCount": 43,
 //   "categories": ["Foundational", "Minimalist / Compositional", ...],  // ordered
 //   "presets": [
@@ -220,6 +224,13 @@ void writeLane(std::ostringstream& out, int laneIndex, const poly::LaneConfig& l
     int stepLen = 16 / subdivision;
     if (stepLen <= 0)
         stepLen = 1;
+    bool hasMicroTiming = false;
+    for (int i = 0; i < poly::kMaxSteps; ++i) {
+        if (lane.microTimingMs[i] != 0.0f) {
+            hasMicroTiming = true;
+            break;
+        }
+    }
     out << "      {"
         << "\"laneIndex\":" << laneIndex << ",\"noteNumber\":" << lane.midiNote << ",\"roleLabel\":\""
         << roleLabelForNote(lane.midiNote) << "\""
@@ -228,7 +239,40 @@ void writeLane(std::ostringstream& out, int laneIndex, const poly::LaneConfig& l
         << ",\"hits\":" << lane.hitCount << ",\"rotation\":" << lane.rotation
         << ",\"velocity\":" << static_cast<int>(lane.baseVelocity) << ",\"probability\":";
     writeFloat(out, lane.probability);
-    out << "}";
+    // schemaVersion 3 (M071 S04): D026 parameter-table fields. These carry the
+    // per-lane values the appendix-presets tables render, so a documented number
+    // can no longer be hand-faked — all sourced directly from LaneConfig.
+    out << ",\"ghostFloor\":" << static_cast<int>(lane.ghostFloor) << ",\"swingAmount\":";
+    writeFloat(out, lane.swingAmount);
+    out << ",\"mutationRate\":";
+    writeFloat(out, lane.mutationRate);
+    out << ",\"driftRate\":";
+    writeFloat(out, lane.driftRate);
+    out << ",\"humanizeMs\":";
+    writeFloat(out, lane.humanizeMs);
+    out << ",\"timingOffsetMs\":";
+    writeFloat(out, lane.timingOffsetMs);
+    out << ",\"hasMicroTiming\":" << (hasMicroTiming ? "true" : "false")
+        << ",\"timeline\":" << (lane.timeline ? "true" : "false")
+        << ",\"fixedPatternLength\":" << lane.fixedPatternLength << ",\"kotekanSourceLane\":" << lane.kotekanSourceLane
+        << ",\"phraseLength\":";
+    writeFloat(out, lane.phraseLength);
+    out << ",\"phraseGap\":";
+    writeFloat(out, lane.phraseGap);
+    out << ",\"phraseOffset\":";
+    writeFloat(out, lane.phraseOffset);
+    out << ",\"cellCount\":" << lane.cellCount << ",\"cellSizes\":[";
+    int cells = lane.cellCount;
+    if (cells < 0)
+        cells = 0;
+    if (cells > poly::kMaxSteps)
+        cells = poly::kMaxSteps;
+    for (int i = 0; i < cells; ++i) {
+        out << lane.cellSizes[i];
+        if (i + 1 < cells)
+            out << ",";
+    }
+    out << "]}";
 }
 
 void writePreset(std::ostringstream& out, int index) {
@@ -248,6 +292,19 @@ void writePreset(std::ostringstream& out, int index) {
         << "    \"activeLaneCount\":" << lanes << ",\n"
         << "    \"notesInBar\":" << compositeSteps16ths(state) << ",\n"
         << "    \"seed\":" << state.seed << ",\n"
+        << "    \"macros\":{\"density\":";
+    writeFloat(out, state.macros.density);
+    out << ",\"complexity\":";
+    writeFloat(out, state.macros.complexity);
+    out << ",\"syncopation\":";
+    writeFloat(out, state.macros.syncopation);
+    out << ",\"swing\":";
+    writeFloat(out, state.macros.swing);
+    out << ",\"tension\":";
+    writeFloat(out, state.macros.tension);
+    out << ",\"humanize\":";
+    writeFloat(out, state.macros.humanize);
+    out << "},\n"
         << "    \"lanes\":[\n";
     for (int i = 0; i < lanes; ++i) {
         writeLane(out, i, state.lanes[i]);
@@ -264,7 +321,7 @@ void writePreset(std::ostringstream& out, int index) {
 int main() {
     std::ostringstream out;
     out << "{\n"
-        << "  \"schemaVersion\":2,\n"
+        << "  \"schemaVersion\":3,\n"
         << "  \"presetCount\":" << poly::kFactoryPresetCount << ",\n"
         << "  \"categories\":[";
     for (int i = 0; i < poly::kFactoryPresetCategoryCount; ++i) {

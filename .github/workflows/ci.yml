@@ -424,9 +424,8 @@ jobs:
         run: jk-standards all
       - name: Check bridge schema coverage (M048 S07)
         run: node scripts/check-bridge-schema-coverage.mjs
-      - name: Check music-theory claim fixtures (M048 S08)
-        working-directory: site
-        run: node --test tests/euclidean-claims.test.mjs tests/appendix-euclidean-claims.test.mjs tests/prose-pattern-claims.test.mjs
+      - name: Check doc-conformance guardrail suite (M071 S06; supersedes M048 S08 3-file list)
+        run: bash scripts/check-doc-conformance.sh
       - name: Check site asset references
         run: bash scripts/check-site-assets.sh
       - name: Validate sample manifest (strict)

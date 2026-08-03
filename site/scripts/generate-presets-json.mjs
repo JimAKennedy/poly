@@ -5,7 +5,9 @@
 // data from the same file instead of drifting hand-copies.
 //
 // Contract with the emitter (engine/tools/emit_presets.cpp):
-//   { schemaVersion, presetCount, categories: [...], presets: [{ index, name, category, notesInBar, lanes: [...] }] }
+//   { schemaVersion, presetCount, categories: [...], presets: [{ index, name, category, notesInBar, macros: {...}, lanes: [...] }] }
+// schemaVersion 3 (M071 S04) added per-preset `macros` and the D026 per-lane
+// parameter-table fields; the guard below rejects any other version loudly.
 //
 // If the emitter binary is missing, we configure (only if needed) and build it.
 // A native build failure exits non-zero and fails the site build — that is
@@ -65,7 +67,7 @@ function validate(parsed) {
   if (typeof parsed.schemaVersion !== 'number') {
     fail('missing schemaVersion');
   }
-  if (parsed.schemaVersion !== 2) {
+  if (parsed.schemaVersion !== 3) {
     fail(`unexpected schemaVersion ${parsed.schemaVersion} — regenerate/update consumers`);
   }
   if (!Array.isArray(parsed.categories) || parsed.categories.length === 0) {

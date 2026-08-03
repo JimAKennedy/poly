@@ -35,9 +35,10 @@ test('presets.json — schema shape', async () => {
     'number',
     'schemaVersion must be a number',
   );
-  assert.ok(
-    parsed.schemaVersion >= 2,
-    `schemaVersion=${parsed.schemaVersion}, expected >= 2`,
+  assert.equal(
+    parsed.schemaVersion,
+    3,
+    `schemaVersion=${parsed.schemaVersion}, expected 3 (M071 S04 D026 fields)`,
   );
 
   assert.ok(
@@ -86,7 +87,64 @@ test('presets.json — schema shape', async () => {
       Array.isArray(preset.lanes) && preset.lanes.length >= 1,
       `preset[${pi}] "${preset.name}".lanes.length=${preset.lanes?.length}, expected >= 1`,
     );
+    // schemaVersion 3 (M071 S04): per-preset macros the appendix Macros line renders.
+    const MACRO_KEYS = [
+      'density',
+      'complexity',
+      'syncopation',
+      'swing',
+      'tension',
+      'humanize',
+    ];
+    assert.ok(
+      preset.macros && typeof preset.macros === 'object',
+      `preset[${pi}] "${preset.name}".macros is missing`,
+    );
+    MACRO_KEYS.forEach((k) => {
+      assert.ok(
+        typeof preset.macros[k] === 'number' &&
+          preset.macros[k] >= 0 &&
+          preset.macros[k] <= 1,
+        `preset[${pi}] "${preset.name}".macros.${k}=${preset.macros?.[k]}, expected number in [0,1]`,
+      );
+    });
     preset.lanes.forEach((lane, li) => {
+      // schemaVersion 3 (M071 S04): D026 per-lane parameter-table fields.
+      const where = `preset[${pi}] "${preset.name}" lane[${li}]`;
+      [
+        'ghostFloor',
+        'swingAmount',
+        'mutationRate',
+        'driftRate',
+        'humanizeMs',
+        'timingOffsetMs',
+        'fixedPatternLength',
+        'kotekanSourceLane',
+        'phraseLength',
+        'phraseGap',
+        'phraseOffset',
+        'cellCount',
+      ].forEach((k) => {
+        assert.equal(
+          typeof lane[k],
+          'number',
+          `${where}.${k}=${lane[k]} is not a number`,
+        );
+      });
+      assert.equal(
+        typeof lane.hasMicroTiming,
+        'boolean',
+        `${where}.hasMicroTiming is not a boolean`,
+      );
+      assert.equal(
+        typeof lane.timeline,
+        'boolean',
+        `${where}.timeline is not a boolean`,
+      );
+      assert.ok(
+        Array.isArray(lane.cellSizes) && lane.cellSizes.length === lane.cellCount,
+        `${where}.cellSizes length=${lane.cellSizes?.length} must equal cellCount=${lane.cellCount}`,
+      );
       assert.ok(
         Number.isInteger(lane.noteNumber) &&
           lane.noteNumber >= 0 &&

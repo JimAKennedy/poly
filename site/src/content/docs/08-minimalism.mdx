@@ -40,7 +40,7 @@ Poly's Drift parameter rotates a lane's pattern by a specified number of steps p
 
 At Drift = +0.25 steps/bar, the pattern completes one full rotation every `steps / 0.25` bars. For a 12-step pattern, that is 48 bars — roughly two minutes at 120 BPM. At Drift = +1.0, the full rotation takes only 12 bars. The slower the drift, the more time you spend in each phase relationship, and the more you hear the gradual process that Reich described.
 
-<PolyPatch title="Reich Phasing Setup" preset="Gradual Process">
+<PolyPatch title="Reich Phasing Setup" preset="Reich Phase Process">
 
 | Lane | Role | Steps | Hits | Rotation | Subdivision | Drift | Velocity |
 |------|------|-------|------|----------|-------------|-------|----------|
@@ -66,7 +66,7 @@ Terry Riley's *In C* (1964) takes a different approach: fifty-three short melodi
 
 Poly's phrase gating models this layered-entry structure. Each lane can have its own phrase Length, Gap, and Offset. Set five lanes to different Euclidean patterns with staggered Offsets, and voices enter and exit the texture at different points in the cycle — the same gradual accumulation and thinning that defines *In C*.
 
-<PolyPatch title="Riley-Inspired Layered Structure" preset="Staggered Entry">
+<PolyPatch title="Riley-Inspired Layered Structure" preset="Riley Layered Entry">
 
 | Lane | Role | Steps | Hits | Subdivision | Offset | Length | Gap | Velocity |
 |------|------|-------|------|-------------|--------|--------|-----|----------|
@@ -86,9 +86,9 @@ Lane 1 runs continuously as the foundation. Lanes 2 through 5 enter at different
 
 Philip Glass's signature technique is *additive rhythm*: a short cell that gradually grows by one note, then contracts. A pattern might progress from `1-2, 1-2, 1-2` to `1-2-3, 1-2-3` to `1-2-3-4, 1-2-3-4` and back. The listener perceives the cell expanding and contracting, breathing.
 
-Poly's Mutation parameter offers an analogous process. As Mutation increases, hits are gradually added to or removed from the Euclidean pattern. At 0%, the pattern is the pure Bjorklund distribution. At higher values, onsets are probabilistically added or removed, creating the sense of a pattern that breathes — growing denser, then thinning, never settling.
+Poly's Complexity and Density macros offer an analogous process. Sweeping either macro changes each lane's effective hit count by units — onsets are added to or removed from the Euclidean pattern one at a time — so the pattern breathes, growing denser then thinning, exactly as an additive cell grows and contracts. The change is deterministic: the same transport position always yields the same hit count, which is what makes it an additive *process* rather than noise (theory-minimalism Rule 6: approximate additive process with Complexity/Density hit-count change, unit by unit).
 
-The Complexity macro provides a higher-level control over this process. Sweep Complexity from 0.0 to 1.0 during a performance, and each lane's effective hit count changes, producing an additive-rhythm effect across the entire ensemble simultaneously.
+This is why Mutation is deliberately not the tool for the additive effect. Process music forswears both improvisation and randomness — given the material and the rule, the piece is fixed. Mutation and probability have no role in a strict process patch (theory-minimalism Rule 8); their controlled unpredictability belongs to the conversational traditions. Sweep Complexity from 0.0 to 1.0 during a performance and you get the additive-rhythm effect across the entire ensemble simultaneously, without surrendering the determinism the idiom depends on.
 
 ## Nancarrow and Metric Modulation
 

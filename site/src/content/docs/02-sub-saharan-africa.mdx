@@ -2,6 +2,12 @@
 class: gated
 title: "2. Sub-Saharan Africa: Bell Patterns and Polymetric Layering"
 description: "The rhythmic foundations of West and Central African drumming — timeline patterns, interlocking parts, and the polymetric stacking that Poly was built to model."
+patternClaims:
+  - label: "Gankogui bell E(7,12)"
+    pattern: "x . x x . x . x x . x ."
+    isEuclidean: { k: 7, n: 12, rotation: 0 }
+    gapSequence: [2, 1, 2, 2, 1, 2, 2]
+    reference: "line 33 prose gap sequence — canonical E(7,12) at the rotation 0 diagram (M071 S02 T01)"
 ---
 
 import PolyPatch from '../../components/PolyPatch.astro';
@@ -25,7 +31,7 @@ The standard gankogui pattern distributes seven strokes across twelve pulses. It
 
 <EuclideanDiagram steps={12} hits={7} />
 
-Notice the asymmetry. The seven hits do not divide twelve evenly — they create an uneven grouping of long and short intervals (2-2-1-2-2-1-2). This asymmetry is not an accident. It is what gives the pattern its characteristic tension, the sense that it is always pulling forward toward the next downbeat without ever quite resolving.
+Notice the asymmetry. The seven hits do not divide twelve evenly — they create an uneven grouping of long and short intervals (2-1-2-2-1-2-2). This asymmetry is not an accident. It is what gives the pattern its characteristic tension, the sense that it is always pulling forward toward the next downbeat without ever quite resolving.
 
 ## Role Separation: Timeline, Support, Lead
 
