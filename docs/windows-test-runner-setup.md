@@ -197,6 +197,16 @@ This is the licensing-sensitive part. Do it deliberately.
   site, install, and create **one port named `poly-test`**. The S08 Python +
   `mido` driver sends transport/parameter MIDI into this port; Cubase's MIDI
   Remote script listens on it.
+
+  > **Windows MIDI port naming:** The Windows MIDI API (via rtmidi) appends a
+  > device index to every port name — so loopMIDI's `poly-test` appears as
+  > `poly-test 0` (input) and `poly-test 1` (output) in `mido.get_output_names()`.
+  > This is standard Windows behaviour, not a misconfiguration. Scripts that
+  > match the port should use a **prefix match** (e.g.
+  > `[n for n in mido.get_output_names() if n.startswith('poly-test')]`) rather
+  > than an exact string comparison. The `MIDI_PORT_NAME` env var (default
+  > `poly-test`) can be set to the full suffixed name if needed — e.g.
+  > `MIDI_PORT_NAME=poly-test 1` for output.
 - ☐ **Python 3 + mido (the transport driver, S08):**
   ```powershell
   winget install --id Python.Python.3.12 -e --source winget
@@ -204,10 +214,16 @@ This is the licensing-sensitive part. Do it deliberately.
   python -m pip install --upgrade pip
   python -m pip install mido python-rtmidi
   ```
+  > **`python3` on Windows:** Windows ships a `python3.exe` stub in
+  > `WindowsApps` that redirects to the Microsoft Store instead of running
+  > Python. The real interpreter is `python.exe`. The repo's test files
+  > handle this with platform detection; if you write new scripts that spawn
+  > Python, use `python` on Windows, not `python3`.
 
 **Verify:** Cubase launches to an empty project without a licensing prompt;
 loopMIDI shows the `poly-test` port; `python -c "import mido; print(mido.get_output_names())"`
-lists `poly-test`.
+lists a port starting with `poly-test` (e.g. `poly-test 1` — see the note
+above about Windows MIDI port naming).
 
 ---
 
