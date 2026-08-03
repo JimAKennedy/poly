@@ -459,7 +459,7 @@
           "cycleSteps": 3,
           "subdivision": 8,
           "stepLen": 2,
-          "hits": 3,
+          "hits": 2,
           "rotation": 0,
           "velocity": 95,
           "probability": 1
@@ -853,7 +853,7 @@
           "hits": 3,
           "rotation": 0,
           "velocity": 115,
-          "probability": 0.9
+          "probability": 1
         },
         {
           "laneIndex": 1,
@@ -939,7 +939,7 @@
           "cycleSteps": 5,
           "subdivision": 12,
           "stepLen": 1,
-          "hits": 5,
+          "hits": 4,
           "rotation": 0,
           "velocity": 85,
           "probability": 0.95
@@ -952,7 +952,7 @@
           "cycleSteps": 3,
           "subdivision": 12,
           "stepLen": 1,
-          "hits": 3,
+          "hits": 2,
           "rotation": 0,
           "velocity": 75,
           "probability": 0.9

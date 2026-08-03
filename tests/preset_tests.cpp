@@ -4,7 +4,9 @@
 
 #include <gtest/gtest.h>
 
+#include "poly/constraint.h"
 #include "poly/engine.h"
+#include "poly/euclidean.h"
 #include "poly/macro.h"
 #include "poly/presets.h"
 #include "poly/state_io.h"

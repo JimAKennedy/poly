@@ -150,6 +150,36 @@ TEST(Constraint, NoBackbeatProtectAllowsMacroChanges) {
         << "Without backbeatProtect, emphasis should remain macro-resolved";
 }
 
+TEST(Constraint, BackbeatProtectPreservesRotation) {
+    auto state = makeBaseState();
+    auto& lane = state.lanes[0];
+    lane.rotation = 2;
+    lane.constraints.backbeatProtect = true;
+
+    state.macros.syncopation = 1.0f;
+
+    auto macroResolved = poly::resolveMacros(state);
+    EXPECT_NE(macroResolved.lanes[0].rotation, 2)
+        << "Syncopation macro should have rotated the lane off its authored grid";
+
+    auto constrained = poly::resolveConstraints(state, macroResolved);
+    EXPECT_EQ(constrained.lanes[0].rotation, 2) << "BackbeatProtect should restore the original authored rotation";
+}
+
+TEST(Constraint, NoBackbeatProtectAllowsRotationChange) {
+    auto state = makeBaseState();
+    auto& lane = state.lanes[0];
+    lane.rotation = 2;
+    lane.constraints.backbeatProtect = false;
+
+    state.macros.syncopation = 1.0f;
+
+    auto macroResolved = poly::resolveMacros(state);
+    auto constrained = poly::resolveConstraints(state, macroResolved);
+    EXPECT_EQ(constrained.lanes[0].rotation, macroResolved.lanes[0].rotation)
+        << "Without backbeatProtect, rotation should remain macro-resolved";
+}
+
 // --- Density Guardrails ---
 
 TEST(Constraint, DensityMinClampsHitCount) {
