@@ -15,8 +15,10 @@ import { test, expect } from '@playwright/test';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import process from 'node:process';
 
 const WEBUI_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const PYTHON = process.platform === 'win32' ? 'python' : 'python3';
 let server;
 let baseUrl;
 
@@ -25,7 +27,7 @@ test.describe('M043 S14 T01 — A/B scene isolation', () => {
     // `-u` forces unbuffered output; without it the "Serving HTTP on ..."
     // banner (which we scrape for the auto-assigned port) doesn't reach the
     // pipe in time.
-    server = spawn('python3', ['-u', '-m', 'http.server', '0', '--directory', WEBUI_DIR], {
+    server = spawn(PYTHON, ['-u', '-m', 'http.server', '0', '--directory', WEBUI_DIR], {
       stdio: ['ignore', 'pipe', 'pipe'],
     });
     baseUrl = await new Promise((resolve, reject) => {
