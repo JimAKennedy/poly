@@ -17,50 +17,46 @@ test runner.
 web UI, which never renders. WebView2 processes are running (the runtime is
 installed and HTML loads), but the UI has no data.
 
-**Root cause:** Windows-specific race condition in choc WebView2 initialization.
-On Windows, `CreateCoreWebView2EnvironmentWithOptions` is asynchronous — it
-returns immediately and the WebView2 core isn't ready until a callback fires via
-the Win32 message loop. `WebUIView::attached()` was calling `addInitScript()`
-and `bind("polyHostCall")` immediately after constructing the WebView, before
-the async callback could fire. Both calls silently returned `false` because
-`coreWebView` was still null. The `polyHostCall` JS function was never
-registered, so the JS `send({ type: 'ready' })` call got a console error
-(`polyHostCall is not a function`), the C++ bridge never received the ready
-signal, `webviewReady_` stayed false, `pushState()` never sent data, and the
-UI rendered blank.
+**Root cause (two bugs, both required to fix):**
 
-On macOS/Linux this works fine because WebKit/GTK initialize synchronously
-within the constructor.
+1. **Async init race condition:** On Windows,
+   `CreateCoreWebView2EnvironmentWithOptions` is asynchronous — it returns
+   immediately and the WebView2 core isn't ready until a callback fires via the
+   Win32 message loop. `WebUIView::attached()` was calling `addInitScript()` and
+   `bind("polyHostCall")` immediately after constructing the WebView, before the
+   async callback could fire. Both calls silently returned `false` because
+   `coreWebView` was still null. The `polyHostCall` JS function was never
+   registered, so the JS `send({ type: 'ready' })` call failed, the C++ bridge
+   never received the ready signal, `webviewReady_` stayed false,
+   `pushState()` never sent data, and the UI rendered blank.
 
-A secondary prerequisite issue was also found: the WebView2 Runtime was not
-installed on the test runner. This is now resolved (runtime installed, runbook
-updated).
+2. **Missing WS_POPUP → WS_CHILD style change:** choc creates its wrapper HWND
+   with `WS_POPUP` style. When reparenting into the DAW's plugin window via
+   `SetParent`, the style must be changed to `WS_CHILD` — otherwise the window
+   doesn't clip to the parent bounds and can fail to render content inside the
+   host window. choc's own `DesktopWindow::setContent` does this
+   (`choc_DesktopWindow.h:806-809`), but Poly's reparenting code was missing it.
 
-**Fix applied:** Moved `addInitScript` and `bind("polyHostCall")` into
-`options.webviewIsReady`, which fires synchronously on macOS/Linux (during the
-constructor) and asynchronously on Windows (after WebView2 finishes its async
-init). Change is in `plugin/source/webui/web_ui_view.cpp` lines 108-119.
+On macOS/Linux these don't apply: WebKit/GTK init synchronously, and NSView
+reparenting works without style changes.
+
+A prerequisite issue was also found: the WebView2 Runtime was not installed on
+the test runner. This is resolved (runtime installed, runbook updated).
+
+**Fix applied:**
+- Moved `addInitScript` and `bind("polyHostCall")` into
+  `options.webviewIsReady` callback (fires synchronously on macOS/Linux,
+  asynchronously on Windows after WebView2 finishes init).
+- Added `WS_POPUP → WS_CHILD` style change via `SetWindowLongPtr` before
+  `SetParent`, plus explicit `ShowWindow(child, SW_SHOW)`.
+- Changes in `plugin/source/webui/web_ui_view.cpp` lines 108-148.
 
 **Current status:**
-- [x] Root cause identified and fix applied in source
+- [x] Root cause identified — two bugs, both fixed
 - [x] Build succeeds, all 462 engine tests pass, pluginval 47/47 pass
-- [x] User-level VST3 copy updated with fixed binary
-- [ ] System-level VST3 copy (`C:\Program Files\Common Files\VST3\`) still has
-  the old binary — needs elevated shell to update (see installation note below)
-- [ ] Cubase UI verification pending — requires interactive desktop session
-- [x] Cubase VST3 cache cleared to force rescan on next launch
-
-**Installation note (for interactive desktop session):**
-From an elevated PowerShell:
-```powershell
-Copy-Item -Force `
-  "C:\Users\polyci\dev\poly\build\VST3\Release\poly_plugin.vst3\Contents\x86_64-win\poly_plugin.vst3" `
-  "C:\Program Files\Common Files\VST3\poly_plugin.vst3\Contents\x86_64-win\poly_plugin.vst3"
-```
-Or remove the stale system-level copy so Cubase only loads the user-level one:
-```powershell
-Remove-Item -Recurse -Force "C:\Program Files\Common Files\VST3\poly_plugin.vst3"
-```
+- [x] Verified working in Cubase 14 on the Windows test runner
+- [x] System-level stale VST3 copy removed from `C:\Program Files\Common Files\VST3\`
+- [x] Cubase VST3 cache cleared, rescanned, loads from user-level path
 
 **Remaining remediation:**
 
@@ -69,7 +65,7 @@ Remove-Item -Recurse -Force "C:\Program Files\Common Files\VST3\poly_plugin.vst3
    user to install the WebView2 Runtime. Prevents blank-screen UX if the
    runtime is genuinely missing (separate from the race condition fix).
 
-**Priority:** High — fix applied, pending verification in Cubase.
+**Priority:** Resolved — verified working in Cubase.
 
 ---
 
