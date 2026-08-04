@@ -109,6 +109,58 @@ preset picker works once ISSUE-001 is resolved.
 
 ---
 
+## ISSUE-003: Cubase nightly fails on `pwsh: command not found`
+
+**Discovered:** 2026-08-04, first `workflow_dispatch` of the Cubase nightly (L4)
+on the self-hosted runner `JIMW1`.
+
+**Symptom:** The run reaches the runner and checks out the repo, then fails in
+~13 s. The first `run:` step (`Prepare artifact staging dir`) errors with
+`pwsh: command not found`, and every later `pwsh` step (`Quit Cubase`, `Archive
+logs`) fails the same way. The run never configures, builds, or launches Cubase.
+The uploaded artifact set is empty (`_artifacts` was never created, because its
+creation step is the one that first hit the missing shell).
+
+**Root cause:** `.github/workflows/cubase-nightly.yml` sets `shell: pwsh` on
+every `run:` step, and all `scripts/cubase/*.ps1` are PowerShell **Core** (7+)
+scripts. A fresh self-hosted Windows box ships only **Windows PowerShell 5.1**
+(`powershell.exe`) — it has no `pwsh`. GitHub-hosted `windows-2022` images
+pre-install `pwsh`, which is why the same workflow would pass there; a
+self-hosted runner is responsible for its own toolchain. Checkout succeeded
+because it runs on Node, not `pwsh`, so the run *looked* like it started before
+dying on the first script step.
+
+**Fix applied:**
+- Documented `pwsh` (PowerShell 7) as a **required** Part 2 toolchain install in
+  `docs/windows-test-runner-setup.md`
+  (`winget install --id Microsoft.PowerShell`), with the caveat that the runner
+  logon task must be **restarted/rebooted** afterward so the runner process
+  picks up the new PATH.
+- Added `pwsh --version` to Part 2's verify block (must print 7.x, not 5.1).
+
+**Current status:**
+- [x] Root cause identified (missing PowerShell Core on the runner)
+- [x] Install + restart step documented in the setup runbook (Part 2)
+- [ ] `pwsh` installed on `JIMW1` and the runner restarted (owner action)
+- [ ] Nightly re-dispatched; run gets past the shell step
+
+**Remediation options (belt-and-braces, optional):**
+
+1. **Preflight shell check (recommended follow-up):** Add an early workflow step
+   that verifies `pwsh` is present and fails with an explicit, self-explaining
+   message (e.g. "PowerShell 7 not installed — see runbook Part 2") instead of
+   the cryptic `command not found` cascade. Makes the next missing-dependency
+   failure diagnosable at a glance.
+2. **Fall back to Windows PowerShell 5.1** (`shell: powershell`): avoids the
+   runner install, but the `.ps1` scripts would need verification against 5.1
+   (it lacks `??`, `ForEach-Object -Parallel`, and some 7-only cmdlets). Not
+   recommended — it diverges from CI's `pwsh` environment.
+
+**Priority:** Medium — hard-blocks every nightly run until `pwsh` is installed,
+but the fix is a one-time install with no code change.
+
+---
+
 ## Template for new issues
 
 ```

@@ -61,6 +61,23 @@ jobs:
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
 
+      # Preflight: every step below runs `shell: pwsh` (PowerShell 7+). A fresh
+      # self-hosted Windows box ships only Windows PowerShell 5.1 (powershell.exe),
+      # NOT pwsh — GitHub-hosted images pre-install it, self-hosted ones do not.
+      # Without this guard a missing pwsh surfaces as a cryptic
+      # "pwsh: command not found" cascade on the first real step. This runs in
+      # the runner's default shell (cmd) so it works even when pwsh is absent,
+      # and fails loud with the exact remediation.
+      - name: Preflight — PowerShell 7 (pwsh) present
+        shell: cmd
+        run: |
+          where pwsh >nul 2>nul
+          if errorlevel 1 (
+            echo ::error::PowerShell 7 (pwsh) not found on this runner. Every step uses shell: pwsh. Install it (winget install --id Microsoft.PowerShell) and RESTART the runner's logon task, then re-dispatch. See docs/windows-test-runner-setup.md Part 2.
+            exit 1
+          )
+          pwsh --version
+
       - name: Prepare artifact staging dir
         shell: pwsh
         run: |
