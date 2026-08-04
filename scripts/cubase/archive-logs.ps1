@@ -58,9 +58,13 @@ try {
     # real result of the launch/quit smoke it exists to diagnose. Record the
     # error (Invoke-PolyPhaseFailure persists cubase-last-error.json) but do NOT
     # let its trailing `throw` propagate; swallow it so the step exits 0.
+    $archiveError = $_.Exception.Message
     try {
-        Invoke-PolyPhaseFailure -Phase "archive" -Message $_.Exception.Message
+        Invoke-PolyPhaseFailure -Phase "archive" -Message $archiveError
     } catch {
-        Write-Warning "[cubase:archive] non-fatal: $($_.Exception.Message)"
+        # Emit a GitHub ::warning:: annotation (not just Write-Warning, which is
+        # invisible in the run summary) so a real archive failure is surfaced in
+        # the run UI even though the step deliberately exits 0.
+        Write-Host "::warning title=Cubase archive::[cubase:archive] non-fatal failure: $archiveError"
     }
 }

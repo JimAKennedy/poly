@@ -111,6 +111,21 @@ jobs:
           Copy-Item -Recurse -Force $src.FullName $dest
           Write-Host "Installed $($src.FullName) -> $dest"
 
+      # Reset the artifact staging dir immediately before the Cubase phase.
+      # The `Test (ctest)` step above inherits POLY_PROBE_OUTPUT process-wide, so
+      # poly_probe_tests (S06) writes a golden probe.jsonl into _artifacts during
+      # the build pyramid. If left in place, the archive step would collect that
+      # ctest output and (in S08) a "probe matches golden" assertion would
+      # falsely pass against ctest's own output instead of Cubase's. Wipe and
+      # recreate the dir so only the Cubase phase's output lands here.
+      - name: Reset artifact dir before Cubase phase
+        shell: pwsh
+        run: |
+          if (Test-Path "${{ env.POLY_ARTIFACT_DIR }}") {
+            Remove-Item -Recurse -Force "${{ env.POLY_ARTIFACT_DIR }}"
+          }
+          New-Item -ItemType Directory -Force -Path "${{ env.POLY_ARTIFACT_DIR }}" | Out-Null
+
       # --- L4 Cubase launch/quit cycle (scripts/cubase machinery from T02) ---
       - name: Kill stale Cubase
         shell: pwsh
@@ -137,6 +152,24 @@ jobs:
         shell: pwsh
         run: ./scripts/cubase/quit-cubase.ps1
 
+      # The real end-state the smoke must guarantee: no Cubase process survives.
+      # quit-cubase logs its own actions, but this is an independent assertion —
+      # if a Cubase process is still running after quit, the smoke did NOT
+      # succeed, so fail the job. Only runs when quit itself succeeded (a failed
+      # quit already fails the job); on the pass path this is the teeth behind
+      # "launched and quit cleanly".
+      - name: Assert no Cubase process survives
+        shell: pwsh
+        run: |
+          $names = @("Cubase", "Cubase14", "Cubase13", "Cubase12")
+          $survivors = Get-Process -Name $names -ErrorAction SilentlyContinue
+          if ($survivors) {
+            $ids = ($survivors | ForEach-Object { $_.Id }) -join ", "
+            Write-Host "::error::Cubase process(es) survived quit: $ids"
+            exit 1
+          }
+          Write-Host "No Cubase process survives — clean launch/quit confirmed."
+
       - name: Archive logs and probe output
         if: always()
         shell: pwsh
@@ -154,21 +187,26 @@ jobs:
           retention-days: 14
           if-no-files-found: warn
 
-  notify:
-    name: Failure notification
+  report:
+    name: Report run status
     needs: [cubase-nightly]
     if: always()
     runs-on: ubuntu-latest
     permissions:
       issues: write
     steps:
-      - name: Check for failure
+      - name: Summarize run result
         id: check
         run: |
-          if [[ "${{ needs.cubase-nightly.result }}" != "success" ]]; then
+          result="${{ needs.cubase-nightly.result }}"
+          if [[ "$result" != "success" ]]; then
             echo "has_failure=true" >> "$GITHUB_OUTPUT"
+            echo "### ❌ Cubase nightly: $result" >> "$GITHUB_STEP_SUMMARY"
+            echo "The launch/quit smoke did not pass — an issue has been filed/updated." >> "$GITHUB_STEP_SUMMARY"
           else
             echo "has_failure=false" >> "$GITHUB_OUTPUT"
+            echo "### ✅ Cubase nightly: success" >> "$GITHUB_STEP_SUMMARY"
+            echo "Cubase launched and quit cleanly; artifacts uploaded." >> "$GITHUB_STEP_SUMMARY"
           fi
       - name: Create or update issue on failure
         if: steps.check.outputs.has_failure == 'true'
