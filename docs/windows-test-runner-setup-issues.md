@@ -161,6 +161,36 @@ but the fix is a one-time install with no code change.
 
 ---
 
+## ISSUE-004: `archive-logs.ps1` self-copy crash on `probe.jsonl`
+
+**Discovered:** 2026-08-04, first full Cubase launch/quit cycle in run
+30865168727 on `JIMW1`.
+
+**Symptom:** The `archive-logs` step fails with `Cannot overwrite the item
+...\probe.jsonl with itself.` The Cubase launch/quit cycle itself completes
+(Cubase launches, wait-ready succeeds, quit hard-kills after graceful timeout),
+but the archive step crashes and marks the run as failed.
+
+**Root cause:** `POLY_PROBE_OUTPUT` is set to
+`${{ github.workspace }}\_artifacts\probe.jsonl`, which is **inside**
+`POLY_ARTIFACT_DIR` (`${{ github.workspace }}\_artifacts`). When the probe
+creates that file (even an empty one), `archive-logs.ps1`'s `Copy-IfPresent`
+tries to copy it from `_artifacts/probe.jsonl` into `_artifacts/probe.jsonl` —
+the same path. PowerShell's `Copy-Item` rejects copying a file onto itself.
+
+**Fix applied:** Added a same-path guard to `Copy-IfPresent` in
+`scripts/cubase/archive-logs.ps1` — resolves both source and destination to
+full paths and skips the copy when they match.
+
+**Current status:**
+- [x] Root cause identified (source path is inside artifact dir)
+- [x] Fix applied in `archive-logs.ps1`
+- [ ] Fix verified in a nightly run
+
+**Priority:** Medium — fails every nightly run that reaches the archive step.
+
+---
+
 ## Template for new issues
 
 ```

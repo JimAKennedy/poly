@@ -24,9 +24,17 @@ try {
         param([string] $Source, [string] $Label)
         if ($Source -and (Test-Path $Source)) {
             $destName = Split-Path -Leaf $Source
-            Copy-Item -Recurse -Force -Path $Source -Destination (Join-Path $ArtifactDir $destName)
-            Write-PolyPhase -Phase "archive" -State "ok" `
-                -Detail "collected $Label" -Extra @{ source = $Source }
+            $dest = Join-Path $ArtifactDir $destName
+            $srcFull = (Resolve-Path $Source).Path
+            $destFull = [System.IO.Path]::GetFullPath($dest)
+            if ($srcFull -eq $destFull) {
+                Write-PolyPhase -Phase "archive" -State "ok" `
+                    -Detail "$Label already in artifact dir (skipped copy)" -Extra @{ source = $Source }
+            } else {
+                Copy-Item -Recurse -Force -Path $Source -Destination $dest
+                Write-PolyPhase -Phase "archive" -State "ok" `
+                    -Detail "collected $Label" -Extra @{ source = $Source }
+            }
         } else {
             Write-PolyPhase -Phase "archive" -State "ok" `
                 -Detail "no $Label to collect (skipped)" -Extra @{ source = $Source }

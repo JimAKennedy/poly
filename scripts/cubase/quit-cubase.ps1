@@ -1,10 +1,17 @@
-# M042 S07: quit Cubase cleanly, with a hard-kill fallback.
+# M042 S07: quit Cubase, with a hard-kill fallback.
 #
-# Preferred path: ask each Cubase window to close (CloseMainWindow), which lets
-# Cubase release the audio device / MIDI ports / project lock gracefully. If a
-# process refuses to exit within a grace period, hard-kill it — a leftover
-# Cubase would block the next nightly (kill-stale would catch it, but leaving a
-# hung process is a failure signal worth surfacing here).
+# First attempt: CloseMainWindow (WM_CLOSE) on each Cubase process. On a normal
+# desktop this triggers project-close → Hub transition, but Cubase does NOT exit
+# — the Steinberg Hub takes over the process and waits for user interaction.
+# The "show Hub on startup" preference only controls cold-launch, not this
+# close-project transition, so the Hub cannot be suppressed here.
+#
+# After $GraceSeconds (default 15) we hard-kill. This is the expected path for
+# unattended runs — a clean process exit via CloseMainWindow alone would require
+# a second WM_CLOSE on the Hub window, which is timing-fragile. The hard-kill
+# may cause Cubase's crash reporter to appear on the NEXT launch; if that
+# becomes a problem, the kill-stale preflight or a registry key to suppress the
+# reporter can handle it.
 #
 # Runs under the workflow's `if: always()` so it executes even when
 # wait-for-ready failed, ensuring the runner is left clean.
@@ -42,15 +49,14 @@ try {
         Start-Sleep -Seconds 1
     }
 
-    # Hard-kill fallback. This is a degraded outcome — record it as such but do
-    # not fail the quit phase (leaving the runner clean is the goal; the hung
-    # process is captured in the status log for diagnosis).
+    # Hard-kill fallback. Expected path — Cubase transitions to the Hub on
+    # WM_CLOSE and won't exit on its own without further interaction.
     $remaining = Get-Process -Name $names -ErrorAction SilentlyContinue
     foreach ($p in $remaining) {
         try {
             Stop-Process -Id $p.Id -Force -ErrorAction Stop
             Write-PolyPhase -Phase "quit" -State "ok" `
-                -Detail "hard-killed unresponsive Cubase (graceful quit timed out)" `
+                -Detail "hard-killed Cubase after graceful timeout (Hub transition blocks clean exit)" `
                 -Extra @{ pid = $p.Id; graceSeconds = $GraceSeconds }
         } catch {
             Write-PolyPhase -Phase "quit" -State "ok" `
