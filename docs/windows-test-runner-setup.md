@@ -421,25 +421,61 @@ Now wire the machine into CI. The nightly workflow
 the launch/quit machinery in `scripts/cubase/` (see that directory's
 `README.md`).
 
+- ☐ **Install the runner at `C:\actions-runner`.** Create the directory *first*
+  and `cd` into it by absolute path before running anything GitHub gives you:
+  ```powershell
+  New-Item -ItemType Directory -Force C:\actions-runner
+  Set-Location C:\actions-runner
+  ```
+  > **Do not paste GitHub's download snippet into an elevated shell as-is.** It
+  > opens with `mkdir actions-runner; cd actions-runner` — *relative* paths. An
+  > elevated PowerShell starts in `C:\Windows\System32`, so the snippet silently
+  > installs the runner to `C:\Windows\System32\actions-runner`, builds repo code
+  > inside a protected OS directory, and makes the whole tree admin-only. This
+  > has happened on this box once already; if you find a runner there, follow
+  > `docs/windows-runner-rehome-and-deelevate.md` to relocate it.
 - ☐ In GitHub: **repo → Settings → Actions → Runners → New self-hosted runner →
   Windows x64.** GitHub shows a per-runner token and download commands.
-- ☐ On the box, run the shown `config.cmd`. When prompted:
+- ☐ From `C:\actions-runner`, run the shown `config.cmd`. When prompted:
   - **Labels:** add `cubase` (the nightly workflow keys off this).
   - **Work folder:** default `_work` is fine.
+- ☐ **Confirm the install path before going further** — a wrong path here is
+  cheap to fix now and painful later:
+  ```powershell
+  (Get-Item C:\actions-runner\run.cmd).FullName   # expect C:\actions-runner\run.cmd
+  Test-Path C:\Windows\System32\actions-runner    # expect False
+  ```
 - ☐ **Install the runner as a LOGON SCHEDULED TASK, not a Windows service.** The
   default `svc.cmd install` registers a *service* — which has **no interactive
   desktop** and will break Cubase/CDP. Instead:
   - Do **not** run `svc.cmd install`.
-  - Create a **Task Scheduler** task that runs `run.cmd` from the runner
-    directory, triggered **At log on** of `polyci`, "Run only when user is
-    logged on", highest privileges, and **not** "Stop if runs longer than…".
-    (Auto-logon from Part 7 makes this fire on every boot.)
+  - Create a **Task Scheduler** task that runs `run.cmd` **by absolute path**,
+    triggered **At log on** of `polyci`, "Run only when user is logged on", and
+    **not** "Stop if runs longer than…". (Auto-logon from Part 7 makes this fire
+    on every boot.) Equivalent from an elevated PowerShell:
+    ```powershell
+    $a = New-ScheduledTaskAction -Execute "C:\actions-runner\run.cmd" `
+                                 -WorkingDirectory "C:\actions-runner"
+    $t = New-ScheduledTaskTrigger -AtLogOn -User "$env:COMPUTERNAME\polyci"
+    $p = New-ScheduledTaskPrincipal -UserId "$env:COMPUTERNAME\polyci" `
+                                    -LogonType Interactive -RunLevel Highest
+    $s = New-ScheduledTaskSettingsSet -ExecutionTimeLimit ([TimeSpan]::Zero) `
+                                      -AllowStartIfOnBatteries `
+                                      -DontStopIfGoingOnBatteries
+    Register-ScheduledTask -TaskName "GitHubActionsRunner" `
+                           -Action $a -Trigger $t -Principal $p -Settings $s
+    ```
+    `-RunLevel Highest` is the *initial* posture only, because Part 1a made
+    `polyci` a local admin. Once the box is stable, drop both the elevation and
+    the admin membership — see
+    `docs/windows-runner-rehome-and-deelevate.md` Part C.
 - ☐ Reboot. Confirm the runner comes up **idle/listening** in the GitHub Runners
   page after auto-logon.
 
 **Verify:** GitHub → Settings → Actions → Runners shows this runner **online**
-with the `cubase` label, and it's running as a logon task (visible in Task
-Scheduler), not as a service.
+with the `cubase` label; it is running as a logon task (visible in Task
+Scheduler), not as a service; and its working directory is `C:\actions-runner`,
+**not** anywhere under `C:\Windows`.
 
 ---
 
