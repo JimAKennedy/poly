@@ -149,6 +149,20 @@ what `.github/workflows/ci.yml` runs.
   ```powershell
   winget install --id Ninja-build.Ninja -e --source winget
   ```
+- ☐ **PowerShell 7 (`pwsh`)** — **required by the Cubase nightly workflow.**
+  Every `run:` step in `.github/workflows/cubase-nightly.yml` (and every
+  `scripts/cubase/*.ps1`) uses `shell: pwsh`, i.e. PowerShell **Core** 7+, which
+  a fresh Windows box does **not** ship (it only has Windows PowerShell 5.1,
+  `powershell.exe`). GitHub-hosted `windows-2022` images pre-install `pwsh`; a
+  self-hosted runner does not — so the nightly fails on the first script step
+  with `pwsh: command not found` until this is installed (ISSUE-003 in
+  `docs/windows-test-runner-setup-issues.md`):
+  ```powershell
+  winget install --id Microsoft.PowerShell -e --source winget
+  ```
+  After installing, **restart the runner's logon task (or reboot)** so the
+  runner process picks up the new PATH — an already-running runner won't see
+  `pwsh` until it restarts.
 - ☐ **Microsoft Edge WebView2 Runtime** (Poly's UI is a WebView2 web view;
   without the runtime the plugin opens to a blank window with no error):
   ```powershell
@@ -162,9 +176,11 @@ what `.github/workflows/ci.yml` runs.
   If the key exists and `pv` has a version string, the runtime is installed.
 - ☐ **Close and reopen PowerShell** so PATH updates land.
 
-**Verify — all five must succeed:**
+**Verify — all six must succeed:**
 ```powershell
 git --version; cmake --version; ninja --version
+# PowerShell 7 (the workflow's shell — must print 7.x, NOT 5.1):
+pwsh --version
 # MSVC: from a "Developer PowerShell for VS 2022" (Start menu), run:
 cl
 # WebView2 Runtime:
@@ -302,17 +318,47 @@ step here fails, the nightly will fail — fix it now, not in CI.
   installs a mismatched Playwright and fails with "test.describe() not expected
   here".)
 - ☐ **Install the plugin so Cubase can load it.** Copy the built bundle to the
-  shared VST3 folder:
+  shared VST3 folder (this is the same `POLY_VST3_INSTALL_DIR` the nightly
+  workflow installs to):
   ```powershell
   Copy-Item -Recurse -Force build\VST3\Release\poly_plugin.vst3 `
     "C:\Program Files\Common Files\VST3\poly_plugin.vst3"
   ```
-  In Cubase, rescan plugins; confirm **Poly** appears and instantiates on an
-  instrument track, opening the **WebUI editor** (a web view, not the old native
-  layout).
+  > **Only ONE copy of `poly_plugin.vst3` may exist on the box.** A leftover
+  > stale bundle in a *different* VST3 location (e.g. the user-level
+  > `%LOCALAPPDATA%\Programs\Common\VST3` or an old manual copy) makes Cubase
+  > load the wrong binary — the exact trap behind the blank-window incident
+  > (ISSUE-001). Before rescanning, confirm there is no second copy:
+  > ```powershell
+  > Get-ChildItem -Recurse -Filter poly_plugin.vst3 `
+  >   "C:\Program Files\Common Files\VST3", "$env:LOCALAPPDATA\Programs\Common\VST3" `
+  >   -ErrorAction SilentlyContinue | Select-Object FullName
+  > ```
+  > If more than one path prints, delete the stale one, then clear Cubase's VST3
+  > cache so it re-scans from scratch: delete
+  > `%APPDATA%\Steinberg\Cubase <ver>_64\Vst3Cache.xml` (or the
+  > `VST3 Cache.xml` variant) before relaunching.
+- ☐ In Cubase, rescan plugins; confirm **Poly** appears and instantiates on an
+  instrument track, opening the **WebUI editor** — a live web view showing the
+  lane strips and preset picker, **not** a blank white window.
+  > **If the editor is blank/white:** that was ISSUE-001 (a WebView2 async-init
+  > race + a missing `WS_POPUP → WS_CHILD` reparenting style), **fixed in the
+  > plugin** as of the `fix/windows-test-portability` work (merged via PR #168).
+  > A blank editor now means one of: (a) the **WebView2 Runtime is missing**
+  > (re-check Part 2's `reg query`), (b) you loaded a **stale bundle** (see the
+  > single-copy note above), or (c) the build predates the fix — rebuild from a
+  > current `main`.
 
 **Verify:** ctest all-green; pluginval exits 0; Playwright all-green; Poly loads
-in Cubase and its WebUI editor renders.
+in Cubase and its WebUI editor renders the lane strips (not a blank window),
+with exactly one `poly_plugin.vst3` on the machine.
+
+> **Presets note (ISSUE-002, by design):** Cubase's *own* preset browser (the
+> DAW dropdown at the top of the plugin header) will show **no** presets for
+> Poly — Poly does not implement the VST3 `ProgramList` API. Poly's factory
+> presets are applied from **Poly's own web-UI preset picker**, not the DAW's.
+> This is expected, not a fault; see `docs/cubase-workflow.md` for the user-facing
+> note.
 
 ---
 
