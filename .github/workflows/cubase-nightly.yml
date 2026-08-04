@@ -68,14 +68,15 @@ jobs:
       # "pwsh: command not found" cascade on the first real step. This runs in
       # the runner's default shell (cmd) so it works even when pwsh is absent,
       # and fails loud with the exact remediation.
+      # Runs in cmd (available even when pwsh is absent). Uses `||` short-circuit
+      # rather than a parenthesized multi-line `if ( )` block: cmd's parser treats
+      # a literal `(` inside the echo'd message as closing the block, which
+      # produced a "not was unexpected at this time" syntax error. The message
+      # below therefore contains no parentheses, and the whole guard is one line.
       - name: Preflight — PowerShell 7 (pwsh) present
         shell: cmd
         run: |
-          where pwsh >nul 2>nul
-          if errorlevel 1 (
-            echo ::error::PowerShell 7 (pwsh) not found on this runner. Every step uses shell: pwsh. Install it (winget install --id Microsoft.PowerShell) and RESTART the runner's logon task, then re-dispatch. See docs/windows-test-runner-setup.md Part 2.
-            exit 1
-          )
+          where pwsh || (echo ::error::PowerShell 7 pwsh not found on this runner. Every step uses shell pwsh. Install via winget install --id Microsoft.PowerShell then RESTART the runner logon task and re-dispatch. See docs/windows-test-runner-setup.md Part 2.& exit /b 1)
           pwsh --version
 
       - name: Prepare artifact staging dir
