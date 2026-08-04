@@ -1,3 +1,7 @@
+---
+class: gated
+---
+
 # Windows runner — rehome and de-elevate
 
 Remediation runbook for the `JIMW1` Cubase box. Three independent changes, in
