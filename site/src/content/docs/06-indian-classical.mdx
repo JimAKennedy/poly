@@ -44,18 +44,18 @@ The concept of *layakari* — rhythmic augmentation and diminution — maps dire
 
 Set Lane 1 to subdivision 1/4 for the basic pulse. Set Lane 2 to 1/8 for dugun. Set Lane 3 to 1/16 for chaugun. All three share the same step count and hit pattern, but the subdivision change compresses the same rhythmic shape into progressively smaller time spans. The result is a layered acceleration that Indian classical musicians spend years learning to control.
 
-<PolyPatch title="Tintal-Inspired Groove" preset="Indian Classical">
+<PolyPatch title="Tintal-Inspired Groove" preset="Tintal Groove">
 
 | Lane | Role | Steps | Hits | Rotation | Subdivision | Velocity | Note |
 |------|------|-------|------|----------|-------------|----------|------|
 | 1 | Sam accent | 16 | 4 | 0 | 1/4 | 110 | 36 |
 | 2 | Theka outline | 16 | 7 | 0 | 1/8 | 90 | 38 |
 | 3 | Dugun fill | 16 | 9 | 2 | 1/8 | 70 | 42 |
-| 4 | Tigun ornament | 16 | 5 | 4 | 1/16 | 55 | 46 |
+| 4 | Chaugun ornament | 16 | 5 | 4 | 1/16 | 55 | 46 |
 
 </PolyPatch>
 
-<PolyPreviewCard preset="Tintal Groove" caption="Tintal-inspired groove — sam accent with theka, dugun, and tigun layakari layers" />
+<PolyPreviewCard preset="Tintal Groove" caption="Tintal-inspired groove — sam accent with theka, dugun, and chaugun layakari layers" />
 
 Lane 1 marks the four strong beats of tintal's 4+4+4+4 structure. Lane 2 provides the mid-density theka skeleton. Lanes 3 and 4 add layakari-style density at higher subdivisions, creating the effect of rhythmic acceleration without changing the tempo.
 
@@ -65,7 +65,7 @@ A *tihai* is a rhythmic phrase repeated three times such that it ends precisely 
 
 Poly's phrase gating parameters model this directly. Set a lane's phrase Length to the number of beats in your tihai phrase, and configure the Gap so that three consecutive phrases (Length + Gap, repeated) land the final onset on beat 1. The Offset parameter positions the tihai's entry point within the cycle.
 
-<PolyPatch title="Rupak Tal Configuration" preset="7-Beat Cycle">
+<PolyPatch title="Rupak Tal Configuration" preset="Rupak Tal">
 
 | Lane | Role | Steps | Hits | Rotation | Subdivision | Velocity | Ghost |
 |------|------|-------|------|----------|-------------|----------|-------|

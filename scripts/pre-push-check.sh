@@ -30,7 +30,7 @@ done
 echo "=== Pre-push quality checks ==="
 
 # region:pre-push-gates
-echo "[0/5] Build config check..."
+echo "[0/6] Build config check..."
 CACHE_FILE="build/CMakeCache.txt"
 NEEDS_RECONFIG=0
 RECONFIG_REASONS=()
@@ -58,7 +58,7 @@ if [ "$NEEDS_RECONFIG" -eq 1 ]; then
     fi
 fi
 
-echo "[1/5] clang-format..."
+echo "[1/6] clang-format..."
 # Prefer running on staged files (fast, no full-tree traversal) when we have any;
 # fall back to --all-files if git diff --cached is empty (e.g. hook invoked
 # outside a staged context, or the whole tree just got reformatted).
@@ -75,19 +75,19 @@ else
     fi
 fi
 
-echo "[2/5] RT safety..."
+echo "[2/6] RT safety..."
 if ! scripts/check-realtime-safety.sh; then
     echo "FAIL: RT safety check failed."
     FAILED=1
 fi
 
-echo "[3/5] CodeSnippet region markers..."
+echo "[3/6] CodeSnippet region markers..."
 if ! scripts/check-snippet-regions.sh; then
     echo "FAIL: CodeSnippet region check failed."
     FAILED=1
 fi
 
-echo "[4/5] Build + test..."
+echo "[4/6] Build + test..."
 if ! cmake --build build --config Release --parallel 2>/dev/null; then
     echo "FAIL: Build failed."
     FAILED=1
@@ -96,7 +96,7 @@ elif ! ctest --test-dir build --build-config Release --output-on-failure 2>/dev/
     FAILED=1
 fi
 
-echo "[5/5] pluginval (strictness=${PLUGINVAL_STRICTNESS})..."
+echo "[5/6] pluginval (strictness=${PLUGINVAL_STRICTNESS})..."
 if ! command -v pluginval >/dev/null 2>&1; then
     echo "  SKIP: pluginval not on PATH. Install with: bash scripts/install-pluginval.sh"
 else
@@ -111,6 +111,21 @@ else
             echo "  For CI-parity strictness: PLUGINVAL_STRICTNESS=8 bash scripts/pre-push-check.sh"
             FAILED=1
         fi
+    fi
+fi
+
+echo "[6/6] Doc-conformance guardrail suite (M071)..."
+# Single source of truth with the CI site-lint job: both invoke
+# scripts/check-doc-conformance.sh (asserted by
+# site/tests/doc-conformance-wiring.test.mjs). The runner imports js-yaml from
+# site/node_modules, so gate on its presence — matching the runner's documented
+# contract that pre-push callers verify deps before invoking.
+if [ ! -d "site/node_modules" ]; then
+    echo "  SKIP: site/node_modules missing. Install with: (cd site && npm ci)"
+else
+    if ! bash scripts/check-doc-conformance.sh; then
+        echo "FAIL: doc-conformance guardrail suite failed (see the named test file/case above)."
+        FAILED=1
     fi
 fi
 # endregion:pre-push-gates

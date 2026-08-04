@@ -22,7 +22,7 @@ Poly's two most distinctive features — the Kotekan parameter and the ability t
 
 Kotekan is the Balinese technique of rhythmic interlocking. Two musicians — called *polos* and *sangsih* — each play a pattern that is incomplete on its own.<sup>[20](/appendix-references/#ref-20)</sup> Polos plays certain beats. Sangsih plays the complementary beats — exactly the ones polos leaves silent. Together they produce a single continuous melody at a speed no individual player could sustain.
 
-The principle is mathematical: if polos plays hits at positions {1, 3, 5, 7} within an 8-step cycle, sangsih plays at positions {2, 4, 6, 8}. The two patterns are complementary — their union covers every beat, their intersection is empty. Neither part makes musical sense alone. Together they are seamless.
+The principle is mathematical: if polos plays hits at positions {1, 3, 5, 7} within an 8-step cycle, sangsih plays at positions {2, 4, 6, 8}. The two patterns are complementary — their union covers every beat. Strict complementation like this is the textbook idealization; in practice the two players also strike together at structural tones — cadence points, phrase joins, and *angsel* breaks — and a pair that never overlaps sounds mechanical (see [theory-gamelan](/theory-gamelan/) Rule 4). Neither part makes musical sense alone. Together they are seamless.
 
 <EuclideanDiagram steps={8} hits={5} />
 
@@ -34,7 +34,7 @@ This is precisely what Poly's Kotekan parameter automates. When you set Lane 2's
 
 <CodeSnippet file="engine/src/engine.cpp" region="kotekan" caption="Complement generation — sangsih pattern derived from polos" />
 
-<PolyPatch title="Balinese Kotekan Interlocking" preset="Gamelan: Kotekan">
+<PolyPatch title="Balinese Kotekan Interlocking" preset="Balinese Kotekan">
 
 | Lane | Role | Steps | Hits | Rotation | Subdivision | Note | Velocity | Ghost | Kotekan |
 |------|------|-------|------|----------|-------------|------|----------|-------|---------|
@@ -69,7 +69,7 @@ No individual instrument plays a complex pattern. Each plays an extremely simple
 
 In Poly, you model colotomic structure by setting lanes to different step counts that are powers of two (or other integer multiples). A lane with 4 steps plays four times for every one time a lane with 16 steps completes its cycle. The convergence points — where all lanes hit simultaneously — become the deep structural markers of the groove.
 
-<PolyPatch title="Javanese Colotomic Nesting" preset="Gamelan: Colotomic">
+<PolyPatch title="Javanese Colotomic Nesting" preset="Javanese Colotomic">
 
 | Lane | Role | Steps | Hits | Rotation | Subdivision | Note | Velocity | Ghost |
 |------|------|-------|------|----------|-------------|------|----------|-------|

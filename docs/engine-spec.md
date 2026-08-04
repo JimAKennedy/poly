@@ -135,6 +135,27 @@ Each on-pattern step is classified via `classifyStep()` into one of five outcome
 
 Anchor steps (`ConstraintConfig::anchorSteps`) bypass mutation/probability so protected positions always fire.
 
+#### Constraint resolution (`resolveConstraints`)
+
+After macros are resolved, `resolveConstraints()` applies each lane's
+`ConstraintConfig` to the macro-resolved state:
+
+- **Density bounds** — `hitCount` is clamped to `[densityMin, densityMax]`
+  (within the lane's step count), and a global `globalDensityCeiling` scales
+  all lanes' hit counts down proportionally (never below each lane's
+  `densityMin`, or 1) when their sum exceeds the ceiling.
+- **Backbeat protection** — for a lane whose `ConstraintConfig::backbeatProtect`
+  is set, `resolveConstraints` restores the lane's **original authored**
+  `emphasisProb`, `baseVelocity`, and `rotation` (overwriting the
+  macro-resolved values). This keeps an authored backbeat on its intended
+  downbeat placement even under maximum syncopation: the `syncopation` macro
+  would otherwise rotate the lane's Euclidean pattern off beats 2 and 4.
+  Factory presets activate this on every non-timeline `Backbeat`-role lane
+  (`presets.cpp` `protectBackbeatLanes`); the timeline-locked referent lane is
+  macro-immune and never carries the Backbeat role, so it is left untouched.
+  [verified: PresetConformance.BackbeatSurvivesSyncopationRotation]
+  [verified: PresetConformance.BackbeatSurvivesSyncopationDefault]
+
 ### 4. Velocity Computation
 
 ```cpp

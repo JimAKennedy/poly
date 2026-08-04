@@ -25,6 +25,7 @@ GrooveState resolveConstraints(const GrooveState& original, const GrooveState& m
         if (cc.backbeatProtect) {
             lane.emphasisProb = orig.emphasisProb;
             lane.baseVelocity = orig.baseVelocity;
+            lane.rotation = orig.rotation;
         }
     }
 

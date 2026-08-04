@@ -46,14 +46,14 @@ Counterpoint in this system is **vertical, not phased**: all voices share the sa
 
 | Lane | Role | Steps | Hits | Rotation | Subdivision | Velocity | Ghost | Mutation | Swing |
 |------|------|-------|------|----------|-------------|----------|-------|----------|-------|
-| 1 | Tupan low (cell heads) | 11 | 5 | 0 | 1/8 | 115 | 0 | 0% | 0 |
+| 1 | Tupan low (cell heads) | 11 | 5 | 7 | 1/8 | 115 | 0 | 0% | 0 |
 | 2 | Tupan stick (fill) | 11 | 7 | 1 | 1/8 | 70 | 45 | 8% | 0 |
 | 3 | Quick pulse | 11 | 11 | 0 | 1/8 | 50 | 20 | 0% | 0 |
 | 4 | Melodic accents | 11 | 4 | 2 | 1/8 | 85 | 25 | 8% | 0 |
 
 </PolyPatch>
 
-Lane 1's five hits must land on pulses 0, 2, 4, 7, 9 — the cell heads of 2+2+3+2+2. E(5,11) happens to produce a different spacing, so use the additive-cells parameters (or timeline mode) rather than trusting the Euclidean default here: this is a case where the *cells*, not the even distribution, are the authority.
+Lane 1's five hits must land on pulses 0, 2, 4, 7, 9 — the cell heads of 2+2+3+2+2. E(5,11) at its default rotation gives {0, 2, 4, 6, 8}, a different spacing — but the cell heads are the same gaps (four 2s and one 3) rearranged, so they *are* E(5,11) rotated: **rotation 7** (rotate-right, the M068 convention) lands the five hits exactly on the cell heads. Set the rotation explicitly, or drive the lane from the additive-cells parameters (or timeline mode) — the *cells*, not the Euclidean default, are the authority.
 
 ## What Breaks the Idiom
 
@@ -61,7 +61,7 @@ Lane 1's five hits must land on pulses 0, 2, 4, 7, 9 — the cell heads of 2+2+3
 - **Swing** (Rule 6) and **heavy humanize** (Rule 7).
 - **Even accents.** All cell heads equal, or accents drifting inside cells — the limp disappears (Rule 2).
 - **Missing quick pulse.** Without the fast stratum, long cycles (11, 13) become uncountable to the listener (Rule 3).
-- **Euclidean-only thinking.** Several aksak accent patterns are *not* the E(k,n) distribution for their cycle (see the kopanitsa note above). The cell sequence is the ground truth; Euclidean patterns are a frequent but not universal match.
+- **Euclidean-only thinking.** Several aksak accent patterns are *not* the E(k,n) distribution for their cycle. (The kopanitsa cell heads happen to be a *rotation* of E(5,11) — see the note above — but longer additive cycles need not match any E(k,n) at all.) The cell sequence is the ground truth; Euclidean patterns are a frequent but not universal match.
 
 ## Sources
 

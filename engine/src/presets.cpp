@@ -1,5 +1,10 @@
 #include "poly/presets.h"
 
+#include <array>
+#include <cstddef>
+
+#include "poly/euclidean.h"
+
 namespace poly {
 
 GrooveState makeFourOnTheFloor() {
@@ -368,12 +373,17 @@ GrooveState makeKotekanInterlock() {
     s.activeLaneCount = 4;
     s.seed = 55;
 
+    // Kotekan Interlock — thin the polos so the sangsih has gaps to interlock into.
+    // polos hitCount MUST stay < cycle.steps: the sangsih (lane 1, kotekanSourceLane=0)
+    // derives its pattern as !euclidean(polos.hitCount, polos.cycle.steps, polos.rotation).
+    // A saturated polos (hitCount >= steps) makes that complement all-false and silences
+    // the sangsih voice — the interlocking pair collapses to a single line.
     auto& polos = s.lanes[0];
     polos.id = 0;
     polos.role = Role::AnchorPulse;
     polos.midiNote = 76;
     polos.cycle = {3, 8};
-    polos.hitCount = 3;
+    polos.hitCount = 2;
     polos.baseVelocity = 95;
     polos.probability = 1.0f;
     polos.noteDuration = 0.12f;
@@ -468,8 +478,13 @@ GrooveState makePocketGroove() {
     ghost.timingOffsetMs = -1.5f;
     ghost.mutationRate = 0.2f;
 
+    // Pocket Groove — restore the 2/4 backbeat; syncopate ornaments only:
+    // syncopation stays 0 so resolveMacros does not rotate the non-referent snare
+    // off beats 2/4. The Dilla push/pull pocket is already authored per-lane via
+    // rotation and micro-timing offsets, so the default syncopation macro is
+    // redundant and genre-breaking. Density kept.
     s.macros.humanize = 0.25f;
-    s.macros.syncopation = 0.3f;
+    s.macros.syncopation = 0.0f;
     s.macros.density = 0.4f;
     return s;
 }
@@ -530,10 +545,8 @@ GrooveState makeAfrobeat12_8() {
     conga.baseVelocity = 65;
     conga.probability = 0.8f;
     conga.ghostFloor = 25;
-    conga.humanizeMs = 2.5f;
 
-    s.macros.swing = 0.1f;
-    s.macros.humanize = 0.15f;
+    // M070 S04: metronomic tradition — no swing/humanize (kept dead-on the grid).
     s.macros.density = 0.5f;
     return s;
 }
@@ -575,7 +588,7 @@ GrooveState makeBalkanAksak() {
     zurna.baseVelocity = 80;
     zurna.probability = 0.85f;
     zurna.velocitySpread = 0.1f;
-    zurna.humanizeMs = 1.5f;
+    // M070 S04: metronomic tradition — no humanize (kept dead-on the grid).
 
     auto& darbuka = s.lanes[3];
     darbuka.id = 3;
@@ -724,7 +737,7 @@ GrooveState makeCarnaticTala() {
     kanjira.probability = 0.7f;
     kanjira.ghostFloor = 20;
     kanjira.velocitySpread = 0.12f;
-    kanjira.humanizeMs = 2.0f;
+    // M070 S04: metronomic tradition — no humanize (kept dead-on the grid).
 
     s.macros.complexity = 0.5f;
     s.macros.density = 0.4f;
@@ -843,23 +856,25 @@ GrooveState makeEweAgbekor() {
     kidi.role = Role::Accent;
     kidi.midiNote = 63;
     kidi.cycle = {5, 12};
-    kidi.hitCount = 5;
+    // Agbekor kidi — response drum: E(4,5) leaves one rest so it interlocks with
+    // the bell instead of saturating every pulse and flattening the ensemble.
+    kidi.hitCount = 4;
     kidi.baseVelocity = 85;
     kidi.probability = 0.95f;
     kidi.velocitySpread = 0.08f;
-    kidi.humanizeMs = 1.5f;
 
     auto& sogo = s.lanes[2];
     sogo.id = 2;
     sogo.role = Role::Ghost;
     sogo.midiNote = 43;
     sogo.cycle = {3, 12};
-    sogo.hitCount = 3;
+    // Agbekor sogo — E(2,3) keeps a gap so the support drum breathes rather than
+    // striking every pulse of its short cycle.
+    sogo.hitCount = 2;
     sogo.baseVelocity = 75;
     sogo.probability = 0.9f;
     sogo.ghostFloor = 30;
     sogo.velocitySpread = 0.1f;
-    sogo.humanizeMs = 2.0f;
 
     auto& lead = s.lanes[3];
     lead.id = 3;
@@ -870,9 +885,8 @@ GrooveState makeEweAgbekor() {
     lead.baseVelocity = 70;
     lead.probability = 0.8f;
     lead.velocitySpread = 0.12f;
-    lead.humanizeMs = 2.5f;
 
-    s.macros.humanize = 0.15f;
+    // M070 S04: metronomic tradition — no swing/humanize (kept dead-on the grid).
     s.macros.density = 0.5f;
     s.macros.complexity = 0.4f;
     return s;
@@ -1002,7 +1016,7 @@ GrooveState makeEweEnsemble() {
     lead.ghostFloor = 60;
     lead.kotekanSourceLane = 0;
 
-    s.macros.humanize = 0.15f;
+    // M070 S04: metronomic tradition — no humanize (kept dead-on the grid).
     return s;
 }
 
@@ -1041,7 +1055,7 @@ GrooveState makeMandingDjembe() {
     djembe.probability = 0.9f;
     djembe.ghostFloor = 55;
 
-    s.macros.humanize = 0.15f;
+    // M070 S04: metronomic tradition — no humanize (kept dead-on the grid).
     return s;
 }
 
@@ -1194,7 +1208,7 @@ GrooveState makeAfrobeatLagos() {
     conga.mutationRate = 0.25f;
 
     s.macros.density = 0.5f;
-    s.macros.humanize = 0.15f;
+    // M070 S04: metronomic tradition — no humanize (kept dead-on the grid).
     return s;
 }
 
@@ -1247,7 +1261,10 @@ GrooveState makeBaliKotekan() {
     reyong.probability = 0.85f;
     reyong.ghostFloor = 50;
 
-    s.macros.complexity = 0.3f;
+    // Balinese Kotekan — ship neutral complexity so the fixed interlocking figures
+    // (jegogan bass, reyong accents) keep their authored density; complexity < 0.5
+    // thins those structural lanes toward a single stroke and dissolves the interlock.
+    s.macros.complexity = 0.5f;
     return s;
 }
 
@@ -1345,7 +1362,10 @@ GrooveState makeTintal() {
     tigun.baseVelocity = 55;
     tigun.probability = 0.8f;
 
-    s.macros.complexity = 0.4f;
+    // Tintal — ship neutral complexity so the fixed 16-beat theka/dugun/tigun layers
+    // pass through untouched; complexity < 0.5 thins their hit counts and perturbs the
+    // tala structure the cycle is meant to state.
+    s.macros.complexity = 0.5f;
     return s;
 }
 
@@ -1386,7 +1406,10 @@ GrooveState makeRupakTal() {
     counter.probability = 0.85f;
     counter.ghostFloor = 35;
 
-    s.macros.complexity = 0.4f;
+    // Rupak Tal — ship neutral complexity so the fixed 7-beat theka and counter rhythm
+    // keep their authored strokes; complexity < 0.5 thins them and blurs the [3+2+2]
+    // additive cycle.
+    s.macros.complexity = 0.5f;
     return s;
 }
 
@@ -1452,7 +1475,6 @@ GrooveState makeKopanitsa() {
     kick.hitCount = 4;
     kick.baseVelocity = 115;
     kick.probability = 1.0f;
-    kick.humanizeMs = 2.0f;
 
     auto& snare = s.lanes[1];
     snare.id = 1;
@@ -1463,7 +1485,6 @@ GrooveState makeKopanitsa() {
     snare.rotation = 3;
     snare.baseVelocity = 90;
     snare.probability = 0.95f;
-    snare.humanizeMs = 3.0f;
 
     auto& hh = s.lanes[2];
     hh.id = 2;
@@ -1473,7 +1494,6 @@ GrooveState makeKopanitsa() {
     hh.hitCount = 7;
     hh.baseVelocity = 70;
     hh.probability = 0.9f;
-    hh.humanizeMs = 2.0f;
 
     auto& bellAccent = s.lanes[3];
     bellAccent.id = 3;
@@ -1484,8 +1504,8 @@ GrooveState makeKopanitsa() {
     bellAccent.rotation = 2;
     bellAccent.baseVelocity = 80;
     bellAccent.probability = 0.9f;
-    bellAccent.humanizeMs = 2.0f;
 
+    // M070 S04: metronomic tradition — no humanize (kept dead-on the grid).
     s.macros.complexity = 0.4f;
     return s;
 }
@@ -1688,7 +1708,9 @@ GrooveState makeMinimalTechno() {
     clap.baseVelocity = 100;
     clap.probability = 1.0f;
 
-    s.macros.density = 0.4f;
+    // Minimal Techno — keep the four-on-the-floor grid dense; let the locked kick and
+    // authored clap/hat densities read as techno instead of halving them by default.
+    s.macros.density = 0.5f;
     return s;
 }
 
@@ -1912,8 +1934,11 @@ GrooveState makeClassicFunk() {
     hh.ghostFloor = 45;
     hh.velocitySpread = 0.40f;
 
+    // Classic Funk — preserve the One; syncopate ornaments only: syncopation stays 0
+    // so resolveMacros does not rotate the non-referent backbeat/ghost lanes off the
+    // downbeat. The per-lane rotations already author the pocket. Tension kept.
     s.macros.tension = 0.6f;
-    s.macros.syncopation = 0.3f;
+    s.macros.syncopation = 0.0f;
     return s;
 }
 
@@ -2147,7 +2172,10 @@ GrooveState makeJungleBreak() {
     ghostLayer.velocitySpread = 0.60f;
     ghostLayer.mutationRate = 0.20f;
 
-    s.macros.syncopation = 0.5f;
+    // Jungle Break — keep the amen backbeat intact by default: syncopation stays 0
+    // so resolveMacros does not rotate the non-referent snare off beats 2 and 4.
+    // Tension shapes velocity/emphasis only (it never moves hits), so it is kept.
+    s.macros.syncopation = 0.0f;
     s.macros.tension = 0.6f;
     return s;
 }
@@ -2206,7 +2234,9 @@ GrooveState makeLiquidDnB() {
     ride.velocitySpread = 0.25f;
     ride.mutationRate = 0.10f;
 
-    s.macros.density = 0.35f;
+    // Liquid Drum and Bass — keep the two-step grid intact; a neutral density preserves the
+    // steady hat and warm ride wash rather than thinning them below the genre's clean pulse.
+    s.macros.density = 0.5f;
     s.macros.humanize = 0.1f;
     return s;
 }
@@ -2314,7 +2344,7 @@ GrooveState makeBalkanFunk() {
     ghostHat.probability = 0.85f;
     ghostHat.ghostFloor = 40;
     ghostHat.velocitySpread = 0.20f;
-    ghostHat.swingAmount = 0.15f;
+    // M070 S04: metronomic tradition — no swing (kept dead-on the grid).
 
     auto& rimAccent = s.lanes[3];
     rimAccent.id = 3;
@@ -2412,7 +2442,77 @@ GrooveState makeCompositionalArc() {
     return s;
 }
 
-GrooveState makeFactoryPreset(int index) {
+namespace {
+
+// M070 S01 (D017 D2 mechanism / D020). A lane is a "locked referent" when its
+// timekeeping pattern is frozen at preset-build time via the engine's existing
+// timeline path — timeline=true with the resolved pattern baked into
+// fixedPattern[0..fixedPatternLength) — and every runtime perturbation is
+// neutralized so macros/mutation/probability cannot move the reference
+// (probability==1, mutationRate==0, no phrase gating). The baked pattern must be
+// non-empty. Mirrors isLockedReferent in tests/preset_tests.cpp exactly.
+bool isReferentLocked(const LaneConfig& cfg) {
+    if (!cfg.timeline || cfg.probability != 1.0f || cfg.mutationRate != 0.0f || cfg.phraseLength != 0.0f)
+        return false;
+    if (cfg.fixedPatternLength <= 0 || cfg.fixedPatternLength > kMaxSteps)
+        return false;
+    for (int s = 0; s < cfg.fixedPatternLength; ++s)
+        if (cfg.fixedPattern[static_cast<size_t>(s)])
+            return true;
+    return false;
+}
+
+// Freeze one referent lane: bake its resolved Euclidean pattern into the timeline
+// slots and clear macro/mutation/probability/phrase state. hitCount, cycle, and
+// rotation are deliberately preserved so kotekan complement lanes (D020) keep
+// deriving from this source (buildLanePattern reads the source's hitCount/steps/
+// rotation, not its fixedPattern). For additive/aksak lanes cycle.steps ==
+// cellCount, so the baked pattern indexes identically to the cell path.
+void lockReferentLane(LaneConfig& cfg) {
+    std::array<bool, kMaxSteps> pattern{};
+    euclidean(cfg.hitCount, cfg.cycle.steps, cfg.rotation, pattern);
+    cfg.timeline = true;
+    cfg.fixedPatternLength = cfg.cycle.steps;
+    cfg.fixedPattern = pattern;
+    cfg.probability = 1.0f;
+    cfg.mutationRate = 0.0f;
+    cfg.phraseLength = 0.0f;
+    cfg.phraseGap = 0.0f;
+    cfg.phraseOffset = 0.0f;
+}
+
+// Guarantee exactly one locked referent per preset. Presets that ship a
+// hand-authored timeline reference (gankogui bell, bossa clave) already satisfy
+// the predicate and are left untouched — re-baking would overwrite their bespoke
+// pattern with a Euclidean one. Otherwise lock the timekeeping lane: the first
+// AnchorPulse that neither phases (Reich's drifting voice) nor derives from a
+// kotekan source. Falls back to any AnchorPulse, then lane 0.
+void lockPresetReferent(GrooveState& s) {
+    for (int i = 0; i < s.activeLaneCount; ++i)
+        if (isReferentLocked(s.lanes[static_cast<size_t>(i)]))
+            return; // already conforms — do not add a second lock
+
+    int referent = -1;
+    for (int i = 0; i < s.activeLaneCount; ++i) {
+        const auto& cfg = s.lanes[static_cast<size_t>(i)];
+        if (cfg.role == Role::AnchorPulse && cfg.driftRate == 0.0f && cfg.kotekanSourceLane < 0) {
+            referent = i;
+            break;
+        }
+    }
+    if (referent < 0)
+        for (int i = 0; i < s.activeLaneCount; ++i)
+            if (s.lanes[static_cast<size_t>(i)].role == Role::AnchorPulse) {
+                referent = i;
+                break;
+            }
+    if (referent < 0)
+        referent = 0;
+
+    lockReferentLane(s.lanes[static_cast<size_t>(referent)]);
+}
+
+GrooveState makeFactoryPresetRaw(int index) {
     switch (index) {
     case 0:
         return makeFourOnTheFloor();
@@ -2503,6 +2603,34 @@ GrooveState makeFactoryPreset(int index) {
     default:
         return GrooveState{};
     }
+}
+
+} // namespace
+
+// M070 S03 (D024). The Syncopation macro rotates every non-timeline lane by
+// round(syncopation * steps/2) (macro.cpp region :apply), which slides a Backbeat
+// lane off beats 2 and 4 as the user raises Syncopation — undoing the genre. A
+// Backbeat is never the referent (that is the AnchorPulse/timeline lane), so its
+// authored placement must survive macro resolution. Activating backbeatProtect on
+// every non-timeline Backbeat lane makes resolveConstraints restore the authored
+// rotation (and emphasis/velocity) after the macro pass, so Syncopation displaces
+// timing and accents without relocating the backbeat. Timeline lanes are already
+// macro-immune, so the flag is only meaningful on non-timeline lanes.
+void protectBackbeatLanes(GrooveState& s) {
+    for (int i = 0; i < s.activeLaneCount; ++i) {
+        auto& lane = s.lanes[static_cast<size_t>(i)];
+        if (lane.role == Role::Backbeat && !lane.timeline)
+            lane.constraints.backbeatProtect = true;
+    }
+}
+
+GrooveState makeFactoryPreset(int index) {
+    if (index < 0 || index >= kFactoryPresetCount)
+        return GrooveState{};
+    GrooveState s = makeFactoryPresetRaw(index);
+    lockPresetReferent(s);
+    protectBackbeatLanes(s);
+    return s;
 }
 
 const char* const kFactoryPresetCategories[kFactoryPresetCategoryCount] = {

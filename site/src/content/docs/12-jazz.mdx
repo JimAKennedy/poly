@@ -40,7 +40,7 @@ Max Roach's revolution was treating each limb as an independent melodic voice. R
 
 In Poly, this maps directly to lane independence. Give each lane its own step count, and the limbs stop moving in lockstep. The ride holds steady at 4 steps per cycle. The snare comps in 5-step or 7-step patterns. The kick places sparse accents in a 3-step cycle. The result is four independent voices, each with its own periodicity, converging and diverging in exactly the way Roach's four limbs did.
 
-<PolyPatch title="Classic Jazz Timekeeping" preset="Jazz: Bop Ride">
+<PolyPatch title="Classic Jazz Timekeeping" preset="Jazz Bop Ride">
 
 | Lane | Role | Steps | Hits | Rotation | Subdivision | Note | Velocity | Ghost | Swing | Mutation |
 |------|------|-------|------|----------|-------------|------|----------|-------|-------|----------|
@@ -57,7 +57,7 @@ The ride and hi-hat are fixed — no mutation. They are the timekeeping foundati
 
 ## Elvin Jones: Polyrhythmic Cascades
 
-Elvin Jones, on John Coltrane's classic quartet recordings, took Roach's independence to its polyrhythmic extreme. Jones superimposed 3-over-4, 5-over-4, and 6-over-4 groupings simultaneously, creating a rhythmic surface so dense that the barline seemed to dissolve. The pulse was always there — Jones never lost the time — but the accent patterns layered across it shifted constantly.
+Elvin Jones, on John Coltrane's classic quartet recordings, took Roach's independence to its polyrhythmic extreme. Jones superimposed 3-over-4, 5-over-4, and 7-over-4 groupings simultaneously, creating a rhythmic surface so dense that the barline seemed to dissolve. The pulse was always there — Jones never lost the time — but the accent patterns layered across it shifted constantly.
 
 This is where Poly's cycle independence becomes essential. Set four lanes to step counts of 3, 4, 5, and 7. The combined pattern does not repeat for `lcm(3, 4, 5, 7) = 420` steps — a phrase so long that the ear hears constant variation rather than repetition. The effect is cascading rhythm, waves of accent that build, converge, and scatter.
 
@@ -65,7 +65,7 @@ This is where Poly's cycle independence becomes essential. Set four lanes to ste
 
 | Lane | Role | Steps | Hits | Rotation | Subdivision | Note | Velocity | Ghost | Swing | Mutation |
 |------|------|-------|------|----------|-------------|------|----------|-------|-------|----------|
-| 1 | Ride (steady) | 4 | 3 | 0 | 1/4 | 51 | 90 | 0 | 0.4 | 10% |
+| 1 | Ride (steady) | 4 | 3 | 0 | 1/4 | 51 | 90 | 0 | 0.4 | 0% |
 | 2 | Snare cross | 3 | 2 | 0 | 1/4 | 38 | 75 | 45 | 0.35 | 20% |
 | 3 | Tom cascade | 5 | 3 | 1 | 1/4 | 45 | 70 | 40 | 0.3 | 20% |
 | 4 | Bass drum | 7 | 4 | 2 | 1/4 | 36 | 85 | 30 | 0.35 | 15% |

@@ -2,6 +2,22 @@
 class: gated
 title: "7. Balkan: Aksak and Asymmetric Groove"
 description: The additive rhythms of Southeastern Europe — how 7/8, 9/8, and 11/8 dance meters arise naturally from Euclidean distribution.
+patternClaims:
+  - label: "Rachenitsa 2+2+3 — E(3,7) rotation 0"
+    pattern: "x . x . x . ."
+    isEuclidean: { k: 3, n: 7, rotation: 0 }
+    gapSequence: [2, 2, 3]
+    reference: "line 33 prose 'rotation 0 gives 2+2+3'"
+  - label: "Rachenitsa 3+2+2 — E(3,7) rotation 3"
+    pattern: "x . . x . x ."
+    isEuclidean: { k: 3, n: 7, rotation: 3 }
+    gapSequence: [3, 2, 2]
+    reference: "line 33 prose 'rotation 3 puts the long group first, 3+2+2'"
+  - label: "Rachenitsa 2+3+2 — E(3,7) rotation 5"
+    pattern: "x . x . . x ."
+    isEuclidean: { k: 3, n: 7, rotation: 5 }
+    gapSequence: [2, 3, 2]
+    reference: "line 37 prose 'rotation 5 moves the long group to the middle, 2+3+2'"
 ---
 
 import PolyPatch from '../../components/PolyPatch.astro';
@@ -30,11 +46,11 @@ This is not a coincidence or an approximation. Bjorklund's algorithm and Balkan 
 
 The rachenitsa exists in multiple rotational forms: 2+2+3, 2+3+2, and 3+2+2. Each variant has a different character. The first pushes forward, the second sways, the third plants the long group on the downbeat and rushes through the short groups.
 
-In Poly, these three variants are the same pattern at different rotations. E(3,7) at rotation 0 gives `2+2+3`. At rotation 1, you get `2+3+2`. At rotation 2, `3+2+2`. The rotation parameter is not an abstract offset — it is the selector for which aksak variant you are playing.
+In Poly, these three variants are one necklace of gaps read from three different starting points; the `rotation` parameter selects which onset lands on the downbeat. E(3,7) at rotation 0 gives `2+2+3`. At rotation 3, the long gap falls first, giving `3+2+2`. At rotation 5, the long gap moves to the middle, giving `2+3+2`. The rotation parameter is not an abstract offset — it is the selector for which aksak variant you are playing.
 
-<EuclideanDiagram steps={7} hits={3} rotation={1} />
+<EuclideanDiagram steps={7} hits={3} rotation={5} />
 
-E(3,7) at rotation 1 shifts the long group to the middle of the cycle, producing the swaying 2+3+2 variant. Try all three rotations to feel how the same three accents in seven positions create distinctly different dance grooves.
+E(3,7) at rotation 5 shifts the long group to the middle of the cycle, producing the swaying 2+3+2 variant. Try all three rotations to feel how the same three accents in seven positions create distinctly different dance grooves.
 
 ## Daichovo and Kopanitsa
 
@@ -48,7 +64,7 @@ E(4,9) at the standard rotation used here produces the grouping `2+2+2+3` — wh
 
 E(4,11) gives `3+3+3+2`, which is one of several kopanitsa variants. Rotation lets you move through the others. The point is that Euclidean distribution naturally generates the additive groupings that define Balkan dance music.
 
-<PolyPatch title="Rachenitsa Groove" preset="7/8 Aksak">
+<PolyPatch title="Rachenitsa Groove" preset="Rachenitsa 7/8">
 
 | Lane | Role | Steps | Hits | Rotation | Subdivision | Velocity | Swing |
 |------|------|-------|------|----------|-------------|----------|-------|
@@ -67,7 +83,7 @@ Notice that Swing is set to 0 on every lane. Aksak rhythms are not swung — the
 
 The Bulgarian wedding music tradition (*svatbarska muzika*) pushes aksak metres to extraordinary tempos<sup>[27](/appendix-references/#ref-27)</sup>. Kopanitsa at 200+ BPM becomes a blur of interlocking accents where individual onsets merge into a continuous textured flow.
 
-<PolyPatch title="Kopanitsa Groove" preset="11/8 Aksak">
+<PolyPatch title="Kopanitsa Groove" preset="Kopanitsa 11/8">
 
 | Lane | Role | Steps | Hits | Rotation | Subdivision | Velocity | Humanize |
 |------|------|-------|------|----------|-------------|----------|----------|

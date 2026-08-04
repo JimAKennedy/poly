@@ -1,0 +1,112 @@
+---
+// Renders a factory-preset parameter table + Macros line straight from the
+// generated presets.json (M071 D026/D4). Replaces the hand-written <PolyPatch>
+// tables in appendix-presets.mdx so no displayed parameter can be fabricated —
+// every cell is derived by ../lib/preset-table-data.mjs, which the conformance
+// test (tests/preset-table-conformance.test.mjs) re-derives from engine truth.
+import presetsData from '../generated/presets.json';
+import { buildPresetTable, findPreset } from '../lib/preset-table-data.mjs';
+
+interface Props {
+  /** Exact factory preset name as it appears in presets.json. */
+  preset: string;
+  /** Optional display heading; defaults to the preset name. */
+  title?: string;
+}
+
+const { preset, title } = Astro.props;
+const record = findPreset(presetsData.presets, preset);
+const { headers, rows, macros } = buildPresetTable(record);
+const heading = title ?? record.name;
+---
+
+<div class="preset-table">
+  <div class="preset-table-header">
+    <span class="preset-table-title">{heading}</span>
+    <span class="preset-table-badge">Factory: {record.name}</span>
+  </div>
+  <div class="preset-table-body">
+    <table>
+      <thead>
+        <tr>{headers.map((header) => <th>{header}</th>)}</tr>
+      </thead>
+      <tbody>
+        {rows.map((row) => (
+          <tr>{row.map((cell) => <td>{cell}</td>)}</tr>
+        ))}
+      </tbody>
+    </table>
+    <p class="preset-table-macros"><strong>Macros:</strong> {macros.join(', ')}</p>
+  </div>
+</div>
+
+<style>
+  .preset-table {
+    border: 2px solid var(--poly-primary);
+    border-radius: 8px;
+    background: var(--poly-patch-bg);
+    margin: 1.5rem 0;
+    overflow: hidden;
+  }
+
+  .preset-table-header {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    padding: 0.6rem 1rem;
+    background: var(--poly-primary);
+    color: #fff;
+    font-family: var(--poly-font-sans);
+  }
+
+  .preset-table-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+
+  .preset-table-badge {
+    font-size: 0.8rem;
+    opacity: 0.85;
+    font-style: italic;
+  }
+
+  .preset-table-body {
+    padding: 0.75rem 1rem;
+    font-family: var(--poly-font-sans);
+    font-size: var(--sl-text-sm);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .preset-table-body table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0;
+    font-family: var(--poly-font-sans);
+    font-size: var(--sl-text-sm);
+  }
+
+  .preset-table-body th {
+    text-align: left;
+    padding: 0.35rem 0.5rem;
+    border-bottom: 2px solid var(--poly-primary);
+    font-weight: 600;
+    color: var(--poly-primary-dark);
+    white-space: nowrap;
+  }
+
+  .preset-table-body td {
+    padding: 0.3rem 0.5rem;
+    border-bottom: 1px solid var(--sl-color-gray-4);
+    white-space: nowrap;
+  }
+
+  .preset-table-body tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .preset-table-macros {
+    margin: 0.75rem 0 0;
+    font-size: var(--sl-text-sm);
+  }
+</style>

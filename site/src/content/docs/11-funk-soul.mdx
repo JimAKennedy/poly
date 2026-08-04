@@ -20,7 +20,7 @@ What makes funk rhythmically distinct is not complexity but *texture*. The patte
 
 ## Ghost Notes: The Hidden Texture
 
-Listen to Clyde Stubblefield's "Funky Drummer" break — the most sampled drum loop in history — and you will hear more ghost notes than accented ones. The snare does not simply hit on 2 and 4. Between those accents, the stick stays on the head, producing a continuous stream of barely audible taps that fill every sixteenth-note subdivision. The ghosts are not decoration; they are the groove.
+Listen to Clyde Stubblefield's "Funky Drummer" break — the most sampled drum loop in history — and you will hear more ghost notes than accented ones. The snare does not simply hit on 2 and 4. Between those accents, the stick stays on the head, producing barely audible taps that cluster toward the backbeat — filling the sixteenth positions that lead into 2 and 4, so each backbeat arrives on a ramp rather than out of silence (theory-funk-soul Rule 4). The ghosts are not an even carpet spread uniformly across the bar, and they are not decoration; they are the groove.
 
 In Poly, you create ghost-note texture through the interplay of Velocity, Ghost floor, and Spread. Set the primary velocity high (100-110) for the accented hits, then set the Ghost floor to 30-50 — this means any hit that the algorithm designates as a ghost will sound at that lower velocity. Spread (40-70%) introduces random variation around both values, so no two ghost notes are exactly the same volume. The result is a lane that breathes between its accents, alive with the micro-dynamics that distinguish a drummer from a grid.
 
@@ -34,7 +34,7 @@ Funk drummers do not play on the grid. They play *around* the grid, and the dire
 
 Poly's per-lane Timing Offset parameter (plus or minus 20 milliseconds) lets you sculpt this push-pull precisely. The offsets are small, but their effect is enormous. A patch where every lane sits at 0ms sounds mechanical. Move the kick to +3ms (behind) and the snare to -2ms (ahead), and the same pattern suddenly has weight and momentum.
 
-<PolyPatch title="Classic Funk Groove" preset="Funk: JB Pocket">
+<PolyPatch title="Classic Funk Groove" preset="Classic Funk">
 
 | Lane | Role | Steps | Hits | Rotation | Subdivision | Note | Velocity | Ghost | Spread | Timing |
 |------|------|-------|------|----------|-------------|------|----------|-------|--------|--------|
@@ -47,7 +47,7 @@ Poly's per-lane Timing Offset parameter (plus or minus 20 milliseconds) lets you
 
 <PolyPreviewCard preset="Classic Funk" caption="JB-style pocket — kick pushes late, snare pulls early, dense ghost layer" />
 
-Notice that the snare accent and snare ghost are separate lanes mapped to the same MIDI note (38). This is how you model a real drummer's two dynamics on one drum — the accent lane hits hard on 2 and 4 (E(2,8) rotated to land on the backbeat), while the ghost lane fills almost every remaining sixteenth with quiet taps. The ghost lane's high Spread (65%) ensures no two bars sound identical.
+Notice that the snare accent and snare ghost are separate lanes mapped to the same MIDI note (38). This is how you model a real drummer's two dynamics on one drum — the accent lane hits hard on 2 and 4 (E(2,8) rotated to land on the backbeat), while the ghost lane fills the spaces between with quiet taps that cluster toward the backbeats rather than spreading uniformly across the bar — an even carpet of ghosts would break the idiom (theory-funk-soul Rule 4). The ghost lane's high Spread (65%) ensures no two bars sound identical.
 
 <ListenFor>
 

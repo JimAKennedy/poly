@@ -22,6 +22,7 @@ add_executable(poly_tests
     params_def_tests.cpp
     plugin_tests.cpp
     preset_tests.cpp
+    preset_conformance_tests.cpp
     sanitize_tests.cpp
     scene_tests.cpp
     state_migration_tests.cpp
