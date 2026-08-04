@@ -53,5 +53,14 @@ try {
 
     Write-PolyPhase -Phase "archive" -State "ok" -Detail "archive complete"
 } catch {
-    Invoke-PolyPhaseFailure -Phase "archive" -Message $_.Exception.Message
+    # Archive is a best-effort diagnostics collector run under the workflow's
+    # `if: always()`. It must never fail the job — a failure here would mask the
+    # real result of the launch/quit smoke it exists to diagnose. Record the
+    # error (Invoke-PolyPhaseFailure persists cubase-last-error.json) but do NOT
+    # let its trailing `throw` propagate; swallow it so the step exits 0.
+    try {
+        Invoke-PolyPhaseFailure -Phase "archive" -Message $_.Exception.Message
+    } catch {
+        Write-Warning "[cubase:archive] non-fatal: $($_.Exception.Message)"
+    }
 }
