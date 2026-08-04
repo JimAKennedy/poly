@@ -50,6 +50,18 @@ try {
         $proc = Start-Process -FilePath $exe -PassThru
     }
 
+    # Publish the launched pid so wait-for-ready.ps1 can match THIS process
+    # rather than any Cubase-named process. Each workflow step runs a fresh
+    # pwsh, so a process-scoped $env var would not survive — persist it:
+    #   - GITHUB_ENV (workflow): the next step inherits POLY_CUBASE_PID.
+    #   - a pid file in the artifact dir: local dry-runs and diagnostics.
+    if ($env:GITHUB_ENV) {
+        Add-Content -Path $env:GITHUB_ENV -Value "POLY_CUBASE_PID=$($proc.Id)"
+    }
+    $env:POLY_CUBASE_PID = "$($proc.Id)"
+    $pidPath = Join-Path (Get-PolyArtifactDir) "cubase-pid.txt"
+    Set-Content -Path $pidPath -Value "$($proc.Id)"
+
     Write-PolyPhase -Phase "launch" -State "ok" `
         -Detail "launched" -Extra @{ pid = $proc.Id; exe = $exe }
 } catch {
