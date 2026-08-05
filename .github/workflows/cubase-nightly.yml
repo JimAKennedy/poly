@@ -71,6 +71,13 @@ jobs:
       # decision: Cubase 14). Scripts use this to resolve the Cubase.exe path
       # and prefs/log directories.
       POLY_CUBASE_VERSION: "14"
+      # S09 (L4-web): CDP remote-debugging port for Cubase's embedded WebView2.
+      # Empty => the e2e flow is off (the launch step does not pass -EnableCdp,
+      # so S07/S08 launches are unaffected). Non-empty => the launch step opens
+      # WebView2's CDP on this port and the Playwright-over-CDP e2e attaches.
+      # Localhost-only; gated by the box's LAN posture (Part 10). Windows-only
+      # (WKWebView exposes no CDP). See docs/windows-test-runner-setup.md Part 12.
+      POLY_CDP_PORT: ""
     steps:
       - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
 
@@ -144,19 +151,50 @@ jobs:
         shell: pwsh
         run: ./scripts/cubase/kill-stale-cubase.ps1
 
+      # The launch step is shared across flows. When POLY_CDP_PORT is set (S09
+      # e2e flow), pass -EnableCdp so WebView2 exposes CDP; otherwise the
+      # S07/S08 launch is unchanged. Building the arg list in pwsh keeps the
+      # conditional out of YAML expression gymnastics.
       - name: Launch Cubase
         shell: pwsh
-        run: >-
-          ./scripts/cubase/launch-cubase.ps1
-          -CubaseVersion "${{ env.POLY_CUBASE_VERSION }}"
-          -FixtureCpr "${{ env.POLY_FIXTURE_CPR }}"
-          -ProbeOutput "${{ env.POLY_PROBE_OUTPUT }}"
+        run: |
+          $args = @(
+            "-CubaseVersion", "${{ env.POLY_CUBASE_VERSION }}",
+            "-FixtureCpr", "${{ env.POLY_FIXTURE_CPR }}",
+            "-ProbeOutput", "${{ env.POLY_PROBE_OUTPUT }}"
+          )
+          if ("${{ env.POLY_CDP_PORT }}" -ne "") {
+            $args += @("-EnableCdp", "-CdpPort", "${{ env.POLY_CDP_PORT }}")
+          }
+          ./scripts/cubase/launch-cubase.ps1 @args
 
       - name: Wait for Cubase ready
         shell: pwsh
         run: >-
           ./scripts/cubase/wait-for-ready.ps1
           -TimeoutSeconds 120
+
+      # S09 (L4-web) flow — gated on POLY_CDP_PORT being set. Runs WHILE Cubase
+      # is up (CDP attach needs the live editor): Playwright connects over CDP,
+      # toggles a kick step in Poly's WebView2 editor, and drives transport via
+      # the S08 mido driver. It records the expected hit to a file; the probe
+      # assertion itself runs AFTER quit (poly_midi_probe flushes JSONL on
+      # deactivate). Windows-only — WKWebView exposes no CDP. Requires a fixture
+      # + loopMIDI 'poly-test' port + MIDI Remote script (R10, owner-provisioned),
+      # so it stays dormant until POLY_CDP_PORT is set.
+      - name: Install e2e deps (Playwright + chromium)
+        if: env.POLY_CDP_PORT != ''
+        shell: pwsh
+        working-directory: tests/cubase/e2e
+        run: |
+          npm ci
+          npx playwright install chromium
+
+      - name: Run L4-web e2e (attach over CDP, toggle step, play transport)
+        if: env.POLY_CDP_PORT != ''
+        shell: pwsh
+        working-directory: tests/cubase/e2e
+        run: npx playwright test toggle-step.spec.ts
 
       # S08 transport run. Gated on a fixture being set: with no fixture this is
       # the S07 launch/quit smoke and there is nothing to play. When the owner
@@ -211,6 +249,16 @@ jobs:
             --probe "${{ env.POLY_PROBE_OUTPUT }}" `
             --golden "${{ env.POLY_GOLDEN }}"
 
+      # S09 post-quit assertion: the probe JSONL (flushed on the quit above) must
+      # contain the kick note-on that toggle-step.spec.ts turned on while Cubase
+      # was up. Reads the expected hit the spec recorded and asserts it fired
+      # through the real plugin. Gated on the e2e flow being active.
+      - name: Assert toggled step in probe (L4-web)
+        if: env.POLY_CDP_PORT != ''
+        shell: pwsh
+        working-directory: tests/cubase/e2e
+        run: npx playwright test assert-probe.spec.ts
+
       - name: Archive logs and probe output
         if: always()
         shell: pwsh
@@ -227,6 +275,19 @@ jobs:
           path: ${{ env.POLY_ARTIFACT_DIR }}
           retention-days: 14
           if-no-files-found: warn
+
+      # Playwright traces + screenshots (retain-on-failure, see
+      # tests/cubase/e2e/playwright.config.ts) so a runner-side CDP/selector
+      # failure is diagnosable without re-running. Only on the e2e flow, only on
+      # failure — the trace dir is absent on a green run.
+      - name: Upload e2e traces on failure
+        if: failure() && env.POLY_CDP_PORT != ''
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        with:
+          name: cubase-e2e-traces
+          path: tests/cubase/e2e/test-results
+          retention-days: 14
+          if-no-files-found: ignore
 
   report:
     name: Report run status

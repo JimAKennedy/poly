@@ -235,6 +235,13 @@ Cubase* while the mido driver runs the transport and the probe captures
 output. Golden flow: Playwright toggles a kick step → transport plays →
 probe JSONL shows the changed pattern.
 
+The concrete implementation is `tests/cubase/e2e/toggle-step.spec.ts` (attach
+over CDP, toggle the step, drive transport) plus `assert-probe.spec.ts` (the
+post-quit probe assertion, since `poly_midi_probe` flushes JSONL only on Cubase
+deactivate). CDP is enabled by passing `-EnableCdp` to
+`scripts/cubase/launch-cubase.ps1`; see `docs/windows-test-runner-setup.md`
+Part 12 for the runner-side enablement and the S09 exit-criterion dispatch run.
+
 **macOS:** WKWebView exposes no CDP. Options, in order of pragmatism:
 (a) Windows-only for true Playwright e2e; macOS relies on L2 + L3 + a
 webview editor-open smoke; (b) later, compile a small WebSocket test hook

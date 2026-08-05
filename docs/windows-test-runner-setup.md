@@ -524,6 +524,74 @@ slice's UAT record.
 
 ---
 
+## Part 12 — WebView2 CDP enablement (S09 L4-web flagship)
+
+The L4-web tier drives Poly's **actual plugin editor inside Cubase** with
+Playwright, attaching over the Chrome DevTools Protocol (CDP). On Windows the
+editor is hosted by WebView2 (via `choc`), which honors a CDP remote-debugging
+port; macOS's WKWebView exposes no such port, so **this flow is Windows-only** —
+the reason this box is the flagship.
+
+### How CDP gets exposed
+
+WebView2 reads `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS` from its process
+environment at startup. Set it to `--remote-debugging-port=9222` before Cubase
+launches and every WebView2 the process spawns (including Poly's editor) listens
+for CDP on that port.
+
+The nightly does this for you: the e2e flow passes `-EnableCdp` to
+`scripts/cubase/launch-cubase.ps1`, which sets the env var before
+`Start-Process` so the launched Cubase inherits it. The S07/S08 flows leave
+`-EnableCdp` off, so their launches are unaffected.
+
+- ☐ Confirm the **WebView2 Runtime** is installed (Part 2 already covers this).
+  CDP attach fails loud if WebView2 isn't present.
+- ☐ No manual env setup is needed for the nightly — the launch script owns it.
+  To exercise CDP by hand for diagnosis, in the shell that will start Cubase:
+  ```powershell
+  $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = "--remote-debugging-port=9222"
+  # then launch Cubase from that same shell and open the Poly editor
+  # verify the port is listening:
+  Test-NetConnection -ComputerName localhost -Port 9222
+  ```
+
+### Security
+
+The remote-debugging port binds to **localhost only** — it is not reachable off
+the box. The runner's network posture (Part 10: LAN-gated, no inbound exposure)
+is what keeps a local CDP port from becoming a remote-code surface. Do not add a
+port forward or bind the port to `0.0.0.0`; a CDP endpoint is effectively remote
+code execution against the browser, and it must stay local.
+
+### S09 exit-criterion dispatch run
+
+The S09 "done" signal: *Playwright attaches over CDP to the editor inside Cubase,
+toggles a kick step, transport plays, and the probe JSONL shows the changed
+pattern.* Prove it manually once, the same way Part 11 proves S07.
+
+Prerequisites (owner-provisioned, R10): the S08 fixture `.cpr`, the loopMIDI
+`poly-test` port, and the MIDI Remote script are all in place (Part 4 + the S08
+recipe), and WebView2 Runtime is installed (Part 2).
+
+- ☐ Set `POLY_FIXTURE_CPR` (turns on the S08 transport flow) **and**
+  `POLY_CDP_PORT` (e.g. `9222`, turns on the S09 e2e flow) for the dispatch —
+  either as workflow env edits on a branch, or as repo/environment variables.
+- ☐ From the Actions tab, run **Cubase Nightly (L4)** via
+  **`workflow_dispatch` → Run workflow** against `main`.
+- ☐ Watch the e2e steps run in order: *Install e2e deps → Run L4-web e2e (attach,
+  toggle, transport)* while Cubase is up, then after quit *Assert toggled step in
+  probe (L4-web)*.
+- ☐ On failure, the `cubase-e2e-traces` artifact carries Playwright traces +
+  screenshots; the `cubase-nightly-artifacts` upload carries the probe JSONL and
+  `e2e-expected-hit.json`.
+
+**Verify:** A manual `workflow_dispatch` run completes green with the L4-web e2e
+attaching over CDP, toggling the step, and the post-quit assertion confirming the
+probe JSONL contains the toggled note-on. This run is the **S09 exit-criterion
+evidence** — capture the run URL for the slice's UAT record.
+
+---
+
 ## Appendix — What runs where (mental model)
 
 | Layer | What | Where it runs on this box |

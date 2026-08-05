@@ -13,7 +13,13 @@ param(
     # S07: empty string => launch Cubase with no project. S08 passes the
     # committed fixture .cpr here.
     [string] $FixtureCpr = "",
-    [string] $ProbeOutput = ""
+    [string] $ProbeOutput = "",
+    # S09 (L4-web): when set, Cubase's embedded WebView2 (choc, the Poly editor
+    # host on Windows) is launched with a CDP remote-debugging port so the
+    # Playwright-over-CDP e2e can attach. Off by default so the S07/S08 flows
+    # are unaffected. See docs/windows-test-runner-setup.md Part 12.
+    [switch] $EnableCdp,
+    [int] $CdpPort = 9222
 )
 
 . "$PSScriptRoot/_common.ps1"
@@ -36,6 +42,19 @@ try {
         $env:POLY_PROBE_OUTPUT = $ProbeOutput
         Write-PolyPhase -Phase "launch" -State "ok" `
             -Detail "POLY_PROBE_OUTPUT set" -Extra @{ probeOutput = $ProbeOutput }
+    }
+
+    # S09: expose WebView2's CDP port so the Playwright e2e can attach to the
+    # editor running inside Cubase. WebView2 reads
+    # WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS from its process environment at
+    # startup, so this must be set BEFORE Start-Process (the child inherits it).
+    # The port binds to localhost only; the box's own network posture (Part 10:
+    # LAN-gated, no inbound) is what keeps it off the wider network. WKWebView
+    # (macOS) exposes no CDP, which is why this flow is Windows-only.
+    if ($EnableCdp) {
+        $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = "--remote-debugging-port=$CdpPort"
+        Write-PolyPhase -Phase "launch" -State "ok" `
+            -Detail "WebView2 CDP enabled" -Extra @{ cdpPort = $CdpPort }
     }
 
     if ($FixtureCpr) {
