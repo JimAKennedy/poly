@@ -1,0 +1,126 @@
+import { execFileSync } from 'node:child_process';
+import { writeFileSync } from 'node:fs';
+
+import { test, expect, chromium } from '@playwright/test';
+import type { Browser, Page } from '@playwright/test';
+
+import { stepToPpq } from './lib/probe-assert';
+import {
+  EXPECTED_HIT_FILE,
+  KICK_PITCH,
+  STEPS_PER_BAR,
+  TOGGLE_STEP_INDEX,
+  KICK_LANE_INDEX,
+} from './lib/toggle-contract';
+
+// M042 S09 — Playwright-over-CDP L4-web flagship.
+//
+// Attaches over CDP to the WebView2 that hosts Poly's editor INSIDE Cubase on
+// the Windows runner, toggles a kick step in the shipping WebUI, and plays the
+// transport via the S08 mido driver.
+//
+// It deliberately does NOT read the probe JSONL here: poly_midi_probe flushes
+// its JSONL only on Cubase DEACTIVATE (setActive(false) in
+// tools/midi_probe/source/probe_processor.cpp) — i.e. on quit, which happens in
+// a later workflow step. So this spec records the expected hit to a file and the
+// post-quit `assert-toggle` CLI does the probe assertion once the JSONL exists.
+//
+// This is runner-gated (R10) and Windows-only: WebView2 honors the CDP
+// remote-debugging port, WKWebView (macOS) does not. On the dev machine this
+// file only needs to typecheck/parse — the actual attach requires Cubase with
+// -EnableCdp (scripts/cubase/launch-cubase.ps1) exposing CDP on POLY_CDP_PORT.
+
+// --- Runner-provided environment ---------------------------------------------
+const CDP_ENDPOINT =
+  process.env.POLY_CDP_ENDPOINT ||
+  `http://localhost:${process.env.POLY_CDP_PORT || '9222'}`;
+// The S08 mido driver drives the transport; path relative to repo root.
+const DRIVER =
+  process.env.POLY_DRIVER || 'tests/cubase/driver/play_scenario.py';
+
+const ATTACH_TIMEOUT_MS = 30_000;
+
+/**
+ * Attach over CDP and locate the page whose DOM is Poly's editor. WebView2 may
+ * expose several targets (Cubase's own webviews, etc.); we pick the one that has
+ * the `.strip` lane containers the WebUI renders. Fails loud, naming the likely
+ * cause (remote-debugging-port not set), if none appears within the timeout.
+ */
+async function findPolyEditor(browser: Browser): Promise<Page> {
+  const deadline = Date.now() + ATTACH_TIMEOUT_MS;
+  let seenTargets = 0;
+  while (Date.now() < deadline) {
+    for (const context of browser.contexts()) {
+      for (const page of context.pages()) {
+        seenTargets++;
+        const isPoly = await page
+          .locator('.strip')
+          .first()
+          .isVisible()
+          .catch(() => false);
+        if (isPoly) return page;
+      }
+    }
+    await new Promise((r) => setTimeout(r, 500));
+  }
+  throw new Error(
+    `No Poly editor page found among ${seenTargets} WebView2 target(s) within ` +
+      `${ATTACH_TIMEOUT_MS}ms. Likely cause: Cubase was not launched with ` +
+      `-EnableCdp (WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port), ` +
+      `so no CDP endpoint is exposed at ${CDP_ENDPOINT}.`,
+  );
+}
+
+test.describe('L4-web: Playwright over CDP toggles a step inside Cubase', () => {
+  // Serial: a single Cubase/CDP session, single runner.
+  test.describe.configure({ mode: 'serial' });
+
+  test('toggle kick step and play transport (probe asserted post-quit)', async () => {
+    const browser = await chromium.connectOverCDP(CDP_ENDPOINT);
+    try {
+      const page = await findPolyEditor(browser);
+
+      // Expand the kick lane and enter timeline (fixed-pattern) mode so we can
+      // toggle an individual step. Selectors mirror the shipping WebUI proven by
+      // site/tests-e2e/webui-timeline-toggle.spec.ts.
+      const lane = page.locator('.strip').nth(KICK_LANE_INDEX);
+      await lane.locator('.ex').click();
+      await expect(lane).toHaveClass(/expanded/);
+
+      const patternPane = lane.locator('[data-pane="pattern"]');
+      const tlToggle = patternPane.locator('[data-tl]');
+      // If not already in timeline mode, flip it on so the fixed grid renders.
+      if (!(await tlToggle.evaluate((el) => el.classList.contains('on')))) {
+        await tlToggle.click();
+      }
+      const fixedGrid = patternPane.locator('[data-fixed]');
+      await expect(fixedGrid).toBeVisible();
+
+      // Toggle the target step ON if it isn't already a hit.
+      const step = fixedGrid.locator('button').nth(TOGGLE_STEP_INDEX);
+      const wasHit = (await step.getAttribute('class'))?.includes('hit') ?? false;
+      if (!wasHit) {
+        await step.click();
+        await expect(step).toHaveClass(/\bhit\b/);
+      }
+
+      // Record the expected hit for the post-quit assertion. The probe file
+      // doesn't exist yet — it's written on Cubase deactivate (quit), a later
+      // workflow step — so we hand the expectation to assert-toggle.ts.
+      const expectedPpq = stepToPpq(TOGGLE_STEP_INDEX, STEPS_PER_BAR);
+      writeFileSync(
+        EXPECTED_HIT_FILE,
+        JSON.stringify({ pitch: KICK_PITCH, ppq: expectedPpq }, null, 2),
+      );
+
+      // Drive the transport via the S08 mido driver (it waits for the MIDI
+      // Remote ready ping, starts, plays, stops). Poly's output is captured by
+      // poly_midi_probe and flushed on the subsequent Cubase quit.
+      execFileSync('python', [DRIVER, '--bars', '4', '--tempo', '120'], {
+        stdio: 'inherit',
+      });
+    } finally {
+      await browser.close();
+    }
+  });
+});
