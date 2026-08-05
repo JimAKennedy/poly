@@ -12,10 +12,13 @@ name: Cubase Nightly (L4)
 # would let any fork's PR run arbitrary code on the licensed box. Do not add
 # one.
 #
-# S07 scope: this workflow proves the machine can trigger -> build -> launch
-# Cubase -> quit cleanly and upload artifacts. It does NOT yet drive transport
-# or assert on probe output — the mido driver + MIDI Remote script + fixture
-# .cpr land in S08 and slot into the `POLY_FIXTURE_CPR` env below.
+# Scope: with no fixture set (POLY_FIXTURE_CPR empty) this is the S07 launch/quit
+# smoke — trigger -> build -> launch Cubase -> quit cleanly -> upload artifacts.
+# S08 adds the transport+probe machinery (mido driver, MIDI Remote script,
+# fixture .cpr, probe-vs-golden compare): setting POLY_FIXTURE_CPR to the
+# committed fixture turns on the "Play scenario" and "Compare probe output to
+# golden" steps below. That fixture + the loopMIDI 'poly-test' port are authored
+# on the runner by the owner (R10), so those steps stay dormant until then.
 
 on:
   schedule:
@@ -50,10 +53,20 @@ jobs:
       POLY_PROBE_OUTPUT: "${{ github.workspace }}\\_artifacts\\probe.jsonl"
       # Staging dir the scripts archive logs/recordings/probe output into.
       POLY_ARTIFACT_DIR: "${{ github.workspace }}\\_artifacts"
-      # S07: no fixture project yet — the launch script opens Cubase with no
-      # project and confirms a clean launch/quit. S08 sets this to the
-      # committed fixture .cpr and the smoke becomes a transport+probe run.
+      # Fixture project. Empty => S07 launch/quit smoke (no project, no
+      # transport). Non-empty => S08 transport+probe run: the driver plays the
+      # fixture and the probe JSONL is compared against the golden below. The
+      # committed fixture is tests/cubase/fixtures/poly-4bar.cpr, authored on the
+      # runner in Cubase (a .cpr is Cubase-version-specific — only Cubase can
+      # write one). Until the owner authors + commits it and provisions the
+      # loopMIDI 'poly-test' port (R10), leave this empty so the nightly keeps
+      # exercising the launch/quit smoke; the transport/compare steps below are
+      # gated on this being non-empty and stay dormant until then.
       POLY_FIXTURE_CPR: ""
+      # Golden the probe JSONL is compared against when a fixture is set. The
+      # fixture uses Poly's default patch, so this is the default-patch
+      # processor-level golden (note-ons: ppq/pitch/velocity/channel).
+      POLY_GOLDEN: "${{ github.workspace }}\\tests\\golden\\processor_default_4bars.txt"
       # Cubase major version the runner has installed and activated (M042 S07
       # decision: Cubase 14). Scripts use this to resolve the Cubase.exe path
       # and prefs/log directories.
@@ -145,6 +158,20 @@ jobs:
           ./scripts/cubase/wait-for-ready.ps1
           -TimeoutSeconds 120
 
+      # S08 transport run. Gated on a fixture being set: with no fixture this is
+      # the S07 launch/quit smoke and there is nothing to play. When the owner
+      # commits the fixture and provisions the loopMIDI 'poly-test' port + MIDI
+      # Remote script (R10), setting POLY_FIXTURE_CPR turns this on: the mido
+      # driver waits for the script's ready ping, starts transport, plays the
+      # scenario, and stops. Poly's output is captured by poly_midi_probe and
+      # flushed to POLY_PROBE_OUTPUT when Cubase deactivates on quit (below).
+      - name: Play scenario (mido driver)
+        if: env.POLY_FIXTURE_CPR != ''
+        shell: pwsh
+        run: |
+          python -m pip install --quiet -r tests/cubase/driver/requirements.txt
+          python tests/cubase/driver/play_scenario.py --bars 4 --tempo 120
+
       - name: Quit Cubase
         # Always attempt a clean quit even if wait-for-ready failed, so a hung
         # Cubase is torn down rather than left for the next run.
@@ -169,6 +196,20 @@ jobs:
             exit 1
           }
           Write-Host "No Cubase process survives — clean launch/quit confirmed."
+
+      # S08 assertion: the probe JSONL Cubase produced must match the in-process
+      # golden for the same preset. Runs after quit (the probe flushes JSONL on
+      # Cubase deactivate) and only when a fixture drove a transport run. This is
+      # the L3<->L4 cross-check — a field-by-field ppq/pitch/velocity/channel
+      # diff, not a byte compare (NoteEvent has interior padding). On mismatch it
+      # prints the first diverging events and fails the job.
+      - name: Compare probe output to golden
+        if: env.POLY_FIXTURE_CPR != ''
+        shell: pwsh
+        run: |
+          python tests/cubase/compare_probe_golden.py `
+            --probe "${{ env.POLY_PROBE_OUTPUT }}" `
+            --golden "${{ env.POLY_GOLDEN }}"
 
       - name: Archive logs and probe output
         if: always()

@@ -185,6 +185,33 @@ See [automation-mapping.md](automation-mapping.md) for which parameters are auto
 
 Poly uses versioned state serialization. Presets saved with older versions will load correctly in newer versions — the plugin reads the version number and migrates the state forward.
 
+## Automated Testing Fixture
+
+The Cubase-in-the-loop nightly (`.github/workflows/cubase-nightly.yml`) drives a
+real Cubase transport run against a committed project fixture, then compares the
+captured MIDI against an in-process golden. This is the L4 tier of the testing
+pyramid (`docs/testing-strategy.md`).
+
+- **Fixture** — `tests/cubase/fixtures/poly-4bar.cpr` holds Poly on an
+  instrument track with `poly_midi_probe` inserted downstream. The probe
+  captures Poly's note output and flushes it to JSONL on deactivate. The
+  fixture is authored once in Cubase on the runner following the recipe in
+  `tests/cubase/fixtures/README.md`, because a `.cpr` is a Cubase-version-specific
+  binary that only Cubase can write.
+- **Driver** — `tests/cubase/driver/play_scenario.py` (Python + mido) opens the
+  loopMIDI `poly-test` virtual port, waits for the MIDI Remote script's ready
+  ping, starts transport, lets the scenario play, and stops.
+- **Transport control** — `tests/cubase/midi-remote/poly-transport.js` is a
+  Cubase MIDI Remote script that maps the virtual-MIDI commands to transport
+  start/stop/locate and emits the ready ping on load.
+- **Comparison** — `tests/cubase/compare_probe_golden.py` diffs the probe JSONL
+  against `tests/golden/processor_default_4bars.txt` field-by-field
+  (ppq/pitch/velocity/channel).
+
+The fixture uses Poly's default patch at 120 BPM so the existing default-patch
+golden is the reference; see the fixture README for the authoring and
+regeneration recipe.
+
 ## Troubleshooting
 
 | Symptom | Cause | Fix |
