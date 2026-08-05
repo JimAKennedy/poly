@@ -39,11 +39,12 @@ Shared with `tests/cubase/midi-remote/poly-transport.js` — change both togethe
 
 ```
 pip install -r requirements.txt
-python play_scenario.py --bars 8 --tempo 120 --beats-per-bar 4
+python play_scenario.py --bars 4 --tempo 120 --beats-per-bar 4
 ```
 
 `--bars`, `--tempo`, and `--beats-per-bar` are parameterized so S09 and future
-scenarios reuse the driver. Defaults are 8 bars at 120 BPM in 4/4.
+scenarios reuse the driver. Defaults are 4 bars at 120 BPM in 4/4, matching the
+committed golden `tests/golden/processor_default_4bars.txt`.
 
 ### Exit codes
 

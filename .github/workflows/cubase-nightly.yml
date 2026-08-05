@@ -56,7 +56,7 @@ jobs:
       # Fixture project. Empty => S07 launch/quit smoke (no project, no
       # transport). Non-empty => S08 transport+probe run: the driver plays the
       # fixture and the probe JSONL is compared against the golden below. The
-      # committed fixture is tests/cubase/fixtures/poly-8bar.cpr, authored on the
+      # committed fixture is tests/cubase/fixtures/poly-4bar.cpr, authored on the
       # runner in Cubase (a .cpr is Cubase-version-specific — only Cubase can
       # write one). Until the owner authors + commits it and provisions the
       # loopMIDI 'poly-test' port (R10), leave this empty so the nightly keeps
@@ -170,7 +170,7 @@ jobs:
         shell: pwsh
         run: |
           python -m pip install --quiet -r tests/cubase/driver/requirements.txt
-          python tests/cubase/driver/play_scenario.py --bars 8 --tempo 120
+          python tests/cubase/driver/play_scenario.py --bars 4 --tempo 120
 
       - name: Quit Cubase
         # Always attempt a clean quit even if wait-for-ready failed, so a hung

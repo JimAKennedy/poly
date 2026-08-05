@@ -192,7 +192,7 @@ real Cubase transport run against a committed project fixture, then compares the
 captured MIDI against an in-process golden. This is the L4 tier of the testing
 pyramid (`docs/testing-strategy.md`).
 
-- **Fixture** — `tests/cubase/fixtures/poly-8bar.cpr` holds Poly on an
+- **Fixture** — `tests/cubase/fixtures/poly-4bar.cpr` holds Poly on an
   instrument track with `poly_midi_probe` inserted downstream. The probe
   captures Poly's note output and flushes it to JSONL on deactivate. The
   fixture is authored once in Cubase on the runner following the recipe in

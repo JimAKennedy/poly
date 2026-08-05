@@ -33,7 +33,7 @@ READY_VALUE = 127
 PORT_NAME = "poly-test"  # loopMIDI virtual port pair name (substring match)
 
 # --- Scenario defaults ---
-DEFAULT_BARS = 8
+DEFAULT_BARS = 4
 DEFAULT_TEMPO_BPM = 120.0
 DEFAULT_BEATS_PER_BAR = 4
 DEFAULT_READY_TIMEOUT_S = 30.0

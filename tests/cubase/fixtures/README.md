@@ -14,9 +14,9 @@ parameter, and the workflow points `POLY_FIXTURE_CPR` at the path below.
 
 | File | Purpose |
 |---|---|
-| `poly-8bar.cpr` | One instrument track hosting Poly, with `poly_midi_probe` inserted downstream so it captures Poly's MIDI output. Opened by the nightly to play a fixed scenario and dump probe JSONL. |
+| `poly-4bar.cpr` | One instrument track hosting Poly, with `poly_midi_probe` inserted downstream so it captures Poly's MIDI output. Opened by the nightly to play a fixed 4-bar scenario and dump probe JSONL. |
 
-`poly-8bar.cpr` is a **binary** Cubase project. It is authored **once, on the
+`poly-4bar.cpr` is a **binary** Cubase project. It is authored **once, on the
 runner, inside Cubase** (Cubase is the only tool that can write a `.cpr`) by
 following the recipe below, then committed. Everything else in this directory —
 this recipe, the directory itself — is authored on the dev machine.
@@ -57,16 +57,16 @@ Perform once on the `cubase`-labelled runner. Prerequisite: Poly and
    on the Poly track, or on a downstream MIDI track fed by Poly's output — the
    probe must sit where it receives Poly's note-ons/note-offs.)
 4. **Set the play range to the scenario length.** The driver plays a fixed
-   number of bars from bar 1; set the left locator to bar 1 and the right
-   locator to the end of the scenario. The scenario length is a driver
-   parameter (`tests/cubase/driver/play_scenario.py`); keep the fixture's
-   arrangement at least that long.
+   number of bars from bar 1 (default 4, matching the 4-bar golden); set the
+   left locator to bar 1 and the right locator to the end of the scenario. The
+   scenario length is a driver parameter (`tests/cubase/driver/play_scenario.py`
+   `--bars`); keep the fixture's arrangement at least that long.
 5. **Confirm the probe output path.** The probe reads `POLY_PROBE_OUTPUT` from
    the environment at deactivate and writes JSONL there — no per-project
    configuration is needed. The nightly sets that env var; nothing about it is
    stored in the `.cpr`.
-6. **Save as `poly-8bar.cpr`** in this directory
-   (`tests/cubase/fixtures/poly-8bar.cpr`), then commit it. The path must match
+6. **Save as `poly-4bar.cpr`** in this directory
+   (`tests/cubase/fixtures/poly-4bar.cpr`), then commit it. The path must match
    `POLY_FIXTURE_CPR` in the workflow and `launch-cubase.ps1`'s `-FixtureCpr`
    argument.
 
