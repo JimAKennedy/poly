@@ -25,11 +25,18 @@ virtual port pair is present.
 
 ## Prerequisite — the `poly-test` virtual port
 
-The script binds a loopMIDI virtual port pair named exactly `poly-test`
+The script binds a loopMIDI virtual port pair whose name **contains** `poly-test`
 (`PORT_NAME` in the script). Create it in loopMIDI on the runner before loading
-the script. Both the input and output halves must carry that name — the
-detection unit requires `expectInputNameEquals('poly-test')` and
-`expectOutputNameEquals('poly-test')`.
+the script.
+
+> **loopMIDI suffix:** loopMIDI appends a non-removable instance suffix, so a
+> port created as `poly-test` is enumerated by Windows as `poly-test 1` (or
+> `poly-test 2`, …). There is no way to strip the suffix. Because of this the
+> detection unit uses `expectInputNameContains('poly-test')` /
+> `expectOutputNameContains('poly-test')` (substring, not exact) so it binds
+> regardless of the suffix. The mido driver (`play_scenario.py` `find_port`)
+> already matches by substring, so both halves of the contract agree the port
+> name *contains* `poly-test`.
 
 ## Protocol
 
