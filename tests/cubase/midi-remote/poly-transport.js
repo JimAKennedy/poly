@@ -27,7 +27,12 @@ var CC_STOP = 21
 var CC_LOCATE = 22
 var CC_READY = 119 // undefined CC in GM — safe sentinel for the ready ping
 var READY_VALUE = 127
-var PORT_NAME = 'poly-test' // loopMIDI virtual port pair name
+// loopMIDI virtual port pair name. loopMIDI appends an instance suffix that
+// cannot be removed (e.g. the OS-enumerated name is "poly-test 1"), so this is
+// matched as a SUBSTRING, not an exact name — see the detection unit below. The
+// mido driver (play_scenario.py find_port) already matches by substring; both
+// sides agree the port name CONTAINS "poly-test".
+var PORT_NAME = 'poly-test'
 
 // --- Device driver + virtual port pair ---
 var driver = midiremote_api.makeDeviceDriver('Jk Digital', 'Poly Test', 'Jim Kennedy')
@@ -35,10 +40,14 @@ var driver = midiremote_api.makeDeviceDriver('Jk Digital', 'Poly Test', 'Jim Ken
 var midiInput = driver.mPorts.makeMidiInput()
 var midiOutput = driver.mPorts.makeMidiOutput()
 
+// Substring detection: loopMIDI enumerates the port as "poly-test 1" (the
+// instance suffix is not removable), so expectNameEquals("poly-test") would
+// never bind and the script would never load / never ping ready. Contains
+// tolerates the suffix and matches the driver's substring semantics.
 driver.makeDetectionUnit()
     .detectPortPair(midiInput, midiOutput)
-    .expectInputNameEquals(PORT_NAME)
-    .expectOutputNameEquals(PORT_NAME)
+    .expectInputNameContains(PORT_NAME)
+    .expectOutputNameContains(PORT_NAME)
 
 // --- Surface: three momentary buttons, one per transport command ---
 // Buttons are off-screen coordinates; this surface is never shown, it only
