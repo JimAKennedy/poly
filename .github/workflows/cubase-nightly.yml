@@ -158,15 +158,19 @@ jobs:
       - name: Launch Cubase
         shell: pwsh
         run: |
-          $args = @(
+          # NB: do NOT name this $args — that is an automatic PowerShell
+          # variable and splatting it (@args) does not bind reliably, which
+          # made launch-cubase.ps1 reject -ProbeOutput as a positional arg and
+          # fail before Cubase even started. Use an explicit name.
+          $launchArgs = @(
             "-CubaseVersion", "${{ env.POLY_CUBASE_VERSION }}",
             "-FixtureCpr", "${{ env.POLY_FIXTURE_CPR }}",
             "-ProbeOutput", "${{ env.POLY_PROBE_OUTPUT }}"
           )
           if ("${{ env.POLY_CDP_PORT }}" -ne "") {
-            $args += @("-EnableCdp", "-CdpPort", "${{ env.POLY_CDP_PORT }}")
+            $launchArgs += @("-EnableCdp", "-CdpPort", "${{ env.POLY_CDP_PORT }}")
           }
-          ./scripts/cubase/launch-cubase.ps1 @args
+          ./scripts/cubase/launch-cubase.ps1 @launchArgs
 
       - name: Wait for Cubase ready
         shell: pwsh
