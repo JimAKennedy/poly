@@ -56,13 +56,13 @@ jobs:
       # Fixture project. Empty => S07 launch/quit smoke (no project, no
       # transport). Non-empty => S08 transport+probe run: the driver plays the
       # fixture and the probe JSONL is compared against the golden below. The
-      # committed fixture is tests/cubase/fixtures/poly-4bar.cpr, authored on the
-      # runner in Cubase (a .cpr is Cubase-version-specific — only Cubase can
-      # write one). Until the owner authors + commits it and provisions the
-      # loopMIDI 'poly-test' port (R10), leave this empty so the nightly keeps
-      # exercising the launch/quit smoke; the transport/compare steps below are
-      # gated on this being non-empty and stay dormant until then.
-      POLY_FIXTURE_CPR: ""
+      # committed fixture is tests/cubase/fixtures/poly-4bar.cpr (authored on the
+      # runner in Cubase, PR #186 — a .cpr is Cubase-version-specific, only
+      # Cubase can write one). Now set, so the "Play scenario" + "Compare probe
+      # output to golden" steps below are live. The loopMIDI 'poly-test' port +
+      # MIDI Remote script must be provisioned on the runner (R10) for the driver
+      # to reach the ready ping; the wait-for-ready timeout fails loud otherwise.
+      POLY_FIXTURE_CPR: "${{ github.workspace }}\\tests\\cubase\\fixtures\\poly-4bar.cpr"
       # Golden the probe JSONL is compared against when a fixture is set. The
       # fixture uses Poly's default patch, so this is the default-patch
       # processor-level golden (note-ons: ppq/pitch/velocity/channel).
