@@ -30,6 +30,36 @@ the flow apart. This is a scratch runbook; delete the file once the flow is gree
 
 ---
 
+## Step 0 — Find the exact port names mido sees (do this first)
+
+Do NOT guess the port name. loopMIDI's OS-level name (`poly-test`, what Cubase
+shows) is **not** what mido opens by — python-rtmidi appends a client/index number,
+so the real name is something like `'poly-test 1'` (with a space and a digit), and
+the exact suffix differs per box (loopMIDI instance count, rtmidi version). On the
+CI runner it enumerated as `poly-test 0` (input) / `poly-test 1` (output); your box
+may differ. Ask mido directly:
+
+```powershell
+cd C:\poly
+python -c "import mido; print('INPUTS:'); [print(repr(n)) for n in mido.get_input_names()]; print('OUTPUTS:'); [print(repr(n)) for n in mido.get_output_names()]"
+```
+
+`repr()` is deliberate — it shows quotes, trailing spaces, and capitalization, so
+you copy the *exact* string. Read the result:
+
+- **An entry containing `poly-test` appears in both lists** → good. Copy those
+  exact strings for any manual `open_input(...)`/`open_output(...)` below. The
+  driver itself matches by substring (`find_port`), so `play_scenario.py` needs no
+  name edit — it will bind whatever contains `poly-test`.
+- **`poly-test` appears in NEITHER list** → loopMIDI isn't running or the port was
+  never created. Open the loopMIDI tray app and confirm a `poly-test` port exists.
+  Nothing downstream can work until it shows up here.
+
+Whenever a manual command below says `open_input('poly-test 1')`, substitute the
+exact name Step 0 printed on *your* box.
+
+---
+
 ## Test 1 — Is the ping emitted at all?
 
 Isolates the plugin/Cubase/MIDI-Remote side from the driver side. Open a raw MIDI
@@ -87,27 +117,28 @@ Manager**. Look for `JkDigital / PolyTest`:
      holding `poly-test 1` open, Cubase may fail to open the same endpoint. Close
      the monitor and relaunch Cubase before reading the Manager.
 
-**2b. Prove the hook fires (add a log line).** If the Manager shows connected but
-you still saw no ping, add a temporary log to the activation hook so you can see
-it fire in Cubase's **Script Console** (Studio → MIDI Remote Manager → Scripting
-Tools / Console) independent of MIDI:
+**2b. Prove the hook fires (log line already deployed).** The activation hook in
+`JkDigital_PolyTest.js` already carries a diagnostic `console.log` (committed as
+temp instrumentation in `da61059`), so you don't need to edit it — just make sure
+the runner has the current script installed (`3-install-midi-remote.ps1`), relaunch
+Cubase, and watch Cubase's **Script Console** (Studio → MIDI Remote Manager →
+Scripting Tools / Console):
 
 ```javascript
-// tests/cubase/midi-remote/JkDigital_PolyTest.js — TEMPORARY diagnostic
+// tests/cubase/midi-remote/JkDigital_PolyTest.js — already in the branch
 driver.mOnActivate = function (activeDevice) {
     console.log('[poly-remote] mOnActivate fired — sending ready ping')
     midiOutput.sendMidi(activeDevice, [0xB0 + CHANNEL, CC_READY, READY_VALUE])
 }
 ```
 
-Re-run `3-install-midi-remote.ps1` to copy the edited script, relaunch Cubase, and
-watch the console:
+- **`[poly-remote] mOnActivate fired` appears, but no CC on the wire** → the hook
+  fires; the problem is the `sendMidi` call or the output port it targets (wrong
+  `activeDevice`/port).
+- **The log line never appears** → binding, not the ping. Return to 2a.
 
-- **Log line appears, but no CC on the wire** → the hook fires; the problem is the
-  `sendMidi` call or the output port it targets (wrong `activeDevice`/port).
-- **Log line never appears** → binding, not the ping. Return to 2a.
-
-Remember to revert the temporary `console.log` before committing.
+The `console.log` (and the driver's `--verbose`) are temporary instrumentation —
+strip them once the flow is green (this whole file goes away then too).
 
 ---
 
@@ -115,21 +146,31 @@ Remember to revert the temporary `console.log` before committing.
 
 If the CC *is* on the wire but the driver still times out, the bug is in
 `play_scenario.py`'s `wait_for_ready`. It filters on
-`msg.control == 119 and msg.value == 127` on input `poly-test 1`. Run just the
-driver against an already-running, already-activated Cubase from Test 1 (close
-Window A's monitor first — port contention):
+`msg.control == 119 and msg.value == 127` on the input whose name contains
+`poly-test`. Run just the driver against an already-running, already-activated
+Cubase from Test 1 (close Window A's monitor first — port contention), and use the
+**`--verbose`** flag so it logs the port lists it saw and **every** incoming MIDI
+message during the wait:
 
 ```powershell
 cd C:\poly
-python tests\cubase\driver\play_scenario.py --bars 4 --tempo 120 --ready-timeout 60
+python tests\cubase\driver\play_scenario.py --bars 4 --tempo 120 --ready-timeout 60 --verbose
 ```
+
+`--verbose` prints `[driver:ports]` (the full input/output name lists mido
+enumerated) and a `[driver:midi-in]` line for each message that arrives while
+waiting — so you can see whether CC119 shows up at all and, if it does, on which
+channel/value.
 
 - **`[driver:ready-received]` prints** → the flow works end-to-end; the nightly's
   30s timeout may just be too tight for a cold Cubase load. Consider bumping
   `--ready-timeout` in the workflow step.
-- **Still times out while Window A saw the CC** → the driver is reading a different
-  port than the monitor, or filtering wrong. Confirm which input it opened from its
-  own `[driver:port-open] in=...` line and compare to where the CC appeared.
+- **`[driver:midi-in]` shows CC119 but it still times out** → a value/channel
+  mismatch in the filter; compare the logged message to the expected
+  `control=119 value=127`.
+- **`[driver:midi-in]` shows nothing (or no CC119) while Window A saw the CC** → the
+  driver opened a different input port than the monitor. Compare its
+  `[driver:port-open] in=...` line to where the CC appeared in Test 1.
 
 ---
 
