@@ -146,6 +146,22 @@ jobs:
           }
           New-Item -ItemType Directory -Force -Path "${{ env.POLY_ARTIFACT_DIR }}" | Out-Null
 
+      # Install the MIDI Remote transport script FROM THE CHECKOUT, so the copy
+      # Cubase loads is always the committed one — not a stale hand-installed
+      # copy. Cubase auto-detects driver scripts from
+      #   <Documents>/Steinberg/Cubase/MIDI Remote/Driver Scripts/Local/JkDigital/PolyTest/JkDigital_PolyTest.js
+      # which lives OUTSIDE the runner's _work checkout, so `git clean` never
+      # touches it — before this step the installed script and the repo could
+      # silently diverge, making every dispatch test whatever was last copied by
+      # hand rather than what is on main. Gated to the transport/e2e flows (the
+      # only ones that need the surface); the S07 launch/quit smoke skips it.
+      # Cubase is launched fresh below (after Kill stale Cubase), so it loads
+      # this freshly-installed script on startup.
+      - name: Install MIDI Remote transport script
+        if: env.POLY_FIXTURE_CPR != '' || env.POLY_CDP_PORT != ''
+        shell: pwsh
+        run: ./scripts/S08-install/3-install-midi-remote.ps1
+
       # --- L4 Cubase launch/quit cycle (scripts/cubase machinery from T02) ---
       - name: Kill stale Cubase
         shell: pwsh
