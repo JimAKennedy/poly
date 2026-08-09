@@ -31,7 +31,7 @@ Run from any directory (each resolves the repo root from its own location).
 | `0-install-all.ps1` | Runs steps 1-4 then preflight, in order. The one-command path. |
 | `1-sync-main.ps1` | `git fetch`/`checkout main`/`pull`; asserts the port-match fix is present. |
 | `2-install-plugins.ps1` | Copies `poly_plugin.vst3` + `poly_midi_probe.vst3` from `build/` into the VST3 dir Cubase loads from. |
-| `3-install-midi-remote.ps1` | Copies `poly-transport.js` into Cubase's MIDI Remote driver-scripts tree. |
+| `3-install-midi-remote.ps1` | Copies `JkDigital_PolyTest.js` into Cubase's MIDI Remote driver-scripts tree. |
 | `4-install-driver-deps.ps1` | `pip install` the mido driver deps; checks a `poly-test` port is visible. |
 | `5-preflight.ps1` | Read-only verifier: branch, both VST3 bundles, MIDI Remote script, loopMIDI port, Cubase 14, golden. Green = ready to author the `.cpr`. |
 
