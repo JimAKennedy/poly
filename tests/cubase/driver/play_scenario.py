@@ -7,7 +7,7 @@ and flushes it to ``POLY_PROBE_OUTPUT`` on Cubase deactivate; this driver only
 controls the transport.
 
 Protocol constants are the contract shared with
-``tests/cubase/midi-remote/poly-transport.js`` -- keep the two in sync.
+``tests/cubase/midi-remote/JkDigital_PolyTest.js`` -- keep the two in sync.
 
 Phase logging goes to stdout as structured lines (``[driver:<phase>] ...``) so a
 runner-side failure is diagnosable from the captured job log without shelling in.
@@ -23,7 +23,7 @@ import argparse
 import sys
 import time
 
-# --- Protocol constants (must match poly-transport.js) ---
+# --- Protocol constants (must match JkDigital_PolyTest.js) ---
 CHANNEL = 0  # MIDI channel 1 == 0-based channel index 0
 CC_START = 20
 CC_STOP = 21

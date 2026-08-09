@@ -6,8 +6,14 @@
 // remote surface is live (a stronger signal than S07's window-present check).
 //
 // This is a driver script, not a hardware controller script: the "device" is
-// the loopMIDI virtual port pair named "poly-test". Install to
-//   <Documents>/Steinberg/Cubase/MIDI Remote/Driver Scripts/Local/Jk Digital/Poly Test/
+// the loopMIDI virtual port pair named "poly-test". Cubase auto-detects driver
+// scripts by a STRICT filename+folder convention derived from makeDeviceDriver:
+//   <Documents>/Steinberg/Cubase/MIDI Remote/Driver Scripts/Local/<vendor>/<device>/<vendor>_<device>.js
+// so the file MUST be named JkDigital_PolyTest.js and live under
+//   .../Local/JkDigital/PolyTest/JkDigital_PolyTest.js
+// A mismatched filename (e.g. poly-transport.js) is silently ignored — the
+// script never loads and no surface connects. The vendor/device are single
+// tokens (no spaces) so the path/filename derivation is unambiguous.
 // (see README.md for the exact path and the CC map the driver must match).
 //
 // Protocol (channel 1 == API channel index 0). These constants are the
@@ -35,7 +41,9 @@ var READY_VALUE = 127
 var PORT_NAME = 'poly-test'
 
 // --- Device driver + virtual port pair ---
-var driver = midiremote_api.makeDeviceDriver('Jk Digital', 'Poly Test', 'Jim Kennedy')
+// Vendor/device are single tokens (no spaces) so Cubase's filename+folder
+// derivation is unambiguous: file JkDigital_PolyTest.js under Local/JkDigital/PolyTest/.
+var driver = midiremote_api.makeDeviceDriver('JkDigital', 'PolyTest', 'Jim Kennedy')
 
 var midiInput = driver.mPorts.makeMidiInput()
 var midiOutput = driver.mPorts.makeMidiOutput()

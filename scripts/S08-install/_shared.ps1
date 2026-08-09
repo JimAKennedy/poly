@@ -30,11 +30,18 @@ function Get-PolyFixturePath {
     return (Join-Path (Get-PolyRepoRoot) "tests\cubase\fixtures\poly-4bar.cpr")
 }
 
-# The Cubase MIDI Remote install dir. The <vendor>/<device> segments MUST match
-# makeDeviceDriver('Jk Digital', 'Poly Test', ...) in poly-transport.js.
+# The Cubase MIDI Remote install dir. Cubase auto-detects a driver script by a
+# STRICT convention: Local\<vendor>\<device>\<vendor>_<device>.js, all derived
+# from makeDeviceDriver('JkDigital', 'PolyTest', ...). A mismatched folder OR
+# filename means the script is silently ignored and no surface connects.
 function Get-PolyMidiRemoteDir {
     return (Join-Path $env:USERPROFILE `
-        "Documents\Steinberg\Cubase\MIDI Remote\Driver Scripts\Local\Jk Digital\Poly Test")
+        "Documents\Steinberg\Cubase\MIDI Remote\Driver Scripts\Local\JkDigital\PolyTest")
+}
+
+# The required script filename (must be <vendor>_<device>.js to be detected).
+function Get-PolyMidiRemoteScriptName {
+    return "JkDigital_PolyTest.js"
 }
 
 function Write-S08 {

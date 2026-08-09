@@ -25,11 +25,11 @@ try {
         Write-S08 -Level warn -Message "On branch '$branch', not main. The nightly checks out main regardless, but a manual driver dry-run uses this tree."
         $warn++
     }
-    $script = Join-Path $root "tests\cubase\midi-remote\poly-transport.js"
+    $script = Join-Path $root "tests\cubase\midi-remote\JkDigital_PolyTest.js"
     if (Select-String -Path $script -Pattern "expectInputNameContains" -Quiet) {
-        Write-S08 -Level ok -Message "poly-transport.js has the substring port matcher."
+        Write-S08 -Level ok -Message "JkDigital_PolyTest.js has the substring port matcher."
     } else {
-        Write-S08 -Level fail -Message "poly-transport.js is MISSING expectInputNameContains. Run 1-sync-main.ps1."
+        Write-S08 -Level fail -Message "JkDigital_PolyTest.js is MISSING expectInputNameContains. Run 1-sync-main.ps1."
         $fail++
     }
 } finally {
@@ -48,7 +48,7 @@ foreach ($bundle in @("poly_plugin.vst3", "poly_midi_probe.vst3")) {
 }
 
 # 3. MIDI Remote script installed at the expected path.
-$mrScript = Join-Path (Get-PolyMidiRemoteDir) "poly-transport.js"
+$mrScript = Join-Path (Get-PolyMidiRemoteDir) (Get-PolyMidiRemoteScriptName)
 if (Test-Path $mrScript) {
     Write-S08 -Level ok -Message "MIDI Remote script installed at $mrScript."
 } else {

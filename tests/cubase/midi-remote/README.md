@@ -4,24 +4,34 @@ class: gated
 
 # Poly Test — Cubase MIDI Remote Script
 
-`poly-transport.js` is the Cubase MIDI Remote driver script that lets the
+`JkDigital_PolyTest.js` is the Cubase MIDI Remote driver script that lets the
 headless test driver control Cubase's transport over a virtual MIDI port, and
 signals readiness back to the runner. It replaces S07's placeholder
 window-present readiness check with a real "ready" ping emitted when the script
 activates.
 
-## Install path (runner, Cubase 14)
+## Install path (runner, Cubase 14) — the filename is load-bearing
 
-Cubase discovers MIDI Remote driver scripts under the user Documents tree:
+Cubase auto-detects a driver script only when **both** the folder and the
+filename follow the strict convention `Local/<vendor>/<device>/<vendor>_<device>.js`,
+all derived from the `makeDeviceDriver(<vendor>, <device>, ...)` call. A file
+whose name does not match `<vendor>_<device>.js` is **silently ignored** — no
+surface appears in the MIDI Remote tab and nothing connects.
 
 ```
-<Documents>/Steinberg/Cubase/MIDI Remote/Driver Scripts/Local/Jk Digital/Poly Test/poly-transport.js
+<Documents>/Steinberg/Cubase/MIDI Remote/Driver Scripts/Local/JkDigital/PolyTest/JkDigital_PolyTest.js
 ```
 
-The `<vendor>/<device>/` segments must match the `makeDeviceDriver('Jk Digital',
-'Poly Test', ...)` call in the script. Copy `poly-transport.js` there, then in
-Cubase open the MIDI Remote tab — the script auto-loads when the `poly-test`
-virtual port pair is present.
+The script declares `makeDeviceDriver('JkDigital', 'PolyTest', ...)` — single
+tokens with no spaces so the path/filename derivation is unambiguous. Copy
+`JkDigital_PolyTest.js` there (the `3-install-midi-remote.ps1` helper does this),
+then in Cubase open the MIDI Remote tab — the script auto-detects and connects
+when the `poly-test` virtual port pair is present.
+
+> **Not an import.** Cubase's **Import Script** button only reads packaged
+> `.midiremote` bundles, never raw `.js` driver scripts. A `.js` driver script
+> is loaded by folder auto-detection, not by importing — so it correctly will
+> not appear in the Import dialog.
 
 ## Prerequisite — the `poly-test` virtual port
 
@@ -62,7 +72,7 @@ timeout still guards against a script that never loads.
 
 ## Verification
 
-- **Dev machine:** `node --check tests/cubase/midi-remote/poly-transport.js`
+- **Dev machine:** `node --check tests/cubase/midi-remote/JkDigital_PolyTest.js`
   confirms the script parses. The `midiremote_api_v1` module only exists inside
   Cubase, so the script cannot be *executed* off-host — parse-clean plus a
   constants match against the driver is the authorable-here proof.

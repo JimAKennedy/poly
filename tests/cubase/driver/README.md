@@ -13,7 +13,7 @@ Remote script's ready ping, plays a fixed number of bars, and stops.
 1. Opens the `poly-test` input and output ports (substring match on the port
    name, so loopMIDI's `-1`/`-2` suffixes are tolerated).
 2. Waits (bounded, fails loud) for the ready ping —
-   `CC 119 value 127` — that `poly-transport.js` emits on activation.
+   `CC 119 value 127` — that `JkDigital_PolyTest.js` emits on activation.
 3. Sends **locate-to-zero** then **transport START** (CC 22, then CC 20).
 4. Sleeps for the scenario duration (`bars × beats/bar × 60/tempo`, plus a small
    tail so the last beat's notes are captured).
@@ -26,7 +26,7 @@ deactivates. The probe-vs-golden comparison is a separate step
 
 ## Protocol
 
-Shared with `tests/cubase/midi-remote/poly-transport.js` — change both together.
+Shared with `tests/cubase/midi-remote/JkDigital_PolyTest.js` — change both together.
 
 | Direction | MIDI | Meaning |
 |---|---|---|
@@ -73,7 +73,7 @@ log: `start`, `port-open`, `ready-received`, `scenario-start`, `scenario-end`,
 
 ## Cross-references
 
-- `tests/cubase/midi-remote/poly-transport.js` — the MIDI Remote side of the
+- `tests/cubase/midi-remote/JkDigital_PolyTest.js` — the MIDI Remote side of the
   protocol.
 - `tests/cubase/fixtures/README.md` — the fixture this driver plays.
 - `tests/cubase/compare_probe_golden.py` — diffs the resulting probe JSONL.

@@ -201,7 +201,7 @@ pyramid (`docs/testing-strategy.md`).
 - **Driver** — `tests/cubase/driver/play_scenario.py` (Python + mido) opens the
   loopMIDI `poly-test` virtual port, waits for the MIDI Remote script's ready
   ping, starts transport, lets the scenario play, and stops.
-- **Transport control** — `tests/cubase/midi-remote/poly-transport.js` is a
+- **Transport control** — `tests/cubase/midi-remote/JkDigital_PolyTest.js` is a
   Cubase MIDI Remote script that maps the virtual-MIDI commands to transport
   start/stop/locate and emits the ready ping on load.
 - **Comparison** — `tests/cubase/compare_probe_golden.py` diffs the probe JSONL
