@@ -84,9 +84,17 @@ page.makeValueBinding(stopButton.mSurfaceValue, page.mHostAccess.mTransport.mVal
 page.makeCommandBinding(locateButton.mSurfaceValue, 'Transport', 'To Left Locator')
 
 // --- Ready ping on activation ---
-// When Cubase loads this script and the virtual port connects, emit the ready
-// sentinel so wait-for-ready.ps1 / the driver can proceed. `context` is the
-// active device handle sendMidi requires.
-page.mOnActivate = function (context) {
-    midiOutput.sendMidi(context, [0xB0 + CHANNEL, CC_READY, READY_VALUE])
+// Emit the ready sentinel so the mido driver's wait_for_ready can proceed.
+//
+// The ping MUST fire from driver.mOnActivate, NOT page.mOnActivate. The device
+// driver's mOnActivate fires when the surface CONNECTS (the port pair is
+// detected and bound) — which on the headless runner happens automatically.
+// page.mOnActivate, by contrast, only fires when Cubase makes that MAPPING PAGE
+// the active page, which requires the MIDI Remote surface to be focused/selected
+// in the UI. On an unattended nightly the page is never activated, so a
+// page-bound ping never sends and the driver times out (observed on every armed
+// run through 2026-08-09). The driver hook receives an activeDevice handle,
+// which is exactly what sendMidi needs.
+driver.mOnActivate = function (activeDevice) {
+    midiOutput.sendMidi(activeDevice, [0xB0 + CHANNEL, CC_READY, READY_VALUE])
 }
