@@ -59,16 +59,21 @@ files are the two halves of one contract.
 | driver → Cubase | CC 20, value ≥ 64, ch 1 | transport START |
 | driver → Cubase | CC 21, value ≥ 64, ch 1 | transport STOP |
 | driver → Cubase | CC 22, value ≥ 64, ch 1 | LOCATE to zero (To Left Locator) |
-| Cubase → driver | CC 119, value 127, ch 1 | ready ping (sent on script activation) |
+| Cubase → driver | CC 119, value 127, ch 1 | ready ping (sent on surface connect) |
 
 Channel 1 is the API's channel index `0`. CC 119 is undefined in General MIDI,
 so it is a safe sentinel that will not collide with musical CC traffic.
 
-The ready ping is sent from the script's `mOnActivate` callback: when Cubase
-loads the script and the port connects, it emits
-`sendMidi(context, [0xB0, 119, 127])`. `wait-for-ready.ps1` (or the driver's
-own bounded wait) blocks until it sees that ping, then proceeds; a bounded
-timeout still guards against a script that never loads.
+The ready ping is sent from the **device driver's** `driver.mOnActivate`
+callback, which fires when the surface *connects* (the `poly-test` port pair is
+detected and bound). It emits `sendMidi(activeDevice, [0xB0, 119, 127])`, and the
+driver's bounded `wait_for_ready` blocks until it sees that ping.
+
+> **Do not bind the ping to `page.mOnActivate`.** The mapping page's activation
+> fires only when Cubase makes that page the *active* page — which needs the MIDI
+> Remote surface focused/selected in the UI. On an unattended runner the page is
+> never activated, so a page-bound ping never sends and the driver times out. The
+> driver-level hook fires on connection, which is what a headless run gets.
 
 ## Verification
 
