@@ -96,5 +96,13 @@ page.makeCommandBinding(locateButton.mSurfaceValue, 'Transport', 'To Left Locato
 // run through 2026-08-09). The driver hook receives an activeDevice handle,
 // which is exactly what sendMidi needs.
 driver.mOnActivate = function (activeDevice) {
+    // TEMP DIAGNOSTIC (M042 S08 ready-ping debug): these console.log lines print
+    // to Cubase's MIDI Remote script console (Studio > MIDI Remote Manager >
+    // Scripting Tools console). They let the runner distinguish "surface never
+    // connected" (this log never appears) from "ping sent but the driver missed
+    // it" (log appears but play_scenario.py still times out). Remove once the
+    // ready-ping path is confirmed working headless.
+    console.log('[poly-remote] mOnActivate fired — sending ready ping CC' + CC_READY + '=' + READY_VALUE)
     midiOutput.sendMidi(activeDevice, [0xB0 + CHANNEL, CC_READY, READY_VALUE])
+    console.log('[poly-remote] ready ping sent')
 }

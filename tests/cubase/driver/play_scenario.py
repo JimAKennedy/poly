@@ -62,15 +62,23 @@ def find_port(candidates, name):
     return None
 
 
-def wait_for_ready(inport, timeout_s):
+def wait_for_ready(inport, timeout_s, verbose=False):
     """Block until the ready ping arrives or ``timeout_s`` elapses.
 
     Returns True on ready, False on timeout. Non-ready messages are drained and
     ignored so a stale buffer can't mask the real ping.
+
+    When ``verbose`` is set, every incoming MIDI message is logged as it arrives
+    (M042 S08 ready-ping debug). This distinguishes "nothing on the wire"
+    (surface never connected / never pinged) from "CC119 arrives but is filtered
+    out" (channel or value mismatch) — the two failures produce the identical
+    30s timeout otherwise.
     """
     deadline = time.monotonic() + timeout_s
     while time.monotonic() < deadline:
         for msg in inport.iter_pending():
+            if verbose:
+                log("rx", str(msg))
             if (
                 msg.type == "control_change"
                 and msg.control == CC_READY
@@ -88,6 +96,8 @@ def run(args):
 
     in_names = mido.get_input_names()
     out_names = mido.get_output_names()
+    if args.verbose:
+        log("ports", f"inputs={in_names} outputs={out_names}")
     in_name = find_port(in_names, PORT_NAME)
     out_name = find_port(out_names, PORT_NAME)
     if in_name is None or out_name is None:
@@ -100,7 +110,7 @@ def run(args):
     with mido.open_input(in_name) as inport, mido.open_output(out_name) as outport:
         log("port-open", f"in={in_name!r} out={out_name!r}")
 
-        if not wait_for_ready(inport, args.ready_timeout):
+        if not wait_for_ready(inport, args.ready_timeout, verbose=args.verbose):
             log(
                 "error",
                 f"no ready ping (CC{CC_READY}={READY_VALUE}) within "
@@ -153,6 +163,12 @@ def parse_args(argv):
         type=float,
         default=DEFAULT_READY_TIMEOUT_S,
         help="seconds to wait for the ready ping before failing loud",
+    )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="log the input/output port lists and every incoming MIDI message "
+        "during the ready-ping wait (M042 S08 diagnostic)",
     )
     return parser.parse_args(argv)
 
