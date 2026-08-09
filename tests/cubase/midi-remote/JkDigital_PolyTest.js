@@ -22,7 +22,8 @@
 //   CC 20 -> transport START   (value >= 64 triggers)
 //   CC 21 -> transport STOP     (value >= 64 triggers)
 //   CC 22 -> LOCATE to zero      (value >= 64 triggers; "To Left Locator")
-//   ready ping OUT: CC 119 value 127 on channel 1, sent on activation.
+//   CC 118 IN  -> ready POLL  (driver asks "are you live?")
+//   CC 119 OUT -> ready ping  (value 127; script's reply to a poll)
 
 var midiremote_api = require('midiremote_api_v1')
 
@@ -31,7 +32,8 @@ var CHANNEL = 0 // API channel index 0 == MIDI channel 1
 var CC_START = 20
 var CC_STOP = 21
 var CC_LOCATE = 22
-var CC_READY = 119 // undefined CC in GM — safe sentinel for the ready ping
+var CC_POLL = 118 // undefined CC in GM — driver's "are you live?" poll (IN)
+var CC_READY = 119 // undefined CC in GM — safe sentinel for the ready ping (OUT)
 var READY_VALUE = 127
 // loopMIDI virtual port pair name. loopMIDI appends an instance suffix that
 // cannot be removed (e.g. the OS-enumerated name is "poly-test 1"), so this is
@@ -57,17 +59,19 @@ driver.makeDetectionUnit()
     .expectInputNameContains(PORT_NAME)
     .expectOutputNameContains(PORT_NAME)
 
-// --- Surface: three momentary buttons, one per transport command ---
+// --- Surface: four momentary buttons — three transport, one ready-poll ---
 // Buttons are off-screen coordinates; this surface is never shown, it only
 // exists to carry the MIDI bindings.
 var surface = driver.mSurface
 var startButton = surface.makeButton(0, 0, 1, 1)
 var stopButton = surface.makeButton(1, 0, 1, 1)
 var locateButton = surface.makeButton(2, 0, 1, 1)
+var pollButton = surface.makeButton(3, 0, 1, 1)
 
 startButton.mSurfaceValue.mMidiBinding.setInputPort(midiInput).bindToControlChange(CHANNEL, CC_START)
 stopButton.mSurfaceValue.mMidiBinding.setInputPort(midiInput).bindToControlChange(CHANNEL, CC_STOP)
 locateButton.mSurfaceValue.mMidiBinding.setInputPort(midiInput).bindToControlChange(CHANNEL, CC_LOCATE)
+pollButton.mSurfaceValue.mMidiBinding.setInputPort(midiInput).bindToControlChange(CHANNEL, CC_POLL)
 
 // --- Host mapping: buttons -> transport ---
 var page = driver.mMapping.makePage('Poly Test Transport')
@@ -83,26 +87,35 @@ page.makeValueBinding(stopButton.mSurfaceValue, page.mHostAccess.mTransport.mVal
 // returns the cursor to the scenario start before a run.
 page.makeCommandBinding(locateButton.mSurfaceValue, 'Transport', 'To Left Locator')
 
-// --- Ready ping on activation ---
-// Emit the ready sentinel so the mido driver's wait_for_ready can proceed.
+// --- Ready handshake: driver polls, script replies ---
+// Readiness is driver-initiated instead of relying on the one-shot
+// driver.mOnActivate. mOnActivate fires exactly once, at surface-connect time,
+// which on an unattended nightly happens DURING Cubase load — before
+// play_scenario.py has opened its input port. mido only buffers messages after
+// the port is open, so that single fire-and-forget ping was already gone by the
+// time the driver started listening, and the driver timed out on every armed
+// run through 2026-08-09 despite the ping being emitted correctly (confirmed by
+// hand: with the listener opened first, the CC119=127 ping arrives on schedule).
 //
-// The ping MUST fire from driver.mOnActivate, NOT page.mOnActivate. The device
-// driver's mOnActivate fires when the surface CONNECTS (the port pair is
-// detected and bound) — which on the headless runner happens automatically.
-// page.mOnActivate, by contrast, only fires when Cubase makes that MAPPING PAGE
-// the active page, which requires the MIDI Remote surface to be focused/selected
-// in the UI. On an unattended nightly the page is never activated, so a
-// page-bound ping never sends and the driver times out (observed on every armed
-// run through 2026-08-09). The driver hook receives an activeDevice handle,
-// which is exactly what sendMidi needs.
-driver.mOnActivate = function (activeDevice) {
+// The poll/reply handshake removes the ordering dependency entirely: the driver
+// (which controls exactly when it starts listening) sends CC_POLL every loop
+// iteration while waiting, and this handler replies with the ready ping each
+// time it sees one. Whenever the poll lands after the surface is connected, the
+// reply arrives within one poll interval — robust to launch-then-listen,
+// listen-then-launch, and a slow cold Cubase load alike.
+//
+// mOnProcessValueChange fires on every CC_POLL the pollButton receives; the
+// callback's second arg is the live activeDevice handle sendMidi needs. Guard on
+// a rising value so we reply once per poll, not on the button's zero-reset.
+pollButton.mSurfaceValue.mOnProcessValueChange = function (activeDevice, value) {
+    if (value <= 0) return
     // TEMP DIAGNOSTIC (M042 S08 ready-ping debug): these console.log lines print
     // to Cubase's MIDI Remote script console (Studio > MIDI Remote Manager >
     // Scripting Tools console). They let the runner distinguish "surface never
-    // connected" (this log never appears) from "ping sent but the driver missed
-    // it" (log appears but play_scenario.py still times out). Remove once the
-    // ready-ping path is confirmed working headless.
-    console.log('[poly-remote] mOnActivate fired — sending ready ping CC' + CC_READY + '=' + READY_VALUE)
+    // connected / poll never received" (this log never appears) from "reply sent
+    // but the driver missed it" (log appears but play_scenario.py still times
+    // out). Remove once the ready-poll handshake is confirmed working headless.
+    console.log('[poly-remote] poll received (CC' + CC_POLL + ') — replying ready ping CC' + CC_READY + '=' + READY_VALUE)
     midiOutput.sendMidi(activeDevice, [0xB0 + CHANNEL, CC_READY, READY_VALUE])
     console.log('[poly-remote] ready ping sent')
 }
