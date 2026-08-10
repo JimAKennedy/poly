@@ -109,13 +109,5 @@ page.makeCommandBinding(locateButton.mSurfaceValue, 'Transport', 'To Left Locato
 // a rising value so we reply once per poll, not on the button's zero-reset.
 pollButton.mSurfaceValue.mOnProcessValueChange = function (activeDevice, value) {
     if (value <= 0) return
-    // TEMP DIAGNOSTIC (M042 S08 ready-ping debug): these console.log lines print
-    // to Cubase's MIDI Remote script console (Studio > MIDI Remote Manager >
-    // Scripting Tools console). They let the runner distinguish "surface never
-    // connected / poll never received" (this log never appears) from "reply sent
-    // but the driver missed it" (log appears but play_scenario.py still times
-    // out). Remove once the ready-poll handshake is confirmed working headless.
-    console.log('[poly-remote] poll received (CC' + CC_POLL + ') — replying ready ping CC' + CC_READY + '=' + READY_VALUE)
     midiOutput.sendMidi(activeDevice, [0xB0 + CHANNEL, CC_READY, READY_VALUE])
-    console.log('[poly-remote] ready ping sent')
 }
