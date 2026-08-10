@@ -120,16 +120,25 @@ jobs:
       - name: Install plugin for Cubase
         shell: pwsh
         run: |
-          $src = Get-ChildItem -Path build -Recurse -Filter poly_plugin.vst3 -Directory |
-            Select-Object -First 1
-          if (-not $src) {
-            Write-Error "poly_plugin.vst3 bundle not found under build/"
-            exit 1
+          # Install BOTH VST3 bundles the fixture needs: poly_plugin (the
+          # instrument under test) and poly_midi_probe (the instrument that
+          # captures Poly's MIDI and writes probe.jsonl). The probe is a required
+          # part of the fixture signal path — it must be the freshly-built bundle,
+          # not a stale hand-installed one, or Cubase loads an old registration
+          # (e.g. the pre-instrument kFxAnalyzer build) and captures nothing.
+          $bundles = @("poly_plugin.vst3", "poly_midi_probe.vst3")
+          foreach ($bundle in $bundles) {
+            $src = Get-ChildItem -Path build -Recurse -Filter $bundle -Directory |
+              Select-Object -First 1
+            if (-not $src) {
+              Write-Error "$bundle bundle not found under build/"
+              exit 1
+            }
+            $dest = Join-Path "${{ env.POLY_VST3_INSTALL_DIR }}" $bundle
+            if (Test-Path $dest) { Remove-Item -Recurse -Force $dest }
+            Copy-Item -Recurse -Force $src.FullName $dest
+            Write-Host "Installed $($src.FullName) -> $dest"
           }
-          $dest = Join-Path "${{ env.POLY_VST3_INSTALL_DIR }}" "poly_plugin.vst3"
-          if (Test-Path $dest) { Remove-Item -Recurse -Force $dest }
-          Copy-Item -Recurse -Force $src.FullName $dest
-          Write-Host "Installed $($src.FullName) -> $dest"
 
       # Reset the artifact staging dir immediately before the Cubase phase.
       # The `Test (ctest)` step above inherits POLY_PROBE_OUTPUT process-wide, so
