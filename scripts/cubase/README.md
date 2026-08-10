@@ -19,8 +19,9 @@ a hard-kill fallback. See `docs/testing-strategy.md` §3.1 for why.
 | Script | Phase | Responsibility |
 |---|---|---|
 | `kill-stale-cubase.ps1` | kill-stale | Terminate any lingering Cubase before a run so state is clean. Idempotent. |
+| `clear-safe-mode-flag.ps1` | clear-safe-mode-flag | Delete Cubase's `ApplicationStarted.txt` sentinel BEFORE launch so Cubase sees a clean prior shutdown and never pops the Safe Mode dialog. Root-cause fix (our quit always hard-kills, so the sentinel is never cleared and Safe Mode would otherwise fire every run). No-op when absent; never fails the run. |
 | `launch-cubase.ps1` | launch | Resolve `Cubase<ver>.exe`, export `POLY_PROBE_OUTPUT`, open the fixture (or empty project in S07). Does not wait. |
-| `dismiss-safe-mode.ps1` | dismiss-safe-mode | Dismiss the modal "Safe Mode" recovery dialog that a prior hard-kill quit provokes on the next launch (presses OK, keeps current preferences). No-op on a clean launch; never fails the run. |
+| `dismiss-safe-mode.ps1` | dismiss-safe-mode | Backstop for the Safe Mode dialog if the flag-clear above ever misses (e.g. a future Cubase changes the sentinel). Presses OK, keeps current preferences. No-op on a clean launch; never fails the run. NB: confirmed on the runner that SendKeys does NOT reliably close this modal — the flag-clear is the primary fix. |
 | `wait-for-ready.ps1` | wait-ready | Block until Cubase presents a settled main window (rejecting the Safe Mode modal), or fail loud on a bounded timeout. S08 extends this to wait on the MIDI Remote `ready` ping. |
 | `quit-cubase.ps1` | quit | Graceful `CloseMainWindow`, then hard-kill fallback so the runner is left clean. |
 | `archive-logs.ps1` | archive | Collect Cubase prefs/logs, crash dumps, and probe JSONL into the artifact dir. |
