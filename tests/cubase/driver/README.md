@@ -59,7 +59,17 @@ committed golden `tests/golden/processor_default_4bars.txt`.
 
 Each phase logs a structured stdout line for diagnosis from the captured job
 log: `start`, `port-open`, `ready-received`, `scenario-start`, `scenario-end`,
-`done`, or `error`.
+`teardown`, `done`, or `error`.
+
+After `scenario-end`, the driver drains the output port (so the final CC_STOP
+reaches the loopback) and then **force-exits with `os._exit(0)`** rather than
+letting the `with` block close the mido ports. Closing a python-rtmidi input
+port on Windows joins its callback thread, and that join hangs indefinitely when
+CC traffic is still arriving on the loopback — the scenario completes but the
+process never exits, pinning the runner until the job timeout. Nothing after the
+stop needs the ports (the probe flushes on Cubase's transport-stop edge, the OS
+reclaims the ports on exit), so the `teardown` line is the last thing printed on
+a healthy run and `done` is unreachable on the scenario path.
 
 ## Verification
 
