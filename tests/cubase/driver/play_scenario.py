@@ -25,6 +25,7 @@ Exit codes:
 """
 
 import argparse
+import os
 import sys
 import time
 
@@ -71,6 +72,12 @@ POLL_INTERVAL_S = 0.25
 # Small guard so transport-stop is sent after the last bar's notes are emitted
 # rather than clipping the final beat.
 TAIL_SECONDS = 0.5
+# After the final CC_STOP, give the rtmidi output port a moment to flush the CC
+# onto the loopback before we force-exit — a synchronous send() only queues the
+# message into rtmidi's buffer, so exiting immediately could drop CC_STOP and
+# leave Cubase's transport running (which would suppress the probe's
+# transport-stop flush). A short drain is plenty for a single 3-byte CC.
+STOP_DRAIN_SECONDS = 1.0
 
 
 def log(phase, message):
@@ -199,6 +206,23 @@ def run(args):
         )
         log("scenario-end", "transport stopped")
 
+        # Drain the output port so CC_STOP actually reaches the loopback, then
+        # force-exit WITHOUT closing the mido ports. Closing a python-rtmidi
+        # input port on Windows joins its callback thread, and that join hangs
+        # indefinitely when CC traffic is still arriving on the loopback (our own
+        # polls echo, the MIDI Remote script may still reply) — the scenario runs
+        # to completion but the process never exits, pinning the runner until the
+        # 30-minute job timeout. Nothing after the stop needs the ports: the probe
+        # flushes probe.jsonl inside Cubase on the transport-stop edge, and the OS
+        # reclaims the ports on exit. os._exit(0) skips the atexit/port-close path
+        # and terminates immediately with the success code.
+        time.sleep(STOP_DRAIN_SECONDS)
+        log("teardown", "scenario complete; force-exiting to skip rtmidi port-close hang")
+        sys.stdout.flush()
+        os._exit(0)
+
+    # Unreachable on the scenario path (os._exit above). Kept for the defensive
+    # case where the with-block is entered but the scenario is skipped.
     log("done", "clean exit")
     return 0
 
