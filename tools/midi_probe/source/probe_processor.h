@@ -39,7 +39,16 @@ public:
     bool writeJsonl(const std::string& path) const;
 
 private:
+    // Flush events_ to POLY_PROBE_OUTPUT if that env var is set. No-op otherwise.
+    // Called from both the transport-stop edge in process() and setActive(false).
+    void flushToOutputPath();
+
     std::vector<ProbeEvent> events_;
+    // Tracks the transport play state across process() blocks so we can flush on
+    // the playing->stopped edge. This runner hard-kills Cubase (the Hub blocks a
+    // clean exit), so setActive(false) never fires — flushing on transport-stop
+    // is the only trigger that lands probe.jsonl on disk before the kill.
+    bool wasPlaying_ = false;
 };
 
 } // namespace probe
