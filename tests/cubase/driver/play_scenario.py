@@ -52,7 +52,18 @@ PORT_NAME = "poly-test"  # loopMIDI virtual port pair name (substring match)
 DEFAULT_BARS = 4
 DEFAULT_TEMPO_BPM = 120.0
 DEFAULT_BEATS_PER_BAR = 4
-DEFAULT_READY_TIMEOUT_S = 30.0
+# The MIDI Remote surface connects only after Cubase finishes loading the
+# project AND binds the remote script to the poly-test port -- and that lands
+# well AFTER wait-for-ready.ps1 reports the main window "stable" (window-settle
+# ranges 6s..16s across runs, surface-connect is later still). A 30s budget
+# flaked when the window settled fast (surface not yet bound within the window);
+# 90s outlasts a slow surface-connect while staying under the 120s workflow-level
+# wait-for-ready timeout. The driver still fails loud on genuine absence.
+DEFAULT_READY_TIMEOUT_S = 90.0
+# How often to log a heartbeat while waiting for the ready ping, so a timeout
+# shows how long we waited (and whether the port was ever seen) instead of a
+# bare "no ready ping".
+READY_HEARTBEAT_S = 10.0
 # How often the driver sends a poll CC while waiting for the reply. Because the
 # poll alternates 127 / 0, only every OTHER send is a reply-triggering rising
 # edge, so the effective rising-edge cadence is 2x this (~0.5s at 0.25s).
@@ -93,12 +104,17 @@ def wait_for_ready(inport, outport, timeout_s):
     poll interval regardless of who started first.
 
     Returns True on ready, False on timeout. Non-ready messages are drained and
-    ignored so a stale buffer can't mask the real ping.
+    ignored so a stale buffer can't mask the real ping. While waiting, a
+    heartbeat is logged every ``READY_HEARTBEAT_S`` so a timeout is diagnosable
+    (elapsed time + whether any MIDI arrived) from the captured log.
     """
     import mido  # deferred like run()'s import so --help works without mido
 
-    deadline = time.monotonic() + timeout_s
+    start = time.monotonic()
+    deadline = start + timeout_s
     next_poll = 0.0  # send the first poll immediately
+    next_heartbeat = start + READY_HEARTBEAT_S
+    any_rx = False  # did the surface send us anything at all (even non-ready)?
     # Alternate 127 / 0 so each poll is a genuine value change the button can't
     # dedup (see POLL_VALUE_HIGH/LOW). Start high so the very first poll is a
     # rising edge the script replies to.
@@ -114,12 +130,20 @@ def wait_for_ready(inport, outport, timeout_s):
             poll_value = POLL_VALUE_LOW if poll_value == POLL_VALUE_HIGH else POLL_VALUE_HIGH
             next_poll = now + POLL_INTERVAL_S
         for msg in inport.iter_pending():
+            any_rx = True
             if (
                 msg.type == "control_change"
                 and msg.control == CC_READY
                 and msg.value == READY_VALUE
             ):
                 return True
+        if now >= next_heartbeat:
+            log(
+                "waiting",
+                f"still polling for ready ping (CC{CC_READY}={READY_VALUE}); "
+                f"elapsed={now - start:.0f}s/{timeout_s:.0f}s any_rx={any_rx}",
+            )
+            next_heartbeat = now + READY_HEARTBEAT_S
         time.sleep(0.02)
     return False
 
