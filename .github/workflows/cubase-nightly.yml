@@ -167,6 +167,21 @@ jobs:
         shell: pwsh
         run: ./scripts/cubase/kill-stale-cubase.ps1
 
+      # Root-cause fix for the Safe Mode chain: delete Cubase's
+      # ApplicationStarted.txt sentinel BEFORE launch. Cubase writes it at startup
+      # and deletes it on a clean exit; our quit hard-kills (the Hub blocks clean
+      # exit), so the sentinel is never deleted and Safe Mode fires on every
+      # subsequent launch — blocking the project load. Clearing it makes Cubase
+      # see a clean prior shutdown and skip Safe Mode. Confirmed on the runner
+      # that the SendKeys dismiss (below) does NOT close the dialog, so this is
+      # the primary fix; dismiss-safe-mode.ps1 + wait-for-ready's rejection remain
+      # as backstops.
+      - name: Clear Cubase Safe Mode flag
+        shell: pwsh
+        run: >-
+          ./scripts/cubase/clear-safe-mode-flag.ps1
+          -CubaseVersion "${{ env.POLY_CUBASE_VERSION }}"
+
       # The launch step is shared across flows. When POLY_CDP_PORT is set (S09
       # e2e flow), pass -EnableCdp so WebView2 exposes CDP; otherwise the
       # S07/S08 launch is unchanged. Building the arg list in pwsh keeps the
