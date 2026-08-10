@@ -168,12 +168,16 @@ That — and only that — is L4's job.
    Launching `Cubase <path>.cpr` opens the project (file-association
    argument; there are no further documented CLI flags).
 2. **Capture: `poly_midi_probe` — a purpose-built logger plugin.** A
-   trivial second VST3 (event input only) that appends
+   trivial second VST3 **instrument** (`kInstrumentSynth`; event input,
+   silent audio output) that appends
    `{ppqPosition, pitch, velocity, channel}` JSONL to a path from an env
-   var, timestamped from the host's own `ProcessContext`. Placed
-   downstream of Poly in the fixture, it gives sample-accurate,
-   in-host capture with no OS MIDI routing flakiness. (~1 day to build;
-   reuses the SDK boilerplate Poly already has.)
+   var, timestamped from the host's own `ProcessContext`. Hosted on a
+   second instrument track fed Poly's MIDI in the fixture, it gives
+   sample-accurate, in-host capture with no OS MIDI routing flakiness. (It
+   is an instrument rather than a MIDI-insert analyzer because a
+   `kFxAnalyzer` is not listed in Cubase's MIDI Inserts; an instrument
+   receives the track's MIDI directly.) (~1 day to build; reuses the SDK
+   boilerplate Poly already has.)
 3. **Control: MIDI, not screen-scraping.** Virtual MIDI port (loopMIDI on
    Windows, IAC on macOS) + a Cubase-side mapping:
    - **MIDI Remote API** (Cubase 12+, JavaScript): transport

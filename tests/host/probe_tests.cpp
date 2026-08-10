@@ -268,8 +268,8 @@ TEST_F(ProbeTestFixture, FlushesOnTransportStopEdgeWithoutSetActive) {
 // Regression for run 31409641043 (M042 S08): the scenario played and the driver
 // force-exited, but probe.jsonl was never written and Compare failed with
 // "No such file". Root cause: the flush waited for the playing->stopped edge,
-// and a kFxAnalyzer MIDI insert is not guaranteed a process() call AFTER the
-// transport stops — so on the runner's hard-kill path the edge was never
+// and the host is not guaranteed to call process() AFTER the transport stops —
+// so on the runner's hard-kill path the edge was never
 // observed. The durable fix is flush-during-playback: probe.jsonl must land on
 // disk from WITHIN a playing process() block, before any stop edge and before
 // the kill. This test proves that: process() blocks with kPlaying set (no
