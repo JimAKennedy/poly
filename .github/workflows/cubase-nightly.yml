@@ -191,6 +191,17 @@ jobs:
           }
           ./scripts/cubase/launch-cubase.ps1 @launchArgs
 
+      # After a hard-kill quit (the Hub blocks clean exit — see quit-cubase.ps1),
+      # the next launch pops a modal "Safe Mode" recovery dialog BEFORE loading
+      # the project, which stalls the whole run (the project never loads, so the
+      # MIDI Remote surface never connects). Dismiss it by pressing its focused
+      # OK button (defaults keep current preferences). No-op on a clean launch.
+      # Needs an interactive desktop session (SendKeys/AppActivate) — the runner
+      # already provides one for Cubase's UI.
+      - name: Dismiss Cubase Safe Mode dialog if present
+        shell: pwsh
+        run: ./scripts/cubase/dismiss-safe-mode.ps1
+
       - name: Wait for Cubase ready
         shell: pwsh
         run: >-

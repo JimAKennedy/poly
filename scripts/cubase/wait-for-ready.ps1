@@ -13,6 +13,15 @@
 #     script will be extended to wait on that ping (a stronger signal that the
 #     project loaded and the remote surface is live).
 #
+# Safe Mode guard: after a hard-kill quit, the next launch can pop a modal
+# "Safe Mode" recovery dialog BEFORE loading the project. That dialog has a real
+# window handle, so a naive "has a settled main window" check would accept it and
+# report ready against a Cubase that never loaded the project (the MIDI Remote
+# surface then never connects and the driver's ready poll times out). We reject
+# any window whose title looks like the Safe Mode dialog so this can never again
+# masquerade as readiness. dismiss-safe-mode.ps1 runs before this and normally
+# clears the dialog; this guard is the backstop if the dismiss does not land.
+#
 # The timeout is the load-bearing safety property: an unattended nightly must
 # NEVER hang the single runner. On timeout we fail loud (persisted error +
 # nonzero exit) so the quit phase still runs (workflow `if: always()`) and the
@@ -53,18 +62,23 @@ try {
     $settledPid = 0
     $settledSince = $null
 
+    # Reject the Safe Mode recovery dialog: it has a real window handle but is
+    # NOT the loaded project. Matched case-insensitively as a substring.
+    $safeModeTitle = "Safe Mode"
+
     while ((Get-Date) -lt $deadline) {
         # Prefer the launched pid; otherwise any Cubase-named process. Require a
         # real main window (splash and main window both have non-zero handles,
-        # but the settle requirement below filters the transient splash).
+        # but the settle requirement below filters the transient splash), and
+        # reject the Safe Mode modal so it can never pass as readiness.
         $proc = $null
         if ($ExpectedPid -gt 0) {
             $proc = Get-Process -Id $ExpectedPid -ErrorAction SilentlyContinue |
-                Where-Object { $_.MainWindowHandle -ne 0 } |
+                Where-Object { $_.MainWindowHandle -ne 0 -and $_.MainWindowTitle -notlike "*$safeModeTitle*" } |
                 Select-Object -First 1
         } else {
             $proc = Get-Process -Name $names -ErrorAction SilentlyContinue |
-                Where-Object { $_.MainWindowHandle -ne 0 } |
+                Where-Object { $_.MainWindowHandle -ne 0 -and $_.MainWindowTitle -notlike "*$safeModeTitle*" } |
                 Select-Object -First 1
         }
 

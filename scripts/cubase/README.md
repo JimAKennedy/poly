@@ -20,7 +20,8 @@ a hard-kill fallback. See `docs/testing-strategy.md` §3.1 for why.
 |---|---|---|
 | `kill-stale-cubase.ps1` | kill-stale | Terminate any lingering Cubase before a run so state is clean. Idempotent. |
 | `launch-cubase.ps1` | launch | Resolve `Cubase<ver>.exe`, export `POLY_PROBE_OUTPUT`, open the fixture (or empty project in S07). Does not wait. |
-| `wait-for-ready.ps1` | wait-ready | Block until Cubase presents a main window, or fail loud on a bounded timeout. S08 extends this to wait on the MIDI Remote `ready` ping. |
+| `dismiss-safe-mode.ps1` | dismiss-safe-mode | Dismiss the modal "Safe Mode" recovery dialog that a prior hard-kill quit provokes on the next launch (presses OK, keeps current preferences). No-op on a clean launch; never fails the run. |
+| `wait-for-ready.ps1` | wait-ready | Block until Cubase presents a settled main window (rejecting the Safe Mode modal), or fail loud on a bounded timeout. S08 extends this to wait on the MIDI Remote `ready` ping. |
 | `quit-cubase.ps1` | quit | Graceful `CloseMainWindow`, then hard-kill fallback so the runner is left clean. |
 | `archive-logs.ps1` | archive | Collect Cubase prefs/logs, crash dumps, and probe JSONL into the artifact dir. |
 | `_common.ps1` | — | Shared helpers: structured phase logging, durable status/error persistence, Cubase path/process resolution. Dot-sourced by each script; not run directly. |
