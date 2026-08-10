@@ -1,4 +1,7 @@
-# Probe is a test-only tool — skip the VST3 validator (no controller class)
+# Probe is a test-only diagnostic tool — skip the VST3 validator. It is a
+# capture-only instrument (kInstrumentSynth) that emits silence and writes JSONL,
+# not a shipping plugin, so the validator's shipping-plugin conformance checks are
+# not meaningful here.
 set(_SAVED_VALIDATOR ${SMTG_RUN_VST_VALIDATOR})
 set(SMTG_RUN_VST_VALIDATOR OFF)
 
@@ -6,6 +9,7 @@ smtg_add_vst3plugin(poly_midi_probe
     source/probe_factory.cpp
     source/probe_processor.h
     source/probe_processor.cpp
+    source/probe_controller.h
     source/probe_ids.h
 )
 

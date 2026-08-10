@@ -58,7 +58,16 @@ try {
     # is diagnosable from the artifact instead of another runner cycle. Emit a
     # dedicated archive line so its presence/absence is visible in the job log.
     if ($env:POLY_PROBE_OUTPUT) {
-        $probeStatus = [System.IO.Path]::ChangeExtension($env:POLY_PROBE_OUTPUT, $null) + "-status.txt"
+        # Match the C++ derivation in probe_processor.cpp writeStatusSidecar():
+        # strip everything from the last '.' and append "-status.txt", so
+        # "...\probe.jsonl" -> "...\probe-status.txt". Do NOT use
+        # [System.IO.Path]::ChangeExtension($path, $null) — on the runner's .NET
+        # it retains the trailing dot ("...\probe."), producing the mismatched
+        # "...\probe.-status.txt" the sidecar was never written to.
+        $probeOut = [string] $env:POLY_PROBE_OUTPUT
+        $dot = $probeOut.LastIndexOf('.')
+        $probeBase = if ($dot -ge 0) { $probeOut.Substring(0, $dot) } else { $probeOut }
+        $probeStatus = $probeBase + "-status.txt"
         Copy-IfPresent -Source $probeStatus -Label "probe status sidecar"
     }
 

@@ -2,7 +2,8 @@
 # Cubase can load both when you author the fixture.
 #
 # The nightly's "Install plugin for Cubase" step installs poly_plugin only;
-# authoring the fixture ALSO needs poly_midi_probe (the downstream analyzer).
+# authoring the fixture ALSO needs poly_midi_probe (the capture instrument that
+# hosts on a second track fed Poly's MIDI).
 # This installs both from the build tree. Build first if you have not:
 #   cmake -S . -B build -G "Visual Studio 17 2022" -DSMTG_RUN_VST_VALIDATOR=ON
 #   cmake --build build --config Release --parallel

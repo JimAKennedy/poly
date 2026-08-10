@@ -50,23 +50,34 @@ Perform once on the `cubase`-labelled runner. Prerequisite: Poly and
    Poly. Leave Poly on its **default patch** — the committed golden is the
    default patch, so the fixture must use it for the probe-vs-golden diff to
    line up. Do not change lanes, seed, or macros.
-3. **Insert `poly_midi_probe` downstream of Poly's MIDI output.** The probe is a
-   MIDI analyzer (`kFxAnalyzer`) that captures the note events Poly emits. Route
-   Poly's MIDI output through the probe so the probe sees the same event stream
-   the golden was generated from. (In Cubase 14: add the probe as a MIDI insert
-   on the Poly track, or on a downstream MIDI track fed by Poly's output — the
-   probe must sit where it receives Poly's note-ons/note-offs.)
-4. **Set the play range to the scenario length.** The driver plays a fixed
+3. **Add a second instrument track hosting `Poly MIDI Probe`.** The probe is a
+   VST3 **instrument** (`kInstrumentSynth`, name "Poly MIDI Probe"): Cubase feeds
+   an instrument the track's MIDI as `data.inputEvents`, which is exactly the
+   note stream the probe captures. It is **not** a MIDI insert — a `kFxAnalyzer`
+   never appears in Cubase's MIDI Inserts list, which is why the probe is
+   registered as an instrument instead. Project → Add Track → Instrument → Poly
+   MIDI Probe. The probe emits only silence; it produces no sound.
+4. **Route Poly's MIDI output into the probe track.** Select the probe
+   instrument track and set its **MIDI input** to Poly's output (in Cubase 14:
+   the probe track's Input Routing → the Poly track / Poly's MIDI out), so Poly's
+   generated note-ons/note-offs flow into the probe's event input. This is the
+   standard "one track feeds another instrument its MIDI" wiring — no MIDI-insert
+   routing is involved. The probe then sees the same event stream the golden was
+   generated from. (The transport-driving `poly-test` loopMIDI port is unrelated
+   to this: that port carries START/STOP/ready CCs between the Python driver and
+   the MIDI Remote surface, not Poly's captured notes. Nothing needs to be routed
+   back out to `poly-test`.)
+5. **Set the play range to the scenario length.** The driver plays a fixed
    number of bars from bar 1 (default 4, matching the 4-bar golden); set the
    left locator to bar 1 and the right locator to the end of the scenario. The
    scenario length is a driver parameter (`tests/cubase/driver/play_scenario.py`
    `--bars`); keep the fixture's arrangement at least that long.
-5. **Confirm the probe output path.** The probe reads `POLY_PROBE_OUTPUT` from
+6. **Confirm the probe output path.** The probe reads `POLY_PROBE_OUTPUT` from
    the environment and writes JSONL there from within `process()` during
    playback (so the file lands before the runner hard-kills Cubase) — no
    per-project configuration is needed. The nightly sets that env var; nothing
    about it is stored in the `.cpr`.
-6. **Save as `poly-4bar.cpr`** in this directory
+7. **Save as `poly-4bar.cpr`** in this directory
    (`tests/cubase/fixtures/poly-4bar.cpr`), then commit it. The path must match
    `POLY_FIXTURE_CPR` in the workflow and `launch-cubase.ps1`'s `-FixtureCpr`
    argument.

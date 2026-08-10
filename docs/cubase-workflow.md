@@ -192,8 +192,11 @@ real Cubase transport run against a committed project fixture, then compares the
 captured MIDI against an in-process golden. This is the L4 tier of the testing
 pyramid (`docs/testing-strategy.md`).
 
-- **Fixture** — `tests/cubase/fixtures/poly-4bar.cpr` holds Poly on an
-  instrument track with `poly_midi_probe` inserted downstream. The probe
+- **Fixture** — `tests/cubase/fixtures/poly-4bar.cpr` holds Poly on one
+  instrument track feeding its MIDI into a second instrument track that hosts
+  `Poly MIDI Probe` (a VST3 instrument, not a MIDI insert — a `kFxAnalyzer` does
+  not appear in Cubase's MIDI Inserts list, so the probe is registered as an
+  instrument that receives the track's MIDI directly). The probe
   captures Poly's note output and flushes it to JSONL from within `process()`
   during playback (so the file lands on disk before the runner hard-kills
   Cubase), with the transport-stop edge and deactivate as fallback triggers. The

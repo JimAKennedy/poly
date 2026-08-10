@@ -8,6 +8,7 @@
 
 #include "pluginterfaces/vst/ivstevents.h"
 #include "pluginterfaces/vst/ivstprocesscontext.h"
+#include "pluginterfaces/vst/vstspeaker.h"
 
 #include "probe_ids.h"
 
@@ -16,19 +17,35 @@ using namespace Steinberg::Vst;
 
 namespace probe {
 
-ProbeProcessor::ProbeProcessor() = default;
+ProbeProcessor::ProbeProcessor() {
+    // Pair this processor with the probe's edit-controller so Cubase can
+    // instantiate the instrument (kInstrumentSynth requires the pair).
+    setControllerClass(kProbeControllerUID);
+}
 
 tresult PLUGIN_API ProbeProcessor::initialize(FUnknown* context) {
     tresult result = AudioEffect::initialize(context);
     if (result != kResultOk)
         return result;
 
+    // The probe is a VST3 instrument (kInstrumentSynth) so Cubase feeds it the
+    // track's MIDI as data.inputEvents. An instrument must advertise an audio
+    // output bus even though the probe emits only silence — Cubase will not host
+    // an instrument with no audio out. Pair the event input with a stereo out.
+    addAudioOutput(STR16("Stereo Out"), SpeakerArr::kStereo);
     addEventInput(STR16("MIDI In"));
 
     return kResultOk;
 }
 
 tresult PLUGIN_API ProbeProcessor::terminate() {
+    // Always leave a diagnostic sidecar, even when zero events were captured (so
+    // flushToOutputPath() never ran during process()). This distinguishes "probe
+    // loaded but received no MIDI" (sidecar present, event_count=0) from "probe
+    // never instantiated" (no sidecar at all) on the next runner cycle. terminate
+    // is not called on the runner's hard-kill path, but a graceful host reaches
+    // it; the flush-during-playback sidecar covers the hard-kill path.
+    writeStatusSidecar();
     return AudioEffect::terminate();
 }
 
@@ -48,6 +65,24 @@ tresult PLUGIN_API ProbeProcessor::setupProcessing(ProcessSetup& setup) {
 
 tresult PLUGIN_API ProbeProcessor::process(ProcessData& data) {
     ++processCalls_;
+
+    // The probe is a capture-only instrument: it emits no sound. Zero the audio
+    // output buffers so Cubase plays silence rather than uninitialized memory.
+    // Supports 32- and 64-bit sample buffers per data.symbolicSampleSize.
+    for (int32 out = 0; out < data.numOutputs; ++out) {
+        AudioBusBuffers& bus = data.outputs[out];
+        for (int32 ch = 0; ch < bus.numChannels; ++ch) {
+            const auto samples = static_cast<size_t>(data.numSamples);
+            if (data.symbolicSampleSize == kSample32) {
+                if (bus.channelBuffers32[ch])
+                    std::memset(bus.channelBuffers32[ch], 0, sizeof(Sample32) * samples);
+            } else {
+                if (bus.channelBuffers64[ch])
+                    std::memset(bus.channelBuffers64[ch], 0, sizeof(Sample64) * samples);
+            }
+        }
+        bus.silenceFlags = (bus.numChannels >= 64) ? ~0ULL : ((1ULL << bus.numChannels) - 1);
+    }
 
     if (data.inputEvents) {
         int32 eventCount = data.inputEvents->getEventCount();
