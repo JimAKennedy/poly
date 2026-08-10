@@ -48,7 +48,11 @@ blocked.
   standard `C:\Program Files\Steinberg\Cubase <ver>\` layout.
 - **`POLY_PROBE_OUTPUT`** is exported by `launch-cubase.ps1` so
   `poly_midi_probe` (`tools/midi_probe/`, S06) flushes captured MIDI as JSONL
-  on Cubase deactivate.
+  from within `process()` during playback (the file is on disk before the
+  runner hard-kills Cubase; the transport-stop edge and deactivate are fallback
+  triggers). The probe also writes a `probe-status.txt` sidecar next to the
+  JSONL recording what it saw (env var, process-call/event counts, whether the
+  stop edge fired, last flush result); `archive-logs.ps1` collects both.
 - **`POLY_FIXTURE_CPR`** is empty in S07 (clean launch/quit only). S08 sets it
   to the committed fixture project and the smoke becomes a transport + probe
   run.

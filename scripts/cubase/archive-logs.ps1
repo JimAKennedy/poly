@@ -51,6 +51,17 @@ try {
     # Probe output (S08 populates this; in S07 it is typically absent).
     Copy-IfPresent -Source $env:POLY_PROBE_OUTPUT -Label "probe JSONL"
 
+    # Probe diagnostic sidecar. The probe always writes probe-status.txt next to
+    # POLY_PROBE_OUTPUT (probe.jsonl -> probe-status.txt) recording what it saw:
+    # env var, process-call count, event count, whether the stop edge fired, last
+    # flush result. It lands even when probe.jsonl does not, so a silent no-flush
+    # is diagnosable from the artifact instead of another runner cycle. Emit a
+    # dedicated archive line so its presence/absence is visible in the job log.
+    if ($env:POLY_PROBE_OUTPUT) {
+        $probeStatus = [System.IO.Path]::ChangeExtension($env:POLY_PROBE_OUTPUT, $null) + "-status.txt"
+        Copy-IfPresent -Source $probeStatus -Label "probe status sidecar"
+    }
+
     Write-PolyPhase -Phase "archive" -State "ok" -Detail "archive complete"
 } catch {
     # Archive is a best-effort diagnostics collector run under the workflow's

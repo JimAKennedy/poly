@@ -62,9 +62,10 @@ Perform once on the `cubase`-labelled runner. Prerequisite: Poly and
    scenario length is a driver parameter (`tests/cubase/driver/play_scenario.py`
    `--bars`); keep the fixture's arrangement at least that long.
 5. **Confirm the probe output path.** The probe reads `POLY_PROBE_OUTPUT` from
-   the environment at deactivate and writes JSONL there — no per-project
-   configuration is needed. The nightly sets that env var; nothing about it is
-   stored in the `.cpr`.
+   the environment and writes JSONL there from within `process()` during
+   playback (so the file lands before the runner hard-kills Cubase) — no
+   per-project configuration is needed. The nightly sets that env var; nothing
+   about it is stored in the `.cpr`.
 6. **Save as `poly-4bar.cpr`** in this directory
    (`tests/cubase/fixtures/poly-4bar.cpr`), then commit it. The path must match
    `POLY_FIXTURE_CPR` in the workflow and `launch-cubase.ps1`'s `-FixtureCpr`

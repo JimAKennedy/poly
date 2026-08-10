@@ -1,7 +1,10 @@
 #include "probe_processor.h"
 
+#include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <fstream>
+#include <string>
 
 #include "pluginterfaces/vst/ivstevents.h"
 #include "pluginterfaces/vst/ivstprocesscontext.h"
@@ -44,6 +47,8 @@ tresult PLUGIN_API ProbeProcessor::setupProcessing(ProcessSetup& setup) {
 }
 
 tresult PLUGIN_API ProbeProcessor::process(ProcessData& data) {
+    ++processCalls_;
+
     if (data.inputEvents) {
         int32 eventCount = data.inputEvents->getEventCount();
         for (int32 i = 0; i < eventCount; ++i) {
@@ -60,16 +65,31 @@ tresult PLUGIN_API ProbeProcessor::process(ProcessData& data) {
         }
     }
 
-    // Flush on the playing->stopped transport edge. This is the only trigger
-    // that survives the runner's hard-kill quit path: the driver sends CC_STOP
-    // and waits (TAIL_SECONDS) before the quit script runs, so the file lands on
-    // disk while Cubase is still alive. This tool is a diagnostic harness (it
-    // already allocates in process() via push_back), so a one-shot file write on
-    // the stop edge is consistent with its posture — not shipping-plugin RT code.
+    // Primary durable trigger: flush-during-playback. Whenever events_ has grown
+    // since the last flush, re-write probe.jsonl from inside process() so the
+    // complete-so-far stream is on disk BEFORE the transport stops. The runner
+    // hard-kills Cubase (the Hub blocks a clean exit), so a flush that waits for
+    // the transport-stop edge or setActive(false) can be beaten by the kill and
+    // silently leave no file — this run's exact failure mode. By writing while
+    // the transport still plays, the last complete write survives the kill. The
+    // file is fully rewritten each time (writeJsonl truncates), so the last write
+    // is always the full note stream, and the compare harness reads a complete
+    // file regardless of when the kill lands. This tool is a diagnostic harness
+    // (it already allocates in process() via push_back), so a throttled file
+    // write is consistent with its posture — not shipping-plugin RT code.
+    if (events_.size() > lastFlushedEventCount_)
+        flushToOutputPath();
+
+    // Flush on the playing->stopped transport edge too, so a clean host that DOES
+    // call process() after stopping writes the final, complete stream. Redundant
+    // with flush-during-playback on the hard-kill path but harmless (idempotent
+    // rewrite), and it records stopEdgeFired_ for the diagnostic sidecar.
     if (data.processContext) {
         const bool playing = (data.processContext->state & ProcessContext::kPlaying) != 0;
-        if (wasPlaying_ && !playing)
+        if (wasPlaying_ && !playing) {
+            stopEdgeFired_ = true;
             flushToOutputPath();
+        }
         wasPlaying_ = playing;
     }
     return kResultOk;
@@ -85,8 +105,43 @@ tresult PLUGIN_API ProbeProcessor::setState(IBStream* /*state*/) {
 
 void ProbeProcessor::flushToOutputPath() {
     const char* path = std::getenv("POLY_PROBE_OUTPUT");
-    if (path && path[0] != '\0')
-        writeJsonl(path);
+    envSeen_ = (path != nullptr && path[0] != '\0');
+    if (envSeen_) {
+        lastFlushOk_ = writeJsonl(path);
+        lastFlushedEventCount_ = events_.size();
+        ++flushCount_;
+    }
+    // Always refresh the diagnostic sidecar so the next run is diagnosable even
+    // when the JSONL write is a no-op (env var absent) or fails to open.
+    writeStatusSidecar();
+}
+
+void ProbeProcessor::writeStatusSidecar() const {
+    // Derive the sidecar path from POLY_PROBE_OUTPUT (probe.jsonl ->
+    // probe-status.txt in the same dir). If the env var is absent we can't know
+    // where the artifact dir is, so there is nowhere durable to write — skip.
+    const char* path = std::getenv("POLY_PROBE_OUTPUT");
+    std::string statusPath;
+    if (path != nullptr && path[0] != '\0') {
+        std::string p(path);
+        const auto dot = p.find_last_of('.');
+        // Strip the extension if present, then append the sidecar suffix.
+        statusPath = (dot == std::string::npos ? p : p.substr(0, dot)) + "-status.txt";
+    } else {
+        return;
+    }
+
+    std::ofstream out(statusPath);
+    if (!out.is_open())
+        return;
+
+    out << "env_seen=" << (envSeen_ ? "yes" : "no") << '\n'
+        << "env_path=" << (path ? path : "") << '\n'
+        << "process_calls=" << processCalls_ << '\n'
+        << "event_count=" << events_.size() << '\n'
+        << "flush_count=" << flushCount_ << '\n'
+        << "last_flush_ok=" << (lastFlushOk_ ? "yes" : "no") << '\n'
+        << "stop_edge_fired=" << (stopEdgeFired_ ? "yes" : "no") << '\n';
 }
 
 bool ProbeProcessor::writeJsonl(const std::string& path) const {

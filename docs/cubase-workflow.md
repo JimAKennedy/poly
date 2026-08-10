@@ -194,7 +194,9 @@ pyramid (`docs/testing-strategy.md`).
 
 - **Fixture** — `tests/cubase/fixtures/poly-4bar.cpr` holds Poly on an
   instrument track with `poly_midi_probe` inserted downstream. The probe
-  captures Poly's note output and flushes it to JSONL on deactivate. The
+  captures Poly's note output and flushes it to JSONL from within `process()`
+  during playback (so the file lands on disk before the runner hard-kills
+  Cubase), with the transport-stop edge and deactivate as fallback triggers. The
   fixture is authored once in Cubase on the runner following the recipe in
   `tests/cubase/fixtures/README.md`, because a `.cpr` is a Cubase-version-specific
   binary that only Cubase can write.

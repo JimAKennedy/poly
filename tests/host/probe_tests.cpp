@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <fstream>
+#include <iterator>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -257,6 +258,86 @@ TEST_F(ProbeTestFixture, FlushesOnTransportStopEdgeWithoutSetActive) {
 
     in.close();
     std::remove(path.c_str());
+#if defined(_WIN32)
+    _putenv_s("POLY_PROBE_OUTPUT", "");
+#else
+    unsetenv("POLY_PROBE_OUTPUT");
+#endif
+}
+
+// Regression for run 31409641043 (M042 S08): the scenario played and the driver
+// force-exited, but probe.jsonl was never written and Compare failed with
+// "No such file". Root cause: the flush waited for the playing->stopped edge,
+// and a kFxAnalyzer MIDI insert is not guaranteed a process() call AFTER the
+// transport stops — so on the runner's hard-kill path the edge was never
+// observed. The durable fix is flush-during-playback: probe.jsonl must land on
+// disk from WITHIN a playing process() block, before any stop edge and before
+// the kill. This test proves that: process() blocks with kPlaying set (no
+// stop edge ever) must still produce the file.
+TEST_F(ProbeTestFixture, FlushesDuringPlaybackBeforeAnyStopEdge) {
+    std::string path = std::string(::testing::TempDir()) + "/probe_during_play.jsonl";
+    std::string statusPath = std::string(::testing::TempDir()) + "/probe_during_play-status.txt";
+    std::remove(path.c_str());
+    std::remove(statusPath.c_str());
+#if defined(_WIN32)
+    _putenv_s("POLY_PROBE_OUTPUT", path.c_str());
+#else
+    setenv("POLY_PROBE_OUTPUT", path.c_str(), 1);
+#endif
+
+    ParameterChanges inParams;
+    ParameterChanges outParams;
+
+    auto runPlayingBlock = [&](int16 pitch) {
+        EventList inputEvents;
+        Event ev{};
+        ev.type = Event::kNoteOnEvent;
+        ev.ppqPosition = static_cast<double>(pitch);
+        ev.sampleOffset = 0;
+        ev.noteOn.channel = 0;
+        ev.noteOn.pitch = pitch;
+        ev.noteOn.velocity = 0.5f;
+        inputEvents.addEvent(ev);
+
+        ProcessContext ctx{};
+        ctx.state = ProcessContext::kPlaying; // stays playing; no stop edge
+
+        ProcessData data{};
+        data.processMode = kRealtime;
+        data.symbolicSampleSize = kSample32;
+        data.numSamples = 512;
+        data.inputEvents = &inputEvents;
+        data.inputParameterChanges = &inParams;
+        data.outputParameterChanges = &outParams;
+        data.processContext = &ctx;
+        proc_->process(data);
+    };
+
+    runPlayingBlock(36);
+    runPlayingBlock(38);
+
+    // File must exist with both notes even though the transport never stopped
+    // and setActive(false) was never called.
+    std::ifstream in(path);
+    ASSERT_TRUE(in.is_open()) << "probe.jsonl must flush during playback, before any stop edge";
+    int lineCount = 0;
+    std::string line;
+    while (std::getline(in, line))
+        lineCount++;
+    EXPECT_EQ(lineCount, 2) << "both captured notes must be in the flushed file";
+    in.close();
+
+    // The diagnostic sidecar must also be written, recording what the probe saw.
+    std::ifstream status(statusPath);
+    ASSERT_TRUE(status.is_open()) << "probe-status.txt sidecar must be written";
+    std::string statusText((std::istreambuf_iterator<char>(status)), std::istreambuf_iterator<char>());
+    status.close();
+    EXPECT_NE(statusText.find("env_seen=yes"), std::string::npos);
+    EXPECT_NE(statusText.find("event_count=2"), std::string::npos);
+    EXPECT_NE(statusText.find("last_flush_ok=yes"), std::string::npos);
+
+    std::remove(path.c_str());
+    std::remove(statusPath.c_str());
 #if defined(_WIN32)
     _putenv_s("POLY_PROBE_OUTPUT", "");
 #else

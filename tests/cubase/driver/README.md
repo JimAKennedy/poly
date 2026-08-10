@@ -20,8 +20,9 @@ Remote script's ready ping, plays a fixed number of bars, and stops.
 5. Sends **transport STOP** (CC 21) and exits.
 
 The driver controls transport only. Poly's MIDI output is captured downstream by
-`poly_midi_probe`, which writes JSONL to `POLY_PROBE_OUTPUT` when Cubase
-deactivates. The probe-vs-golden comparison is a separate step
+`poly_midi_probe`, which writes JSONL to `POLY_PROBE_OUTPUT` from within
+`process()` during playback (so the file is on disk before the runner's
+hard-kill quit). The probe-vs-golden comparison is a separate step
 (`tests/cubase/compare_probe_golden.py`).
 
 ## Protocol
@@ -67,9 +68,10 @@ letting the `with` block close the mido ports. Closing a python-rtmidi input
 port on Windows joins its callback thread, and that join hangs indefinitely when
 CC traffic is still arriving on the loopback — the scenario completes but the
 process never exits, pinning the runner until the job timeout. Nothing after the
-stop needs the ports (the probe flushes on Cubase's transport-stop edge, the OS
-reclaims the ports on exit), so the `teardown` line is the last thing printed on
-a healthy run and `done` is unreachable on the scenario path.
+stop needs the ports (the probe flushes `probe.jsonl` from within `process()`
+during playback — on disk well before the stop — and the OS reclaims the ports
+on exit), so the `teardown` line is the last thing printed on a healthy run and
+`done` is unreachable on the scenario path.
 
 ## Verification
 
