@@ -237,8 +237,9 @@ probe JSONL shows the changed pattern.
 
 The concrete implementation is `tests/cubase/e2e/toggle-step.spec.ts` (attach
 over CDP, toggle the step, drive transport) plus `assert-probe.spec.ts` (the
-post-quit probe assertion, since `poly_midi_probe` flushes JSONL only on Cubase
-deactivate). CDP is enabled by passing `-EnableCdp` to
+post-quit probe assertion, run against the JSONL `poly_midi_probe` flushes from
+within `process()` during playback — on disk before the runner's hard-kill quit,
+so it survives the kill). CDP is enabled by passing `-EnableCdp` to
 `scripts/cubase/launch-cubase.ps1`; see `docs/windows-test-runner-setup.md`
 Part 12 for the runner-side enablement and the S09 exit-criterion dispatch run.
 
