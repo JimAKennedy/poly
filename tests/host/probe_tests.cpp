@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cstdio>
+#include <cstdlib>
 #include <fstream>
 #include <sstream>
 #include <string>
@@ -8,6 +9,7 @@
 #include <gtest/gtest.h>
 
 #include "pluginterfaces/vst/ivstevents.h"
+#include "pluginterfaces/vst/ivstprocesscontext.h"
 #include "public.sdk/source/vst/hosting/eventlist.h"
 #include "public.sdk/source/vst/hosting/hostclasses.h"
 #include "public.sdk/source/vst/hosting/parameterchanges.h"
@@ -198,6 +200,68 @@ TEST_F(ProbeTestFixture, WritesJsonl) {
     EXPECT_NE(line2.find("\"pitch\":36"), std::string::npos);
 
     std::remove(path.c_str());
+}
+
+// Regression for the nightly hard-kill flush gap (M042 S08): the runner
+// hard-kills Cubase, so setActive(false) never fires. The probe must flush on
+// the playing->stopped transport edge instead, while Cubase is still alive.
+TEST_F(ProbeTestFixture, FlushesOnTransportStopEdgeWithoutSetActive) {
+    std::string path = std::string(::testing::TempDir()) + "/probe_stopedge.jsonl";
+    std::remove(path.c_str());
+#if defined(_WIN32)
+    _putenv_s("POLY_PROBE_OUTPUT", path.c_str());
+#else
+    setenv("POLY_PROBE_OUTPUT", path.c_str(), 1);
+#endif
+
+    ParameterChanges inParams;
+    ParameterChanges outParams;
+
+    // Helper: run one process() block with a note and an explicit play state.
+    auto runBlock = [&](int16 pitch, bool playing) {
+        EventList inputEvents;
+        Event ev{};
+        ev.type = Event::kNoteOnEvent;
+        ev.ppqPosition = static_cast<double>(pitch);
+        ev.sampleOffset = 0;
+        ev.noteOn.channel = 0;
+        ev.noteOn.pitch = pitch;
+        ev.noteOn.velocity = 0.5f;
+        inputEvents.addEvent(ev);
+
+        ProcessContext ctx{};
+        ctx.state = playing ? ProcessContext::kPlaying : 0;
+
+        ProcessData data{};
+        data.processMode = kRealtime;
+        data.symbolicSampleSize = kSample32;
+        data.numSamples = 512;
+        data.inputEvents = &inputEvents;
+        data.inputParameterChanges = &inParams;
+        data.outputParameterChanges = &outParams;
+        data.processContext = &ctx;
+        proc_->process(data);
+    };
+
+    runBlock(36, /*playing=*/true);  // transport running, one note captured
+    runBlock(38, /*playing=*/false); // playing->stopped edge: flush fires here
+
+    // The file must exist even though setActive(false) has NOT been called.
+    std::ifstream in(path);
+    ASSERT_TRUE(in.is_open()) << "probe.jsonl must be flushed on the transport-stop edge";
+    int lineCount = 0;
+    std::string line;
+    while (std::getline(in, line))
+        lineCount++;
+    EXPECT_EQ(lineCount, 2) << "both captured notes must be in the flushed file";
+
+    in.close();
+    std::remove(path.c_str());
+#if defined(_WIN32)
+    _putenv_s("POLY_PROBE_OUTPUT", "");
+#else
+    unsetenv("POLY_PROBE_OUTPUT");
+#endif
 }
 
 // --- T03: Poly -> Probe chain integration ---
