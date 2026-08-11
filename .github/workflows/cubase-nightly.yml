@@ -79,7 +79,7 @@ jobs:
       # (WKWebView exposes no CDP). See docs/windows-test-runner-setup.md Part 12.
       POLY_CDP_PORT: ""
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
 
       # Preflight: every step below runs `shell: pwsh` (PowerShell 7+). A fresh
       # self-hosted Windows box ships only Windows PowerShell 5.1 (powershell.exe),
