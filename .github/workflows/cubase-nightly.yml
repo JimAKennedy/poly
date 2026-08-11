@@ -294,10 +294,15 @@ jobs:
           Write-Host "No Cubase process survives — clean launch/quit confirmed."
 
       # S08 assertion: the probe JSONL Cubase produced must match the in-process
-      # golden for the same preset. Runs after quit (the probe flushes JSONL on
-      # Cubase deactivate) and only when a fixture drove a transport run. This is
-      # the L3<->L4 cross-check — a field-by-field ppq/pitch/velocity/channel
-      # diff, not a byte compare (NoteEvent has interior padding). On mismatch it
+      # golden for the same preset. Runs after quit (the probe flushes JSONL
+      # during playback / on the transport-stop edge) and only when a fixture
+      # drove a transport run. This is the L3<->L4 cross-check — a field-by-field
+      # ppq/pitch/velocity diff, not a byte compare (NoteEvent has interior
+      # padding). It models the DAW transform by default: it trims the driver's
+      # TAIL_SECONDS overspill past the 4-bar boundary (--max-ppq 16.0), widens
+      # the velocity epsilon to absorb Cubase's ~0.0015 host bias, and ignores
+      # channel (a Cubase instrument track coerces MIDI to one channel; channel
+      # fidelity is covered by the in-process ProbeChain test). On mismatch it
       # prints the first diverging events and fails the job.
       - name: Compare probe output to golden
         if: env.POLY_FIXTURE_CPR != ''
