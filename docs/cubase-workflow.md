@@ -210,8 +210,13 @@ pyramid (`docs/testing-strategy.md`).
   Cubase MIDI Remote script that maps the virtual-MIDI commands to transport
   start/stop/locate and emits the ready ping on load.
 - **Comparison** — `tests/cubase/compare_probe_golden.py` diffs the probe JSONL
-  against `tests/golden/processor_default_4bars.txt` field-by-field
-  (ppq/pitch/velocity/channel).
+  against `tests/golden/processor_default_4bars.txt` field-by-field on
+  ppq/pitch/velocity. It models the DAW transform: it trims the driver's
+  `TAIL_SECONDS` overspill past the 4-bar boundary (`--max-ppq`), widens the
+  velocity epsilon to absorb Cubase's near-constant host bias, and ignores
+  channel by default (`--ignore-channel`) because a Cubase instrument track
+  coerces incoming MIDI to a single channel — engine-boundary channel fidelity is
+  covered by the in-process `ProbeChain` test (`tests/host/probe_tests.cpp`).
 
 The fixture uses Poly's default patch at 120 BPM so the existing default-patch
 golden is the reference; see the fixture README for the authoring and
