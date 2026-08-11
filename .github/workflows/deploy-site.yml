@@ -32,7 +32,7 @@ jobs:
       - name: Check site asset references
         run: bash scripts/check-site-assets.sh
       - name: Setup Emscripten
-        uses: mymindstorm/setup-emsdk@6ab9eb1bda2574c4ddb79809fc9247783eaf9021 # v14
+        uses: mymindstorm/setup-emsdk@4528d102f7230f0e7b276855c01ea1159be0e984 # v16
         with:
           version: 3.1.61
       - name: Build WASM
