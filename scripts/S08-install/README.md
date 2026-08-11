@@ -34,6 +34,7 @@ Run from any directory (each resolves the repo root from its own location).
 | `3-install-midi-remote.ps1` | Copies `JkDigital_PolyTest.js` into Cubase's MIDI Remote driver-scripts tree. |
 | `4-install-driver-deps.ps1` | `pip install` the mido driver deps; checks a `poly-test` port is visible. |
 | `5-preflight.ps1` | Read-only verifier: branch, both VST3 bundles, MIDI Remote script, loopMIDI port, Cubase 14, golden. Green = ready to author the `.cpr`. |
+| `6-keep-runner-awake.md` | Config changes that keep the runner's console session live/unlocked overnight so the `schedule:` nightly's MIDI Remote handshake works unattended. Complements the runbook's Part 7. Not a script — a checklist to apply and later tidy up. |
 
 ## Order of operations
 
