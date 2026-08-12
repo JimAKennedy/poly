@@ -15,7 +15,7 @@ jobs:
     # check dead code. Let the job report failure honestly; the notify job's
     # `if: always()` still runs on either outcome.
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
       - run: sudo apt-get install -y ninja-build
       - name: Configure
         run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DENABLE_ASAN=ON -DPOLY_ENGINE_ONLY=ON
@@ -30,7 +30,7 @@ jobs:
     name: UndefinedBehaviorSanitizer
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
       - run: sudo apt-get install -y ninja-build
       - name: Configure
         run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DENABLE_UBSAN=ON -DPOLY_ENGINE_ONLY=ON
@@ -45,7 +45,7 @@ jobs:
     name: ThreadSanitizer
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
       - run: sudo apt-get install -y ninja-build
       - name: Configure
         run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DENABLE_TSAN=ON -DPOLY_ENGINE_ONLY=ON
@@ -67,7 +67,7 @@ jobs:
     name: AddressSanitizer (plugin)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
       - name: Install system dependencies
         run: |
           sudo apt-get update
@@ -89,7 +89,7 @@ jobs:
     name: ThreadSanitizer (plugin)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@93cb6efe18208431cddfb8368fd83d5badbf9bfd # v5
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
       - name: Install system dependencies
         run: |
           sudo apt-get update
