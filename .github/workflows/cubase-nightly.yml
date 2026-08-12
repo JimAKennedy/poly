@@ -26,6 +26,15 @@ on:
     # single self-hosted runner isn't contended.
     - cron: "0 2 * * *"
   workflow_dispatch:
+    inputs:
+      cdp_port:
+        description: >-
+          S09 L4-web only: CDP remote-debugging port for Cubase's WebView2
+          editor (e.g. 9222). Leave EMPTY for a routine S07/S08 nightly — the
+          Playwright-over-CDP e2e flow stays off. Set it (9222) to run the S09
+          exit-criterion e2e. Scheduled runs always use the empty default.
+        required: false
+        default: ""
 
 # Only one Cubase run at a time — there is a single self-hosted runner and
 # Cubase/loopMIDI/interactive-desktop state is machine-global. Newer runs wait
@@ -72,12 +81,15 @@ jobs:
       # and prefs/log directories.
       POLY_CUBASE_VERSION: "14"
       # S09 (L4-web): CDP remote-debugging port for Cubase's embedded WebView2.
-      # Empty => the e2e flow is off (the launch step does not pass -EnableCdp,
-      # so S07/S08 launches are unaffected). Non-empty => the launch step opens
-      # WebView2's CDP on this port and the Playwright-over-CDP e2e attaches.
+      # Sourced from the workflow_dispatch `cdp_port` input; empty on a schedule
+      # trigger (inputs are undefined there) so scheduled nightlies never run the
+      # heavier e2e flow. Empty => the e2e flow is off (the launch step does not
+      # pass -EnableCdp, so S07/S08 launches are unaffected). Non-empty => the
+      # launch step opens WebView2's CDP on this port and the Playwright-over-CDP
+      # e2e attaches. Dispatch the S09 exit-criterion run with `-f cdp_port=9222`.
       # Localhost-only; gated by the box's LAN posture (Part 10). Windows-only
       # (WKWebView exposes no CDP). See docs/windows-test-runner-setup.md Part 12.
-      POLY_CDP_PORT: ""
+      POLY_CDP_PORT: ${{ github.event.inputs.cdp_port || '' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
 

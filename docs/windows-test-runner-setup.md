@@ -573,11 +573,15 @@ Prerequisites (owner-provisioned, R10): the S08 fixture `.cpr`, the loopMIDI
 `poly-test` port, and the MIDI Remote script are all in place (Part 4 + the S08
 recipe), and WebView2 Runtime is installed (Part 2).
 
-- ☐ Set `POLY_FIXTURE_CPR` (turns on the S08 transport flow) **and**
-  `POLY_CDP_PORT` (e.g. `9222`, turns on the S09 e2e flow) for the dispatch —
-  either as workflow env edits on a branch, or as repo/environment variables.
+- ☐ `POLY_FIXTURE_CPR` is already set in the workflow env (the S08 fixture
+  landed), so the transport flow is always on. To additionally turn on the S09
+  e2e flow, pass the `cdp_port` dispatch input (e.g. `9222`) — the workflow maps
+  it to `POLY_CDP_PORT`. Scheduled runs leave it empty, so they never run the
+  heavier e2e flow.
 - ☐ From the Actions tab, run **Cubase Nightly (L4)** via
-  **`workflow_dispatch` → Run workflow** against `main`.
+  **`workflow_dispatch` → Run workflow** against `main`, setting the **cdp_port**
+  input to `9222`. Or from the CLI:
+  `gh workflow run cubase-nightly.yml --repo JimAKennedy/poly --ref main -f cdp_port=9222`.
 - ☐ Watch the e2e steps run in order: *Install e2e deps → Run L4-web e2e (attach,
   toggle, transport)* while Cubase is up, then after quit *Assert toggled step in
   probe (L4-web)*.
