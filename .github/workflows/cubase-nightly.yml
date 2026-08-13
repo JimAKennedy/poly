@@ -260,6 +260,23 @@ jobs:
           npm ci
           npx playwright install chromium
 
+      # Diagnostic (non-fatal): dump the Cubase window topology BEFORE the CDP
+      # gate, so cubase-nightly-artifacts captures whether the Poly editor even
+      # materialized under the unattended Actions agent. The last A′ run only
+      # told us "CDP port absent" — it could not distinguish "editor frame never
+      # opened" from "choc/WebView2 host never booted" from "CDP arg not honored".
+      # This enumerates all three layers (the `01 - Poly` frame, the `choc_####`
+      # host, the CDP listener) and writes editor-window-topology.txt. It is
+      # continue-on-error so it never masks the real gate that follows.
+      - name: Diagnose Poly editor window topology
+        if: env.POLY_CDP_PORT != ''
+        continue-on-error: true
+        shell: pwsh
+        run: >-
+          ./scripts/cubase/diagnose-editor-window.ps1
+          -CdpPort ${{ env.POLY_CDP_PORT }}
+          -OutputPath "${{ env.POLY_ARTIFACT_DIR }}/editor-window-topology.txt"
+
       # Wait for the Poly editor's WebView2 CDP endpoint to come up before the
       # attach. The runner diagnostic proved CDP is up regardless of focus/
       # visibility (MEM115) — the real failure mode is the WebView2/choc host
