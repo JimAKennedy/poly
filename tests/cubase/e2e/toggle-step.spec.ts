@@ -31,14 +31,49 @@ import {
 // -EnableCdp (scripts/cubase/launch-cubase.ps1) exposing CDP on POLY_CDP_PORT.
 
 // --- Runner-provided environment ---------------------------------------------
+// Use 127.0.0.1, NOT localhost: WebView2's --remote-debugging-port listener
+// binds to IPv4 127.0.0.1 only, but Node resolves `localhost` to IPv6 ::1
+// first, so `http://localhost:9222` gets `connect ECONNREFUSED ::1:9222` even
+// when CDP is up on v4 (observed on the runner, M042 S09).
 const CDP_ENDPOINT =
   process.env.POLY_CDP_ENDPOINT ||
-  `http://localhost:${process.env.POLY_CDP_PORT || '9222'}`;
+  `http://127.0.0.1:${process.env.POLY_CDP_PORT || '9222'}`;
 // The S08 mido driver drives the transport; path relative to repo root.
 const DRIVER =
   process.env.POLY_DRIVER || 'tests/cubase/driver/play_scenario.py';
 
 const ATTACH_TIMEOUT_MS = 30_000;
+// WebView2's CDP endpoint appears asynchronously: the --remote-debugging-port
+// listener only comes up after the plugin editor view renders, which can lag
+// Cubase's "main window stable" signal. A one-shot connectOverCDP fails with
+// ECONNREFUSED if it fires first. Retry the initial connect over this window.
+const CONNECT_TIMEOUT_MS = 30_000;
+const CONNECT_RETRY_MS = 1_000;
+
+/**
+ * Connect over CDP with retry. WebView2 opens its remote-debugging port only
+ * after the editor renders (after Cubase reports its window stable), so the
+ * first connect can be refused. Retry until the endpoint accepts or we time
+ * out, then fail loud naming the likely cause.
+ */
+async function connectWithRetry(): Promise<Browser> {
+  const deadline = Date.now() + CONNECT_TIMEOUT_MS;
+  let lastErr: unknown;
+  while (Date.now() < deadline) {
+    try {
+      return await chromium.connectOverCDP(CDP_ENDPOINT);
+    } catch (err) {
+      lastErr = err;
+      await new Promise((r) => setTimeout(r, CONNECT_RETRY_MS));
+    }
+  }
+  throw new Error(
+    `Could not connect over CDP at ${CDP_ENDPOINT} within ${CONNECT_TIMEOUT_MS}ms. ` +
+      `Likely cause: Cubase was not launched with -EnableCdp, or the Poly editor ` +
+      `window is not open in the fixture, so WebView2 never exposed a CDP ` +
+      `endpoint. Last error: ${lastErr instanceof Error ? lastErr.message : lastErr}`,
+  );
+}
 
 /**
  * Attach over CDP and locate the page whose DOM is Poly's editor. WebView2 may
@@ -76,7 +111,7 @@ test.describe('L4-web: Playwright over CDP toggles a step inside Cubase', () => 
   test.describe.configure({ mode: 'serial' });
 
   test('toggle kick step and play transport (probe asserted post-quit)', async () => {
-    const browser = await chromium.connectOverCDP(CDP_ENDPOINT);
+    const browser = await connectWithRetry();
     try {
       const page = await findPolyEditor(browser);
 

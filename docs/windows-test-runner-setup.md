@@ -571,8 +571,18 @@ pattern.* Prove it manually once, the same way Part 11 proves S07.
 
 Prerequisites (owner-provisioned, R10): the S08 fixture `.cpr`, the loopMIDI
 `poly-test` port, and the MIDI Remote script are all in place (Part 4 + the S08
-recipe), and WebView2 Runtime is installed (Part 2).
+recipe).
 
+- ☐ **Verify the WebView2 Runtime is installed.** Cubase hosts Poly's editor via
+  WebView2 (choc), which is what exposes CDP for the e2e to attach to. Check the
+  Evergreen Runtime version from an elevated PowerShell:
+  ```powershell
+  $key = "HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}"
+  (Get-ItemProperty -Path $key -Name pv -ErrorAction SilentlyContinue).pv
+  ```
+  A non-empty version string (e.g. `151.0.4129.78`) means it is installed. If
+  empty, install it and re-check:
+  `winget install --id Microsoft.EdgeWebView2Runtime --accept-source-agreements --accept-package-agreements`.
 - ☐ `POLY_FIXTURE_CPR` is already set in the workflow env (the S08 fixture
   landed), so the transport flow is always on. To additionally turn on the S09
   e2e flow, pass the `cdp_port` dispatch input (e.g. `9222`) — the workflow maps
