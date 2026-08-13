@@ -551,8 +551,35 @@ The nightly does this for you: the e2e flow passes `-EnableCdp` to
   ```powershell
   $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = "--remote-debugging-port=9222"
   # then launch Cubase from that same shell and open the Poly editor
-  # verify the port is listening:
-  Test-NetConnection -ComputerName localhost -Port 9222
+  # verify the port is listening (use 127.0.0.1, NOT localhost — WebView2
+  # binds IPv4 only, and `localhost` resolves to IPv6 ::1 first):
+  Test-NetConnection -ComputerName 127.0.0.1 -Port 9222
+  ```
+
+### The editor must be materialized AND focused (focus trap)
+
+WebView2 exposes CDP **only while the Poly editor window is materialized and
+Cubase has foreground focus.** Cubase destroys the WebView2 view on editor
+focus-loss and recreates it on focus-return, so the CDP port comes and goes with
+the editor. Two consequences:
+
+- **The nightly forces this.** `scripts/cubase/focus-editor-cdp.ps1` runs after
+  wait-ready (S09 flow only): it brings Cubase to the foreground, then polls the
+  OS TCP table until `127.0.0.1:<port>` is actually listening, failing loud if it
+  never comes up. The e2e step then runs the same script as a background job
+  (`-HoldSeconds`) so Cubase stays foreground while Playwright attaches. The
+  fixture (#212) saves with the editor already open, so it exists on load; this
+  step only has to make it foreground.
+- **A manual `Test-NetConnection` from another window will read `False` even
+  when CDP is up** — Alt-Tabbing to the probe shell tears the editor down. To
+  check the port by hand without the focus trap, snapshot the listen table from
+  a delayed background job while you hold focus on the editor:
+  ```powershell
+  Start-Job { Start-Sleep 12
+    (Get-NetTCPConnection -State Listen | ? LocalPort -eq 9222) `
+      | Out-File C:\Users\polyci\cdp-probe.txt } | Out-Null
+  # click back into the Poly editor and hold focus ~15s, then:
+  Get-Content C:\Users\polyci\cdp-probe.txt
   ```
 
 ### Security
