@@ -77,7 +77,17 @@ Perform once on the `cubase`-labelled runner. Prerequisite: Poly and
    playback (so the file lands before the runner hard-kills Cubase) — no
    per-project configuration is needed. The nightly sets that env var; nothing
    about it is stored in the `.cpr`.
-7. **Save as `poly-4bar.cpr`** in this directory
+7. **Open the Poly plugin editor window and leave it open when you save.** The
+   S09 L4-web e2e (`tests/cubase/e2e/toggle-step.spec.ts`) attaches over CDP to
+   the WebView2 that hosts Poly's editor — but WebView2 (and its
+   `--remote-debugging-port` listener) only exists once the editor view renders.
+   Cubase does not auto-open a plugin's editor on project load, so the editor
+   must be **open and saved with the project**: double-click the Poly instrument
+   to show its UI, then save with the window open. Cubase persists the open
+   editor state in the `.cpr`, so on the next load the editor auto-shows and CDP
+   comes up. Without this, the S08 transport/probe flow still passes but the S09
+   e2e fails at `connectOverCDP` with `ECONNREFUSED` (nothing listening).
+8. **Save as `poly-4bar.cpr`** in this directory
    (`tests/cubase/fixtures/poly-4bar.cpr`), then commit it. The path must match
    `POLY_FIXTURE_CPR` in the workflow and `launch-cubase.ps1`'s `-FixtureCpr`
    argument.
