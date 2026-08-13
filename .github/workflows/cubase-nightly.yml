@@ -260,11 +260,47 @@ jobs:
           npm ci
           npx playwright install chromium
 
+      # Force the Poly editor foreground so WebView2 materializes and binds the
+      # CDP port, then poll until 127.0.0.1:<port> is actually listening. choc's
+      # WebView2 exposes CDP only while the editor is materialized+focused
+      # (runner-confirmed, M042 S09), and an unattended session never gives it
+      # sustained focus — so without this the e2e attach hits ECONNREFUSED. This
+      # runs immediately before the attach (minimising the up-then-lost window)
+      # and fails loud here if the port never opens, so the cause is diagnosed
+      # with a clear phase line instead of Playwright's opaque connect timeout.
+      - name: Focus Poly editor and wait for CDP
+        if: env.POLY_CDP_PORT != ''
+        shell: pwsh
+        run: >-
+          ./scripts/cubase/focus-editor-cdp.ps1
+          -CdpPort ${{ env.POLY_CDP_PORT }}
+          -TimeoutSeconds 60
+
       - name: Run L4-web e2e (attach over CDP, toggle step, play transport)
         if: env.POLY_CDP_PORT != ''
         shell: pwsh
-        working-directory: tests/cubase/e2e
-        run: npx playwright test toggle-step.spec.ts
+        run: |
+          # Keep Cubase foreground WHILE Playwright attaches: choc's WebView2
+          # tears down the editor view (and its CDP port) on focus-loss, and
+          # starting the test in a sibling process can steal foreground. Run the
+          # focus-holder as a background job for the attach window, then run the
+          # spec, then stop the holder. The holder re-confirms the port first, so
+          # a port that dropped between the verify step and here still fails loud.
+          $repo = "${{ github.workspace }}"
+          $holder = Start-Job -ScriptBlock {
+            param($root, $port)
+            & "$root/scripts/cubase/focus-editor-cdp.ps1" -CdpPort $port -TimeoutSeconds 30 -HoldSeconds 90
+          } -ArgumentList $repo, ${{ env.POLY_CDP_PORT }}
+          try {
+            Push-Location tests/cubase/e2e
+            npx playwright test toggle-step.spec.ts
+            $code = $LASTEXITCODE
+            Pop-Location
+          } finally {
+            Stop-Job $holder -ErrorAction SilentlyContinue | Out-Null
+            Remove-Job $holder -Force -ErrorAction SilentlyContinue | Out-Null
+          }
+          if ($code -ne 0) { exit $code }
 
       # S08 transport run. Gated on a fixture being set: with no fixture this is
       # the S07 launch/quit smoke and there is nothing to play. When the owner
