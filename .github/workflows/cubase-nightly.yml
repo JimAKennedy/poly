@@ -21,20 +21,31 @@ name: Cubase Nightly (L4)
 # on the runner by the owner (R10), so those steps stay dormant until then.
 
 on:
-  schedule:
-    # 02:00 UTC nightly — offset from the 03:00 sanitizer/NFR nightlies so the
-    # single self-hosted runner isn't contended.
-    - cron: "0 2 * * *"
+  # NO `schedule:` trigger. The S09 CDP flow requires the owner to launch Cubase
+  # by hand (see the "Await manual Cubase" step) — a scheduled run would hang on
+  # that human gate until it times out. The S07/S08 auto-launch flows remain
+  # dispatch-only too, so every run is deliberately owner-triggered. NEVER add a
+  # `pull_request` trigger (self-hosted runner executes repo code — Part 10).
   workflow_dispatch:
     inputs:
       cdp_port:
         description: >-
           S09 L4-web only: CDP remote-debugging port for Cubase's WebView2
-          editor (e.g. 9222). Leave EMPTY for a routine S07/S08 nightly — the
+          editor (e.g. 9222). Leave EMPTY for a routine S07/S08 run — the
           Playwright-over-CDP e2e flow stays off. Set it (9222) to run the S09
-          exit-criterion e2e. Scheduled runs always use the empty default.
+          exit-criterion e2e.
         required: false
         default: ""
+      manual_cubase:
+        description: >-
+          S09 CDP only: set to 'true' to PAUSE after build+install for you to
+          launch Cubase by hand in your VNC session, then proceed once the CDP
+          port is live. Use this because the unattended launch does not expose
+          CDP (seven-round S09 finding); a hand-launched Cubase does (#215).
+          Requires cdp_port to be set. Leave 'false'/empty for the automated
+          launch (S07/S08, or an S09 attempt against the auto-launch).
+        required: false
+        default: "false"
 
 # Only one Cubase run at a time — there is a single self-hosted runner and
 # Cubase/loopMIDI/interactive-desktop state is machine-global. Newer runs wait
@@ -90,6 +101,13 @@ jobs:
       # Localhost-only; gated by the box's LAN posture (Part 10). Windows-only
       # (WKWebView exposes no CDP). See docs/windows-test-runner-setup.md Part 12.
       POLY_CDP_PORT: ${{ github.event.inputs.cdp_port || '' }}
+      # S09 manual-CDP flow. When 'true' (dispatch input), the CI job does NOT
+      # launch Cubase — it builds + installs the fresh plugin/probe, then blocks
+      # on the "Await manual Cubase" gate for the owner to open Cubase by hand
+      # (the one context CDP works, #215) and signal go. The auto launch/
+      # wait-ready/kill-stale/quit steps are gated OFF in this flow so they never
+      # fight the owner's Cubase. Empty/'false' => the automated launch flow.
+      POLY_MANUAL_CUBASE: ${{ github.event.inputs.manual_cubase || 'false' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
 
@@ -184,7 +202,11 @@ jobs:
         run: ./scripts/S08-install/3-install-midi-remote.ps1
 
       # --- L4 Cubase launch/quit cycle (scripts/cubase machinery from T02) ---
+      # The launch/wait/kill steps below are the AUTOMATED flow. In the manual-
+      # CDP flow (POLY_MANUAL_CUBASE == 'true') they are skipped — the owner
+      # launches Cubase by hand and the "Await manual Cubase" gate takes over.
       - name: Kill stale Cubase
+        if: env.POLY_MANUAL_CUBASE != 'true'
         shell: pwsh
         run: ./scripts/cubase/kill-stale-cubase.ps1
 
@@ -198,6 +220,7 @@ jobs:
       # the primary fix; dismiss-safe-mode.ps1 + wait-for-ready's rejection remain
       # as backstops.
       - name: Clear Cubase Safe Mode flag
+        if: env.POLY_MANUAL_CUBASE != 'true'
         shell: pwsh
         run: >-
           ./scripts/cubase/clear-safe-mode-flag.ps1
@@ -208,6 +231,7 @@ jobs:
       # S07/S08 launch is unchanged. Building the arg list in pwsh keeps the
       # conditional out of YAML expression gymnastics.
       - name: Launch Cubase
+        if: env.POLY_MANUAL_CUBASE != 'true'
         shell: pwsh
         run: |
           # Splat as a HASHTABLE, not an array. Array splatting
@@ -235,14 +259,30 @@ jobs:
       # Needs an interactive desktop session (SendKeys/AppActivate) — the runner
       # already provides one for Cubase's UI.
       - name: Dismiss Cubase Safe Mode dialog if present
+        if: env.POLY_MANUAL_CUBASE != 'true'
         shell: pwsh
         run: ./scripts/cubase/dismiss-safe-mode.ps1
 
       - name: Wait for Cubase ready
+        if: env.POLY_MANUAL_CUBASE != 'true'
         shell: pwsh
         run: >-
           ./scripts/cubase/wait-for-ready.ps1
           -TimeoutSeconds 120
+
+      # Manual-CDP flow: the CI job did NOT launch Cubase (the steps above were
+      # skipped). Pause here for the owner to open Cubase by hand on the freshly-
+      # installed plugin + fixture, then proceed once the sentinel is dropped AND
+      # the CDP port is live. Fails loud on timeout so a forgotten dispatch never
+      # pins the runner. Only runs in the manual-CDP flow.
+      - name: Await manual Cubase (CDP)
+        if: env.POLY_MANUAL_CUBASE == 'true'
+        shell: pwsh
+        run: >-
+          ./scripts/cubase/await-manual-cubase.ps1
+          -CdpPort ${{ env.POLY_CDP_PORT }}
+          -FixtureCpr "${{ env.POLY_FIXTURE_CPR }}"
+          -TimeoutSeconds 900
 
       # S09 (L4-web) flow — gated on POLY_CDP_PORT being set. Runs WHILE Cubase
       # is up (CDP attach needs the live editor): Playwright connects over CDP,
@@ -321,7 +361,9 @@ jobs:
 
       - name: Quit Cubase
         # Always attempt a clean quit even if wait-for-ready failed, so a hung
-        # Cubase is torn down rather than left for the next run.
+        # Cubase is torn down rather than left for the next run. In the manual-
+        # CDP flow this also tears down the owner's hand-launched Cubase and
+        # forces poly_midi_probe's deactivate-flush — expected: the run is done.
         if: always()
         shell: pwsh
         run: ./scripts/cubase/quit-cubase.ps1
