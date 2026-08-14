@@ -65,6 +65,23 @@ public static extern int GetClassNameW(System.IntPtr hWnd, System.Text.StringBui
 
 [System.Runtime.InteropServices.DllImport("user32.dll")]
 public static extern System.IntPtr GetForegroundWindow();
+
+[System.Runtime.InteropServices.DllImport("kernel32.dll")]
+public static extern bool ProcessIdToSessionId(uint dwProcessId, out uint pSessionId);
+
+[System.Runtime.InteropServices.DllImport("kernel32.dll")]
+public static extern uint WTSGetActiveConsoleSessionId();
+
+// OpenInputDesktop succeeds only when the interactive input desktop is
+// available to this process (i.e. the console is unlocked and attached). It
+// returns NULL when the session is locked / no interactive input desktop is
+// reachable — the discriminating signal for "editor paints but WebView2's CDP
+// pipe can't bind because the input desktop is locked/headless".
+[System.Runtime.InteropServices.DllImport("user32.dll", SetLastError = true)]
+public static extern System.IntPtr OpenInputDesktop(uint dwFlags, bool fInherit, uint dwDesiredAccess);
+
+[System.Runtime.InteropServices.DllImport("user32.dll", SetLastError = true)]
+public static extern bool CloseDesktop(System.IntPtr hDesktop);
 '@
 
 # Build the set of pids in the Cubase process tree we care about.
@@ -79,7 +96,67 @@ if ($ExpectedPid -gt 0) {
 $cubasePids = $cubasePids | Sort-Object -Unique
 Write-Diag "=== Cubase pids under inspection: $($cubasePids -join ', ') ==="
 
+# --- Session / window-station / lock-state block -----------------------------
+# The decisive discriminator for the unattended-agent CDP failure (MEM118): the
+# editor + WebView2 host materialize, but the CDP port never binds. Two rival
+# causes need different fixes:
+#   (a) Cubase runs on a NON-interactive session/station (Session 0 service
+#       isolation) — WebView2's remote-debugging pipe can't bind. Fix: run the
+#       runner as an interactive logon task on the console session (runbook Part
+#       7/9), NOT a service.
+#   (b) Cubase IS on the interactive session but the console is LOCKED / has no
+#       attached display at WebView2-init time — the input desktop is
+#       unreachable. Fix: keep-awake + dummy-HDMI + auto-unlock (keep-awake doc).
+# S08's MIDI Remote surface DOES bind under the agent (golden compare passes),
+# which argues against pure (a) — so (b), or a WebView2-specific requirement
+# beyond "interactive desktop", is the live hypothesis. This block reports the
+# raw facts so the next run settles it.
+Write-Diag ""
+Write-Diag "=== session / window-station / desktop-lock state ==="
+$activeConsole = [Win32.Enum]::WTSGetActiveConsoleSessionId()
+Write-Diag "  active physical console session id: $activeConsole"
+foreach ($cp in $cubasePids) {
+    $sid = [uint32]0
+    $ok = [Win32.Enum]::ProcessIdToSessionId([uint32]$cp, [ref]$sid)
+    $sidText = if ($ok) { "$sid" } else { "unknown" }
+    $sameAsConsole = if ($ok -and $sid -eq $activeConsole) { "YES" } else { "NO" }
+    Write-Diag "  Cubase pid $cp -> session id: $sidText (matches active console: $sameAsConsole)"
+}
+# Session 0 => service-isolated, no interactive desktop => cause (a).
+# A pid on the active console session id => interactive => points at cause (b).
+
+# Input-desktop reachability: OpenInputDesktop(0, false, DESKTOP_READOBJECTS=0x1)
+# returns a handle only when the interactive input desktop is available (console
+# unlocked + attached). NULL => locked/headless => cause (b).
+$inputDesk = [Win32.Enum]::OpenInputDesktop(0, $false, 0x0001)
+if ($inputDesk -ne [System.IntPtr]::Zero) {
+    Write-Diag "  interactive input desktop reachable: YES (console unlocked / attached)"
+    [void][Win32.Enum]::CloseDesktop($inputDesk)
+} else {
+    Write-Diag "  interactive input desktop reachable: NO (console LOCKED or headless — WebView2 CDP pipe likely blocked)"
+}
+
+# The most direct evidence: read the WebView2 browser child's command line and
+# confirm whether --remote-debugging-port actually reached the process. If the
+# msedgewebview2.exe children exist but NONE carry the flag despite env var +
+# registry policy, the flag is being stripped/ignored at spawn — a delivery
+# problem, not a session problem.
+Write-Diag "=== WebView2 (msedgewebview2.exe) child command lines ==="
+$wv = Get-CimInstance Win32_Process -Filter "Name='msedgewebview2.exe'" -ErrorAction SilentlyContinue
+if ($wv) {
+    foreach ($p in $wv) {
+        $hasFlag = if ($p.CommandLine -match 'remote-debugging-port') { 'HAS --remote-debugging-port' } else { 'no debug flag' }
+        $typeArg = if ($p.CommandLine -match '--type=(\S+)') { $Matches[1] } else { '(browser/root)' }
+        Write-Diag "  pid $($p.ProcessId) [$typeArg] $hasFlag"
+    }
+    $anyFlag = $wv | Where-Object { $_.CommandLine -match 'remote-debugging-port' }
+    Write-Diag "  => any WebView2 process carries --remote-debugging-port: $(if ($anyFlag) { 'YES' } else { 'NO' })"
+} else {
+    Write-Diag "  no msedgewebview2.exe processes found"
+}
+
 $fg = [Win32.Enum]::GetForegroundWindow()
+Write-Diag ""
 Write-Diag "=== foreground window handle right now: $fg ==="
 
 # Enumerate every top-level window; keep those owned by a Cubase pid.
