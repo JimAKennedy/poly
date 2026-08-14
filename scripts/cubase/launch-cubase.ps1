@@ -51,37 +51,21 @@ try {
     # The port binds to localhost only; the box's own network posture (Part 10:
     # LAN-gated, no inbound) is what keeps it off the wider network. WKWebView
     # (macOS) exposes no CDP, which is why this flow is Windows-only.
+    #
+    # NOTE: this automated path never brought the CDP port up under the GitHub
+    # Actions logon-task agent (M042 S09, runs #40-#47: 0 of 18 msedgewebview2.exe
+    # children ever carried the flag, no delivery mechanism — env var, HKCU
+    # registry policy, ICoreWebView2EnvironmentOptions patch, or dedicated
+    # user-data-dir — reached the browser process). The working path is the
+    # MANUAL-CDP flow: the owner launches Cubase by hand in their VNC session with
+    # this env var set (the #215 recipe), and the workflow's "Await manual Cubase"
+    # gate waits for the port. This script is SKIPPED in that flow
+    # (POLY_MANUAL_CUBASE == 'true'); it stays here for the S07/S08 launch/quit +
+    # transport smokes, which do not need CDP.
     if ($EnableCdp) {
-        $cdpArgs = "--remote-debugging-port=$CdpPort"
-        $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = $cdpArgs
-
-        # Belt-and-suspenders: also set the per-app-exe WebView2 policy in the
-        # registry. Runner evidence (M042 S09, run #42): the env var alone was
-        # NOT honored on the unattended Actions-agent launch even though the
-        # editor + choc WebView2 host DID materialize (topology diagnostic:
-        # editor frame PRESENT, choc host PRESENT, CDP port ABSENT). The
-        # additionalBrowserArguments in WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS
-        # only takes effect at the first WebView2 environment creation for a
-        # given user-data-dir, so timing/session differences can silently drop
-        # it. The registry policy is honored regardless of that timing.
-        #
-        # Under HKCU\...\WebView2\AdditionalBrowserArguments the VALUE NAME is
-        # the host exe (Cubase<ver>.exe) and the DATA is the args string. We set
-        # the specific exe name AND the "*" wildcard fallback so we are covered
-        # regardless of which exe name choc's WebView2 attributes to. Values are
-        # overwritten (Force) each launch and cleared on quit, so no stale global
-        # policy lingers on the runner.
-        $exeName = Split-Path -Leaf $exe
-        $policyKey = "HKCU:\Software\Policies\Microsoft\Edge\WebView2\AdditionalBrowserArguments"
-        New-Item -Path $policyKey -Force | Out-Null
-        New-ItemProperty -Path $policyKey -Name $exeName -Value $cdpArgs `
-            -PropertyType String -Force | Out-Null
-        New-ItemProperty -Path $policyKey -Name "*" -Value $cdpArgs `
-            -PropertyType String -Force | Out-Null
-
+        $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = "--remote-debugging-port=$CdpPort"
         Write-PolyPhase -Phase "launch" -State "ok" `
-            -Detail "WebView2 CDP enabled (env var + registry policy)" `
-            -Extra @{ cdpPort = $CdpPort; policyExe = $exeName }
+            -Detail "WebView2 CDP enabled (env var)" -Extra @{ cdpPort = $CdpPort }
     }
 
     if ($FixtureCpr) {

@@ -83,23 +83,9 @@ endif()
 # -----------------------------------------------------------------------------
 if(APPLE OR WIN32)
     include(FetchContent)
-    # PATCH_COMMAND (M042 S09): choc creates the WebView2 environment with a null
-    # options object, so --remote-debugging-port never reaches msedgewebview2.exe
-    # (runner-confirmed: env var + registry policy both fail to deliver it). The
-    # patch makes choc honour WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS at environment
-    # creation — the one delivery point WebView2 does not strip. Gated on that env
-    # var, so the shipping DAW (which never sets it) is byte-unchanged. Applied via
-    # a CMake helper (FetchContent runs PATCH_COMMAND with no shell, so we can't use
-    # `|| 2>/dev/null` inline) that is idempotent across warm caches / re-configures.
-    # Coupled to the pinned GIT_TAG above; bumping the tag requires re-verifying
-    # plugin/patches/choc-webview2-cdp-args.patch.
     FetchContent_Declare(choc
         GIT_REPOSITORY https://github.com/Tracktion/choc.git
         GIT_TAG 5685fb59db9e60d31a35df7bff0ce7967beaaf25
-        PATCH_COMMAND ${CMAKE_COMMAND}
-            -DPATCH=${CMAKE_CURRENT_SOURCE_DIR}/patches/choc-webview2-cdp-args.patch
-            -DREPO=<SOURCE_DIR>
-            -P ${CMAKE_CURRENT_SOURCE_DIR}/patches/apply-choc-patch.cmake
     )
     FetchContent_MakeAvailable(choc)
 

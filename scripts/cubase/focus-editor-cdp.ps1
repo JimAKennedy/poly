@@ -11,21 +11,24 @@
 #   theory that focus was required was WRONG (see MEM115); this script no longer
 #   forces foreground.
 #
-#   The real failure mode (M042 S09, run #42, MEM117): the editor + choc
-#   WebView2 host DO materialize under the unattended Actions agent (topology
-#   diagnostic: editor frame PRESENT, choc host PRESENT), yet the CDP port is
-#   ABSENT -- the --remote-debugging-port arg (via the env var) is not honored
-#   on the automated launch. launch-cubase.ps1 -EnableCdp now also sets the
-#   per-app-exe WebView2 registry policy, which is honored regardless of
-#   env-var/process-creation timing. This gate polls the OS TCP listen table for
-#   127.0.0.1:<port> and fails loud (nonzero exit) if the port never appears
-#   within the timeout, so a still-absent endpoint is diagnosed HERE with a
-#   clear phase line rather than surfacing as Playwright's opaque 30s
-#   connect-retry timeout. Read editor-window-topology.txt (the diagnostic step
-#   just before this) to see which layer is present when the port is absent.
+#   The automated Actions-agent launch never brought the port up (M042 S09,
+#   runs #40-#47): the editor + choc WebView2 host DO materialize (topology
+#   diagnostic: editor frame PRESENT, choc host PRESENT), yet the CDP port stays
+#   ABSENT because no delivery mechanism reached the browser process. The working
+#   path is the MANUAL-CDP flow — the owner launches Cubase by hand in their VNC
+#   session with WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS set (the #215 recipe), and
+#   the "Await manual Cubase" gate confirms the port is up. This script is the
+#   automated-flow gate: it polls the OS TCP listen table for 127.0.0.1:<port>
+#   and fails loud (nonzero exit) if the port never appears within the timeout,
+#   so a still-absent endpoint is diagnosed HERE with a clear phase line rather
+#   than surfacing as Playwright's opaque 30s connect-retry timeout. Read
+#   editor-window-topology.txt (the diagnostic step just before this) to see
+#   which layer is present when the port is absent.
 #
-# Runs between Wait-for-ready and the L4-web e2e step, only when POLY_CDP_PORT
-# is set (the S09 flow). It never runs for S07/S08.
+# Runs between Wait-for-ready and the L4-web e2e step, only when POLY_CDP_PORT is
+# set AND POLY_MANUAL_CUBASE is not 'true' (the automated S09 flow). It never
+# runs for S07/S08, nor for the manual-CDP flow (the Await manual gate replaces
+# it there).
 
 [CmdletBinding()]
 param(
@@ -70,13 +73,14 @@ try {
         # The port never came up within the window. This is a hard failure for the
         # S09 flow: without the CDP endpoint the e2e cannot attach. Fail loud so
         # the quit phase still runs (workflow `if: always()`) and the cause is
-        # captured here, not left to Playwright's opaque connect timeout. Run #42
-        # proved the editor + WebView2 host DO materialize (see
-        # editor-window-topology.txt) -- so the cause is the --remote-debugging-port
-        # arg not being honored, NOT the editor failing to open. The registry
-        # policy in launch-cubase.ps1 -EnableCdp targets exactly that.
+        # captured here, not left to Playwright's opaque connect timeout. The
+        # topology diagnostic (run just before this) proves the editor + WebView2
+        # host DO materialize -- so the cause is the --remote-debugging-port arg
+        # not reaching the browser process on the automated launch, NOT the editor
+        # failing to open. The automated launch has never delivered the flag
+        # (runs #40-#47); use the manual-CDP flow (-f manual_cubase=true) instead.
         Invoke-PolyPhaseFailure -Phase "focus-editor-cdp" `
-            -Message "CDP listener never appeared on 127.0.0.1:$CdpPort within ${TimeoutSeconds}s. The editor + WebView2 host materialize (see editor-window-topology.txt), so the --remote-debugging-port arg is not being honored on this launch. Check the WebView2 registry policy write in the launch phase." `
+            -Message "CDP listener never appeared on 127.0.0.1:$CdpPort within ${TimeoutSeconds}s. The editor + WebView2 host materialize (see editor-window-topology.txt), so the --remote-debugging-port arg is not reaching the browser process on this automated launch. The automated flow has never delivered it; use the manual-CDP flow (-f manual_cubase=true, owner opens Cubase in VNC)." `
             -Extra @{ cdpPort = $CdpPort }
     }
 } catch {
