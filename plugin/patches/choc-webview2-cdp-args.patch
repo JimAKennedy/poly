@@ -1,20 +1,25 @@
 choc WebView2: honour WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS at environment
-creation so --remote-debugging-port actually reaches the browser process.
+creation, and use a DEDICATED user-data-dir, so --remote-debugging-port
+actually reaches the browser process.
 
-Why (M042 S09, runner-confirmed across runs #40/#42/#44/#45):
+Why (M042 S09, runner-confirmed across runs #40/#42/#44/#45/#46):
   choc creates the WebView2 environment with EnvironmentOptions = nullptr
-  (the 3rd arg to CreateCoreWebView2EnvironmentWithOptions). WebView2 only
-  applies AdditionalBrowserArguments supplied on that options object at first
-  environment creation; the WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS env var and
-  the HKCU registry policy were BOTH proven not to reach the spawned
-  msedgewebview2.exe under the unattended Actions agent (run #45: 0 of 18
-  WebView2 children carried --remote-debugging-port). This is the one delivery
-  point WebView2 does not strip.
+  (the 3rd arg to CreateCoreWebView2EnvironmentWithOptions) and a shared
+  per-exe user-data-dir (%APPDATA%\Cubase14.exe). WebView2 honours
+  AdditionalBrowserArguments ONLY at the FIRST browser-process creation for a
+  given data-dir. Under the unattended Actions agent an earlier WebView2
+  instance already owns the shared dir, so a correct options object is ignored
+  (run #46: the patch compiled into the loaded plugin, yet 0 of 18
+  msedgewebview2.exe children carried --remote-debugging-port). Passing BOTH a
+  dedicated data-dir AND the options object makes our environment creation the
+  first for that dir, so the flag is honoured. The env var and HKCU registry
+  policy were both proven insufficient (run #45).
 
 Scope/safety:
   Gated on the env var being present. The shipping DAW never sets it, so the
-  options object stays nullptr and behaviour is byte-identical for real users;
-  only the S09 test harness (launch-cubase.ps1 sets the var) activates it.
+  options object stays nullptr, the data-dir is unchanged, and behaviour is
+  byte-identical for real users; only the S09 test harness (launch-cubase.ps1
+  sets the var) activates it.
 
 Coupling:
   Anchored on choc GIT_TAG 5685fb59db9e60d31a35df7bff0ce7967beaaf25 pinned in
@@ -22,20 +27,25 @@ Coupling:
   the choc_WebView.h line context still matches.
 
 diff --git a/choc/gui/choc_WebView.h b/choc/gui/choc_WebView.h
-index fcfdf42..b999637 100644
+index fcfdf42..508f69a 100644
 --- a/choc/gui/choc_WebView.h
 +++ b/choc/gui/choc_WebView.h
-@@ -1347,6 +1347,66 @@ public:
+@@ -1347,6 +1347,90 @@ public:
  namespace choc::ui
  {
  
 +//==============================================================================
 +// POLY PATCH (M042 S09): let WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS reach the
-+// WebView2 environment via ICoreWebView2EnvironmentOptions. choc passes nullptr
-+// for the options object, so --remote-debugging-port (needed for the
-+// Playwright-over-CDP e2e) never reaches msedgewebview2.exe. This builds a
-+// minimal options impl from that env var when it is set; when it is unset (the
-+// shipping DAW), the helper returns nullptr and nothing changes.
++// WebView2 environment via ICoreWebView2EnvironmentOptions, AND give the editor
++// a DEDICATED user-data-dir so its environment creation is the first for that
++// dir. choc passes nullptr for the options object and a shared per-exe data-dir
++// (%APPDATA%\Cubase14.exe), so --remote-debugging-port (needed for the
++// Playwright-over-CDP e2e) is ignored: WebView2 honours AdditionalBrowserArguments
++// only at the FIRST browser-process creation for a given data-dir, and under the
++// runner an earlier WebView2 instance already owns the shared dir (run #46:
++// 0 of 18 msedgewebview2.exe children carried the flag despite a correct options
++// object). Gated on the env var: when it is unset (the shipping DAW) the helpers
++// return nullptr / the original folder and behaviour is byte-identical.
 +namespace poly_cdp
 +{
 +    // Minimal ICoreWebView2EnvironmentOptions impl carrying only
@@ -78,8 +88,16 @@ index fcfdf42..b999637 100644
 +        virtual HRESULT STDMETHODCALLTYPE put_AllowSingleSignOnUsingOSPrimaryAccount (BOOL) { return S_OK; }
 +    };
 +
-+    // Returns a ref-counted options object when WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS
-+    // is set, else nullptr (caller passes it straight through as the 3rd arg).
++    // True when the CDP test harness set WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS.
++    static inline bool cdpEnabled()
++    {
++        wchar_t buffer[2048];
++        auto n = GetEnvironmentVariableW (L"WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS", buffer, 2048);
++        return n != 0 && n < 2048;
++    }
++
++    // Returns a ref-counted options object when the CDP env var is set, else
++    // nullptr (caller passes it straight through as the 3rd arg).
 +    static inline IUnknown* makeEnvOptionsFromEnv()
 +    {
 +        wchar_t buffer[2048];
@@ -87,21 +105,33 @@ index fcfdf42..b999637 100644
 +        if (n == 0 || n >= 2048) return nullptr;
 +        return new EnvOptions (std::wstring (buffer, n));
 +    }
++
++    // When CDP is enabled, redirect the editor to a DEDICATED user-data-dir so
++    // its WebView2 environment creation is the first for that dir and the
++    // AdditionalBrowserArguments (--remote-debugging-port) are honoured, instead
++    // of inheriting a flagless browser already spawned for the shared per-exe
++    // dir. Unchanged (shipping DAW) when the env var is unset.
++    static inline std::wstring overrideUserDataFolder (const std::wstring& base)
++    {
++        if (! cdpEnabled()) return base;
++        return base + L".polycdp";
++    }
 +}
 +
  //==============================================================================
  struct WebView::Pimpl
  {
-@@ -1380,7 +1440,12 @@ struct WebView::Pimpl
+@@ -1380,7 +1464,13 @@ struct WebView::Pimpl
                                                                          webviewDLL.findFunction ("CreateCoreWebView2EnvironmentWithOptions"))
                      {
                          eventHandler = new EventHandler (*this);
 -                        createCoreWebView2EnvironmentWithOptions (nullptr, userDataFolder.c_str(), nullptr, eventHandler);
-+                        // POLY PATCH (M042 S09): pass env-derived options (carrying
-+                        // --remote-debugging-port when the test harness sets the env
-+                        // var); nullptr for the shipping DAW.
++                        // POLY PATCH (M042 S09): dedicated data-dir + env-derived
++                        // options (carrying --remote-debugging-port) when the test
++                        // harness sets the env var; unchanged for the shipping DAW.
++                        auto polyDataFolder = poly_cdp::overrideUserDataFolder (userDataFolder);
 +                        auto* polyEnvOptions = poly_cdp::makeEnvOptionsFromEnv();
-+                        createCoreWebView2EnvironmentWithOptions (nullptr, userDataFolder.c_str(), polyEnvOptions, eventHandler);
++                        createCoreWebView2EnvironmentWithOptions (nullptr, polyDataFolder.c_str(), polyEnvOptions, eventHandler);
 +                        if (polyEnvOptions != nullptr) polyEnvOptions->Release();
                          return true;
                      }
