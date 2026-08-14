@@ -25,6 +25,22 @@ param(
 
 Write-PolyPhase -Phase "quit" -State "start"
 
+# Clear the WebView2 CDP registry policy set by launch-cubase.ps1 (-EnableCdp),
+# so no stale global policy lingers on the runner and silently affects other
+# WebView2 apps. Best-effort — a leftover value is a hygiene issue, not a run
+# failure — and a no-op when the key was never written (S07/S08 flows). Runs
+# before the process-quit logic so it executes even on the early-return paths.
+try {
+    $policyKey = "HKCU:\Software\Policies\Microsoft\Edge\WebView2\AdditionalBrowserArguments"
+    if (Test-Path $policyKey) {
+        Remove-Item -Path $policyKey -Force -Recurse -ErrorAction SilentlyContinue
+        Write-PolyPhase -Phase "quit" -State "ok" -Detail "cleared WebView2 CDP registry policy"
+    }
+} catch {
+    Write-PolyPhase -Phase "quit" -State "ok" `
+        -Detail "WebView2 CDP registry policy clear skipped: $($_.Exception.Message)"
+}
+
 try {
     $names = Get-CubaseProcessNames
     $procs = Get-Process -Name $names -ErrorAction SilentlyContinue
