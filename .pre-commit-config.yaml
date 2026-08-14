@@ -3,9 +3,14 @@ repos:
     rev: v6.0.0
     hooks:
       - id: trailing-whitespace
-        exclude: '^(\.gsd/|\.bg-shell/|.*\.uidesc$)'
+        # *.patch excluded: patch files are verbatim diffs whose context/±lines
+        # are whitespace-sensitive — reformatting them corrupts `git apply`
+        # (M042 S09 choc CDP patch).
+        exclude: '^(\.gsd/|\.bg-shell/|.*\.uidesc$|.*\.patch$)'
       - id: end-of-file-fixer
-        exclude: '^(\.gsd/|\.bg-shell/|.*\.uidesc$)'
+        # *.patch excluded: see trailing-whitespace above — a trailing-newline
+        # fixup can invalidate the final hunk.
+        exclude: '^(\.gsd/|\.bg-shell/|.*\.uidesc$|.*\.patch$)'
       - id: check-yaml
         # .clang-format uses a multi-document YAML stream (--- separates the
         # Cpp and ObjC language sections). clang-format is its real validator

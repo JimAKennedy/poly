@@ -41,6 +41,9 @@ Makefile
 *.cmake
 !CMakeLists.txt
 !**/cmake/jk_*.cmake
+# Tracked FetchContent patch-apply helpers (M042 S09 choc CDP patch). The broad
+# *.cmake ignore above is for generated build artifacts; these are source.
+!plugin/patches/*.cmake
 compile_commands.json
 _deps/
 
