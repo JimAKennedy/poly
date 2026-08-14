@@ -11,13 +11,18 @@
 #   theory that focus was required was WRONG (see MEM115); this script no longer
 #   forces foreground.
 #
-#   The real failure mode is that in an unattended launch the WebView2/choc host
-#   may never INSTANTIATE at all (process_calls=0 -- the editor never
-#   materialized once), so the port never opens. This gate polls the OS TCP
-#   listen table for 127.0.0.1:<port> and fails loud (nonzero exit) if the port
-#   never appears within the timeout, so a still-absent endpoint is diagnosed
-#   HERE with a clear phase line rather than surfacing as Playwright's opaque
-#   30s connect-retry timeout.
+#   The real failure mode (M042 S09, run #42, MEM117): the editor + choc
+#   WebView2 host DO materialize under the unattended Actions agent (topology
+#   diagnostic: editor frame PRESENT, choc host PRESENT), yet the CDP port is
+#   ABSENT -- the --remote-debugging-port arg (via the env var) is not honored
+#   on the automated launch. launch-cubase.ps1 -EnableCdp now also sets the
+#   per-app-exe WebView2 registry policy, which is honored regardless of
+#   env-var/process-creation timing. This gate polls the OS TCP listen table for
+#   127.0.0.1:<port> and fails loud (nonzero exit) if the port never appears
+#   within the timeout, so a still-absent endpoint is diagnosed HERE with a
+#   clear phase line rather than surfacing as Playwright's opaque 30s
+#   connect-retry timeout. Read editor-window-topology.txt (the diagnostic step
+#   just before this) to see which layer is present when the port is absent.
 #
 # Runs between Wait-for-ready and the L4-web e2e step, only when POLY_CDP_PORT
 # is set (the S09 flow). It never runs for S07/S08.
@@ -65,11 +70,13 @@ try {
         # The port never came up within the window. This is a hard failure for the
         # S09 flow: without the CDP endpoint the e2e cannot attach. Fail loud so
         # the quit phase still runs (workflow `if: always()`) and the cause is
-        # captured here, not left to Playwright's opaque connect timeout. The
-        # near-certain cause is that the WebView2/choc host never instantiated in
-        # this unattended session (process_calls=0) -- NOT a focus problem.
+        # captured here, not left to Playwright's opaque connect timeout. Run #42
+        # proved the editor + WebView2 host DO materialize (see
+        # editor-window-topology.txt) -- so the cause is the --remote-debugging-port
+        # arg not being honored, NOT the editor failing to open. The registry
+        # policy in launch-cubase.ps1 -EnableCdp targets exactly that.
         Invoke-PolyPhaseFailure -Phase "focus-editor-cdp" `
-            -Message "CDP listener never appeared on 127.0.0.1:$CdpPort within ${TimeoutSeconds}s. Likely the Poly editor's WebView2/choc host never instantiated in this unattended session (process_calls=0), so no CDP endpoint was exposed." `
+            -Message "CDP listener never appeared on 127.0.0.1:$CdpPort within ${TimeoutSeconds}s. The editor + WebView2 host materialize (see editor-window-topology.txt), so the --remote-debugging-port arg is not being honored on this launch. Check the WebView2 registry policy write in the launch phase." `
             -Extra @{ cdpPort = $CdpPort }
     }
 } catch {
