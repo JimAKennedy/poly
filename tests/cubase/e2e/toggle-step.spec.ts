@@ -124,15 +124,26 @@ test.describe('L4-web: Playwright over CDP toggles a step inside Cubase', () => 
 
       const patternPane = lane.locator('[data-pane="pattern"]');
       const tlToggle = patternPane.locator('[data-tl]');
-      // If not already in timeline mode, flip it on so the fixed grid renders.
+      // If not already in timeline mode, flip it on. In timeline mode the ladder
+      // step buttons become click-to-toggle (ui.js buildLadder: the click handler
+      // is only wired when l.timeline is set); in Euclidean mode they are
+      // display-only.
       if (!(await tlToggle.evaluate((el) => el.classList.contains('on')))) {
         await tlToggle.click();
       }
-      const fixedGrid = patternPane.locator('[data-fixed]');
-      await expect(fixedGrid).toBeVisible();
+
+      // The per-step toggle buttons live in the lane's `.ladder` group — a SIBLING
+      // of the pattern pane, not inside it (ui.js renders `.ladder` in `.core`,
+      // the panes in `.deep`; the pane prose even says "Edit steps on the ladder
+      // above"). There is no `[data-fixed]` grid — that was a removed design
+      // (webui/tests/interaction.spec.mjs asserts `[data-fixed]` count is 0). The
+      // shipping toggle path is proven by interaction.spec.mjs: click
+      // `.strip .ladder button` and assert the `hit` class.
+      const ladder = lane.locator('.ladder');
+      await expect(ladder.locator('button').first()).toBeVisible();
 
       // Toggle the target step ON if it isn't already a hit.
-      const step = fixedGrid.locator('button').nth(TOGGLE_STEP_INDEX);
+      const step = ladder.locator('button').nth(TOGGLE_STEP_INDEX);
       const wasHit = (await step.getAttribute('class'))?.includes('hit') ?? false;
       if (!wasHit) {
         await step.click();

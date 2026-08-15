@@ -5,7 +5,7 @@
 # (CDP)" gate. It does, in one step, what the gate's printed recipe asks the
 # operator to do by hand:
 #   1. set WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port=<port>
-#      in THIS shell (so the Cubase child inherits it — the #215 recipe, the one
+#      in THIS shell (so the Cubase child inherits it -- the #215 recipe, the one
 #      path that actually exposes CDP; double-clicking the .cpr does NOT),
 #   2. launch Cubase on the freshly-checked-out fixture,
 #   3. wait for the Poly editor to materialise AND the CDP port to listen, then
@@ -18,13 +18,13 @@
 # (same port default, same fixture path, same sentinel path as
 # await-manual-cubase.ps1).
 #
-# It does NOT wait for the CI job — it just gets Cubase into the CDP-ready state
+# It does NOT wait for the CI job -- it just gets Cubase into the CDP-ready state
 # and signals go. The CI gate (await-manual-cubase.ps1) then detects the sentinel
 # + live port and proceeds with the e2e.
 
 [CmdletBinding()]
 param(
-    # CDP remote-debugging port — must match the dispatch's `-f cdp_port` and the
+    # CDP remote-debugging port -- must match the dispatch's `-f cdp_port` and the
     # gate's -CdpPort (default 9222).
     [int] $CdpPort = 9222,
     # Cubase major version installed on the runner (matches POLY_CUBASE_VERSION).
@@ -66,7 +66,7 @@ if (Test-Path $GoFile) {
 
 # STEP 1: set the CDP arg in THIS shell BEFORE launch. Start-Process inherits the
 # current process environment, so the launched Cubase (and the WebView2 child it
-# spawns) sees it. This is the load-bearing line — without it the port never
+# spawns) sees it. This is the load-bearing line -- without it the port never
 # binds.
 $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = "--remote-debugging-port=$CdpPort"
 Write-Host "[launch-manual-cdp] WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS"
@@ -74,7 +74,7 @@ Write-Host "[launch-manual-cdp] WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = $env:WEB
 # STEP 2: launch Cubase on the fixture.
 Write-Host "[launch-manual-cdp] launching Cubase $CubaseVersion on $FixtureCpr"
 $proc = Start-Process -FilePath $exe -ArgumentList "`"$FixtureCpr`"" -PassThru
-Write-Host "[launch-manual-cdp] launched pid $($proc.Id) — open the Poly editor if it is not already open"
+Write-Host "[launch-manual-cdp] launched pid $($proc.Id) -- open the Poly editor if it is not already open"
 
 # STEP 3: wait for the CDP port to listen. The editor's WebView2 exposes the port
 # only once it has materialised; this poll is the real readiness signal.
@@ -99,12 +99,12 @@ if (-not $listening) {
     Write-Host "::error::[launch-manual-cdp] CDP port $CdpPort never came up within ${TimeoutSeconds}s."
     Write-Host "  Confirm the Poly editor window is open. If it is and the port is still"
     Write-Host "  absent, quit Cubase and re-run this script (the env var must be set"
-    Write-Host "  before Cubase launches). NOT dropping the sentinel — the gate will not"
+    Write-Host "  before Cubase launches). NOT dropping the sentinel -- the gate will not"
     Write-Host "  proceed against a Cubase with no CDP port."
     exit 1
 }
 
-# STEP 4: CDP is live — drop the sentinel so the CI gate proceeds.
+# STEP 4: CDP is live -- drop the sentinel so the CI gate proceeds.
 New-Item -ItemType File -Force -Path $GoFile | Out-Null
-Write-Host "[launch-manual-cdp] CDP listening on 127.0.0.1:$CdpPort — dropped sentinel $GoFile"
+Write-Host "[launch-manual-cdp] CDP listening on 127.0.0.1:$CdpPort -- dropped sentinel $GoFile"
 Write-Host "[launch-manual-cdp] the CI 'Await manual Cubase (CDP)' gate should now proceed to the e2e."
