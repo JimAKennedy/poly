@@ -24,16 +24,22 @@ jobs:
         include:
           - os: macos-14
             cmake-args: -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES=arm64 -DSMTG_RUN_VST_VALIDATOR=ON
+          # D029 (M054 S02): Poly ships no Linux VST3, so the Linux leg builds the
+          # portable engine only (-DPOLY_ENGINE_ONLY=ON, no VST3 SDK / editor).
+          # SMTG_RUN_VST_VALIDATOR is dropped — there is no plugin to validate.
           - os: ubuntu-latest
-            cmake-args: -G Ninja -DCMAKE_BUILD_TYPE=Release -DSMTG_RUN_VST_VALIDATOR=ON
+            cmake-args: -G Ninja -DCMAKE_BUILD_TYPE=Release -DPOLY_ENGINE_ONLY=ON
           - os: windows-2022
             cmake-args: -G "Visual Studio 17 2022" -DSMTG_RUN_VST_VALIDATOR=ON
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
       - name: Install dependencies (Linux)
+        # D029 (M054 S02): engine-only build needs only Ninja — no VSTGUI/GTK/X11
+        # UI libs, since -DPOLY_ENGINE_ONLY=ON compiles the platform-independent
+        # poly_engine with no VST3 SDK or editor.
         if: runner.os == 'Linux'
-        run: sudo apt-get install -y ninja-build libx11-dev libxcb1-dev libxkbcommon-x11-dev libx11-xcb-dev libxcb-util-dev libxcb-cursor-dev libxcb-keysyms1-dev libxcb-xkb-dev libxkbcommon-dev libfontconfig1-dev libcairo2-dev libgtkmm-3.0-dev libsqlite3-dev libxcb-util0-dev
+        run: sudo apt-get install -y ninja-build
       - name: Install Ninja (macOS)
         if: runner.os == 'macOS'
         run: brew install ninja
@@ -327,37 +333,12 @@ jobs:
             --timeout-ms 120000 \
             --validate "${{ steps.find-vst3.outputs.path }}"
 
-  pluginval-linux:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download plugin artifact
-        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
-        with:
-          name: plugin-ubuntu-latest
-          path: plugin
-      - name: Find VST3 bundle
-        id: find-vst3
-        run: |
-          VST3_PATH=$(find plugin -name "*.vst3" -not -name "*probe*" -type d | head -1)
-          echo "path=$VST3_PATH" >> "$GITHUB_OUTPUT"
-          echo "Found VST3 at: $VST3_PATH"
-      - name: Download pluginval
-        run: |
-          curl -fsSL -o pluginval.zip https://github.com/Tracktion/pluginval/releases/download/v1.0.4/pluginval_Linux.zip
-          unzip -q pluginval.zip
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libasound2-dev libfreetype6-dev libx11-dev libxcomposite-dev libxcursor-dev libxext-dev libxinerama-dev libxrandr-dev libxrender-dev libcairo2-dev libfontconfig1-dev libxcb1-dev libxkbcommon-x11-dev libx11-xcb-dev libxcb-util-dev libxcb-cursor-dev libxcb-keysyms1-dev libxcb-xkb-dev libxkbcommon-dev libgtkmm-3.0-dev libsqlite3-dev libxcb-util0-dev
-      - name: Run pluginval
-        run: |
-          chmod +x pluginval
-          xvfb-run -a ./pluginval \
-            --strictness-level 8 \
-            --skip-gui-tests \
-            --timeout-ms 120000 \
-            --validate "${{ steps.find-vst3.outputs.path }}"
+  # D029 (M054 S02): the Linux plugin-validation job was removed. Poly ships no
+  # Linux VST3, and the Linux `build` leg now compiles engine-only
+  # (-DPOLY_ENGINE_ONLY=ON), so there is no Linux plugin artifact to validate.
+  # macOS + Windows pluginval cover the shipping plugin targets; engine
+  # portability stays covered by the engine-isolation, code-coverage, and
+  # wasm-build legs.
 
   # M050 S03 (G3): pluginval on the Windows artifact. Windows is where several
   # plugin-loading bugs historically hide (COM apartment threading, DLL search
@@ -525,7 +506,7 @@ jobs:
           if-no-files-found: ignore
 
   ci-complete:
-    needs: [code-quality, build, build-au-macos, engine-isolation, secrets-scan, code-coverage, webui-tests, pluginval-macos, pluginval-linux, pluginval-windows, wasm-build, site-lint, site-e2e]
+    needs: [code-quality, build, build-au-macos, engine-isolation, secrets-scan, code-coverage, webui-tests, pluginval-macos, pluginval-windows, wasm-build, site-lint, site-e2e]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -539,7 +520,6 @@ jobs:
              [[ "${{ needs.code-coverage.result }}" != "success" ]] || \
              [[ "${{ needs.webui-tests.result }}" != "success" ]] || \
              [[ "${{ needs.pluginval-macos.result }}" != "success" ]] || \
-             [[ "${{ needs.pluginval-linux.result }}" != "success" ]] || \
              [[ "${{ needs.pluginval-windows.result }}" != "success" ]] || \
              [[ "${{ needs.wasm-build.result }}" != "success" ]] || \
              [[ "${{ needs.site-lint.result }}" != "success" ]] || \

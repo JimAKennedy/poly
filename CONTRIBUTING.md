@@ -7,6 +7,15 @@
 - Ninja (recommended)
 - pre-commit (`pip install pre-commit`)
 
+## Platform support
+
+Poly ships as a plugin on **macOS and Windows** only. On Linux the build is
+**engine/WASM-only**: `poly_engine` compiles and its tests run, but there is no
+shipping Linux VST3 and no plugin/editor to build. Configure Linux checkouts
+with `-DPOLY_ENGINE_ONLY=ON` (see [Testing](#testing)) — a full plugin build is
+not expected to work there. This is decision D029 (M054); see `CHANGELOG.md` for
+the scope statement.
+
 ## Development workflow
 
 1. Fork the repository
