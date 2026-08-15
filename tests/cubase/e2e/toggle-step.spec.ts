@@ -1,5 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { writeFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { test, expect, chromium } from '@playwright/test';
 import type { Browser, Page } from '@playwright/test';
@@ -39,9 +41,21 @@ import {
 const CDP_ENDPOINT =
   process.env.POLY_CDP_ENDPOINT ||
   `http://127.0.0.1:${process.env.POLY_CDP_PORT || '9222'}`;
-// The S08 mido driver drives the transport; path relative to repo root.
+// The S08 mido driver drives the transport. The workflow runs this spec from
+// `tests/cubase/e2e/` (Push-Location), NOT the repo root, so a repo-root-relative
+// path here resolves against the wrong cwd and doubles the prefix
+// (…/tests/cubase/e2e/tests/cubase/driver/…), which failed run #52. Anchor the
+// default to the repo root derived from this file's location (three levels up
+// from tests/cubase/e2e), and run the driver with that repo root as its cwd so
+// the driver's own relative-path assumptions hold too. POLY_DRIVER, if set, is
+// used verbatim.
+// Playwright loads these specs as ES modules (tsconfig module: ES2022), so
+// __dirname is undefined — derive this file's dir from import.meta.url instead.
+const HERE = path.dirname(fileURLToPath(import.meta.url));
+const REPO_ROOT = path.resolve(HERE, '..', '..', '..');
 const DRIVER =
-  process.env.POLY_DRIVER || 'tests/cubase/driver/play_scenario.py';
+  process.env.POLY_DRIVER ||
+  path.join(REPO_ROOT, 'tests', 'cubase', 'driver', 'play_scenario.py');
 
 const ATTACH_TIMEOUT_MS = 30_000;
 // WebView2's CDP endpoint appears asynchronously: the --remote-debugging-port
@@ -172,6 +186,7 @@ test.describe('L4-web: Playwright over CDP toggles a step inside Cubase', () => 
       // poly_midi_probe and flushed on the subsequent Cubase quit.
       execFileSync('python', [DRIVER, '--bars', '4', '--tempo', '120'], {
         stdio: 'inherit',
+        cwd: REPO_ROOT,
       });
     } finally {
       await browser.close();
