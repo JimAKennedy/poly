@@ -64,6 +64,23 @@ if (Test-Path $GoFile) {
     Write-Host "[launch-manual-cdp] removed stale go-file $GoFile"
 }
 
+# Clear Cubase's Safe Mode flag before launch (same root-cause fix as
+# clear-safe-mode-flag.ps1, which the CI chain SKIPS in the manual-CDP flow).
+# Cubase writes a zero-byte ApplicationStarted.txt on startup and deletes it on a
+# clean exit; every quit here hard-kills Cubase (the Hub blocks a clean exit), so
+# the sentinel is always left behind and the next launch pops the modal Safe Mode
+# recovery dialog BEFORE loading the fixture. Deleting it makes Cubase see a clean
+# prior shutdown and skip the dialog, so the operator no longer has to click
+# through it. Best-effort: a missing prefs dir or absent flag is the happy path.
+$prefsDir = Join-Path $env:APPDATA "Steinberg\Cubase $CubaseVersion`_64"
+$safeModeFlag = Join-Path $prefsDir "ApplicationStarted.txt"
+if (Test-Path $safeModeFlag) {
+    Remove-Item -Path $safeModeFlag -Force -ErrorAction SilentlyContinue
+    Write-Host "[launch-manual-cdp] cleared stale Safe Mode flag $safeModeFlag (Cubase will skip the recovery dialog)"
+} else {
+    Write-Host "[launch-manual-cdp] no Safe Mode flag present (clean prior shutdown, nothing to clear)"
+}
+
 # STEP 1: set the CDP arg in THIS shell BEFORE launch. Start-Process inherits the
 # current process environment, so the launched Cubase (and the WebView2 child it
 # spawns) sees it. This is the load-bearing line -- without it the port never
