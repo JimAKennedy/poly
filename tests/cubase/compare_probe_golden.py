@@ -77,6 +77,11 @@ EPS_VELOCITY = 3e-3
 # the driver's TAIL_SECONDS overplay is dropped (see --max-ppq / trim_probe_tail).
 DEFAULT_MAX_PPQ = 16.0
 DEFAULT_MAX_DIVERGENCES = 10
+# 4/4 scenario: one bar = 4 quarter-note beats. The S09 e2e toggles a step that
+# recurs every bar, so an expected-hit at base-bar ppq P also occurs at P + n*4
+# for every bar in the [0, --max-ppq] window. Used to expand a single toggled
+# step across the loop when subtracting it from the golden (see apply_toggle).
+DEFAULT_BEATS_PER_BAR = 4.0
 
 
 @dataclass
@@ -165,7 +170,70 @@ def parse_golden(text, source):
     return events
 
 
-def diff_events(probe, golden, eps_ppq, eps_velocity, ignore_channel):
+def parse_expected_hit(text, source):
+    """Parse the S09 e2e expected-hit JSON: {pitch, ppq, absent?}.
+
+    toggle-step.spec.ts writes this after toggling a step in Poly's editor. The
+    ``ppq`` is the toggled step's BASE-BAR musical position (a 4-step/bar kick
+    lane => step 2 is ppq 2.0); ``absent`` is true when the step was toggled OFF
+    (the note-on should be gone) and false/absent when toggled ON. Returns a
+    NoteOn-ish tuple ``(pitch, ppq, absent)``; ``velocity``/``channel`` are not
+    part of the toggle contract.
+    """
+    try:
+        obj = json.loads(text)
+    except json.JSONDecodeError as exc:
+        raise CompareError(f"{source}: invalid JSON: {exc}") from exc
+    try:
+        return (int(obj["pitch"]), float(obj["ppq"]), bool(obj.get("absent", False)))
+    except (KeyError, TypeError, ValueError) as exc:
+        raise CompareError(f"{source}: missing/invalid field: {exc}") from exc
+
+
+def apply_toggle(golden, pitch, base_ppq, absent, max_ppq, eps_ppq, beats_per_bar):
+    """Reconcile the golden with the S09 toggle so it matches the toggled probe.
+
+    The golden is the UN-toggled default render; the probe is captured after the
+    e2e toggled one step. A toggled step recurs every bar, so it occurs at
+    ``base_ppq + n*beats_per_bar`` for every bar in the [0, max_ppq] window.
+
+    When ``absent`` (step toggled OFF), the probe legitimately lacks those
+    note-ons, so REMOVE them from the golden before diffing. (Toggle-ON, which
+    would instead ADD note-ons the un-toggled golden lacks, is not produced by
+    the current fixture — the kick lane starts fully lit — so it is unsupported
+    here and left for a future fixture that starts a step OFF.)
+
+    Returns ``(reconciled_golden, matched_ppqs)`` where ``matched_ppqs`` is the
+    list of per-bar ppqs actually found and removed, for logging.
+    """
+    if not absent:
+        raise CompareError(
+            "expected-hit toggle-ON is not supported by the golden reconciler "
+            "(the fixture's kick lane starts fully lit, so the e2e toggles OFF); "
+            "add a start-OFF step to the fixture before using toggle-ON compare"
+        )
+    limit = max_ppq if max_ppq > 0 else float("inf")
+    targets = []
+    ppq = base_ppq
+    while ppq <= limit + eps_ppq:
+        targets.append(ppq)
+        ppq += beats_per_bar
+
+    reconciled = []
+    matched = []
+    for g in golden:
+        hit = (
+            g.pitch == pitch
+            and any(abs(g.ppq - t) <= eps_ppq for t in targets)
+        )
+        if hit:
+            matched.append(g.ppq)
+        else:
+            reconciled.append(g)
+    return reconciled, matched
+
+
+def diff_events(probe, golden, eps_ppq, eps_velocity, ignore_channel, skip_velocity_pitch=None):
     """Return a list of (index, field, probe_val, golden_val) divergences.
 
     A count mismatch is reported as a single ('count', ...) divergence first, and
@@ -177,6 +245,17 @@ def diff_events(probe, golden, eps_ppq, eps_velocity, ignore_channel):
     tried and rejected). Channel is skipped when ``ignore_channel`` is set,
     because a Cubase instrument track coerces incoming MIDI to a single channel
     (channel fidelity is covered by the in-process ``ProbeChain`` test).
+
+    ``skip_velocity_pitch`` (the S09 toggled lane's MIDI note): velocity is NOT
+    compared for note-ons at that pitch. Toggling a step flips the lane into
+    timeline mode, which changes the engine's stepsInCycle -> absStep->cycleStep
+    mapping and thus the whole lane's per-step velocities (engine.cpp:321). The
+    un-toggled golden is therefore the wrong velocity reference for that lane. We
+    still verify the toggled lane's COUNT, PITCH, and PPQ exactly (a toggled-OFF
+    step must produce NO onset for that lane at that ppq -- enforced by the count
+    check after apply_toggle removes those note-ons from the golden); we only drop
+    the exact-velocity assertion for that one lane. The untouched lanes keep full
+    velocity fidelity.
     """
     divergences = []
     if len(probe) != len(golden):
@@ -189,7 +268,8 @@ def diff_events(probe, golden, eps_ppq, eps_velocity, ignore_channel):
             divergences.append((i, "pitch", p.pitch, g.pitch))
         if not ignore_channel and p.channel != g.channel:
             divergences.append((i, "channel", p.channel, g.channel))
-        if abs(p.velocity - g.velocity) > eps_velocity:
+        skip_velocity = skip_velocity_pitch is not None and g.pitch == skip_velocity_pitch
+        if not skip_velocity and abs(p.velocity - g.velocity) > eps_velocity:
             divergences.append((i, "velocity", p.velocity, g.velocity))
         if abs(p.ppq - g.ppq) > eps_ppq:
             divergences.append((i, "ppq", p.ppq, g.ppq))
@@ -204,18 +284,25 @@ def format_divergence(d):
 
 
 def compare(
-    probe_events, golden_events, eps_ppq, eps_velocity, max_divergences, ignore_channel
+    probe_events, golden_events, eps_ppq, eps_velocity, max_divergences, ignore_channel,
+    skip_velocity_pitch=None
 ):
     """Compare and print. Return 0 on match, 1 on mismatch."""
     divergences = diff_events(
-        probe_events, golden_events, eps_ppq, eps_velocity, ignore_channel
+        probe_events, golden_events, eps_ppq, eps_velocity, ignore_channel,
+        skip_velocity_pitch
     )
     if not divergences:
+        vel_note = (
+            f", velocity NOT checked for pitch {skip_velocity_pitch} (toggled lane)"
+            if skip_velocity_pitch is not None
+            else ""
+        )
         print(
             f"[compare:ok] probe matches golden "
             f"({len(golden_events)} note-ons, eps_ppq={eps_ppq}, "
             f"eps_velocity={eps_velocity}, "
-            f"channel={'ignored' if ignore_channel else 'checked'})"
+            f"channel={'ignored' if ignore_channel else 'checked'}{vel_note})"
         )
         return 0
     print(
@@ -242,6 +329,48 @@ def run(args):
         print(f"[compare:error] {exc}", file=sys.stderr)
         return 2
 
+    # S09: when the e2e toggled a step, the probe reflects the toggle but the
+    # golden is the UN-toggled default. Reconcile the golden with the toggle (read
+    # from the expected-hit file the spec wrote) so the diff verifies BOTH that the
+    # toggle removed exactly the intended per-bar note-ons AND that every other
+    # note-on still matches the engine. Absent expected-hit file => S08 path, no
+    # toggle, compare straight (the default L3<->L4 cross-check).
+    #
+    # skip_velocity_pitch: the toggled lane's MIDI note, for which we drop the
+    # exact-velocity check (the toggle re-modes the lane -> its velocities
+    # legitimately change; see diff_events). None on the S08 path.
+    skip_velocity_pitch = None
+    if args.expected_hit:
+        try:
+            with open(args.expected_hit, encoding="utf-8") as fh:
+                pitch, base_ppq, absent = parse_expected_hit(fh.read(), args.expected_hit)
+            golden_events, matched = apply_toggle(
+                golden_events,
+                pitch,
+                base_ppq,
+                absent,
+                args.max_ppq,
+                args.eps_ppq,
+                args.beats_per_bar,
+            )
+        except FileNotFoundError:
+            # Not an error: no toggle happened this run (S08 flow). Compare as-is.
+            print(
+                f"[compare:toggle] no expected-hit file at {args.expected_hit}; "
+                f"comparing against un-toggled golden"
+            )
+        except CompareError as exc:
+            print(f"[compare:error] {exc}", file=sys.stderr)
+            return 2
+        else:
+            skip_velocity_pitch = pitch
+            print(
+                f"[compare:toggle] removed {len(matched)} golden note-on(s) for "
+                f"pitch {pitch} at per-bar ppq {matched} "
+                f"(step toggled {'OFF' if absent else 'ON'}); "
+                f"velocity NOT checked for pitch {pitch} (toggled lane re-modes)"
+            )
+
     raw_probe_count = len(probe_events)
     probe_events = trim_probe_tail(probe_events, args.max_ppq)
     trimmed = raw_probe_count - len(probe_events)
@@ -258,6 +387,7 @@ def run(args):
         args.eps_velocity,
         args.max_divergences,
         args.ignore_channel,
+        skip_velocity_pitch,
     )
 
 
@@ -306,6 +436,24 @@ def parse_args(argv):
         type=int,
         default=DEFAULT_MAX_DIVERGENCES,
         help="how many diverging events to print",
+    )
+    parser.add_argument(
+        "--expected-hit",
+        default=None,
+        help=(
+            "path to the S09 e2e expected-hit JSON ({pitch, ppq, absent}). When "
+            "present, the toggled step is reconciled into the golden per-bar "
+            "before diffing (a missing file is treated as the S08 no-toggle path)"
+        ),
+    )
+    parser.add_argument(
+        "--beats-per-bar",
+        type=float,
+        default=DEFAULT_BEATS_PER_BAR,
+        help=(
+            "beats per bar for expanding a toggled step across the loop "
+            "(default 4 for 4/4)"
+        ),
     )
     return parser.parse_args(argv)
 

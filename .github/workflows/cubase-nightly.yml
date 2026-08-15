@@ -410,13 +410,24 @@ jobs:
       # channel (a Cubase instrument track coerces MIDI to one channel; channel
       # fidelity is covered by the in-process ProbeChain test). On mismatch it
       # prints the first diverging events and fails the job.
+      #
+      # S09: the e2e toggles a kick step OFF before the transport plays, so the
+      # captured probe legitimately lacks that step's per-bar note-ons while the
+      # golden (an un-toggled default render) still has them. --expected-hit points
+      # the compare at the JSON the spec wrote ({pitch, ppq, absent}); the compare
+      # reconciles the toggle into the golden (removing pitch 36 at ppq 2/6/10/14)
+      # before diffing, so a green result proves BOTH that the toggle removed
+      # exactly the intended notes AND that every other note-on still matches the
+      # engine. In the S08 non-CDP path no such file exists, so the compare runs
+      # straight against the un-toggled golden (the file-absent branch).
       - name: Compare probe output to golden
         if: env.POLY_FIXTURE_CPR != ''
         shell: pwsh
         run: |
           python tests/cubase/compare_probe_golden.py `
             --probe "${{ env.POLY_PROBE_OUTPUT }}" `
-            --golden "${{ env.POLY_GOLDEN }}"
+            --golden "${{ env.POLY_GOLDEN }}" `
+            --expected-hit "${{ env.POLY_ARTIFACT_DIR }}\e2e-expected-hit.json"
 
       # S09 post-quit assertion: the probe JSONL (flushed on the quit above) must
       # contain the kick note-on that toggle-step.spec.ts turned on while Cubase
