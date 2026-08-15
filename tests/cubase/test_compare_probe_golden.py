@@ -62,6 +62,7 @@ class CompareTests(unittest.TestCase):
                 kw.get("eps_velocity", c.EPS_VELOCITY),
                 kw.get("max_divergences", c.DEFAULT_MAX_DIVERGENCES),
                 kw.get("ignore_channel", True),
+                kw.get("skip_velocity_pitch", None),
             )
         return rc, buf.getvalue()
 
@@ -178,6 +179,113 @@ class CompareTests(unittest.TestCase):
             "probe",
         )
         self.assertEqual(len(c.trim_probe_tail(events, 0)), 1)
+
+    def test_toggle_off_removes_per_bar_hits_and_matches(self):
+        # The real S09 case: the e2e toggles kick step 2 OFF, so the probe lacks
+        # pitch 36 at ppq 2/6/10/14 while the golden (un-toggled) still has them.
+        # Reconciling the toggle into the golden makes the two match exactly.
+        golden = c.parse_golden(
+            "# h\n# h\n"
+            "0.000000   36  0.5  0\n"
+            "2.000000   36  0.5  0\n"  # toggled off -> removed
+            "4.000000   36  0.5  0\n"
+            "6.000000   36  0.5  0\n"  # toggled off -> removed
+            "8.000000   36  0.5  0\n",
+            "golden",
+        )
+        reconciled, matched = c.apply_toggle(
+            golden, 36, 2.0, True, 8.0, c.EPS_PPQ, c.DEFAULT_BEATS_PER_BAR
+        )
+        self.assertEqual(matched, [2.0, 6.0])
+        self.assertEqual([g.ppq for g in reconciled], [0.0, 4.0, 8.0])
+
+    def test_toggle_only_removes_matching_pitch(self):
+        # A different pitch at the same ppq must survive the removal.
+        golden = c.parse_golden(
+            "# h\n# h\n"
+            "2.000000   36  0.5  0\n"  # removed
+            "2.000000   38  0.5  1\n",  # kept (pitch 38)
+            "golden",
+        )
+        reconciled, matched = c.apply_toggle(
+            golden, 36, 2.0, True, 4.0, c.EPS_PPQ, c.DEFAULT_BEATS_PER_BAR
+        )
+        self.assertEqual(matched, [2.0])
+        self.assertEqual([(g.pitch, g.ppq) for g in reconciled], [(38, 2.0)])
+
+    def test_toggle_on_unsupported_raises(self):
+        golden = c.parse_golden("# h\n# h\n0.000000   36  0.5  0\n", "golden")
+        with self.assertRaises(c.CompareError):
+            c.apply_toggle(
+                golden, 36, 2.0, False, 16.0, c.EPS_PPQ, c.DEFAULT_BEATS_PER_BAR
+            )
+
+    def test_parse_expected_hit_absent(self):
+        pitch, ppq, absent = c.parse_expected_hit(
+            '{"pitch": 36, "ppq": 2, "absent": true}', "expected"
+        )
+        self.assertEqual((pitch, ppq, absent), (36, 2.0, True))
+
+    def test_parse_expected_hit_defaults_absent_false(self):
+        pitch, ppq, absent = c.parse_expected_hit(
+            '{"pitch": 36, "ppq": 2}', "expected"
+        )
+        self.assertEqual((pitch, ppq, absent), (36, 2.0, False))
+
+    def test_parse_expected_hit_bad_json_raises(self):
+        with self.assertRaises(c.CompareError):
+            c.parse_expected_hit("{not json}", "expected")
+
+    def test_skip_velocity_pitch_ignores_toggled_lane_velocity(self):
+        # The toggled lane (pitch 36) has a large velocity divergence that would
+        # normally fail; skip_velocity_pitch=36 drops the velocity check for that
+        # lane only. Pitch/ppq are still compared, so a real timing/pitch defect
+        # on that lane would still fail.
+        probe = (
+            '{"type":"noteOn","ppq":0.000000,"pitch":36,'
+            '"velocity":0.833000,"channel":0}\n'  # +0.023 vs golden -> would fail
+            '{"type":"noteOn","ppq":1.000000,"pitch":38,'
+            '"velocity":0.601500,"channel":0}\n'  # untouched lane, within eps
+        )
+        golden = (
+            "# h\n# h\n"
+            "0.000000   36  0.809530  0\n"
+            "1.000000   38  0.600000  0\n"
+        )
+        rc, out = self._compare(probe, golden, skip_velocity_pitch=36)
+        self.assertEqual(rc, 0, out)
+        self.assertIn("velocity NOT checked for pitch 36", out)
+
+    def test_skip_velocity_pitch_still_checks_other_lanes(self):
+        # Skipping the toggled lane's velocity must NOT mask a velocity defect on
+        # a DIFFERENT lane (pitch 38).
+        probe = (
+            '{"type":"noteOn","ppq":0.000000,"pitch":36,'
+            '"velocity":0.833000,"channel":0}\n'  # skipped
+            '{"type":"noteOn","ppq":1.000000,"pitch":38,'
+            '"velocity":0.700000,"channel":0}\n'  # +0.1 vs golden -> must fail
+        )
+        golden = (
+            "# h\n# h\n"
+            "0.000000   36  0.809530  0\n"
+            "1.000000   38  0.600000  0\n"
+        )
+        rc, out = self._compare(probe, golden, skip_velocity_pitch=36)
+        self.assertEqual(rc, 1)
+        self.assertIn("velocity", out)
+        self.assertIn("probe=0.7", out)
+
+    def test_skip_velocity_pitch_still_checks_toggled_lane_ppq(self):
+        # Skipping velocity must NOT skip the toggled lane's ppq check: a real
+        # timing shift on that lane still fails.
+        probe = (
+            '{"type":"noteOn","ppq":0.010000,"pitch":36,'
+            '"velocity":0.833000,"channel":0}\n'  # ppq off by 0.01 -> must fail
+        )
+        golden = "# h\n# h\n0.000000   36  0.809530  0\n"
+        rc, out = self._compare(probe, golden, skip_velocity_pitch=36)
+        self.assertEqual(rc, 1)
+        self.assertIn("ppq", out)
 
     def test_max_divergences_truncates(self):
         # Build 12 pitch-only-wrong events; identical velocities so only the 12
