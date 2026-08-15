@@ -33,6 +33,15 @@ param(
     # launch always uses the freshly-installed plugin's test project, not a stale
     # hand clone. Override for a local dry-run.
     [string] $FixtureCpr = "C:\actions-runner\_work\poly\poly\tests\cubase\fixtures\poly-4bar.cpr",
+    # Where poly_midi_probe flushes its JSONL on Cubase deactivate. This MUST be
+    # set in THIS shell before launch so the Cubase child inherits it -- the probe
+    # reads getenv("POLY_PROBE_OUTPUT") and writes nowhere if it is absent, which
+    # is exactly what happened in run #53 (e2e green, but no probe.jsonl -> the
+    # compare-to-golden step failed with "No such file"). The default matches the
+    # workflow's POLY_PROBE_OUTPUT (github.workspace\_artifacts\probe.jsonl) so the
+    # CI compare step finds it. An existing $env:POLY_PROBE_OUTPUT in this shell
+    # wins (non-standard runner layouts / local dry-runs).
+    [string] $ProbeOutput = "",
     # Sentinel the CI gate polls for. MUST match await-manual-cubase.ps1's default
     # ($env:TEMP\poly-cdp-go.txt) so the gate sees it.
     [string] $GoFile = "",
@@ -55,6 +64,21 @@ if (-not $exe) {
 }
 if (-not (Test-Path $FixtureCpr)) {
     throw "Fixture not found: $FixtureCpr"
+}
+
+# Resolve the probe output path. Precedence: explicit -ProbeOutput arg, then an
+# existing $env:POLY_PROBE_OUTPUT already in this shell, then the CI default
+# (derived from the fixture's workspace root: <workspace>\_artifacts\probe.jsonl,
+# matching the workflow's POLY_PROBE_OUTPUT). The fixture lives at
+# <workspace>\tests\cubase\fixtures\poly-4bar.cpr, so the workspace root is four
+# levels up.
+if (-not $ProbeOutput) {
+    if ($env:POLY_PROBE_OUTPUT) {
+        $ProbeOutput = $env:POLY_PROBE_OUTPUT
+    } else {
+        $workspace = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $FixtureCpr)))
+        $ProbeOutput = Join-Path $workspace "_artifacts\probe.jsonl"
+    }
 }
 
 # Remove any stale sentinel first so the gate never sees a leftover from a prior
@@ -81,12 +105,22 @@ if (Test-Path $safeModeFlag) {
     Write-Host "[launch-manual-cdp] no Safe Mode flag present (clean prior shutdown, nothing to clear)"
 }
 
-# STEP 1: set the CDP arg in THIS shell BEFORE launch. Start-Process inherits the
-# current process environment, so the launched Cubase (and the WebView2 child it
-# spawns) sees it. This is the load-bearing line -- without it the port never
-# binds.
+# STEP 1: set the CDP arg AND the probe output path in THIS shell BEFORE launch.
+# Start-Process inherits the current process environment, so the launched Cubase
+# (and the WebView2 child it spawns) sees both. These are the load-bearing lines:
+#   - WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: without it the CDP port never binds.
+#   - POLY_PROBE_OUTPUT: without it poly_midi_probe (running INSIDE this Cubase)
+#     reads getenv and finds nothing, so it writes no JSONL on deactivate and the
+#     CI compare-to-golden step fails with "No such file" (run #53). The automated
+#     launch-cubase.ps1 sets this the same way; the manual flow skips that script,
+#     so we must set it here.
 $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = "--remote-debugging-port=$CdpPort"
 Write-Host "[launch-manual-cdp] WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS"
+
+$probeDir = Split-Path -Parent $ProbeOutput
+if ($probeDir) { New-Item -ItemType Directory -Force -Path $probeDir | Out-Null }
+$env:POLY_PROBE_OUTPUT = $ProbeOutput
+Write-Host "[launch-manual-cdp] POLY_PROBE_OUTPUT = $env:POLY_PROBE_OUTPUT"
 
 # STEP 2: launch Cubase on the fixture.
 Write-Host "[launch-manual-cdp] launching Cubase $CubaseVersion on $FixtureCpr"
