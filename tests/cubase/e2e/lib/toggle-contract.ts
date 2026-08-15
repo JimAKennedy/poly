@@ -6,13 +6,17 @@ import path from 'node:path';
 // Keeping them here means the two halves can never drift on which step/pitch is
 // under test.
 
-// The fixture uses Poly's default patch; the default kick lane's MIDI note is 36
-// (GM kick), and the fixed-pattern (timeline) grid is 16 steps/bar in 4/4. We
-// toggle step 4 (beat 1, ppq 1.0) — its onset is distinct from the always-present
-// downbeat, so the assertion is unambiguous.
+// The fixture's kick lane (lane 0, MIDI note 36) is a timeline lane whose ladder
+// renders 4 steps/bar in 4/4 — one step per quarter note — and ALL FOUR steps
+// start ON (the golden shows pitch 36 firing at every integer ppq: 0,1,2,3,4,5…).
+// Because the lane is fully lit there is no OFF step to toggle ON, so the e2e
+// instead toggles step 2 (ppq 2.0, a mid-bar quarter) OFF and asserts that
+// note-on DISAPPEARS from the probe. Step 2 is unambiguous: at ppq 2.0 only lane
+// 0 emits pitch 36 (other lanes fire 38/42 there), and the 4-step cycle == 1 bar
+// so the step is removed in every bar (ppq 2.0, 6.0, 10.0, 14.0).
 export const KICK_PITCH = 36;
-export const STEPS_PER_BAR = 16;
-export const TOGGLE_STEP_INDEX = 4;
+export const STEPS_PER_BAR = 4;
+export const TOGGLE_STEP_INDEX = 2;
 export const KICK_LANE_INDEX = 0;
 
 // The spec writes the expected {pitch, ppq} here after toggling; assert-toggle.ts
