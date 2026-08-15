@@ -73,6 +73,13 @@ export interface ExpectedHit {
   ppq: number;
   /** Match tolerance on ppq; both sides derive from the same transport. */
   ppqTolerance?: number;
+  /**
+   * Direction of the toggle assertion. When false/omitted, the toggled step was
+   * turned ON and its note-on must be PRESENT. When true, the step was turned OFF
+   * (the fixture's kick lane starts fully lit — see toggle-contract.ts) and its
+   * note-on must be ABSENT from the probe.
+   */
+  absent?: boolean;
 }
 
 const DEFAULT_PPQ_TOLERANCE = 5e-4;
@@ -87,6 +94,21 @@ export function probeHasNoteOn(notes: ProbeNote[], expected: ExpectedHit): boole
   return noteOns(notes).some(
     (n) => n.pitch === expected.pitch && Math.abs(n.ppq - expected.ppq) <= tol,
   );
+}
+
+/**
+ * Resolve the toggle assertion in whichever direction the expectation records.
+ * Toggling a step ON adds a note-on (expect present); toggling a lit step OFF
+ * removes it (expect absent). Returns true when the probe matches the expected
+ * direction. Keeps the direction logic in one tested place so the assertion spec
+ * stays a thin read-and-check.
+ */
+export function probeMatchesToggle(
+  notes: ProbeNote[],
+  expected: ExpectedHit,
+): boolean {
+  const present = probeHasNoteOn(notes, expected);
+  return expected.absent ? !present : present;
 }
 
 /**

@@ -5,6 +5,7 @@ import {
   parseProbeJsonl,
   noteOns,
   probeHasNoteOn,
+  probeMatchesToggle,
   stepToPpq,
 } from './probe-assert';
 
@@ -85,12 +86,41 @@ test.describe('probeHasNoteOn', () => {
   });
 });
 
+test.describe('probeMatchesToggle', () => {
+  test('present expectation matches when the note-on is there (toggle ON)', () => {
+    const notes = parseProbeJsonl(PROBE_WITH_KICK);
+    expect(probeMatchesToggle(notes, { pitch: 36, ppq: 2.0 })).toBe(true);
+    expect(probeMatchesToggle(notes, { pitch: 36, ppq: 2.0, absent: false })).toBe(
+      true,
+    );
+  });
+
+  test('absent expectation matches when the note-on is gone (toggle OFF)', () => {
+    const notes = parseProbeJsonl(PROBE_WITH_KICK);
+    // ppq 1.0 has no kick — an absent expectation there is satisfied.
+    expect(probeMatchesToggle(notes, { pitch: 36, ppq: 1.0, absent: true })).toBe(
+      true,
+    );
+    // ppq 2.0 DOES have a kick — an absent expectation there fails.
+    expect(probeMatchesToggle(notes, { pitch: 36, ppq: 2.0, absent: true })).toBe(
+      false,
+    );
+  });
+});
+
 test.describe('stepToPpq', () => {
   test('maps step index to ppq for a 16-step bar in 4/4', () => {
     // 16 steps/bar, 4 beats/bar => each step is 0.25 ppq.
     expect(stepToPpq(0, 16)).toBe(0);
     expect(stepToPpq(4, 16)).toBe(1.0);
     expect(stepToPpq(8, 16)).toBe(2.0);
+  });
+
+  test('maps step index to ppq for the fixture kick lane (4 steps/bar)', () => {
+    // 4 steps/bar, 4 beats/bar => each step is 1.0 ppq (kick walks in quarters).
+    expect(stepToPpq(0, 4)).toBe(0);
+    expect(stepToPpq(2, 4)).toBe(2.0);
+    expect(stepToPpq(3, 4)).toBe(3.0);
   });
 
   test('non-positive stepsPerBar throws', () => {

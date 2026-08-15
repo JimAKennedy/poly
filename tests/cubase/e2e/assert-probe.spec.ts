@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 
 import { test, expect } from '@playwright/test';
 
-import { parseProbeJsonl, probeHasNoteOn } from './lib/probe-assert';
+import { parseProbeJsonl, probeMatchesToggle } from './lib/probe-assert';
 import { EXPECTED_HIT_FILE, PROBE_OUTPUT } from './lib/toggle-contract';
 
 // M042 S09 — post-quit probe assertion for the L4-web e2e.
@@ -22,19 +22,22 @@ interface ExpectedHit {
   pitch: number;
   ppq: number;
   ppqTolerance?: number;
+  absent?: boolean;
 }
 
 test.describe('L4-web: probe reflects the toggled step (post-quit)', () => {
-  test('probe JSONL contains the toggled kick note-on', () => {
+  test('probe JSONL reflects the toggled kick step', () => {
     const expected = JSON.parse(
       readFileSync(EXPECTED_HIT_FILE, 'utf-8'),
     ) as ExpectedHit;
     const jsonl = readFileSync(PROBE_OUTPUT, 'utf-8');
     const notes = parseProbeJsonl(jsonl, PROBE_OUTPUT);
+    const direction = expected.absent
+      ? `should NOT contain a note-on (step toggled OFF)`
+      : `should contain a note-on (step toggled ON)`;
     expect(
-      probeHasNoteOn(notes, expected),
-      `probe should contain a note-on for pitch ${expected.pitch} at ppq ` +
-        `${expected.ppq} — the toggled step should have fired`,
+      probeMatchesToggle(notes, expected),
+      `probe ${direction} for pitch ${expected.pitch} at ppq ${expected.ppq}`,
     ).toBe(true);
   });
 });

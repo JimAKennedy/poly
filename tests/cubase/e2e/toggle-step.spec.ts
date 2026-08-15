@@ -16,8 +16,9 @@ import {
 // M042 S09 — Playwright-over-CDP L4-web flagship.
 //
 // Attaches over CDP to the WebView2 that hosts Poly's editor INSIDE Cubase on
-// the Windows runner, toggles a kick step in the shipping WebUI, and plays the
-// transport via the S08 mido driver.
+// the Windows runner, toggles a kick step OFF in the shipping WebUI, and plays
+// the transport via the S08 mido driver. The fixture's kick lane starts fully
+// lit, so the observable change is a REMOVED onset (asserted absent post-quit).
 //
 // It deliberately does NOT read the probe JSONL here: poly_midi_probe flushes
 // its JSONL only on Cubase DEACTIVATE (setActive(false) in
@@ -142,21 +143,28 @@ test.describe('L4-web: Playwright over CDP toggles a step inside Cubase', () => 
       const ladder = lane.locator('.ladder');
       await expect(ladder.locator('button').first()).toBeVisible();
 
-      // Toggle the target step ON if it isn't already a hit.
+      // Toggle the target step. The fixture's kick lane starts fully lit (all 4
+      // steps ON — see toggle-contract.ts), so this click turns step 2 OFF, which
+      // must REMOVE its note-on from the probe. We do NOT read the `hit` CSS class
+      // as an oracle: the WebUI sets `hit` on every ladder button for a lane with
+      // additive cells (ui.js buildLadder: `l.cells || l.pattern[i]`), so it never
+      // reflects the engine's real fixedPattern. The probe is the true oracle —
+      // asserted post-quit by assert-probe.spec.ts.
       const step = ladder.locator('button').nth(TOGGLE_STEP_INDEX);
-      const wasHit = (await step.getAttribute('class'))?.includes('hit') ?? false;
-      if (!wasHit) {
-        await step.click();
-        await expect(step).toHaveClass(/\bhit\b/);
-      }
+      await step.click();
 
-      // Record the expected hit for the post-quit assertion. The probe file
+      // Record the expected change for the post-quit assertion. The probe file
       // doesn't exist yet — it's written on Cubase deactivate (quit), a later
-      // workflow step — so we hand the expectation to assert-toggle.ts.
+      // workflow step — so we hand the expectation to assert-probe.spec.ts.
+      // `absent: true` because we toggled the step OFF: its note-on must be gone.
       const expectedPpq = stepToPpq(TOGGLE_STEP_INDEX, STEPS_PER_BAR);
       writeFileSync(
         EXPECTED_HIT_FILE,
-        JSON.stringify({ pitch: KICK_PITCH, ppq: expectedPpq }, null, 2),
+        JSON.stringify(
+          { pitch: KICK_PITCH, ppq: expectedPpq, absent: true },
+          null,
+          2,
+        ),
       );
 
       // Drive the transport via the S08 mido driver (it waits for the MIDI
