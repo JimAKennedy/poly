@@ -292,13 +292,19 @@ jobs:
       # deactivate). Windows-only — WKWebView exposes no CDP. Requires a fixture
       # + loopMIDI 'poly-test' port + MIDI Remote script (R10, owner-provisioned),
       # so it stays dormant until POLY_CDP_PORT is set.
-      - name: Install e2e deps (Playwright + chromium)
+      - name: Install e2e deps (Playwright + chromium + mido driver)
         if: env.POLY_CDP_PORT != ''
         shell: pwsh
         working-directory: tests/cubase/e2e
         run: |
           npm ci
           npx playwright install chromium
+          # The e2e spec drives the transport inline via play_scenario.py while
+          # Cubase is up (before the standalone "Play scenario" step, which does
+          # its own install), so the mido driver deps must be present here or the
+          # inline call fails with ModuleNotFoundError. Repo root is three levels
+          # up from tests/cubase/e2e.
+          python -m pip install --quiet -r ../../../tests/cubase/driver/requirements.txt
 
       # Diagnostic (non-fatal): dump the Cubase window topology BEFORE the CDP
       # gate, so cubase-nightly-artifacts captures whether the Poly editor even
@@ -352,8 +358,15 @@ jobs:
       # driver waits for the script's ready ping, starts transport, plays the
       # scenario, and stops. Poly's output is captured by poly_midi_probe and
       # flushed to POLY_PROBE_OUTPUT when Cubase deactivates on quit (below).
+      #
+      # In the S09 (L4-web) flow the e2e spec above ALREADY drives the transport
+      # inline (it must play AFTER toggling the step, while Cubase is up). Playing
+      # again here would double the scenario into the same probe capture and break
+      # the golden compare, so this standalone step is skipped whenever the CDP
+      # flow is active (POLY_CDP_PORT set). It remains the sole player for the
+      # non-CDP S08 path.
       - name: Play scenario (mido driver)
-        if: env.POLY_FIXTURE_CPR != ''
+        if: env.POLY_FIXTURE_CPR != '' && env.POLY_CDP_PORT == ''
         shell: pwsh
         run: |
           python -m pip install --quiet -r tests/cubase/driver/requirements.txt
