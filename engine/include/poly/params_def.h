@@ -75,9 +75,9 @@ static constexpr std::array<Entry, 16> kLaneExprParamRegistry = {{
     {15, "Kotekan Source", Kind::KotekanSrc, -1.0, 7.0, -1.0},
 }};
 
-// Lane core params (10), addressed via ParamIDs::laneCoreParam(lane, offset).
-// Order matches plugids.h ParamIDs::kCoreSteps..kCoreMidiChannel.
-static constexpr std::array<Entry, 10> kLaneCoreParamRegistry = {{
+// Lane core params (11), addressed via ParamIDs::laneCoreParam(lane, offset).
+// Order matches plugids.h ParamIDs::kCoreSteps..kCoreFillEveryN.
+static constexpr std::array<Entry, 11> kLaneCoreParamRegistry = {{
     {0, "Steps", Kind::Ranged1_64, 1.0, 64.0, 4.0},
     {1, "Subdivision", Kind::Subdivision, 1.0, 16.0, 4.0},
     {2, "Hits", Kind::Ranged0_64, 0.0, 64.0, 4.0},
@@ -88,6 +88,10 @@ static constexpr std::array<Entry, 10> kLaneCoreParamRegistry = {{
     {7, "Pattern Length", Kind::Ranged0_64, 0.0, 64.0, 0.0},
     {8, "Tempo Mult", Kind::TempoMult, 0.25, 4.0, 1.0},
     {9, "MIDI Channel", Kind::MidiChannel, -1.0, 15.0, -1.0},
+    // M034 S01: fill-every-N bars. 0 = off; N>0 = fill on bars whose absolute
+    // bar index is a multiple of N. Ranged0_64 (round(norm*64)) stays well
+    // inside the engine's [0,1024] sanitize clamp.
+    {10, "Fill Every N", Kind::Ranged0_64, 0.0, 64.0, 0.0},
 }};
 
 namespace detail {

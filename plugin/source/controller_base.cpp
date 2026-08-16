@@ -71,6 +71,7 @@ static constexpr CoreParamDef kCoreParamDefs[] = {
     {ParamIDs::kCoreFixedPatternLen, "Pattern Length", "", 64, 0.0},
     {ParamIDs::kCoreTempoMult, "Tempo Mult", "x", 0, 0.2},
     {ParamIDs::kCoreMidiChannel, "MIDI Channel", "", 16, 0.0},
+    {ParamIDs::kCoreFillEveryN, "Fill Every N", "bars", 64, 0.0},
 };
 
 } // namespace
@@ -152,6 +153,8 @@ Steinberg::tresult PLUGIN_API PolyControllerBase::initialize(Steinberg::FUnknown
 
     addParam(ParamIDs::kActiveLaneCount, "Active Lanes", "", 7, 3.0 / 7.0, UnitIDs::kGlobal);
     addParam(ParamIDs::kSeed, "Seed", "", 0, 0.0, UnitIDs::kGlobal);
+    // M034 S01: momentary manual-fill trigger (0->1 edge forces a fill bar).
+    addParam(ParamIDs::kFillManualTrigger, "Fill Trigger", "", 1, 0.0, UnitIDs::kGlobal);
 
     registerOutputParameters();
 
@@ -273,6 +276,7 @@ Steinberg::tresult PLUGIN_API PolyControllerBase::setComponentState(Steinberg::I
         core(ParamIDs::kCoreFixedPatternLen, cfg.fixedPatternLength);
         core(ParamIDs::kCoreTempoMult, cfg.tempoMultiplier);
         core(ParamIDs::kCoreMidiChannel, cfg.midiChannel);
+        core(ParamIDs::kCoreFillEveryN, cfg.fillEveryNBars);
     }
 
     setParamNormalized(ParamIDs::kMacroComplexity, gs.macros.complexity);

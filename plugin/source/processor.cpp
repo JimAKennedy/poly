@@ -743,6 +743,11 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
     // Byte-identical NoteEvent output — the emission stream is a display-only
     // side channel (the null-buffer contract proves the notes are unchanged).
     emissionBuffer_.clear();
+    // M034 S01: consume the manual-fill latch for exactly one render pass. The
+    // transient GrooveState field is never serialized; resolved is a fresh copy
+    // each block so it defaults false unless we pulse it here.
+    resolved.fillManualTrigger = fillManualTriggered_;
+    fillManualTriggered_ = false;
     engine_.renderRange(tc_, resolved, noteBuffer_, &emissionBuffer_);
     publishEmissions();
     // endregion:process-render
@@ -901,6 +906,9 @@ static bool applyCoreParam(Steinberg::Vst::ParamID id, double normalized, Groove
     case kCoreMidiChannel:
         cfg.midiChannel = static_cast<int16_t>(eng);
         break;
+    case kCoreFillEveryN:
+        cfg.fillEveryNBars = static_cast<int>(eng);
+        break;
     default:
         break;
     }
@@ -1016,6 +1024,13 @@ void PolyProcessor::applyParameter(Steinberg::Vst::ParamID id, double normalized
     case kExportTrigger:
         if (normalized > 0.5)
             exportTriggered_ = true;
+        break;
+    case kFillManualTrigger:
+        // M034 S01: momentary edge. Latch on 0->1; the render path consumes it
+        // for exactly one pass (forcing the current bar to render as a fill bar)
+        // and clears the latch.
+        if (normalized > 0.5)
+            fillManualTriggered_ = true;
         break;
     case kCaptureLength:
         captureLengthBars_ = 1 + static_cast<int>(std::round(normalized * 31.0));

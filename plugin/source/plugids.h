@@ -49,6 +49,9 @@ static constexpr Steinberg::Vst::ParamID kMacroHumanize = 205;
 
 static constexpr Steinberg::Vst::ParamID kActiveLaneCount = 300;
 static constexpr Steinberg::Vst::ParamID kSeed = 301;
+// M034 S01: global momentary trigger — a 0->1 edge forces every lane to render
+// the current bar as a fill bar for one render pass (see processor.cpp).
+static constexpr Steinberg::Vst::ParamID kFillManualTrigger = 302;
 
 static constexpr Steinberg::Vst::ParamID kVelocityOutputBase = 400;
 inline Steinberg::Vst::ParamID velocityOutput(int lane) {
@@ -73,7 +76,7 @@ inline Steinberg::Vst::ParamID phrasePhaseOutput(int lane) {
 static constexpr Steinberg::Vst::ParamID kTransportPpqOutput = 450;
 
 static constexpr Steinberg::Vst::ParamID kLaneCoreBase = 800;
-static constexpr int kCoreParamsPerLane = 10;
+static constexpr int kCoreParamsPerLane = 11;
 static constexpr int kCoreSteps = 0;
 static constexpr int kCoreSubdivision = 1;
 static constexpr int kCoreHits = 2;
@@ -84,6 +87,7 @@ static constexpr int kCoreTimeline = 6;
 static constexpr int kCoreFixedPatternLen = 7;
 static constexpr int kCoreTempoMult = 8;
 static constexpr int kCoreMidiChannel = 9;
+static constexpr int kCoreFillEveryN = 10; // M034 S01: per-lane fill-every-N bars
 
 inline Steinberg::Vst::ParamID laneCoreParam(int lane, int offset) {
     return kLaneCoreBase + static_cast<Steinberg::Vst::ParamID>(lane * kCoreParamsPerLane + offset);
