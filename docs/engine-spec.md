@@ -70,6 +70,25 @@ This guarantees:
 - Block boundaries are invisible (same step index regardless of split point)
 - Lanes cycle identically under any host meter (only scene chain, envelopes, and capture windows follow host meter)
 
+> **Roadmap note — M034 S02 superseded by M051 S02 (2026-08-16).** The
+> meter-independent lane math and the host-meter bar count
+> (`TransportContext::ppqPerBar()`) that M034 S02 originally scoped were
+> delivered ahead of schedule by **M051 S02** (commit `2af1c77`, decision
+> D003, MEM026) — read host time signature, replace the hardcoded bar-length
+> constants in `scene.h`, `envelope.cpp`, and `midi_capture.h`, and verify
+> chain/envelope/capture behaviour in non-4/4, all proven at the engine level
+> by `tests/time_signature_tests.cpp`. M034 S02 was therefore closed as a
+> **boundary-verification** slice layered on the M051-delivered engine work:
+> it adds the missing VST3-boundary integration proof that a non-4/4 host
+> meter flows from `Vst::ProcessContext` (`kTimeSigValid`) through
+> `PolyProcessor::process()` into the engine's `TransportContext` and the real
+> render call sites (`SceneChainState::update`, `computeEnvelopePhase`, and the
+> capture window). No production source change was needed; the slice adds the
+> `PolyTestHost` host-time-signature injection capability and the boundary
+> regression tests.
+> [verified: HostTests.HostTimeSig_ThreeFourReachesEngine]
+> [verified: HostTests.HostTimeSig_SevenEightReachesEngineEveryBlock]
+
 ### Transport Context
 
 ```cpp
