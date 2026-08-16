@@ -10,6 +10,11 @@
   const CONV = 120;
   const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const NS = 'http://www.w3.org/2000/svg';
+  // M032 S02 (T03): per-lane export/drag affordance is plugin-only, gated on the
+  // same canExport capability as the global Export chip. The mock flips it true
+  // via the ?export=1 seam so the per-lane-export spec can exercise the trigger
+  // contract without a native build.
+  const CAN_EXPORT = !!(host.capabilities && host.capabilities.canExport);
 
   let S = null; // latest state snapshot
   let lastFrame = { t8: 0, playing: false, convLeft: CONV, lanes: [] };
@@ -898,6 +903,7 @@
         <div class="head">
           <div class="nm"><b>${l.name}</b>${l.role}</div>
           <button class="mute${l.active ? '' : ' off'}" data-mute aria-label="Mute ${l.name}" title="Mute">●</button>
+          ${CAN_EXPORT ? `<button class="lex" draggable="true" data-lex aria-label="Export ${l.name} lane" title="Export or drag just this lane to your DAW">⇱</button>` : ''}
           <button class="ex" aria-label="Expand ${l.name} strip" title="Expand">⤢</button>
         </div>
         <div class="body2">
@@ -947,6 +953,24 @@
         host.edit(`lane.${li}.active`, active ? 0 : 1, 'perform');
         host.edit(`lane.${li}.active`, active ? 0 : 1, 'end');
       });
+      // M032 S02 (T03): per-lane export/drag. A click saves just this lane
+      // (exportSaveAs {lane}); a drag hands just this lane's .mid to the DAW
+      // (beginMidiDrag {lane}). Both carry {lane: li} so the native handler
+      // forwards laneFilter into renderPatternToSMF — the global Export chip
+      // keeps firing an empty payload (all lanes). Plugin-only (CAN_EXPORT).
+      const lex = s.querySelector('[data-lex]');
+      if (lex) {
+        lex.addEventListener('click', (e) => {
+          e.stopPropagation();
+          host.action('exportSaveAs', { lane: li });
+        });
+        lex.addEventListener('dragstart', (e) => {
+          e.stopPropagation();
+          host.action('beginMidiDrag', { lane: li });
+          lex.classList.add('dragging');
+        });
+        lex.addEventListener('dragend', () => lex.classList.remove('dragging'));
+      }
       s.querySelectorAll('.tabs button').forEach((tb) =>
         tb.addEventListener('click', () => {
           tabState[li] = tb.dataset.tab;

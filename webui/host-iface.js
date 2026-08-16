@@ -38,9 +38,16 @@
  *   //                                          source: site/src/generated/presets.json)
  *   //   'togglePlay'      {}            (mock only; native transport is host-owned)
  *   //   'exportRequest'   {}
- *   //   'beginMidiDrag'   {}            (G06: open native drag-source window for
- *   //                                    drag-to-DAW; canExport-gated, plugin only,
- *   //                                    fires only when capState===3/complete)
+ *   //   'exportSaveAs'    {lane?}       (canExport-gated, plugin only: offline-render
+ *   //                                    the current pattern to SMF and open the
+ *   //                                    native Save-As panel. Optional {lane:N}
+ *   //                                    (M032 S02) exports only lane N as one named
+ *   //                                    track; absent/negative = all lanes.)
+ *   //   'beginMidiDrag'   {lane?}       (G06: open native drag-source window for
+ *   //                                    drag-to-DAW; canExport-gated, plugin only.
+ *   //                                    M053 S11 removed the capState gate — fires
+ *   //                                    in every capture state. Optional {lane:N}
+ *   //                                    (M032 S02) drags only that lane.)
  *   //   'armCapture'      {}            (M051 S08: arm the capture state machine)
  *   //   'resetCapture'    {}            (M051 S08: reset to idle from any state)
  *   //   'setCaptureBars'  {bars}        (M051 S08: bar window length, bound to

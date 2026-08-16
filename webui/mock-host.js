@@ -917,12 +917,22 @@
       case 'exportRequest':
         console.info('[mock-host] exportRequest — native host runs the SMF export path here');
         break;
+      case 'exportSaveAs':
+        // M053 S11 / M032 S02: the native host offline-renders the current
+        // pattern to SMF and opens a Save-As panel. An optional {lane:N} payload
+        // (M032 S02) restricts the export to one lane; absent = all lanes. The
+        // mock has no native SMF path — record the intent (the wrapped action
+        // log carries the {lane} payload for the per-lane spec) and change no
+        // state.
+        console.info('[mock-host] exportSaveAs — native host runs the SMF Save-As path here', payload);
+        return;
       case 'beginMidiDrag':
         // G06: the native host opens a platform drag-source window here
         // (platform_drag_source_mac.mm / _win.cpp) carrying the frozen .mid.
-        // The mock has no native surface — record the intent (via the wrapped
-        // action log in tests) and change no state.
-        console.info('[mock-host] beginMidiDrag — native host opens the drag-source window here');
+        // M032 S02: an optional {lane:N} payload drags only that lane. The mock
+        // has no native surface — record the intent (via the wrapped action log
+        // in tests) and change no state.
+        console.info('[mock-host] beginMidiDrag — native host opens the drag-source window here', payload);
         return;
       default:
         console.warn('[mock-host] unknown action', name, payload);

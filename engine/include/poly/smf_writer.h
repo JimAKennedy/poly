@@ -2,6 +2,8 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
+#include <string>
 #include <vector>
 
 #include "poly/types.h"
@@ -22,6 +24,26 @@ static constexpr double kSmfMinTempo = 20.0;
 // region:writeSMF
 std::vector<uint8_t> writeSMF(const NoteEvent* events, size_t count, double tempo, double ppqOffset = 0.0);
 // endregion:writeSMF
+
+// region:writeMultiTrackSMF
+// Format-1 multi-track serializer. Emits MThd with format=1 and
+// ntrks = 1 + (number of distinct NoteEvent::laneIndex values among events).
+// Track 0 is a conductor track carrying only the FF 51 tempo meta + FF 2F
+// end-of-track. Each subsequent MTrk holds exactly one lane's note events,
+// ordered by ascending laneIndex, and is preceded by an FF 03 track-name meta.
+//
+// nameForLane maps a laneIndex to a human-readable track name (e.g. the offline
+// export path passes laneName(midiNote) → "Kick"/"Snare"/...). When it is empty
+// (the legacy capture path, which has no LaneConfig) each track falls back to
+// "Lane N" where N = laneIndex + 1.
+//
+// tempo clamp (kSmfMinTempo), ppqOffset trimming, VLQ delta encoding, and the
+// note-off-before-note-on-at-same-tick ordering all match writeSMF; only the
+// chunk layout differs. writeSMF is left untouched for the Format-0 parity
+// harness — this is a separate function.
+std::vector<uint8_t> writeMultiTrackSMF(const NoteEvent* events, size_t count, double tempo, double ppqOffset = 0.0,
+                                        const std::function<std::string(int laneIndex)>& nameForLane = {});
+// endregion:writeMultiTrackSMF
 
 size_t writeVLQ(uint32_t value, uint8_t* out);
 

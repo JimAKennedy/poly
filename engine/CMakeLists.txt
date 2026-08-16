@@ -4,6 +4,7 @@ add_library(poly_engine STATIC
     src/engine.cpp
     src/envelope.cpp
     src/euclidean.cpp
+    src/lane_name.cpp
     src/macro.cpp
     src/midi_capture.cpp
     src/offline_render.cpp

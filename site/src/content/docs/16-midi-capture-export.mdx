@@ -14,13 +14,13 @@ The answer is MIDI capture. Poly continuously records every note it generates in
 
 ## The Capture Buffer
 
-Every `NoteEvent` that Poly's engine produces during playback is written into a `MidiCaptureBuffer` — a fixed-size circular buffer that holds the most recent 2048 events. At typical groove densities (four to six active lanes, moderate Density), this covers roughly eight bars of output. [⚠ unverified] Busier patches with high Complexity and many active lanes will fill the buffer faster; sparser patches will retain more history.
+Every `NoteEvent` that Poly's engine produces during playback is written into a `MidiCaptureBuffer` — a fixed-size circular buffer that holds the most recent 8192 events. That ceiling is sized at twice the worst-case density of a full 32-bar capture (8 active lanes × 16 steps × 32 bars = 4096 onsets), so even the densest patch exports a full 32-bar window without dropping notes. [verified: MidiCaptureBuffer.DenseThirtyTwoBarPatternNoEventLoss] At typical groove densities (four to six active lanes, moderate Density) the buffer holds far more history than any capture length will ever request. [⚠ unverified] Busier patches with high Complexity and many active lanes fill the buffer faster; sparser patches retain more history.
 
 The buffer stores each event's PPQ position, pitch, velocity, MIDI channel, and duration — everything needed to reconstruct the musical content as a standard MIDI part. There is no separate "recording" state to engage. As long as the DAW transport is running, the buffer is capturing. When the transport stops, the buffer resets. When the DAW loops back to the start of a region, the capture buffer is preserved across the wrap — the last several bars from before the loop remain exportable. [verified: HostTests.LoopWrap_CaptureBufferPreservedAcrossPasses]
 
 This design is deliberate. Poly's output is generative — every playback produces a slightly different result, shaped by mutation, humanization, and macro modulation. The circular buffer ensures that whatever you just heard is always available for export, without requiring you to anticipate which pass will produce the keeper. You listen, you react, you capture.
 
-The 2048-event capacity is a hard limit. When the buffer is full, the oldest events are overwritten as new ones arrive. This is the standard circular buffer trade-off: you always have the most recent material, but distant history is gone. For most workflows this is exactly right — you are capturing a moment, not an entire session.
+The 8192-event capacity is a hard limit. When the buffer is full, the oldest events are overwritten as new ones arrive. This is the standard circular buffer trade-off: you always have the most recent material, but distant history is gone. For most workflows this is exactly right — you are capturing a moment, not an entire session.
 
 ## Export Controls
 

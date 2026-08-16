@@ -50,10 +50,18 @@ private:
     // M053 S11: offline MIDI export helpers. renderCurrentPatternSmf renders the
     // controller's live cachedState to an SMF blob with no DAW transport; the two
     // sinks feed those bytes to the Save-As panel / native drag source.
-    std::vector<uint8_t> renderCurrentPatternSmf() const;
+    // M032 S02 (T03): laneFilter forwards to renderPatternToSMF — -1 (default)
+    // exports every active lane; N in [0, kMaxLanes) exports only lane N as a
+    // single named MTrk. The WebUI Export chip passes the payload's optional
+    // {lane} through so a per-lane drag/save emits just that lane.
+    std::vector<uint8_t> renderCurrentPatternSmf(int laneFilter = -1) const;
     void openMidiExportDialog(const std::vector<uint8_t>& bytes);
     void beginDragExport(const std::vector<uint8_t>& bytes);
     std::string suggestedExportName() const;
+    // Push an exportResult message to the WebUI (toast / clear pending). Empty
+    // path = cancelled. Shared by the Save-As completion callback and the
+    // POLY_EXPORT_SINK test path.
+    void pushExportResult(const std::string& savedPath);
 
     PolyController* controller_ = nullptr;
     std::unique_ptr<choc::ui::WebView> webview_;

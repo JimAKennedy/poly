@@ -2,10 +2,13 @@
 
 #include <algorithm>
 #include <cmath>
+#include <functional>
+#include <string>
 #include <vector>
 
 #include "poly/constraint.h"
 #include "poly/engine.h"
+#include "poly/lane_name.h"
 #include "poly/macro.h"
 #include "poly/scene.h"
 #include "poly/smf_writer.h"
@@ -34,7 +37,7 @@ GrooveState resolveRenderState(const SceneState& scene) {
 } // namespace
 
 std::vector<uint8_t> renderPatternToSMF(const SceneState& scene, int bars, double tempo, int timeSigNumerator,
-                                        int timeSigDenominator) {
+                                        int timeSigDenominator, int laneFilter) {
     // Argument hardening: this primitive has no external dependencies, so the
     // only failure modes are out-of-range inputs. Clamp them to sane ranges so
     // the block loop is finite and every field the engine indexes is valid.
@@ -86,12 +89,33 @@ std::vector<uint8_t> renderPatternToSMF(const SceneState& scene, int bars, doubl
         ppq = blockEnd;
     }
 
+    // Per-lane export: keep only the requested lane's events before serializing.
+    // laneFilter < 0 means "all lanes" (default). A specific N drops every event
+    // whose laneIndex differs, so writeMultiTrackSMF emits the conductor track
+    // plus exactly one named MTrk for lane N; an out-of-range N simply matches
+    // nothing, yielding a conductor-only file (never a throw).
+    if (laneFilter >= 0) {
+        events.erase(std::remove_if(events.begin(), events.end(),
+                                    [laneFilter](const NoteEvent& e) { return e.laneIndex != laneFilter; }),
+                     events.end());
+    }
+
     std::sort(events.begin(), events.end(),
               [](const NoteEvent& a, const NoteEvent& b) { return a.ppqPosition < b.ppqPosition; });
 
+    // Format-1 export: one named MTrk per active lane. The offline path has the
+    // resolved GrooveState, so each lane's configured GM note yields a real drum
+    // name ("Kick"/"Snare"/...) via laneName() rather than a bare "Lane N". A
+    // NoteEvent::laneIndex outside the lane array falls back to the empty name,
+    // which writeMultiTrackSMF turns into "Lane N".
+    auto nameForLane = [&resolved](int laneIndex) -> std::string {
+        if (laneIndex >= 0 && laneIndex < kMaxLanes)
+            return laneName(resolved.lanes[static_cast<size_t>(laneIndex)].midiNote);
+        return {};
+    };
     // ppqOffset 0.0: the render starts at bar 0, so absolute PPQ positions are
     // already the intended file positions (no leading-silence trim needed).
-    return writeSMF(events.data(), events.size(), safeTempo, 0.0);
+    return writeMultiTrackSMF(events.data(), events.size(), safeTempo, 0.0, nameForLane);
 }
 
 } // namespace poly

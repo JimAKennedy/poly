@@ -24,6 +24,11 @@ struct UISnapshot {
     // Defaults to 4/4 when the host doesn't publish kTimeSigValid.
     std::atomic<int16_t> timeSigNumerator{4};
     std::atomic<int16_t> timeSigDenominator{4};
+    // M032 S03: host tempo (BPM), populated from ProcessContext.tempo every
+    // block. The offline WebUI export path (renderCurrentPatternSmf) reads this
+    // so the exported SMF tempo meta reflects the real host tempo instead of a
+    // hardcoded 120.0. Defaults to 120.0 before the first process() call.
+    std::atomic<double> tempoBpm{120.0};
 
     // M051 S08: capture state machine surfaced to the WebUI Cloth timeline so
     // the arm->capture->complete progression is directly observable (the visual

@@ -8,6 +8,7 @@
 #include <chrono>
 #include <cmath>
 #include <cstdio>
+#include <cstdlib>
 #include <ctime>
 #include <string>
 
@@ -236,6 +237,16 @@ void WebUIView::handleHostCall(const std::string& json) {
     } catch (...) {
         // Malformed JSON — drop silently per bridge-schema invariant
     }
+}
+
+// M032 S02 (T03): read the optional {lane} export payload. Absent, non-int, or
+// out-of-range values yield -1 (all lanes), so the all-lanes default is
+// preserved and renderPatternToSMF safely ignores a bad index (conductor-only).
+static int exportLaneFilter(const choc::value::ValueView& payload) {
+    if (!payload.isObject() || !payload.hasObjectMember("lane"))
+        return -1;
+    const auto lane = payload["lane"].get<int32_t>();
+    return (lane >= 0 && lane < kMaxLanes) ? lane : -1;
 }
 
 void WebUIView::handleAction(const std::string& name, const choc::value::ValueView& payload) {
@@ -573,9 +584,11 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
         // panel over those bytes. No capture-state gate and no processor
         // round-trip — the Export chip works from a stopped preview.
         // saveDialogOpen_ still guards against re-entrant panels.
+        // M032 S02 (T03): an optional {lane} payload restricts the export to one
+        // lane; absent/negative means all lanes (unchanged all-lanes default).
         if (saveDialogOpen_)
             return;
-        openMidiExportDialog(renderCurrentPatternSmf());
+        openMidiExportDialog(renderCurrentPatternSmf(exportLaneFilter(payload)));
         return;
     }
 
@@ -584,7 +597,8 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
         // current pattern offline and hand the bytes to the native drag-source
         // window (NSPasteboard / OLE CF_HDROP, via the platform_drag_source
         // seam). No capture gating — works from a stopped preview.
-        beginDragExport(renderCurrentPatternSmf());
+        // M032 S02 (T03): honours the same optional {lane} per-lane payload.
+        beginDragExport(renderCurrentPatternSmf(exportLaneFilter(payload)));
         return;
     }
 
@@ -1007,18 +1021,56 @@ std::string WebUIView::suggestedExportName() const {
     return name;
 }
 
-std::vector<uint8_t> WebUIView::renderCurrentPatternSmf() const {
+std::vector<uint8_t> WebUIView::renderCurrentPatternSmf(int laneFilter) const {
     // M053 S11: render the CURRENT pattern (controller cachedState) to an SMF
     // blob with no DAW transport. Bars come from the capture-length mirror
-    // (kCaptureLength) and timesig from the UI snapshot. Tempo has no UI-thread
-    // source, so a 120 BPM fallback is used — it only affects the SMF tempo meta
-    // event, not the PPQ note positions, and matches the engine render defaults
-    // (see 53-11-RESEARCH.md). Runs on the message thread; allocation is fine.
+    // (kCaptureLength) and timesig from the UI snapshot. Runs on the message
+    // thread; allocation is fine.
+    //
+    // M032 S03 (T02): tempo now comes from the UI snapshot too. The processor
+    // publishes ctx.tempo into UISnapshot.tempoBpm every process() block, so the
+    // exported SMF tempo meta mirrors the host tempo the plugin last saw instead
+    // of the old hardcoded 120.0 (MEM054). The snapshot defaults to 120.0 before
+    // the first process() call, preserving the prior fallback when no host tempo
+    // has been observed yet. Tempo only affects the SMF tempo meta event, not the
+    // PPQ note positions.
     auto* snap = controller_->uiSnapshot();
     const int bars = snap ? snap->captureBars.load(std::memory_order_relaxed) : 8;
     const int tsNum = snap ? snap->timeSigNumerator.load(std::memory_order_relaxed) : 4;
     const int tsDen = snap ? snap->timeSigDenominator.load(std::memory_order_relaxed) : 4;
-    return renderPatternToSMF(controller_->cachedState(), bars, 120.0, tsNum, tsDen);
+    const double tempo = snap ? snap->tempoBpm.load(std::memory_order_relaxed) : 120.0;
+    return renderPatternToSMF(controller_->cachedState(), bars, tempo, tsNum, tsDen, laneFilter);
+}
+
+// Test-only export byte sink, gated on the POLY_EXPORT_SINK env var. When set
+// (runner-only; unset in every shipping build), the shipping Export path also
+// writes the exact SMF bytes it would hand to the native Save-As panel to that
+// file path. This lets the L4-web e2e capture the IN-DAW export blob over CDP
+// without automating the modal native file dialog — the same pattern as
+// POLY_PROBE_OUTPUT (the env var is read from the process Cubase inherited at
+// launch; launch-cubase.ps1 exports it). No-op and zero cost when the var is
+// unset. Returns true if a sink was configured and the write succeeded, so the
+// caller can log the fallout; a failed write is logged but never blocks the
+// user-facing dialog/drag. Message-thread only (called from the export
+// handlers), so blocking file I/O is fine here.
+static bool writeExportSinkIfEnabled(const std::vector<uint8_t>& bytes) {
+    const char* sinkPath = std::getenv("POLY_EXPORT_SINK");
+    if (sinkPath == nullptr || sinkPath[0] == '\0')
+        return false;
+    std::FILE* f = std::fopen(sinkPath, "wb");
+    if (f == nullptr) {
+        std::fprintf(stderr, "[poly] POLY_EXPORT_SINK: could not open %s for writing\n", sinkPath);
+        return false;
+    }
+    const size_t written = bytes.empty() ? 0 : std::fwrite(bytes.data(), 1, bytes.size(), f);
+    std::fclose(f);
+    if (written != bytes.size()) {
+        std::fprintf(stderr, "[poly] POLY_EXPORT_SINK: short write to %s (%zu/%zu bytes)\n", sinkPath, written,
+                     bytes.size());
+        return false;
+    }
+    std::fprintf(stderr, "[poly] POLY_EXPORT_SINK: wrote %zu bytes to %s\n", bytes.size(), sinkPath);
+    return true;
 }
 
 void WebUIView::beginDragExport(const std::vector<uint8_t>& bytes) {
@@ -1026,25 +1078,52 @@ void WebUIView::beginDragExport(const std::vector<uint8_t>& bytes) {
     // Unlike the Save-As panel this is non-modal (no saveDialogOpen_ re-entrancy
     // guard): beginMidiDragExport writes a temp .mid and hands off to the OS drag
     // pasteboard, returning immediately.
+    //
+    // Test hook (POLY_EXPORT_SINK): in sink mode the per-lane DRAG export bytes
+    // are written to the sink and the OS drag is SKIPPED — beginMidiDragExport
+    // would start a native drag loop with no drop target under the unattended
+    // e2e. This makes S02's deferred single-lane-drag UAT verifiable over CDP
+    // (click the lane's drag affordance, then validate the sink file) without
+    // automating an OS drag gesture. Off and free in shipping builds, where the
+    // real OS drag runs unchanged.
+    if (writeExportSinkIfEnabled(bytes))
+        return;
     beginMidiDragExport(parentView_, suggestedExportName(), bytes);
 }
 
+void WebUIView::pushExportResult(const std::string& savedPath) {
+    if (!webview_ || !webviewReady_)
+        return;
+    // Notify the WebUI so it can toast success or clear its "…" pending
+    // indicator. Empty path = cancelled.
+    std::string js = "window.polyHostPush({\"type\":\"exportResult\",\"savedPath\":";
+    if (savedPath.empty()) {
+        js += "\"\"";
+    } else {
+        js += choc::json::getEscapedQuotedString(savedPath);
+    }
+    js += "})";
+    webview_->evaluateJavascript(js);
+}
+
 void WebUIView::openMidiExportDialog(const std::vector<uint8_t>& bytes) {
+    // Test hook (POLY_EXPORT_SINK): in sink mode the shipping export bytes are
+    // written straight to the sink path and the native Save-As panel is SKIPPED.
+    // The panel's Show() is modal and blocks the UI thread until a human picks a
+    // path — under the unattended L4-web e2e that would hang forever. In sink
+    // mode we already have the exact bytes on disk, so bypassing the modal loses
+    // nothing and lets the e2e drive export unattended. We still push an
+    // exportResult carrying the sink path so the WebUI toast fires — an
+    // observable success signal the CDP spec can assert on. Off (and free) in
+    // every shipping build, where the modal path runs unchanged.
+    if (writeExportSinkIfEnabled(bytes)) {
+        pushExportResult(std::getenv("POLY_EXPORT_SINK"));
+        return;
+    }
     saveDialogOpen_ = true;
     openMidiSaveDialog(parentView_, suggestedExportName(), bytes, [this](const std::string& savedPath) {
         saveDialogOpen_ = false;
-        if (!webview_ || !webviewReady_)
-            return;
-        // Notify the WebUI so it can toast success or clear
-        // its "…" pending indicator. Empty path = cancelled.
-        std::string js = "window.polyHostPush({\"type\":\"exportResult\",\"savedPath\":";
-        if (savedPath.empty()) {
-            js += "\"\"";
-        } else {
-            js += choc::json::getEscapedQuotedString(savedPath);
-        }
-        js += "})";
-        webview_->evaluateJavascript(js);
+        pushExportResult(savedPath);
     });
 }
 

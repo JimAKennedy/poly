@@ -1,3 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright 2024-2026 Jim Kennedy
+#include <vector>
+
 #include <gtest/gtest.h>
 
 #include "poly/midi_capture.h"
@@ -187,6 +191,45 @@ TEST(MidiCaptureBuffer, ExtractWindowEvictedAfterWrap) {
     NoteEvent after[64];
     size_t nAfter = buf.extract(0.0, 8.0, after, 64);
     EXPECT_EQ(nAfter, 0u);
+}
+
+// M032 S02 T01: The milestone requires the capture ceiling to hold at least a
+// 32-bar dense pattern without event loss. The worst realistic case is 8 lanes
+// (kMaxLanes) each firing a note on every sixteenth (subdivision clamps to 16):
+// 32 bars * 16 steps/bar * 8 lanes = 4096 note events. Push all of them, then
+// prove none were evicted and extractLastBars(32) returns every one. Before
+// kCapacity was raised (2048) the ring dropped the first half of the window.
+TEST(MidiCaptureBuffer, DenseThirtyTwoBarPatternNoEventLoss) {
+    MidiCaptureBuffer buf;
+
+    constexpr int kBars = 32;
+    constexpr int kLanes = 8;                                                   // kMaxLanes
+    constexpr int kStepsPerBar = 16;                                            // sixteenths = max subdivision
+    constexpr double kStepPpq = MidiCaptureBuffer::kBeatsPerBar / kStepsPerBar; // 0.25 PPQ
+    constexpr int kExpected = kBars * kStepsPerBar * kLanes;                    // 4096
+
+    int pushed = 0;
+    for (int bar = 0; bar < kBars; ++bar) {
+        for (int step = 0; step < kStepsPerBar; ++step) {
+            double ppq = static_cast<double>(bar * kStepsPerBar + step) * kStepPpq;
+            for (int lane = 0; lane < kLanes; ++lane) {
+                NoteEvent e = makeEvent(ppq, static_cast<int16_t>(36 + lane), 0.8f, static_cast<int16_t>(lane));
+                e.laneIndex = static_cast<int16_t>(lane);
+                buf.push(e);
+                ++pushed;
+            }
+        }
+    }
+
+    EXPECT_EQ(pushed, kExpected);
+    EXPECT_LE(static_cast<size_t>(kExpected), MidiCaptureBuffer::kCapacity);
+    // No eviction: every pushed event is still resident in the ring.
+    EXPECT_EQ(buf.count(), static_cast<size_t>(kExpected));
+
+    // extractLastBars(32) over the whole pattern must return all 4096 events.
+    std::vector<NoteEvent> out(MidiCaptureBuffer::kCapacity);
+    size_t n = buf.extractLastBars(kBars, out.data(), out.size());
+    EXPECT_EQ(n, static_cast<size_t>(kExpected));
 }
 
 TEST(MidiCaptureBuffer, ExtractSortedOutput) {

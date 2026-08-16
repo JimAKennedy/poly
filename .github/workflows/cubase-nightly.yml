@@ -117,6 +117,15 @@ jobs:
       # Localhost-only; gated by the box's LAN posture (Part 10). Windows-only
       # (WKWebView exposes no CDP). See docs/windows-test-runner-setup.md Part 12.
       POLY_CDP_PORT: ${{ github.event_name == 'schedule' && '9222' || github.event.inputs.cdp_port }}
+      # M032 export UAT automation (Level A). When the plugin sees POLY_EXPORT_SINK,
+      # the shipping Export chip / per-lane export writes the exact SMF bytes to
+      # this path and SKIPS the modal native Save-As panel (which would block the
+      # UI thread forever under the unattended runner). The export-midi e2e clicks
+      # Export over CDP, then validates this file with the independent mido parser.
+      # Like POLY_PROBE_OUTPUT it must exist in the environment Cubase inherits at
+      # launch — set here so launch-cubase.ps1's child Cubase reads it. Harmless on
+      # non-CDP runs (no e2e clicks Export, so the plugin never writes it).
+      POLY_EXPORT_SINK: "${{ github.workspace }}\\_artifacts\\export-sink.mid"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
 
@@ -371,6 +380,27 @@ jobs:
           # directly. The wait-for-CDP step above already confirmed the port.
           Push-Location tests/cubase/e2e
           npx playwright test toggle-step.spec.ts
+          $code = $LASTEXITCODE
+          Pop-Location
+          if ($code -ne 0) { exit $code }
+
+      # M032 export UAT automation (Level A): drive the SHIPPING in-plugin MIDI
+      # export while Cubase is up. The spec attaches over CDP, clicks the Export
+      # chip (all lanes) and a per-lane export handle — each writes its SMF bytes
+      # to POLY_EXPORT_SINK (the modal dialog is skipped in sink mode) — then
+      # validates each file with the independent mido parser (Format-1, named GM
+      # tracks, no dropped notes, host tempo). This automates M032's deferred
+      # "export a .mid, open in Cubase, confirm named tracks" manual UAT for the
+      # real in-DAW export path. Runs in the CDP flow only (same gate as the
+      # toggle e2e); the validator's mido dep is installed by the e2e-deps step
+      # above (driver requirements.txt pins mido). Uses the freshly-installed
+      # plugin, so it exercises the current export code, not a stale bundle.
+      - name: Run L4-web export e2e (in-DAW MIDI export, validate SMF)
+        if: env.POLY_CDP_PORT != ''
+        shell: pwsh
+        run: |
+          Push-Location tests/cubase/e2e
+          npx playwright test export-midi.spec.ts
           $code = $LASTEXITCODE
           Pop-Location
           if ($code -ne 0) { exit $code }
