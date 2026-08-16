@@ -107,10 +107,27 @@ static void buildLanePattern(const LaneConfig& cfg, const GrooveState& state, in
             const auto& src = state.lanes[cfg.kotekanSourceLane];
             std::array<bool, kMaxSteps> srcPattern{};
             euclidean(src.hitCount, src.cycle.steps, src.rotation, srcPattern);
-            for (int s = 0; s < cfg.cycle.steps && s < src.cycle.steps; ++s)
+            int complementHits = 0;
+            for (int s = 0; s < cfg.cycle.steps && s < src.cycle.steps; ++s) {
                 pattern[s] = !srcPattern[s];
-            for (int s = src.cycle.steps; s < cfg.cycle.steps; ++s)
+                if (pattern[s])
+                    ++complementHits;
+            }
+            for (int s = src.cycle.steps; s < cfg.cycle.steps; ++s) {
                 pattern[s] = true;
+                ++complementHits;
+            }
+            // MEM095 / M070 "Kotekan Interlock": a macro-saturated source
+            // (hitCount == cycle.steps, reachable dynamically via the complexity/
+            // density macros) makes srcPattern all-true, so !srcPattern is
+            // all-false and the sangsih complement goes entirely silent — the
+            // interlocking pair collapses to a single line. When the derived
+            // complement is fully silent, fall back to the lane's own Euclidean
+            // pattern so the complement keeps at least one interlocking hit. This
+            // only fires when complementHits == 0, so every non-saturated pattern
+            // stays byte-identical (determinism golden tests unaffected).
+            if (complementHits == 0)
+                euclidean(cfg.hitCount, cfg.cycle.steps, cfg.rotation, pattern);
             // endregion:kotekan
         } else {
             euclidean(cfg.hitCount, cfg.cycle.steps, cfg.rotation, pattern);
