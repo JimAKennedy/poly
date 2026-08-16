@@ -161,6 +161,14 @@ jobs:
       # from docs/windows-test-runner-setup.md, so this step is the only thing
       # standing between a re-provision and a repeat. Fails loud with the exact
       # remediation for whatever it finds.
+      #
+      # It runs BEFORE "Reset artifact dir", so its phase lines are wiped from
+      # cubase-run-status.jsonl on the pass path — that is fine and deliberate.
+      # On the FAIL path the job stops here, the reset never runs, and the
+      # archive/upload steps (`if: always()`) preserve both the status JSONL and
+      # cubase-last-error.json. The record survives exactly when it is needed;
+      # do not move this step later to "fix" it, or a bad posture costs a full
+      # build first.
       - name: Check runner posture
         shell: pwsh
         run: >-
