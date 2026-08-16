@@ -40,6 +40,14 @@ subsystem does not bind its surface without an active, unlocked desktop.
 
 ## Config changes (run once, from an elevated PowerShell as `polyci`)
 
+> Elevation is correct **here** — these are one-off machine-config commands
+> (power plan, registry, auto-logon) that genuinely need admin. It is only the
+> runner's *logon scheduled task* that must stay non-elevated (`-RunLevel
+> Limited`), because an elevated task makes WebView2 discard the CDP debugging
+> flag and kills the L4-web tier. See `docs/windows-test-runner-setup.md`
+> Part 12. Never run the Cubase `scripts/` or `scripts/S08-install/` helpers
+> from this elevated window.
+
 ### 1. Power: never sleep, never hibernate, never blank the display
 
 Part 7 lists these; re-run them to be certain they stuck (Windows Update can

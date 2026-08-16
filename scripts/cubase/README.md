@@ -20,12 +20,29 @@ a hard-kill fallback. See `docs/testing-strategy.md` §3.1 for why.
 |---|---|---|
 | `kill-stale-cubase.ps1` | kill-stale | Terminate any lingering Cubase before a run so state is clean. Idempotent. |
 | `clear-safe-mode-flag.ps1` | clear-safe-mode-flag | Delete Cubase's `ApplicationStarted.txt` sentinel BEFORE launch so Cubase sees a clean prior shutdown and never pops the Safe Mode dialog. Root-cause fix (our quit always hard-kills, so the sentinel is never cleared and Safe Mode would otherwise fire every run). No-op when absent; never fails the run. |
-| `launch-cubase.ps1` | launch | Resolve `Cubase<ver>.exe`, export `POLY_PROBE_OUTPUT`, open the fixture (or empty project in S07). Does not wait. |
+| `launch-cubase.ps1` | launch | Resolve `Cubase<ver>.exe`, export `POLY_PROBE_OUTPUT`, open the fixture (or empty project in S07). Does not wait. With `-EnableCdp` it also sets `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS` so the editor's WebView2 opens a CDP port — and **refuses to launch if the shell is elevated**, because WebView2 discards that flag for elevated hosts (see below). |
 | `dismiss-safe-mode.ps1` | dismiss-safe-mode | Backstop for the Safe Mode dialog if the flag-clear above ever misses (e.g. a future Cubase changes the sentinel). Presses OK, keeps current preferences. No-op on a clean launch; never fails the run. NB: confirmed on the runner that SendKeys does NOT reliably close this modal — the flag-clear is the primary fix. |
 | `wait-for-ready.ps1` | wait-ready | Block until Cubase presents a settled main window (rejecting the Safe Mode modal), or fail loud on a bounded timeout. S08 extends this to wait on the MIDI Remote `ready` ping. |
 | `quit-cubase.ps1` | quit | Graceful `CloseMainWindow`, then hard-kill fallback so the runner is left clean. |
 | `archive-logs.ps1` | archive | Collect Cubase prefs/logs, crash dumps, and probe JSONL into the artifact dir. |
+| `check-runner-posture.ps1` | check-posture | Read-only gate the nightly runs **before the build**: asserts the process is not elevated, the runner is a logon task and not a service, no shadow VST3 bundle exists, and (with `-RequireCdp`) the WebView2 Runtime is installed. Exits 1 with per-item remediation. Also invoked by `scripts/S08-install/5-preflight.ps1`, so the human and CI paths assert the same invariants. |
+| `focus-editor-cdp.ps1` | focus-editor-cdp | S09 gate: poll the OS TCP listen table until the editor's CDP endpoint is up on `127.0.0.1:<port>`, fail loud on timeout. Despite the name it does **not** force foreground — CDP is focus-independent. |
+| `diagnose-editor-window.ps1` | — | Diagnostic (non-fatal): dump session/window-station/lock state, **process elevation**, the Cubase window topology, every `msedgewebview2.exe` command line, and the CDP listener state to `editor-window-topology.txt`. Read this first when the CDP port is missing. |
+| `launch-manual-cdp.ps1` | — | Hand-launch Cubase on the fixture with the CDP port open, for diagnosis outside a CI run. Not used by the workflow. Must be run from a non-elevated shell. |
 | `_common.ps1` | — | Shared helpers: structured phase logging, durable status/error persistence, Cubase path/process resolution. Dot-sourced by each script; not run directly. |
+
+## The runner must not be elevated
+
+WebView2 ignores browser flags delivered "via the local device environment" —
+the `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS` env var *and* the Edge/WebView2
+registry policy keys — whenever the host app runs elevated
+([Microsoft docs](https://learn.microsoft.com/en-us/microsoft-edge/webview2/concepts/webview-features-flags)).
+An elevated Cubase therefore cannot expose the CDP endpoint the L4-web e2e
+attaches to, which is the whole of the M042 S09 dead end (runs #40–#47: 0 of 18
+`msedgewebview2.exe` children carried `--remote-debugging-port`). The
+`GitHubActionsRunner` logon task is registered `-RunLevel Limited` for this
+reason; `launch-cubase.ps1` fails loud rather than launching a Cubase that
+cannot work. See `docs/windows-test-runner-setup.md` Part 12.
 
 ## Observability
 
