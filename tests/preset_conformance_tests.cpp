@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright 2024-2026 Jim Kennedy
 // M070 preset-conformance lint.
 //
 // This file is the dedicated home for the executable conformance assertions that

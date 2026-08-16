@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright 2024-2026 Jim Kennedy
 // Roundtrip invariants for the M048 S03 parameter registry.
 //
 // For every entry in kLaneExprParamRegistry and kLaneCoreParamRegistry we

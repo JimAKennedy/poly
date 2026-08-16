@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright 2024-2026 Jim Kennedy
 // macOS native drag-source window for MIDI export. Opens a small floating
 // panel containing a draggable clip proxy; the user drags it into the DAW,
 // which pulls a temporary .mid file through the drag pasteboard. Called from

@@ -1,49 +1,60 @@
-# Starlight Starter Kit: Basics
+# Poly Guide Site
 
-[![Built with Starlight](https://astro.badg.es/v2/built-with-starlight/tiny.svg)](https://starlight.astro.build)
+The contributor-facing source for **[poly.jk.digital](https://poly.jk.digital)** — the
+online guide _Layered Repetition as Sonic Architecture_, a book-length treatment of
+polymetric drumming built around the Poly VST3 instrument.
 
-```
-npm create astro@latest -- --template starlight
-```
+This is a [Starlight](https://starlight.astro.build/) (Astro) documentation site. It
+publishes the prose chapters, an interactive in-browser WebUI powered by the Poly engine
+compiled to WebAssembly, and a battery of conformance tests that keep the prose, the
+preset library, and the engine in agreement.
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## What lives here
 
-## 🚀 Project Structure
+- **`src/content/docs/`** — the guide itself, as `.mdx`. Numbered chapters (`01-foundations`
+  through `18-editors-and-views`), companion `theory-*` deep-dives, and `appendix-*`
+  reference pages (parameters, presets, Euclidean tables, timing model, plugin and website
+  architecture). The sidebar and site metadata are defined in `astro.config.mjs`.
+- **`src/components/`, `src/styles/`, `src/audio/`, `src/lib/`** — Astro components, custom
+  CSS, and the client-side audio/playback helpers the interactive pages use.
+- **`src/generated/`, `src/data/`** — JSON derived from the engine (presets, note-map counts,
+  parameter definitions). Regenerated, not hand-edited (see the `generate-*` scripts below).
+- **`public/webui/`** — the embedded Poly WebUI, copied from the repo-root `webui/` by the
+  `copy-webui` script at build time so the guide can run the real engine in the browser.
+- **`tests/`** — Node `node --test` conformance suites that assert the prose and preset
+  tables match engine behavior (Euclidean claims, preset taxonomy, SMF export, etc.).
+- **`tests-e2e/`** — Playwright end-to-end specs that drive the embedded WebUI in a real
+  browser (audio probes, control audits, parity checks).
 
-Inside of your Astro + Starlight project, you'll see the following folders and files:
+## Commands
 
-```
-.
-├── public/
-├── src/
-│   ├── assets/
-│   ├── content/
-│   │   └── docs/
-│   └── content.config.ts
-├── astro.config.mjs
-├── package.json
-└── tsconfig.json
-```
+All commands run from `site/`:
 
-Starlight looks for `.md` or `.mdx` files in the `src/content/docs/` directory. Each file is exposed as a route based on its file name.
+| Command                     | Action                                                                       |
+| :-------------------------- | :--------------------------------------------------------------------------- |
+| `npm install`               | Install dependencies                                                         |
+| `npm run generate-presets`  | Regenerate `presets.json` from the engine                                    |
+| `npm run generate-counts`   | Regenerate note-map count data                                               |
+| `npm run generate-params`   | Regenerate parameter-definition data                                         |
+| `npm run copy-webui`        | Copy the built Poly WebUI (and wasm engine, if present) into `public/webui/` |
+| `npm run dev`               | Regenerate data, then start the local dev server at `localhost:4321`         |
+| `npm run build`             | Regenerate data, copy the WebUI, and build the production site to `./dist/`   |
+| `npm run preview`           | Preview the production build locally before deploying                        |
+| `npm test`                  | Run the `node --test` conformance suites in `tests/`                          |
+| `npm run test:e2e`          | Run the Playwright end-to-end suites in `tests-e2e/`                          |
 
-Images can be added to `src/assets/` and embedded in Markdown with a relative link.
+`dev`, `start`, and `build` run the `generate-*` steps first, so the interactive pages
+always reflect the current engine.
 
-Static assets, like favicons, can be placed in the `public/` directory.
+## Deploying
 
-## 🧞 Commands
+`npm run build` emits a static site to `site/dist/`, which is published to
+[poly.jk.digital](https://poly.jk.digital). The `site:` value in `astro.config.mjs` must
+match that canonical URL for absolute links and Open Graph metadata to resolve.
 
-All commands are run from the root of the project, from a terminal:
+## More about Poly
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Check out [Starlight’s docs](https://starlight.astro.build/), read [the Astro documentation](https://docs.astro.build), or jump into the [Astro Discord server](https://astro.build/chat).
+- Engine and plugin source, architecture, and roadmap live in the repository root — see the
+  top-level `README.md`, `ARCHITECTURE.md`, and `CHANGELOG.md`.
+- Contributor conventions for working inside this site are in `AGENTS.md`
+  (`CLAUDE.md` is a symlink to it).

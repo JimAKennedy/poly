@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright 2024-2026 Jim Kennedy
 // Emits all factory presets as a JSON document on stdout.
 //
 // Consumed by the site prebuild pipeline (M043 S11 T02+): produces the single

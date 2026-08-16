@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright 2024-2026 Jim Kennedy
 #pragma once
 
 // Single-source-of-truth registry for Poly's lane-scoped parameters.

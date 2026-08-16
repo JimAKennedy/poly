@@ -16,6 +16,16 @@ with `-DPOLY_ENGINE_ONLY=ON` (see [Testing](#testing)) — a full plugin build i
 not expected to work there. This is decision D029 (M054); see `CHANGELOG.md` for
 the scope statement.
 
+## Finding something to work on
+
+New here? The best entry points are labeled
+[good first issue](https://github.com/JimAKennedy/poly/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
+— scoped, self-contained, and reviewable without deep engine context. For the
+bigger picture of where the project is headed, see the
+[ROADMAP.md](ROADMAP.md), which groups all open
+[issues](https://github.com/JimAKennedy/poly/issues) by theme and priority. Once
+you pick an issue, comment on it to claim it, then follow the workflow below.
+
 ## Development workflow
 
 1. Fork the repository

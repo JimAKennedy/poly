@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright 2024-2026 Jim Kennedy
 // M051 S02 T04: regression tests for host time signature threading.
 //
 // These lock the four behaviors the S02 vision cares about:

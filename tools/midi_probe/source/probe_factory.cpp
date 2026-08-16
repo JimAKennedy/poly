@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright 2024-2026 Jim Kennedy
 #include "pluginterfaces/vst/ivstaudioprocessor.h"
 #include "public.sdk/source/main/pluginfactory.h"
 

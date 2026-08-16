@@ -157,6 +157,18 @@ Primary target: **Cubase**. Should work with any VST3-compatible host.
 **[poly.jk.digital](https://poly.jk.digital)** -- the full guide covering polyrhythmic
 traditions, Euclidean rhythm theory, and how to use Poly's preset system. Source is in `site/`.
 
+## Contributing
+
+Contributions are welcome. Start here:
+
+- **[ROADMAP.md](ROADMAP.md)** — the public, issue-backed roadmap grouping open
+  work by theme and priority, so you can see where the project is headed.
+- **[CONTRIBUTING.md](CONTRIBUTING.md)** — prerequisites, build setup, code
+  style, real-time safety rules, and the fork-branch-PR workflow.
+- **[Good first issues](https://github.com/JimAKennedy/poly/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)**
+  — scoped, self-contained tasks that are reviewable without deep engine
+  context. The best place to make a first contribution.
+
 ## License
 
 [GPLv3](LICENSE). Copyright 2024-2026 Jim Kennedy.

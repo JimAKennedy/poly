@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright 2024-2026 Jim Kennedy
 // macOS native Save As… dialog for MIDI export. Uses NSSavePanel with a
 // sheet attached to the parent NSView's window when available, otherwise
 // modal. Called from the UI thread by WebUIView's exportSaveAs action.

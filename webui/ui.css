@@ -102,6 +102,14 @@
 
   /* ---- DESK ---- */
   #desk { padding: 14px 16px 16px; display: grid; grid-template-columns: repeat(5, 1fr) 160px; gap: 11px; transition: grid-template-columns .25s ease-out; }
+  /* M031 S02 T03: while a lane is expanded, collapsed columns are floored at a
+     usable min-width (expandStrip() minmax(88px, <fr>)). At 6-8 lanes the
+     floored columns can exceed the desk width, so scroll horizontally rather
+     than crushing the collapsed strips to a sliver — the same affordance the
+     narrow-iframe rule below uses. overflow-y stays hidden so no phantom
+     vertical scrollbar appears. This class is only set when a lane is expanded;
+     the collapsed no-expand desk keeps its default (non-scrolling) layout. */
+  #desk.lane-expanded { overflow-x: auto; overflow-y: hidden; }
   /* M043 S14 T04: narrow-iframe responsiveness. Below the 900px design
      midline the 5+master grid can't split 320-ish px five ways without
      clipping the ring diagrams and macro sliders — swap to horizontal
@@ -202,7 +210,13 @@
   .tabs { display: flex; gap: 4px; flex: none; }
   .tabs button { border: 1px solid var(--line); background: transparent; border-radius: 5px; padding: 4px 9px; font-size: 9px; letter-spacing: .16em; text-transform: uppercase; color: var(--dim); }
   .tabs button.on { color: var(--ground); background: var(--c); border-color: var(--c); font-weight: 600; }
-  .pane { flex: 1; min-height: 0; overflow-y: auto; display: none; flex-direction: column; gap: 10px; }
+  /* M031 S02 T02: min-width:0 caps the pane's intrinsic width so a wide pane
+     (e.g. the Envelopes pane's 74px curve svgs) can never force the expanded
+     strip's grid column — and thus the desk — wider than its allotted share,
+     which would squeeze or scroll the collapsed lanes out of view. overflow-x
+     is hidden so any still-too-wide pane content clips inside the strip rather
+     than blowing out the desk. */
+  .pane { flex: 1; min-width: 0; min-height: 0; overflow-y: auto; overflow-x: hidden; display: none; flex-direction: column; gap: 10px; }
   .pane.on { display: flex; }
   .prow { display: flex; justify-content: space-between; align-items: center; font-size: 11px; gap: 8px; }
   .prow label { color: var(--dim); letter-spacing: .08em; text-transform: uppercase; font-size: 9.5px; }

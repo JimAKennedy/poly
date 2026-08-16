@@ -16,6 +16,18 @@ jobs:
           python-version: '3.12'
       - run: pip install pre-commit
       - run: pre-commit run --all-files
+      - name: SPDX headers present on all tracked C/C++/ObjC sources
+        run: bash scripts/check-spdx-headers.sh
+      - name: SPDX guard contract + green/red behavior proof
+        run: node --test scripts/check-spdx-headers.mjs
+      - name: No personal-machine paths in tracked files
+        run: bash scripts/check-personal-paths.sh
+      - name: Personal-path guard contract + green/red behavior proof
+        run: node --test scripts/check-personal-paths.mjs
+      - name: Site docs are project-specific, not Starlight template boilerplate
+        run: bash scripts/check-site-readme.sh
+      - name: Site-readme guard contract + green/red behavior proof
+        run: node --test scripts/check-site-readme.mjs
 
   build:
     strategy:
@@ -180,6 +192,40 @@ jobs:
             exit 1
           fi
 
+  # M031 S04: clang-tidy gate. This runs clang-tidy on PR-changed engine C/C++
+  # files and fails ONLY on the `.clang-tidy` WarningsAsErrors set (8 real-defect
+  # checks: use-after-move, dangling-handle, move-forwarding-reference,
+  # pro-type-member-init, slicing, use-nullptr, move-const-arg,
+  # unnecessary-copy-initialization). D032 recon proved the engine tree carries
+  # ~1,400 full-roster clang-tidy warnings but ZERO WarningsAsErrors hits today,
+  # so gating on the full roster would be red-on-arrival. The honest, green gate
+  # is therefore WarningsAsErrors-only; the legacy full-roster warnings stay
+  # advisory (burndown is a documented out-of-scope follow-up). Plugin/source is
+  # NOT covered here: the engine-only configure produces a compile DB without
+  # the VST3 SDK, and plugin/source tidy coverage is a separate follow-up (it
+  # would need the full VST3 toolchain in this job). The shared runner
+  # scripts/run-clang-tidy-changed.sh is the single seam both this job and any
+  # future caller invoke; parsing the gated set from .clang-tidy keeps that file
+  # the single source of truth.
+  clang-tidy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
+        with:
+          # Need the PR base commit present locally to diff changed files.
+          fetch-depth: 0
+      - name: Install clang-tidy and Ninja
+        run: sudo apt-get install -y clang-tidy ninja-build
+      - name: Configure engine-only (compile DB for clang-tidy)
+        run: cmake -S . -B build-tidy -G Ninja -DCMAKE_BUILD_TYPE=Release -DPOLY_ENGINE_ONLY=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+      - name: Run clang-tidy gate on changed engine files
+        env:
+          # Diff against the PR base SHA (pull_request) or the pushed-from SHA
+          # (push). Both are fetched with fetch-depth: 0 above.
+          POLY_TIDY_BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event.before }}
+          POLY_TIDY_BUILD_DIR: build-tidy
+        run: bash scripts/run-clang-tidy-changed.sh
+
   secrets-scan:
     runs-on: ubuntu-latest
     permissions:
@@ -229,6 +275,65 @@ jobs:
         with:
           name: coverage-report
           path: coverage-report/
+
+  # M031 S05: plugin-layer coverage. The main `code-coverage` job configures
+  # engine-only (-DPOLY_ENGINE_ONLY=ON, ci.yml `code-coverage`) so it never
+  # compiles plugin/source/*.cpp — engine coverage only. This job drops
+  # POLY_ENGINE_ONLY and builds poly_host_tests, the sole target that compiles
+  # plugin/source/processor.cpp + controller_base.cpp against the real VST3 SDK
+  # (tests/CMakeLists.txt), with --coverage instrumentation, then scopes lcov to
+  # plugin/source/** so Codecov gets a `plugin` flag distinct from the engine
+  # coverage flag. The apt dependency list mirrors the sanitizers.yml
+  # `asan-plugin` job — the proven recipe for a full (non-engine-only)
+  # host-tests build on ubuntu. Advisory by design: no percentage threshold
+  # gates the build and fail_ci_if_error stays false (the plugin layer's
+  # coverage baseline is still being established); the job's PASS signal is that
+  # the plugin translation units build and the host tests run green under
+  # instrumentation, and the printed lcov summary reports the plugin percent.
+  plugin-coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build lcov libx11-dev libxcb1-dev libxkbcommon-x11-dev libx11-xcb-dev libxcb-util-dev libxcb-cursor-dev libxcb-keysyms1-dev libxcb-xkb-dev libxkbcommon-dev libfontconfig1-dev libcairo2-dev libgtkmm-3.0-dev libsqlite3-dev libxcb-util0-dev
+      - name: Cache VST3 SDK
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: build/_deps/vst3sdk-src
+          key: vst3sdk-plugin-coverage-${{ hashFiles('CMakeLists.txt') }}
+      - name: Cache GoogleTest
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: build/_deps/googletest-src
+          key: gtest-plugin-coverage-${{ hashFiles('tests/CMakeLists.txt') }}
+      - name: Configure with coverage (full, non-engine-only)
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DENABLE_COVERAGE=ON
+      - name: Build host tests (compiles plugin/source/processor.cpp + controller_base.cpp)
+        run: cmake --build build --parallel --target poly_host_tests
+      - name: Run host tests
+        run: ctest --test-dir build --output-on-failure -R "^HostTests\.|^GoldenProcessor\."
+      - name: Generate plugin-scoped coverage
+        run: |
+          lcov --capture --directory build --output-file coverage-plugin.info \
+               --ignore-errors mismatch
+          lcov --extract coverage-plugin.info '*/plugin/source/*' \
+               --output-file coverage-plugin.filtered.info \
+               --ignore-errors empty
+          echo "### Plugin-layer coverage" >> "$GITHUB_STEP_SUMMARY"
+          lcov --list coverage-plugin.filtered.info | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Upload to Codecov (plugin flag)
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+        with:
+          files: coverage-plugin.filtered.info
+          flags: plugin
+          fail_ci_if_error: false
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: plugin-coverage-report
+          path: coverage-plugin.filtered.info
+          retention-days: 14
 
   webui-tests:
     runs-on: ubuntu-latest
@@ -506,18 +611,20 @@ jobs:
           if-no-files-found: ignore
 
   ci-complete:
-    needs: [code-quality, build, build-au-macos, engine-isolation, secrets-scan, code-coverage, webui-tests, pluginval-macos, pluginval-windows, wasm-build, site-lint, site-e2e]
+    needs: [code-quality, clang-tidy, build, build-au-macos, engine-isolation, secrets-scan, code-coverage, plugin-coverage, webui-tests, pluginval-macos, pluginval-windows, wasm-build, site-lint, site-e2e]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Check all jobs passed
         run: |
           if [[ "${{ needs.code-quality.result }}" != "success" ]] || \
+             [[ "${{ needs.clang-tidy.result }}" != "success" ]] || \
              [[ "${{ needs.build.result }}" != "success" ]] || \
              [[ "${{ needs.build-au-macos.result }}" != "success" ]] || \
              [[ "${{ needs.engine-isolation.result }}" != "success" ]] || \
              [[ "${{ needs.secrets-scan.result }}" != "success" ]] || \
              [[ "${{ needs.code-coverage.result }}" != "success" ]] || \
+             [[ "${{ needs.plugin-coverage.result }}" != "success" ]] || \
              [[ "${{ needs.webui-tests.result }}" != "success" ]] || \
              [[ "${{ needs.pluginval-macos.result }}" != "success" ]] || \
              [[ "${{ needs.pluginval-windows.result }}" != "success" ]] || \
