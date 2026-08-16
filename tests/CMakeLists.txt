@@ -27,6 +27,7 @@ add_executable(poly_tests
     preset_conformance_tests.cpp
     sanitize_tests.cpp
     scene_tests.cpp
+    seed_lock_tests.cpp
     state_migration_tests.cpp
     smf_writer_tests.cpp
     wasm_api_envelope_gap_slot_tests.cpp

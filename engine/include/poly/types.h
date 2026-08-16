@@ -238,12 +238,31 @@ struct LaneConfig {
     // AND playback cycle wrap (see prepareLaneContext in engine.cpp; enforced M049 S02 / E2 fix).
     int fixedPatternLength = 0;
     std::array<float, kMaxSteps> microTimingMs{}; // per-step timing offset in ms; range [-20, +20]
+    // M034 S03: per-lane seed lock. laneSeed is the preserved RNG seed a locked
+    // lane derives from; seedLocked pins it so a global reroll (GrooveState::seed
+    // change) leaves this lane's output byte-identical while other lanes re-roll.
+    // The WebUI captures the current global seed into laneSeed when the user locks
+    // the lane. Defaults (seedLocked=false, laneSeed=0) make laneEffectiveSeed
+    // return the global seed unchanged, so pre-change output is byte-identical.
+    uint64_t laneSeed = 0;
+    bool seedLocked = false;
     bool active = true;
     std::array<EnvelopeAssign, kMaxEnvelopesPerLane> envelopes{};
     int envelopeCount = 0;
     ConstraintConfig constraints{};
 };
 // endregion:lane-config
+
+// Effective RNG seed for a lane. A locked lane (seedLocked=true) derives every
+// deterministicRand roll from its preserved laneSeed, so its output stays
+// byte-identical across a global reroll; an unlocked lane uses the global seed.
+// With the defaults (seedLocked=false) this returns globalSeed unchanged, so
+// output is byte-identical to the pre-lock RNG path (determinism tests stay
+// green). laneId is still XOR-mixed inside deterministicRand, so two locked
+// lanes sharing a laneSeed still diverge by lane index.
+inline uint64_t laneEffectiveSeed(const LaneConfig& cfg, uint64_t globalSeed) {
+    return cfg.seedLocked ? cfg.laneSeed : globalSeed;
+}
 
 // --- Additive cell helpers ---
 

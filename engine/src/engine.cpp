@@ -165,9 +165,11 @@ static StepOutcome classifyStep(const LaneConfig& cfg, const GrooveState& state,
 
     if (cfg.mutationRate > 0.0f && !isAnchor) {
         int64_t cycleIndex = (absStep >= 0) ? absStep / stepsInCycle : (absStep - stepsInCycle + 1) / stepsInCycle;
-        float mutRoll = deterministicRand(state.seed, cfg.id, cycleIndex * kMaxSteps + cycleStep, 8);
+        float mutRoll =
+            deterministicRand(laneEffectiveSeed(cfg, state.seed), cfg.id, cycleIndex * kMaxSteps + cycleStep, 8);
         if (mutRoll < cfg.mutationRate) {
-            float typeRoll = deterministicRand(state.seed, cfg.id, cycleIndex * kMaxSteps + cycleStep, 9);
+            float typeRoll =
+                deterministicRand(laneEffectiveSeed(cfg, state.seed), cfg.id, cycleIndex * kMaxSteps + cycleStep, 9);
             if (typeRoll < kMutationDropThreshold) {
                 if (isPatternStep)
                     isPatternStep = false;
@@ -197,20 +199,20 @@ static StepOutcome classifyStep(const LaneConfig& cfg, const GrooveState& state,
             if (mods.fill <= 0.0f)
                 return notEmitted();
             float fillProb = std::clamp(mods.fill, 0.0f, 1.0f);
-            float fillRoll = deterministicRand(state.seed, cfg.id, absStep, 4);
+            float fillRoll = deterministicRand(laneEffectiveSeed(cfg, state.seed), cfg.id, absStep, 4);
             if (fillRoll >= fillProb)
                 return notEmitted();
         }
 
         if (mods.activation < 0.0f) {
             float activationProb = std::clamp(1.0f + mods.activation, 0.0f, 1.0f);
-            float actRoll = deterministicRand(state.seed, cfg.id, absStep, 5);
+            float actRoll = deterministicRand(laneEffectiveSeed(cfg, state.seed), cfg.id, absStep, 5);
             if (actRoll >= activationProb)
                 return notEmitted();
         }
 
         float effectiveProb = std::clamp(cfg.probability + mods.probability, 0.0f, 1.0f);
-        float probRoll = deterministicRand(state.seed, cfg.id, absStep, 0);
+        float probRoll = deterministicRand(laneEffectiveSeed(cfg, state.seed), cfg.id, absStep, 0);
         if (probRoll >= effectiveProb)
             return notEmitted();
     }
@@ -225,7 +227,7 @@ static StepOutcome classifyStep(const LaneConfig& cfg, const GrooveState& state,
 static float computeStepVelocity(const LaneConfig& cfg, const GrooveState& state, int64_t absStep, int64_t cycleStep,
                                  const EnvelopeMods& mods, bool mutatedToGhost) {
     float velBase = cfg.baseVelocity / kMidiVelocityMax;
-    float velRand = deterministicRand(state.seed, cfg.id, absStep, 1);
+    float velRand = deterministicRand(laneEffectiveSeed(cfg, state.seed), cfg.id, absStep, 1);
     float spread = cfg.velocitySpread * (velRand * 2.0f - 1.0f);
     float vel = velBase + spread;
 
@@ -241,7 +243,7 @@ static float computeStepVelocity(const LaneConfig& cfg, const GrooveState& state
         // by the AccentBias envelope, occasionally adds a further nudge.
         float effectiveEmphasis = std::clamp(cfg.emphasisProb + mods.accent, 0.0f, 1.0f);
         if (effectiveEmphasis > 0.0f) {
-            float emphRoll = deterministicRand(state.seed, cfg.id, absStep, 2);
+            float emphRoll = deterministicRand(laneEffectiveSeed(cfg, state.seed), cfg.id, absStep, 2);
             if (emphRoll < effectiveEmphasis) {
                 vel += accentVal * kEmphasisVelocityBoost * (1.0f - vel);
             }
@@ -278,7 +280,7 @@ static double applyTimingShifts(const LaneConfig& cfg, const TransportContext& t
     float effectiveHumanize = cfg.humanizeMs + humanizeMod * kHumanizeEnvelopeScale;
     if (effectiveHumanize > 0.0f && tc.tempo > 0.0) {
         double jitterPpq = static_cast<double>(effectiveHumanize) * tc.tempo / kMsPerMinute;
-        float jitterRand = deterministicRand(state.seed, cfg.id, absStep, 3);
+        float jitterRand = deterministicRand(laneEffectiveSeed(cfg, state.seed), cfg.id, absStep, 3);
         ppq += jitterPpq * (jitterRand * 2.0f - 1.0f);
     }
 

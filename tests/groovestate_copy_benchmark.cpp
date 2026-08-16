@@ -65,7 +65,9 @@ TEST(GrooveStateCopyBenchmark, ReportsFactSizes) {
     std::fprintf(stderr, "[bench] sizeof(SceneState)  = %zu bytes\n", sizeof(poly::SceneState));
     // M034 S01: +32 bytes from LaneConfig.fillEveryNBars (int × 8 lanes); the
     // transient GrooveState.fillManualTrigger bool fit in existing tail padding.
-    EXPECT_EQ(sizeof(poly::GrooveState), 13616u) << "GrooveState size changed — update DECISIONS.md perf entry";
+    // M034 S03: +96 bytes from LaneConfig.laneSeed (uint64_t) + seedLocked (bool),
+    // which with 8-byte alignment costs 12 bytes/lane × 8 lanes.
+    EXPECT_EQ(sizeof(poly::GrooveState), 13712u) << "GrooveState size changed — update DECISIONS.md perf entry";
 }
 
 TEST(GrooveStateCopyBenchmark, ThreeCopyPipelineFitsBlockBudget) {
