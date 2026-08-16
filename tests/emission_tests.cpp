@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright 2024-2026 Jim Kennedy
 // M045 S01 T01: EmissionEventBuffer classification tests.
 //
 // Verify the engine populates EmissionEventBuffer with per-step

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright 2024-2026 Jim Kennedy
 // Windows native Save As… dialog for MIDI export. Uses IFileSaveDialog
 // (Vista+); falls back to nothing if the COM call fails. Called from the
 // UI thread by WebUIView's exportSaveAs action.

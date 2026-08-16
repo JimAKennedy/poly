@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright 2024-2026 Jim Kennedy
 // Web UI view — hosts the webui/ bundle in a choc::ui::WebView and
 // bridges to the controller per webui/bridge-schema.md. Compiled only on
 // the choc-webview platforms (defined(__APPLE__) || defined(_WIN32)).

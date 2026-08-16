@@ -1055,6 +1055,7 @@
       if (c > 1) setLaneCount(c - 1);
     });
 
+    desk.classList.remove('lane-expanded');
     desk.style.gridTemplateColumns = `repeat(${S.lanes.length}, 1fr) 160px`;
   }
   function expandStrip(li) {
@@ -1064,9 +1065,42 @@
     const wide = n >= 6 ? '2.55fr' : '1.9fr';
     const narrow = n >= 6 ? '.38fr' : '.62fr';
     const master = n >= 6 ? '148px' : '160px';
+    // M031 S02 T02: the expanded strip must stay wide enough for its full
+    // 5-button tab row. The buttons don't shrink (no flex) and .strip clips
+    // overflow, so once the strip's .deep column falls below the row's natural
+    // 320px the trailing tabs ("Adv") clip off the right edge — at 6-8 lanes
+    // the bare fr share shrank the strip to ~436px (.deep 292px < 320). Floor
+    // the expanded column so .deep clears the row's natural width: strip = 320
+    // (tabs) + 104 (core col) + 10 (body2 gap) + 28 (strip 14px L/R padding) =
+    // 462. The 320px tab-row figure was measured on macOS Chromium; the headless
+    // Ubuntu runner (webui-tests CI) renders the same 5 buttons ~8px wider, so a
+    // 470px floor left .deep (~326px) only ~6px of slack — which the Ubuntu
+    // glyph widening consumed, clipping the "Adv" tab by 2px on CI while passing
+    // locally. Floor at 484 so .deep is ~340px: comfortably above the ~334px
+    // Ubuntu natural width with headroom for future font-rendering jitter.
+    // minmax() keeps the fr as the max so the strip still grows on wide
+    // viewports; collapsed columns keep their fr and shrink to absorb the
+    // floor (T03 gives collapsed strips their own usable floor + scroll).
+    const EXPANDED_FLOOR_PX = 484;
+    const wideCol = `minmax(${EXPANDED_FLOOR_PX}px, ${wide})`;
+    // M031 S02 T03: floor each collapsed column so a strip never crushes below
+    // ring legibility. T01 measured the usable floor at 84px (64px ring + 20px
+    // L/R padding); at the 8-lane worst case the bare .38fr share shrank the
+    // collapsed strips to ~60px (an unreadable sliver). minmax(88px, <fr>) keeps
+    // the fr as the max — so collapsed strips stay elastic and the layout is
+    // unchanged whenever they fit — but pins the min at 88px (84px floor + 4px
+    // margin against sub-pixel jitter). When the floored columns no longer fit
+    // (6-8 lanes with a lane expanded) the desk overflows horizontally instead
+    // of squeezing; the .lane-expanded class below turns on overflow-x:auto so
+    // the collapsed strips scroll behind a scrollbar affordance rather than
+    // silently shrinking. This only applies while a lane is expanded — the
+    // collapsed no-expand layout (li < 0 branch) is untouched for 1-8 lanes.
+    const COLLAPSED_FLOOR_PX = 88;
+    const narrowCol = `minmax(${COLLAPSED_FLOOR_PX}px, ${narrow})`;
+    desk.classList.toggle('lane-expanded', li >= 0);
     desk.style.gridTemplateColumns = li < 0
       ? `repeat(${n}, 1fr) 160px`
-      : S.lanes.map((_, i) => (i === li ? wide : narrow)).join(' ') + ` ${master}`;
+      : S.lanes.map((_, i) => (i === li ? wideCol : narrowCol)).join(' ') + ` ${master}`;
     if (li >= 0) buildPanes(li);
   }
   function refreshStrip(li) {

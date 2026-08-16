@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright 2024-2026 Jim Kennedy
 #include "processor.h"
 
 #include <algorithm>
@@ -599,12 +601,14 @@ Steinberg::tresult PLUGIN_API PolyProcessor::process(Steinberg::Vst::ProcessData
         }
     }
 
-    // M046 S03 P4: drain all seven host→RT handshake slots. `consume()` atomically
-    // detaches the published payload (if any) via exchange(-1), guaranteeing the
-    // reader either applies one publish or none — never a torn read of an in-flight
-    // publish. Drops are surfaced via handshakeDrops_ on the writer side; applied
-    // counters (T03) bump here on every successful consume so the "no silent loss"
-    // invariant `issued == applied + drops` is directly testable.
+    // M046 S03 P4 / M031 S01: drain all seven host→RT handshake slots. `consume()`
+    // swaps the reader's private buffer into the triple-buffer mailbox and applies
+    // the freshly-taken slot in place; the permutation invariant guarantees the
+    // writer never targets that slot, so the reader either applies one publish or
+    // none — never a torn read of an in-flight publish, and never a race with the
+    // writer's next commit. Drops are surfaced via handshakeDrops_ on the writer
+    // side; applied counters (T03) bump here on every successful consume so the
+    // "no silent loss" invariant `issued == applied + drops` is directly testable.
     if (stateSlot_.consume([this](const SceneState& s) { sceneState_ = s; }))
         handshakeApplied_.state.fetch_add(1, std::memory_order_relaxed);
     if (noteMapSlot_.consume([this](const NoteMap& nm) { sceneState_.noteMap = nm; }))

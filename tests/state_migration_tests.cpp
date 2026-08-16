@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright 2024-2026 Jim Kennedy
 // M068 S03 (T03): Round-trip saved-state migration test.
 //
 // S02 replaced the retired Bresenham pattern generator (step i pulses iff

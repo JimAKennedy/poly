@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright 2024-2026 Jim Kennedy
 #pragma once
 
 #include <atomic>
@@ -16,76 +18,98 @@
 
 namespace poly {
 
-// M046 S03 P4: SPSC 2-slot double-buffer exchange for host→RT handshakes.
+// M046 S03 P4: lockless triple-buffer exchange for host→RT handshakes.
 //
 // Replaces the single-buffer `Pending<T> + std::atomic<bool> ready_` pattern
 // that silently lost updates when the host thread wrote twice before the RT
-// thread drained (P4 TOCTOU + silent-loss). The two slots let a fresh publish
-// always land in a slot the reader isn't looking at, and the exchange-based
-// commit surfaces any displaced-but-unconsumed publish so the writer can bump
-// an explicit drop counter — the "no lost updates" property becomes "either
-// applied or accounted."
+// thread drained (P4 TOCTOU + silent-loss). A fresh publish always lands in a
+// slot the reader isn't looking at, and the exchange-based commit surfaces any
+// displaced-but-unconsumed publish so the writer can bump an explicit drop
+// counter — the "no lost updates" property becomes "either applied or
+// accounted."
+//
+// M031 S01: the prior design used two slots and an alternating writer index,
+// relying on the reader detaching slots[cur] into a stack local "before the
+// writer laps back." That happens-before edge had no synchronization backing
+// it: after the reader's exchange(-1) the writer had NO way to know the reader
+// was still copying slots[cur], so the writer's second alternation could write
+// slots[cur] concurrently with the reader's detach copy (TSan data race on
+// the slots[] detach copy, all five hot slots — pinned in M031 S01 T01). Two slots are
+// fundamentally insufficient: while the reader holds one slot and the last
+// publish occupies another, the writer's next write has nowhere safe to go and
+// must lap back onto a slot in use.
+//
+// The fix is a classic lockless triple buffer. Three slots and three indices —
+// a writer-private `writeIdx_`, a reader-private `readIdx_`, and a shared atomic
+// `mailbox` — are maintained as a permutation of {0,1,2} by only ever swapping
+// the mailbox with exactly one private index at a time (an atomic exchange
+// preserves the multiset). Because writeIdx_ and readIdx_ are therefore always
+// DISTINCT, slots[writeIdx_] (the only slot the writer writes) and
+// slots[readIdx_] (the only slot the reader reads) are never the same address:
+// the conflicting access is eliminated outright, not merely reordered. The
+// acq_rel exchanges on `mailbox` carry the two happens-before edges the old
+// design lacked:
+//   - writer's release publishes its payload write; reader's acquire on the
+//     matching exchange sees it before apply() reads the slot.
+//   - reader's release publishes "done reading the slot I'm handing back";
+//     writer's acquire on a later commit sees it before it reuses that slot.
 //
 // SPSC invariants (single writer = host thread, single reader = RT thread):
-//   - `writeSlot()` returns the writer's next alternating slot index (0↔1). The
-//     writer alone owns this counter, so the reader — which detaches the
-//     current published slot via exchange(-1) and holds it exclusively for the
-//     duration of its apply() callback — never overlaps the writer's next
-//     write, regardless of how the atomic `published` sequences.
-//   - `commit(idx)` atomically swaps the published-index; if the previous
-//     published-index was ≥ 0 the writer displaced an unconsumed publish and
-//     the caller MUST bump its drop counter.
-//   - `consume(fn)` atomically detaches the published slot (index → -1) and
-//     invokes `fn(payload)`. Returns true iff a payload was applied.
+//   - `writeSlot()` returns the writer's private slot index; it is stable until
+//     the next commit() swaps it out. The writer alone touches writeIdx_.
+//   - `commit(idx)` atomically swaps slots[writeIdx_] into the mailbox (fresh
+//     bit set) and takes the mailbox's old buffer back as the next writeIdx_;
+//     returns true iff the displaced mailbox value was still fresh (an
+//     unconsumed publish the caller MUST count as a drop).
+//   - `consume(fn)` swaps the reader's buffer into the mailbox and, if the
+//     mailbox held a fresh publish, invokes `fn(slots[readIdx_])` on the
+//     reader-owned buffer. Returns true iff a payload was applied.
 //
-// RT-safety: writeSlot/commit/consume perform only lockless int32 atomics and
-// a POD copy inside the caller. No allocation, no locks, no exceptions.
+// RT-safety: writeSlot/commit/consume perform only lockless int32 atomics; the
+// reader applies in-place on its private slot (no stack copy of the payload).
+// No allocation, no locks, no exceptions.
 template <typename Payload> struct HostToRTSlot {
-    Payload slots[2]{};
-    std::atomic<int32_t> published{-1}; // -1 = empty, 0 or 1 = slot holding an unconsumed publish
+    Payload slots[3]{};
 
-    // M049 S11 / M050 S02: writer owns an alternating slot index (0↔1) rather
-    // than deriving the target from `published`. Deriving from `published` was
-    // racy: after consume()'s exchange sets published back to -1, the writer's
-    // next writeSlot() could hand back the SAME slot the reader was still
-    // reading from (M049 S11). Alternation gives the writer a one-round
-    // guarantee. The remaining lap-around race — writer alternates twice and
-    // hits the same slot again while the reader is still reading it (M050 S02
-    // TSan finding) — is closed by consume() detaching the payload into a
-    // stack local immediately after acquire, so slots[cur] is no longer read
-    // by the time the writer laps back.
-    int32_t nextSlot{0};
+    static constexpr int32_t kIndexMask = 0x3; // low bits hold the slot index (0..2)
+    static constexpr int32_t kFreshBit = 0x4;  // set while the mailbox holds an unconsumed publish
 
-    // Writer: pick the slot to write into. Alternation guarantees non-collision
-    // for consecutive writes; the reader detaches the slot content immediately
-    // after acquire (see consume()), so by the time the writer laps back to
-    // slot `cur` two rounds later, the reader has finished reading it. No
-    // spin needed. SPSC-safe: only the writer touches nextSlot.
-    int32_t writeSlot() {
-        int32_t idx = nextSlot;
-        nextSlot ^= 1;
-        return idx;
+    // Initial permutation: writer owns slot 0, reader owns slot 1, mailbox holds
+    // slot 2 with the fresh bit clear (nothing published yet).
+    int32_t writeIdx_{0};            // writer-private; only the host thread touches it
+    int32_t readIdx_{1};             // reader-private; only the RT thread touches it
+    std::atomic<int32_t> mailbox{2}; // shared: (index & kIndexMask) | (fresh ? kFreshBit : 0)
+
+    // Writer: the slot to fill next. Stable until commit() swaps writeIdx_ out.
+    // SPSC-safe: only the writer reads/writes writeIdx_.
+    int32_t writeSlot() { return writeIdx_; }
+
+    // Writer: publish slots[writeIdx_] and take back the buffer the mailbox held.
+    // Returns true if the displaced mailbox value was still fresh (unconsumed) —
+    // the caller must bump its drop counter. `writeIdx` is passed for call-site
+    // symmetry with the old API and equals writeIdx_ by construction.
+    bool commit(int32_t writeIdx) {
+        (void)writeIdx;
+        const int32_t prev = mailbox.exchange(writeIdx_ | kFreshBit, std::memory_order_acq_rel);
+        writeIdx_ = prev & kIndexMask;
+        return (prev & kFreshBit) != 0;
     }
 
-    // Writer: atomically publish the newly-filled slot. Returns true if a previous
-    // unconsumed publish was displaced (writer should bump its drop counter).
-    bool commit(int32_t writeIdx) { return published.exchange(writeIdx, std::memory_order_release) >= 0; }
-
-    // Reader (RT thread): apply pending payload via callback if one is published.
-    // M050 S02: detach the payload into a local copy immediately after acquire,
-    // then run apply() on the local. This closes the M050 lap-around race —
-    // by the time the writer alternates back to slot `cur` two rounds later,
-    // this function has already finished reading slots[cur] (only into `local`),
-    // so no reader→writer synchronization is needed. RT cost: one POD copy
-    // (~260 B typical, 27 KB for SceneState — same shape as the render
-    // pipeline's existing GrooveState copies, measured at 0.02% of block
-    // deadline in M049 S09).
+    // Reader (RT thread): if the mailbox holds a fresh publish, swap the reader's
+    // buffer in and apply the freshly-taken buffer in place. A relaxed peek skips
+    // the exchange (and buffer churn) when nothing is fresh — only the reader ever
+    // clears the fresh bit, so a peeked-fresh mailbox stays fresh until this
+    // exchange. apply() reads slots[readIdx_] directly: the writer can never target
+    // readIdx_ (permutation invariant), so the reader owns it for the whole call —
+    // no stack copy of the payload needed.
     template <typename Apply> bool consume(Apply&& apply) {
-        int32_t cur = published.exchange(-1, std::memory_order_acquire);
-        if (cur < 0)
+        if ((mailbox.load(std::memory_order_relaxed) & kFreshBit) == 0)
             return false;
-        Payload local = slots[cur];
-        std::forward<Apply>(apply)(local);
+        const int32_t prev = mailbox.exchange(readIdx_, std::memory_order_acq_rel);
+        readIdx_ = prev & kIndexMask;
+        if ((prev & kFreshBit) == 0)
+            return false; // defensive: only the reader clears fresh, so unreachable in SPSC
+        std::forward<Apply>(apply)(slots[readIdx_]);
         return true;
     }
 };

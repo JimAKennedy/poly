@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright 2024-2026 Jim Kennedy
 // M049 S08 (E9): header self-containment probe.
 //
 // Before the split, state_io_write_lane.h / state_io_read_lane.h called

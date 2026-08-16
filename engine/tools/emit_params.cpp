@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright 2024-2026 Jim Kennedy
 // Emits the lane-scoped parameter registry as a JSON document on stdout.
 //
 // Consumed by site prebuild + doc regen (M048 S05): produces the single

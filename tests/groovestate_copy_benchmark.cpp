@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-or-later
+// Copyright 2024-2026 Jim Kennedy
 // M049 S09 (E10): benchmark the per-block GrooveState copy pipeline the
 // plugin runs inside process(). Answers the question the 2026-07-16 review
 // left open: is the "3-4 copies of a 13.6 KB struct per audio block" cost
