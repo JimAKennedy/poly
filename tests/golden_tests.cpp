@@ -8,6 +8,7 @@
 
 #include <gtest/gtest.h>
 
+#include "poly/constraint.h"
 #include "poly/engine.h"
 #include "poly/macro.h"
 #include "poly/types.h"
@@ -1131,6 +1132,61 @@ TEST(GoldenKotekan, BlockSizeIndependence) {
 
     EXPECT_EQ(serialize(small), serialize(medium)) << "Kotekan: 0.05 vs 0.5 PPQ blocks differ";
     EXPECT_EQ(serialize(small), serialize(large)) << "Kotekan: 0.05 vs 2.0 PPQ blocks differ";
+}
+
+// --- Test 41: Kotekan complement survives a macro-saturated source ---
+// MEM095 / M070 preset "Kotekan Interlock" root cause, now reachable dynamically
+// at runtime: a macro that drives the source lane toward maximum density
+// (complexity=1.0) forces src.hitCount == src.cycle.steps. euclidean() of a
+// fully-saturated cycle is all-true, so !srcPattern is all-false and the sangsih
+// complement goes entirely SILENT (countB == 0), breaking the interlock. This
+// test drives the real macro -> constraint -> render pipeline (not just a raw
+// kotekan pair) so the dynamic saturation break is exercised end-to-end.
+TEST(GoldenKotekan, ComplementSurvivesMacroSaturatedSource) {
+    poly::Engine engine;
+    poly::GrooveState state{};
+    state.activeLaneCount = 2;
+    state.seed = 42;
+
+    // Source lane: 8-step / 3-hit Euclidean, the classic kotekan polos.
+    auto& laneA = state.lanes[0];
+    laneA.id = 0;
+    laneA.midiNote = 36;
+    laneA.cycle = {.steps = 8, .subdivision = 8};
+    laneA.hitCount = 3;
+    laneA.baseVelocity = 100;
+    laneA.probability = 1.0f;
+
+    // Complement (sangsih) lane derives its pattern from lane 0.
+    auto& laneB = state.lanes[1];
+    laneB.id = 1;
+    laneB.midiNote = 38;
+    laneB.cycle = {.steps = 8, .subdivision = 8};
+    laneB.hitCount = 3;
+    laneB.baseVelocity = 80;
+    laneB.probability = 1.0f;
+    laneB.kotekanSourceLane = 0;
+
+    // complexity=1.0 lerps the source hitCount all the way to cycle.steps (8),
+    // saturating the source so every step fires.
+    state.macros.complexity = 1.0f;
+
+    // Full runtime pipeline: resolve macros, then constraints, then render.
+    auto macroResolved = poly::resolveMacros(state);
+    auto constrained = poly::resolveConstraints(state, macroResolved);
+    auto events = renderSorted(engine, constrained, 0.0, 4.0, 0.5);
+
+    int countA = 0, countB = 0;
+    for (const auto& e : events) {
+        if (e.pitch == 36)
+            countA++;
+        if (e.pitch == 38)
+            countB++;
+    }
+
+    EXPECT_EQ(countA, 8) << "complexity=1.0 should saturate the source lane to a full 8-hit cycle";
+    EXPECT_GT(countB, 0) << "Kotekan complement must retain at least one interlocking hit "
+                            "even when the source is macro-saturated (MEM095 regression)";
 }
 
 // --- Test 35: Timing offset deterministic across block sizes ---
