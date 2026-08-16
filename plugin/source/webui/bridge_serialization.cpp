@@ -119,12 +119,12 @@ std::string laneToJson(const LaneConfig& cfg, const std::string& name, int laneI
                   ",\"vel\":%u,\"prob\":%.4f,\"spread\":%.4f"
                   ",\"ghost\":%u,\"push\":%.4f"
                   ",\"hits\":%d,\"rot\":%d,\"timeline\":%s"
-                  ",\"active\":%s",
+                  ",\"active\":%s,\"seedLocked\":%s",
                   cfg.midiNote, cfg.midiChannel, cfg.cycle.steps, cfg.cycle.subdivision,
                   static_cast<unsigned>(cfg.baseVelocity), static_cast<double>(cfg.probability),
                   static_cast<double>(cfg.velocitySpread), static_cast<unsigned>(cfg.ghostFloor),
                   static_cast<double>(cfg.syncopationOffset), cfg.hitCount, cfg.rotation,
-                  cfg.timeline ? "true" : "false", cfg.active ? "true" : "false");
+                  cfg.timeline ? "true" : "false", cfg.active ? "true" : "false", cfg.seedLocked ? "true" : "false");
     js += buf;
 
     double stepLen = 8.0 / cfg.cycle.subdivision;

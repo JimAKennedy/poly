@@ -76,7 +76,7 @@ inline Steinberg::Vst::ParamID phrasePhaseOutput(int lane) {
 static constexpr Steinberg::Vst::ParamID kTransportPpqOutput = 450;
 
 static constexpr Steinberg::Vst::ParamID kLaneCoreBase = 800;
-static constexpr int kCoreParamsPerLane = 11;
+static constexpr int kCoreParamsPerLane = 12;
 static constexpr int kCoreSteps = 0;
 static constexpr int kCoreSubdivision = 1;
 static constexpr int kCoreHits = 2;
@@ -88,6 +88,7 @@ static constexpr int kCoreFixedPatternLen = 7;
 static constexpr int kCoreTempoMult = 8;
 static constexpr int kCoreMidiChannel = 9;
 static constexpr int kCoreFillEveryN = 10; // M034 S01: per-lane fill-every-N bars
+static constexpr int kCoreSeedLock = 11;   // M034 S03: per-lane seed lock (bool)
 
 inline Steinberg::Vst::ParamID laneCoreParam(int lane, int offset) {
     return kLaneCoreBase + static_cast<Steinberg::Vst::ParamID>(lane * kCoreParamsPerLane + offset);

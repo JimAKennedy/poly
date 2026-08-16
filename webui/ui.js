@@ -65,6 +65,68 @@
   document.getElementById('scB').addEventListener('click', () => host.action('selectScene', { scene: 'B' }));
   document.getElementById('scM').addEventListener('click', () => host.action('selectScene', { scene: 'Morph' }));
 
+  /* --- seed dice + history (M034 S03) ---
+     The global seed already renders in the chrome (#seedVal). The dice rolls a
+     fresh seed through the existing 'seed' edit path; a ring buffer of visited
+     seeds lets back/forward restore earlier rolls. A navigation restores an
+     existing entry (it does not branch or duplicate history); only a genuinely
+     new seed (dice, preset, or any external seed change) appends a visit. */
+  const SEED_MAX = 999999;
+  const SEED_HIST_CAP = 32;
+  const seedDice = document.getElementById('seedDice');
+  const seedBack = document.getElementById('seedBack');
+  const seedFwd = document.getElementById('seedFwd');
+  const seedHistPos = document.getElementById('seedHistPos');
+  let seedHistory = [];
+  let seedHistIdx = -1;
+  let seedNavigating = false;
+
+  function emitSeed(seed) {
+    const norm = Math.max(0, Math.min(1, seed / SEED_MAX));
+    host.edit('seed', norm, 'begin');
+    host.edit('seed', norm, 'perform');
+    host.edit('seed', norm, 'end');
+  }
+  function updateSeedNav() {
+    if (seedBack) seedBack.disabled = seedHistIdx <= 0;
+    if (seedFwd) seedFwd.disabled = seedHistIdx < 0 || seedHistIdx >= seedHistory.length - 1;
+    if (seedHistPos)
+      seedHistPos.textContent = seedHistory.length ? `${seedHistIdx + 1}/${seedHistory.length}` : '';
+  }
+  function recordSeed(seed) {
+    // A back/forward restore re-emits a known seed — do not record it as a new
+    // visit (that would duplicate the entry and strand the forward branch).
+    if (seedNavigating) return;
+    if (seedHistIdx >= 0 && seedHistory[seedHistIdx] === seed) return;
+    // A new roll from anywhere but the tail drops the stale forward branch.
+    seedHistory = seedHistory.slice(0, seedHistIdx + 1);
+    seedHistory.push(seed);
+    if (seedHistory.length > SEED_HIST_CAP) seedHistory.shift();
+    seedHistIdx = seedHistory.length - 1;
+    updateSeedNav();
+  }
+  function navigateSeed(delta) {
+    const next = seedHistIdx + delta;
+    if (next < 0 || next >= seedHistory.length) return;
+    seedHistIdx = next;
+    // Suppress the record that the resulting state push would otherwise trigger.
+    seedNavigating = true;
+    emitSeed(seedHistory[seedHistIdx]);
+    seedNavigating = false;
+    updateSeedNav();
+  }
+  if (seedDice) {
+    seedDice.addEventListener('click', () => {
+      // Roll a seed distinct from the current head so the readout always moves.
+      let seed;
+      do { seed = Math.floor(Math.random() * (SEED_MAX + 1)); }
+      while (seedHistory.length && seed === seedHistory[seedHistIdx]);
+      emitSeed(seed);
+    });
+  }
+  if (seedBack) seedBack.addEventListener('click', () => navigateSeed(-1));
+  if (seedFwd) seedFwd.addEventListener('click', () => navigateSeed(1));
+
   /* --- morph slider --- */
   const morphSlider = document.getElementById('morphSlider');
   const morphTrack = morphSlider.querySelector('.morph-track');
@@ -1586,10 +1648,25 @@
       `<div class="section-label">Fill</div>` + sliderHtml(FILL) +
       `<div class="prow"><label>Manual</label><div class="chip-row">` +
         `<button class="chip" data-manualfill>Fill Now</button></div></div>` +
-      `<div class="hint">Fill plays an off-pattern burst every N bars. Fill Now triggers one fill pass immediately.</div>`;
+      `<div class="hint">Fill plays an off-pattern burst every N bars. Fill Now triggers one fill pass immediately.</div>` +
+      `<div class="section-label">Seed</div>` +
+      `<div class="prow"><label>Lock</label><div class="chip-row">` +
+        `<button class="chip${l.seedLocked ? ' on' : ''}" data-seedlock aria-pressed="${l.seedLocked ? 'true' : 'false'}">${l.seedLocked ? 'Locked' : 'Lock Seed'}</button></div></div>` +
+      `<div class="hint">Locking pins this lane's pattern to the current seed, so rolling the global seed leaves it unchanged.</div>`;
 
     adv.querySelector('[data-manualfill]').addEventListener('click', () =>
       host.action('manualFill', {}));
+
+    // Per-lane seed lock: a boolean edit that flips the lane's current lock
+    // state. The native processor captures the current global seed into the
+    // lane's laneSeed on the false->true edge (M034 S03 T01), so a subsequent
+    // global reroll leaves this lane byte-identical.
+    adv.querySelector('[data-seedlock]').addEventListener('click', () => {
+      const next = l.seedLocked ? 0 : 1;
+      host.edit(`lane.${li}.seedLock`, next, 'begin');
+      host.edit(`lane.${li}.seedLock`, next, 'perform');
+      host.edit(`lane.${li}.seedLock`, next, 'end');
+    });
 
     adv.querySelectorAll('.slider-track').forEach((track) => {
       const field = track.dataset.field;
@@ -1678,6 +1755,7 @@
   function boot(state) {
     S = state;
     _prevStateStr = JSON.stringify(state);
+    recordSeed(state.seed);
     refreshAll();
     sizeLoom();
   }
@@ -1689,8 +1767,9 @@
     const sig = JSON.stringify(state);
     if (!first && sig === _prevStateStr) return;
     _prevStateStr = sig;
-    if (first) boot(state);
-    else refreshAll();
+    if (first) { boot(state); return; }
+    recordSeed(state.seed);
+    refreshAll();
   });
   if (host.getState()) boot(host.getState());
 

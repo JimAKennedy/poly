@@ -909,6 +909,18 @@ static bool applyCoreParam(Steinberg::Vst::ParamID id, double normalized, Groove
     case kCoreFillEveryN:
         cfg.fillEveryNBars = static_cast<int>(eng);
         break;
+    case kCoreSeedLock: {
+        // M034 S03: on the false->true edge, capture the current global seed so
+        // this lane keeps deriving every deterministicRand roll from it — a
+        // subsequent global reroll (GrooveState::seed change) then leaves the
+        // lane byte-identical (poly::laneEffectiveSeed). Unlock leaves laneSeed
+        // intact; it only takes effect while seedLocked is true.
+        const bool next = (eng > 0.5);
+        if (next && !cfg.seedLocked)
+            cfg.laneSeed = gs.seed;
+        cfg.seedLocked = next;
+        break;
+    }
     default:
         break;
     }

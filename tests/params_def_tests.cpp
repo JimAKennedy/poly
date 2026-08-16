@@ -105,9 +105,9 @@ TEST(ParamsDefTest, CoreRegistryRoundtripsForEveryEntry) {
 
 TEST(ParamsDefTest, RegistryCountsMatchPlugids) {
     // Guard against silent drift: plugids.h declares kParamsPerLane=16 and
-    // kCoreParamsPerLane=11. The registries must match.
+    // kCoreParamsPerLane=12. The registries must match.
     EXPECT_EQ(kLaneExprParamRegistry.size(), 16u);
-    EXPECT_EQ(kLaneCoreParamRegistry.size(), 11u);
+    EXPECT_EQ(kLaneCoreParamRegistry.size(), 12u);
 }
 
 TEST(ParamsDefTest, OffsetsAreSequentialAndUnique) {

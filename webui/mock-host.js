@@ -32,6 +32,10 @@
       tempoMultiplier: opts.tempoMultiplier ?? 1.0,
       kotekanSource: opts.kotekanSource ?? -1,
       fillEveryN: opts.fillEveryN ?? 0,
+      // M034 S03: per-lane seed lock. The mock has no RNG engine, so it only
+      // tracks the boolean for UI reflection/round-trip; the byte-identical
+      // invariance is proven engine-side (seed_lock_tests.cpp).
+      seedLocked: opts.seedLocked ?? false,
       accents: new Array(steps).fill(0),
     };
     if (opts.mt) opts.mt.forEach((v, i) => { l.mt[i] = v; });
@@ -1063,6 +1067,7 @@
           },
           tempoMult:    v => { lane.tempoMultiplier = v; },
           fillEveryN:   v => { lane.fillEveryN = Math.round(v * 64); },
+          seedLock:     v => { lane.seedLocked = v >= 0.5; },
           cellCount:    v => {
             const count = Math.round(v * 64);
             if (count > 0 && !lane.cells) lane.cells = new Array(count).fill(2);

@@ -53,6 +53,7 @@ inline constexpr FieldMapping kLaneCoreFields[] = {
     {"tempoMult", ParamIDs::kCoreTempoMult},
     {"channel", ParamIDs::kCoreMidiChannel},
     {"fillEveryN", ParamIDs::kCoreFillEveryN},
+    {"seedLock", ParamIDs::kCoreSeedLock},
 };
 
 } // namespace detail

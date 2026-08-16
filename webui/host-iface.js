@@ -88,7 +88,12 @@
  *   name, role, note, ch, steps, stepLen, vel, prob, spread, ghost, push,
  *   hits, rot, timeline, fixed: number[]|null, pattern: number[],
  *   cells: number[]|null, mt: number[], envs: Env[], hue,
- *   fillEveryN: number       // M034 S01: bars between auto-fills (0 = off)
+ *   fillEveryN: number,      // M034 S01: bars between auto-fills (0 = off)
+ *   seedLocked: bool         // M034 S03: lane pinned to its captured seed; a
+ *                            //   global seed reroll leaves it unchanged. The
+ *                            //   'lane.N.seedLock' edit (0/1) flips it; native
+ *                            //   captures the current global seed into laneSeed
+ *                            //   on the false->true edge.
  * }
  * Env = { target, period, depth, on }
  * Frame = {
