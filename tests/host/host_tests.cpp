@@ -751,6 +751,108 @@ TEST(HostTests, BufferSizeInvariance) {
     }
 }
 
+// --- M034 S02: non-4-4 host meter reaches the engine at the plugin boundary ---
+//
+// The engine-level meter support (TransportContext::ppqPerBar threaded through
+// scene chain, envelope phase, and MIDI capture) shipped under M051 S02
+// (commit 2af1c77, D003, MEM026) and is proven at the header/engine level by
+// tests/time_signature_tests.cpp. What those tests cannot prove is the VST3
+// boundary: that a host publishing kTimeSigValid on Vst::ProcessContext actually
+// flows through PolyProcessor::process() into the tc_ TransportContext that drives
+// chainState_.update(), computeEnvelopePhase(), extractLastBars(), and
+// engine_.renderRange().
+//
+// PolyProcessor mirrors tc_.timeSigNumerator/Denominator into uiSnapshot_
+// (processor.cpp:150-151) in the SAME block, from the SAME tc_ it hands to the
+// engine render (processor.cpp:751) and the chain update (processor.cpp:718). So
+// asserting the published UISnapshot meter equals the injected host meter proves
+// the meter reached the engine's transport context for that render — the
+// end-to-end boundary this slice closes. These tests are the regression guard for
+// the meter-threading contract at the plugin boundary.
+
+TEST(HostTests, HostTimeSig_DefaultsTo44WhenHostPublishesNone) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+    const auto* snap = host.controllerUiSnapshot();
+    ASSERT_NE(snap, nullptr);
+
+    // No injection: processBlock omits kTimeSigValid, exactly as every pre-M034
+    // host test drives it. Processor must fall back to 4/4.
+    host.processBlock(0.0, 120.0, true);
+    EXPECT_EQ(snap->timeSigNumerator.load(std::memory_order_relaxed), 4);
+    EXPECT_EQ(snap->timeSigDenominator.load(std::memory_order_relaxed), 4);
+
+    host.teardown();
+}
+
+TEST(HostTests, HostTimeSig_ThreeFourReachesEngine) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+    const auto* snap = host.controllerUiSnapshot();
+    ASSERT_NE(snap, nullptr);
+
+    host.setHostTimeSignature(3, 4);
+    host.processBlock(0.0, 120.0, true);
+
+    EXPECT_EQ(snap->timeSigNumerator.load(std::memory_order_relaxed), 3)
+        << "kTimeSigValid 3/4 must reach tc_ (ppqPerBar()=3.0 for chainState_.update, "
+           "computeEnvelopePhase, extractLastBars, and engine_.renderRange this block).";
+    EXPECT_EQ(snap->timeSigDenominator.load(std::memory_order_relaxed), 4);
+
+    host.teardown();
+}
+
+TEST(HostTests, HostTimeSig_SevenEightReachesEngineEveryBlock) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+    const auto* snap = host.controllerUiSnapshot();
+    ASSERT_NE(snap, nullptr);
+
+    host.setHostTimeSignature(7, 8);
+    // Drive several blocks across a 7/8 bar boundary (3.5 PPQ per bar) to prove
+    // the meter is read every block, not just latched once at the first process().
+    const double tempo = 120.0;
+    const double step = host.ppqPerBlock(tempo);
+    for (double ppq = 0.0; ppq < 8.0; ppq += step) {
+        host.processBlock(ppq, tempo, true);
+        ASSERT_EQ(snap->timeSigNumerator.load(std::memory_order_relaxed), 7);
+        ASSERT_EQ(snap->timeSigDenominator.load(std::memory_order_relaxed), 8);
+    }
+
+    host.teardown();
+}
+
+TEST(HostTests, HostTimeSig_InvalidMeterSanitizedThenValidRestoredThenCleared) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+    const auto* snap = host.controllerUiSnapshot();
+    ASSERT_NE(snap, nullptr);
+
+    // A garbage host reading (denominator not a power-of-two subdivision) must be
+    // rejected by the processor's sanitizer (processor.cpp:141-146) and fall back
+    // to 4/4 rather than propagate a nonsense ppqPerBar() into the engine.
+    host.setHostTimeSignature(5, 3);
+    host.processBlock(0.0, 120.0, true);
+    EXPECT_EQ(snap->timeSigNumerator.load(std::memory_order_relaxed), 4)
+        << "invalid denominator 3 must be sanitized to the 4/4 fallback";
+    EXPECT_EQ(snap->timeSigDenominator.load(std::memory_order_relaxed), 4);
+
+    // A valid odd meter is accepted verbatim.
+    host.setHostTimeSignature(5, 4);
+    host.processBlock(0.0, 120.0, true);
+    EXPECT_EQ(snap->timeSigNumerator.load(std::memory_order_relaxed), 5);
+    EXPECT_EQ(snap->timeSigDenominator.load(std::memory_order_relaxed), 4);
+
+    // Clearing returns to the no-kTimeSigValid path (4/4 fallback).
+    host.clearHostTimeSignature();
+    host.processBlock(0.0, 120.0, true);
+    EXPECT_EQ(snap->timeSigNumerator.load(std::memory_order_relaxed), 4)
+        << "clearHostTimeSignature() must return to the 4/4 fallback (no kTimeSigValid published)";
+    EXPECT_EQ(snap->timeSigDenominator.load(std::memory_order_relaxed), 4);
+
+    host.teardown();
+}
+
 // --- T03: Golden MIDI comparison at processor level ---
 
 static std::string serializeNoteOns(const std::vector<MidiEvent>& events) {

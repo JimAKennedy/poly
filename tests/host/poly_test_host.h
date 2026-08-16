@@ -71,6 +71,18 @@ public:
                       double loopEnd = 0.0);
     void stopAndFlush(double ppqPos, double tempo);
 
+    // --- M034 S02: host time-signature injection (non-4-4 meter boundary proof) ---
+    // Sets a host time signature that every subsequent processBlock() publishes on
+    // ProcessContext with the kTimeSigValid flag — modelling a DAW project in a
+    // non-4-4 meter (e.g. 3/4, 7/8). This is the ONLY path that reaches the
+    // processor's kTimeSigValid branch (processor.cpp:138-147), which populates
+    // tc_.timeSigNumerator/Denominator — the same TransportContext handed to
+    // chainState_.update() and engine_.renderRange() every block. Until set (or
+    // after clearHostTimeSignature()) processBlock() omits kTimeSigValid, so the
+    // processor falls back to 4/4 and all existing host tests stay byte-identical.
+    void setHostTimeSignature(int numerator, int denominator);
+    void clearHostTimeSignature();
+
     // --- Host-side state IO (real IBStream via Steinberg::MemoryStream) ---
     // saveState() calls processor->getState() end-to-end and returns the serialized bytes.
     // loadState() calls processor->setState(); if a controller is attached, it also invokes
@@ -232,6 +244,11 @@ private:
     double sampleRate_ = 44100.0;
     int blockSize_ = 512;
     bool active_ = false;
+    // M034 S02: host time signature injected into every processBlock() when both
+    // are > 0. 0/0 (the default) means "host publishes no kTimeSigValid" — the
+    // pre-M034 behavior every existing test relies on.
+    int hostTimeSigNum_ = 0;
+    int hostTimeSigDen_ = 0;
     std::vector<MidiEvent> events_;
     std::vector<float> leftBuf_;
     std::vector<float> rightBuf_;

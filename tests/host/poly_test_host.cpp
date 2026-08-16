@@ -164,6 +164,15 @@ void PolyTestHost::processBlock(double ppqStart, double tempo, bool playing, boo
         ctx.cycleStartMusic = loopStart;
         ctx.cycleEndMusic = loopEnd;
     }
+    // M034 S02: inject a host time signature so process() takes the kTimeSigValid
+    // branch (processor.cpp:138-147). Only published when both fields are > 0; the
+    // 0/0 default leaves kTimeSigValid unset so the processor falls back to 4/4 and
+    // every pre-M034 host test is byte-identical.
+    if (hostTimeSigNum_ > 0 && hostTimeSigDen_ > 0) {
+        ctx.state |= ProcessContext::kTimeSigValid;
+        ctx.timeSigNumerator = hostTimeSigNum_;
+        ctx.timeSigDenominator = hostTimeSigDen_;
+    }
     ctx.sampleRate = sampleRate_;
     ctx.projectTimeMusic = ppqStart;
     ctx.tempo = tempo;
@@ -246,6 +255,16 @@ std::optional<double> PolyTestHost::lastOutputParamValue(uint32_t paramId) const
     if (it == lastOutputParams_.end())
         return std::nullopt;
     return it->second;
+}
+
+void PolyTestHost::setHostTimeSignature(int numerator, int denominator) {
+    hostTimeSigNum_ = numerator;
+    hostTimeSigDen_ = denominator;
+}
+
+void PolyTestHost::clearHostTimeSignature() {
+    hostTimeSigNum_ = 0;
+    hostTimeSigDen_ = 0;
 }
 
 void PolyTestHost::playBars(double bars, double tempo) {
