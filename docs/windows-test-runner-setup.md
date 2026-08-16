@@ -318,15 +318,15 @@ step here fails, the nightly will fail — fix it now, not in CI.
   installs a mismatched Playwright and fails with "test.describe() not expected
   here".)
 - ☐ **Install the plugin so Cubase can load it.** Copy the built bundle to the
-  shared VST3 folder (this is the same `POLY_VST3_INSTALL_DIR` the nightly
-  workflow installs to):
+  **per-user** VST3 folder — the same `POLY_VST3_INSTALL_DIR` the nightly
+  installs to, and the one a non-elevated runner can write (Part 12):
   ```powershell
   Copy-Item -Recurse -Force build\VST3\Release\poly_plugin.vst3 `
-    "C:\Program Files\Common Files\VST3\poly_plugin.vst3"
+    "$env:LOCALAPPDATA\Programs\Common\VST3\poly_plugin.vst3"
   ```
   > **Only ONE copy of `poly_plugin.vst3` may exist on the box.** A leftover
-  > stale bundle in a *different* VST3 location (e.g. the user-level
-  > `%LOCALAPPDATA%\Programs\Common\VST3` or an old manual copy) makes Cubase
+  > stale bundle in a *different* VST3 location (e.g. the machine-wide
+  > `C:\Program Files\Common Files\VST3` or an old manual copy) makes Cubase
   > load the wrong binary — the exact trap behind the blank-window incident
   > (ISSUE-001). Before rescanning, confirm there is no second copy:
   > ```powershell
@@ -544,6 +544,65 @@ The nightly does this for you: the e2e flow passes `-EnableCdp` to
 `Start-Process` so the launched Cubase inherits it. The S07/S08 flows leave
 `-EnableCdp` off, so their launches are unaffected.
 
+### The runner must NOT be elevated (the S09 dead end)
+
+> **This is the load-bearing constraint of the whole L4-web tier.** If the
+> `GitHubActionsRunner` logon task is ever re-registered with
+> `-RunLevel Highest`, CDP silently stops working and the e2e fails with a bare
+> "CDP port never came up".
+
+WebView2 **deliberately discards** browser flags delivered "via the local device
+environment" — both `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS` and the
+`Software\Policies\Microsoft\Edge\WebView2` registry keys — whenever the host
+app is running elevated. From Microsoft's
+[WebView2 browser flags](https://learn.microsoft.com/en-us/microsoft-edge/webview2/concepts/webview-features-flags)
+reference:
+
+> Elevated apps ignore flags that are set via the local device environment.
+> Elevated apps honor flags that are set via code.
+
+This is the entire explanation for the seven-round S09 dead end (runs #40–#47).
+The runner's logon task ran with `-RunLevel Highest`, so every job step — and
+therefore Cubase — ran at high integrity, and **0 of 18** `msedgewebview2.exe`
+children ever carried `--remote-debugging-port`, in every round, no matter how
+the flag was delivered. A Cubase launched by hand from an ordinary
+(medium-integrity) VNC shell exposed the port every single time. Sessions,
+window stations, desktop lock state, editor focus and WebView2 process reuse
+were all investigated and all ruled out — the topology diagnostic reported
+session 1, console matched, input desktop reachable, editor frame and choc host
+both PRESENT on every failing run.
+
+The documented escape hatch — passing `AdditionalBrowserArguments` through
+`ICoreWebView2EnvironmentOptions` in code, which *is* honored when elevated —
+is a dead end here too: WebView2 Runtime **150 and later** has an open
+regression making the DevTools endpoint unreachable for elevated hosts however
+the flag arrives
+([WebView2Feedback#5640](https://github.com/MicrosoftEdge/WebView2Feedback/issues/5640)).
+This box runs 151.x. **A non-elevated Cubase is the only supported
+configuration.**
+
+Consequences, all already in place:
+
+- The logon task is registered `-RunLevel Limited`
+  (`docs/windows-runner-rehome-and-deelevate.md` Part C3).
+- The nightly installs the plugin to the **per-user** VST3 folder
+  (`%LOCALAPPDATA%\Programs\Common\VST3`), which Cubase scans alongside the
+  machine-wide one and which a non-admin can write. Nothing Poly-named may be
+  left in `C:\Program Files\Common Files\VST3` — the duplicate VST3 class ID
+  resolves to whichever copy Cubase scanned first, so a stale bundle there means
+  the run silently tests an old build. The install step fails the job if it
+  finds one.
+- `launch-cubase.ps1 -EnableCdp` and `launch-manual-cdp.ps1` both refuse to run
+  elevated, and `diagnose-editor-window.ps1` records the elevation state in
+  `editor-window-topology.txt`.
+
+**Verify** (from a normal, non-elevated PowerShell — an elevated one reports
+only itself):
+
+```powershell
+(Get-ScheduledTask GitHubActionsRunner).Principal.RunLevel   # expect Limited
+```
+
 - ☐ Confirm the **WebView2 Runtime** is installed (Part 2 already covers this).
   CDP attach fails loud if WebView2 isn't present.
 - ☐ No manual env setup is needed for the nightly — the launch script owns it.
@@ -556,31 +615,26 @@ The nightly does this for you: the e2e flow passes `-EnableCdp` to
   Test-NetConnection -ComputerName 127.0.0.1 -Port 9222
   ```
 
-### The editor must be materialized AND focused (focus trap)
+### The editor must be materialized — but focus is NOT required
 
-WebView2 exposes CDP **only while the Poly editor window is materialized and
-Cubase has foreground focus.** Cubase destroys the WebView2 view on editor
-focus-loss and recreates it on focus-return, so the CDP port comes and goes with
-the editor. Two consequences:
+The Poly editor window has to exist for its WebView2 to be created at all, so
+the fixture (#212) is saved with the editor already open and it materializes on
+project load.
 
-- **The nightly forces this.** `scripts/cubase/focus-editor-cdp.ps1` runs after
-  wait-ready (S09 flow only): it brings Cubase to the foreground, then polls the
-  OS TCP table until `127.0.0.1:<port>` is actually listening, failing loud if it
-  never comes up. The e2e step then runs the same script as a background job
-  (`-HoldSeconds`) so Cubase stays foreground while Playwright attaches. The
-  fixture (#212) saves with the editor already open, so it exists on load; this
-  step only has to make it foreground.
-- **A manual `Test-NetConnection` from another window will read `False` even
-  when CDP is up** — Alt-Tabbing to the probe shell tears the editor down. To
-  check the port by hand without the focus trap, snapshot the listen table from
-  a delayed background job while you hold focus on the editor:
-  ```powershell
-  Start-Job { Start-Sleep 12
-    (Get-NetTCPConnection -State Listen | ? LocalPort -eq 9222) `
-      | Out-File C:\Users\polyci\cdp-probe.txt } | Out-Null
-  # click back into the Poly editor and hold focus ~15s, then:
-  Get-Content C:\Users\polyci\cdp-probe.txt
-  ```
+Focus, however, is irrelevant: the runner diagnostic confirmed the CDP port is
+listening with Cubase in the **background** and the choc WebView2 host window
+`Visible=False`. An earlier theory that the editor had to be foregrounded was
+wrong, and `scripts/cubase/focus-editor-cdp.ps1` no longer forces foreground
+despite its name — it only polls the OS TCP table until `127.0.0.1:<port>` is
+listening and fails loud if it never comes up.
+
+Checking by hand: use `127.0.0.1`, **not** `localhost` — WebView2 binds IPv4
+only and `localhost` resolves to `::1` first, which reads as closed.
+
+```powershell
+Get-NetTCPConnection -State Listen | Where-Object LocalPort -eq 9222
+Invoke-RestMethod http://127.0.0.1:9222/json/version
+```
 
 ### Security
 
@@ -610,15 +664,21 @@ recipe).
   A non-empty version string (e.g. `151.0.4129.78`) means it is installed. If
   empty, install it and re-check:
   `winget install --id Microsoft.EdgeWebView2Runtime --accept-source-agreements --accept-package-agreements`.
+- ☐ Confirm the runner's logon task is **not** elevated — see *The runner must
+  NOT be elevated* above. This is the single most common cause of a missing CDP
+  port:
+  ```powershell
+  (Get-ScheduledTask GitHubActionsRunner).Principal.RunLevel   # expect Limited
+  ```
 - ☐ `POLY_FIXTURE_CPR` is already set in the workflow env (the S08 fixture
-  landed), so the transport flow is always on. To additionally turn on the S09
-  e2e flow, pass the `cdp_port` dispatch input (e.g. `9222`) — the workflow maps
-  it to `POLY_CDP_PORT`. Scheduled runs leave it empty, so they never run the
-  heavier e2e flow.
+  landed), so the transport flow is always on. The S09 e2e flow is on by default
+  too: the `cdp_port` dispatch input defaults to `9222` and scheduled runs always
+  use `9222`. Clear the field on a dispatch to skip the e2e and run only the
+  S07/S08 launch/transport smoke.
 - ☐ From the Actions tab, run **Cubase Nightly (L4)** via
-  **`workflow_dispatch` → Run workflow** against `main`, setting the **cdp_port**
-  input to `9222`. Or from the CLI:
-  `gh workflow run cubase-nightly.yml --repo JimAKennedy/poly --ref main -f cdp_port=9222`.
+  **`workflow_dispatch` → Run workflow** against `main`, leaving **cdp_port** at
+  its `9222` default. Or from the CLI:
+  `gh workflow run cubase-nightly.yml --repo JimAKennedy/poly --ref main`.
 - ☐ Watch the e2e steps run in order: *Install e2e deps → Run L4-web e2e (attach,
   toggle, transport)* while Cubase is up, then after quit *Assert toggled step in
   probe (L4-web)*.

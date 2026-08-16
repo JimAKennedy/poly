@@ -52,20 +52,44 @@ try {
     # LAN-gated, no inbound) is what keeps it off the wider network. WKWebView
     # (macOS) exposes no CDP, which is why this flow is Windows-only.
     #
-    # NOTE: this automated path never brought the CDP port up under the GitHub
-    # Actions logon-task agent (M042 S09, runs #40-#47: 0 of 18 msedgewebview2.exe
-    # children ever carried the flag, no delivery mechanism — env var, HKCU
-    # registry policy, ICoreWebView2EnvironmentOptions patch, or dedicated
-    # user-data-dir — reached the browser process). The working path is the
-    # MANUAL-CDP flow: the owner launches Cubase by hand in their VNC session with
-    # this env var set (the #215 recipe), and the workflow's "Await manual Cubase"
-    # gate waits for the port. This script is SKIPPED in that flow
-    # (POLY_MANUAL_CUBASE == 'true'); it stays here for the S07/S08 launch/quit +
-    # transport smokes, which do not need CDP.
+    # THIS ONLY WORKS IN A NON-ELEVATED PROCESS. WebView2 deliberately ignores
+    # browser flags delivered "via the local device environment" — both this env
+    # var and the Edge/WebView2 registry policy keys — when the host app is
+    # elevated:
+    #   https://learn.microsoft.com/en-us/microsoft-edge/webview2/concepts/webview-features-flags
+    # That is the sole cause of the M042 S09 dead end (runs #40-#47: 0 of 18
+    # msedgewebview2.exe children carried the flag under the elevated
+    # GitHubActionsRunner logon task, while a hand-launched Cubase in a normal
+    # medium-integrity shell exposed the port every time). Delivering the flag
+    # "via code" is documented to survive elevation, but WebView2 Runtime >= 150
+    # has an open regression that makes the CDP endpoint unreachable for elevated
+    # hosts no matter how the flag arrives
+    # (MicrosoftEdge/WebView2Feedback#5640), so a non-elevated Cubase is the only
+    # supported configuration. The runner's logon task is registered
+    # `-RunLevel Limited` for exactly this reason
+    # (docs/windows-runner-rehome-and-deelevate.md Part C3).
+    #
+    # Fail loud rather than launching a Cubase that cannot possibly expose CDP —
+    # otherwise re-elevating the task resurfaces as an opaque "CDP port never
+    # came up" timeout two steps later, which is precisely how the original
+    # seven-round dead end presented.
     if ($EnableCdp) {
+        $identity = [Security.Principal.WindowsIdentity]::GetCurrent()
+        $isElevated = ([Security.Principal.WindowsPrincipal]$identity).IsInRole(
+            [Security.Principal.WindowsBuiltInRole]::Administrator)
+        if ($isElevated) {
+            Invoke-PolyPhaseFailure -Phase "launch" `
+                -Message ("running ELEVATED, so WebView2 will ignore " +
+                    "WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS and the CDP port can never bind. " +
+                    "Re-register the GitHubActionsRunner logon task with -RunLevel Limited " +
+                    "(docs/windows-runner-rehome-and-deelevate.md Part C3) and restart it.") `
+                -Extra @{ cdpPort = $CdpPort; elevated = $true }
+        }
+
         $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = "--remote-debugging-port=$CdpPort"
         Write-PolyPhase -Phase "launch" -State "ok" `
-            -Detail "WebView2 CDP enabled (env var)" -Extra @{ cdpPort = $CdpPort }
+            -Detail "WebView2 CDP enabled (env var, non-elevated)" `
+            -Extra @{ cdpPort = $CdpPort; elevated = $false }
     }
 
     if ($FixtureCpr) {

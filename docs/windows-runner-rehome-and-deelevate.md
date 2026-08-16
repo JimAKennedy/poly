@@ -11,12 +11,21 @@ the order they must happen:
 |---|---|---|---|
 | A | Turn Smart App Control off | Unblocks the build **today** | Reboot |
 | B | Move the runner out of `C:\Windows\System32` | Repo code is building inside a protected OS directory | ~10 min, runner offline |
-| C | Drop `polyci` from Administrators | Runner executes repo code; it should not be admin | None if prerequisites are met |
+| C | De-elevate the runner (and drop `polyci` from Administrators) | Runner executes repo code; it should not be admin — **and an elevated runner makes the S09 CDP e2e impossible** | None if prerequisites are met |
 
 > **Order matters.** Part A is the only one that fixes the currently-failing
 > nightly — B and C are hygiene and change nothing about the build outcome. Do A,
 > confirm green, then B, then C. Doing C first will make B need a second admin
 > login you may not have tested yet.
+
+> **Part C3 is no longer optional.** It started life as security hygiene, but it
+> is now a functional requirement of the L4-web tier. WebView2 discards browser
+> flags delivered via the environment or the registry whenever the host app is
+> elevated, so an elevated Cubase can never expose the `--remote-debugging-port`
+> CDP endpoint the Playwright e2e attaches to — that was the whole of the M042
+> S09 seven-round dead end (runs #40–#47). See
+> `docs/windows-test-runner-setup.md` Part 12. If you ever re-elevate the logon
+> task, the nightly's CDP steps fail loud by design.
 
 This runbook is a companion to `docs/windows-test-runner-setup.md` (the
 from-scratch build of this machine). Part 9 of that doc is the step that, left
@@ -240,42 +249,37 @@ The runner executes whatever a workflow tells it to. It should not be running as
 a local administrator. This is not a one-liner — two real dependencies on
 elevation have to be removed first.
 
-### C1 — Rehome the plugin install (the actual blocker)
+### C1 — Rehome the plugin install (the actual blocker) — **done in the repo**
 
-`cubase-nightly.yml` installs the built bundle to a machine-wide location:
+`cubase-nightly.yml` used to install the built bundle to a machine-wide
+location, `C:\Program Files\Common Files\VST3`. That folder is writable only by
+`Administrators`, `SYSTEM`, and `TrustedInstaller`, so the *Install plugin for
+Cubase* step — which does a `Remove-Item -Recurse -Force` then
+`Copy-Item -Recurse` — needed admin.
 
-```yaml
-POLY_VST3_INSTALL_DIR: "C:\\Program Files\\Common Files\\VST3"
-```
+**Resolved: the workflow now installs to the per-user VST3 path**,
+`%LOCALAPPDATA%\Programs\Common\VST3`, which Cubase scans alongside the
+machine-wide one (confirmed against the runner's own
+`Cubase Pro VST3 Cache\vst3plugins.xml`) and which a non-admin can write. The
+step derives it from `$env:LOCALAPPDATA` inside the `pwsh` block — note that a
+job-level `env:` entry **cannot** work here, because the `env` expression
+context sees only workflow-defined variables and `${{ env.LOCALAPPDATA }}`
+expands to the empty string. `scripts/S08-install/_shared.ps1` defaults to the
+same path.
 
-That folder is writable only by `Administrators`, `SYSTEM`, and
-`TrustedInstaller`, so the *Install plugin for Cubase* step — which does a
-`Remove-Item -Recurse -Force` then `Copy-Item -Recurse` — needs admin. Pick one:
+The remaining task is a one-time cleanup that only an admin can do:
 
-**Option 1 — per-user VST3 path (preferred).** Change the workflow to the
-user-level location, which Cubase scans alongside the common one:
-
-```yaml
-POLY_VST3_INSTALL_DIR: "${{ env.LOCALAPPDATA }}\\Programs\\Common\\VST3"
-```
-
-Requires a repo change and a one-off `New-Item -ItemType Directory -Force` of
-that path, but leaves no ACL carve-out on `Program Files` and keeps CI's install
-target isolated from anything you install by hand.
-
-**Option 2 — targeted ACL grant.** Keep the workflow as-is and widen just that
-one folder:
-
-```powershell
-icacls "C:\Program Files\Common Files\VST3" /grant "$env:COMPUTERNAME\polyci:(OI)(CI)M" /T
-```
-
-No repo change, but CI can now overwrite any system-wide VST3 — including
-plugins you did not build. Prefer Option 1 unless something off-box needs the
-plugin at the common path.
-
-- ☐ Chosen and applied one of the two.
-- ☐ Dispatched the nightly and confirmed the install step still passes.
+- ☐ **Delete the Poly bundles from the machine-wide folder.** Cubase scans both
+  locations, and two bundles with the same VST3 class ID resolve to whichever
+  copy it scanned first — leave them and the nightly may silently test a stale
+  build. From an elevated PowerShell:
+  ```powershell
+  Remove-Item -Recurse -Force "C:\Program Files\Common Files\VST3\poly_plugin.vst3"
+  Remove-Item -Recurse -Force "C:\Program Files\Common Files\VST3\poly_midi_probe.vst3"
+  ```
+  The install step fails the job if it finds either one, so this cannot be
+  forgotten silently.
+- ☐ Dispatched the nightly and confirmed the install step passes.
 
 ### C2 — Confirm a second working admin
 
@@ -296,18 +300,41 @@ plus a strong password) **before** proceeding. Otherwise you lose the ability to
 install VS Build Tools updates, Cubase updates, and drivers — the exact reasons
 Part 1a of the setup doc made `polyci` an admin.
 
-### C3 — Drop the task's elevation
+### C3 — Drop the task's elevation — **required for the S09 CDP e2e**
 
-Re-register the task principal with `-RunLevel Limited`:
+Re-register the task principal with `-RunLevel Limited`, from an elevated
+PowerShell:
 
 ```powershell
 $p = New-ScheduledTaskPrincipal -UserId "$env:COMPUTERNAME\polyci" `
                                 -LogonType Interactive -RunLevel Limited
 Set-ScheduledTask -TaskName "GitHubActionsRunner" -Principal $p
+
+# The change only takes effect for a NEW listener process.
+Stop-ScheduledTask  -TaskName "GitHubActionsRunner"
+Start-ScheduledTask -TaskName "GitHubActionsRunner"
 ```
 
 This only works once Part B has moved the runner off `System32` — a
-non-elevated `polyci` cannot write to the old tree at all.
+non-elevated `polyci` cannot write to the old tree at all. `C:\actions-runner`
+grants `Authenticated Users:(M)`, so the work tree stays writable after the
+de-elevation.
+
+C3 is sufficient on its own for the CDP fix: `-RunLevel Limited` gives the task
+`polyci`'s **filtered** token (medium integrity), which is exactly the context
+an ordinary VNC shell runs in. C4 below removes the admin membership as well,
+which is worth doing but is not what CDP depends on.
+
+**Verify** — from a normal, non-elevated PowerShell:
+
+```powershell
+(Get-ScheduledTask GitHubActionsRunner).Principal.RunLevel   # expect Limited
+```
+
+Then dispatch **Cubase Nightly (L4)** and confirm the *Wait for Poly editor CDP
+endpoint* step passes. `editor-window-topology.txt` in the run artifacts should
+report `this process elevated: NO` and a WebView2 child carrying
+`--remote-debugging-port`.
 
 ### C4 — Remove admin membership
 

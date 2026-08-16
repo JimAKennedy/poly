@@ -1,31 +1,33 @@
-# M042 S09: operator-run script for the manual-CDP flow.
+# M042 S09: hand-launch Cubase with the CDP port open, for diagnosis.
 #
-# Run this by hand in the runner's VNC session AFTER a dispatch with
-# `-f cdp_port=9222 -f manual_cubase=true` reaches the "Await manual Cubase
-# (CDP)" gate. It does, in one step, what the gate's printed recipe asks the
-# operator to do by hand:
-#   1. set WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port=<port>
-#      in THIS shell (so the Cubase child inherits it -- the #215 recipe, the one
-#      path that actually exposes CDP; double-clicking the .cpr does NOT),
-#   2. launch Cubase on the freshly-checked-out fixture,
-#   3. wait for the Poly editor to materialise AND the CDP port to listen, then
-#   4. drop the sentinel file the gate is polling for.
+# THE NIGHTLY NO LONGER NEEDS THIS. The workflow launches Cubase itself and the
+# CDP port comes up unattended, because the runner's logon task now runs
+# NON-elevated (docs/windows-runner-rehome-and-deelevate.md Part C3). WebView2
+# discards browser flags set via the environment or registry whenever the host
+# app is elevated, which is why the automated launch used to yield no CDP port
+# while this hand-run script always worked -- the differentiator was integrity
+# level, not the human. The manual-CDP gate (await-manual-cubase.ps1) and its
+# `manual_cubase` dispatch input are gone.
 #
-# Why a script (not hand-typed): the env var MUST be set in the same shell that
-# launches Cubase, before launch. Typing it by hand is error-prone (a missed
-# env-var-before-launch silently yields no CDP port and a confusing timeout).
-# This keeps the recipe under version control so it always matches the workflow
-# (same port default, same fixture path, same sentinel path as
-# await-manual-cubase.ps1).
+# Keep this for reproducing the editor/CDP state by hand outside a CI run. In one
+# step it:
+#   1. sets WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port=<port>
+#      in THIS shell (so the Cubase child inherits it -- an env var set after
+#      launch has no effect),
+#   2. sets POLY_PROBE_OUTPUT so poly_midi_probe has somewhere to flush its JSONL,
+#   3. clears Cubase's Safe Mode flag, launches Cubase on the fixture, and
+#   4. waits for the CDP port to listen, failing loud if it never does.
 #
-# It does NOT wait for the CI job -- it just gets Cubase into the CDP-ready state
-# and signals go. The CI gate (await-manual-cubase.ps1) then detects the sentinel
-# + live port and proceeds with the e2e.
+# RUN IT FROM A NORMAL, NON-ELEVATED POWERSHELL. From an elevated shell Cubase
+# inherits the elevation and the port can never bind -- the script refuses to
+# start in that case rather than leaving you with a confusing timeout.
+#
+# The sentinel file below is vestigial (nothing polls for it now that the CI gate
+# is gone); it is kept because it is harmless and makes a hand run observable.
 
 [CmdletBinding()]
 param(
-    # CDP remote-debugging port -- must match the dispatch's `-f cdp_port` and the
-    # gate's -CdpPort (default 9222).
+    # CDP remote-debugging port to open (matches the workflow's cdp_port input).
     [int] $CdpPort = 9222,
     # Cubase major version installed on the runner (matches POLY_CUBASE_VERSION).
     [string] $CubaseVersion = "14",
@@ -53,6 +55,19 @@ param(
 )
 
 . "$PSScriptRoot/_common.ps1"
+
+# Refuse to run elevated. WebView2 ignores browser flags delivered via the
+# environment or the registry when the host app is elevated, so an elevated
+# launch cannot expose CDP no matter what this script does -- better to say so
+# now than to time out 120s later. See docs/windows-test-runner-setup.md Part 12.
+$isElevated = ([Security.Principal.WindowsPrincipal]`
+    [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
+        [Security.Principal.WindowsBuiltInRole]::Administrator)
+if ($isElevated) {
+    throw ("This shell is ELEVATED. WebView2 ignores WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS " +
+        "for elevated host apps, so the CDP port would never bind. Re-run from a normal " +
+        "(non-elevated) PowerShell window.")
+}
 
 if (-not $GoFile) {
     $GoFile = Join-Path $env:TEMP "poly-cdp-go.txt"

@@ -12,8 +12,9 @@
 # It changes nothing: pure enumeration + a read-only port probe. Safe to run
 # with Cubase open on the fixture with the Poly editor visible.
 #
-# Usage (elevated PowerShell on the runner, with Cubase already open on the
-# fixture and the Poly editor visible):
+# Usage (a NORMAL, non-elevated PowerShell on the runner — an elevated shell
+# would report its own elevation, not the nightly's — with Cubase already open
+# on the fixture and the Poly editor visible):
 #   ./scripts/cubase/diagnose-editor-window.ps1 -CdpPort 9222
 
 [CmdletBinding()]
@@ -97,9 +98,9 @@ $cubasePids = $cubasePids | Sort-Object -Unique
 Write-Diag "=== Cubase pids under inspection: $($cubasePids -join ', ') ==="
 
 # --- Session / window-station / lock-state block -----------------------------
-# The decisive discriminator for the unattended-agent CDP failure (MEM118): the
-# editor + WebView2 host materialize, but the CDP port never binds. Two rival
-# causes need different fixes:
+# Context for the unattended-agent CDP failure (the editor + WebView2 host
+# materialize, but the CDP port never binds). Three candidate causes were in
+# play; the raw facts below distinguish them:
 #   (a) Cubase runs on a NON-interactive session/station (Session 0 service
 #       isolation) — WebView2's remote-debugging pipe can't bind. Fix: run the
 #       runner as an interactive logon task on the console session (runbook Part
@@ -107,10 +108,11 @@ Write-Diag "=== Cubase pids under inspection: $($cubasePids -join ', ') ==="
 #   (b) Cubase IS on the interactive session but the console is LOCKED / has no
 #       attached display at WebView2-init time — the input desktop is
 #       unreachable. Fix: keep-awake + dummy-HDMI + auto-unlock (keep-awake doc).
-# S08's MIDI Remote surface DOES bind under the agent (golden compare passes),
-# which argues against pure (a) — so (b), or a WebView2-specific requirement
-# beyond "interactive desktop", is the live hypothesis. This block reports the
-# raw facts so the next run settles it.
+#   (c) Cubase runs ELEVATED, so WebView2 ignores the CDP flag by design. Fix:
+#       register the runner's logon task with -RunLevel Limited.
+# Runs #40-#47 reported session 1, console matched, input desktop reachable —
+# ruling out (a) and (b) — and the cause was (c). The elevation line below is
+# therefore the one to read first when the port is missing.
 Write-Diag ""
 Write-Diag "=== session / window-station / desktop-lock state ==="
 $activeConsole = [Win32.Enum]::WTSGetActiveConsoleSessionId()
@@ -134,6 +136,21 @@ if ($inputDesk -ne [System.IntPtr]::Zero) {
     [void][Win32.Enum]::CloseDesktop($inputDesk)
 } else {
     Write-Diag "  interactive input desktop reachable: NO (console LOCKED or headless — WebView2 CDP pipe likely blocked)"
+}
+
+# Elevation of THIS process — which is also Cubase's, since launch-cubase.ps1
+# starts Cubase as a child of this same job shell. This is the discriminator
+# that actually mattered (MEM118 superseded): WebView2 ignores browser flags set
+# "via the local device environment" (env var + registry policy) whenever the
+# host app is elevated, so an elevated Cubase can never expose CDP.
+# See docs/windows-test-runner-setup.md Part 12.
+$isElevated = ([Security.Principal.WindowsPrincipal]`
+    [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
+        [Security.Principal.WindowsBuiltInRole]::Administrator)
+if ($isElevated) {
+    Write-Diag "  this process elevated: YES — WebView2 WILL ignore the CDP env var/registry flag (expect no listener)"
+} else {
+    Write-Diag "  this process elevated: NO (required for CDP — WebView2 honors the env var only for non-elevated hosts)"
 }
 
 # The most direct evidence: read the WebView2 browser child's command line and
