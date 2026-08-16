@@ -143,6 +143,21 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force -Path "${{ env.POLY_ARTIFACT_DIR }}" | Out-Null
 
+      # Assert the runner-machine invariants BEFORE spending ~4 minutes on the
+      # build. Each one is a real failure that previously presented as something
+      # else entirely: an elevated runner (WebView2 silently discards the CDP
+      # flag — the S09 dead end), a service-installed runner (no interactive
+      # desktop), a shadow VST3 bundle (Cubase loads a stale build and reports
+      # green), a missing WebView2 Runtime. The machine is provisioned by hand
+      # from docs/windows-test-runner-setup.md, so this step is the only thing
+      # standing between a re-provision and a repeat. Fails loud with the exact
+      # remediation for whatever it finds.
+      - name: Check runner posture
+        shell: pwsh
+        run: >-
+          ./scripts/cubase/check-runner-posture.ps1
+          ${{ env.POLY_CDP_PORT != '' && '-RequireCdp' || '' }}
+
       # --- Below-Cubase pyramid on the runner (CI parity with ci.yml build leg) ---
       - name: Configure (MSVC, validator ON)
         shell: pwsh

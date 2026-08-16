@@ -32,6 +32,33 @@ with a **Verify** you must see pass before moving on.
 
 ---
 
+## The four invariants — check these first when anything is "mysteriously broken"
+
+Each one below has silently broken a tier on this box, and each presented as a
+symptom pointing somewhere else entirely. They are not enforced by Windows, so
+one script asserts all of them — it runs in the nightly before the build, and
+you should run it by hand after touching the runner's configuration:
+
+```powershell
+# from a NORMAL, non-elevated PowerShell in the runner's session
+pwsh -File C:\poly\scripts\cubase\check-runner-posture.ps1 -RequireCdp
+```
+
+| # | Invariant | What it looks like when broken | Where |
+|---|---|---|---|
+| 1 | The runner's logon task is **`-RunLevel Limited`** (not elevated) | "CDP port never came up" — the L4-web e2e cannot attach, and no amount of flag-delivery cleverness helps | Part 9, [Part 12](#the-runner-must-not-be-elevated-the-s09-dead-end) |
+| 2 | The runner is a **logon scheduled task**, never a Windows service | Cubase never presents a UI; the editor and MIDI Remote surface never appear (session 0 has no desktop) | Part 9 |
+| 3 | **Exactly one copy** of each Poly VST3 bundle exists on the box | A green run that tested a *stale binary* — duplicate VST3 class IDs resolve to whichever Cubase scanned first | Part 6, Part 12 |
+| 4 | The **interactive session stays logged on and unlocked** | Overnight nightlies fail while manual dispatches pass | Part 7, `scripts/S08-install/6-keep-runner-awake.md` |
+
+Invariant 1 is the one that cost the most: seven rounds of S09 debugging chased
+sessions, window stations, desktop lock state, editor focus, WebView2 process
+reuse, a `choc` source patch and a registry policy — and the answer was one word
+in the scheduled task. **When a WebView2-hosted UI will not expose CDP, check
+the host process's integrity level before anything else.**
+
+---
+
 ## Part 0 — Before you touch the keyboard (decisions & inventory)
 
 - ☐ **Confirm the hardware is x64 physical (or Intel-Mac/Boot Camp), not a VM on
@@ -104,6 +131,14 @@ Both methods land you the same place: a local admin named `polyci`.
 - ☐ **`polyci` exists as a LOCAL account** (not linked to a Microsoft account).
 - ☐ **`polyci` is in the Administrators group.**
 - ☐ **Its password is set to never expire** and stored in your password manager.
+
+> **Admin membership ≠ an elevated runner.** `polyci` being an administrator is
+> correct and stays that way — you need it to install VS Build Tools, drivers
+> and Cubase updates by hand. What must *not* happen is the runner's scheduled
+> task requesting elevation (`-RunLevel Highest`), which would hand every CI job
+> a high-integrity token and break the WebView2 CDP tier outright. Part 9
+> registers the task `-RunLevel Limited` — `polyci`'s ordinary filtered token —
+> and invariant 1 above exists to keep it that way.
 
 ### 1b — Switch to `polyci` and set up its shell
 
@@ -450,32 +485,58 @@ the launch/quit machinery in `scripts/cubase/` (see that directory's
   desktop** and will break Cubase/CDP. Instead:
   - Do **not** run `svc.cmd install`.
   - Create a **Task Scheduler** task that runs `run.cmd` **by absolute path**,
-    triggered **At log on** of `polyci`, "Run only when user is logged on", and
-    **not** "Stop if runs longer than…". (Auto-logon from Part 7 makes this fire
-    on every boot.) Equivalent from an elevated PowerShell:
+    triggered **At log on** of `polyci`, "Run only when user is logged on",
+    **not** "Run with highest privileges", and **not** "Stop if runs longer
+    than…". (Auto-logon from Part 7 makes this fire on every boot.) Equivalent
+    from an elevated PowerShell:
     ```powershell
     $a = New-ScheduledTaskAction -Execute "C:\actions-runner\run.cmd" `
                                  -WorkingDirectory "C:\actions-runner"
     $t = New-ScheduledTaskTrigger -AtLogOn -User "$env:COMPUTERNAME\polyci"
     $p = New-ScheduledTaskPrincipal -UserId "$env:COMPUTERNAME\polyci" `
-                                    -LogonType Interactive -RunLevel Highest
+                                    -LogonType Interactive -RunLevel Limited
     $s = New-ScheduledTaskSettingsSet -ExecutionTimeLimit ([TimeSpan]::Zero) `
                                       -AllowStartIfOnBatteries `
                                       -DontStopIfGoingOnBatteries
     Register-ScheduledTask -TaskName "GitHubActionsRunner" `
                            -Action $a -Trigger $t -Principal $p -Settings $s
     ```
-    `-RunLevel Highest` is the *initial* posture only, because Part 1a made
-    `polyci` a local admin. Once the box is stable, drop both the elevation and
-    the admin membership — see
-    `docs/windows-runner-rehome-and-deelevate.md` Part C.
+
+  > ### ⚠ `-RunLevel Limited` is load-bearing. Do not "fix" it to `Highest`.
+  >
+  > An elevated task makes every job step — and the Cubase it launches — run at
+  > high integrity, and **WebView2 discards browser flags delivered via the
+  > environment or the registry for elevated host apps by design.** The L4-web
+  > CDP e2e then cannot work at all, and it fails as a bare "CDP port never came
+  > up" that looks nothing like an elevation problem. This cost seven rounds of
+  > debugging (runs #40–#47) before it was found. Full explanation in **Part 12
+  > → *The runner must NOT be elevated***.
+  >
+  > `polyci` stays a local administrator (Part 1a) so you can install tooling by
+  > hand — that is fine and expected. It is the *task* that must not be
+  > elevated: `-RunLevel Limited` gives it `polyci`'s filtered (medium
+  > integrity) token, exactly what an ordinary desktop shell gets.
+  >
+  > If a workflow step ever fails because it cannot write somewhere, the fix is
+  > to move the write to a user-writable path — **not** to re-elevate the task.
+  > The plugin install already moved to the per-user VST3 folder for this
+  > reason.
+
 - ☐ Reboot. Confirm the runner comes up **idle/listening** in the GitHub Runners
   page after auto-logon.
+- ☐ **Run the posture check** from a normal (non-elevated) PowerShell in the
+  runner's session. It asserts everything above — plus the traps from Part 6 and
+  Part 12 — in one command, and is the same check the nightly runs before it
+  builds:
+  ```powershell
+  pwsh -File C:\poly\scripts\cubase\check-runner-posture.ps1 -RequireCdp
+  ```
 
 **Verify:** GitHub → Settings → Actions → Runners shows this runner **online**
 with the `cubase` label; it is running as a logon task (visible in Task
-Scheduler), not as a service; and its working directory is `C:\actions-runner`,
-**not** anywhere under `C:\Windows`.
+Scheduler), not as a service; its working directory is `C:\actions-runner`,
+**not** anywhere under `C:\Windows`; and `check-runner-posture.ps1` exits 0 with
+every line `[ OK ]`.
 
 ---
 
@@ -595,13 +656,24 @@ Consequences, all already in place:
 - `launch-cubase.ps1 -EnableCdp` and `launch-manual-cdp.ps1` both refuse to run
   elevated, and `diagnose-editor-window.ps1` records the elevation state in
   `editor-window-topology.txt`.
+- `scripts/cubase/check-runner-posture.ps1` asserts it (with the other three
+  invariants), and the nightly runs that check before it builds — so a
+  re-elevated task fails in seconds with remediation text rather than thirty
+  minutes later as a CDP timeout.
 
 **Verify** (from a normal, non-elevated PowerShell — an elevated one reports
 only itself):
 
 ```powershell
+pwsh -File C:\poly\scripts\cubase\check-runner-posture.ps1 -RequireCdp
+# expect every line [ OK ] and exit code 0
+
 (Get-ScheduledTask GitHubActionsRunner).Principal.RunLevel   # expect Limited
 ```
+
+After a run, `editor-window-topology.txt` in `cubase-nightly-artifacts` should
+show `this process elevated: NO` and at least one `msedgewebview2.exe` carrying
+`--remote-debugging-port`.
 
 - ☐ Confirm the **WebView2 Runtime** is installed (Part 2 already covers this).
   CDP attach fails loud if WebView2 isn't present.

@@ -44,11 +44,12 @@ param(
     # CI compare step finds it. An existing $env:POLY_PROBE_OUTPUT in this shell
     # wins (non-standard runner layouts / local dry-runs).
     [string] $ProbeOutput = "",
-    # Sentinel the CI gate polls for. MUST match await-manual-cubase.ps1's default
-    # ($env:TEMP\poly-cdp-go.txt) so the gate sees it.
+    # Marker file dropped once CDP is confirmed live. Vestigial -- the CI gate
+    # that polled for it is gone -- but harmless, and it makes a hand run's
+    # success observable after the fact.
     [string] $GoFile = "",
     # How long to wait for the editor + CDP port before giving up (and NOT
-    # dropping the sentinel, so the gate never proceeds against a half-ready
+    # dropping the marker, so it never claims success against a half-ready
     # Cubase).
     [int] $TimeoutSeconds = 120,
     [int] $PollSeconds = 2
@@ -165,12 +166,12 @@ if (-not $listening) {
     Write-Host "::error::[launch-manual-cdp] CDP port $CdpPort never came up within ${TimeoutSeconds}s."
     Write-Host "  Confirm the Poly editor window is open. If it is and the port is still"
     Write-Host "  absent, quit Cubase and re-run this script (the env var must be set"
-    Write-Host "  before Cubase launches). NOT dropping the sentinel -- the gate will not"
-    Write-Host "  proceed against a Cubase with no CDP port."
+    Write-Host "  before Cubase launches). NOT dropping the marker -- this run did not"
+    Write-Host "  reach a CDP-ready Cubase."
     exit 1
 }
 
-# STEP 4: CDP is live -- drop the sentinel so the CI gate proceeds.
+# STEP 4: CDP is live -- drop the marker so the run's success is observable.
 New-Item -ItemType File -Force -Path $GoFile | Out-Null
-Write-Host "[launch-manual-cdp] CDP listening on 127.0.0.1:$CdpPort -- dropped sentinel $GoFile"
-Write-Host "[launch-manual-cdp] the CI 'Await manual Cubase (CDP)' gate should now proceed to the e2e."
+Write-Host "[launch-manual-cdp] CDP listening on 127.0.0.1:$CdpPort -- dropped marker $GoFile"
+Write-Host "[launch-manual-cdp] Cubase is CDP-ready. Attach with:  Invoke-RestMethod http://127.0.0.1:$CdpPort/json/version"

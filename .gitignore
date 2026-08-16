@@ -26,6 +26,12 @@ cmake-build-*/
 build-test/
 build-*/
 
+# Cubase-phase run output (probe JSONL, phase status, window topology, Cubase
+# prefs/logs). The workflow points POLY_ARTIFACT_DIR at the run's staging dir,
+# but scripts/cubase/_common.ps1 falls back to a repo-local _artifacts/ for
+# by-hand dry-runs — which must never be committed.
+_artifacts/
+
 # -----------------------------------------------------------------------------
 # External SDKs (downloaded during CI)
 # -----------------------------------------------------------------------------

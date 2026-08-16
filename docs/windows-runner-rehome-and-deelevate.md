@@ -207,7 +207,7 @@ $a = New-ScheduledTaskAction -Execute "C:\actions-runner\run.cmd" `
                              -WorkingDirectory "C:\actions-runner"
 $t = New-ScheduledTaskTrigger -AtLogOn -User "$env:COMPUTERNAME\polyci"
 $p = New-ScheduledTaskPrincipal -UserId "$env:COMPUTERNAME\polyci" `
-                                -LogonType Interactive -RunLevel Highest
+                                -LogonType Interactive -RunLevel Limited
 $s = New-ScheduledTaskSettingsSet -ExecutionTimeLimit ([TimeSpan]::Zero) `
                                   -AllowStartIfOnBatteries `
                                   -DontStopIfGoingOnBatteries
@@ -215,7 +215,12 @@ Register-ScheduledTask -TaskName "GitHubActionsRunner" `
                        -Action $a -Trigger $t -Principal $p -Settings $s
 ```
 
-Keep `-RunLevel Highest` for now; Part C removes it.
+Register it `-RunLevel Limited` straight away. An earlier revision of this
+runbook used `Highest` here and deferred the fix to Part C3 — do not do that:
+`Highest` is what breaks the L4-web CDP tier (Part C3), and there is no reason
+to create the broken state and then repair it. This works as soon as Part B has
+moved the runner off `System32`, since a non-elevated `polyci` can write
+`C:\actions-runner` (`Authenticated Users:(M)`) but not the old tree.
 
 `-ExecutionTimeLimit ([TimeSpan]::Zero)` is the "not *Stop if runs longer
 than…*" setting. Without it Task Scheduler kills the listener after three days
@@ -328,7 +333,8 @@ which is worth doing but is not what CDP depends on.
 **Verify** — from a normal, non-elevated PowerShell:
 
 ```powershell
-(Get-ScheduledTask GitHubActionsRunner).Principal.RunLevel   # expect Limited
+pwsh -File C:\poly\scripts\cubase\check-runner-posture.ps1 -RequireCdp
+# expect every line [ OK ]; this is the same check the nightly runs before it builds
 ```
 
 Then dispatch **Cubase Nightly (L4)** and confirm the *Wait for Poly editor CDP
@@ -363,7 +369,8 @@ ctest, install, Cubase launch/quit — as a non-admin.
 |---|---|---|
 | A — SAC off | **No** | Clean Windows reinstall only. |
 | B — rehome | Yes | Re-register the runner at the old path; nothing is destroyed until B4. |
-| C — de-elevate | Yes | `Add-LocalGroupMember -Group Administrators -Member polyci`, re-register the task with `-RunLevel Highest`, re-logon. |
+| C4 — admin membership | Yes | `Add-LocalGroupMember -Group Administrators -Member polyci`, re-logon. |
+| C3 — task elevation | Yes, but **don't** | Re-registering the task `-RunLevel Highest` restores admin to CI *and breaks the L4-web CDP tier* (see C3). If a step needs privilege, move the write to a user-writable path instead. `scripts/cubase/check-runner-posture.ps1` and the nightly both fail on an elevated task. |
 
 ## Gotchas
 

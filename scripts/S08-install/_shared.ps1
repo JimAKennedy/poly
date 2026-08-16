@@ -30,6 +30,17 @@ function Get-PolyVst3Dir {
     return (Join-Path $env:LOCALAPPDATA "Programs\Common\VST3")
 }
 
+# The OTHER standard VST3 folder — the one we are NOT installing to. Cubase
+# scans both, so anything Poly-named here shadows the install target: two
+# bundles with the same VST3 class ID resolve to whichever Cubase scanned first,
+# and the loser is invisible. Callers treat a hit as blocking.
+function Get-PolyVst3ShadowDir {
+    $machineWide = "C:\Program Files\Common Files\VST3"
+    $perUser = Join-Path $env:LOCALAPPDATA "Programs\Common\VST3"
+    if ((Get-PolyVst3Dir) -eq $machineWide) { return $perUser }
+    return $machineWide
+}
+
 # The committed fixture path the nightly opens (matches the workflow's
 # POLY_FIXTURE_CPR target and launch-cubase.ps1 -FixtureCpr).
 function Get-PolyFixturePath {

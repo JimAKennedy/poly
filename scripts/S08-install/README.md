@@ -14,6 +14,12 @@ and `docs/windows-test-runner-setup.md` (the full runner runbook).
 
 ## Prerequisites
 
+- **Run these from a NORMAL, non-elevated PowerShell.** The runner itself runs
+  non-elevated (its logon task is `-RunLevel Limited`) because WebView2 refuses
+  to honor the CDP debugging flag for elevated host apps, so an elevated shell
+  here does not match the environment the nightly actually uses — and
+  `5-preflight.ps1` will fail on it, by design. See
+  `docs/windows-test-runner-setup.md` Part 12.
 - The loopMIDI `poly-test` virtual port exists (loopMIDI enumerates it as
   `poly-test 1`; the substring matcher tolerates the suffix).
 - Poly and `poly_midi_probe` are built under `build/` (Release). To build:
@@ -30,10 +36,10 @@ Run from any directory (each resolves the repo root from its own location).
 |---|---|
 | `0-install-all.ps1` | Runs steps 1-4 then preflight, in order. The one-command path. |
 | `1-sync-main.ps1` | `git fetch`/`checkout main`/`pull`; asserts the port-match fix is present. |
-| `2-install-plugins.ps1` | Copies `poly_plugin.vst3` + `poly_midi_probe.vst3` from `build/` into the VST3 dir Cubase loads from. |
+| `2-install-plugins.ps1` | Copies `poly_plugin.vst3` + `poly_midi_probe.vst3` from `build/` into the **per-user** VST3 dir (`%LOCALAPPDATA%\Programs\Common\VST3`), the same target the nightly uses. Refuses to install if a shadow copy exists in the machine-wide folder (`-AllowShadow` overrides). |
 | `3-install-midi-remote.ps1` | Copies `JkDigital_PolyTest.js` into Cubase's MIDI Remote driver-scripts tree. |
 | `4-install-driver-deps.ps1` | `pip install` the mido driver deps; checks a `poly-test` port is visible. |
-| `5-preflight.ps1` | Read-only verifier: branch, both VST3 bundles, MIDI Remote script, loopMIDI port, Cubase 14, golden. Green = ready to author the `.cpr`. |
+| `5-preflight.ps1` | Read-only verifier. First delegates to `scripts/cubase/check-runner-posture.ps1` (elevation, logon-task-not-service, shadow VST3 bundles, WebView2 Runtime — the same gate the nightly runs), then checks branch, both VST3 bundles, MIDI Remote script, loopMIDI port, Cubase 14, golden. Green = ready to author the `.cpr`. |
 | `6-keep-runner-awake.md` | Config changes that keep the runner's console session live/unlocked overnight so the `schedule:` nightly's MIDI Remote handshake works unattended. Complements the runbook's Part 7. Not a script — a checklist to apply and later tidy up. |
 
 ## Order of operations

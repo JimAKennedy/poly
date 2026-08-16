@@ -15,6 +15,30 @@ $warn = 0
 
 Write-S08 -Level info -Message "S08 preflight — checking runner prerequisites ..."
 
+# 0. Runner-machine posture. Delegated to scripts/cubase/check-runner-posture.ps1
+# so the human path and the nightly assert exactly the same invariants from one
+# source of truth — elevation, logon-task-not-service, shadow VST3 bundles,
+# WebView2 Runtime. These are the failures that historically presented as
+# something else (an elevated runner reads as "CDP is broken"; a shadow bundle
+# reads as "the e2e contract drifted"), so they are checked first and treated as
+# blocking. Invoked as a child process: it throws on failure, and preflight
+# should keep going to report everything else in one pass.
+Write-Host ""
+Write-S08 -Level info -Message "--- runner posture (shared with the nightly) ---"
+$postureScript = Join-Path $root "scripts\cubase\check-runner-posture.ps1"
+if (Test-Path $postureScript) {
+    pwsh -NoProfile -File $postureScript -RequireCdp
+    if ($LASTEXITCODE -ne 0) {
+        Write-S08 -Level fail -Message "Runner posture check FAILED (see above). The nightly runs this same check and will stop on it."
+        $fail++
+    }
+} else {
+    Write-S08 -Level warn -Message "check-runner-posture.ps1 not found at $postureScript — clone is stale, run 1-sync-main.ps1."
+    $warn++
+}
+Write-Host ""
+Write-S08 -Level info -Message "--- S08 fixture prerequisites ---"
+
 # 1. On main with the port-match fix.
 Push-Location $root
 try {
