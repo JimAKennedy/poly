@@ -69,12 +69,15 @@ endif()
 # choc-webview web UI — the shipping DAW editor as of M052 (2026-07-20).
 # See webui/README.md for architecture and bridge-schema.md for the protocol.
 #
-# Platform-gated: built for macOS+Windows (the shipping targets), skipped on
-# Linux until choc's WebKitGTK backend is wired up in CI (M054). Poly does not
-# ship a Linux VST3 — the Ubuntu build is a portability sanity check. The native
-# VSTGUI editor was removed in M053/S05, so on Linux the plugin ships no editor
-# (controller.cpp's createView returns nullptr) until the choc WebKitGTK backend
-# lands in M054.
+# Platform-gated to macOS+Windows (the shipping plugin targets). Linux is
+# deliberately excluded, NOT "excluded until CI is wired up": M054 decision D029
+# (Path 3) pins Linux to engine/WASM only — Poly ships no Linux VST3 binary, so
+# the Ubuntu CI leg is now an engine-only (-DPOLY_ENGINE_ONLY=ON) portability
+# compile that never reaches this predicate. There is no plan to add choc's
+# WebKitGTK backend; the native VSTGUI editor was already removed in M053/S05, so
+# were a full Linux plugin ever built it would ship no editor (controller.cpp's
+# createView returns nullptr). Keeping the `if(APPLE OR WIN32)` guard makes that
+# scope explicit at the build boundary.
 #
 # There is intentionally no build flag here: the platform condition IS the
 # selector, so local dev and CI cannot diverge on which editor ships. The same

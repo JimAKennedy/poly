@@ -1,0 +1,56 @@
+M054 S02 T03 — Linux engine-only build verification
+====================================================
+
+Status:  PASS
+Date:    2026-08-15
+Decision: D029 (Path 3 — pin Linux to an engine-only portability compile)
+Host:    macOS / AppleClang 21.0.0 (POLY_ENGINE_ONLY builds the platform-independent
+         poly_engine with no VST3 SDK, so the macOS host reproduces the ubuntu-latest
+         CI leg's compile signal exactly).
+
+Purpose
+-------
+D029 flips the ubuntu-latest CI build leg to `-DPOLY_ENGINE_ONLY=ON` and deletes the
+pluginval-linux job. The one substantive risk in S02 is that this new config fails to
+configure / build / test. This log records a clean local run of that exact config plus
+static internal-consistency checks on the workflow edits, proving the matrix shape is
+green before CI runs it.
+
+1. Engine-only configure + build + test (the CI Linux leg's config)
+-------------------------------------------------------------------
+Command:
+  cmake -S . -B build-s02-verify -DCMAKE_BUILD_TYPE=Release -DPOLY_ENGINE_ONLY=ON
+  cmake --build build-s02-verify --parallel
+  ctest --test-dir build-s02-verify --output-on-failure
+
+Result:
+  - Configure: done (3.3s), no VST3 SDK / UI dependency probes.
+  - Build:     100% — poly_tests linked, warnings only, no errors.
+  - Ctest:     100% tests passed, 0 tests failed out of 365 (0.90s).
+
+VST3 SDK absence (proves engine-only fetched no plugin SDK):
+  test ! -d build-s02-verify/_deps/vst3sdk-src   ->  vst3sdk-src ABSENT (PASS)
+
+2. Workflow internal consistency (static)
+-----------------------------------------
+- Contract test `tests/ci/ci-linux-engine-only.test.mjs`: 4/4 pass
+    * ubuntu-latest build leg configures engine-only
+    * Linux build leg installs only engine deps (no UI libs)
+    * pluginval-linux job is fully removed
+    * ci-complete aggregation gate references no undefined job
+- YAML parse validity: .github/workflows/ci.yml loads cleanly (13 jobs).
+- Dangling `needs` count: 0 (every job in every `needs:` list exists).
+- `pluginval-linux` present in job graph: False.
+- Remaining `pluginval` references are the intended macOS + Windows legs only
+  (pluginval-macos, pluginval-windows) — these cover the shipping plugin targets.
+
+Job graph after D029:
+  code-quality, build, build-au-macos, engine-isolation, secrets-scan,
+  code-coverage, webui-tests, pluginval-macos, pluginval-windows, wasm-build,
+  site-lint, site-e2e, ci-complete
+
+Conclusion
+----------
+The engine-only Linux config configures, builds, and passes all 365 tests with no VST3
+SDK fetched, and the workflow edits are internally consistent (no dangling aggregation-
+gate reference to the deleted pluginval-linux job). The new matrix shape is safe for CI.

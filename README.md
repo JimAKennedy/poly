@@ -49,6 +49,21 @@ cmake -S . -B build -G Ninja -DPOLY_ENGINE_ONLY=ON
 cmake --build build
 ```
 
+This is the only supported Linux build (see [Supported platforms](#supported-platforms)).
+
+## Supported platforms
+
+Poly ships as a plugin on **macOS and Windows** only. Linux is an
+**engine/WASM-only** target: the `poly_engine` library compiles and its tests
+run on Linux (and the engine cross-compiles to WebAssembly for the web guide),
+but no shipping Linux VST3 is built. Rebuilding on Linux gives you a fast
+engine-only compile with no VST3 SDK or UI dependencies — use
+`-DPOLY_ENGINE_ONLY=ON` as shown above.
+
+This is decision **D029** (M054): Poly ships no Linux VST3 binary, so the Linux
+CI leg is an engine/WASM portability compile rather than a full plugin build.
+See `CHANGELOG.md` for the full scope statement.
+
 ## Architecture
 
 The core engine (`poly_engine`) is isolated from the plugin layer (`poly_plugin`).
