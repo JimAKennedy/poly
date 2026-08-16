@@ -147,7 +147,8 @@ enum class StepOutcome : uint8_t {
 };
 
 static StepOutcome classifyStep(const LaneConfig& cfg, const GrooveState& state, int64_t absStep, int64_t cycleStep,
-                                bool isPatternStep, bool isAnchor, const EnvelopeMods& mods, int stepsInCycle) {
+                                bool isPatternStep, bool isAnchor, const EnvelopeMods& mods, int stepsInCycle,
+                                bool isFillBar) {
     // M073 S01: A base velocity of exactly zero mutes the lane entirely. The
     // emission decision below never consults velocity magnitude, and
     // computeStepVelocity's ghost-floor clamp can raise a 0 back up — so
@@ -184,6 +185,15 @@ static StepOutcome classifyStep(const LaneConfig& cfg, const GrooveState& state,
 
     if (!isAnchor) {
         if (!isPatternStep) {
+            // M034 S01: deterministic bar-gated fill. On a fill bar (absolute
+            // bar index a multiple of the lane's fillEveryNBars, or a manual
+            // fill pulse) an off-pattern step fires as an Add with no
+            // probabilistic dice — the bar gate itself is the deterministic
+            // decision, so activation/probability culling below is bypassed.
+            // fillEveryNBars=0 with no manual pulse leaves isFillBar false, so
+            // this branch is never taken and output is byte-identical.
+            if (isFillBar)
+                return StepOutcome::Add;
             if (mods.fill <= 0.0f)
                 return notEmitted();
             float fillProb = std::clamp(mods.fill, 0.0f, 1.0f);
@@ -445,10 +455,23 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
             int64_t cycleStep = computeDriftedCycleStep(cfg, ctx, absStep, ppq);
             EnvelopeMods mods = computeEnvelopeMods(cfg, state, ppq, tc.ppqPerBar());
 
+            // M034 S01: bar-gated fill activation. Derived from the absolute PPQ
+            // bar index (never accumulated) so it is deterministic and RT-safe.
+            // A manual-fill pulse forces every bar in this render to be a fill
+            // bar, independent of fillEveryNBars.
+            bool isFillBar = state.fillManualTrigger;
+            if (!isFillBar && cfg.fillEveryNBars > 0) {
+                double ppqPerBar = tc.ppqPerBar();
+                if (ppqPerBar > 0.0) {
+                    int64_t barIndex = static_cast<int64_t>(std::floor(ppq / ppqPerBar));
+                    isFillBar = (barIndex % cfg.fillEveryNBars) == 0;
+                }
+            }
+
             bool isPatternStep = ctx.pattern[static_cast<size_t>(cycleStep)];
             bool isAnchor = cfg.constraints.anchorSteps.steps[static_cast<size_t>(cycleStep)] > 0.0f;
-            StepOutcome outcome =
-                classifyStep(cfg, state, absStep, cycleStep, isPatternStep, isAnchor, mods, ctx.stepsInCycle);
+            StepOutcome outcome = classifyStep(cfg, state, absStep, cycleStep, isPatternStep, isAnchor, mods,
+                                               ctx.stepsInCycle, isFillBar);
 
             // Post-timing-shift onset for the audible note. A Drop never fires,
             // so it has no shifted onset — the display shows it at its grid ppq.

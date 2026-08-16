@@ -13,6 +13,7 @@ add_executable(poly_tests
     emission_tests.cpp
     euclidean_tests.cpp
     envelope_tests.cpp
+    fill_tests.cpp
     golden_tests.cpp
     lane_name_tests.cpp
     dynamic_shaping_tests.cpp

@@ -63,7 +63,9 @@ TEST(GrooveStateCopyBenchmark, ReportsFactSizes) {
     std::fprintf(stderr, "[bench] sizeof(GrooveState) = %zu bytes\n", sizeof(poly::GrooveState));
     std::fprintf(stderr, "[bench] sizeof(LaneConfig)  = %zu bytes\n", sizeof(poly::LaneConfig));
     std::fprintf(stderr, "[bench] sizeof(SceneState)  = %zu bytes\n", sizeof(poly::SceneState));
-    EXPECT_EQ(sizeof(poly::GrooveState), 13584u) << "GrooveState size changed — update DECISIONS.md perf entry";
+    // M034 S01: +32 bytes from LaneConfig.fillEveryNBars (int × 8 lanes); the
+    // transient GrooveState.fillManualTrigger bool fit in existing tail padding.
+    EXPECT_EQ(sizeof(poly::GrooveState), 13616u) << "GrooveState size changed — update DECISIONS.md perf entry";
 }
 
 TEST(GrooveStateCopyBenchmark, ThreeCopyPipelineFitsBlockBudget) {

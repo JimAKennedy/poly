@@ -228,6 +228,8 @@ struct LaneConfig {
     float syncopationOffset = 0.0f;             // 0.0-1.0; pushes even (strong-beat) steps late
     float tempoMultiplier = 1.0f;               // 0.25-4.0; per-lane tempo scaling (Nancarrow-style)
     int kotekanSourceLane = -1;                 // -1=independent, 0-7=complement of source lane's pattern
+    int fillEveryNBars = 0;                     // 0 = no bar-gated fill; N>0 = play off-pattern fill on bars whose
+                                                // absolute bar index is a multiple of N (deterministic, PPQ-derived)
     int cellCount = 0;                          // 0 = equal cells (standard Euclidean); >0 = additive/aksak
     std::array<int, kMaxSteps> cellSizes{};     // subdivision units per cell; sum = total cycle length
     bool timeline = false;                      // timeline mode: use fixedPattern, immune to macros
@@ -312,6 +314,11 @@ struct GrooveState {
     MacroValues macros{};
     uint64_t seed = 0;
     int globalDensityCeiling = 0;
+    // Transient momentary control (NOT serialized): when true, the current
+    // render pass forces every bar to render as a fill bar for lanes,
+    // independent of each lane's fillEveryNBars. The plugin pulses this for a
+    // single render from a manual-fill trigger, then clears it.
+    bool fillManualTrigger = false;
 };
 // endregion:groove-state
 
