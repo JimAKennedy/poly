@@ -160,6 +160,18 @@ template <typename ReadFn> [[nodiscard]] bool readLaneConfig(ReadFn&& read, Lane
     // Pre-v17 states carry no fillEveryNBars byte; the struct default (0 = fill
     // inert) already stands, so old presets load with fill disabled.
 
+    if (version >= kLaneSeedLockStateVersion) {
+        if (!read(&lane.laneSeed, sizeof(lane.laneSeed)))
+            return false;
+        uint8_t seedLocked = 0;
+        if (!read(&seedLocked, sizeof(seedLocked)))
+            return false;
+        lane.seedLocked = (seedLocked != 0);
+    }
+    // Pre-v18 states carry no laneSeed/seedLocked bytes; the struct defaults
+    // (laneSeed=0, seedLocked=false) stand, so laneEffectiveSeed returns the
+    // global seed and playback stays byte-identical to a pre-lock preset.
+
     // M068 S03: pre-Bjorklund states (< v16) authored rotation against the
     // retired Bresenham generator. Rotate each non-timeline lane by the delta
     // that maps Bjorklund onto the legacy pattern so playback stays

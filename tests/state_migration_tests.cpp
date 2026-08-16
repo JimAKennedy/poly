@@ -324,3 +324,99 @@ TEST(StateMigration, CorruptFillEveryNBarsIsSanitized) {
     EXPECT_EQ(loaded.sceneA.lanes[0].fillEveryNBars, 0) << "negative fillEveryNBars must clamp to 0";
     EXPECT_EQ(loaded.sceneA.lanes[1].fillEveryNBars, 1024) << "oversized fillEveryNBars must clamp to 1024";
 }
+
+// --- M034 S03 (T02): laneSeed + seedLocked serialization (v18) -----------------
+
+// laneSeed and seedLocked round-trip through a current-version (v18) save/reload
+// for both scenes and every lane slot, so a project with per-lane seed locks
+// reopens with each locked lane pinned to its preserved seed exactly as authored.
+TEST(StateMigration, LaneSeedLockRoundTripsAtCurrentVersion) {
+    SceneState authored{};
+    authored.select = SceneSelect::A;
+    authored.sceneA.activeLaneCount = kMaxLanes;
+    authored.sceneB.activeLaneCount = kMaxLanes;
+    // Distinct per-lane values prove each slot serializes its own laneSeed, and
+    // alternating seedLocked proves the flag travels independently of the seed.
+    for (int i = 0; i < kMaxLanes; ++i) {
+        authored.sceneA.lanes[static_cast<size_t>(i)].id = i;
+        authored.sceneA.lanes[static_cast<size_t>(i)].laneSeed = 0x1000ULL + static_cast<uint64_t>(i);
+        authored.sceneA.lanes[static_cast<size_t>(i)].seedLocked = (i % 2 == 0);
+        authored.sceneB.lanes[static_cast<size_t>(i)].id = i;
+        authored.sceneB.lanes[static_cast<size_t>(i)].laneSeed = 0xABCDEF00ULL + static_cast<uint64_t>(i);
+        authored.sceneB.lanes[static_cast<size_t>(i)].seedLocked = (i % 2 == 1);
+    }
+
+    const auto blob = serializeSceneAsVersion(authored, kLaneSeedLockStateVersion);
+    const SceneState loaded = deserializeScene(blob);
+
+    for (int i = 0; i < kMaxLanes; ++i) {
+        EXPECT_EQ(loaded.sceneA.lanes[static_cast<size_t>(i)].laneSeed, 0x1000ULL + static_cast<uint64_t>(i))
+            << "sceneA lane " << i << " laneSeed must round-trip";
+        EXPECT_EQ(loaded.sceneA.lanes[static_cast<size_t>(i)].seedLocked, (i % 2 == 0))
+            << "sceneA lane " << i << " seedLocked must round-trip";
+        EXPECT_EQ(loaded.sceneB.lanes[static_cast<size_t>(i)].laneSeed, 0xABCDEF00ULL + static_cast<uint64_t>(i))
+            << "sceneB lane " << i << " laneSeed must round-trip";
+        EXPECT_EQ(loaded.sceneB.lanes[static_cast<size_t>(i)].seedLocked, (i % 2 == 1))
+            << "sceneB lane " << i << " seedLocked must round-trip";
+    }
+}
+
+// A pre-v18 preset carries no laneSeed/seedLocked bytes. It must still load, and
+// every lane must default laneSeed=0 / seedLocked=false. seedLocked defaulting to
+// false is the critical backward-compat guard: an old preset must NEVER load with
+// a lane accidentally locked, which would freeze that lane's RNG under a reroll.
+TEST(StateMigration, PreV18StateDefaultsLaneSeedLockToDefaults) {
+    SceneState authored{};
+    authored.select = SceneSelect::A;
+    authored.sceneA.activeLaneCount = kMaxLanes;
+    authored.sceneB.activeLaneCount = kMaxLanes;
+    // Author locked lanes with non-zero seeds; a genuine v17 blob must not carry
+    // them, so the reloaded state must fall back to the struct defaults.
+    for (int i = 0; i < kMaxLanes; ++i) {
+        authored.sceneA.lanes[static_cast<size_t>(i)].id = i;
+        authored.sceneA.lanes[static_cast<size_t>(i)].laneSeed = 0xDEAD0000ULL + static_cast<uint64_t>(i);
+        authored.sceneA.lanes[static_cast<size_t>(i)].seedLocked = true;
+        authored.sceneB.lanes[static_cast<size_t>(i)].id = i;
+        authored.sceneB.lanes[static_cast<size_t>(i)].laneSeed = 0xBEEF0000ULL + static_cast<uint64_t>(i);
+        authored.sceneB.lanes[static_cast<size_t>(i)].seedLocked = true;
+    }
+
+    const auto v17Blob = serializeSceneAsVersion(authored, kLaneSeedLockStateVersion - 1);
+    const SceneState loaded = deserializeScene(v17Blob);
+
+    for (int i = 0; i < kMaxLanes; ++i) {
+        EXPECT_EQ(loaded.sceneA.lanes[static_cast<size_t>(i)].laneSeed, 0ULL)
+            << "sceneA lane " << i << " must default laneSeed=0 for a pre-v18 state";
+        EXPECT_FALSE(loaded.sceneA.lanes[static_cast<size_t>(i)].seedLocked)
+            << "sceneA lane " << i << " must default seedLocked=false for a pre-v18 state";
+        EXPECT_EQ(loaded.sceneB.lanes[static_cast<size_t>(i)].laneSeed, 0ULL)
+            << "sceneB lane " << i << " must default laneSeed=0 for a pre-v18 state";
+        EXPECT_FALSE(loaded.sceneB.lanes[static_cast<size_t>(i)].seedLocked)
+            << "sceneB lane " << i << " must default seedLocked=false for a pre-v18 state";
+    }
+}
+
+// Negative / boundary surface (Q7): a locked lane carrying laneSeed=0 (the
+// struct default value stored under an explicit lock) must round-trip as locked,
+// proving the seedLocked flag is serialized independently and is not inferred
+// from a non-zero laneSeed. Conversely an unlocked lane with a non-zero laneSeed
+// must round-trip as unlocked — the two fields never leak into each other.
+TEST(StateMigration, LaneSeedLockFlagIsIndependentOfSeedValue) {
+    SceneState authored{};
+    authored.select = SceneSelect::A;
+    authored.sceneA.activeLaneCount = 2;
+    authored.sceneA.lanes[0].id = 0;
+    authored.sceneA.lanes[0].laneSeed = 0;      // default seed value...
+    authored.sceneA.lanes[0].seedLocked = true; // ...but explicitly locked
+    authored.sceneA.lanes[1].id = 1;
+    authored.sceneA.lanes[1].laneSeed = 0x9999ULL; // non-zero seed...
+    authored.sceneA.lanes[1].seedLocked = false;   // ...but not locked
+
+    const auto blob = serializeSceneAsVersion(authored, kLaneSeedLockStateVersion);
+    const SceneState loaded = deserializeScene(blob);
+
+    EXPECT_EQ(loaded.sceneA.lanes[0].laneSeed, 0ULL) << "lane 0 laneSeed stays 0";
+    EXPECT_TRUE(loaded.sceneA.lanes[0].seedLocked) << "lane 0 must remain locked even with laneSeed=0";
+    EXPECT_EQ(loaded.sceneA.lanes[1].laneSeed, 0x9999ULL) << "lane 1 laneSeed round-trips";
+    EXPECT_FALSE(loaded.sceneA.lanes[1].seedLocked) << "lane 1 must remain unlocked even with a non-zero laneSeed";
+}
