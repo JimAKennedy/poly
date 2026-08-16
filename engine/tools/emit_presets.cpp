@@ -49,82 +49,16 @@
 #include <string>
 #include <string_view>
 
+#include "poly/lane_name.h"
 #include "poly/presets.h"
 #include "poly/types.h"
 
 namespace {
 
-// GM percussion mapping — matches the taxonomy used by the site sample manifest
-// and preset-patterns.ts. Anything not in this table falls through to "perc".
+// GM percussion mapping — single-sourced in engine/src/lane_name.cpp so the
+// preset emitter and the SMF Format-1 track namer share one table.
 const char* roleLabelForNote(int note) {
-    switch (note) {
-    case 35:
-    case 36:
-        return "kick";
-    case 37:
-        return "rim";
-    case 38:
-    case 40:
-        return "snare";
-    case 39:
-        return "clap";
-    case 41:
-    case 43:
-    case 45:
-    case 47:
-    case 48:
-    case 50:
-        return "tom";
-    case 42:
-    case 44:
-        return "hat";
-    case 46:
-        return "openhat";
-    case 49:
-    case 51:
-    case 52:
-    case 53:
-    case 55:
-    case 57:
-    case 59:
-        return "cymbal";
-    case 56:
-        return "cowbell";
-    case 60:
-    case 61:
-        return "bongo";
-    case 62:
-    case 63:
-    case 64:
-        return "conga";
-    case 65:
-    case 66:
-        return "timbale";
-    case 67:
-    case 68:
-        return "agogo";
-    case 69:
-    case 70:
-    case 71:
-    case 72:
-        return "shaker";
-    case 73:
-    case 74:
-        return "guiro";
-    case 75:
-        return "clave";
-    case 76:
-    case 77:
-        return "woodblock";
-    case 78:
-    case 79:
-        return "cuica";
-    case 80:
-    case 81:
-        return "triangle";
-    default:
-        return "perc";
-    }
+    return poly::noteLabel(note);
 }
 
 const char* roleName(poly::Role r) {

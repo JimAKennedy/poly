@@ -14,6 +14,7 @@ add_executable(poly_tests
     euclidean_tests.cpp
     envelope_tests.cpp
     golden_tests.cpp
+    lane_name_tests.cpp
     dynamic_shaping_tests.cpp
     swing_humanize_tests.cpp
     macro_tests.cpp

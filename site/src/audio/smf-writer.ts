@@ -23,6 +23,13 @@ export interface NoteEventLike {
 }
 
 export function writeVLQ(value: number, out: number[]): void {
+  // A 4-byte VLQ encodes at most 28 bits (0x0fffffff). Values >= 2^28 need a
+  // 5th byte; the engine (engine/src/smf_writer.cpp) clamps them to the max
+  // representable delta to avoid overrunning its fixed temp[4] stack buffer.
+  // This port has no fixed-buffer risk (out.push grows), but must apply the
+  // identical clamp so all three implementations stay byte-for-byte at the
+  // boundary. Use >>> 0 so the comparison is unsigned.
+  if ((value >>> 0) > 0x0fffffff) value = 0x0fffffff;
   if (value < 0x80) {
     out.push(value & 0x7f);
     return;

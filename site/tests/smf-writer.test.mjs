@@ -66,6 +66,37 @@ test('writeVLQ: multi-byte values match spec examples', () => {
   }
 });
 
+test('writeVLQ: max 4-byte value (2^28-1) encodes without clamping', () => {
+  // FourBytes boundary: 0x0fffffff is the largest value a 4-byte VLQ can hold.
+  // Must encode to four continuation-terminated bytes, matching the engine
+  // writeVLQ FourBytes test (tests/smf_writer_tests.cpp).
+  const out = [];
+  writeVLQ(0x0fffffff, out);
+  assert.deepEqual(out, [0xff, 0xff, 0xff, 0x7f], 'VLQ(2^28-1)');
+});
+
+test('writeVLQ: values at/above 2^28 clamp to the 4-byte ceiling', () => {
+  // ClampAtCeiling boundary: values >= 2^28 would need a 5th byte and overrun
+  // the engine's fixed temp[4] buffer, so all three ports clamp to 0x0fffffff.
+  // The JS/TS clamp must produce the identical bytes as VLQ(0x0fffffff) so the
+  // parity harness stays meaningful.
+  const ceilingBytes = [0xff, 0xff, 0xff, 0x7f];
+  const cases = [
+    0x10000000, // 2^28 — first value needing a 5th byte
+    0x1fffffff, // well above the ceiling
+    0xffffffff, // uint32 max
+  ];
+  for (const input of cases) {
+    const out = [];
+    writeVLQ(input, out);
+    assert.deepEqual(
+      out,
+      ceilingBytes,
+      `VLQ(0x${(input >>> 0).toString(16)}) clamps to 4-byte ceiling`,
+    );
+  }
+});
+
 test('TICKS_PER_QUARTER matches engine kSmfTicksPerQuarter', () => {
   assert.equal(TICKS_PER_QUARTER, 480);
 });

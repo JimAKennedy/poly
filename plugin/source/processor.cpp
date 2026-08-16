@@ -147,6 +147,7 @@ void PolyProcessor::updateTransportContext(const Steinberg::Vst::ProcessData& da
     // is stable per-block, no ordering requirement with other fields).
     uiSnapshot_.timeSigNumerator.store(tc_.timeSigNumerator, std::memory_order_relaxed);
     uiSnapshot_.timeSigDenominator.store(tc_.timeSigDenominator, std::memory_order_relaxed);
+    uiSnapshot_.tempoBpm.store(tc_.tempo, std::memory_order_relaxed);
 
     if (ctx.state & Steinberg::Vst::ProcessContext::kProjectTimeMusicValid) {
         double ppqStart = ctx.projectTimeMusic;
@@ -1165,7 +1166,10 @@ Steinberg::tresult PLUGIN_API PolyProcessor::notify(Steinberg::Vst::IMessage* me
                       [](const NoteEvent& a, const NoteEvent& b) { return a.ppqPosition < b.ppqPosition; });
 
             double ppqOffset = (exportEventCount_ > 0) ? exportEvents_[0].ppqPosition : 0.0;
-            auto smf = writeSMF(exportEvents_.data(), exportEventCount_, exportTempo_, ppqOffset);
+            // Format-1 multi-track export. The legacy capture path only has raw
+            // NoteEvents (no LaneConfig), so it passes no namer: writeMultiTrackSMF
+            // falls back to "Lane N" per distinct laneIndex.
+            auto smf = writeMultiTrackSMF(exportEvents_.data(), exportEventCount_, exportTempo_, ppqOffset);
 
             if (auto* reply = allocateMessage()) { // RT-SAFE-OK: notify() runs on message thread
                 reply->setMessageID("MidiExportData");

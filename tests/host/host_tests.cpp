@@ -18,6 +18,7 @@
 #include "plugids.h"
 #include "poly/bridge.h"
 #include "poly/euclidean.h"
+#include "poly/offline_render.h" // M032 S03 T02: export-tempo mirror integration test
 #include "poly/params_def.h"
 #include "poly/scene.h"
 #include "poly/state_io.h"
@@ -1394,6 +1395,59 @@ TEST(HostTests, ExportTrigger_ResetsAfterCommit_PlayingPath) {
                                   "via outputParameterChanges. Same defect as the stopped-path variant — "
                                   "T02 must fix both consume sites.";
     EXPECT_DOUBLE_EQ(*v, 0.0);
+
+    host.teardown();
+}
+
+// --- M032 S03 T02: offline export tempo mirrors the host tempo ---
+//
+// renderCurrentPatternSmf (web_ui_view.cpp) used to hardcode 120.0 for the SMF
+// tempo meta because the UI/message thread had no host-tempo source (MEM054).
+// T01 published ctx.tempo into UISnapshot.tempoBpm every process() block; T02
+// makes the offline export read it. This pins the integration end-to-end: drive
+// the processor at a non-default tempo, confirm the controller's UISnapshot (the
+// exact surface renderCurrentPatternSmf reads) carries that tempo, then render
+// through the same primitive + snapshot fields the export path uses and assert
+// the SMF tempo meta encodes the host tempo, not the old 120 BPM fallback.
+
+TEST(HostTests, ExportTempoMirrorsHostTempo) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+
+    constexpr double kHostTempo = 150.0; // 60,000,000 / 150 = 400000 us/qtr, clean
+    constexpr uint32_t kExpectedUsPerQuarter = 400000u;
+    constexpr uint32_t kDefaultUsPerQuarter = 500000u; // 120 BPM — the old hardcoded fallback
+
+    // One process() block at the host tempo publishes ctx.tempo into the snapshot
+    // (processor.cpp: uiSnapshot_.tempoBpm.store(tc_.tempo, ...) every block).
+    host.processBlock(0.0, kHostTempo, /*playing=*/true);
+
+    auto* snap = host.controllerUiSnapshot();
+    ASSERT_NE(snap, nullptr) << "controller must hold the processor's UISnapshot after connect";
+    const double snapTempo = snap->tempoBpm.load(std::memory_order_relaxed);
+    EXPECT_DOUBLE_EQ(snapTempo, kHostTempo)
+        << "UISnapshot.tempoBpm must mirror the host tempo — this is the surface renderCurrentPatternSmf reads.";
+
+    // Render through the same primitive + snapshot fields renderCurrentPatternSmf
+    // uses. A default scene still emits the conductor track carrying the tempo meta.
+    const int bars = snap->captureBars.load(std::memory_order_relaxed);
+    const int tsNum = snap->timeSigNumerator.load(std::memory_order_relaxed);
+    const int tsDen = snap->timeSigDenominator.load(std::memory_order_relaxed);
+    poly::SceneState scene{};
+    const auto smf = poly::renderPatternToSMF(scene, bars, snapTempo, tsNum, tsDen, /*laneFilter=*/-1);
+
+    // Conductor track 0 opens with delta 0 + FF 51 03, so usPerQuarter is bytes 26..28
+    // (same offset offline_render_tests::extractTempoMeta reads).
+    ASSERT_GE(smf.size(), 29u) << "conductor track tempo meta must be present";
+    const uint32_t usPerQuarter =
+        (static_cast<uint32_t>(smf[26]) << 16) | (static_cast<uint32_t>(smf[27]) << 8) | static_cast<uint32_t>(smf[28]);
+
+    EXPECT_EQ(usPerQuarter, kExpectedUsPerQuarter)
+        << "Exported SMF tempo meta must encode the host tempo (" << kHostTempo << " BPM = " << kExpectedUsPerQuarter
+        << " us/qtr), got " << usPerQuarter << ".";
+    EXPECT_NE(usPerQuarter, kDefaultUsPerQuarter)
+        << "Regression guard: export must not fall back to the hardcoded 120 BPM (500000 us/qtr) "
+           "when the host runs at a different tempo.";
 
     host.teardown();
 }

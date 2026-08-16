@@ -25,6 +25,16 @@ namespace poly {
 // drag-to-DAW), letting export work from a stopped preview instead of the
 // arm->capture->complete state machine.
 //
+// Per-lane export (M032 S02): `laneFilter` selects which lanes reach the
+// serializer. -1 (the default) exports every active lane, exactly as before.
+// A value N in [0, kMaxLanes) restricts the emitted events to that single
+// laneIndex, so writeMultiTrackSMF produces the conductor track plus exactly
+// one named MTrk for lane N (no other lanes' notes present). An out-of-range
+// N (>= kMaxLanes) matches no events, yielding a conductor-only file rather
+// than throwing. Filtering happens after render, so the rendered pattern
+// (and therefore each note's timing/velocity) is identical to the all-lanes
+// export — only the track set differs.
+//
 // Robustness (no external dependencies; pure in-memory computation):
 //   - bars is clamped to [1, kMaxRenderBars]; non-positive values render 1 bar,
 //     pathological values are capped so memory stays bounded.
@@ -36,6 +46,6 @@ namespace poly {
 static constexpr int kMaxRenderBars = 256;
 
 std::vector<uint8_t> renderPatternToSMF(const SceneState& scene, int bars, double tempo, int timeSigNumerator = 4,
-                                        int timeSigDenominator = 4);
+                                        int timeSigDenominator = 4, int laneFilter = -1);
 
 } // namespace poly

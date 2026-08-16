@@ -238,6 +238,16 @@ void WebUIView::handleHostCall(const std::string& json) {
     }
 }
 
+// M032 S02 (T03): read the optional {lane} export payload. Absent, non-int, or
+// out-of-range values yield -1 (all lanes), so the all-lanes default is
+// preserved and renderPatternToSMF safely ignores a bad index (conductor-only).
+static int exportLaneFilter(const choc::value::ValueView& payload) {
+    if (!payload.isObject() || !payload.hasObjectMember("lane"))
+        return -1;
+    const auto lane = payload["lane"].get<int32_t>();
+    return (lane >= 0 && lane < kMaxLanes) ? lane : -1;
+}
+
 void WebUIView::handleAction(const std::string& name, const choc::value::ValueView& payload) {
     auto& scene = controller_->mutableActiveScene();
 
@@ -573,9 +583,11 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
         // panel over those bytes. No capture-state gate and no processor
         // round-trip — the Export chip works from a stopped preview.
         // saveDialogOpen_ still guards against re-entrant panels.
+        // M032 S02 (T03): an optional {lane} payload restricts the export to one
+        // lane; absent/negative means all lanes (unchanged all-lanes default).
         if (saveDialogOpen_)
             return;
-        openMidiExportDialog(renderCurrentPatternSmf());
+        openMidiExportDialog(renderCurrentPatternSmf(exportLaneFilter(payload)));
         return;
     }
 
@@ -584,7 +596,8 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
         // current pattern offline and hand the bytes to the native drag-source
         // window (NSPasteboard / OLE CF_HDROP, via the platform_drag_source
         // seam). No capture gating — works from a stopped preview.
-        beginDragExport(renderCurrentPatternSmf());
+        // M032 S02 (T03): honours the same optional {lane} per-lane payload.
+        beginDragExport(renderCurrentPatternSmf(exportLaneFilter(payload)));
         return;
     }
 
@@ -1007,18 +1020,25 @@ std::string WebUIView::suggestedExportName() const {
     return name;
 }
 
-std::vector<uint8_t> WebUIView::renderCurrentPatternSmf() const {
+std::vector<uint8_t> WebUIView::renderCurrentPatternSmf(int laneFilter) const {
     // M053 S11: render the CURRENT pattern (controller cachedState) to an SMF
     // blob with no DAW transport. Bars come from the capture-length mirror
-    // (kCaptureLength) and timesig from the UI snapshot. Tempo has no UI-thread
-    // source, so a 120 BPM fallback is used — it only affects the SMF tempo meta
-    // event, not the PPQ note positions, and matches the engine render defaults
-    // (see 53-11-RESEARCH.md). Runs on the message thread; allocation is fine.
+    // (kCaptureLength) and timesig from the UI snapshot. Runs on the message
+    // thread; allocation is fine.
+    //
+    // M032 S03 (T02): tempo now comes from the UI snapshot too. The processor
+    // publishes ctx.tempo into UISnapshot.tempoBpm every process() block, so the
+    // exported SMF tempo meta mirrors the host tempo the plugin last saw instead
+    // of the old hardcoded 120.0 (MEM054). The snapshot defaults to 120.0 before
+    // the first process() call, preserving the prior fallback when no host tempo
+    // has been observed yet. Tempo only affects the SMF tempo meta event, not the
+    // PPQ note positions.
     auto* snap = controller_->uiSnapshot();
     const int bars = snap ? snap->captureBars.load(std::memory_order_relaxed) : 8;
     const int tsNum = snap ? snap->timeSigNumerator.load(std::memory_order_relaxed) : 4;
     const int tsDen = snap ? snap->timeSigDenominator.load(std::memory_order_relaxed) : 4;
-    return renderPatternToSMF(controller_->cachedState(), bars, 120.0, tsNum, tsDen);
+    const double tempo = snap ? snap->tempoBpm.load(std::memory_order_relaxed) : 120.0;
+    return renderPatternToSMF(controller_->cachedState(), bars, tempo, tsNum, tsDen, laneFilter);
 }
 
 void WebUIView::beginDragExport(const std::vector<uint8_t>& bytes) {
