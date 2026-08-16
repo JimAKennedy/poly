@@ -42,11 +42,17 @@ inline constexpr FieldMapping kLaneExprFields[] = {
 };
 
 inline constexpr FieldMapping kLaneCoreFields[] = {
-    {"steps", ParamIDs::kCoreSteps},         {"subdivision", ParamIDs::kCoreSubdivision},
-    {"hits", ParamIDs::kCoreHits},           {"rotation", ParamIDs::kCoreRotation},
-    {"note", ParamIDs::kCoreMidiNote},       {"cellCount", ParamIDs::kCoreCellCount},
-    {"timeline", ParamIDs::kCoreTimeline},   {"fixedPatternLen", ParamIDs::kCoreFixedPatternLen},
-    {"tempoMult", ParamIDs::kCoreTempoMult}, {"channel", ParamIDs::kCoreMidiChannel},
+    {"steps", ParamIDs::kCoreSteps},
+    {"subdivision", ParamIDs::kCoreSubdivision},
+    {"hits", ParamIDs::kCoreHits},
+    {"rotation", ParamIDs::kCoreRotation},
+    {"note", ParamIDs::kCoreMidiNote},
+    {"cellCount", ParamIDs::kCoreCellCount},
+    {"timeline", ParamIDs::kCoreTimeline},
+    {"fixedPatternLen", ParamIDs::kCoreFixedPatternLen},
+    {"tempoMult", ParamIDs::kCoreTempoMult},
+    {"channel", ParamIDs::kCoreMidiChannel},
+    {"fillEveryN", ParamIDs::kCoreFillEveryN},
 };
 
 } // namespace detail

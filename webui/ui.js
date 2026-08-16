@@ -1556,7 +1556,11 @@
       { field: 'timingOffset', label: 'T. Offset', norm: (l.timingOffset + 20) / 40,
         fmt: (v) => { const ms = v * 40 - 20; return (ms > 0 ? '+' : '') + Math.round(ms) + 'ms'; } },
     ];
-    const ALL_ADV = [...PHRASE, ...MUTATION, ...MORE];
+    const FILL = [
+      { field: 'fillEveryN', label: 'Every', norm: (l.fillEveryN || 0) / 64,
+        fmt: (v) => { const n = Math.round(v * 64); return n === 0 ? 'Off' : n + ' bars'; } },
+    ];
+    const ALL_ADV = [...PHRASE, ...MUTATION, ...MORE, ...FILL];
     const SUBS = [1, 2, 4, 8, 16];
     const sliderHtml = (arr) => arr.map((p) =>
       `<div class="param-slider${p.disabled ? ' phrase-disabled' : ''}"><label>${p.label}</label>` +
@@ -1578,7 +1582,14 @@
         S.lanes.map((sl, si) => si !== li
           ? `<button class="chip${l.kotekanSource === si ? ' on' : ''}" data-kot="${si}">${sl.name}</button>`
           : '').join('') +
-      `</div></div>`;
+      `</div></div>` +
+      `<div class="section-label">Fill</div>` + sliderHtml(FILL) +
+      `<div class="prow"><label>Manual</label><div class="chip-row">` +
+        `<button class="chip" data-manualfill>Fill Now</button></div></div>` +
+      `<div class="hint">Fill plays an off-pattern burst every N bars. Fill Now triggers one fill pass immediately.</div>`;
+
+    adv.querySelector('[data-manualfill]').addEventListener('click', () =>
+      host.action('manualFill', {}));
 
     adv.querySelectorAll('.slider-track').forEach((track) => {
       const field = track.dataset.field;

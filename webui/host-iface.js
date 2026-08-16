@@ -37,6 +37,10 @@
  *   //                                          N = state.presets.length;
  *   //                                          source: site/src/generated/presets.json)
  *   //   'togglePlay'      {}            (mock only; native transport is host-owned)
+ *   //   'manualFill'      {}            (M034 S01: pulse the global momentary
+ *   //                                    fill trigger; native edges
+ *   //                                    kFillManualTrigger for one fill render
+ *   //                                    pass, independent of lane.N.fillEveryN)
  *   //   'exportRequest'   {}
  *   //   'exportSaveAs'    {lane?}       (canExport-gated, plugin only: offline-render
  *   //                                    the current pattern to SMF and open the
@@ -83,7 +87,8 @@
  * Lane = {
  *   name, role, note, ch, steps, stepLen, vel, prob, spread, ghost, push,
  *   hits, rot, timeline, fixed: number[]|null, pattern: number[],
- *   cells: number[]|null, mt: number[], envs: Env[], hue
+ *   cells: number[]|null, mt: number[], envs: Env[], hue,
+ *   fillEveryN: number       // M034 S01: bars between auto-fills (0 = off)
  * }
  * Env = { target, period, depth, on }
  * Frame = {
