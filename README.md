@@ -64,6 +64,78 @@ This is decision **D029** (M054): Poly ships no Linux VST3 binary, so the Linux
 CI leg is an engine/WASM portability compile rather than a full plugin build.
 See `CHANGELOG.md` for the full scope statement.
 
+## Installing a release
+
+Download the `.zip` for your platform from a
+[GitHub Release](https://github.com/JimAKennedy/poly/releases), unzip it, and
+copy `poly_plugin.vst3` into your VST3 folder:
+
+- **macOS** — `~/Library/Audio/Plug-Ins/VST3/` (per-user) or
+  `/Library/Audio/Plug-Ins/VST3/` (all users)
+- **Windows** — `C:\Program Files\Common Files\VST3\`
+- **Linux** — no plugin zip is published. Poly is **engine/WASM-only** on Linux
+  (decision **D029**), so there is no Linux VST3 to download — don't go looking
+  for one in the GitHub Release. Build the engine locally with
+  `-DPOLY_ENGINE_ONLY=ON` (see [Supported platforms](#supported-platforms)).
+
+On macOS and Windows the zip extracts to a top-level `poly_plugin.vst3/` bundle;
+copy that whole bundle directory (not its loose contents) into the VST3 folder
+above.
+
+### macOS Gatekeeper (unsigned builds)
+
+Release builds are signed and notarized by Apple **only when the maintainer has
+provisioned the Developer ID signing secrets** (see
+[Signing and notarization](#signing-and-notarization)). Until then the shipped
+bundle is **unsigned**, so macOS attaches a quarantine flag to the downloaded
+`.zip` and Gatekeeper blocks the plugin — Cubase silently drops it from the
+scan, or you get a "cannot be opened because the developer cannot be verified"
+dialog.
+
+Clear the quarantine flag on the extracted bundle before copying it in:
+
+```bash
+xattr -dr com.apple.quarantine poly_plugin.vst3
+```
+
+`-d` deletes the attribute, `-r` recurses into the bundle. Once a signed +
+notarized + stapled release ships, this step is unnecessary — Gatekeeper
+accepts the stapled bundle with no prompt.
+
+## Signing and notarization
+
+The macOS release leg (`.github/workflows/release.yml`) auto-signs, notarizes,
+and staples the `.vst3` **the moment the six repository secrets below are
+provisioned** — no code change required. Each signing step is gated on its
+secrets being non-empty (`env.MACOS_* != ''`); while the secrets are absent the
+steps **skip** and the leg ships an unsigned zip (see the Gatekeeper note
+above). This is decision **D031** (M030 S03), which revises D004's
+unsigned-forever deferral.
+
+Provision these under **Settings → Secrets and variables → Actions** in the
+GitHub repo:
+
+| Secret | What it is |
+|--------|-----------|
+| `MACOS_CERTIFICATE_P12_BASE64` | Base64 of the exported *Developer ID Application* certificate + private key (`.p12`). Export from Keychain Access, then `base64 -i cert.p12 \| pbcopy`. |
+| `MACOS_CERTIFICATE_PASSWORD` | The password set when exporting the `.p12`. |
+| `MACOS_SIGNING_IDENTITY` | The codesign identity string, e.g. `Developer ID Application: Your Name (TEAMID)`. |
+| `MACOS_NOTARY_APPLE_ID` | Apple ID email used for notarization. |
+| `MACOS_NOTARY_PASSWORD` | An **app-specific password** for that Apple ID (appleid.apple.com → Sign-In and Security → App-Specific Passwords), *not* the account password. |
+| `MACOS_NOTARY_TEAM_ID` | Your Apple Developer Team ID (the `TEAMID` in the identity string above). |
+
+To provision:
+
+1. Enroll in the [Apple Developer Program](https://developer.apple.com/programs/)
+   and create a *Developer ID Application* certificate.
+2. Export it from Keychain Access as a `.p12` (certificate **and** private key),
+   set an export password, and base64-encode the file.
+3. Generate an app-specific password for the notarization Apple ID.
+4. Add all six secrets to the repo, then push a `v*.*.*` tag. The
+   **Codesign / Notarize / Staple VST3 (macOS)** steps run after pluginval and
+   before packaging; `notarytool submit --wait` fails the leg if Apple rejects
+   the submission, so a bad build never ships mislabeled.
+
 ## Architecture
 
 The core engine (`poly_engine`) is isolated from the plugin layer (`poly_plugin`).

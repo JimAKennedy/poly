@@ -1,0 +1,269 @@
+name: Release
+
+# Tag-triggered release pipeline (M030 S01). On push of a semver tag (v*.*.*)
+# this builds the two shipping VST3 targets per locked decision D029/D030 —
+# macOS universal (arm64+x86_64) and Windows x64 — zips each .vst3 bundle, and
+# publishes them as assets on a GitHub Release whose body is generated from
+# CHANGELOG.md via scripts/gen-release-notes.mjs.
+#
+# There is intentionally NO Linux leg: Poly ships no Linux plugin binary
+# (plugin/CMakeLists.txt gates the plugin on `if(APPLE OR WIN32)`; Linux is
+# engine/WASM only). Do not re-add one — scripts/check-release-workflow.mjs
+# asserts its absence.
+#
+# The shape of this file (trigger, two-leg matrix arches, artifact naming,
+# release-job wiring) is locked by scripts/check-release-workflow.mjs.
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+# Default read-only; the release job elevates to contents: write locally.
+permissions:
+  contents: read
+
+jobs:
+  build:
+    # macOS Developer ID signing + Apple notarization secrets (M030 S03, D031).
+    # Mapped to job-level env because GitHub does NOT expose the `secrets` context
+    # in step `if:` expressions — only `env` is available there — so the signing
+    # steps gate on `env.MACOS_* != ''`. When a secret is unset it resolves to the
+    # empty string and its step is SKIPPED (never failed), so the leg still ships
+    # an unsigned zip. The Windows leg inherits these too but never reads them
+    # (its signing steps are `runner.os == 'macOS'`-gated). See the README
+    # "Signing and notarization" section for the provisioning procedure.
+    env:
+      MACOS_CERTIFICATE_P12_BASE64: ${{ secrets.MACOS_CERTIFICATE_P12_BASE64 }}
+      MACOS_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_CERTIFICATE_PASSWORD }}
+      MACOS_SIGNING_IDENTITY: ${{ secrets.MACOS_SIGNING_IDENTITY }}
+      MACOS_NOTARY_APPLE_ID: ${{ secrets.MACOS_NOTARY_APPLE_ID }}
+      MACOS_NOTARY_PASSWORD: ${{ secrets.MACOS_NOTARY_PASSWORD }}
+      MACOS_NOTARY_TEAM_ID: ${{ secrets.MACOS_NOTARY_TEAM_ID }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # macOS ships a UNIVERSAL binary — both arches in one .vst3 bundle.
+          # Unlike ci.yml's arm64-only build leg, the release requires
+          # -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" so poly_engine compiles
+          # both slices. The quotes are load-bearing: the `;` must reach cmake
+          # as part of a single quoted argument, not as a shell separator.
+          # -DSMTG_RUN_VST_VALIDATOR=ON makes the SDK run the VST3 validator as a
+          # post-build step, so a validation failure fails the Build step before
+          # packaging — mirroring ci.yml's build-leg flag on the exact release
+          # binary. scripts/check-release-workflow.mjs asserts this flag stays on
+          # both legs.
+          - os: macos-14
+            asset: macos-universal
+            cmake-args: -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" -DSMTG_RUN_VST_VALIDATOR=ON
+          - os: windows-2022
+            asset: windows-x64
+            cmake-args: -G "Visual Studio 17 2022" -DCMAKE_BUILD_TYPE=Release -DSMTG_RUN_VST_VALIDATOR=ON
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
+      - name: Install Ninja (macOS)
+        if: runner.os == 'macOS'
+        run: brew install ninja
+      - name: Cache VST3 SDK
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: build/_deps/vst3sdk-src
+          key: vst3sdk-release-${{ matrix.os }}-${{ hashFiles('CMakeLists.txt') }}
+      - name: Cache GoogleTest
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: build/_deps/googletest-src
+          key: gtest-release-${{ matrix.os }}-${{ hashFiles('tests/CMakeLists.txt') }}
+      - name: Configure
+        run: cmake -S . -B build ${{ matrix.cmake-args }}
+      - name: Build
+        run: cmake --build build --config Release --parallel
+      # Validate the freshly built .vst3 with pluginval (Tracktion, pinned
+      # v1.0.4 — the exact pin and flags as ci.yml's pluginval-macos/-windows
+      # jobs) AFTER Build and BEFORE packaging, so a validation failure aborts
+      # the leg before any zip asset is produced. The find pattern mirrors the
+      # "Locate and package" steps below (exclude the midi_probe bundle). The
+      # step order (pluginval BEFORE package) is locked by
+      # scripts/check-release-workflow.mjs.
+      - name: Run pluginval (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          VST3_PATH=$(find build -name "*.vst3" -not -name "*probe*" -type d | head -1)
+          if [ -z "$VST3_PATH" ]; then
+            echo "::error::No poly_plugin.vst3 bundle found under build for pluginval"
+            exit 1
+          fi
+          curl -fsSL -o pluginval.zip https://github.com/Tracktion/pluginval/releases/download/v1.0.4/pluginval_macOS.zip
+          unzip -q pluginval.zip
+          chmod +x "pluginval.app/Contents/MacOS/pluginval"
+          "pluginval.app/Contents/MacOS/pluginval" \
+            --strictness-level 8 \
+            --skip-gui-tests \
+            --timeout-ms 120000 \
+            --validate "$VST3_PATH"
+      - name: Run pluginval (Windows)
+        if: runner.os == 'Windows'
+        # git-bash so the find/curl/unzip invocations match the macOS leg and
+        # ci.yml's pluginval-windows job (its packaging step uses pwsh, but
+        # pluginval is driven from bash on both platforms for one code path).
+        shell: bash
+        run: |
+          VST3_PATH=$(find build -name "*.vst3" -not -name "*probe*" -type d | head -1)
+          if [ -z "$VST3_PATH" ]; then
+            echo "::error::No poly_plugin.vst3 bundle found under build for pluginval"
+            exit 1
+          fi
+          curl -fsSL -o pluginval.zip https://github.com/Tracktion/pluginval/releases/download/v1.0.4/pluginval_Windows.zip
+          unzip -q pluginval.zip
+          ./pluginval.exe \
+            --strictness-level 8 \
+            --skip-gui-tests \
+            --timeout-ms 120000 \
+            --validate "$VST3_PATH"
+      # --- macOS Developer ID signing + Apple notarization (M030 S03, D031). ---
+      # These three steps run AFTER pluginval and BEFORE packaging, so the zipped
+      # asset carries a signed + notarized + stapled bundle that loads in Cubase
+      # with no Gatekeeper quarantine dialog. Each is gated on its secrets being
+      # non-empty; absent secrets (the autonomous default — Apple Developer ID
+      # credentials cannot be provisioned in-sandbox) SKIP every step and the leg
+      # ships an unsigned zip. Provisioning the six repo secrets flips signing on
+      # with no code change. scripts/check-release-workflow.mjs locks this shape:
+      # the runtime codesign flag, the secret `if:` gate, notarytool --wait,
+      # stapling, and the order (after pluginval, before packaging).
+      - name: Codesign VST3 (macOS)
+        if: runner.os == 'macOS' && env.MACOS_CERTIFICATE_P12_BASE64 != '' && env.MACOS_SIGNING_IDENTITY != ''
+        run: |
+          set -euo pipefail
+          VST3_PATH=$(find build -name "*.vst3" -not -name "*probe*" -type d | head -1)
+          if [ -z "$VST3_PATH" ]; then
+            echo "::error::No poly_plugin.vst3 bundle found under build for codesign"
+            exit 1
+          fi
+          # Import the Developer ID Application cert into an ephemeral keychain so
+          # nothing persists on the runner beyond this job.
+          KEYCHAIN="$RUNNER_TEMP/poly-signing.keychain-db"
+          KEYCHAIN_PASSWORD=$(uuidgen)
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          echo "$MACOS_CERTIFICATE_P12_BASE64" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security import "$RUNNER_TEMP/cert.p12" -P "$MACOS_CERTIFICATE_PASSWORD" \
+            -A -t cert -f pkcs12 -k "$KEYCHAIN"
+          security set-key-partition-list -S apple-tool:,apple: \
+            -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN" >/dev/null
+          security list-keychains -d user -s "$KEYCHAIN" \
+            $(security list-keychains -d user | tr -d '"')
+          # --options runtime enables the hardened runtime and --timestamp embeds a
+          # secure Apple timestamp; both are REQUIRED for the bundle to pass
+          # notarization. --deep signs nested code (the bundle is a plugin dir).
+          codesign --force --deep --options runtime --timestamp \
+            --sign "$MACOS_SIGNING_IDENTITY" "$VST3_PATH"
+          codesign --verify --deep --strict --verbose=2 "$VST3_PATH"
+          rm -f "$RUNNER_TEMP/cert.p12"
+      - name: Notarize VST3 (macOS)
+        if: runner.os == 'macOS' && env.MACOS_NOTARY_APPLE_ID != '' && env.MACOS_NOTARY_PASSWORD != '' && env.MACOS_NOTARY_TEAM_ID != ''
+        run: |
+          set -euo pipefail
+          VST3_PATH=$(find build -name "*.vst3" -not -name "*probe*" -type d | head -1)
+          if [ -z "$VST3_PATH" ]; then
+            echo "::error::No poly_plugin.vst3 bundle found under build for notarization"
+            exit 1
+          fi
+          # notarytool ingests a zip/pkg/dmg, not a bare .vst3 bundle directory.
+          ditto -c -k --keepParent "$VST3_PATH" "$RUNNER_TEMP/notarize.zip"
+          # --wait blocks until Apple returns a terminal status and exits non-zero
+          # on anything but Accepted, so an un-notarizable build fails the leg here
+          # instead of shipping. The submission id/status is printed to the log.
+          xcrun notarytool submit "$RUNNER_TEMP/notarize.zip" \
+            --apple-id "$MACOS_NOTARY_APPLE_ID" \
+            --password "$MACOS_NOTARY_PASSWORD" \
+            --team-id "$MACOS_NOTARY_TEAM_ID" \
+            --wait
+          rm -f "$RUNNER_TEMP/notarize.zip"
+      - name: Staple notarization ticket (macOS)
+        if: runner.os == 'macOS' && env.MACOS_NOTARY_APPLE_ID != '' && env.MACOS_NOTARY_PASSWORD != '' && env.MACOS_NOTARY_TEAM_ID != ''
+        run: |
+          set -euo pipefail
+          VST3_PATH=$(find build -name "*.vst3" -not -name "*probe*" -type d | head -1)
+          if [ -z "$VST3_PATH" ]; then
+            echo "::error::No poly_plugin.vst3 bundle found under build for stapling"
+            exit 1
+          fi
+          # Staple the notarization ticket INTO the bundle so Gatekeeper accepts it
+          # offline (no ticket fetch needed on the end user's machine).
+          xcrun stapler staple "$VST3_PATH"
+          xcrun stapler validate "$VST3_PATH"
+      # Package the shipping .vst3 bundle as a zipped release asset. `probe` is
+      # the midi_probe test tool's bundle (tools/midi_probe) — exclude it so we
+      # ship poly_plugin.vst3, matching ci.yml's pluginval find pattern.
+      - name: Locate and package VST3 (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          VST3_PATH=$(find build -name "*.vst3" -not -name "*probe*" -type d | head -1)
+          if [ -z "$VST3_PATH" ]; then
+            echo "::error::No poly_plugin.vst3 bundle found under build"
+            exit 1
+          fi
+          ASSET="poly-${GITHUB_REF_NAME}-${{ matrix.asset }}.zip"
+          echo "Located VST3: $VST3_PATH"
+          ditto -c -k --keepParent "$VST3_PATH" "$ASSET"
+          echo "Packaged asset: $ASSET"
+      - name: Locate and package VST3 (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $vst3 = Get-ChildItem -Path build -Recurse -Directory -Filter *.vst3 |
+            Where-Object { $_.Name -notlike '*probe*' } | Select-Object -First 1
+          if (-not $vst3) {
+            Write-Output "::error::No poly_plugin.vst3 bundle found under build"
+            exit 1
+          }
+          $asset = "poly-$env:GITHUB_REF_NAME-${{ matrix.asset }}.zip"
+          Write-Output "Located VST3: $($vst3.FullName)"
+          Compress-Archive -Path $vst3.FullName -DestinationPath $asset
+          Write-Output "Packaged asset: $asset"
+      - name: Upload release asset
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release-${{ matrix.asset }}
+          path: poly-*.zip
+          retention-days: 7
+          if-no-files-found: error
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    # Elevated ONLY here — this is the one job that mutates repo state by
+    # creating/updating the GitHub Release for the tag.
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: '24'
+      - name: Download all release assets
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+        with:
+          pattern: release-*
+          merge-multiple: true
+          path: dist
+      # Strip the leading `v` from the tag (v0.1.0 -> 0.1.0) and pull the body
+      # from CHANGELOG.md. gen-release-notes.mjs exits non-zero if the section
+      # is missing or empty, so a mistagged/undocumented version fails loud here
+      # before any Release is published.
+      - name: Generate release notes
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "Resolved release version: $VERSION"
+          node scripts/gen-release-notes.mjs "$VERSION" > release-notes.md
+          echo "----- release body -----"
+          cat release-notes.md
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
+        with:
+          body_path: release-notes.md
+          files: dist/*.zip
+          fail_on_unmatched_files: true
