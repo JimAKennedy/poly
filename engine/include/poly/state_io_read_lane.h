@@ -153,6 +153,12 @@ template <typename ReadFn> [[nodiscard]] bool readLaneConfig(ReadFn&& read, Lane
         if (!read(&lane.midiChannel, sizeof(lane.midiChannel)))
             return false;
     }
+    if (version >= kFillEveryNBarsStateVersion) {
+        if (!read(&lane.fillEveryNBars, sizeof(lane.fillEveryNBars)))
+            return false;
+    }
+    // Pre-v17 states carry no fillEveryNBars byte; the struct default (0 = fill
+    // inert) already stands, so old presets load with fill disabled.
 
     // M068 S03: pre-Bjorklund states (< v16) authored rotation against the
     // retired Bresenham generator. Rotate each non-timeline lane by the delta

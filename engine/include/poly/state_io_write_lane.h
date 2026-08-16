@@ -150,6 +150,10 @@ template <typename WriteFn>
         if (!write(&lane.midiChannel, sizeof(lane.midiChannel)))
             return false;
     }
+    if (bodyVersion >= kFillEveryNBarsStateVersion) {
+        if (!write(&lane.fillEveryNBars, sizeof(lane.fillEveryNBars)))
+            return false;
+    }
 
     return true;
 }

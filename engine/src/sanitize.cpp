@@ -86,6 +86,11 @@ void sanitizeLane(LaneConfig& lane, int laneIndex) {
     if (lane.kotekanSourceLane == laneIndex)
         lane.kotekanSourceLane = -1;
 
+    // fillEveryNBars gates fill activation via (barIndex % fillEveryNBars); 0
+    // disables it. A corrupt negative would make the modulo ill-defined, so
+    // clamp to [0, 1024] (1024 bars mirrors the envelope periodBars ceiling).
+    lane.fillEveryNBars = clampi(lane.fillEveryNBars, 0, 1024);
+
     lane.cellCount = clampi(lane.cellCount, 0, kMaxSteps);
     // Each active cell must be >= 1 subdivision unit so the additive cycle
     // length can never be zero (renderRange divides by it).

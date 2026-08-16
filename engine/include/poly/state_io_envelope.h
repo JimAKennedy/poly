@@ -10,12 +10,17 @@
 namespace poly {
 
 // region:state-version
-static constexpr int32_t kCurrentStateVersion = 16;
+static constexpr int32_t kCurrentStateVersion = 17;
 // M068 S03: v16 switched the pattern generator from the retired Bresenham
 // distribution (`(i*k) mod n < k`) to Bjorklund. Lanes saved before v16 carry a
 // rotation authored against the old generator; readLaneConfig migrates each
 // non-timeline lane by euclideanMigrationDelta so playback stays byte-identical.
 static constexpr int32_t kBjorklundGeneratorStateVersion = 16;
+// M034 S01: v17 appended LaneConfig.fillEveryNBars (bar-gated fill activation).
+// writeLaneConfig emits it under `bodyVersion >= 17`; readLaneConfig reads it
+// under `version >= 17`, so pre-v17 states load with fillEveryNBars defaulting
+// to 0 (fill inert), preserving byte-identical playback.
+static constexpr int32_t kFillEveryNBarsStateVersion = 17;
 // endregion:state-version
 
 // --- Envelope serialization helpers ---
