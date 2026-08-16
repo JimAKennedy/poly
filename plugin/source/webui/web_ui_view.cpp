@@ -8,6 +8,7 @@
 #include <chrono>
 #include <cmath>
 #include <cstdio>
+#include <cstdlib>
 #include <ctime>
 #include <string>
 
@@ -1041,30 +1042,88 @@ std::vector<uint8_t> WebUIView::renderCurrentPatternSmf(int laneFilter) const {
     return renderPatternToSMF(controller_->cachedState(), bars, tempo, tsNum, tsDen, laneFilter);
 }
 
+// Test-only export byte sink, gated on the POLY_EXPORT_SINK env var. When set
+// (runner-only; unset in every shipping build), the shipping Export path also
+// writes the exact SMF bytes it would hand to the native Save-As panel to that
+// file path. This lets the L4-web e2e capture the IN-DAW export blob over CDP
+// without automating the modal native file dialog — the same pattern as
+// POLY_PROBE_OUTPUT (the env var is read from the process Cubase inherited at
+// launch; launch-cubase.ps1 exports it). No-op and zero cost when the var is
+// unset. Returns true if a sink was configured and the write succeeded, so the
+// caller can log the fallout; a failed write is logged but never blocks the
+// user-facing dialog/drag. Message-thread only (called from the export
+// handlers), so blocking file I/O is fine here.
+static bool writeExportSinkIfEnabled(const std::vector<uint8_t>& bytes) {
+    const char* sinkPath = std::getenv("POLY_EXPORT_SINK");
+    if (sinkPath == nullptr || sinkPath[0] == '\0')
+        return false;
+    std::FILE* f = std::fopen(sinkPath, "wb");
+    if (f == nullptr) {
+        std::fprintf(stderr, "[poly] POLY_EXPORT_SINK: could not open %s for writing\n", sinkPath);
+        return false;
+    }
+    const size_t written = bytes.empty() ? 0 : std::fwrite(bytes.data(), 1, bytes.size(), f);
+    std::fclose(f);
+    if (written != bytes.size()) {
+        std::fprintf(stderr, "[poly] POLY_EXPORT_SINK: short write to %s (%zu/%zu bytes)\n", sinkPath, written,
+                     bytes.size());
+        return false;
+    }
+    std::fprintf(stderr, "[poly] POLY_EXPORT_SINK: wrote %zu bytes to %s\n", bytes.size(), sinkPath);
+    return true;
+}
+
 void WebUIView::beginDragExport(const std::vector<uint8_t>& bytes) {
     // Open the native drag-source window over the offline-rendered SMF bytes.
     // Unlike the Save-As panel this is non-modal (no saveDialogOpen_ re-entrancy
     // guard): beginMidiDragExport writes a temp .mid and hands off to the OS drag
     // pasteboard, returning immediately.
+    //
+    // Test hook (POLY_EXPORT_SINK): in sink mode the per-lane DRAG export bytes
+    // are written to the sink and the OS drag is SKIPPED — beginMidiDragExport
+    // would start a native drag loop with no drop target under the unattended
+    // e2e. This makes S02's deferred single-lane-drag UAT verifiable over CDP
+    // (click the lane's drag affordance, then validate the sink file) without
+    // automating an OS drag gesture. Off and free in shipping builds, where the
+    // real OS drag runs unchanged.
+    if (writeExportSinkIfEnabled(bytes))
+        return;
     beginMidiDragExport(parentView_, suggestedExportName(), bytes);
 }
 
+void WebUIView::pushExportResult(const std::string& savedPath) {
+    if (!webview_ || !webviewReady_)
+        return;
+    // Notify the WebUI so it can toast success or clear its "…" pending
+    // indicator. Empty path = cancelled.
+    std::string js = "window.polyHostPush({\"type\":\"exportResult\",\"savedPath\":";
+    if (savedPath.empty()) {
+        js += "\"\"";
+    } else {
+        js += choc::json::getEscapedQuotedString(savedPath);
+    }
+    js += "})";
+    webview_->evaluateJavascript(js);
+}
+
 void WebUIView::openMidiExportDialog(const std::vector<uint8_t>& bytes) {
+    // Test hook (POLY_EXPORT_SINK): in sink mode the shipping export bytes are
+    // written straight to the sink path and the native Save-As panel is SKIPPED.
+    // The panel's Show() is modal and blocks the UI thread until a human picks a
+    // path — under the unattended L4-web e2e that would hang forever. In sink
+    // mode we already have the exact bytes on disk, so bypassing the modal loses
+    // nothing and lets the e2e drive export unattended. We still push an
+    // exportResult carrying the sink path so the WebUI toast fires — an
+    // observable success signal the CDP spec can assert on. Off (and free) in
+    // every shipping build, where the modal path runs unchanged.
+    if (writeExportSinkIfEnabled(bytes)) {
+        pushExportResult(std::getenv("POLY_EXPORT_SINK"));
+        return;
+    }
     saveDialogOpen_ = true;
     openMidiSaveDialog(parentView_, suggestedExportName(), bytes, [this](const std::string& savedPath) {
         saveDialogOpen_ = false;
-        if (!webview_ || !webviewReady_)
-            return;
-        // Notify the WebUI so it can toast success or clear
-        // its "…" pending indicator. Empty path = cancelled.
-        std::string js = "window.polyHostPush({\"type\":\"exportResult\",\"savedPath\":";
-        if (savedPath.empty()) {
-            js += "\"\"";
-        } else {
-            js += choc::json::getEscapedQuotedString(savedPath);
-        }
-        js += "})";
-        webview_->evaluateJavascript(js);
+        pushExportResult(savedPath);
     });
 }
 

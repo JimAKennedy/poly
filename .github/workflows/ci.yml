@@ -125,6 +125,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.12'
       - name: Install Ninja
         run: sudo apt-get install -y ninja-build
       - name: Configure engine-only (no VST3 SDK)
@@ -133,6 +136,37 @@ jobs:
         run: cmake --build build-engine --parallel
       - name: Run engine tests
         run: ctest --test-dir build-engine --output-on-failure
+      # M032 export UAT automation (Level C): independent-parser validation of the
+      # MIDI export. poly_smf_emit renders the default preset to a real .mid via
+      # the same renderPatternToSMF primitive the WebUI Export chip uses; the mido
+      # validator (an SMF parser we don't own) then asserts the M032 contract —
+      # Format-1, conductor-only tempo, one named GM track per active lane, and no
+      # dropped notes. This replaces the "open the .mid in Cubase and eyeball the
+      # named tracks" manual UAT with an offline, Cubase-free gate. The in-DAW
+      # export path itself is exercised by the Cubase nightly L4-web e2e.
+      - name: Install SMF validator deps (mido)
+        run: python -m pip install --quiet mido==1.3.3
+      - name: Unit-test the SMF validator (contract has teeth)
+        working-directory: tests/cubase
+        run: python -m unittest test_validate_smf_export -v
+      - name: Validate MIDI export contract (independent parser)
+        run: |
+          set -euo pipefail
+          emit=$(find build-engine -name poly_smf_emit -type f | head -1)
+          if [ -z "$emit" ]; then
+            echo "::error::poly_smf_emit not built under build-engine"
+            exit 1
+          fi
+          mkdir -p _smf
+          # All-lanes export: multiple named GM tracks, no loss, host tempo 120.
+          "$emit" _smf/all.mid
+          python tests/cubase/validate_smf_export.py _smf/all.mid \
+            --expected-bpm 120 --min-note-ons 16
+          # Single-lane export (M032 S02): exactly one named "Kick" track.
+          "$emit" _smf/lane0.mid 0
+          python tests/cubase/validate_smf_export.py _smf/lane0.mid \
+            --expected-bpm 120 --expected-named-tracks 1 --min-note-ons 4 \
+            --lane-name Kick
       - name: Verify no VST3 SDK fetched
         run: |
           if [ -d "build-engine/_deps/vst3sdk-src" ]; then

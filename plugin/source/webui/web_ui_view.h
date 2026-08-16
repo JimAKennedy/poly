@@ -58,6 +58,10 @@ private:
     void openMidiExportDialog(const std::vector<uint8_t>& bytes);
     void beginDragExport(const std::vector<uint8_t>& bytes);
     std::string suggestedExportName() const;
+    // Push an exportResult message to the WebUI (toast / clear pending). Empty
+    // path = cancelled. Shared by the Save-As completion callback and the
+    // POLY_EXPORT_SINK test path.
+    void pushExportResult(const std::string& savedPath);
 
     PolyController* controller_ = nullptr;
     std::unique_ptr<choc::ui::WebView> webview_;

@@ -42,6 +42,24 @@ Note names use the Cubase default convention: Middle C (MIDI 60) = C3, MIDI 0 = 
 | 6    | 43   | G1   | High Floor Tom  |
 | 7    | 50   | D2   | High Tom        |
 
+## MIDI Export Track Naming
+
+MIDI export (the WebUI Export chip, per-lane export, and drag-to-DAW) writes a
+**Format-1** Standard MIDI File: a conductor track carrying the tempo/time-sig
+meta and no notes, followed by **one named `MTrk` per active lane**. Each lane
+track's name (`FF 03`) is the GM role of the lane's note number, resolved by
+`laneName()` in `engine/src/lane_name.cpp` from the same note inventory above —
+so a kick lane (35–36) exports as a "Kick" track, a snare lane (38, 40) as
+"Snare", a hi-hat lane (42, 44) as "Hi-Hat", and so on. Note numbers not in the
+inventory fall through to "Perc". A single lane can be exported on its own (the
+file then contains the conductor track plus just that one named track); the note
+numbers and their GM names are identical whether a lane is exported alone or as
+part of the full pattern.
+
+The role labels used for track names are the single source of truth shared with
+the site sample manifest and the preset emitter (`emit_presets.cpp` consumes
+`noteLabel()` rather than keeping its own copy).
+
 ## Design Notes
 
 Non-Western instruments are mapped to the closest GM equivalent by role:
