@@ -5,6 +5,10 @@ import { bjorklund, rotateRight } from '../src/audio/bjorklund.ts';
 // Imported through the audio/playback surface to prove it re-exports the very
 // same generator (no internal fork). See preset-patterns.ts.
 import { bjorklund as presetPatternsBjorklund } from '../src/audio/preset-patterns.ts';
+// Imported through the claim-verifier surface to prove it re-exports the very
+// same generator (no internal fork). See lib/euclidean-claims.mjs — this was
+// the last forked JS Bjorklund, collapsed in M075.
+import { bjorklund as euclideanClaimsBjorklund } from '../src/lib/euclidean-claims.mjs';
 
 // Canon table — byte-for-byte the same spellings the engine pins in
 // tests/euclidean_tests.cpp (ToussaintCanonSpellings). Each onset-index set is
@@ -77,5 +81,16 @@ test('preset-patterns re-exports the identical generator (no fork)', () => {
     presetPatternsBjorklund,
     bjorklund,
     'preset-patterns.ts must re-export the same bjorklund function object',
+  );
+});
+
+// Function-object identity is the strongest possible proof that exactly one JS
+// Bjorklund implementation exists: it fails loudly the moment anyone re-forks a
+// local copy into euclidean-claims.mjs (byte-equal or not). See M075 S01.
+test('euclidean-claims re-exports the identical generator (no fork)', () => {
+  assert.equal(
+    euclideanClaimsBjorklund,
+    bjorklund,
+    'euclidean-claims.mjs must re-export the same bjorklund function object',
   );
 });

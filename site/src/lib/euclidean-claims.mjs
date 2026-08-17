@@ -2,37 +2,19 @@
 //
 // One shared bjorklund() function so the appendix's E(k,n) claims, chapter
 // prose patternClaims front-matter, and the EuclideanDiagram component all
-// agree on the canonical pattern for any (k, n). Ports EuclideanDiagram.astro's
-// implementation into a plain ESM module tests can import.
+// agree on the canonical pattern for any (k, n). The canonical generator lives
+// in the single source of truth at ../audio/bjorklund.ts; this module now
+// re-exports it rather than forking a copy. Node (≥ v22) strips TS types
+// natively, so a plain .mjs can import the .ts directly.
 //
 // The verifier catches the D1-D3 error class from the 2026-07-16 review:
 // hand-typed onset strings that disagree with the theoretical claim.
 
-// Bjorklund's algorithm — canonical Euclidean distribution at rotation 0.
-// Mirrors EuclideanDiagram.astro:11-33 and engine/src/euclidean.cpp.
-export function bjorklund(steps, hits) {
-  if (hits >= steps) return Array(steps).fill(true);
-  if (hits <= 0) return Array(steps).fill(false);
-
-  let pattern = [];
-  for (let i = 0; i < hits; i++) pattern.push([1]);
-  let remainder = [];
-  for (let i = 0; i < steps - hits; i++) remainder.push([0]);
-
-  while (remainder.length > 1) {
-    const newPattern = [];
-    const minLen = Math.min(pattern.length, remainder.length);
-    for (let i = 0; i < minLen; i++) {
-      newPattern.push([...pattern[i], ...remainder[i]]);
-    }
-    const leftover =
-      pattern.length > remainder.length ? pattern.slice(minLen) : remainder.slice(minLen);
-    pattern = newPattern;
-    remainder = leftover;
-  }
-
-  return [...pattern, ...remainder].flat().map((v) => v === 1);
-}
+// Bjorklund's algorithm — the single shared generator. Imported for local use
+// by the verifier helpers below and re-exported so consumers keep the same
+// import surface. This collapsed the last forked JS Bjorklund (M075).
+import { bjorklund } from '../audio/bjorklund.ts';
+export { bjorklund } from '../audio/bjorklund.ts';
 
 // Parse an onset-string like "x . x . ." (with any whitespace between symbols)
 // into a boolean array. Accepts x/X/1 as onset, . or 0 as rest. Throws on
