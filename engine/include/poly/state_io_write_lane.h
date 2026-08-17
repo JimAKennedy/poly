@@ -150,6 +150,17 @@ template <typename WriteFn>
         if (!write(&lane.midiChannel, sizeof(lane.midiChannel)))
             return false;
     }
+    if (bodyVersion >= kFillEveryNBarsStateVersion) {
+        if (!write(&lane.fillEveryNBars, sizeof(lane.fillEveryNBars)))
+            return false;
+    }
+    if (bodyVersion >= kLaneSeedLockStateVersion) {
+        if (!write(&lane.laneSeed, sizeof(lane.laneSeed)))
+            return false;
+        uint8_t seedLocked = lane.seedLocked ? 1 : 0;
+        if (!write(&seedLocked, sizeof(seedLocked)))
+            return false;
+    }
 
     return true;
 }

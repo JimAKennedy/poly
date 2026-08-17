@@ -104,13 +104,20 @@ template <typename ReadFn> [[nodiscard]] bool readGrooveState(ReadFn&& read, Gro
 
 // --- Public: SceneState (v3 format, used by processor/controller) ---
 
-template <typename WriteFn> [[nodiscard]] bool writeSceneState(WriteFn&& write, const SceneState& scene) {
-    int32_t version = kCurrentStateVersion;
-    if (!write(&version, sizeof(version)))
+// bodyVersion defaults to the current version for production callers. Tests pass
+// an older version to forge a historical-format fixture: the version stamp and
+// every lane/envelope body are emitted exactly as that version's writer would,
+// so a genuine pre-v17 blob omits the fillEveryNBars byte (v17) entirely rather
+// than writing current-format bytes under an old stamp (which would misalign the
+// reader now that the wire formats differ).
+template <typename WriteFn>
+[[nodiscard]] bool writeSceneState(WriteFn&& write, const SceneState& scene,
+                                   int32_t bodyVersion = kCurrentStateVersion) {
+    if (!write(&bodyVersion, sizeof(bodyVersion)))
         return false;
-    if (!writeGrooveStateBody(write, scene.sceneA))
+    if (!writeGrooveStateBody(write, scene.sceneA, bodyVersion))
         return false;
-    if (!writeGrooveStateBody(write, scene.sceneB))
+    if (!writeGrooveStateBody(write, scene.sceneB, bodyVersion))
         return false;
     auto select = static_cast<uint8_t>(scene.select);
     if (!write(&select, sizeof(select)))

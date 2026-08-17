@@ -201,8 +201,105 @@ TEST(TimeSignature, PpqPerBarHelper) {
     EXPECT_DOUBLE_EQ(tc.ppqPerBar(), 4.5);
 
     tc.timeSigNumerator = 5;
+    tc.timeSigDenominator = 4;
+    EXPECT_DOUBLE_EQ(tc.ppqPerBar(), 5.0);
+
+    tc.timeSigNumerator = 5;
     tc.timeSigDenominator = 16;
     EXPECT_DOUBLE_EQ(tc.ppqPerBar(), 1.25);
+}
+
+// -----------------------------------------------------------------------
+// 5/4 explicit coverage — the roadmap success criterion names 3/4, 5/4,
+// and 7/8 by hand. 3/4 and 7/8 are exercised end-to-end above; this test
+// closes the literal 5/4 gap across the same meter-dependent surfaces so
+// the criterion has by-name evidence rather than transitive-only coverage.
+//
+// 5/4 = 5 PPQ per bar. Lane cycles stay meter-independent; scene chain,
+// envelope period, and capture window all follow the 5 PPQ bar.
+// -----------------------------------------------------------------------
+TEST(TimeSignature, FiveFourAcrossAllMeterDependentSurfaces) {
+    constexpr double kPpqPerBar = 5.0; // 5/4
+
+    // Helper golden.
+    poly::TransportContext tcHelper{};
+    tcHelper.timeSigNumerator = 5;
+    tcHelper.timeSigDenominator = 4;
+    EXPECT_DOUBLE_EQ(tcHelper.ppqPerBar(), kPpqPerBar);
+
+    // 1. Lane cycles are meter-independent: a 7/8 lane cycles every 3.5 PPQ
+    //    whether the host is in 4/4 or 5/4.
+    poly::GrooveState state{};
+    state.activeLaneCount = 1;
+    auto& lane = state.lanes[0];
+    lane.active = true;
+    lane.id = 0;
+    lane.midiNote = 36;
+    lane.cycle = {.steps = 7, .subdivision = 8};
+    lane.hitCount = 3;
+    lane.rotation = 0;
+    lane.probability = 1.0f;
+
+    poly::TransportContext tc44{};
+    tc44.ppqStart = 0.0;
+    tc44.ppqEnd = 10.0;
+    tc44.tempo = 120.0;
+    tc44.playing = true;
+    tc44.timeSigNumerator = 4;
+    tc44.timeSigDenominator = 4;
+
+    poly::TransportContext tc54 = tc44;
+    tc54.timeSigNumerator = 5;
+    tc54.timeSigDenominator = 4;
+
+    poly::Engine e44;
+    poly::Engine e54;
+    poly::NoteEventBuffer buf44{};
+    poly::NoteEventBuffer buf54{};
+    e44.renderRange(tc44, state, buf44);
+    e54.renderRange(tc54, state, buf54);
+
+    ASSERT_EQ(buf44.count, buf54.count);
+    for (size_t i = 0; i < buf44.count; ++i) {
+        EXPECT_DOUBLE_EQ(buf44.events[i].ppqPosition, buf54.events[i].ppqPosition)
+            << "Lane cycle should be meter-independent at 5/4, event " << i;
+    }
+
+    // 2. Scene chain: a bars=2 entry crosses over at PPQ 10 in 5/4 (2 × 5),
+    //    not at PPQ 8 (4/4) or PPQ 6 (3/4).
+    poly::SceneChainConfig config{};
+    config.entryCount = 2;
+    config.entries[0] = {.scene = poly::SceneSelect::A, .bars = 2};
+    config.entries[1] = {.scene = poly::SceneSelect::B, .bars = 2};
+    config.mode = poly::ChainMode::Loop;
+
+    poly::SceneChainState chain;
+    EXPECT_EQ(chain.update(config, 0.0, kPpqPerBar), poly::SceneSelect::A);
+    EXPECT_EQ(chain.update(config, 5.0, kPpqPerBar), poly::SceneSelect::A);  // still bar 1
+    EXPECT_EQ(chain.update(config, 10.0, kPpqPerBar), poly::SceneSelect::B); // bar 2 = crossover
+
+    // 3. Envelope period: periodBars=2 → 10 PPQ per cycle, half-cycle at PPQ 5.
+    constexpr double kEps = 1e-9;
+    constexpr float periodBars = 2.0f;
+    EXPECT_NEAR(poly::computeEnvelopePhase(0.0, periodBars, 0.0f, kPpqPerBar), 0.0, kEps);
+    EXPECT_NEAR(poly::computeEnvelopePhase(5.0, periodBars, 0.0f, kPpqPerBar), 0.5, kEps);
+    EXPECT_NEAR(poly::computeEnvelopePhase(10.0, periodBars, 0.0f, kPpqPerBar), 0.0, kEps);
+
+    // 4. Capture window: "last 4 bars" = 20 PPQ at 5/4. Window: [20 - 20, 20 + 1)
+    //    = [0, 21) → all 21 events at PPQ 0..20.
+    poly::MidiCaptureBuffer capBuf;
+    for (int i = 0; i <= 20; ++i) {
+        poly::NoteEvent ev{};
+        ev.ppqPosition = static_cast<double>(i);
+        ev.pitch = static_cast<int16_t>(60 + i);
+        ev.velocity = 100.0f;
+        capBuf.push(ev);
+    }
+    poly::NoteEvent out[64];
+    size_t n54 = capBuf.extractLastBars(4, out, 64, kPpqPerBar);
+    EXPECT_EQ(n54, 21u);
+    EXPECT_DOUBLE_EQ(out[0].ppqPosition, 0.0);
+    EXPECT_DOUBLE_EQ(out[n54 - 1].ppqPosition, 20.0);
 }
 
 } // namespace

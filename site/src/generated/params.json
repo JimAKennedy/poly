@@ -262,6 +262,26 @@
       "defaultEngine": -1,
       "engineRange": "-1 to 15",
       "defaultDisplay": "Auto"
+    },
+    {
+      "offset": 10,
+      "name": "Fill Every N",
+      "kind": "Ranged0_64",
+      "minEngine": 0,
+      "maxEngine": 64,
+      "defaultEngine": 0,
+      "engineRange": "0 - 64",
+      "defaultDisplay": "0"
+    },
+    {
+      "offset": 11,
+      "name": "Seed Lock",
+      "kind": "Bool",
+      "minEngine": 0,
+      "maxEngine": 1,
+      "defaultEngine": 0,
+      "engineRange": "Off / On",
+      "defaultDisplay": "Off"
     }
   ]
 }

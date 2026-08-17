@@ -14,7 +14,7 @@
 //                           "defaultEngine": 1, "engineRange": "0.0 - 1.0",
 //                           "normalizedRange": "0 - 100%",
 //                           "defaultDisplay": "100%" }, ... ],
-//   "coreParams":       [ ... same shape, 10 entries ... ]
+//   "coreParams":       [ ... same shape, 12 entries ... ]
 // }
 
 #include <cstdio>

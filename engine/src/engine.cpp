@@ -107,10 +107,27 @@ static void buildLanePattern(const LaneConfig& cfg, const GrooveState& state, in
             const auto& src = state.lanes[cfg.kotekanSourceLane];
             std::array<bool, kMaxSteps> srcPattern{};
             euclidean(src.hitCount, src.cycle.steps, src.rotation, srcPattern);
-            for (int s = 0; s < cfg.cycle.steps && s < src.cycle.steps; ++s)
+            int complementHits = 0;
+            for (int s = 0; s < cfg.cycle.steps && s < src.cycle.steps; ++s) {
                 pattern[s] = !srcPattern[s];
-            for (int s = src.cycle.steps; s < cfg.cycle.steps; ++s)
+                if (pattern[s])
+                    ++complementHits;
+            }
+            for (int s = src.cycle.steps; s < cfg.cycle.steps; ++s) {
                 pattern[s] = true;
+                ++complementHits;
+            }
+            // MEM095 / M070 "Kotekan Interlock": a macro-saturated source
+            // (hitCount == cycle.steps, reachable dynamically via the complexity/
+            // density macros) makes srcPattern all-true, so !srcPattern is
+            // all-false and the sangsih complement goes entirely silent — the
+            // interlocking pair collapses to a single line. When the derived
+            // complement is fully silent, fall back to the lane's own Euclidean
+            // pattern so the complement keeps at least one interlocking hit. This
+            // only fires when complementHits == 0, so every non-saturated pattern
+            // stays byte-identical (determinism golden tests unaffected).
+            if (complementHits == 0)
+                euclidean(cfg.hitCount, cfg.cycle.steps, cfg.rotation, pattern);
             // endregion:kotekan
         } else {
             euclidean(cfg.hitCount, cfg.cycle.steps, cfg.rotation, pattern);
@@ -147,7 +164,8 @@ enum class StepOutcome : uint8_t {
 };
 
 static StepOutcome classifyStep(const LaneConfig& cfg, const GrooveState& state, int64_t absStep, int64_t cycleStep,
-                                bool isPatternStep, bool isAnchor, const EnvelopeMods& mods, int stepsInCycle) {
+                                bool isPatternStep, bool isAnchor, const EnvelopeMods& mods, int stepsInCycle,
+                                bool isFillBar) {
     // M073 S01: A base velocity of exactly zero mutes the lane entirely. The
     // emission decision below never consults velocity magnitude, and
     // computeStepVelocity's ghost-floor clamp can raise a 0 back up — so
@@ -164,9 +182,11 @@ static StepOutcome classifyStep(const LaneConfig& cfg, const GrooveState& state,
 
     if (cfg.mutationRate > 0.0f && !isAnchor) {
         int64_t cycleIndex = (absStep >= 0) ? absStep / stepsInCycle : (absStep - stepsInCycle + 1) / stepsInCycle;
-        float mutRoll = deterministicRand(state.seed, cfg.id, cycleIndex * kMaxSteps + cycleStep, 8);
+        float mutRoll =
+            deterministicRand(laneEffectiveSeed(cfg, state.seed), cfg.id, cycleIndex * kMaxSteps + cycleStep, 8);
         if (mutRoll < cfg.mutationRate) {
-            float typeRoll = deterministicRand(state.seed, cfg.id, cycleIndex * kMaxSteps + cycleStep, 9);
+            float typeRoll =
+                deterministicRand(laneEffectiveSeed(cfg, state.seed), cfg.id, cycleIndex * kMaxSteps + cycleStep, 9);
             if (typeRoll < kMutationDropThreshold) {
                 if (isPatternStep)
                     isPatternStep = false;
@@ -184,23 +204,32 @@ static StepOutcome classifyStep(const LaneConfig& cfg, const GrooveState& state,
 
     if (!isAnchor) {
         if (!isPatternStep) {
+            // M034 S01: deterministic bar-gated fill. On a fill bar (absolute
+            // bar index a multiple of the lane's fillEveryNBars, or a manual
+            // fill pulse) an off-pattern step fires as an Add with no
+            // probabilistic dice — the bar gate itself is the deterministic
+            // decision, so activation/probability culling below is bypassed.
+            // fillEveryNBars=0 with no manual pulse leaves isFillBar false, so
+            // this branch is never taken and output is byte-identical.
+            if (isFillBar)
+                return StepOutcome::Add;
             if (mods.fill <= 0.0f)
                 return notEmitted();
             float fillProb = std::clamp(mods.fill, 0.0f, 1.0f);
-            float fillRoll = deterministicRand(state.seed, cfg.id, absStep, 4);
+            float fillRoll = deterministicRand(laneEffectiveSeed(cfg, state.seed), cfg.id, absStep, 4);
             if (fillRoll >= fillProb)
                 return notEmitted();
         }
 
         if (mods.activation < 0.0f) {
             float activationProb = std::clamp(1.0f + mods.activation, 0.0f, 1.0f);
-            float actRoll = deterministicRand(state.seed, cfg.id, absStep, 5);
+            float actRoll = deterministicRand(laneEffectiveSeed(cfg, state.seed), cfg.id, absStep, 5);
             if (actRoll >= activationProb)
                 return notEmitted();
         }
 
         float effectiveProb = std::clamp(cfg.probability + mods.probability, 0.0f, 1.0f);
-        float probRoll = deterministicRand(state.seed, cfg.id, absStep, 0);
+        float probRoll = deterministicRand(laneEffectiveSeed(cfg, state.seed), cfg.id, absStep, 0);
         if (probRoll >= effectiveProb)
             return notEmitted();
     }
@@ -215,7 +244,7 @@ static StepOutcome classifyStep(const LaneConfig& cfg, const GrooveState& state,
 static float computeStepVelocity(const LaneConfig& cfg, const GrooveState& state, int64_t absStep, int64_t cycleStep,
                                  const EnvelopeMods& mods, bool mutatedToGhost) {
     float velBase = cfg.baseVelocity / kMidiVelocityMax;
-    float velRand = deterministicRand(state.seed, cfg.id, absStep, 1);
+    float velRand = deterministicRand(laneEffectiveSeed(cfg, state.seed), cfg.id, absStep, 1);
     float spread = cfg.velocitySpread * (velRand * 2.0f - 1.0f);
     float vel = velBase + spread;
 
@@ -231,7 +260,7 @@ static float computeStepVelocity(const LaneConfig& cfg, const GrooveState& state
         // by the AccentBias envelope, occasionally adds a further nudge.
         float effectiveEmphasis = std::clamp(cfg.emphasisProb + mods.accent, 0.0f, 1.0f);
         if (effectiveEmphasis > 0.0f) {
-            float emphRoll = deterministicRand(state.seed, cfg.id, absStep, 2);
+            float emphRoll = deterministicRand(laneEffectiveSeed(cfg, state.seed), cfg.id, absStep, 2);
             if (emphRoll < effectiveEmphasis) {
                 vel += accentVal * kEmphasisVelocityBoost * (1.0f - vel);
             }
@@ -268,7 +297,7 @@ static double applyTimingShifts(const LaneConfig& cfg, const TransportContext& t
     float effectiveHumanize = cfg.humanizeMs + humanizeMod * kHumanizeEnvelopeScale;
     if (effectiveHumanize > 0.0f && tc.tempo > 0.0) {
         double jitterPpq = static_cast<double>(effectiveHumanize) * tc.tempo / kMsPerMinute;
-        float jitterRand = deterministicRand(state.seed, cfg.id, absStep, 3);
+        float jitterRand = deterministicRand(laneEffectiveSeed(cfg, state.seed), cfg.id, absStep, 3);
         ppq += jitterPpq * (jitterRand * 2.0f - 1.0f);
     }
 
@@ -445,10 +474,23 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
             int64_t cycleStep = computeDriftedCycleStep(cfg, ctx, absStep, ppq);
             EnvelopeMods mods = computeEnvelopeMods(cfg, state, ppq, tc.ppqPerBar());
 
+            // M034 S01: bar-gated fill activation. Derived from the absolute PPQ
+            // bar index (never accumulated) so it is deterministic and RT-safe.
+            // A manual-fill pulse forces every bar in this render to be a fill
+            // bar, independent of fillEveryNBars.
+            bool isFillBar = state.fillManualTrigger;
+            if (!isFillBar && cfg.fillEveryNBars > 0) {
+                double ppqPerBar = tc.ppqPerBar();
+                if (ppqPerBar > 0.0) {
+                    int64_t barIndex = static_cast<int64_t>(std::floor(ppq / ppqPerBar));
+                    isFillBar = (barIndex % cfg.fillEveryNBars) == 0;
+                }
+            }
+
             bool isPatternStep = ctx.pattern[static_cast<size_t>(cycleStep)];
             bool isAnchor = cfg.constraints.anchorSteps.steps[static_cast<size_t>(cycleStep)] > 0.0f;
-            StepOutcome outcome =
-                classifyStep(cfg, state, absStep, cycleStep, isPatternStep, isAnchor, mods, ctx.stepsInCycle);
+            StepOutcome outcome = classifyStep(cfg, state, absStep, cycleStep, isPatternStep, isAnchor, mods,
+                                               ctx.stepsInCycle, isFillBar);
 
             // Post-timing-shift onset for the audible note. A Drop never fires,
             // so it has no shifted onset — the display shows it at its grid ppq.

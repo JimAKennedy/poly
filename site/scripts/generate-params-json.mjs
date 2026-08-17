@@ -56,8 +56,8 @@ function validate(parsed) {
   if (!Array.isArray(parsed.expressionParams) || parsed.expressionParams.length !== 16) {
     fail(`expressionParams: expected 16 entries, got ${parsed.expressionParams?.length}`);
   }
-  if (!Array.isArray(parsed.coreParams) || parsed.coreParams.length !== 10) {
-    fail(`coreParams: expected 10 entries, got ${parsed.coreParams?.length}`);
+  if (!Array.isArray(parsed.coreParams) || parsed.coreParams.length !== 12) {
+    fail(`coreParams: expected 12 entries, got ${parsed.coreParams?.length}`);
   }
   const all = [...parsed.expressionParams, ...parsed.coreParams];
   for (const p of all) {

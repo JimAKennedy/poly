@@ -225,6 +225,9 @@ private:
     double exportTempo_ = 120.0;
     std::atomic<bool> exportReady_{false};
     bool exportTriggered_ = false;
+    // M034 S01: momentary manual-fill latch. Set on the kFillManualTrigger 0->1
+    // edge, consumed (and cleared) by the render path for one pass.
+    bool fillManualTriggered_ = false;
     bool wasPlaying_ = false;
     int captureLengthBars_ = MidiCaptureBuffer::kDefaultCaptureBars;
 

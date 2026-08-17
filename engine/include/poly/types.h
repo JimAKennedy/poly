@@ -228,6 +228,8 @@ struct LaneConfig {
     float syncopationOffset = 0.0f;             // 0.0-1.0; pushes even (strong-beat) steps late
     float tempoMultiplier = 1.0f;               // 0.25-4.0; per-lane tempo scaling (Nancarrow-style)
     int kotekanSourceLane = -1;                 // -1=independent, 0-7=complement of source lane's pattern
+    int fillEveryNBars = 0;                     // 0 = no bar-gated fill; N>0 = play off-pattern fill on bars whose
+                                                // absolute bar index is a multiple of N (deterministic, PPQ-derived)
     int cellCount = 0;                          // 0 = equal cells (standard Euclidean); >0 = additive/aksak
     std::array<int, kMaxSteps> cellSizes{};     // subdivision units per cell; sum = total cycle length
     bool timeline = false;                      // timeline mode: use fixedPattern, immune to macros
@@ -236,12 +238,31 @@ struct LaneConfig {
     // AND playback cycle wrap (see prepareLaneContext in engine.cpp; enforced M049 S02 / E2 fix).
     int fixedPatternLength = 0;
     std::array<float, kMaxSteps> microTimingMs{}; // per-step timing offset in ms; range [-20, +20]
+    // M034 S03: per-lane seed lock. laneSeed is the preserved RNG seed a locked
+    // lane derives from; seedLocked pins it so a global reroll (GrooveState::seed
+    // change) leaves this lane's output byte-identical while other lanes re-roll.
+    // The WebUI captures the current global seed into laneSeed when the user locks
+    // the lane. Defaults (seedLocked=false, laneSeed=0) make laneEffectiveSeed
+    // return the global seed unchanged, so pre-change output is byte-identical.
+    uint64_t laneSeed = 0;
+    bool seedLocked = false;
     bool active = true;
     std::array<EnvelopeAssign, kMaxEnvelopesPerLane> envelopes{};
     int envelopeCount = 0;
     ConstraintConfig constraints{};
 };
 // endregion:lane-config
+
+// Effective RNG seed for a lane. A locked lane (seedLocked=true) derives every
+// deterministicRand roll from its preserved laneSeed, so its output stays
+// byte-identical across a global reroll; an unlocked lane uses the global seed.
+// With the defaults (seedLocked=false) this returns globalSeed unchanged, so
+// output is byte-identical to the pre-lock RNG path (determinism tests stay
+// green). laneId is still XOR-mixed inside deterministicRand, so two locked
+// lanes sharing a laneSeed still diverge by lane index.
+inline uint64_t laneEffectiveSeed(const LaneConfig& cfg, uint64_t globalSeed) {
+    return cfg.seedLocked ? cfg.laneSeed : globalSeed;
+}
 
 // --- Additive cell helpers ---
 
@@ -312,6 +333,11 @@ struct GrooveState {
     MacroValues macros{};
     uint64_t seed = 0;
     int globalDensityCeiling = 0;
+    // Transient momentary control (NOT serialized): when true, the current
+    // render pass forces every bar to render as a fill bar for lanes,
+    // independent of each lane's fillEveryNBars. The plugin pulses this for a
+    // single render from a manual-fill trigger, then clears it.
+    bool fillManualTrigger = false;
 };
 // endregion:groove-state
 

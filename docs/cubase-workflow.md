@@ -168,6 +168,15 @@ Poly exposes selected parameters to Cubase's automation system:
 
 See [automation-mapping.md](automation-mapping.md) for which parameters are automatable.
 
+### Fill and Seed Lock (Per-Lane)
+
+Two per-lane parameters extend the automatable surface:
+
+- **Fill Every N** (bars) — when set above 0, the lane plays a denser fill pattern on every bar whose absolute bar index is a multiple of N. 0 disables the fill. The gate is derived from the host's absolute PPQ position, so it stays meter-aware in non-4/4 projects.
+- **Seed Lock** (off/on) — pins the lane to the current global seed at the moment the lock engages, so re-rolling the global seed leaves that lane's pattern unchanged. Automate or toggle it per lane to hold one lane steady while varying the rest.
+
+A global **Fill Trigger** parameter is also exposed: a momentary control whose 0→1 edge forces a single fill bar on the next render pass, independent of the per-lane Fill Every N gate.
+
 ## Preset Management
 
 ### Save Presets

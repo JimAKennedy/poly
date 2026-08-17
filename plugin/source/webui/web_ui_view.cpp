@@ -447,6 +447,19 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
         return;
     }
 
+    if (name == "manualFill") {
+        // M034 S01: pulse the global momentary manual-fill trigger. The processor
+        // latches on the 0->1 edge (like kExportTrigger) and consumes it once at
+        // the render site, forcing exactly one fill render pass independent of any
+        // lane's fillEveryNBars. A momentary has no resting UI value, so we drive a
+        // single begin/perform(1.0)/end gesture; the processor self-resets the latch.
+        controller_->beginEdit(ParamIDs::kFillManualTrigger);
+        controller_->setParamNormalized(ParamIDs::kFillManualTrigger, 1.0);
+        controller_->performEdit(ParamIDs::kFillManualTrigger, 1.0);
+        controller_->endEdit(ParamIDs::kFillManualTrigger);
+        return;
+    }
+
     if (name == "applyPreset") {
         int index = payload["index"].get<int32_t>();
 
