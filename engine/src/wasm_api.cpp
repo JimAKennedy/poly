@@ -9,7 +9,9 @@
 #include "poly/constraint.h"
 #include "poly/engine.h"
 #include "poly/euclidean.h"
+#include "poly/fitter.h"
 #include "poly/macro.h"
+#include "poly/midi_reader.h"
 #include "poly/presets.h"
 #include "poly/sanitize.h"
 #include "poly/scene.h"
@@ -36,6 +38,13 @@ struct Context {
     poly::EmissionEventBuffer emissionBuffer{};
     std::array<double, poly::kMaxEventsPerBlock * kFieldsPerEvent> flatEvents{};
     std::array<double, poly::kMaxEmissionsPerBlock * kFieldsPerEmission> flatEmissions{};
+    // M035 S03 T01: per-lane pre-import snapshots backing poly_revert_import.
+    // poly_import_midi captures the target lane here (on the selected scene)
+    // immediately before overwriting it, but only retains the snapshot when the
+    // import succeeds — a rejected drop leaves no stale snapshot to revert into.
+    // Keyed by lane index so the export stays {lane}-only.
+    std::array<poly::LaneSnapshot, poly::kMaxLanes> importSnapshots{};
+
     // Scratch buffer used by readState() to hand out an interpolated GrooveState
     // view under SceneSelect::Morph. Owning it on the Context keeps returned
     // pointers (e.g. poly_lane_micro_timing_ptr) valid for the JS caller's
@@ -554,6 +563,40 @@ float poly_lane_envelope_depth(PolyContext ctx, int lane, int index) {
     if (lane < 0 || lane >= poly::kMaxLanes || index < 0 || index >= poly::kMaxEnvelopesPerLane)
         return 0.0f;
     return c->readState().lanes[static_cast<size_t>(lane)].envelopes[static_cast<size_t>(index)].envelope.depth;
+}
+
+int poly_import_midi(PolyContext ctx, int lane, const uint8_t* data, int size) {
+    auto* c = static_cast<Context*>(ctx);
+    if (lane < 0 || lane >= poly::kMaxLanes || !data || size <= 0)
+        return 0;
+    auto& cfg = c->state().lanes[static_cast<size_t>(lane)];
+    // Snapshot the pre-import lane so a revert can atomically restore it. Taken
+    // before importMidiToLane mutates cfg; only retained on success so a
+    // rejected drop leaves no stale snapshot (S03 must-have 6, Decision D039).
+    const poly::LaneSnapshot before = poly::captureLaneSnapshot(cfg);
+    const bool ok = poly::importMidiToLane(data, static_cast<size_t>(size), cfg);
+    if (ok) {
+        c->importSnapshots[static_cast<size_t>(lane)] = before;
+        poly::sanitizeGrooveState(c->state());
+    }
+    return ok ? 1 : 0;
+}
+
+// M035 S03 T01: revert the most recent successful import on `lane`, restoring
+// the LaneConfig captured by poly_import_midi. Returns 1 when a snapshot was
+// restored, 0 when the lane index is out of range or there is nothing to revert
+// (no prior import, or already reverted) — a safe no-op mirroring the S02
+// unknown-message-drop contract. The symmetric partner of poly_import_midi that
+// the web preview's revertImport action routes to; payload is {lane} only.
+int poly_revert_import(PolyContext ctx, int lane) {
+    auto* c = static_cast<Context*>(ctx);
+    if (lane < 0 || lane >= poly::kMaxLanes)
+        return 0;
+    auto& cfg = c->state().lanes[static_cast<size_t>(lane)];
+    const bool reverted = poly::revertLaneFromSnapshot(cfg, c->importSnapshots[static_cast<size_t>(lane)]);
+    if (reverted)
+        poly::sanitizeGrooveState(c->state());
+    return reverted ? 1 : 0;
 }
 
 void poly_action_set_euclid(PolyContext ctx, int lane, int steps, int hits, int rotation) {

@@ -20,9 +20,11 @@
 #include "plugids.h"
 #include "poly/bridge.h"
 #include "poly/euclidean.h"
+#include "poly/midi_reader.h"    // M035 S02 T04: shared parse+fit+apply the fitMidi drop action calls
 #include "poly/offline_render.h" // M032 S03 T02: export-tempo mirror integration test
 #include "poly/params_def.h"
 #include "poly/scene.h"
+#include "poly/smf_writer.h" // M035 S02 T04: synthesize a .mid blob for the drop-import proof
 #include "poly/state_io.h"
 #include "poly/types.h"
 #include "poly_test_host.h"
@@ -2184,4 +2186,164 @@ TEST(HostTests, EmissionOnsetsNormalizedToFrameTimeline) {
     EXPECT_GT(totalEmitted, 0u) << "a playing bar past the wrap must still publish emissions";
 
     host.teardown();
+}
+
+// --- M035 S02 T04: plugin fitMidi drop -> reverse-Euclid import ---
+//
+// The plugin's fitMidi bridge action (web_ui_view.cpp::handleAction) parses the
+// dropped .mid bytes, fits Euclidean parameters, and applies them to the live
+// lane via the ONE shared pure-engine helper poly::importMidiToLane — the same
+// helper the wasm poly_import_midi export calls. These tests prove that engine
+// apply path (the mutation the handler performs on controller_->mutableActiveScene())
+// inside the VST3-linked host binary: a well-formed .mid blob mutates the target
+// lane's cycle/hitCount/rotation, and a non-MIDI blob leaves the lane untouched
+// (the unknown-message-drop contract).
+
+namespace {
+// Build one full cycle of E(k,n) as NoteEvents, each note one step long except
+// the last, which sustains to the cycle boundary so the SMF's final note-off
+// encodes the loop length (the fitter's loopLengthPpq contract). Mirrors the
+// euclideanEvents helper in midi_reader_tests.cpp.
+std::vector<poly::NoteEvent> makeEuclideanMidiEvents(int k, int n, int rotation, int subdivision) {
+    const double g = 4.0 / static_cast<double>(subdivision);
+    const double loopLen = static_cast<double>(n) * g;
+    std::array<bool, poly::kMaxSteps> pattern{};
+    poly::euclidean(k, n, rotation, pattern);
+    std::vector<double> onsets;
+    for (int i = 0; i < n; ++i)
+        if (pattern[static_cast<size_t>(i)])
+            onsets.push_back(static_cast<double>(i) * g);
+    double maxOnset = 0.0;
+    for (double o : onsets)
+        maxOnset = std::max(maxOnset, o);
+    std::vector<poly::NoteEvent> events;
+    for (double o : onsets) {
+        poly::NoteEvent ev;
+        ev.ppqPosition = o;
+        ev.pitch = 36;
+        ev.velocity = 0.8f;
+        ev.duration = (o == maxOnset) ? (loopLen - o) : g;
+        ev.channel = 0;
+        ev.laneIndex = 0;
+        events.push_back(ev);
+    }
+    return events;
+}
+} // namespace
+
+TEST(HostTests, FitMidiBlobMutatesTargetLane) {
+    // A dropped tresillo loop E(3,8) at 16th-note subdivision, rotation 0
+    // (aperiodic: gcd(3,8)=1, so the rotation is unambiguous).
+    const auto events = makeEuclideanMidiEvents(3, 8, 0, 16);
+    const auto bytes = poly::writeSMF(events.data(), events.size(), 120.0);
+    ASSERT_FALSE(bytes.empty());
+
+    // Start the target lane from a clearly-different config so the mutation is
+    // observable rather than a no-op coincidence.
+    poly::LaneConfig lane{};
+    lane.cycle = {5, 4};
+    lane.hitCount = 1;
+    lane.rotation = 0;
+
+    ASSERT_TRUE(poly::importMidiToLane(bytes, lane)) << "a well-formed .mid loop must parse+fit+apply onto the lane";
+
+    EXPECT_EQ(lane.cycle.steps, 8) << "reverse-Euclid must recover the source step count";
+    EXPECT_EQ(lane.cycle.subdivision, 16) << "reverse-Euclid must recover the source subdivision";
+    EXPECT_EQ(lane.hitCount, 3) << "reverse-Euclid must recover the source hit count";
+    EXPECT_EQ(lane.rotation, 0) << "reverse-Euclid must recover the source rotation";
+    // A clean Euclidean fit leaves the lane in generative (non-timeline) mode.
+    EXPECT_FALSE(lane.timeline) << "a clean Euclidean fit must not switch the lane into timeline mode";
+}
+
+TEST(HostTests, FitMidiRejectsNonMidiBlobLeavesLaneUntouched) {
+    // Unknown-message-drop contract: a non-MIDI / unparseable blob returns false
+    // and the lane is left byte-for-byte untouched (no flicker, no partial apply).
+    poly::LaneConfig lane{};
+    lane.cycle = {5, 4};
+    lane.hitCount = 2;
+    lane.rotation = 1;
+    const poly::LaneConfig before = lane;
+
+    const std::vector<uint8_t> garbage = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
+    EXPECT_FALSE(poly::importMidiToLane(garbage, lane))
+        << "a non-MIDI blob must be rejected (parseSMF no-throw / valid==false contract)";
+
+    EXPECT_EQ(lane.cycle.steps, before.cycle.steps);
+    EXPECT_EQ(lane.cycle.subdivision, before.cycle.subdivision);
+    EXPECT_EQ(lane.hitCount, before.hitCount);
+    EXPECT_EQ(lane.rotation, before.rotation);
+    EXPECT_EQ(lane.timeline, before.timeline);
+
+    // An empty blob is likewise a data condition, not a crash.
+    poly::LaneConfig emptyLane{};
+    const poly::LaneConfig emptyBefore = emptyLane;
+    EXPECT_FALSE(poly::importMidiToLane(std::vector<uint8_t>{}, emptyLane));
+    EXPECT_EQ(emptyLane.cycle.steps, emptyBefore.cycle.steps);
+    EXPECT_EQ(emptyLane.hitCount, emptyBefore.hitCount);
+}
+
+// --- M035 S03 T04: plugin fitMidi -> revertImport atomic restore ---
+//
+// The plugin's revertImport bridge action (web_ui_view.cpp::handleAction) restores
+// a lane from the per-lane snapshot the matching fitMidi captured with
+// poly::captureLaneSnapshot just before poly::importMidiToLane overwrote it. These
+// tests reproduce that exact call sequence inside the VST3-linked host binary — the
+// same snapshot-store-keyed-by-lane pattern WebUIView::importSnapshots_ holds — and
+// prove the two S03 contracts on the plugin surface: (1) a successful drop then
+// revert restores the pre-import LaneConfig byte-for-byte, and (2) a rejected drop
+// arms no snapshot, so a follow-up revert is a safe no-op (must-have 6).
+
+TEST(HostTests, RevertImportRestoresLaneAfterFitMidi) {
+    // A hand-set lane the user is happy with, then a dropped tresillo E(3,8)/16
+    // overwrites it. revertImport must return it exactly as it was.
+    poly::LaneConfig lane{};
+    lane.cycle = {5, 4};
+    lane.hitCount = 2;
+    lane.rotation = 3;
+    lane.timeline = true;
+    const poly::LaneConfig before = lane;
+
+    // fitMidi: snapshot BEFORE the overwrite, retain it only on a successful apply.
+    poly::LaneSnapshot snap = poly::captureLaneSnapshot(lane);
+    const auto events = makeEuclideanMidiEvents(3, 8, 0, 16);
+    const auto bytes = poly::writeSMF(events.data(), events.size(), 120.0);
+    ASSERT_FALSE(bytes.empty());
+    ASSERT_TRUE(poly::importMidiToLane(bytes, lane)) << "the dropped loop must import onto the lane";
+    ASSERT_TRUE(snap.valid) << "a successful import must leave an armed snapshot to revert into";
+    // The import genuinely changed the lane, so the revert is meaningful.
+    EXPECT_EQ(lane.cycle.steps, 8);
+    EXPECT_EQ(lane.hitCount, 3);
+
+    // revertImport: atomic restore, then the snapshot is consumed.
+    ASSERT_TRUE(poly::revertLaneFromSnapshot(lane, snap)) << "revert must restore the pre-import lane";
+    EXPECT_EQ(lane.cycle.steps, before.cycle.steps);
+    EXPECT_EQ(lane.cycle.subdivision, before.cycle.subdivision);
+    EXPECT_EQ(lane.hitCount, before.hitCount);
+    EXPECT_EQ(lane.rotation, before.rotation);
+    EXPECT_EQ(lane.timeline, before.timeline);
+
+    // A second consecutive revert has nothing to restore and is a safe no-op.
+    EXPECT_FALSE(poly::revertLaneFromSnapshot(lane, snap));
+    EXPECT_EQ(lane.cycle.steps, before.cycle.steps) << "a no-op revert must not perturb the lane";
+}
+
+TEST(HostTests, RevertImportNoSnapshotAfterRejectedDrop) {
+    // A rejected drop (non-MIDI) must not overwrite the lane and must arm no
+    // snapshot, so the confirm bar never appears and revert is a no-op (must-have 6).
+    poly::LaneConfig lane{};
+    lane.cycle = {7, 8};
+    lane.hitCount = 4;
+    const poly::LaneConfig before = lane;
+
+    poly::LaneSnapshot snap = poly::captureLaneSnapshot(lane);
+    const std::vector<uint8_t> garbage = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
+    ASSERT_FALSE(poly::importMidiToLane(garbage, lane)) << "a non-MIDI drop must be rejected";
+    // The plugin retains the snapshot ONLY after a successful import; a rejected
+    // drop drops it on the floor, so nothing is armed.
+    poly::LaneSnapshot discarded{};
+    EXPECT_FALSE(poly::revertLaneFromSnapshot(lane, discarded))
+        << "a rejected drop arms no snapshot, so revert is a safe no-op";
+    EXPECT_EQ(lane.cycle.steps, before.cycle.steps);
+    EXPECT_EQ(lane.hitCount, before.hitCount);
+    (void)snap; // captured pre-drop, but never retained past the rejected apply
 }

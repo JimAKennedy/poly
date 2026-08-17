@@ -24,9 +24,11 @@
 #include "platform_drag_source.h"
 #include "platform_save_dialog.h"
 #include "poly/euclidean.h"
+#include "poly/midi_reader.h" // M035 S02 T04: shared parse+fit+apply for the fitMidi drop action
 #include "poly/offline_render.h"
 #include "poly/params_def.h"
 #include "poly/presets.h"
+#include "poly/sanitize.h"     // M035 S02 T04: sanitize the scene after a fitMidi import
 #include "poly_webui_assets.h" // generated: jk_embed_assets(webui/*)
 
 #ifdef __APPLE__
@@ -297,6 +299,72 @@ void WebUIView::handleAction(const std::string& name, const choc::value::ValueVi
         controller_->endEdit(stepsId);
         controller_->endEdit(hitsId);
         controller_->endEdit(rotId);
+        return;
+    }
+
+    if (name == "fitMidi") {
+        // M035 S02 T04: drop a .mid onto a lane -> reverse-Euclid import. The
+        // bytes arrive as a JSON number[] (0-255) so the blob survives the
+        // plugin bridge's JSON.stringify (payloadFitMidi in bridge.schema.json).
+        // Parse+fit+apply runs through the ONE shared pure-engine helper
+        // (poly::importMidiToLane, T02) that the wasm poly_import_midi export
+        // also calls, so all three surfaces agree on exactly what a drop does.
+        int lane = payload["lane"].get<int32_t>();
+        if (lane < 0 || lane >= kMaxLanes)
+            return;
+        if (!payload.hasObjectMember("bytes") || !payload["bytes"].isArray())
+            return;
+        const auto& bytesVal = payload["bytes"];
+        std::vector<uint8_t> bytes;
+        bytes.reserve(bytesVal.size());
+        for (uint32_t i = 0; i < bytesVal.size(); ++i)
+            bytes.push_back(static_cast<uint8_t>(bytesVal[i].get<int32_t>() & 0xFF));
+
+        auto& cfg = scene.lanes[lane];
+        // Snapshot the pre-import lane so a revertImport can atomically restore it.
+        // Taken before importMidiToLane mutates cfg; only retained on success so a
+        // rejected drop leaves no stale snapshot to revert into (S03 must-have 6,
+        // Decision D039). Symmetric with the wasm poly_import_midi path.
+        const poly::LaneSnapshot before = poly::captureLaneSnapshot(cfg);
+        // No-throw contract (D037): a non-MIDI / unparseable / degenerate-fit drop
+        // returns false and leaves the lane untouched (unknown-message-drop
+        // contract) — bail before driving any controller edit so the UI does not
+        // flicker on a rejected drop.
+        if (!poly::importMidiToLane(bytes, cfg))
+            return;
+        importSnapshots_[static_cast<size_t>(lane)] = before;
+        // Mirror the wasm path (poly_import_midi), which sanitizes after apply so
+        // the driven params land inside their declared ranges.
+        poly::sanitizeGrooveState(scene);
+
+        // Drive the mutated lane's core params + timeline/micro-timing sends so
+        // the audio thread and the UI both see the imported rhythm. importMidiToLane
+        // can rewrite steps/subdivision/hits/rotation and (on a residual capture)
+        // switch the lane into timeline mode with a fixedPattern + micro-timing.
+        driveLaneImportSends(lane);
+        return;
+    }
+
+    if (name == "revertImport") {
+        // M035 S03 T03: atomic revert of the most recent successful import on
+        // `lane`, restoring the LaneConfig captured by the fitMidi case. Payload
+        // is {lane}-only (D039) — no LaneConfig crosses the bridge; the plugin
+        // holds the snapshot engine-side. An out-of-range lane or an empty
+        // snapshot (no prior import, or already reverted) is a safe no-op mirroring
+        // the S02 unknown-message-drop contract: revertLaneFromSnapshot returns
+        // false, we skip the controller sends, and nothing changes. Symmetric with
+        // the wasm poly_revert_import export.
+        int lane = payload["lane"].get<int32_t>();
+        if (lane < 0 || lane >= kMaxLanes)
+            return;
+        auto& cfg = scene.lanes[lane];
+        if (!poly::revertLaneFromSnapshot(cfg, importSnapshots_[static_cast<size_t>(lane)]))
+            return;
+        // Re-sanitize (mirror poly_revert_import) so the restored params land in
+        // range, then drive the same core params + sends fitMidi drove so the
+        // audio thread and UI both see the restored rhythm.
+        poly::sanitizeGrooveState(scene);
+        driveLaneImportSends(lane);
         return;
     }
 
@@ -986,6 +1054,34 @@ void WebUIView::pushFrame() {
     js += "]}}";
 
     webview_->evaluateJavascript("window.polyHostPush(" + js + ")");
+}
+
+void WebUIView::driveLaneImportSends(int lane) {
+    // Shared by fitMidi (apply) and revertImport (restore): drive the lane's core
+    // params + timeline/micro-timing sends so the audio thread and UI reconcile
+    // exactly the fields importMidiToLane / the snapshot restore can rewrite —
+    // steps/subdivision/hits/rotation, timeline mode, and the fixedPattern length,
+    // plus the timeline-pattern and micro-timing message channels.
+    auto& scene = controller_->mutableActiveScene();
+    const auto& cfg = scene.lanes[lane];
+    auto pushParam = [this](Steinberg::Vst::ParamID id, double value) {
+        controller_->beginEdit(id);
+        controller_->setParamNormalized(id, value);
+        controller_->performEdit(id, value);
+        controller_->endEdit(id);
+    };
+    auto core = [&](int offset, double engine) {
+        pushParam(ParamIDs::laneCoreParam(lane, offset),
+                  params::engineToNormCore(static_cast<uint32_t>(offset), engine));
+    };
+    core(ParamIDs::kCoreSteps, cfg.cycle.steps);
+    core(ParamIDs::kCoreSubdivision, cfg.cycle.subdivision);
+    core(ParamIDs::kCoreHits, cfg.hitCount);
+    core(ParamIDs::kCoreRotation, cfg.rotation);
+    core(ParamIDs::kCoreTimeline, cfg.timeline ? 1.0 : 0.0);
+    core(ParamIDs::kCoreFixedPatternLen, cfg.fixedPatternLength);
+    controller_->sendTimelinePattern(lane);
+    controller_->sendMicroTiming(lane);
 }
 
 void WebUIView::sendCaptureCommand(const char* messageId) {

@@ -22,6 +22,14 @@
   let expanded = -1;
   let strips = [], rings = [], hands = [], ladders = [], vus = [], playeds = [];
   const tabState = {};
+  // M035 S03 T02: import confirm bar. When a .mid drop actually populates a lane
+  // (the resulting state changes that lane), we surface a transient per-lane
+  // Accept/Revert bar. `pendingImport` records the drop's pre-import lane
+  // signature so the next state push can tell a real import from a rejected drop
+  // (must-have 6); `importConfirmLane` is the lane whose bar is currently shown.
+  let importConfirmLane = -1;
+  let pendingImport = null;
+  let pendingImportTimer = null;
   // M045 S01 T03: per-lane, per-step overlay class diff cache. Populated by
   // updateEmissionOverlay each frame; reset in buildDesk when the ladder DOM
   // is torn down and rebuilt. Declared here so buildDesk can reset it during
@@ -915,6 +923,59 @@
     parent.appendChild(e);
     return e;
   }
+  // M035 S03 T02: transient per-lane import confirm bar. Appended into a strip
+  // by buildDesk when importConfirmLane matches. Accept keeps the fitted lane and
+  // just dismisses the bar; Revert fires the revertImport {lane} bridge action,
+  // whose state push restores the pre-import lane and (via the importConfirmLane
+  // reset) rebuilds the desk without the bar. Styles are inline so the bar needs
+  // no ui.css / copy-webui round-trip.
+  function renderImportConfirm(strip, li) {
+    const bar = document.createElement('div');
+    bar.className = 'import-confirm';
+    bar.dataset.lane = li;
+    bar.setAttribute('role', 'status');
+    bar.style.cssText =
+      'display:flex;align-items:center;gap:8px;width:100%;margin-top:6px;' +
+      'padding:5px 8px;box-sizing:border-box;border:1px solid var(--c);' +
+      'border-radius:6px;background:rgba(0,0,0,0.28);';
+    const label = document.createElement('span');
+    label.textContent = 'Imported';
+    label.style.cssText =
+      'flex:1;text-transform:uppercase;letter-spacing:.12em;font-size:9px;color:#B7AE9D;';
+    const revert = document.createElement('button');
+    revert.type = 'button';
+    revert.className = 'import-revert';
+    revert.textContent = 'Revert';
+    revert.title = 'Restore the lane to its pre-import pattern';
+    const accept = document.createElement('button');
+    accept.type = 'button';
+    accept.className = 'import-accept';
+    accept.textContent = 'Accept';
+    accept.title = 'Keep the imported pattern';
+    for (const b of [revert, accept]) {
+      b.style.cssText =
+        'border:1px solid var(--line);background:transparent;border-radius:5px;' +
+        'padding:2px 8px;font-size:10px;color:var(--text);cursor:pointer;line-height:1.4;';
+    }
+    accept.style.borderColor = 'var(--c)';
+    revert.addEventListener('click', () => {
+      // Reset the flag first so the synchronous state push from revertImport
+      // rebuilds the desk without re-adding the bar.
+      importConfirmLane = -1;
+      host.action('revertImport', { lane: li });
+    });
+    accept.addEventListener('click', () => dismissImportConfirm());
+    bar.appendChild(label);
+    bar.appendChild(revert);
+    bar.appendChild(accept);
+    strip.appendChild(bar);
+  }
+  function dismissImportConfirm() {
+    // Accept keeps the imported lane, so there is no state push — remove the bar
+    // DOM directly and clear the flag so future desk rebuilds omit it.
+    importConfirmLane = -1;
+    document.querySelectorAll('.import-confirm').forEach((b) => b.remove());
+  }
   // G02: inline lane rename. Mirrors the native double-click-name gesture
   // (lane_edit_view.cpp beginNameEdit/commitNameEdit): prefill with the current
   // name, cap at 15 chars, commit non-empty on Enter/blur, discard on Escape.
@@ -1015,6 +1076,58 @@
         host.edit(`lane.${li}.active`, active ? 0 : 1, 'perform');
         host.edit(`lane.${li}.active`, active ? 0 : 1, 'end');
       });
+      // M035 S02 T03: drop a .mid onto a lane strip -> reverse-Euclid import.
+      // The strip reads the dropped file bytes and fires the fitMidi bridge
+      // action ({lane, bytes}); the host (mock JS fit / wasm poly_import_midi /
+      // native fitMidi) parses+fits+applies. bytes is a plain number[] so it
+      // JSON-serializes across the plugin bridge. A non-file / unreadable /
+      // non-MIDI drop is logged and ignored — never crashes the UI
+      // (unknown-message-drop contract, bridge-schema.md).
+      s.addEventListener('dragover', (e) => {
+        // Only claim drops that carry files, so an internal lane/step drag is
+        // never swallowed. preventDefault marks the strip a valid drop target.
+        if (e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files')) {
+          e.preventDefault();
+          s.classList.add('drop-hot');
+        }
+      });
+      s.addEventListener('dragleave', (e) => {
+        // Ignore dragleave bubbling up from descendants still inside the strip.
+        if (e.target === s) s.classList.remove('drop-hot');
+      });
+      s.addEventListener('drop', (e) => {
+        const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+        if (!file) return; // not a file drop — leave it for other handlers
+        e.preventDefault();
+        s.classList.remove('drop-hot');
+        const done = (buf) => {
+          try {
+            const bytes = Array.from(new Uint8Array(buf));
+            // Arm import detection: snapshot the lane's pre-import signature so the
+            // next state push can confirm the drop actually populated the lane
+            // (and so a rejected/degenerate drop shows no confirm bar). The timer
+            // clears the marker if no state ever arrives (rejected drop paths
+            // return early without a push).
+            const pre = host.getState && host.getState();
+            const preSig = pre && pre.lanes && pre.lanes[li] ? JSON.stringify(pre.lanes[li]) : null;
+            pendingImport = { lane: li, preSig };
+            if (pendingImportTimer) clearTimeout(pendingImportTimer);
+            pendingImportTimer = setTimeout(() => { pendingImport = null; pendingImportTimer = null; }, 1500);
+            host.action('fitMidi', { lane: li, bytes });
+          } catch (err) {
+            console.warn('[ui] MIDI drop: could not import dropped file', err);
+          }
+        };
+        if (typeof file.arrayBuffer === 'function') {
+          file.arrayBuffer().then(done).catch((err) =>
+            console.warn('[ui] MIDI drop: could not read dropped file', err));
+        } else {
+          const fr = new FileReader();
+          fr.onload = () => done(fr.result);
+          fr.onerror = () => console.warn('[ui] MIDI drop: could not read dropped file');
+          fr.readAsArrayBuffer(file);
+        }
+      });
       // M032 S02 (T03): per-lane export/drag. A click saves just this lane
       // (exportSaveAs {lane}); a drag hands just this lane's .mid to the DAW
       // (beginMidiDrag {lane}). Both carry {lane: li} so the native handler
@@ -1045,6 +1158,7 @@
         s.querySelectorAll('.pane').forEach((p) => p.classList.toggle('on', p.dataset.pane === saved));
       }
       refreshStrip(li);
+      if (importConfirmLane === li) renderImportConfirm(s, li);
     });
     const m = document.createElement('div');
     m.id = 'master';
@@ -1768,6 +1882,18 @@
     if (!first && sig === _prevStateStr) return;
     _prevStateStr = sig;
     if (first) { boot(state); return; }
+    // M035 S03 T02: a drop is pending — if this push actually changed the target
+    // lane, the import took effect, so raise its confirm bar. An unchanged lane
+    // (rejected/degenerate drop that still pushed) raises nothing (must-have 6).
+    if (pendingImport) {
+      const li = pendingImport.lane;
+      const newLane = state.lanes && state.lanes[li];
+      if (newLane && JSON.stringify(newLane) !== pendingImport.preSig) {
+        importConfirmLane = li;
+        pendingImport = null;
+        if (pendingImportTimer) { clearTimeout(pendingImportTimer); pendingImportTimer = null; }
+      }
+    }
     recordSeed(state.seed);
     refreshAll();
   });

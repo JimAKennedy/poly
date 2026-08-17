@@ -49,6 +49,8 @@ param IDs.
 | `setAccent` | `payloadSetAccent` | `lane`, `step`, `value` |  |
 | `setCaptureBars` | `payloadSetCaptureBars` | `bars` | G07: capture-window length in bars. Drives the global kCaptureLength param (1-32), mapped native-side to norm=(bars-1)/31. |
 | `beginMidiDrag` | `payloadEmpty` | — | Empty payload for: togglePlay, exportRequest, chainAddEntry, resetNoteMap, beginMidiDrag |
+| `fitMidi` | `payloadFitMidi` | `lane`, `bytes` | M035 S02: drop a .mid onto a lane -> reverse-Euclid import. `bytes` is the raw file content as an array of 0-255 byte values (JSON-serializable so it crosses the plugin bridge; the wasm/native host copies it into the engine's parse+fit+apply path). A non-MIDI / unparseable / degenerate-fit drop leaves the lane untouched (unknown-message-drop contract). |
+| `revertImport` | `payloadRevertImport` | `lane` | M035 S03: back out of a fitMidi import on a lane. The host restores the lane to its exact pre-import parameters from an engine-side snapshot armed by the matching fitMidi (mock JS deep-copy / wasm poly_revert_import / native scene snapshot). Payload is `{lane}` only — no LaneConfig crosses the bridge. A revert with no armed snapshot (rejected drop, or a second consecutive revert) logs a warning and no-ops. |
 <!-- END GENERATED: actions -->
 
 ## C++ → JS
@@ -67,7 +69,7 @@ param IDs.
 |---|---|---|---|
 | `msgReady` | JS → C++ | `type`: `"ready"`<br>`v`: integer | `type`, `v` |
 | `msgEdit` | JS → C++ | `type`: `"edit"`<br>`v`: integer<br>`paramId`: string<br>`value`: number<br>`gesture`: `begin`\|`perform`\|`end` | `type`, `v`, `paramId`, `value`, `gesture` |
-| `msgAction` | JS → C++ | `type`: `"action"`<br>`v`: integer<br>`name`: `toggleStep`\|`setEuclid`\|`setCells`\|`setLaneName`\|`setFixedStep`\|`setMicroTiming`\|`setEnvelope`\|`selectScene`\|`applyPreset`\|`togglePlay`\|`exportRequest`\|`chainAddEntry`\|`chainRemoveEntry`\|`resetNoteMap`\|`setNoteMap`\|`setAccent`\|`setCaptureBars`\|`beginMidiDrag`<br>`payload`: object | `type`, `v`, `name`, `payload` |
+| `msgAction` | JS → C++ | `type`: `"action"`<br>`v`: integer<br>`name`: `toggleStep`\|`setEuclid`\|`setCells`\|`setLaneName`\|`setFixedStep`\|`setMicroTiming`\|`setEnvelope`\|`selectScene`\|`applyPreset`\|`togglePlay`\|`exportRequest`\|`chainAddEntry`\|`chainRemoveEntry`\|`resetNoteMap`\|`setNoteMap`\|`setAccent`\|`setCaptureBars`\|`beginMidiDrag`\|`fitMidi`\|`revertImport`<br>`payload`: object | `type`, `v`, `name`, `payload` |
 | `msgState` | C++ → JS | `type`: `"state"`<br>`state`: `state` | `type`, `state` |
 | `msgFrame` | C++ → JS | `type`: `"frame"`<br>`frame`: `frame` | `type`, `frame` |
 <!-- END GENERATED: messages -->

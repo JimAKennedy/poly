@@ -217,6 +217,8 @@ if(EMSCRIPTEN)
         "_poly_lane_envelope_target"
         "_poly_lane_envelope_period"
         "_poly_lane_envelope_depth"
+        "_poly_import_midi"
+        "_poly_revert_import"
         "_poly_action_set_euclid"
         "_poly_action_toggle_step"
         "_poly_action_apply_preset"

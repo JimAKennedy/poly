@@ -130,6 +130,10 @@
     #desk { grid-template-columns: repeat(5, minmax(140px, 1fr)) 148px; }
   }
   .strip { background: linear-gradient(var(--surface), #191512); border: 1px solid #2B251E; border-radius: 8px; padding: 12px 10px; display: flex; flex-direction: column; align-items: center; gap: 9px; min-height: 0; min-width: 0; overflow: hidden; }
+  /* M035 S02 T03: a .mid dragged over a lane strip marks it a hot drop target
+     (reverse-Euclid import). The lane hue (--c) glows so the user sees which
+     lane the drop will populate. Cleared on drop / dragleave. */
+  .strip.drop-hot { border-color: var(--c); box-shadow: 0 0 0 1px var(--c), 0 0 12px -2px var(--c); }
   /* Reserve a fixed head height so a role/name that wraps to a second line
      never pushes the ring + ladder + feel down — every strip's ring starts at
      the same Y regardless of title length. Sized for the worst case (one name

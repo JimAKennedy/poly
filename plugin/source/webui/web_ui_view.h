@@ -6,6 +6,7 @@
 // bridges it to the controller per webui/bridge-schema.md. Compiled on the
 // choc-webview platforms (Apple/Windows); Linux keeps the VSTGUI editor.
 
+#include <array>
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -16,6 +17,8 @@
 #include "public.sdk/source/common/pluginview.h"
 
 #include "choc/gui/choc_MessageLoop.h"
+#include "poly/midi_reader.h" // M035 S03 T03: LaneSnapshot for the revertImport store
+#include "poly/types.h"       // M035 S03 T03: kMaxLanes for the per-lane snapshot array
 
 namespace choc::ui {
 class WebView;
@@ -49,6 +52,11 @@ private:
     void stopFrameTimer();
     void resizeWebviewToRect(const Steinberg::ViewRect& r);
     void sendCaptureCommand(const char* messageId);
+    // M035 S03 T03: drive the mutated lane's core params + timeline/micro-timing
+    // sends so the audio thread and UI both see an imported/reverted rhythm.
+    // Shared by the fitMidi (apply) and revertImport (restore) handleAction cases
+    // so both surfaces reconcile exactly the fields importMidiToLane can rewrite.
+    void driveLaneImportSends(int lane);
     // M053 S11: offline MIDI export helpers. renderCurrentPatternSmf renders the
     // controller's live cachedState to an SMF blob with no DAW transport; the two
     // sinks feed those bytes to the Save-As panel / native drag source.
@@ -81,6 +89,14 @@ private:
     // while a panel is already open (openMidiExportDialog clears it in the
     // completion callback).
     bool saveDialogOpen_ = false;
+
+    // M035 S03 T03: per-lane pre-import snapshots backing the revertImport bridge
+    // action (D039). fitMidi captures the target lane here immediately before the
+    // import overwrites it and retains the snapshot only on success — a rejected
+    // drop leaves no stale snapshot to revert into (S03 must-have 6). Keyed by
+    // lane index so the bridge payload stays {lane}-only; no LaneConfig ever
+    // crosses the JS boundary. Symmetric with the wasm Context's importSnapshots.
+    std::array<poly::LaneSnapshot, kMaxLanes> importSnapshots_{};
 };
 
 } // namespace poly
