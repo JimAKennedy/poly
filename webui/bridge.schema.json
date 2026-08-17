@@ -170,7 +170,7 @@
           "toggleStep", "setEuclid", "setCells", "setLaneName", "setFixedStep", "setMicroTiming",
           "setEnvelope", "selectScene", "applyPreset", "togglePlay", "exportRequest",
           "chainAddEntry", "chainRemoveEntry", "resetNoteMap", "setNoteMap", "setAccent",
-          "setCaptureBars", "beginMidiDrag"
+          "setCaptureBars", "beginMidiDrag", "fitMidi", "revertImport"
         ] },
         "payload": { "type": "object" }
       },
@@ -333,6 +333,27 @@
         "bars": { "type": "integer", "minimum": 1, "maximum": 32 }
       },
       "required": ["bars"],
+      "additionalProperties": false
+    },
+
+    "payloadFitMidi": {
+      "description": "M035 S02: drop a .mid onto a lane -> reverse-Euclid import. `bytes` is the raw file content as an array of 0-255 byte values (JSON-serializable so it crosses the plugin bridge; the wasm/native host copies it into the engine's parse+fit+apply path). A non-MIDI / unparseable / degenerate-fit drop leaves the lane untouched (unknown-message-drop contract).",
+      "type": "object",
+      "properties": {
+        "lane":  { "type": "integer", "minimum": 0, "maximum": 7 },
+        "bytes": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 255 } }
+      },
+      "required": ["lane", "bytes"],
+      "additionalProperties": false
+    },
+
+    "payloadRevertImport": {
+      "description": "M035 S03: back out of a fitMidi import on a lane. The host restores the lane to its exact pre-import parameters from an engine-side snapshot armed by the matching fitMidi (mock JS deep-copy / wasm poly_revert_import / native scene snapshot). Payload is `{lane}` only — no LaneConfig crosses the bridge. A revert with no armed snapshot (rejected drop, or a second consecutive revert) logs a warning and no-ops.",
+      "type": "object",
+      "properties": {
+        "lane": { "type": "integer", "minimum": 0, "maximum": 7 }
+      },
+      "required": ["lane"],
       "additionalProperties": false
     },
 

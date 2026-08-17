@@ -120,6 +120,12 @@
       "type": "action", "v": 1,
       "name": "beginMidiDrag",
       "payload": {}
+    },
+    {
+      "label": "fit MIDI drop (M035 S02)",
+      "type": "action", "v": 1,
+      "name": "fitMidi",
+      "payload": { "lane": 2, "bytes": [77, 84, 104, 100, 0, 0, 0, 6] }
     }
   ]
 }

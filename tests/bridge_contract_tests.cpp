@@ -467,6 +467,41 @@ TEST(BridgeActionContract, SetEuclidPayloadPartial) {
     EXPECT_EQ(p["steps"].get<int32_t>(), 16);
 }
 
+// M035 S02 T04: the fitMidi drop payload carries the .mid file as a JSON number[]
+// (0-255) so it survives the plugin bridge's JSON.stringify. This mirrors exactly
+// how web_ui_view.cpp::handleAction extracts lane + bytes before handing the blob
+// to poly::importMidiToLane, catching the byte-array round-trip bug class.
+TEST(BridgeActionContract, FitMidiPayloadBytesRoundtrip) {
+    auto msg = choc::json::parse(
+        R"({"type":"action","v":1,"name":"fitMidi","payload":{"lane":3,"bytes":[77,84,104,100,0,255]}})");
+    auto p = msg["payload"];
+    EXPECT_EQ(p["lane"].get<int32_t>(), 3);
+    ASSERT_TRUE(p.hasObjectMember("bytes"));
+    ASSERT_TRUE(p["bytes"].isArray());
+    const auto& bytesVal = p["bytes"];
+    ASSERT_EQ(bytesVal.size(), 6u);
+    std::vector<uint8_t> bytes;
+    for (uint32_t i = 0; i < bytesVal.size(); ++i)
+        bytes.push_back(static_cast<uint8_t>(bytesVal[i].get<int32_t>() & 0xFF));
+    const std::vector<uint8_t> expected = {'M', 'T', 'h', 'd', 0, 255};
+    EXPECT_EQ(bytes, expected);
+}
+
+// M035 S03 T04: revertImport is the {lane}-only counterpart to fitMidi. The
+// plugin's handleAction extracts just `lane` and restores the pre-import snapshot;
+// no LaneConfig ever crosses the bridge (D039). This pins the payload shape the
+// handler parses.
+TEST(BridgeActionContract, RevertImportPayloadLaneOnly) {
+    auto msg = choc::json::parse(R"({"type":"action","v":1,"name":"revertImport","payload":{"lane":3}})");
+    EXPECT_EQ(std::string(msg["name"].toString()), "revertImport");
+    auto p = msg["payload"];
+    EXPECT_EQ(p["lane"].get<int32_t>(), 3);
+    // {lane}-only contract: no LaneConfig fields ride along.
+    EXPECT_FALSE(p.hasObjectMember("bytes"));
+    EXPECT_FALSE(p.hasObjectMember("steps"));
+    EXPECT_FALSE(p.hasObjectMember("pattern"));
+}
+
 TEST(BridgeActionContract, SetCellsPayloadWithArray) {
     auto msg = choc::json::parse(R"({"type":"action","v":1,"name":"setCells","payload":{"lane":3,"cells":[2,3,2]}})");
     auto p = msg["payload"];
@@ -677,9 +712,10 @@ TEST(BridgeActionContract, AllSchemaActionsHaveCppHandler) {
     auto actionNames = schema["definitions"]["msgAction"]["properties"]["name"]["enum"];
 
     std::set<std::string> cppHandlers = {
-        "toggleStep",   "setEuclid",   "setCells",      "setFixedStep",   "setMicroTiming", "setEnvelope",
-        "selectScene",  "applyPreset", "exportRequest", "setAccent",      "chainAddEntry",  "chainRemoveEntry",
-        "resetNoteMap", "setNoteMap",  "setLaneName",   "setCaptureBars", "beginMidiDrag",
+        "toggleStep",     "setEuclid",        "setCells",     "setFixedStep",  "setMicroTiming",
+        "setEnvelope",    "selectScene",      "applyPreset",  "exportRequest", "setAccent",
+        "chainAddEntry",  "chainRemoveEntry", "resetNoteMap", "setNoteMap",    "setLaneName",
+        "setCaptureBars", "beginMidiDrag",    "fitMidi",      "revertImport",
     };
     std::set<std::string> mockOnly = {"togglePlay"};
 

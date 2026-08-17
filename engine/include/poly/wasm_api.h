@@ -62,6 +62,23 @@ POLY_EXPORT int poly_lane_envelope_target(PolyContext ctx, int lane, int index);
 POLY_EXPORT float poly_lane_envelope_period(PolyContext ctx, int lane, int index);
 POLY_EXPORT float poly_lane_envelope_depth(PolyContext ctx, int lane, int index);
 
+// M035 S02 T02: atomic reverse-Euclid MIDI import. Parses the dropped .mid
+// bytes (poly::parseSMF), fits Euclidean lane parameters (poly::fitEuclidean,
+// S01) and applies them into the selected scene's lane — all in one call. `data`
+// points at `size` raw file bytes the JS host copied into the wasm heap. Returns
+// 1 on success, 0 when the bytes are not a usable metrical SMF, the fit is
+// degenerate, or the lane index is out of range (lane left untouched). The
+// single parse+fit+apply path the web preview's fitMidi action routes to.
+POLY_EXPORT int poly_import_midi(PolyContext ctx, int lane, const uint8_t* data, int size);
+
+// M035 S03 T01: revert the most recent successful poly_import_midi on `lane`,
+// atomically restoring the pre-import LaneConfig snapshot the engine captured.
+// Returns 1 when a snapshot was restored, 0 when `lane` is out of range or there
+// is nothing to revert (no prior import, or already reverted) — a safe no-op.
+// Symmetric with poly_import_midi; the web preview's revertImport action routes
+// here. Payload is {lane} only — no LaneConfig crosses the bridge (Decision D039).
+POLY_EXPORT int poly_revert_import(PolyContext ctx, int lane);
+
 POLY_EXPORT void poly_action_set_euclid(PolyContext ctx, int lane, int steps, int hits, int rotation);
 POLY_EXPORT void poly_action_toggle_step(PolyContext ctx, int lane, int step);
 POLY_EXPORT void poly_action_apply_preset(PolyContext ctx, int index);

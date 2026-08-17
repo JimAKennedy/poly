@@ -27,6 +27,21 @@
  *   action(name: string, payload: object): void
  *   //   'toggleStep'      {lane, step}
  *   //   'setEuclid'       {lane, steps?, hits?, rotation?}
+ *   //   'fitMidi'         {lane, bytes: number[]}  (M035 S02: drop a .mid onto
+ *   //                                    a lane -> reverse-Euclid import. bytes
+ *   //                                    is the raw file content as 0..255
+ *   //                                    values; the host parses+fits+applies
+ *   //                                    (mock JS / wasm poly_import_midi /
+ *   //                                    native fitMidi). A non-MIDI / unparse-
+ *   //                                    able / degenerate drop leaves the lane
+ *   //                                    untouched.)
+ *   //   'revertImport'    {lane}          (M035 S03: back out of a fitMidi import
+ *   //                                    — restore the lane to its exact pre-import
+ *   //                                    params from the snapshot armed by the
+ *   //                                    matching fitMidi (mock JS deep-copy / wasm
+ *   //                                    poly_revert_import / native scene snapshot).
+ *   //                                    {lane}-only; no LaneConfig crosses the
+ *   //                                    bridge. No armed snapshot -> warn + no-op.)
  *   //   'setCells'        {lane, cells: number[] | null}
  *   //   'setLaneName'     {lane, name}    (1..15 chars; empty/oversized dropped)
  *   //   'setFixedStep'    {lane, step, on}

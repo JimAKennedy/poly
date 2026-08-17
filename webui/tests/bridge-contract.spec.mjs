@@ -179,6 +179,32 @@ test.describe('outbound action contract', () => {
     expect(validate(msg), JSON.stringify(validate.errors)).toBe(true);
   });
 
+  test('fitMidi action has correct shape (M035 S02)', async ({ page }) => {
+    const actions = await page.evaluate(() => {
+      window.PolyHost.action('fitMidi', { lane: 3, bytes: [77, 84, 104, 100, 0, 0, 0, 6] });
+      return window.__actionLog.slice();
+    });
+    expect(actions.length).toBe(1);
+    expect(actions[0].name).toBe('fitMidi');
+    expect(actions[0].payload.lane).toBe(3);
+    expect(Array.isArray(actions[0].payload.bytes)).toBe(true);
+    const msg = { type: 'action', v: 1, ...actions[0] };
+    expect(validate(msg), JSON.stringify(validate.errors)).toBe(true);
+  });
+
+  test('revertImport action has correct shape (M035 S03)', async ({ page }) => {
+    const actions = await page.evaluate(() => {
+      window.PolyHost.action('revertImport', { lane: 2 });
+      return window.__actionLog.slice();
+    });
+    expect(actions.length).toBe(1);
+    expect(actions[0].name).toBe('revertImport');
+    // {lane}-only contract — no LaneConfig crosses the bridge (D039).
+    expect(actions[0].payload).toEqual({ lane: 2 });
+    const msg = { type: 'action', v: 1, ...actions[0] };
+    expect(validate(msg), JSON.stringify(validate.errors)).toBe(true);
+  });
+
   test('noteMap actions have correct shape', async ({ page }) => {
     const actions = await page.evaluate(() => {
       window.PolyHost.action('setNoteMap', { note: 36, output: 48 });

@@ -1315,6 +1315,39 @@
     emitState();
   }
 
+  // M035 S02 T02: atomic reverse-Euclid MIDI import. Copies the dropped file
+  // bytes into the wasm heap and calls the single parse+fit+apply engine export
+  // (poly_import_midi), which writes the fitted lane params into the selected
+  // scene's lane. Returns true on success, false when the bytes are not a
+  // usable metrical SMF / the fit is degenerate / the lane is out of range —
+  // the caller leaves the lane untouched (graceful non-MIDI drop handling).
+  function importMidi(lane, bytes) {
+    if (!Module || !Module._poly_import_midi) return false;
+    if (typeof lane !== 'number' || lane < 0) return false;
+    if (!bytes || bytes.length === 0) return false;
+    const view = bytes instanceof Uint8Array ? bytes : Uint8Array.from(bytes);
+    const len = view.length;
+    const ptr = Module._malloc(len);
+    if (!ptr) return false;
+    try {
+      Module.HEAPU8.set(view, ptr);
+      return Module._poly_import_midi(engineCtx, lane, ptr, len) !== 0;
+    } finally {
+      Module._free(ptr);
+    }
+  }
+
+  // M035 S03 T02: back out of a fitMidi import. The engine owns the per-lane
+  // pre-import LaneSnapshot (armed by poly_import_midi, T01); poly_revert_import
+  // restores it and consumes it, returning 1 on restore / 0 when there is no
+  // armed snapshot (rejected drop, or a second consecutive revert) or the lane
+  // is out of range. The caller leaves the lane untouched on 0.
+  function revertImport(lane) {
+    if (!Module || !Module._poly_revert_import) return false;
+    if (typeof lane !== 'number' || lane < 0) return false;
+    return Module._poly_revert_import(engineCtx, lane) !== 0;
+  }
+
   /* ---------- action handler ---------- */
   function action(name, payload = {}) {
     // M044 S06: set by selectScene when preferredRolesByNote must be rebuilt
@@ -1334,6 +1367,32 @@
           payload.steps ?? -1, payload.hits ?? -1, payload.rotation ?? 0
         );
         break;
+      case 'fitMidi': {
+        // M035 S02 T02: drop a .mid onto a lane -> populate it from the
+        // reverse-Euclid fit. Unparseable / non-MIDI drops leave the lane
+        // untouched and skip the state sync so the UI does not flicker
+        // (unknown-message-drop contract, bridge-schema.md).
+        const ok = importMidi(payload.lane, payload.bytes);
+        if (!ok) {
+          console.warn('[wasm-host] fitMidi: dropped file is not a usable MIDI loop; lane unchanged');
+          return;
+        }
+        console.info(`[wasm-host] fitMidi: imported loop into lane ${payload.lane}`);
+        break;
+      }
+      case 'revertImport': {
+        // M035 S03 T02: restore the lane to its pre-import parameters from the
+        // engine-side snapshot. A no-op revert (no armed snapshot / bad lane)
+        // leaves the lane untouched and skips the state sync so the UI does not
+        // flicker (unknown-message-drop contract, bridge-schema.md).
+        const ok = revertImport(payload.lane);
+        if (!ok) {
+          console.warn('[wasm-host] revertImport: no import to revert on lane', payload.lane);
+          return;
+        }
+        console.info(`[wasm-host] revertImport: restored lane ${payload.lane} to its pre-import parameters`);
+        break;
+      }
       case 'setCells': {
         if (payload.cells) {
           const buf = Module._malloc(payload.cells.length * 4);

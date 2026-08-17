@@ -801,6 +801,214 @@
   }
   requestAnimationFrame(pump);
 
+  /* ---------- reverse-Euclid MIDI import (mock, M035 S02 T03) ---------- */
+  // The plugin + wasm surfaces run the authoritative C++ import path
+  // (poly::parseSMF + poly::fitEuclidean + applyFitToLane —
+  // engine/src/midi_reader.cpp / fitter.cpp). The mock has no engine, so it
+  // mirrors that logic in JS so a dropped .mid populates a lane in the
+  // standalone web preview and Playwright CI. It is kept faithful to the engine
+  // algorithm (same candidate subdivisions, same least-squares grid choice, same
+  // Bjorklund-rotation search) so the mock's fit agrees with production for a
+  // clean Euclidean loop.
+
+  // Standard MIDI File reader. Parses format 0/1, decodes VLQ delta times,
+  // honours running status, reads the first FF 51 tempo meta, and merges every
+  // track's note-on stream into one ascending onset timeline. Metrical division
+  // only. Returns { valid, onsetsPpq, loopLengthPpq, tempoBpm }; valid=false for
+  // anything that is not a usable metrical SMF. Never throws / reads OOB — a
+  // malformed drop is a data condition, mirroring parseSMF's no-throw contract.
+  function parseSMF(bytes) {
+    const FAIL = { valid: false, onsetsPpq: [], loopLengthPpq: 0, tempoBpm: 120 };
+    const d = bytes instanceof Uint8Array ? bytes : Uint8Array.from(bytes || []);
+    if (d.length < 14) return FAIL;
+    if (d[0] !== 0x4d || d[1] !== 0x54 || d[2] !== 0x68 || d[3] !== 0x64) return FAIL; // 'MThd'
+    const be32 = (o) => ((d[o] << 24) | (d[o + 1] << 16) | (d[o + 2] << 8) | d[o + 3]) >>> 0;
+    const be16 = (o) => (d[o] << 8) | d[o + 1];
+    const headerLen = be32(4);
+    if (headerLen < 6) return FAIL;
+    const division = be16(12);
+    if (division & 0x8000) return FAIL; // SMPTE division unsupported
+    const tpqn = division;
+    if (tpqn <= 0) return FAIL;
+
+    const onsetsTicks = [];
+    let maxTick = 0;
+    let tempoBpm = 120;
+    let tempoSeen = false;
+    let pos = 8 + headerLen; // first chunk follows the MThd body
+
+    while (pos + 8 <= d.length) {
+      const isTrack = d[pos] === 0x4d && d[pos + 1] === 0x54 && d[pos + 2] === 0x72 && d[pos + 3] === 0x6b; // 'MTrk'
+      const chunkLen = be32(pos + 4);
+      const bodyStart = pos + 8;
+      const bodyEnd = bodyStart + chunkLen;
+      if (bodyEnd > d.length) return FAIL; // truncated chunk
+      if (!isTrack) { pos = bodyEnd; continue; } // skip unknown chunks
+
+      let p = bodyStart;
+      let absTick = 0;
+      let running = 0;
+      while (p < bodyEnd) {
+        // VLQ delta time.
+        let delta = 0, vb, guard = 0;
+        do {
+          if (p >= bodyEnd) return FAIL;
+          vb = d[p++];
+          delta = (delta << 7) | (vb & 0x7f);
+          if (++guard > 4) return FAIL;
+        } while (vb & 0x80);
+        absTick += delta;
+
+        if (p >= bodyEnd) return FAIL;
+        let status = d[p];
+        if (status & 0x80) { p++; running = status; }
+        else { status = running; if (!(status & 0x80)) return FAIL; } // running status
+
+        if (status === 0xff) {
+          // Meta: type + VLQ len + data.
+          if (p >= bodyEnd) return FAIL;
+          const metaType = d[p++];
+          let mlen = 0, mb, mg = 0;
+          do { if (p >= bodyEnd) return FAIL; mb = d[p++]; mlen = (mlen << 7) | (mb & 0x7f); if (++mg > 4) return FAIL; } while (mb & 0x80);
+          if (p + mlen > bodyEnd) return FAIL;
+          if (metaType === 0x51 && mlen === 3 && !tempoSeen) {
+            const usPerQ = ((d[p] << 16) | (d[p + 1] << 8) | d[p + 2]) >>> 0;
+            if (usPerQ > 0) { tempoBpm = 60000000 / usPerQ; tempoSeen = true; }
+          }
+          p += mlen;
+        } else if (status === 0xf0 || status === 0xf7) {
+          // SysEx: VLQ len + data.
+          let slen = 0, sb, sg = 0;
+          do { if (p >= bodyEnd) return FAIL; sb = d[p++]; slen = (slen << 7) | (sb & 0x7f); if (++sg > 4) return FAIL; } while (sb & 0x80);
+          if (p + slen > bodyEnd) return FAIL;
+          p += slen;
+        } else {
+          const hi = status & 0xf0;
+          if (hi === 0x80 || hi === 0x90 || hi === 0xa0 || hi === 0xb0 || hi === 0xe0) {
+            if (p + 2 > bodyEnd) return FAIL;
+            const data2 = d[p + 1];
+            p += 2;
+            if (hi === 0x90 && data2 > 0) onsetsTicks.push(absTick); // note-on, vel>0
+          } else if (hi === 0xc0 || hi === 0xd0) {
+            if (p + 1 > bodyEnd) return FAIL;
+            p += 1;
+          } else {
+            return FAIL; // unknown status byte
+          }
+        }
+      }
+      if (absTick > maxTick) maxTick = absTick;
+      pos = bodyEnd;
+    }
+
+    if (onsetsTicks.length === 0) return FAIL;
+    onsetsTicks.sort((a, b) => a - b);
+    return {
+      valid: true,
+      onsetsPpq: onsetsTicks.map((t) => t / tpqn),
+      loopLengthPpq: maxTick / tpqn,
+      tempoBpm,
+    };
+  }
+
+  // Mirror of engine/src/fitter.cpp: least-squares fit of Euclidean lane
+  // parameters (steps, subdivision, hits, rotation) to a set of onset PPQs.
+  const FIT_SUBDIVISIONS = [1, 2, 3, 4, 6, 8, 12, 16, 24, 32];
+  const FIT_MAX_STEPS = 64; // engine kMaxSteps
+  function fitEuclidean(onsetsPpq, loopLengthPpq, tempoBpm) {
+    if (!onsetsPpq || onsetsPpq.length < 2 || loopLengthPpq <= 0)
+      return { valid: false };
+    const tb = tempoBpm > 0 ? tempoBpm : 120;
+    let bestCost = Infinity;
+    let best = null;
+    for (const subdivision of FIT_SUBDIVISIONS) {
+      const g = 4 / subdivision;
+      const n = Math.round(loopLengthPpq / g);
+      if (n < 2 || n > FIT_MAX_STEPS) continue;
+      if (Math.abs(loopLengthPpq - n * g) > 0.5 * g) continue;
+      const occupied = new Array(n).fill(false);
+      const deltaSum = new Array(n).fill(0);
+      const deltaCount = new Array(n).fill(0);
+      let quantErr = 0;
+      for (const onset of onsetsPpq) {
+        const slot = Math.round(onset / g);
+        const dd = onset - slot * g;
+        quantErr += dd * dd;
+        let step = slot % n; if (step < 0) step += n;
+        occupied[step] = true;
+        deltaSum[step] += dd;
+        deltaCount[step] += 1;
+      }
+      let k = 0; for (let i = 0; i < n; i++) if (occupied[i]) k++;
+      if (k < 1 || k > n) continue;
+      // Reuse the same euclid()/rotArr() the mock renders with so the applied
+      // pattern reproduces the fitted occupancy (ties -> smallest rotation).
+      let bestMismatch = Infinity, bestRotation = 0;
+      for (let r = 0; r < n; r++) {
+        const pat = rotArr(euclid(k, n), r);
+        let mismatch = 0;
+        for (let i = 0; i < n; i++) if (!!pat[i] !== occupied[i]) mismatch++;
+        if (mismatch < bestMismatch) { bestMismatch = mismatch; bestRotation = r; if (mismatch === 0) break; }
+      }
+      const cost = quantErr + g * g * bestMismatch;
+      if (cost < bestCost) {
+        bestCost = cost;
+        best = { subdivision, n, k, bestRotation, bestMismatch, occupied, deltaSum, deltaCount };
+      }
+    }
+    if (!best) return { valid: false };
+    const microTimingMs = new Array(best.n).fill(0);
+    for (let i = 0; i < best.n; i++) {
+      if (best.deltaCount[i] === 0) continue;
+      const avgPpq = best.deltaSum[i] / best.deltaCount[i];
+      microTimingMs[i] = Math.max(-20, Math.min(20, avgPpq * (60000 / tb)));
+    }
+    return {
+      valid: true,
+      steps: best.n,
+      subdivision: best.subdivision,
+      hits: best.k,
+      rotation: best.bestRotation,
+      patternMismatch: best.bestMismatch,
+      occupied: best.occupied.slice(),
+      microTimingMs,
+    };
+  }
+
+  // Apply a fitted result to a lane in place. Mirrors engine applyFitToLane:
+  // when the maximally-even skeleton cannot express the actual occupancy
+  // (patternMismatch > 0) the lane switches to timeline mode carrying the real
+  // fixedPattern; otherwise timeline is cleared. Micro-timing is copied
+  // unconditionally (zero on-grid).
+  function applyFitToLane(fit, l) {
+    l.steps = fit.steps;
+    l.subdivision = fit.subdivision;
+    l.stepLen = 8 / fit.subdivision;
+    l.hits = fit.hits;
+    l.rot = fit.rotation;
+    l.cells = null;
+    l.cellCount = 0;
+    l.accents = new Array(fit.steps).fill(0);
+    if (fit.patternMismatch > 0 && fit.occupied) {
+      l.timeline = true;
+      l.fixed = fit.occupied.map((b) => (b ? 1 : 0));
+      l.pattern = l.fixed.slice();
+    } else {
+      l.timeline = false;
+      l.fixed = null;
+      l.pattern = rotArr(euclid(fit.hits, fit.steps), fit.rotation);
+    }
+    l.mt = fit.microTimingMs ? fit.microTimingMs.slice(0, fit.steps) : new Array(fit.steps).fill(0);
+    while (l.mt.length < fit.steps) l.mt.push(0);
+  }
+
+  // M035 S03 T02: per-lane pre-import snapshots, keyed by lane index. fitMidi
+  // deep-copies the lane just before it overwrites it; revertImport restores that
+  // copy and consumes it (a second revert / a rejected drop finds nothing and
+  // no-ops). This mirrors the engine-side LaneSnapshot store the wasm/native
+  // surfaces own, keeping the revertImport bridge payload {lane}-only (D039).
+  const importSnapshots = {};
+
   /* ---------- actions ---------- */
   function action(name, payload = {}) {
     const l = state.lanes[payload.lane];
@@ -821,6 +1029,51 @@
         if (payload.hits !== undefined) l.hits = Math.max(0, Math.min(l.steps, payload.hits));
         if (payload.rotation !== undefined) l.rot = ((payload.rotation % l.steps) + l.steps) % l.steps;
         l.pattern = rotArr(euclid(l.hits, l.steps), l.rot);
+        break;
+      }
+      case 'fitMidi': {
+        // M035 S02 T03: drop a .mid onto a lane -> populate it from the
+        // reverse-Euclid fit. The mock mirrors the C++ import path in JS
+        // (parseSMF + fitEuclidean + applyFitToLane). A non-MIDI / unparseable /
+        // degenerate-fit drop leaves the lane untouched and skips the state push
+        // so the UI does not flicker (unknown-message-drop contract,
+        // bridge-schema.md).
+        if (!l) {
+          console.warn('[mock-host] fitMidi: lane out of range', payload.lane);
+          return;
+        }
+        const parsed = parseSMF(payload.bytes);
+        if (!parsed.valid) {
+          console.warn('[mock-host] fitMidi: dropped file is not a usable MIDI loop; lane unchanged');
+          return;
+        }
+        const fit = fitEuclidean(parsed.onsetsPpq, parsed.loopLengthPpq, parsed.tempoBpm);
+        if (!fit.valid) {
+          console.warn('[mock-host] fitMidi: fit degenerate; lane unchanged');
+          return;
+        }
+        // Arm the revert snapshot only now that the fit is known good, so a
+        // rejected/degenerate drop (handled by the early returns above) leaves
+        // no stale snapshot to revert into (S03 must-have 6).
+        importSnapshots[payload.lane] = JSON.parse(JSON.stringify(l));
+        applyFitToLane(fit, l);
+        console.info(`[mock-host] fitMidi: imported loop into lane ${payload.lane} -> E(${fit.hits},${fit.steps}) rot ${fit.rotation}`);
+        break;
+      }
+      case 'revertImport': {
+        // M035 S03 T02: restore the lane to its pre-import parameters from the
+        // snapshot armed by the matching fitMidi, then consume it so a second
+        // consecutive revert is a safe no-op. No armed snapshot (rejected drop,
+        // or already reverted) -> warn + no-op, skipping the state push so the
+        // UI does not flicker (unknown-message-drop contract, bridge-schema.md).
+        const snap = importSnapshots[payload.lane];
+        if (!l || !snap) {
+          console.warn('[mock-host] revertImport: no import to revert on lane', payload.lane);
+          return;
+        }
+        state.lanes[payload.lane] = JSON.parse(JSON.stringify(snap));
+        delete importSnapshots[payload.lane];
+        console.info(`[mock-host] revertImport: restored lane ${payload.lane} to its pre-import parameters`);
         break;
       }
       case 'setCells':
