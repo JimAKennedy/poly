@@ -8,6 +8,9 @@ doc_roots:
 
 exempt_dirs:
   - docs/reviews/          # dated reviews: frozen, line refs pinned by date
+  - docs/internal/         # gitignored scratch area (.gitignore): never present in
+                           # CI, so enumerating it only makes local runs and the
+                           # pre-commit hook disagree with the pipeline
 
 taxonomy:
   classes: [generated, gated, archived]
@@ -67,3 +70,20 @@ behavioral_claims:
       path: site/tests
     - type: js
       path: site/tests-e2e
+
+workflow_concurrency:
+  # Both locks are deliberately repo-wide: they serialise access to a resource
+  # that exists once, not once per branch. Declaring them here is the check's
+  # intended way of saying so out loud (jk-standards >= v0.8.0).
+  global_locks:
+    # Cubase, loopMIDI, and the interactive desktop session are machine-global
+    # state on the single self-hosted Windows runner. Two nightly runs cannot
+    # share them at any ref, so ref-scoping this group would licence exactly
+    # the collision the lock exists to prevent. See the rationale comment above
+    # the group in .github/workflows/cubase-nightly.yml.
+    - cubase-nightly
+    # GitHub Pages has one live deployment per repository. This is the group
+    # name GitHub's own deploy-pages guidance prescribes, paired with
+    # cancel-in-progress: false so a queued deploy waits rather than cancelling
+    # a publish already in flight.
+    - pages
