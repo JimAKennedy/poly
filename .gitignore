@@ -325,3 +325,4 @@ venv/
 target/
 vendor/
 tmp/
+gsd-session-*.html

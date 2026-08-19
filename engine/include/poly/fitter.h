@@ -48,6 +48,20 @@ struct FitResult {
     // Euclidean pattern. Non-zero drives the residual capture in S01 T02.
     int patternMismatch = 0;
 
+    // Normalized nearest-Euclidean goodness-of-fit in [0, 100], readable by a
+    // future UI/user. 100.0 means the input occupancy IS a pure Euclidean
+    // rhythm (the fitted skeleton disagrees on zero steps); the value decreases
+    // as occupancy departs from that skeleton, and 0.0 marks degenerate/no-fit
+    // input (default). Derived purely from the STRUCTURAL patternMismatch
+    // (occupancy), NOT from onsetError (timing): an on-grid but non-Euclidean
+    // pattern still reads below 100, while an off-grid pure-Euclidean pattern
+    // (patternMismatch 0) still reads 100. Computed as
+    //   100 * (1 - patternMismatch / (2 * min(hitCount, steps - hitCount)))
+    // with the fully-occupied edge (steps == hitCount, no empty step for the
+    // skeleton to disagree on) special-cased to 100.0. No consumer wires this
+    // yet — it is a documented future seam frozen for S02 goldens.
+    double fitPercent = 0.0;
+
     // Residual capture (S01 T02): what the maximally-even Euclidean skeleton
     // cannot express, recovered from the winning grid so re-rendering
     // approximates the source rather than the nearest textbook rhythm.
