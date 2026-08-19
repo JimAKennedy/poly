@@ -25,3 +25,23 @@ export const EXPORT_SINK =
 // toggle-contract.ts.
 export const EXPORT_LANE_INDEX = 0;
 export const EXPORT_LANE_NAME = 'Kick';
+
+// The lane-track names an all-lanes export is expected to produce from the
+// poly-4bar fixture.
+//
+// These are the ENGINE's GM names (engine/src/lane_name.cpp laneName()), which
+// is what the export path actually writes: offline_render.cpp names each MTrk
+// via laneName(lane.midiNote). They are deliberately NOT the WebUI display
+// names in kWebPresetLaneNames (web_ui_view.cpp), which spell the toms
+// "Tom Hi"/"Tom Lo" — laneName() collapses the whole GM tom range to "Tom" and
+// cannot emit those strings at all.
+//
+// The set is derived from the fixture's state, not from a factory preset. The
+// fixture holds Poly's default processor state, whose 4-bar golden
+// (tests/golden/processor_default_4bars.txt) emits pitches 36, 38, 42, 45 —
+// laneName() maps those to Kick, Snare, Hi-Hat, Tom respectively. Factory
+// preset 0 is a different patch (its 4th lane is note 46, "Open Hat"), so
+// expectations taken from it do not describe this export.
+//
+// Re-derive from the golden's distinct pitches if the fixture is ever re-cut.
+export const EXPORT_ALL_LANE_NAMES = ['Kick', 'Snare', 'Hi-Hat', 'Tom'];
