@@ -21,12 +21,24 @@
 #   - Speculative "someday this doc will describe X" pairs — only real,
 #     current, checkable claims
 #
-# "Do NOT map" is not the same as "leave out of this file". Since jk-standards
-# v0.6.0 the doc-completeness check requires EVERY doc under a doc_root to be
+# "Do NOT map" is not the same as "leave out of this file". The doc-completeness
+# check (jk-standards v0.6.0+) requires every doc under a doc_root to be
 # accounted for here — as a `mappings` entry or as a `cannot_drift` entry with a
-# written reason. A doc in the list above therefore belongs in `cannot_drift`
-# below, which records why touch-correlation would be the wrong tool for it,
-# rather than being omitted and silently forgotten.
+# written reason — so a doc in the list above generally belongs in `cannot_drift`
+# below, recording why touch-correlation would be the wrong tool for it rather
+# than being omitted and silently forgotten.
+#
+# Two exceptions, both handled by the tool rather than by entries here:
+#   - Archived docs are exempt by class as of v0.10.0
+#     (`doc_completeness.exempt_classes`, default ["archived"]). They need no
+#     entry. NOTE this exempts them from doc-COMPLETENESS only — an archived doc
+#     named as a `mappings` target is still enforced by doc-drift.
+#   - Untracked and git-ignored files under a doc_root are no longer enumerated
+#     at all (v0.10.0), so a gitignored scratch doc needs neither an entry here
+#     nor an `exempt_dirs` line.
+#
+# Generated and data-driven docs are NOT exempt by class — poly's carry
+# `class: gated` — so they keep their `cannot_drift` entries below.
 
 version: 1
 
@@ -481,40 +493,3 @@ cannot_drift:
       Manual UAT guide for the M054 additive-cells feature, written to be
       executed by hand in a DAW. The feature's machine-checkable contract is
       documented in docs/engine-spec.md, which is mapped above.
-
-  # --- Archived docs — remove these entries when jk-standards#48 lands ------
-  #
-  # These carry `class: archived` and are frozen by definition; jk-standards'
-  # own docs state the class contract as "archived docs are exempt", and
-  # status-prose, file-line-refs, and research-provenance all honour it.
-  # doc-completeness does not, so each archived page needs an entry here to
-  # satisfy a check the surrounding taxonomy says should not apply to it.
-  # Tracked upstream as JimAKennedy/jk-standards#48 — when a class-aware skip
-  # ships, delete this whole block rather than maintaining it.
-
-  - doc: "docs/webui-migration.md"
-    reason: >-
-      Archived (2026-07-22): frozen snapshot from the mid-migration
-      webui-integration branch. The migration is complete and the file states
-      that no "remaining work" claim in it is still open. Frozen by class.
-
-  - doc: "docs/webui-drag-spike.md"
-    reason: >-
-      Archived: findings from the WebUI drag-and-drop spike, kept as a record
-      of what was tried and rejected. Frozen by class.
-
-  - doc: "docs/webui-capture-timeline-uat.md"
-    reason: >-
-      Archived: UAT notes from the capture-timeline work, retained as a dated
-      record of what was exercised. Frozen by class.
-
-  - doc: "docs/audits/M053-webui-parity-matrix.md"
-    reason: >-
-      Archived: point-in-time parity matrix between the native and web UIs
-      taken during M053. A snapshot of a gap that has since been closed.
-      Frozen by class.
-
-  - doc: "docs/audits/M053-gap-closure-plan.md"
-    reason: >-
-      Archived: the M053 plan for closing the gaps that matrix identified.
-      Superseded by the work having landed. Frozen by class.
