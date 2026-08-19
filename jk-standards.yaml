@@ -8,9 +8,6 @@ doc_roots:
 
 exempt_dirs:
   - docs/reviews/          # dated reviews: frozen, line refs pinned by date
-  - docs/internal/         # gitignored scratch area (.gitignore): never present in
-                           # CI, so enumerating it only makes local runs and the
-                           # pre-commit hook disagree with the pipeline
 
 taxonomy:
   classes: [generated, gated, archived]
