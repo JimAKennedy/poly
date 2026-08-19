@@ -8,6 +8,7 @@ import type { Browser, Page } from '@playwright/test';
 
 import {
   EXPORT_SINK,
+  EXPORT_ALL_LANE_NAMES,
   EXPORT_LANE_INDEX,
   EXPORT_LANE_NAME,
 } from './lib/export-contract';
@@ -138,7 +139,16 @@ test.describe('L4-web: in-DAW MIDI export produces a valid Format-1 SMF', () => 
       await waitForSink();
       // All active lanes -> multiple named GM tracks; the default 4-bar preset
       // renders well over 16 note-ons, so 16 is a safe no-loss floor.
-      validateSink(['--min-note-ons', '16']);
+      //
+      // Name the expected tracks explicitly rather than letting the validator
+      // fall back to its preset-0 default: this fixture is NOT preset 0, and
+      // the export names tracks from the engine GM vocabulary, not the WebUI
+      // display names. See EXPORT_ALL_LANE_NAMES for the derivation.
+      validateSink([
+        '--min-note-ons',
+        '16',
+        ...EXPORT_ALL_LANE_NAMES.flatMap((n) => ['--lane-name', n]),
+      ]);
 
       // --- Single-lane export via the per-lane handle ------------------------
       rmSync(EXPORT_SINK);
