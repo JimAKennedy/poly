@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstring>
+#include <utility>
 #include <vector>
 
 #include <gtest/gtest.h>
@@ -52,6 +54,21 @@ void expectRoundTrip(int k, int n, int rotation, int subdivision) {
     EXPECT_EQ(fit.rotation, rotation) << "k=" << k << " n=" << n << " r=" << rotation;
     EXPECT_EQ(fit.patternMismatch, 0);
     EXPECT_DOUBLE_EQ(fit.onsetError, 0.0);
+}
+
+// Five hits packed at a fixed spacing of `slotStride` steps on a 32-step /
+// subdivision-32 grid (one step = 4/32 PPQ), starting at step 0. A large stride
+// is close to maximally even (near-Euclidean); shrinking the stride pulls the
+// hits into an ever-tighter cluster that no rotation of E(5,32) — and no
+// coarser grid — can host, driving the structural mismatch up. Positions land
+// on odd 32nd-note slots, so coarser candidate grids incur quantization error
+// and the winning grid stays pinned at (steps=32, subdivision=32, hitCount=5).
+std::vector<double> clusteredOnsets32(int slotStride) {
+    const double g = 4.0 / 32.0;
+    std::vector<double> onsets;
+    for (int i = 0; i < 5; ++i)
+        onsets.push_back(static_cast<double>(i * slotStride) * g);
+    return onsets;
 }
 
 } // namespace
@@ -256,9 +273,155 @@ TEST(FitEuclidean, DeterministicAcrossRepeatedCalls) {
     EXPECT_EQ(a.rotation, b.rotation);
     EXPECT_DOUBLE_EQ(a.onsetError, b.onsetError);
     EXPECT_EQ(a.patternMismatch, b.patternMismatch);
+    EXPECT_DOUBLE_EQ(a.fitPercent, b.fitPercent);
     EXPECT_EQ(a.fixedPatternLength, b.fixedPatternLength);
     EXPECT_EQ(a.fixedPattern, b.fixedPattern);
     EXPECT_EQ(a.microTimingMs, b.microTimingMs);
+}
+
+// --- T02: fitPercent metric + non-Euclidean best-fit degradation ---
+//
+// fitPercent is the normalized nearest-Euclidean goodness-of-fit in [0,100],
+// derived purely from the structural occupancy mismatch (NOT the timing
+// residual). These cases pin its exact-value contract at the endpoints, prove
+// it is off-grid-timing-blind, characterize its non-increasing degradation on a
+// pinned-grid family, and confirm the fitter still returns a usable best-fit
+// (renderable grid) across deliberately non-Euclidean patterns.
+
+TEST(FitEuclidean, PureEuclideanFitPercentIsExactly100) {
+    // A rhythm sampled exactly on its Euclidean grid IS its own skeleton: zero
+    // structural mismatch, so the goodness-of-fit pins at the 100.0 ceiling.
+    for (int r = 0; r < 8; ++r) {
+        const auto onsets = euclideanOnsets(3, 8, r, 8);
+        const poly::FitResult fit = poly::fitEuclidean(onsets, loopLength(8, 8));
+        ASSERT_TRUE(fit.valid) << "r=" << r;
+        EXPECT_EQ(fit.patternMismatch, 0) << "r=" << r;
+        EXPECT_DOUBLE_EQ(fit.fitPercent, 100.0) << "r=" << r;
+    }
+    // A denser aperiodic spelling on a finer grid pins at 100 just the same.
+    const auto five = euclideanOnsets(5, 16, 3, 16);
+    const poly::FitResult fitFive = poly::fitEuclidean(five, loopLength(16, 16));
+    ASSERT_TRUE(fitFive.valid);
+    EXPECT_DOUBLE_EQ(fitFive.fitPercent, 100.0);
+}
+
+TEST(FitEuclidean, DegenerateInputFitPercentIsExactly0) {
+    // The invalid safe default carries no fit, so its goodness-of-fit is the
+    // 0.0 floor — never a NaN, never a stale value from a prior candidate.
+    const poly::FitResult empty = poly::fitEuclidean({}, 4.0);
+    EXPECT_FALSE(empty.valid);
+    EXPECT_DOUBLE_EQ(empty.fitPercent, 0.0);
+
+    const poly::FitResult single = poly::fitEuclidean({1.5}, 4.0);
+    EXPECT_FALSE(single.valid);
+    EXPECT_DOUBLE_EQ(single.fitPercent, 0.0);
+
+    const poly::FitResult badLen = poly::fitEuclidean({0.0, 1.5, 3.0}, 0.0);
+    EXPECT_FALSE(badLen.valid);
+    EXPECT_DOUBLE_EQ(badLen.fitPercent, 0.0);
+}
+
+TEST(FitEuclidean, OffGridPureEuclideanStillReads100) {
+    // fitPercent is derived from the STRUCTURAL occupancy mismatch, not timing.
+    // Tresillo E(3,8) with the middle hit nudged off its grid slot still has a
+    // zero-mismatch skeleton, so it reads a full 100 even though onsetError > 0.
+    auto onsets = euclideanOnsets(3, 8, 0, 8); // {0.0, 1.5, 3.0}
+    onsets[1] += 0.05;                         // off-grid, same occupancy
+
+    const poly::FitResult fit = poly::fitEuclidean(onsets, loopLength(8, 8));
+
+    ASSERT_TRUE(fit.valid);
+    EXPECT_EQ(fit.patternMismatch, 0);
+    EXPECT_GT(fit.onsetError, 0.0);
+    EXPECT_DOUBLE_EQ(fit.fitPercent, 100.0);
+}
+
+TEST(FitEuclidean, FitPercentDegradesNonIncreasinglyOnPinnedGrid) {
+    // Pinned-grid degradation family. Member 0 is a pure E(5,32) rhythm (nearest
+    // Euclidean skeleton, fit 100). The remaining members pack the same five
+    // hits into progressively tighter clusters on the same 32-step /
+    // subdivision-32 grid; the tighter the cluster, the further the occupancy
+    // sits from ANY rotation of E(5,32), so the structural patternMismatch rises
+    // and fitPercent falls. Every member stays pinned to (steps=32,
+    // subdivision=32, hitCount=5) — asserted below — so the fitPercent values
+    // are a like-for-like family and the comparison is meaningful. Contract:
+    // non-increasing across the family, and strictly < 100 for every member
+    // whose occupancy has departed the skeleton.
+    const double len = loopLength(32, 32);
+    const std::vector<std::pair<const char*, std::vector<double>>> family = {
+        {"pure-E(5,32)", euclideanOnsets(5, 32, 3, 32)},
+        {"stride-3", clusteredOnsets32(3)},
+        {"stride-2", clusteredOnsets32(2)},
+        {"stride-1", clusteredOnsets32(1)},
+    };
+
+    double prev = 100.0 + 1e-9;
+    double firstFit = 0.0, lastFit = 0.0;
+    for (size_t m = 0; m < family.size(); ++m) {
+        const poly::FitResult fit = poly::fitEuclidean(family[m].second, len);
+        ASSERT_TRUE(fit.valid) << family[m].first;
+
+        // Whole family shares one grid, so fitPercent is apples-to-apples.
+        EXPECT_EQ(fit.steps, 32) << family[m].first;
+        EXPECT_EQ(fit.subdivision, 32) << family[m].first;
+        EXPECT_EQ(fit.hitCount, 5) << family[m].first;
+
+        EXPECT_GE(fit.fitPercent, 0.0) << family[m].first;
+        EXPECT_LE(fit.fitPercent, 100.0) << family[m].first;
+        EXPECT_LE(fit.fitPercent, prev) << family[m].first << " must not increase fit vs previous";
+
+        if (m == 0) {
+            EXPECT_DOUBLE_EQ(fit.fitPercent, 100.0) << "pure Euclidean member must read a full 100";
+            firstFit = fit.fitPercent;
+        } else {
+            EXPECT_LT(fit.fitPercent, 100.0) << family[m].first << " departed the skeleton, must read < 100";
+        }
+        lastFit = fit.fitPercent;
+        prev = fit.fitPercent;
+    }
+
+    // The family must actually degrade, not merely stay flat: the tightest
+    // cluster is markedly worse-fitting than the pure Euclidean start.
+    EXPECT_LT(lastFit, firstFit);
+    EXPECT_LT(lastFit, 50.0);
+}
+
+// A deliberately non-Euclidean pattern must still yield a valid, renderable
+// best-fit lane (steps >= 2, 1 <= hitCount <= steps) with a fitPercent that
+// stays inside [0,100]. The fitter never fails on a real-but-messy loop.
+namespace {
+void expectUsableBestFit(const std::vector<double>& onsets, double loopLengthPpq, const char* label) {
+    const poly::FitResult fit = poly::fitEuclidean(onsets, loopLengthPpq);
+    EXPECT_TRUE(fit.valid) << label;
+    EXPECT_GE(fit.steps, 2) << label;
+    EXPECT_GE(fit.hitCount, 1) << label;
+    EXPECT_LE(fit.hitCount, fit.steps) << label;
+    EXPECT_GE(fit.fitPercent, 0.0) << label;
+    EXPECT_LE(fit.fitPercent, 100.0) << label;
+}
+} // namespace
+
+TEST(FitEuclidean, NonEuclideanPatternsRemainUsableBestFit) {
+    const double len = loopLength(8, 8);
+
+    // Extra hit: an on-grid onset the maximally-even skeleton cannot host.
+    auto extra = euclideanOnsets(3, 8, 0, 8);
+    extra.push_back(0.5);
+    expectUsableBestFit(extra, len, "extra-hit");
+
+    // Missing hit: drop one onset from a pure Euclidean rhythm.
+    auto missing = euclideanOnsets(5, 16, 3, 16);
+    ASSERT_GE(missing.size(), 3u);
+    missing.pop_back();
+    expectUsableBestFit(missing, loopLength(16, 16), "missing-hit");
+
+    // Shifted subset: keep only some hits and slide one off its grid slot.
+    std::vector<double> shifted = {0.0, 1.5 + 0.3, 3.0};
+    expectUsableBestFit(shifted, len, "shifted-subset");
+
+    // Dense cluster: four adjacent hits with no maximally-even spelling.
+    std::vector<double> dense = {0.0, 0.5, 1.0, 1.5};
+    expectUsableBestFit(dense, len, "dense-cluster");
 }
 
 // --- T03: round-trip render proof through the real engine ---
@@ -357,4 +520,123 @@ TEST(FitEuclidean, RenderRoundTripFive_16) {
 TEST(FitEuclidean, RenderRoundTripSeven_12) {
     for (int r = 0; r < 12; ++r)
         expectRenderRoundTrip(7, 12, r, 12);
+}
+
+// --- S02: non-Euclidean golden regression pack ---
+//
+// A committed, diff-reviewable table freezing poly::fitEuclidean's output on
+// deliberately non-Euclidean input. Each record pins the ENTIRE fitted struct —
+// every integer/structural field plus the D040/MEM185 fitPercent metric and the
+// IEEE onsetError residual — so any future engine or fitter change that silently
+// alters a fitted lane on messy input fails CI immediately.
+//
+// Inputs are built deterministically from the same euclideanOnsets/loopLength/
+// clusteredOnsets32 helpers the rest of this file uses (no live-Cubase / no
+// GOLDEN_DIR dependency); the frozen records were captured from the fitter as it
+// stands after S01 and hand-verified against the D040 formula
+//   fitPercent = 100 * (1 - patternMismatch / (2 * min(hitCount, steps - hitCount)))
+// (fully-occupied edge -> 100, !found -> 0). The pack covers the roadmap's four
+// non-Euclidean families (extra hit, missing hit, shifted subset, dense cluster),
+// the pinned-grid degradation family (clusteredOnsets32, mid-range fitPercent),
+// and the degenerate/!found floor (valid=false, fitPercent 0).
+
+namespace {
+
+struct GoldenCase {
+    const char* label;
+    std::vector<double> onsets;
+    double loopLengthPpq;
+
+    // Frozen fitted record.
+    bool valid;
+    int steps;
+    int subdivision;
+    int hitCount;
+    int rotation;
+    int patternMismatch;
+    int fixedPatternLength;
+    double fitPercent;
+    double onsetError;
+    // Per-step occupancy of fixedPattern as '0'/'1', length == fixedPatternLength
+    // (empty string for the degenerate !found floor).
+    const char* occupancy;
+};
+
+std::vector<GoldenCase> goldenPack() {
+    // Extra hit: an on-grid onset the maximally-even E(3,8) skeleton cannot host.
+    auto extra = euclideanOnsets(3, 8, 0, 8);
+    extra.push_back(0.5);
+
+    // Missing hit: drop one onset from a pure E(5,16) rhythm.
+    auto missing = euclideanOnsets(5, 16, 3, 16);
+    missing.pop_back();
+
+    return {
+        {"extra-hit", extra, loopLength(8, 8), true, 32, 32, 4, 0, 4, 32, 50.0, 0.0,
+         "10001000000010000000000010000000"},
+        {"missing-hit", missing, loopLength(16, 16), true, 32, 32, 4, 0, 6, 32, 25.0, 0.0,
+         "00000010000010000010000010000000"},
+        {"shifted-subset",
+         {0.0, 1.5 + 0.3, 3.0},
+         loopLength(8, 8),
+         true,
+         32,
+         32,
+         3,
+         24,
+         2,
+         32,
+         66.666666666666671,
+         0.0025000000000000044,
+         "10000000000000100000000010000000"},
+        {"dense-cluster",
+         {0.0, 0.5, 1.0, 1.5},
+         loopLength(8, 8),
+         true,
+         32,
+         32,
+         4,
+         0,
+         4,
+         32,
+         50.0,
+         0.0,
+         "10001000100010000000000000000000"},
+        {"pinned-stride-3", clusteredOnsets32(3), loopLength(32, 32), true, 32, 32, 5, 12, 4, 32, 60.0, 0.0,
+         "10010010010010000000000000000000"},
+        {"pinned-stride-2", clusteredOnsets32(2), loopLength(32, 32), true, 32, 32, 5, 6, 6, 32, 40.0, 0.0,
+         "10101010100000000000000000000000"},
+        {"pinned-stride-1", clusteredOnsets32(1), loopLength(32, 32), true, 32, 32, 5, 0, 8, 32, 19.999999999999996,
+         0.0, "11111000000000000000000000000000"},
+        {"degenerate-single", {1.5}, 4.0, false, 4, 4, 1, 0, 0, 0, 0.0, 0.0, ""},
+    };
+}
+
+} // namespace
+
+TEST(FitEuclidean, NonEuclideanGoldenPackReproducesFrozenRecords) {
+    for (const auto& g : goldenPack()) {
+        const poly::FitResult fit = poly::fitEuclidean(g.onsets, g.loopLengthPpq);
+
+        EXPECT_EQ(fit.valid, g.valid) << g.label;
+        EXPECT_EQ(fit.steps, g.steps) << g.label;
+        EXPECT_EQ(fit.subdivision, g.subdivision) << g.label;
+        EXPECT_EQ(fit.hitCount, g.hitCount) << g.label;
+        EXPECT_EQ(fit.rotation, g.rotation) << g.label;
+        EXPECT_EQ(fit.patternMismatch, g.patternMismatch) << g.label;
+        EXPECT_EQ(fit.fixedPatternLength, g.fixedPatternLength) << g.label;
+
+        // Rational-of-ints metric — exact-equal (EXPECT_DOUBLE_EQ tolerates the
+        // 4-ULP the division introduces).
+        EXPECT_DOUBLE_EQ(fit.fitPercent, g.fitPercent) << g.label;
+        // IEEE PPQ^2 residual — freeze within a tight epsilon.
+        EXPECT_NEAR(fit.onsetError, g.onsetError, 1e-9) << g.label;
+
+        // Per-step timeline occupancy.
+        const int occLen = static_cast<int>(std::strlen(g.occupancy));
+        ASSERT_EQ(occLen, g.fixedPatternLength) << g.label << " occupancy string length must match";
+        for (int i = 0; i < g.fixedPatternLength; ++i)
+            EXPECT_EQ(fit.fixedPattern[static_cast<size_t>(i)] ? 1 : 0, g.occupancy[i] == '1' ? 1 : 0)
+                << g.label << " step " << i;
+    }
 }

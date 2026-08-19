@@ -142,6 +142,21 @@ FitResult fitEuclidean(const std::vector<double>& onsetsPpq, double loopLengthPp
             result.onsetError = quantErr;
             result.patternMismatch = bestMismatch;
 
+            // Normalized nearest-Euclidean goodness-of-fit, derived purely from
+            // the structural occupancy mismatch (NOT the timing residual). The
+            // maximum number of steps a size-k Euclidean skeleton can disagree
+            // with any occupancy on the same k-of-n grid is 2*min(k, n-k) (each
+            // displaced hit costs one false-negative on its Euclidean slot and
+            // one false-positive on the slot it moved to). Dividing by that
+            // bound puts a fully-displaced pattern at 0 and a pure Euclidean
+            // pattern (mismatch 0) at 100. A fully-occupied grid (k == n) has no
+            // empty step for the skeleton to disagree on, so it is trivially a
+            // pure Euclidean fit — special-cased to 100 to avoid 0/0.
+            const int room = std::min(k, n - k);
+            result.fitPercent =
+                (room == 0) ? 100.0
+                            : 100.0 * (1.0 - static_cast<double>(bestMismatch) / (2.0 * static_cast<double>(room)));
+
             // Residual capture (T02): the actual per-step occupancy of the
             // winning grid becomes a timeline `fixedPattern` — this preserves
             // extra/missing hits the maximally-even skeleton cannot host, so
