@@ -37,6 +37,11 @@
 #     at all (v0.10.0), so a gitignored scratch doc needs neither an entry here
 #     nor an `exempt_dirs` line.
 #
+# As of v0.11.0 doc-completeness also runs the reverse pass: every entry here —
+# each `mappings` doc: target and each `cannot_drift` path — must still exist on
+# disk. Deleting or renaming a doc means deleting or updating its entry in the
+# same change; a stale entry now fails the check rather than sitting unnoticed.
+#
 # Generated and data-driven docs are NOT exempt by class — poly's carry
 # `class: gated` — so they keep their `cannot_drift` entries below.
 
