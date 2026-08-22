@@ -509,7 +509,7 @@ jobs:
 
       - name: Upload run artifacts
         if: always()
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: cubase-nightly-artifacts
           path: ${{ env.POLY_ARTIFACT_DIR }}
@@ -522,7 +522,7 @@ jobs:
       # failure — the trace dir is absent on a green run.
       - name: Upload e2e traces on failure
         if: failure() && env.POLY_CDP_PORT != ''
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: cubase-e2e-traces
           path: tests/cubase/e2e/test-results
