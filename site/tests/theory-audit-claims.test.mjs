@@ -138,10 +138,27 @@ async function docSource(file) {
   return srcCache.get(file);
 }
 
+// Every case registered in this host — whole-file (FINDINGS-driven) and
+// section-scoped (standalone test blocks like S03-F03). The coverage test
+// asserts against this set so deleting any required case's registration block
+// turns the suite red by name, not just its whole-file assertion body.
+const REGISTERED_CASE_IDS = new Set();
+function registerCase(id) {
+  REGISTERED_CASE_IDS.add(id);
+}
+
+for (const f of FINDINGS) {
+  registerCase(f.id);
+}
+
 test('theory-audit-claims covers at least the S02 and S03 findings', () => {
-  const ids = new Set(FINDINGS.map((f) => f.id));
-  for (const req of ['S02-F01', 'S02-F12', 'S02-F54', 'S03-F02']) {
-    assert.ok(ids.has(req), `theory-audit-claims dropped required finding: ${req}`);
+  for (const req of ['S02-F01', 'S02-F12', 'S02-F54', 'S03-F02', 'S03-F03']) {
+    assert.ok(
+      REGISTERED_CASE_IDS.has(req),
+      `theory-audit-claims dropped required finding: ${req}. ` +
+        'Every M001 corrected claim must have a registered case in this host ' +
+        '(either a FINDINGS row or a section-scoped test block registered via registerCase).',
+    );
   }
 });
 
@@ -219,6 +236,10 @@ function extractSection(src, heading) {
   return lines.slice(start, end).join('\n');
 }
 
+// Register the section-scoped case's id alongside its test() call so the
+// coverage assertion above catches deletion of this block — removing the
+// test() removes the registerCase() line with it.
+registerCase('S03-F03');
 test('S03-F03 (08-minimalism.mdx, section-scoped): Drift section cites Piano Phase, not an unnamed Reich process', async () => {
   const src = await docSource('08-minimalism.mdx');
   const section = extractSection(src, '## Drift as Phase Engine');
