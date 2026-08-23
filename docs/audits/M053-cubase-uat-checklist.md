@@ -4,6 +4,13 @@ class: gated
 
 # M053 Cubase UAT Plan — WebUI Parity Go-Signal
 
+> **Milestone numbering (legacy scheme):** the `M0xx` identifiers in this
+> document — `M053` and any others it cites — belong to the repo's earlier
+> commit-message milestone numbering. They do **not** correspond to the GSD
+> milestone scheme (`M001` onwards) now used for planned work: a GSD `M001` is
+> a different milestone from anything named here. Read these references as
+> historical labels, not as pointers into the current roadmap.
+
 > **Status (2026-07-28):** UAT script (human-run). Fill the Result/Notes columns in Cubase, then attach this file as the Integration + UAT verification-class evidence for M053 close.
 > **Lifecycle:** Verification artifact — the manual go-signal the S05 decommission plan named. Only the milestone owner can run it (R10: the agent cannot drive Cubase).
 > **Scope:** The 8 `close-in-webui` capability gaps closed in S03a–S03c, one representative Integration round-trip, and the G06 drag-export deferral spot-check. The 7 cosmetic/viz-divergence rows (G09–G14, G16) are accepted documented divergences per the gap-closure plan — **not** tested here.
