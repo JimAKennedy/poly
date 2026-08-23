@@ -11,6 +11,12 @@ import EuclideanDiagram from '../../components/EuclideanDiagram.astro';
 
 This appendix catalogues the Euclidean distributions most relevant to Poly's rhythmic vocabulary, organised by step count. For each pattern, the table lists the onset distribution, traditional associations, and the chapter where it is discussed in detail. Use this as a lookup reference when designing patches — if you know the tradition you are drawing from, find its Euclidean signature here and dial it in directly.
 
+## Phase Convention
+
+Every row in this appendix is derived from `bjorklund(n, k)` in `site/src/audio/bjorklund.ts` and then, if a rotation is specified, rotated using Poly's **rotate-right** convention (a rotation of `r` moves each onset `r` steps later in the cycle, wrapping at the end). Rows shown without an explicit rotation are printed at **rotation 0** — the canonical Bjorklund output, with the first onset always at step 0. The Pattern column reads left-to-right from step 0, so `x` at position `i` means an onset at step `i`, and the Grouping column is the wrap-around gap sequence between consecutive onsets (each numeral is the distance to the next onset, and the numerals sum to `n`).
+
+The same E(k,n) distribution can therefore appear in the wild with any of its `n` rotational spellings — they are all the same Euclidean rhythm, just phased differently against step 0. For example, E(3,16) at rotation 0 puts onsets at steps 0, 5, 10 (gaps `5+5+6`, printed as `x . . . . x . . . . x . . . . .` in the 16-step table below); the same distribution rotated by 6 puts onsets at steps 0, 6, 11 (gaps `6+5+5`), and rotated by 11 puts them at steps 0, 5, 11 (gaps `5+6+5`). If you derive a row from Bjorklund by hand and get a different Pattern than the table shows, check the rotation before concluding the row is wrong: the two are the same distribution iff their gap sequences are cyclic rotations of each other.
+
 ## 4 Steps
 
 {/* Regenerate via `node scripts/generate-euclidean-appendix.mjs`. Row selection and per-row Traditional Association + Chapter + optional rotation live in `site/src/data/euclidean-appendix.json`; the E(k,n), Pattern, and Grouping columns are computed from bjorklund(). Do not hand-edit content between markers. */}
