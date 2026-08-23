@@ -1,49 +1,57 @@
 #!/usr/bin/env bash
 # check-doc-conformance.sh
 #
-# Single source of truth for the M071 doc-conformance guardrail suite.
-# Invoked by BOTH .github/workflows/ci.yml (site-lint job) and
+# Single source of truth for the doc-conformance / audit-ledger guardrail
+# suite. Invoked by BOTH .github/workflows/ci.yml (site-lint job) and
 # scripts/pre-push-check.sh so the CI list and the pre-push list are one list
 # and cannot drift.
 #
-# Runs the full conformance / doc-arithmetic guardrail node-test suite from
-# site/ and exits non-zero if any test fails. `node --test` names the exact
-# failing file/case in its output, so a reintroduced wrong Euclidean pattern or
-# a dangling preset name surfaces the offending file directly.
+# Runs the full guardrail node-test suite and exits non-zero if any test
+# fails. `node --test` names the exact failing file/case in its output, so a
+# reintroduced wrong Euclidean pattern, a dangling preset name, a dropped
+# audit-ledger row, or a broken prose-claim helper surfaces the offending
+# file directly.
 #
-# Requires site/node_modules (the claim tests import js-yaml). CI runs `npm ci`
-# before this step; callers that cannot guarantee node_modules (the pre-push
-# hook) should gate on its presence before invoking — this script assumes deps
-# are installed.
+# Two families of tests ride this runner:
+#   * site/tests/**  — M071 doc-conformance guardrails (import js-yaml from
+#                      site/node_modules). CI runs `npm ci` before this step;
+#                      callers that cannot guarantee site/node_modules (the
+#                      pre-push hook) should gate on its presence.
+#   * docs/audits/** — M001 S01 audit-ledger completeness gates (parity
+#                      matrix, gap-closure plan, theory-audit remediation
+#                      ledger). Zero external module deps.
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-SITE_DIR="$REPO_ROOT/site"
 
-# The M071 conformance / guardrail suite. Adding a guardrail test to the suite
-# means adding it here — site/tests/doc-conformance-wiring.test.mjs asserts that
-# every required file is named in this runner, so an omission fails that wiring
-# test rather than silently dropping coverage.
+# The guardrail suite. Adding a guardrail test means adding it here —
+# site/tests/doc-conformance-wiring.test.mjs asserts that every required file
+# is named in this runner, so an omission fails that wiring test rather than
+# silently dropping coverage.
 TESTS=(
-    tests/euclidean-claims.test.mjs
-    tests/appendix-euclidean-claims.test.mjs
-    tests/prose-pattern-claims.test.mjs
-    tests/chapter-euclidean-guardrail.test.mjs
-    tests/polypatch-preset-resolution.test.mjs
-    tests/preset-table-conformance.test.mjs
-    tests/preset-taxonomy-conformance.test.mjs
-    tests/prose-conformance-claims.test.mjs
-    tests/idiom-break-framing.test.mjs
-    tests/theory-euclidean-guardrail.test.mjs
-    tests/theory-patch-conformance.test.mjs
+    site/tests/euclidean-claims.test.mjs
+    site/tests/appendix-euclidean-claims.test.mjs
+    site/tests/prose-pattern-claims.test.mjs
+    site/tests/chapter-euclidean-guardrail.test.mjs
+    site/tests/polypatch-preset-resolution.test.mjs
+    site/tests/preset-table-conformance.test.mjs
+    site/tests/preset-taxonomy-conformance.test.mjs
+    site/tests/prose-conformance-claims.test.mjs
+    site/tests/idiom-break-framing.test.mjs
+    site/tests/theory-euclidean-guardrail.test.mjs
+    site/tests/theory-patch-conformance.test.mjs
+    site/tests/prose-claim-helpers.test.mjs
+    docs/audits/theory-audit-remediation.test.mjs
+    docs/audits/parity-matrix.test.mjs
+    docs/audits/gap-closure-plan.test.mjs
 )
 
-echo "check-doc-conformance.sh: running ${#TESTS[@]} doc-conformance guardrail test file(s):"
+echo "check-doc-conformance.sh: running ${#TESTS[@]} guardrail test file(s):"
 for t in "${TESTS[@]}"; do
-    echo "  - site/$t"
+    echo "  - $t"
 done
 
-cd "$SITE_DIR"
+cd "$REPO_ROOT"
 node --test "${TESTS[@]}"
