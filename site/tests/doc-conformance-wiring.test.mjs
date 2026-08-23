@@ -51,6 +51,8 @@ const REQUIRED = [
   'site/tests/theory-patch-conformance.test.mjs',
   // M001 S01 shared prose-claim helper self-test.
   'site/tests/prose-claim-helpers.test.mjs',
+  // M001 S02+ shared theory-audit-remediation prose-claim host (D010).
+  'site/tests/theory-audit-claims.test.mjs',
   // M001 S01 audit-ledger completeness gates.
   'docs/audits/theory-audit-remediation.test.mjs',
   'docs/audits/parity-matrix.test.mjs',

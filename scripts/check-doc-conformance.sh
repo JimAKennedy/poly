@@ -43,6 +43,7 @@ TESTS=(
     site/tests/theory-euclidean-guardrail.test.mjs
     site/tests/theory-patch-conformance.test.mjs
     site/tests/prose-claim-helpers.test.mjs
+    site/tests/theory-audit-claims.test.mjs
     docs/audits/theory-audit-remediation.test.mjs
     docs/audits/parity-matrix.test.mjs
     docs/audits/gap-closure-plan.test.mjs
