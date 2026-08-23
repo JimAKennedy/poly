@@ -4,6 +4,13 @@ class: archived
 
 # M053 WebUI ↔ Native Feature Parity Matrix
 
+> **Milestone numbering (legacy scheme):** the `M0xx` identifiers in this
+> document — `M053` and any others it cites — belong to the repo's earlier
+> commit-message milestone numbering. They do **not** correspond to the GSD
+> milestone scheme (`M001` onwards) now used for planned work: a GSD `M001` is
+> a different milestone from anything named here. Read these references as
+> historical labels, not as pointers into the current roadmap.
+
 > **Archived (2026-07-28)** — frozen audit snapshot from M053/S01. Its `file:line`
 > citations point into `plugin/source/ui/*`, the native VSTGUI views deleted in
 > M053/S05; re-verify any row by opening its cited `file:line` at the pre-S05

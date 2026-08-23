@@ -498,3 +498,12 @@ cannot_drift:
       Manual UAT guide for the M054 additive-cells feature, written to be
       executed by hand in a DAW. The feature's machine-checkable contract is
       documented in docs/engine-spec.md, which is mapped above.
+
+  - doc: "docs/audits/M001-theory-audit-remediation-plan.md"
+    reason: >-
+      Planning artifact for the M001-M005 music-theory audit remediation. It
+      enumerates findings against an external audit of the site's prose and
+      assigns each to a slice; its rows are driven by that audit and by slice
+      completion, not by any source file in this tree. The site prose it plans
+      to correct is itself mapped above, and each row's fix is verified by the
+      per-claim tests in site/tests rather than by touch-correlation.

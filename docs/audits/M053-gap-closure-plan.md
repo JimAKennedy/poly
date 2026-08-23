@@ -4,6 +4,13 @@ class: archived
 
 # M053 WebUI ↔ Native Gap-Closure Plan
 
+> **Milestone numbering (legacy scheme):** the `M0xx` identifiers in this
+> document — `M053` and any others it cites — belong to the repo's earlier
+> commit-message milestone numbering. They do **not** correspond to the GSD
+> milestone scheme (`M001` onwards) now used for planned work: a GSD `M001` is
+> a different milestone from anything named here. Read these references as
+> historical labels, not as pointers into the current roadmap.
+
 > **Archived (2026-07-28)** — frozen decision artifact from M053/S02. Its
 > `file:line` citations reference `plugin/source/ui/*`, the native VSTGUI views
 > deleted in M053/S05; they are pinned to the pre-S05 commit, not `HEAD`. The

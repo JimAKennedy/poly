@@ -4,6 +4,13 @@ class: gated
 
 # Additive Cells — UAT Guide
 
+> **Milestone numbering (legacy scheme):** the `M0xx` identifiers in this
+> document — `M054` and any others it cites — belong to the repo's earlier
+> commit-message milestone numbering. They do **not** correspond to the GSD
+> milestone scheme (`M001` onwards) now used for planned work: a GSD `M001` is
+> a different milestone from anything named here. Read these references as
+> historical labels, not as pointers into the current roadmap.
+
 > **Status (2026-07-31):** Draft UAT script (human-run), deferred — not a release
 > blocker. Tracked against M073/M054 WebUI-fix work; not gating any milestone.
 > **Lifecycle:** Verification artifact — a manual exploration guide for the
