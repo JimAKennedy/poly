@@ -3,15 +3,25 @@
 # =============================================================================
 
 # -----------------------------------------------------------------------------
-# Vendored jk-standards skills (installed via `jk-standards install-skills`;
-# pinned by skills-lock.json). Named explicitly so the tracked poly-local
-# .claude/skills/poly-site skill stays under version control.
+# Vendored agent skills. Skills are installed, not authored here: the five
+# jk-standards ones come from `jk-standards install-skills --dest .claude/skills`
+# and are pinned by skills-lock.json, and other agent harnesses install their own
+# defaults alongside them. The rule is deny-by-default rather than an explicit
+# list of the five, because an explicit list leaves any *newly* installed skill
+# untracked-but-unignored, where the next `git add -A` sweeps it into a commit —
+# which is exactly how 294 files of unrelated vendored skills once landed here.
+# poly-site is the one poly-local, hand-authored skill, so it is re-included.
+#
+# `.claude/skills/*` (not `.claude/skills/`) is required: git will not descend
+# into an excluded directory, so the negation below could not re-include
+# poly-site if the parent were excluded wholesale.
 # -----------------------------------------------------------------------------
-.claude/skills/branch-discipline/
-.claude/skills/ci-hygiene/
-.claude/skills/doc-anti-drift/
-.claude/skills/escape-hatch-discipline/
-.claude/skills/sanitizer-ci-setup/
+.claude/skills/*
+!.claude/skills/poly-site/
+
+# Generic-agent skills dir (`install-skills` default --dest). Nothing in poly
+# reads it; it exists only when a harness installs skills without --dest.
+.agents/
 
 # -----------------------------------------------------------------------------
 # Build Directories
