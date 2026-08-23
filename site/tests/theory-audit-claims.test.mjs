@@ -82,6 +82,36 @@ const FINDINGS = [
     ],
   },
   {
+    id: 'S03-F02',
+    file: '08-minimalism.mdx',
+    rule:
+      "Ch 8's 'Reich and Phase Shifting' section must pair each of Reich's three named works with its own " +
+      'technique: Piano Phase (1967) with continuous/gradual phase-shifting, Drumming (1971) with construction ' +
+      'and reduction (not phase shifting), and Clapping Music (1972) with discrete one-position jumps. ' +
+      'Ledger F02.',
+    // The pre-correction opening sentence began by conflating the three
+    // techniques into one gradual-phase-shifting narrative. That opening must
+    // not reappear.
+    forbidden: [
+      'Steve Reich starts two identical rhythmic patterns in unison',
+    ],
+    // Any prose that attributes phase-shifting or gradual/continuous shifting
+    // to Drumming reverses the correction. Match a Drumming citation followed
+    // shortly by phase-shifting language on the same line.
+    forbiddenRegex: [
+      /\*Drumming\*[^\n]{0,120}(phase[- ]?shift|gradual (?:phase|shift)|continuous (?:phase|shift))/i,
+    ],
+    present: [
+      'three distinct techniques',
+      'Piano Phase',
+      'Violin Phase',
+      'Drumming',
+      'construction and reduction',
+      'Clapping Music',
+      'one position every twelve bars',
+    ],
+  },
+  {
     id: 'S02-F54',
     file: 'appendix-euclidean-reference.mdx',
     rule:
@@ -108,10 +138,10 @@ async function docSource(file) {
   return srcCache.get(file);
 }
 
-test('theory-audit-claims covers at least the S02 findings (F01, F12, F54)', () => {
+test('theory-audit-claims covers at least the S02 and S03 findings', () => {
   const ids = new Set(FINDINGS.map((f) => f.id));
-  for (const req of ['S02-F01', 'S02-F12', 'S02-F54']) {
-    assert.ok(ids.has(req), `theory-audit-claims dropped required S02 finding: ${req}`);
+  for (const req of ['S02-F01', 'S02-F12', 'S02-F54', 'S03-F02']) {
+    assert.ok(ids.has(req), `theory-audit-claims dropped required finding: ${req}`);
   }
 });
 
@@ -165,5 +195,61 @@ test('S02-F54 arithmetic: E(3,16) appendix row matches bjorklund(16, 3) at rotat
     '5+5+6',
     `appendix-euclidean-reference.mdx [S02-F54]: E(3,16) grouping cell "${groupingCell.trim()}" ` +
       `disagrees with derived gap sequence ${printedGaps.join('+')}. Authority: bjorklund(16, 3) at rotation 0.`,
+  );
+});
+
+// F03 is asserted section-scoped rather than whole-file: the Drift → Piano
+// Phase re-point only makes sense when the "## Drift as Phase Engine" section
+// itself names the work Drift models. A whole-file check would false-pass on
+// a Piano Phase mention that lives back in the Reich section while the Drift
+// section still speaks of Reich's process without naming its source, which is
+// exactly the pre-correction shape ledger F03 records. Extracting the section
+// makes the failure name the Drift section rather than the chapter at large.
+function extractSection(src, heading) {
+  const lines = src.split('\n');
+  const start = lines.findIndex((l) => l.trim() === heading);
+  if (start < 0) return null;
+  let end = lines.length;
+  for (let i = start + 1; i < lines.length; i++) {
+    if (/^##\s/.test(lines[i])) {
+      end = i;
+      break;
+    }
+  }
+  return lines.slice(start, end).join('\n');
+}
+
+test('S03-F03 (08-minimalism.mdx, section-scoped): Drift section cites Piano Phase, not an unnamed Reich process', async () => {
+  const src = await docSource('08-minimalism.mdx');
+  const section = extractSection(src, '## Drift as Phase Engine');
+  assert.ok(
+    section,
+    "08-minimalism.mdx [S03-F03]: '## Drift as Phase Engine' section not found. " +
+      'Authority: ledger F03 requires the Drift section to name the Reich work it models (Piano Phase).',
+  );
+  assertClaim(
+    assert,
+    {
+      id: 'S03-F03',
+      file: '08-minimalism.mdx (## Drift as Phase Engine)',
+      rule:
+        'Ch 8 Drift section must name Piano Phase (1967) as the work Drift models — Drift produces ' +
+        'continuous phase shift, which is Piano Phase, not the construction/reduction of Drumming. ' +
+        'Ledger F03.',
+      // The pre-correction Drift section referred to "the gradual process
+      // that Reich described" without naming which work — the exact shape
+      // that lets a reader assume Drumming (since Drumming was the only
+      // Reich work named upstream before S03-F02 fixed that too).
+      forbidden: [
+        'the gradual process that Reich described',
+      ],
+      present: [
+        'Piano Phase',
+        '(1967)',
+        'ref-35',
+        'not the additive construction of Drumming',
+      ],
+    },
+    section,
   );
 });
