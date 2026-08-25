@@ -23,7 +23,7 @@
 //   5. Each finding row cites a `M0xx/Syy` slice that appears in that
 //      milestone's own breakdown table.
 //   6. No `_pending_` placeholder survives anywhere in the ledger.
-//   7. Every ledger ID cross-referenced from the "Related open issues" table
+//   7. Every ledger ID cross-referenced from the "Related issues" table
 //      resolves to a real finding row.
 //   8. No issue is both carried in that table and declared deliberately
 //      absent from it.
@@ -291,18 +291,18 @@ test('no _pending_ placeholder survives in any finding row', () => {
   }
 });
 
-// --- Related-open-issues table -------------------------------------------
+// --- Related-issues table -----------------------------------------------
 //
-// The "Related open issues" section claims to enumerate every open GitHub
-// issue overlapping this plan's remit, and the "Out of scope" section names a
-// subset of the same issues. Whether an issue is *open on GitHub* is not
+// The "Related issues" section claims to enumerate every GitHub issue
+// overlapping this plan's remit, and the "Out of scope" section names a subset
+// of the same issues. Whether an issue is *open on GitHub* is not
 // checkable offline, so these cases guard the parts that are: that the table's
 // ledger cross-references resolve, that an issue is not simultaneously tabled
 // and declared absent, and that the two prose sites cite the same issue set.
 // The desync these were written against was an "Out of scope" list naming only
 // two of the seven engine issues the table carries.
 
-const ISSUES_HEADING = '## Related open issues';
+const ISSUES_HEADING = '## Related issues';
 const OUT_OF_SCOPE_HEADING = '## Out of scope';
 
 function sectionLines(heading) {
@@ -343,8 +343,8 @@ const absentProse = issuesSection
   .join('\n');
 const absentIssues = issueNumbers(absentProse);
 
-test('Related open issues: the table is non-empty and every row cites resolvable ledger findings', () => {
-  assert.ok(issueRows.length > 0, 'Related open issues table has no issue rows');
+test('Related issues: the table is non-empty and every row cites resolvable ledger findings', () => {
+  assert.ok(issueRows.length > 0, 'Related issues table has no issue rows');
   for (const row of issueRows) {
     const ids = row.ledger.match(/F\d{2}/g) || [];
     assert.ok(
@@ -360,7 +360,7 @@ test('Related open issues: the table is non-empty and every row cites resolvable
   }
 });
 
-test('Related open issues: no issue is both tabled and declared deliberately absent', () => {
+test('Related issues: no issue is both tabled and declared deliberately absent', () => {
   const tabled = new Set(issueRows.map((r) => r.issue));
   const both = [...tabled].filter((n) => absentIssues.has(n));
   assert.deepEqual(
@@ -370,14 +370,14 @@ test('Related open issues: no issue is both tabled and declared deliberately abs
   );
 });
 
-test('Out of scope cites only issues the Related-open-issues table carries', () => {
+test('Out of scope cites only issues the Related-issues table carries', () => {
   const tabled = new Set(issueRows.map((r) => r.issue));
   const cited = issueNumbers(sectionLines(OUT_OF_SCOPE_HEADING).join('\n'));
   const unlisted = [...cited].filter((n) => !tabled.has(n));
   assert.deepEqual(
     unlisted,
     [],
-    `Out of scope names issue(s) absent from the Related open issues table: ${unlisted
+    `Out of scope names issue(s) absent from the Related issues table: ${unlisted
       .map((n) => `#${n}`)
       .join(', ')}`,
   );

@@ -28,7 +28,7 @@ class: gated
 > M001/S01 — asserts every finding ID F01–F54 is present, each carries exactly
 > one valid severity, disposition, and status token, each names a real slice
 > that appears in that milestone's breakdown table below, and no `_pending_`
-> placeholder survives. It also guards the "Related open issues" table: its
+> placeholder survives. It also guards the "Related issues" table: its
 > ledger cross-references must resolve, no issue may be both tabled and
 > declared absent, and "Out of scope" may cite only issues the table carries.
 > Whether each tabled issue is still open on the tracker is *not* machine-
@@ -290,18 +290,19 @@ The mechanical half of that verdict is `docs/audits/theory-audit-remediation.tes
 plus the per-claim tests each slice adds. The editorial half is a human re-read —
 which is why every row names a *location*, not just a fix.
 
-## Related open issues
+## Related issues
 
-Every currently-open GitHub issue that overlaps this plan's remit is enumerated
-here so the two views cannot silently drift. A row is either **closed by** a
-ledger finding (the finding's verification, when it lands, is what will close
-the issue) or **not closed here** — retained on the issue tracker because it is
-an engine or preset change that this documentation-and-tests plan deliberately
-does not build.
+Every GitHub issue that overlaps this plan's remit is enumerated here so the two
+views cannot silently drift. A row is either **closed by** a ledger finding (the
+finding's verification is what closes the issue) or **not closed here** —
+retained on the issue tracker because it is an engine or preset change that this
+documentation-and-tests plan deliberately does not build. Rows stay in the table
+after their issue closes, so the finding ↔ issue link survives; the Relationship
+cell records the closure.
 
 | Issue | Ledger row | Relationship |
 |---|---|---|
-| [#91](https://github.com/JimAKennedy/poly/issues/91) | F54 | Closed by F54, which landed in M001/S02. The E(3,16) appendix row is correct under Poly's phase convention; F54 makes that convention explicit next to the table so a reader can verify without re-deriving Bjorklund. The issue is still open on the tracker — closing it is the last step of the S02 verification, not a further code change. |
+| [#91](https://github.com/JimAKennedy/poly/issues/91) — **closed** | F54 | Closed by F54, which landed in M001/S02; the issue was closed on the tracker 2026-08-25. The E(3,16) appendix row is correct under Poly's phase convention, and an arithmetic case re-derives the printed row from `bjorklund(16, 3)`. What was actually missing was the convention itself: F54 states it in a "Phase Convention" preamble so a reader arriving at a different rotation can tell a phase difference from an error without re-deriving Bjorklund. |
 | [#150](https://github.com/JimAKennedy/poly/issues/150) | F31, F32 | Not closed here. #150 proposes tempo-relative non-isochronous subdivision profiles (samba, Malian jembe) citing the same Polak (2010) / Polak & London (2014) evidence F31 discloses. F31/F32 state in prose that Humanize is random jitter and not those profiles; building the profiles stays on the issue tracker. |
 | [#151](https://github.com/JimAKennedy/poly/issues/151) | F31, F10 | Not closed here. #151 proposes replacing white-noise humanize with a correlated 1/f process. That is the engine half of the same gap F31 discloses, and it is also what would let F10's "precise but not quantised" characterisation be modelled rather than merely hedged. |
 | [#152](https://github.com/JimAKennedy/poly/issues/152) | F18, F38–F40 | Not closed here. #152 proposes a timeline-relative constraint so mutation and fills respect the clave/bell matrix. This plan only makes Ch 3's clave claims properly sourced (F18) and its patch construction self-consistent (F38–F40); teaching the engine about the timeline lane is the tracker's. |
