@@ -232,6 +232,54 @@ TEST(MidiCaptureBuffer, DenseThirtyTwoBarPatternNoEventLoss) {
     EXPECT_EQ(n, static_cast<size_t>(kExpected));
 }
 
+// Backs the chapter-16 claim that at typical groove densities (four to six
+// active lanes) the buffer holds far more history than any capture length will
+// ever request. "Any capture length" is bounded: the Capture Length parameter
+// (plugin/source/controller_base.cpp, kCaptureLength) is a 1-32 bar stepped
+// control, so 32 bars is the largest window that can be asked for.
+//
+// The claim is proven at the pessimistic end of "typical": every lane firing on
+// every sixteenth, which is the densest a lane can be (subdivision clamps to
+// 16) and denser than the "moderate Density" the prose describes. If the
+// headroom holds there, it holds for every real patch at that lane count.
+TEST(MidiCaptureBuffer, TypicalDensityRetainsBeyondMaxCaptureLength) {
+    constexpr int kMaxCaptureBars = 32; // kCaptureLength parameter ceiling
+    constexpr int kStepsPerBar = 16;    // sixteenths = max subdivision
+    constexpr double kStepPpq = MidiCaptureBuffer::kBeatsPerBar / kStepsPerBar;
+
+    // "Four to six active lanes" — the typical range the chapter names.
+    for (int lanes = 4; lanes <= 6; ++lanes) {
+        MidiCaptureBuffer buf;
+
+        const int perBar = lanes * kStepsPerBar;
+        const int expected = kMaxCaptureBars * perBar;
+
+        for (int bar = 0; bar < kMaxCaptureBars; ++bar) {
+            for (int step = 0; step < kStepsPerBar; ++step) {
+                double ppq = static_cast<double>(bar * kStepsPerBar + step) * kStepPpq;
+                for (int lane = 0; lane < lanes; ++lane) {
+                    NoteEvent e = makeEvent(ppq, static_cast<int16_t>(36 + lane), 0.8f, static_cast<int16_t>(lane));
+                    e.laneIndex = static_cast<int16_t>(lane);
+                    buf.push(e);
+                }
+            }
+        }
+
+        // Nothing was evicted: the longest requestable window fits outright.
+        EXPECT_EQ(buf.count(), static_cast<size_t>(expected)) << "lanes=" << lanes;
+
+        std::vector<NoteEvent> out(MidiCaptureBuffer::kCapacity);
+        size_t n = buf.extractLastBars(kMaxCaptureBars, out.data(), out.size());
+        EXPECT_EQ(n, static_cast<size_t>(expected)) << "lanes=" << lanes;
+
+        // "Far more history than any capture length will ever request": the
+        // ring's own capacity spans several times the 32-bar ceiling, so the
+        // margin is headroom rather than an exact fit.
+        const int barsHeld = static_cast<int>(MidiCaptureBuffer::kCapacity) / perBar;
+        EXPECT_GE(barsHeld, 2 * kMaxCaptureBars) << "lanes=" << lanes << " barsHeld=" << barsHeld;
+    }
+}
+
 TEST(MidiCaptureBuffer, ExtractSortedOutput) {
     MidiCaptureBuffer buf;
     buf.push(makeEvent(2.0, 38, 0.6f, 1));
