@@ -169,6 +169,14 @@ const FINDINGS = [
       'and cite fr-goldberg-2015 inline for the field measurements that show systematic deviation from ' +
       'the 3:2 ratio. Per D013 theory-balkan.mdx Rule 8 stays unchanged; the caveat lives in Ch 7. ' +
       'Ledger F06.',
+    // Pre-correction phrasing asserted the long-to-short ratio *is* exactly
+    // 1.5× (or exactly 3:2). Reject any assertive re-appearance. The corrective
+    // sentence uses "not exactly 1.5×" and "look like exactly 1.5×"; both are
+    // guarded because neither is preceded by an assertive is/are/equals.
+    forbiddenRegex: [
+      /(?:are|is|equals?)\s+exactly\s+1\.5/i,
+      /(?:are|is|equals?|ratio\s+(?:is|of))\s+exactly\s+(?:3:2|three[-\s]to[-\s]two)/i,
+    ],
     present: [
       'not exactly 1.5',
       'short beats',
