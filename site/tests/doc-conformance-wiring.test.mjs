@@ -1,5 +1,5 @@
-// Non-vacuity wiring test for the M071 doc-conformance guardrail suite
-// (M071 S06 T02).
+// Non-vacuity wiring test for the shared doc-conformance guardrail runner
+// (originally M071 S06 T02; extended by M001 S01 T05).
 //
 // The shared runner scripts/check-doc-conformance.sh is the single source of
 // truth for WHICH guardrail tests run; the CI site-lint job and the local
@@ -33,29 +33,40 @@ const RUNNER = join(REPO, 'scripts', 'check-doc-conformance.sh');
 const CI = join(REPO, '.github', 'workflows', 'ci.yml');
 const PRE_PUSH = join(REPO, 'scripts', 'pre-push-check.sh');
 
-// The canonical M071 conformance / doc-arithmetic guardrail contract. Adding a
-// guardrail means adding it here AND to the runner; this list is what the
-// "coverage drop" assertion checks the runner against.
+// The canonical guardrail contract. Adding a guardrail means adding it here
+// AND to the runner; this list is what the "coverage drop" assertion checks
+// the runner against. Paths are repo-relative (the runner cd's to REPO_ROOT).
 const REQUIRED = [
-  'tests/euclidean-claims.test.mjs',
-  'tests/appendix-euclidean-claims.test.mjs',
-  'tests/prose-pattern-claims.test.mjs',
-  'tests/chapter-euclidean-guardrail.test.mjs',
-  'tests/polypatch-preset-resolution.test.mjs',
-  'tests/preset-table-conformance.test.mjs',
-  'tests/preset-taxonomy-conformance.test.mjs',
-  'tests/prose-conformance-claims.test.mjs',
-  'tests/idiom-break-framing.test.mjs',
-  'tests/theory-euclidean-guardrail.test.mjs',
-  'tests/theory-patch-conformance.test.mjs',
+  // M071 doc-conformance guardrails.
+  'site/tests/euclidean-claims.test.mjs',
+  'site/tests/appendix-euclidean-claims.test.mjs',
+  'site/tests/prose-pattern-claims.test.mjs',
+  'site/tests/chapter-euclidean-guardrail.test.mjs',
+  'site/tests/polypatch-preset-resolution.test.mjs',
+  'site/tests/preset-table-conformance.test.mjs',
+  'site/tests/preset-taxonomy-conformance.test.mjs',
+  'site/tests/prose-conformance-claims.test.mjs',
+  'site/tests/idiom-break-framing.test.mjs',
+  'site/tests/theory-euclidean-guardrail.test.mjs',
+  'site/tests/theory-patch-conformance.test.mjs',
+  // M001 S01 shared prose-claim helper self-test.
+  'site/tests/prose-claim-helpers.test.mjs',
+  // M001 S02+ shared theory-audit-remediation prose-claim host (D010).
+  'site/tests/theory-audit-claims.test.mjs',
+  // M001 S01 audit-ledger completeness gates.
+  'docs/audits/theory-audit-remediation.test.mjs',
+  'docs/audits/parity-matrix.test.mjs',
+  'docs/audits/gap-closure-plan.test.mjs',
 ];
 
-// Extract every `tests/<name>.test.mjs` token the runner script names. The
+// Extract every `<dir>/<name>.test.mjs` token the runner script names. The
 // runner keeps them in a bash TESTS=() array, one per line, so a simple regex
 // over the file body is a faithful read of what the runner actually runs.
 function runnerTests() {
   const body = readFileSync(RUNNER, 'utf8');
-  const matches = body.match(/tests\/[A-Za-z0-9._-]+\.test\.mjs/g) ?? [];
+  const matches =
+    body.match(/(?:site\/tests|docs\/audits)\/[A-Za-z0-9._-]+\.test\.mjs/g) ??
+    [];
   return [...new Set(matches)];
 }
 
@@ -76,10 +87,10 @@ test('runner names at least the full REQUIRED guardrail set (no coverage drop)',
 
 test('every test file the runner names exists on disk (no phantom entry)', () => {
   for (const rel of runnerTests()) {
-    const abs = join(SITE, rel);
+    const abs = join(REPO, rel);
     assert.ok(
       existsSync(abs),
-      `check-doc-conformance.sh names a non-existent test file: site/${rel}`,
+      `check-doc-conformance.sh names a non-existent test file: ${rel}`,
     );
   }
 });

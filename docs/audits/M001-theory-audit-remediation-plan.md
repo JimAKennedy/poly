@@ -21,9 +21,10 @@ class: gated
 > slice records when `gsd_plan_milestone` runs.
 > **Completeness:** Mechanically enforced by
 > `docs/audits/theory-audit-remediation.test.mjs` (`node --test`), built in
-> M001/S01 — asserts every finding ID F01–F53 is present, each carries exactly
-> one valid severity, disposition, and status token, each names a real slice,
-> and no `_pending_` placeholder survives.
+> M001/S01 — asserts every finding ID F01–F54 is present, each carries exactly
+> one valid severity, disposition, and status token, each names a real slice
+> that appears in that milestone's breakdown table below, and no `_pending_`
+> placeholder survives.
 
 ## Why this plan exists
 
@@ -77,22 +78,23 @@ numbered item addressed at the location named in the "Fix lands in" column.
 
 | ID | Audit § | Finding | Sev | Disp | Fix lands in | Slice | Verification | Status |
 |---|---|---|---|---|---|---|---|---|
-| F01 | 2.4.1, 3.4, §5.1 | Ch 6 uses E(4,7) (grouping 2+2+2+1) to illustrate rupak's 3+2+2. E(3,7) at rotation 3 is the correct illustration; the chapter's own patch already uses E(3,7), so prose and patch contradict each other. | `P0` | `correct` | `06-indian-classical.mdx` — the E(4,7) paragraph and the E(3,7) patch note | M001/S02 | New case in `site/tests/prose-pattern-claims.test.mjs` asserting the rupak paragraph names E(3,7) and the rotation that yields 3+2+2, checked against `site/src/audio/bjorklund.ts` | `open` |
-| F02 | 2.7.2, §5.3 | Ch 8 attributes gradual phase shifting to *Drumming* (1971). *Drumming* is an additive/subtractive process; gradual phasing is *Piano Phase* / *Violin Phase* (1967); *Clapping Music* (1972) uses discrete one-position jumps. Three techniques conflated. | `P0` | `correct` | `08-minimalism.mdx` — the *Drumming* and *Clapping Music* paragraphs | M001/S03 | Prose-claim test asserting each named Reich work is paired with its own technique term | `open` |
-| F03 | 2.7.3, §5.3 | Poly's Drift is described as modelling *Drumming*. Drift gradually shifts cycle position — that models *Piano Phase*. | `P0` | `correct` | `08-minimalism.mdx` Drift section | M001/S03 | Same test as F02 | `open` |
-| F04 | 2.5.1, §5.4 | Ch 7: "Bjorklund's algorithm and Balkan folk musicians independently arrived at the same solution." Bjorklund (2003) derived it for neutron-beam timing; Toussaint (2004/2005) identified the musical connection. The relationship is mathematical, not historical convergence. | `P0` | `reframe` | `07-balkan.mdx` — the paragraph following the E(3,7) diagram | M001/S04 | Prose-claim test forbidding the independent-convergence phrasing and requiring the Toussaint-identified framing | `open` |
-| F05 | 2.5.2, §5.10, §1 | Ch 7 presents E(4,11)=3+3+3+2 as the kopanitsa grouping while line 37 of the same chapter states the primary form is 2+2+3+2+2 (five cells, not four — not cleanly Euclidean at any rotation). Internal contradiction. | `P1` | `correct` | `07-balkan.mdx` — the aksak-definition paragraph and the "Daichovo and Kopanitsa" section | M001/S04 | Prose-claim test asserting the E(4,11) paragraph names 2+2+3+2+2 as the primary form and E(4,11) as a variant rendering | `open` |
-| F06 | 2.5.5 | Ch 7 implies aksak long beats are exactly 1.5× short beats. Goldberg (2015) shows performed long beats deviate systematically. Chapter cites Goldberg only in Further Reading. | `P1` | `disclose` | `07-balkan.mdx`, `theory-balkan.mdx` | M001/S04 | Goldberg inline citation present; caveat paragraph asserted by prose-conformance test | `open` |
+| F01 | 2.4.1, 3.4, §5.1 | Ch 6 uses E(4,7) (grouping 2+2+2+1) to illustrate rupak's 3+2+2. E(3,7) at rotation 3 is the correct illustration; the chapter's own patch already uses E(3,7), so prose and patch contradict each other. | `P0` | `correct` | `06-indian-classical.mdx` — the E(4,7) paragraph and the E(3,7) patch note | M001/S02 | New case S02-F01 in `site/tests/theory-audit-claims.test.mjs` forbids `E(4,7)` in the rupak illustration and pins the diagram to `<EuclideanDiagram steps={7} hits={3} rotation={3} />`, checked against `site/src/audio/bjorklund.ts` | `done` |
+| F02 | 2.7.2, §5.3 | Ch 8 attributes gradual phase shifting to *Drumming* (1971). *Drumming* is an additive/subtractive process; gradual phasing is *Piano Phase* / *Violin Phase* (1967); *Clapping Music* (1972) uses discrete one-position jumps. Three techniques conflated. | `P0` | `correct` | `08-minimalism.mdx` — the *Drumming* and *Clapping Music* paragraphs | M001/S03 | Case S03-F02 in `site/tests/theory-audit-claims.test.mjs` forbids *Drumming* citations followed within ~120 chars by phase-shifting/gradual/continuous language, pinning each named Reich work to its own technique term | `done` |
+| F03 | 2.7.3, §5.3 | Poly's Drift is described as modelling *Drumming*. Drift gradually shifts cycle position — that models *Piano Phase*. | `P0` | `correct` | `08-minimalism.mdx` Drift section | M001/S03 | Section-scoped case S03-F03 in `site/tests/theory-audit-claims.test.mjs` extracts the `## Drift as Phase Engine` section and asserts *Piano Phase* is cited while *Drumming* is not | `done` |
+| F04 | 2.5.1, §5.4 | Ch 7: "Bjorklund's algorithm and Balkan folk musicians independently arrived at the same solution." Bjorklund (2003) derived it for neutron-beam timing; Toussaint (2004/2005) identified the musical connection. The relationship is mathematical, not historical convergence. | `P0` | `reframe` | `07-balkan.mdx` — the paragraph following the E(3,7) diagram | M001/S04 | New case S04-F04 in `site/tests/theory-audit-claims.test.mjs` forbids the independent-convergence phrasing and requires the Toussaint-identified (ref-1) and Bjorklund (ref-46) framing | `done` |
+| F05 | 2.5.2, §5.10, §1 | Ch 7 presents E(4,11)=3+3+3+2 as the kopanitsa grouping while line 37 of the same chapter states the primary form is 2+2+3+2+2 (five cells, not four — not cleanly Euclidean at any rotation). Internal contradiction. | `P1` | `correct` | `07-balkan.mdx` — the aksak-definition paragraph and the "Daichovo and Kopanitsa" section | M001/S04 | Case S04-F05 in `site/tests/theory-audit-claims.test.mjs` asserts the Daichovo/Kopanitsa paragraph names 2+2+3+2+2 as the primary form with E(4,11) as a variant rendering, and arithmetic case S04-F05-arith re-derives the E(5,11) and E(4,11) spellings from `site/src/audio/bjorklund.ts` | `done` |
+| F06 | 2.5.5 | Ch 7 implies aksak long beats are exactly 1.5× short beats. Goldberg (2015) shows performed long beats deviate systematically. Chapter cites Goldberg only in Further Reading. | `P1` | `disclose` | `07-balkan.mdx`, `theory-balkan.mdx` | M001/S04 | Case S04-F06 in `site/tests/theory-audit-claims.test.mjs` forbids assertive "exactly 1.5×" / "exactly 3:2" long-vs-short-beat phrasing in `07-balkan.mdx` and requires an inline fr-goldberg-2015 citation on the aksak long-beat caveat | `done` |
 | F07 | 2.1.2, §5.9 | Ch 2: Ewe ensemble music has been organised this way "for centuries." Unsourced; fieldwork documentation begins mid-20th century. | `P1` | `reframe` | `02-sub-saharan-africa.mdx` — the chapter opening paragraph | M001/S05 | Prose-claim test forbidding unhedged multi-century temporal claims in Ch 2 | `open` |
 | F08 | 2.1.1 | Ch 2 calls E(7,12) "the single most important timeline pattern in sub-Saharan music." Toussaint (2005) says "most commonly used" — descriptive, not evaluative. | `P1` | `reframe` | `02-sub-saharan-africa.mdx` — the gankogui / E(7,12) paragraph | M001/S05 | Prose-claim test asserting the descriptive phrasing | `open` |
 | F09 | 2.6.1, §5.11 | Ch 4: Fela "built the genre… but it was Tony Allen who created its rhythmic vocabulary." Contentious; Allen himself co-attributes, and Fela's horn arranging shaped the rhythmic feel. | `P1` | `reframe` | `04-afrobeat.mdx` — the chapter opening paragraph | M001/S06 | Prose-claim test asserting co-attribution language | `open` |
 | F10 | 2.6.3 | Ch 4: "Tony Allen's timing was precise but not quantised." Received wisdom presented as measured fact; no measurement study covers Allen recordings. | `P1` | `reframe` | `04-afrobeat.mdx` — the Humanize bullet in the macros section | M001/S06 | Prose-claim test asserting the claim is marked as characterisation, not measurement | `open` |
 | F11 | 2.7.1 | Ch 8 adopts Reich's own framing that West African and Indonesian musicians "had known for centuries" that identical patterns at different rates generate complexity. African stacking uses fixed independent cycles; gamelan uses fixed hierarchical nesting. Neither is deliberate drift. Reich's analogy was criticised (Agawu 2003). | `P1` | `reframe` | `08-minimalism.mdx` — the chapter opening paragraph | M001/S06 | Prose-claim test asserting attribution to Reich's framing rather than assertion as fact | `open` |
-| F12 | 2.4.2 | Ch 6: E(7,16) as "the kind of structure a tabla player might outline during a slow theka." Thekas are fixed named bol sequences, not Euclidean distributions. Fine as analogy, not as grounding. | `P1` | `reframe` | `06-indian-classical.mdx` — the E(7,16) tintal-skeleton paragraph | M001/S07 | Prose-claim test asserting the paragraph marks itself as analogy | `open` |
-| F13 | 2.8 (Electronic) | Ch 9: "difference between techno and house is often reducible to one parameter: swing" cited to a Roger Linn blog. Contested (Butler 2006). Attribute to Linn rather than stating as fact. | `P1` | `source` | `09-electronic.mdx` | M001/S07 | Inline attribution present; Butler cross-reference added | `open` |
-| F14 | 2.8 (D&B) | Ch 13: Amen break as "most sampled recording in music history" — disputed; needs "widely considered" hedge. | `P1` | `reframe` | `13-drum-and-bass.mdx` | M001/S07 | Prose-claim test asserting the hedge | `open` |
-| F15 | 2.8 (Jazz) | Ch 12: Max Roach's polymetric independence claim is directionally right but uncited. Monson (1996) and Gridley are the authorities. | `P1` | `source` | `12-jazz.mdx` | M001/S07 | Monson citation resolves in the reference appendix | `open` |
-| F16 | §1 (lcm) | The guide uses lcm convergence as "sam" (Indian) and "gong stroke" (gamelan). Legitimate informal translation, but neither tradition uses the term that way internally. Make the translation explicit. | `P1` | `disclose` | `01-foundations.mdx`, `06-indian-classical.mdx`, `05-gamelan.mdx` | M001/S07 | Translation caveat present at each of the three sites; asserted by prose-conformance test | `open` |
+| F12 | 2.4.2 | Ch 6: E(7,16) as "the kind of structure a tabla player might outline during a slow theka." Thekas are fixed named bol sequences, not Euclidean distributions. Fine as analogy, not as grounding. | `P1` | `reframe` | `06-indian-classical.mdx` — the E(7,16) tintal-skeleton paragraph | M001/S02 | Case S02-F12 in `site/tests/theory-audit-claims.test.mjs` forbids the pre-correction grounding phrase and requires the analogy framing ("not itself a tintal theka", "thekas are fixed, named bol sequences", "rough analogue") | `done` |
+| F13 | 2.8 (Electronic) | Ch 9: "difference between techno and house is often reducible to one parameter: swing" cited to a Roger Linn blog. Contested (Butler 2006). Attribute to Linn rather than stating as fact. | `P1` | `source` | `09-electronic.mdx` | M001/S06 | Inline attribution present; Butler cross-reference added | `open` |
+| F14 | 2.8 (D&B) | Ch 13: Amen break as "most sampled recording in music history" — disputed; needs "widely considered" hedge. | `P1` | `reframe` | `13-drum-and-bass.mdx` | M001/S06 | Prose-claim test asserting the hedge | `open` |
+| F15 | 2.8 (Jazz) | Ch 12: Max Roach's polymetric independence claim is directionally right but uncited. Monson (1996) and Gridley are the authorities. | `P1` | `source` | `12-jazz.mdx` | M001/S06 | Monson citation resolves in the reference appendix | `open` |
+| F16 | §1 (lcm) | The guide uses lcm convergence as "sam" (Indian) and "gong stroke" (gamelan). Legitimate informal translation, but neither tradition uses the term that way internally. Make the translation explicit. | `P1` | `disclose` | `01-foundations.mdx`, `06-indian-classical.mdx`, `05-gamelan.mdx` | M001/S06 | Translation caveat present at each of the three sites; asserted by prose-conformance test | `open` |
+| F54 | issue [#91](https://github.com/JimAKennedy/poly/issues/91) | The E(3,16) row in the euclidean-reference appendix (`x . . . . x . . . . x . . . . .`, 5+5+6 at rotation 0) reads as wrong to a reader deriving Bjorklund from scratch, because Poly's phase convention (which rotation counts as canonical) is nowhere stated. The row is correct under that convention; the convention itself must be made explicit next to the table so a reader can verify without re-deriving. | `P1` | `disclose` | `appendix-euclidean-reference.mdx` — the table preamble and the E(3,16) row | M001/S02 | Case S02-F54 in `site/tests/theory-audit-claims.test.mjs` asserts the "Phase Convention" preamble is present (rotate-right / rotation-0 canonical / worked example "onsets at steps 0, 5, 10"), and an arithmetic case re-derives the printed E(3,16) row from `bjorklund(16, 3)` — closes [#91](https://github.com/JimAKennedy/poly/issues/91) | `done` |
 
 ### M002 — Citation Integrity (reference-list re-tiering)
 
@@ -164,12 +166,11 @@ claim test so it cannot regress.
 | Slice | Scope | Findings |
 |---|---|---|
 | S01 | Ledger + conformance harness. Land this plan doc and `theory-audit-remediation.test.mjs`; extend `prose-pattern-claims`/`prose-conformance-claims` with the assertion helpers the later slices need. | infrastructure |
-| S02 | Ch 6 rupak: E(4,7) → E(3,7) at the rotation that yields 3+2+2; reconcile prose with the existing patch. | F01 |
+| S02 | Ch 6 rupak: E(4,7) → E(3,7) at the rotation that yields 3+2+2; reconcile prose with the existing patch. Same Ch 6 slice also lands the tintal-skeleton-as-analogy reframe and, in the euclidean-reference appendix, an explicit phase-convention statement so the E(3,16) row can be verified without re-deriving Bjorklund (closes issue #91). | F01, F12, F54 |
 | S03 | Ch 8 Reich: separate *Drumming* (additive), *Piano/Violin Phase* (gradual phasing), *Clapping Music* (discrete jumps); re-anchor Drift to *Piano Phase*. | F02, F03 |
 | S04 | Ch 7 Balkan: drop the independent-convergence claim; reconcile the kopanitsa grouping; add the non-integer long-beat caveat with Goldberg inline. | F04, F05, F06 |
 | S05 | Ch 2: hedge the "centuries" claim; restore Toussaint's descriptive phrasing for E(7,12). | F07, F08 |
-| S06 | Attribution care: Allen/Fela co-attribution, Allen timing as characterisation, Reich's African framing attributed to Reich. | F09, F10, F11 |
-| S07 | Remaining analogy/hedge items: E(7,16)-as-theka, Linn attribution, Amen-break hedge, Roach sourcing, lcm-as-sam/gong translation. | F12–F16 |
+| S06 | Attribution care and remaining analogy/hedge items: Allen/Fela co-attribution, Allen timing as characterisation, Reich's African framing attributed to Reich, Linn attribution for the techno-vs-house-swing claim, "widely considered" hedge on the Amen break, Monson/Gridley sourcing for Roach, and the lcm-as-sam/gong translation caveat at each of its three sites. | F09, F10, F11, F13, F14, F15, F16 |
 
 **Demo:** re-read the audit's Section 5 items 1, 3, 4, 9, 10, 11 against the
 site; each is addressed at the cited line, and `node --test site/tests/` is green.
@@ -280,6 +281,21 @@ The audit is re-runnable. After M001–M004 land, a re-read should find:
 The mechanical half of that verdict is `docs/audits/theory-audit-remediation.test.mjs`
 plus the per-claim tests each slice adds. The editorial half is a human re-read —
 which is why every row names a *location*, not just a fix.
+
+## Related open issues
+
+Every currently-open GitHub issue that overlaps this plan's remit is enumerated
+here so the two views cannot silently drift. A row is either **closed by** a
+ledger finding (the finding's verification, when it lands, is what will close
+the issue) or **not closed here** — retained on the issue tracker because it is
+an engine or preset change that this documentation-and-tests plan deliberately
+does not build.
+
+| Issue | Ledger row | Relationship |
+|---|---|---|
+| [#91](https://github.com/JimAKennedy/poly/issues/91) | F54 | Closed by F54. The E(3,16) appendix row is correct under Poly's phase convention; F54 makes that convention explicit next to the table so a reader can verify without re-deriving Bjorklund. |
+| [#156](https://github.com/JimAKennedy/poly/issues/156) | F31 | Not closed here. F31 discloses that Humanize applies random jitter rather than the systematic, style-specific subdivision profiles Polak (2010) documents; the exact non-Euclidean-timeline preset work #156 tracks stays on the issue tracker. |
+| [#157](https://github.com/JimAKennedy/poly/issues/157) | F32 | Not closed here. F32 pairs the Balkan long-beat honesty note with F06 (Goldberg inline); cell-aware swing for aksak — a real engine change — stays on the issue tracker as #157. |
 
 ## Out of scope
 

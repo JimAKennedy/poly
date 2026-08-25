@@ -2,6 +2,17 @@
 class: gated
 title: "6. Indian Classical: Tala Cycles and Rhythmic Arithmetic"
 description: The tala system of Hindustani and Carnatic music — how cycle lengths of 7, 10, and 16 beats create rhythmic architecture through subdivision and recombination.
+patternClaims:
+  - label: "Rupak tal 3+2+2 illustration"
+    pattern: "x . . x . x ."
+    isEuclidean: { k: 3, n: 7, rotation: 3 }
+    gapSequence: [3, 2, 2]
+    reference: "line 27 prose — E(3,7) at rotation 3 as rupak's 3+2+2 grouping (M001 S02 F01)"
+  - label: "Rupak Tal patch sam-marker lane (rotation 0, 2+2+3)"
+    pattern: "x . x . x . ."
+    isEuclidean: { k: 3, n: 7, rotation: 0 }
+    gapSequence: [2, 2, 3]
+    reference: "line 82 prose — Rupak Tal PolyPatch Lane 1 (M001 S02 D009)"
 ---
 
 import PolyPatch from '../../components/PolyPatch.astro';
@@ -22,13 +33,13 @@ A tala is not simply a time signature. It is a cyclic structure divided into sec
 
 These are not arbitrary numbers. The grouping patterns create internal asymmetries that a Western time signature cannot express. Rupak's 3+2+2 means the first section is longer than the others — the cycle has a built-in weight distribution.
 
-<EuclideanDiagram steps={7} hits={4} />
+<EuclideanDiagram steps={7} hits={3} rotation={3} />
 
-E(4,7) distributes four accents across seven positions, producing the grouping `2+2+2+1` — close to rupak's internal pulse. With rotation, you can shift the long group to match the traditional 3+2+2 structure.
+E(3,7) at rotation 3 spells `x . . x . x .` — three accents across seven positions producing the 3+2+2 grouping, rupak's traditional accent distribution with the long group at the front of the cycle. Rotation 0 of the same E(3,7) family spells the mirror image `x . x . x . .` (grouping 2+2+3), which is the phase the Rupak Tal patch below actually uses; both are the same maximally-even distribution, differing only in which onset lands on beat one.
 
 <EuclideanDiagram steps={16} hits={7} />
 
-E(7,16) across tintal's sixteen beats creates a sparse, syncopated skeleton — the kind of structure a tabla player might outline during a slow *theka* (basic pattern) before elaborating with faster subdivisions.
+E(7,16) is not itself a tintal theka — thekas are fixed, named bol sequences that every tabla player learns by rote, not Bjorklund distributions. But its sparse, syncopated shape across sixteen beats reads as a rough analogue for the *kind* of weight-across-the-cycle a slow theka carries before the player elaborates with faster subdivisions; it is a way to sight-read one side of tintal's phrasing, not a claim about what theka actually is.
 
 ## Sam and Khali: Gravity and Weightlessness
 
@@ -79,7 +90,7 @@ Poly's phrase gating parameters model this directly. Set a lane's phrase Length 
 
 <EuclideanDiagram steps={7} hits={3} />
 
-E(3,7) with rotation 0 produces `x . x . x . .` — three accents across seven beats, capturing rupak's sparse, lilting quality. This odd-meter cycle never settles into the bilateral symmetry of tintal; it always leans forward.
+E(3,7) with rotation 0 produces `x . x . x . .` — three accents across seven beats, grouping 2+2+3. This is the phase the Rupak Tal patch's sam-marker lane above uses: the same maximally-even distribution as the 3+2+2 illustration at the top of the chapter, phase-shifted so the long gap sits at the end of the cycle rather than the start. The tala itself never settles into the bilateral symmetry of tintal; it always leans forward, whichever way the cycle is entered.
 
 ## Polymetric Convergence as Sam
 

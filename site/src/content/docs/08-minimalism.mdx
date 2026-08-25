@@ -24,9 +24,9 @@ For process counterpoint stated as explicit rules — pattern choice for rich ro
 
 ## Reich and Phase Shifting
 
-In *Drumming* (1971), Steve Reich starts two identical rhythmic patterns in unison, then gradually shifts one forward until it has moved through every possible phase relationship and returns to unison<sup>[34](/appendix-references/#ref-34)</sup>. The piece is an exhaustive exploration of a single pattern's rotational space.
+Reich uses three distinct techniques across three works, and it matters which is which. In *Piano Phase* (1967) — and its companion *Violin Phase* the same year — two performers play the same twelve-note figure in unison; one then accelerates almost imperceptibly until they are exactly one sixteenth ahead, and they lock in there before the process repeats. That continuous, sliding shift through every phase relationship is Reich's phase-shifting technique in its pure form<sup>[35](/appendix-references/#ref-35)</sup>. *Drumming* (1971) is a different process: it holds a single twelve-beat pattern fixed and builds it up beat by beat and then reduces it back, an exhaustive exploration of one pattern's construction and reduction rather than of its rotational space<sup>[34](/appendix-references/#ref-34)</sup>. *Clapping Music* (1972) discretises the *Piano Phase* idea — instead of sliding, one performer jumps forward by exactly one position every twelve bars, then holds.
 
-The core pattern of *Clapping Music* (1972) is even more explicit: `x x x . x x . x . x x .` — eight claps distributed across twelve pulses in the inter-onset gap sequence 1-1-2-1-2-2-1-2. One performer holds steady while the other shifts by one position after every twelve bars. Twelve shifts later, they are back in unison.
+The core pattern of *Clapping Music* is `x x x . x x . x . x x .` — eight claps distributed across twelve pulses in the inter-onset gap sequence 1-1-2-1-2-2-1-2. One performer holds steady while the other shifts by one position after every twelve bars. Twelve shifts later, they are back in unison.
 
 Reich's pattern is *close to* but *not* E(8,12). The Euclidean distribution of eight onsets across twelve pulses is `x . x x . x x . x x . x` (gap sequence 2-1-2-1-2-1-2-1) — a strict alternation of 1s and 2s that no arrangement of Bjorklund can pull out of order. Reich's version uses the same gap-value palette (1s and 2s) but breaks the alternation at the opening with three consecutive claps (positions 0, 1, 2) — a run that no E(k,n) family with n=12 produces at any rotation. That opening cluster is a small but structural difference and it is what makes Reich's pattern feel authored rather than generated.
 
@@ -38,7 +38,7 @@ E(5,12) is a sparser variant suitable for demonstrating the phasing effect in Po
 
 Poly's Drift parameter rotates a lane's pattern by a specified number of steps per bar. Set two lanes to identical step counts and hit patterns, leave one with Drift at 0, and give the other a small positive value. The second lane's pattern slowly rotates against the first, passing through every phase relationship.
 
-At Drift = +0.25 steps/bar, the pattern completes one full rotation every `steps / 0.25` bars. For a 12-step pattern, that is 48 bars — roughly two minutes at 120 BPM. At Drift = +1.0, the full rotation takes only 12 bars. The slower the drift, the more time you spend in each phase relationship, and the more you hear the gradual process that Reich described.
+At Drift = +0.25 steps/bar, the pattern completes one full rotation every `steps / 0.25` bars. For a 12-step pattern, that is 48 bars — roughly two minutes at 120 BPM. At Drift = +1.0, the full rotation takes only 12 bars. The slower the drift, the more time you spend in each phase relationship, and the closer the effect gets to the continuous phase-shifting Reich set out in *Piano Phase* (1967)<sup>[35](/appendix-references/#ref-35)</sup> — not the additive construction of *Drumming*.
 
 <PolyPatch title="Reich Phasing Setup" preset="Reich Phase Process">
 

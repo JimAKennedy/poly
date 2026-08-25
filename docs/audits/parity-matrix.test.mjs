@@ -49,6 +49,14 @@ const NATIVE_VIEWS = [
   'export_controls_view',
 ];
 
+// Strip a trailing HTML comment from a table row. Matrix rows carry a
+// `<!-- [file-line-ok]: ... -->` marker past the closing pipe (the jk-standards
+// escape hatch for deliberately pinned file:line refs); without stripping it
+// the row no longer ends in `|` and the tokenizer below skips it entirely.
+function stripRowComment(line) {
+  return line.replace(/\s*<!--[\s\S]*?-->\s*$/, '').trimEnd();
+}
+
 // Split a markdown table row into trimmed cell strings (drops the leading and
 // trailing empty cells produced by the border pipes).
 function cells(row) {
@@ -75,7 +83,7 @@ function matrixRows() {
   let verdictCol = -1;
   let viewCol = -1;
   for (const raw of lines) {
-    const line = raw.trimEnd();
+    const line = stripRowComment(raw.trimEnd());
     const isTableRow = line.startsWith('|') && line.endsWith('|');
     if (!isTableRow) {
       inVerdictTable = false;

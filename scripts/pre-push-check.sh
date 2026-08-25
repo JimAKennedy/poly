@@ -114,7 +114,7 @@ else
     fi
 fi
 
-echo "[6/6] Doc-conformance guardrail suite (M071)..."
+echo "[6/6] Doc-conformance + audit-ledger guardrail suite..."
 # Single source of truth with the CI site-lint job: both invoke
 # scripts/check-doc-conformance.sh (asserted by
 # site/tests/doc-conformance-wiring.test.mjs). The runner imports js-yaml from
