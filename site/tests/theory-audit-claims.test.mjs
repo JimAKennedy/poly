@@ -29,6 +29,7 @@ import { assertClaim } from './helpers/prose-claims.mjs';
 import { bjorklund } from '../src/audio/bjorklund.ts';
 import {
   parsePattern,
+  parseGrouping,
   gapSequence,
   findEuclideanRotation,
 } from '../src/lib/euclidean-claims.mjs';
@@ -148,9 +149,13 @@ const FINDINGS = [
     forbiddenRegex: [
       /E\(4,\s*11\)[^\n]{0,120}(?:is|as)\s+(?:the\s+)?(?:canonical|primary)\s+kopanitsa/i,
     ],
+    // Semantic markers only. The Euclidean spellings themselves (E(5,11),
+    // 2+2+3+2+2, and E(4,11)=3+3+3+2) are re-derived from bjorklund.ts in
+    // the 'S04-F05 arithmetic' case below rather than transcribed here —
+    // mirroring the S02-F54 pairing of a FINDINGS row with an arithmetic
+    // case, per the S04 must-have that forbids transcribed spellings.
     present: [
-      '2+2+3+2+2',
-      'E(5,11)',
+      'primary form',
       'five-cell',
       // The demotion language — E(4,11) is a variant, not the canonical.
       'variant rendering',
@@ -280,6 +285,119 @@ test('S02-F54 arithmetic: E(3,16) appendix row matches bjorklund(16, 3) at rotat
     '5+5+6',
     `appendix-euclidean-reference.mdx [S02-F54]: E(3,16) grouping cell "${groupingCell.trim()}" ` +
       `disagrees with derived gap sequence ${printedGaps.join('+')}. Authority: bjorklund(16, 3) at rotation 0.`,
+  );
+});
+
+// Build a boolean onset pattern of length n whose consecutive onset gaps
+// equal `groups` (wrapping from the last onset back to the first). The gap
+// sequence returned by gapSequence() over the resulting pattern equals
+// `groups` exactly, so a caller can feed a prose grouping "a+b+c+..." into
+// findEuclideanRotation to test whether that grouping is any rotation of
+// bjorklund(n, groups.length). Sum of `groups` must equal n.
+function patternFromGrouping(groups, n) {
+  const pat = new Array(n).fill(false);
+  let idx = 0;
+  for (const g of groups) {
+    pat[idx] = true;
+    idx += g;
+  }
+  return pat;
+}
+
+// F05 arithmetic case: re-derive kopanitsa's E(5,11) primary form and its
+// demoted E(4,11) variant from bjorklund.ts and check them against the
+// spellings actually printed in the '## Daichovo and Kopanitsa' section, so
+// a mismatch names the derived gap sequence next to the printed one rather
+// than leaving the reader with a bare count. Extracts the section directly
+// so a paragraph edit that moves the pattern shows up here. Follows the
+// S02-F54 precedent — the S04 must-have forbids transcribing the F05
+// spellings, so the FINDINGS.present list above only checks semantic
+// framing; the numeric authority lives here.
+registerCase('S04-F05-arith');
+test('S04-F05 arithmetic: kopanitsa spellings re-derive from bjorklund(11,5) and bjorklund(11,4)', async () => {
+  const src = await docSource('07-balkan.mdx');
+  const section = extractSection(src, '## Daichovo and Kopanitsa');
+  assert.ok(
+    section,
+    "07-balkan.mdx [S04-F05]: '## Daichovo and Kopanitsa' section not found. " +
+      'Authority: ledger F05 requires the kopanitsa demotion prose to live in this section.',
+  );
+
+  // The prose's five-cell primary form. Verify (a) it sums to 11, (b) it has
+  // five cells, and (c) it is genuinely a rotation of bjorklund(11, 5) —
+  // not just a plausible-looking additive grouping.
+  const primaryMatch = section.match(/primary form is\s+(\d+(?:\+\d+)+)/);
+  assert.ok(
+    primaryMatch,
+    "07-balkan.mdx [S04-F05]: could not locate 'primary form is X+Y+...' phrase " +
+      'in the Kopanitsa section. Authority: ledger F05 requires the five-cell primary ' +
+      'form to be named in prose so this arithmetic case can re-derive it against bjorklund.ts.',
+  );
+  const primaryGroups = parseGrouping(primaryMatch[1]);
+  const primarySum = primaryGroups.reduce((a, b) => a + b, 0);
+  assert.equal(
+    primarySum,
+    11,
+    `07-balkan.mdx [S04-F05]: primary-form grouping "${primaryMatch[1]}" sums to ${primarySum}, ` +
+      'not 11. Authority: kopanitsa is 11/8; a primary form that does not sum to 11 is a typo.',
+  );
+  assert.equal(
+    primaryGroups.length,
+    5,
+    `07-balkan.mdx [S04-F05]: primary-form grouping "${primaryMatch[1]}" has ` +
+      `${primaryGroups.length} cells, not 5. Authority: ledger F05 requires the ` +
+      'five-cell (five-accent) form as primary; a four-cell form reintroduces the ' +
+      'pre-correction E(4,11) contradiction.',
+  );
+
+  const primaryPattern = patternFromGrouping(primaryGroups, 11);
+  const canonical5 = bjorklund(11, 5);
+  const canonical5Gaps = gapSequence(canonical5);
+  const fiveRotation = findEuclideanRotation(primaryPattern, 5, 11);
+  assert.notEqual(
+    fiveRotation,
+    null,
+    `07-balkan.mdx [S04-F05]: primary-form grouping "${primaryMatch[1]}" is not any ` +
+      `rotation of bjorklund(11, 5) (canonical gaps ${canonical5Gaps.join('+')}). ` +
+      'Authority: site/src/audio/bjorklund.ts.',
+  );
+
+  // The prose must name E(5,11) as the canonical Bjorklund spelling of that
+  // five-cell family. Assert it appears inside the section — if the label
+  // migrates out of the demotion paragraph, the reader loses the numeric
+  // justification for the demotion.
+  assert.ok(
+    /E\(5,\s*11\)/.test(section),
+    "07-balkan.mdx [S04-F05]: '## Daichovo and Kopanitsa' section does not name " +
+      'E(5,11) as the canonical Bjorklund spelling of the five-cell family. ' +
+      `Authority: bjorklund(11, 5) has 5 onsets across 11 steps (gaps ` +
+      `${canonical5Gaps.join('+')}), and the prose grouping "${primaryMatch[1]}" ` +
+      'is a rotation of that pattern.',
+  );
+
+  // The demoted E(4,11) row. The prose prints its grouping inline; verify
+  // that spelling is bjorklund(11, 4) at rotation 0, not a transcribed
+  // shape that could silently drift from the algorithm.
+  const fourMatch = section.match(/E\(4,\s*11\)\s+gives\s+`(\d+(?:\+\d+)+)`/);
+  assert.ok(
+    fourMatch,
+    "07-balkan.mdx [S04-F05]: could not locate the 'E(4,11) gives `X+Y+...`' " +
+      'arithmetic line in the Kopanitsa section. Authority: ledger F05 requires ' +
+      'the E(4,11) demotion to print its grouping so this case can re-derive it ' +
+      'against bjorklund.ts.',
+  );
+  const fourGroups = parseGrouping(fourMatch[1]);
+  const fourPattern = patternFromGrouping(fourGroups, 11);
+  const canonical4 = bjorklund(11, 4);
+  const canonical4Gaps = gapSequence(canonical4);
+  const fourRotation = findEuclideanRotation(fourPattern, 4, 11);
+  assert.equal(
+    fourRotation,
+    0,
+    `07-balkan.mdx [S04-F05]: E(4,11) printed grouping "${fourMatch[1]}" is not ` +
+      `bjorklund(11, 4) at rotation 0 (canonical gaps ${canonical4Gaps.join('+')}). ` +
+      'Authority: site/src/audio/bjorklund.ts under the rotation-0-canonical convention ' +
+      'stated in appendix-euclidean-reference.mdx.',
   );
 });
 
