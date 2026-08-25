@@ -112,6 +112,65 @@ const FINDINGS = [
     ],
   },
   {
+    id: 'S04-F04',
+    file: '07-balkan.mdx',
+    rule:
+      'Ch 7 Balkan must frame the Bjorklund/aksak correspondence as a mathematical relationship — ' +
+      'citing ref-46 (Bjorklund, neutron-beam timing) and ref-1 (Toussaint) — never as a historical ' +
+      'convergence in which the tradition and the algorithm independently arrived at the same solution. ' +
+      'Ledger F04.',
+    // The pre-correction phrasing said the two traditions "independently
+    // arrived at the same solution" — a historical-convergence claim the
+    // sources do not support. That phrasing must not reappear.
+    forbidden: [
+      'independently arrived at the same solution',
+    ],
+    // Any prose that calls the correspondence a "historical convergence"
+    // reverses the correction.
+    forbiddenRegex: [/historical(?:ly)?\s+converg/i],
+    present: [
+      'The correspondence is mathematical, not historical',
+      'ref-46',
+      'ref-1',
+    ],
+  },
+  {
+    id: 'S04-F05',
+    file: '07-balkan.mdx',
+    rule:
+      "Ch 7 Balkan's Daichovo/Kopanitsa section must name 2+2+3+2+2 as kopanitsa's primary five-cell " +
+      'form, cite E(5,11) as its canonical Bjorklund spelling, and demote E(4,11) to a four-accent ' +
+      'variant rendering rather than the canonical kopanitsa grouping. Per D012 the E(4,11) diagram and ' +
+      'the Kopanitsa 11/8 PolyPatch table stay unchanged. Ledger F05.',
+    // The pre-correction prose presented E(4,11) as *the* kopanitsa grouping.
+    // Reject any residual phrasing that calls E(4,11) the canonical or the
+    // primary kopanitsa spelling.
+    forbiddenRegex: [
+      /E\(4,\s*11\)[^\n]{0,120}(?:is|as)\s+(?:the\s+)?(?:canonical|primary)\s+kopanitsa/i,
+    ],
+    present: [
+      '2+2+3+2+2',
+      'E(5,11)',
+      'five-cell',
+      // The demotion language — E(4,11) is a variant, not the canonical.
+      'variant rendering',
+    ],
+  },
+  {
+    id: 'S04-F06',
+    file: '07-balkan.mdx',
+    rule:
+      'Ch 7 Balkan must state plainly that performed aksak long beats are not exactly 1.5x short beats, ' +
+      'and cite fr-goldberg-2015 inline for the field measurements that show systematic deviation from ' +
+      'the 3:2 ratio. Per D013 theory-balkan.mdx Rule 8 stays unchanged; the caveat lives in Ch 7. ' +
+      'Ledger F06.',
+    present: [
+      'not exactly 1.5',
+      'short beats',
+      'fr-goldberg-2015',
+    ],
+  },
+  {
     id: 'S02-F54',
     file: 'appendix-euclidean-reference.mdx',
     rule:
@@ -151,8 +210,17 @@ for (const f of FINDINGS) {
   registerCase(f.id);
 }
 
-test('theory-audit-claims covers at least the S02 and S03 findings', () => {
-  for (const req of ['S02-F01', 'S02-F12', 'S02-F54', 'S03-F02', 'S03-F03']) {
+test('theory-audit-claims covers at least the S02, S03, and S04 findings', () => {
+  for (const req of [
+    'S02-F01',
+    'S02-F12',
+    'S02-F54',
+    'S03-F02',
+    'S03-F03',
+    'S04-F04',
+    'S04-F05',
+    'S04-F06',
+  ]) {
     assert.ok(
       REGISTERED_CASE_IDS.has(req),
       `theory-audit-claims dropped required finding: ${req}. ` +

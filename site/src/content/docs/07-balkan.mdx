@@ -38,9 +38,11 @@ The Turkish word *aksak* means "limping" — an apt description for rhythms that
 
 These are literally Euclidean rhythms. E(3,7) distributes three onsets across seven positions, producing the inter-onset pattern `2+2+3` — exactly the rachenitsa.
 
+One caveat before the diagram: written aksak notation makes the long beat look like exactly 1.5× the short beat, but performed aksak long beats are not exactly 1.5× short beats. Goldberg's field measurements ([Goldberg 2015](/appendix-references/#fr-goldberg-2015)) show that the long-to-short ratio deviates systematically from 3:2, varying by tradition, tempo, and player. The additive-cell notation is a good structural abstraction, not a claim about the actual millisecond ratio.
+
 <EuclideanDiagram steps={7} hits={3} />
 
-This is not a coincidence or an approximation. Bjorklund's algorithm and Balkan folk musicians independently arrived at the same solution to the same problem: how to distribute a small number of accents as evenly as possible across an odd number of positions.
+This is not a coincidence. The correspondence is mathematical, not historical: Bjorklund's algorithm was originally derived for pulse distribution in neutron-beam timing at the Spallation Neutron Source<sup>[46](/appendix-references/#ref-46)</sup>, and Toussaint<sup>[1](/appendix-references/#ref-1)</sup> later identified that the same even distribution appears in additive dance meters that Balkan folk musicians have long favored. The algorithm did not discover the tradition and the tradition did not discover the algorithm — the same mathematical distribution describes both.
 
 ## Rotation Selects the Variant
 
@@ -58,11 +60,13 @@ The same principle extends to longer cycles. Daichovo horo in 9/8 uses four acce
 
 <EuclideanDiagram steps={9} hits={4} />
 
-E(4,9) at the standard rotation used here produces the grouping `2+2+2+3` — which *is* the daichovo horo grouping. This is one of the tightest matches between Euclidean distribution and traditional aksak in the entire repertoire: the algorithm and the tradition agree exactly. See [E(4,9) in the Euclidean reference appendix](/appendix-euclidean-reference/) for the pattern in full. Kopanitsa in 11/8 distributes four accents across eleven:
+E(4,9) at the standard rotation used here produces the grouping `2+2+2+3` — which *is* the daichovo horo grouping. This is one of the tightest matches between Euclidean distribution and traditional aksak in the entire repertoire: the algorithm and the tradition agree exactly. See [E(4,9) in the Euclidean reference appendix](/appendix-euclidean-reference/) for the pattern in full.
+
+Kopanitsa in 11/8 is a different case. Its primary form is 2+2+3+2+2 — five cells, five accents across eleven positions, not four. That five-cell grouping is not the Euclidean distribution of any 4-hit pattern in 11 (it has five onsets, not four); it belongs to the five-hit family, and its canonical Bjorklund spelling is E(5,11). E(4,11), which distributes four accents across eleven, is a related four-accent variant rendering rather than the canonical kopanitsa grouping:
 
 <EuclideanDiagram steps={11} hits={4} />
 
-E(4,11) gives `3+3+3+2`, which is one of several kopanitsa variants. Rotation lets you move through the others. The point is that Euclidean distribution naturally generates the additive groupings that define Balkan dance music.
+E(4,11) gives `3+3+3+2`; rotation moves through its variants. The point is that Euclidean distribution naturally generates a family of additive groupings, several of which correspond to Balkan dance metres — but the canonical five-cell kopanitsa 2+2+3+2+2 is a five-accent pattern, not the four-accent E(4,11) row.
 
 <PolyPatch title="Rachenitsa Groove" preset="Rachenitsa 7/8">
 
