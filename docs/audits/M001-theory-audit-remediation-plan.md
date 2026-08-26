@@ -114,7 +114,7 @@ numbered item addressed at the location named in the "Fix lands in" column.
 | F20 | 2.4.7, §5.12 | Refs [21]–[25] for Ch 6 include a commercial blog, a high-school textbook PDF, and a YouTube konnakol video. Clayton (2000), Nelson (2008), Kippen (1988) are the authorities and are already in Further Reading. | `P1` | `source` | `06-indian-classical.mdx`; `appendix-references.mdx` | M002/S04 | Tier-A citation check passes for Ch 6 | `open` |
 | F21 | 2.5, §4 Tier C, §5.12 | Refs [26], [27] for Balkan are educational aggregator pages. Brăiloiu (1951), Rice (1994), Goldberg (2015) are in Further Reading only. | `P1` | `source` | `07-balkan.mdx` — the aksak-definition and svatbarska-muzika paragraphs; `appendix-references.mdx` | M002/S05 | Tier-A citation check passes for Ch 7 | `open` |
 | F22 | 2.2.2 | Ch 3: "the habanera rhythm that Jelly Roll Morton called 'the Spanish tinge'" — accurate but uncited. Lomax's Morton interviews (1950) are the primary source. | `P1` | `source` | `03-afro-cuban.mdx` — the tresillo / "Spanish tinge" paragraph | M002/S06 | Lomax citation resolves in the appendix | `open` |
-| F23 | §4 (whole section) | The reference list mixes peer-reviewed scholarship and hobbyist media at equal citation weight, with no mechanism preventing regression. | `P1` | `source` | `appendix-references.mdx`; new `site/tests/citation-tier.test.mjs` | M002/S06 | New test: every reference carries a declared tier, and every inline citation attached to a named-theory claim resolves to a Tier-A source | `open` |
+| F23 | §4 (whole section) | The reference list mixes peer-reviewed scholarship and hobbyist media at equal citation weight, with no mechanism preventing regression. | `P1` | `source` | `appendix-references.mdx`; new `site/tests/citation-tier.test.mjs` | M002/S06 | New test: every reference carries a declared tier, and every inline citation attached to a named-theory claim resolves to a Tier-A source. Scope note: the audit's §4 tier lists name only refs 10/11, 14–17, 21/22, 24–27 and 42, but this row covers the *whole* list — including Ch 2's refs 4, 7, 8 and 9, which no other row touches. Two of those (7, 8) are cited by nothing on the site and should be dropped rather than tiered; ref-4 and ref-9 survive only inside the `See also refs [4]–[9]` pointer in `theory-sub-saharan-africa.mdx`, so tiering them means deciding whether that pointer earns its place | `open` |
 
 ### M003 — Scope and Repositioning (honest-simplification framing)
 
@@ -195,7 +195,7 @@ video or a hobbyist blog, and a CI check keeps it that way.
 | S03 | Ch 4: swap refs [14]–[17] for Allen & Veal (2013), Veal (2000). | F19 |
 | S04 | Ch 6: promote Clayton, Nelson, Kippen into the inline refs. | F20 |
 | S05 | Ch 7: promote Brăiloiu, Rice, Goldberg into the inline refs. | F21 |
-| S06 | Lomax citation for the Spanish-tinge claim; declare a tier on every reference; add `citation-tier.test.mjs`. | F22, F23 |
+| S06 | Lomax citation for the Spanish-tinge claim; declare a tier on every reference — including the Ch 2 block (refs 4, 7, 8, 9), which the audit's §4 lists do not name and no other slice covers; add `citation-tier.test.mjs`. | F22, F23 |
 
 **Demo:** the audit's Section 4 Tier-C list is empty for inline citations; the
 new tier test fails if a Tier-B/C source is attached to a named-theory claim.
