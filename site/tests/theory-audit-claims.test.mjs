@@ -10,7 +10,8 @@
 // explicitly declares Euclidean spellings out of scope.
 //
 // S02 creates this file with the F01, F12, and F54 cases. S03-S06 append their
-// findings to the same FINDINGS array. Every case is built on the shared
+// findings to the same FINDINGS array. F08 occupies two entries because the
+// same superlative appears in Ch 2 and in the euclidean-reference appendix. Every case is built on the shared
 // assertion helpers in ./helpers/prose-claims.mjs so a red run names the file,
 // the finding id, which side moved (forbidden reappeared vs corrective went
 // missing), and the authority the claim must agree with.
@@ -200,6 +201,58 @@ const FINDINGS = [
       'onsets at steps 0, 5, 10',
     ],
   },
+  {
+    id: 'S05-F07',
+    file: '02-sub-saharan-africa.mdx',
+    rule:
+      'Ch 2 must not assert an unsourced multi-century depth for Ewe ensemble practice. Ethnomusicological ' +
+      'fieldwork documenting Ewe drumming dates from the mid-twentieth century; depth before that is poorly ' +
+      'attested (audit 2.1.2, §5.9). The claim may be kept only as something the tradition understands about ' +
+      'itself, bounded by what the documentary record supports. Ledger F07.',
+    // The pre-correction sentence asserted the organising logic had held "for
+    // centuries" as bare fact. Any unhedged multi-century assertion reverses
+    // the reframe; Ch 2 has no legitimate use of these constructions.
+    forbiddenRegex: [
+      /\bfor centuries\b/i,
+      /\bfor hundreds of years\b/i,
+    ],
+    present: [
+      'documented in ethnomusicological fieldwork from the mid-twentieth century',
+      'understood within the tradition',
+    ],
+  },
+  {
+    id: 'S05-F08',
+    file: '02-sub-saharan-africa.mdx',
+    rule:
+      'Toussaint (2005, ref-1) calls E(7,12) the most commonly used timeline in sub-Saharan Africa — a ' +
+      'descriptive frequency claim, not an evaluative ranking (audit 2.1.1). Ch 2 must carry the descriptive ' +
+      'phrasing and cite Toussaint himself; the pre-correction text named Toussaint while footnoting ref-4, ' +
+      'a Wikipedia article. Ledger F08.',
+    forbiddenRegex: [/single most important/i],
+    present: [
+      'Toussaint describes as the most commonly used',
+      // The reframe is only durable if the descriptive/evaluative distinction
+      // is stated, not merely enacted by word choice.
+      'not a ranking of importance',
+      'ref-1',
+    ],
+  },
+  {
+    // Same claim as S05-F08, second site. The audit cited only Ch 2 because
+    // that is where it read the sentence, but the appendix repeats it verbatim
+    // below the generated E(12) table; fixing one and not the other would
+    // leave the overclaim live for the next re-read.
+    id: 'S05-F08-appendix',
+    file: 'appendix-euclidean-reference.mdx',
+    rule:
+      'The E(7,12) prose under the 12-step table repeats Ch 2\'s superlative and must carry the same ' +
+      'descriptive Toussaint framing. Ledger F08, second site.',
+    forbiddenRegex: [/single most important/i],
+    present: [
+      'Toussaint describes as the most commonly used',
+    ],
+  },
 ];
 
 const srcCache = new Map();
@@ -223,7 +276,7 @@ for (const f of FINDINGS) {
   registerCase(f.id);
 }
 
-test('theory-audit-claims covers at least the S02, S03, and S04 findings', () => {
+test('theory-audit-claims covers at least the S02, S03, S04, and S05 findings', () => {
   for (const req of [
     'S02-F01',
     'S02-F12',
@@ -233,6 +286,9 @@ test('theory-audit-claims covers at least the S02, S03, and S04 findings', () =>
     'S04-F04',
     'S04-F05',
     'S04-F06',
+    'S05-F07',
+    'S05-F08',
+    'S05-F08-appendix',
   ]) {
     assert.ok(
       REGISTERED_CASE_IDS.has(req),
