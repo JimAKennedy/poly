@@ -1,0 +1,410 @@
+---
+class: archived
+---
+
+# Poly Guide — Music Theory Audit
+
+> **Archived (2026-08-25)** — this is the frozen text of the external August 2026
+> music-theory audit of the Poly Guide, kept verbatim as the upstream input to
+> [M001-theory-audit-remediation-plan.md](M001-theory-audit-remediation-plan.md).
+> Its section numbers (§1–§7) are what that plan's ledger cites in its "Audit §"
+> column. Do not edit it to reflect fixes: the audit describes the site as it
+> stood when the audit was written, and the remediation plan's ledger — not this
+> file — is the live record of what has since been corrected.
+
+*August 2026. Covers the full site as of the current `main` branch. All 17 chapters + 9 theory deep-dive pages + appendices read in full.*
+
+---
+
+## Executive Summary
+
+The guide is better than you fear but not as solid as it needs to be to stand alone as a knowledge base. The core Euclidean claims are mathematically correct and well-sourced, the attribution disclaimers on the theory deep-dive pages are honest and well-written, and the CI test harness (pattern-conformance, Euclidean-guardrail) adds real integrity guarantees for the patch tables. Where the guide falls short is a cluster of specific ethnomusicological claims that overreach the cited sources, a reference list that mixes serious scholarship with YouTube videos and hobbyist blogs at the same citation weight, and a set of patch-to-theory inconsistencies that the test harness catches mechanically but whose explanations in prose are sometimes confused.
+
+Your instinct is correct: the current content should **not** be positioned as a comprehensive ethnomusicology review. The repositioning you propose — "here is the simplified theory framework we used to make the presets idiomatic, and that may inform future plugin features" — is the right frame, and it requires both a repositioning statement *and* targeted corrections to claims that are simply wrong as written.
+
+---
+
+## Section 1: What Is Mathematically Sound
+
+These claims are correct and can be asserted confidently.
+
+### Euclidean distribution claims
+
+All E(k,n) pattern derivations in chapters 1–7 and the Euclidean reference appendix are correct under the Bresenham/Bjorklund convention the engine uses. The test harness in `site/tests/appendix-euclidean-claims.test.mjs` verifies every pattern claim against the actual implementation.
+
+- E(7,12) = `x . x x . x . x x . x .` — gap sequence 2-1-2-2-1-2-2. Correct.
+- E(3,8) tresillo = `x . . x . . x .` — gap sequence 3-3-2. Correct.
+- E(5,8) cinquillo = `x . x x . x x .` — gap sequence 2-1-2-1-2. Correct.
+- E(3,7) rachenitsa = rotation 0 → 2+2+3, rotation 3 → 3+2+2, rotation 5 → 2+3+2. All correct.
+- E(4,9) daichovo = 2+2+2+3. Correct, and Toussaint (2005) explicitly lists this association.
+- E(4,11) kopanitsa claim of 3+3+3+2 — **partially correct**: E(4,11) at rotation 0 gives gaps 3-3-3-2 summing to 11. This *is* one kopanitsa variant. But the guide implies it is *the* kopanitsa grouping without noting that the traditional pattern is contested (Brăiloiu 1951, Rice 1994 give 2+2+3+2+2 as the primary damar grouping for kopanitsa).
+- Son clave non-Euclidean analysis: gap sequence 3-3-4-2-4 is correct; the guide correctly identifies that the 2-gap cannot appear in any E(k,16) pattern. The distinction between E(5,16) bossa bass and son clave is correctly explained.
+- Clapping Music pattern `x x x . x x . x . x x .`: gap sequence 1-1-2-1-2-2-1-2 is correct per Reich's original score.
+- Javanese colotomic cycle ratios 4:8:16:32. Correctly described; powers-of-two hierarchy matches Sumarsam (1995) and the Oxford Academic sources cited.
+
+### Lcm convergence arithmetic
+
+All lcm calculations in the chapters (lcm(7,12)=84, lcm(7,16)=112, lcm(3,5,7,11)=1155, etc.) are correct. The metaphor of lcm convergence as "sam" (Indian) or "gong stroke" (gamelan) is a legitimate informal use of the concept, though not terminology any of those traditions use internally — the guide should make that translation more explicit.
+
+---
+
+## Section 2: Ethnomusicological Claims — Tradition by Tradition
+
+### 2.1 Sub-Saharan Africa (Chapters 2, theory-sub-saharan-africa)
+
+**What's solid:**
+- The gankogui/E(7,12) identification is correct and well-sourced (Toussaint 2005, Arom 1991).
+- The timeline-constancy rule (Rule 1 in theory-sub-saharan-africa) is substantiated by Locke (1982, 1998) and Chernoff (1979).
+- The offbeat-placement of support drums (Rule 3) is correctly sourced to Locke (1982).
+- The 3:2 cross-rhythm as foundational (Rule 4) is correctly sourced to Novotney (1998).
+- Distinction between Ewe multi-cycle stacking and Manding same-cycle hocketing is a legitimate pedagogical simplification; the guide correctly notes it is a simplification.
+- Rules 7 and 9 are attributed as the guide's own compressions rather than direct citations. That is the correct attribution approach.
+
+**Issues:**
+
+1. **"Most important timeline in sub-Saharan music" (Ch 2, line ~33)** — the guide attributes this to Toussaint and says E(7,12) is "the single most important timeline." Toussaint (2005) calls it "the most commonly used timeline in sub-Saharan Africa" in a descriptive, not evaluative, sense. The superlative as written is slightly stronger than the source supports. Low severity; easy fix.
+
+2. **"Centuries" of Ewe tradition (Ch 2, para 1)** — "In the Ewe communities of southern Ghana, it has been the organising logic of ensemble music for centuries." This is plausible but unsourced. Ethnomusicological fieldwork documenting Ewe drumming dates from the mid-20th century; historical depth before that is poorly attested. Remove the temporal claim or hedge it.
+
+3. **The Manding-Ewe contrast is real but oversimplified.** Manding dunun ensembles do operate with distinct cycle lengths in many contexts; the guide's "all same cycle length" characterisation of Manding is an oversimplification. Rice and Charry (Mande Music, 2000, not cited) would be the authority here. The guide is not wrong but is flattening complexity for a pedagogical purpose — the repositioning statement should cover this.
+
+4. **Rule 8 (non-isochronous subdivision) is the most technically sophisticated claim**, and the guide cites Polak (2010) and Polak & London (2014) correctly. However, the guide's Poly approximation ("a light Humanize ≤0.15 as an admitted approximation") is honest — Humanize applies random timing offsets, whereas the Polak data shows *systematic, style-specific* subdivision profiles. The guide's note that this is an approximation is present but could be clearer about *how* different the approximation is from the real thing.
+
+**Chapter 2 patch consistency with theory-sub-saharan-africa:**
+
+The "Ewe-Inspired Polymetric Ensemble" patch in Chapter 2 has Lane 4 (Lead complement) at 7 steps, 5 hits, rotation 2, Kotekan L1. The theory-sub-saharan-africa construction patch (Rule-Checked Ewe Texture) uses Lane 5 at 7 steps, 5 hits, rotation 0 with phrase gating. These are *different configurations*. Neither is wrong, but the chapter patch does not use timeline mode for the bell lane and does not include a dance-beat lane — both recommended in the theory page. The chapter example and the theory-page construction are inconsistent in approach, which could confuse a reader following both.
+
+**Key missing source:** Gerhard Kubik's extensive work on African rhythm and Arom's more recent methodological writings would significantly strengthen this section. Neither is in the reference list.
+
+---
+
+### 2.2 Afro-Cuban (Chapters 3, theory-afro-cuban)
+
+**What's solid:**
+- Peñalosa (2009) is the definitive source for clave alignment, and the guide uses it correctly for bombo/ponche identification and the "crossed" concept.
+- The son vs. rumba clave distinction (gap sequences 3-3-4-2-4 vs. 3-4-3-2-4) is correct.
+- The "non-Euclidean clave" explanation is mathematically exact and pedagogically well-handled.
+- The E(5,16) bossa/son distinction is accurate — hits 0,3,6,10,13 vs. 0,3,6,10,12. The guide correctly uses this as a teaching tool while acknowledging the one-pulse difference.
+- The timeline-mode workflow for exact clave is correct.
+- Mauleón (1993) is a legitimate authority for arranging idioms.
+
+**Issues:**
+
+1. **Reference 10 is a YouTube video for the primary clave citation.** Ref [10] (cited inline on the E(7,12)→clave paragraph) links to a YouTube video titled "The Clave Rhythm." The theory-afro-cuban page correctly cites Peñalosa (2009) for the matrix concept, but the in-chapter reference is the video. These should be swapped: Peñalosa is the citation the claim deserves. Ref [10] being a YouTube link for the most important theoretical assertion in the chapter is the reference list's biggest single problem.
+
+2. **"Jelly Roll Morton called it the Spanish tinge"** (Ch 3, tresillo section) — This is a real historical claim that Morton made; it refers specifically to the habanera's rhythmic feel in early jazz. The claim is accurate, but no citation is provided. Alan Lomax's interviews with Morton (1950) are the primary source.
+
+3. **Rumba clave description in Chapter 3 vs. theory page.** Chapter 3 says rumba clave is `x . . x . . . x . . x . x . . .` (hits at 0,3,7,10,12). The theory-afro-cuban page confirms this. This is the 3-2 rumba clave. Both are consistent — but neither mentions that there is debate in the literature (Acosta 2004, Moore 2006) about whether the rumba clave predates or postdates the son clave. The guide can legitimately avoid this debate under the repositioning frame.
+
+4. **Son clave rule-checked patch (theory-afro-cuban) vs. chapter ensemble patch.** The rule-checked patch uses Rotation "—" (timeline lane) for the clave, with an explicit note that it uses the exact non-Euclidean pattern. The Chapter 3 ensemble patch uses Rotation 0 and hits 5 at 16 steps — the E(5,16) approximation. The chapter does explain this is the approximation, but the two patches in the same guide family using different approaches for the clave could confuse readers who are doing both. A cross-reference note is needed.
+
+5. **The tumbao rotation=14 in the rule-checked patch** (theory-afro-cuban Lane 2: 16 steps, 6 hits, rotation 14). Rotation 14 on a 16-step pattern shifts the first hit to step 14, placing the opening accent near the cycle end — this is consistent with the bombo/ponche avoidance of beat 1 (Rule 3). However 6 hits with rotation 14 at 16 steps is an unusual configuration; the guide would benefit from showing the actual onset positions to explain why this satisfies the rule.
+
+---
+
+### 2.3 Gamelan (Chapter 5, theory-gamelan)
+
+**What's solid:**
+- Tenzer (2000) and Vitale (1990) are the correct primary sources for kotekan.
+- The distinction between strict complementation (textbook) and overlap at structural tones (practice) is a genuine and important ethnomusicological point, sourced to Tenzer. Rule 4's note that "a pair with empty intersection everywhere sounds mechanical" is correct and often overlooked.
+- Sumarsam (1995) is correctly cited for colotomic structure.
+- The five named kotekan styles (norot, kotekan telu, kotekan empat, nyog cag) — Rule 5 — are real; Tenzer covers them. However, the guide states this as a rule that you must "choose one and keep it; mixing interlock styles mid-phrase is not idiomatic." This is a reasonable simplification but is stronger than Tenzer's description, which allows stylistic mixing within a kebyar performance.
+- The Javanese colotomic 4:8:16:32 structure is correct and textbook Sumarsam.
+
+**Issues:**
+
+1. **"Time is not a line — it is a circle" (Ch 5 opening)** — This is a legitimate characterisation drawn from Geertz's Negara (1980) and repeated in many gamelan texts, but it is not cited. The framing is evocative but slightly orientalist when presented without sourcing; citing Tenzer (2000)'s actual discussion of cyclic structure would ground it.
+
+2. **Polos "leans onbeat, sangsih leans offbeat" (Rule 3)** — Vitale (1990) describes this broadly, but the polos/sangsih onbeat/offbeat distinction varies by kotekan style. In norot, the sangsih carries the melodic tone and the polos provides the offbeat fill — essentially the reverse of the guide's description in that style. The rule is a simplification of a style-dependent relationship.
+
+3. **Poly's Kotekan parameter implements strict complementation** (guide's Rule 4 acknowledgement is correct). The guide appropriately notes that "add deliberate doublings via a third lane or accent masks until kotekan modes ship" — this is the honest limitation statement.
+
+4. **"Rule 5: named interlock styles"** — Five styles listed. Tenzer identifies these (and others); the list is correct. But the guide doesn't mention *kotekan polos* (a third player playing only the structural pokok tones), which is a common performance practice and relevant to Poly users who want to add a third "melody" lane.
+
+5. **Chapter 5 patch vs. theory-gamelan patch:** The Chapter 5 "Balinese Kotekan Interlocking" patch sets Sangsih (Lane 2) to 8 steps, 5 hits, Kotekan L1. The theory-gamelan "Rule-Checked Kotekan Over Colotomy" sets Polos (Lane 6) to 8 steps, 5 hits, Sangsih (Lane 7) to 8 steps, 3 hits, Kotekan L6. These are consistent in approach — Lane 7 derives its complement from Lane 6. However the chapter patch does not include a Pokok (structural melody) layer, which the theory page identifies as required (Rule 6: "The interlock serves a melody"). The chapter patch is incomplete relative to the theory requirements.
+
+---
+
+### 2.4 Indian Classical (Chapter 6, theory-indian-classical)
+
+**What's solid:**
+- Clayton (2000) is the correct gold-standard source for tala and sam.
+- Nelson (2008) for tihai arithmetic is correct.
+- The vibhag groupings for tintal (4+4+4+4), jhaptal (2+3+2+3), and rupak (3+2+2) are correct.
+- Sam as gravitational centre and khali as negative space midpoint is correctly described for tintal.
+- Layakari as augmentation/diminution, and the dugun/tigun/chaugun speed ratios (2x/3x/4x), are standard Hindustani theory.
+
+**Issues:**
+
+1. **Rupak's grouping described inconsistently.** Chapter 6 says "Rupak tal occupies 7 beats as 3+2+2." This is correct for Hindustani rupak. But then says E(4,7) produces groupings "close to rupak's internal pulse" — E(4,7) gives 2+2+2+1, which is *not* close to 3+2+2. The bridge from E(4,7) to rupak is mathematically strained. E(3,7) at rotation 0 gives 2+2+3, and at rotation 3 gives 3+2+2 — which actually *does* match the rupak grouping. The chapter uses E(4,7) where it should use E(3,7) with appropriate rotation to illustrate rupak. This is a genuine error.
+
+2. **E(7,16) for tintal skeleton** — Chapter 6 says "E(7,16) across tintal's sixteen beats creates a sparse, syncopated skeleton — the kind of structure a tabla player might outline during a slow theka." This is creative but unsupported. Tabla thekas are not Euclidean distributions; they are fixed named stroke sequences (bols). E(7,16) is not a theka for tintal or for any tala — the guide is using it as an analogy, which is fine under the repositioning frame but should not be presented as if it has ethnomusicological grounding.
+
+3. **Khali in tintal.** The guide says "sam falls on beat 1 and khali on beat 9." This is correct for Hindustani tintal (the khali is at vibhag 3, which begins on beat 9). Well done.
+
+4. **Tihai arithmetic discussion** — The guide says to "configure the Gap so that three consecutive phrases (Length + Gap, repeated) land the final onset on beat 1." The arithmetic is right in principle, but the guide does not provide a worked example with actual numbers. Nelson (2008) gives the standard formula: (Length × 3) + (Gap × 2) = remaining beats to sam. The theory page (theory-indian-classical) should include one worked example.
+
+5. **Layakari ratios mapped to Poly subdivision parameter** — This is a legitimate and elegant mapping. However, the guide says "Set Lane 1 to subdivision 1/4 for the basic pulse. Set Lane 2 to 1/8 for dugun. Set Lane 3 to 1/16 for chaugun." This is correct as a practical Poly workflow but conflates *rhythmic augmentation* (the same pattern at different speeds) with *subdivision change* (a different density of hits). True layakari involves the player performing the same compositional phrase at double or triple speed, not simply changing lane subdivision. This is a conceptual simplification, which is fine under the repositioning frame.
+
+6. **Carnatic tala system entirely absent.** The chapter title says "Indian Classical" and cites "Hindustani and Carnatic" in the description, but Carnatic music's tala system (which uses solkattu/konnakol, different tala families, and a completely different conceptual framework) gets no coverage. Given that the chapter claims to cover both traditions, this is a gap. Under repositioning, the scope should be limited to Hindustani practice explicitly.
+
+7. **Reference quality:** Refs 21-25 for this chapter include an Artium Academy blog post, a NIOS high-school textbook PDF, and a YouTube konnakol video. Clayton (2000) and Nelson (2008) are in the Further Reading section — they are the correct authorities — but the inline citation numbers point to weak sources. The theory-indian-classical page does cite Clayton and Kippen correctly in its rules.
+
+---
+
+### 2.5 Balkan (Chapter 7, theory-balkan)
+
+**What's solid:**
+- Brăiloiu (1951) originating the term "aksak" and the two/three-cell theory is correctly attributed in Further Reading.
+- The rachenitsa as 2+2+3 / 2+3+2 / 3+2+2 via rotation is correct.
+- E(3,7) = rachenitsa connection is correct per Toussaint (2005) — one of his cleaner examples.
+- E(4,9) = daichovo 2+2+2+3 is correct and exact.
+- "Swing is off-limits for aksak" (theory-balkan Rule, and Ch 7 patch swing=0) — correct and well-explained. Aksak asymmetry is structural, not timbral.
+- Goldberg (2015) on timing variations is a genuinely useful empirical source that most guides lack.
+
+**Issues:**
+
+1. **"Bjorklund's algorithm and Balkan folk musicians independently arrived at the same solution"** (Ch 7, para after E(3,7) diagram) — This is the guide's strongest overclaim. Bjorklund (2003) derived his algorithm for neutron beam pulse distribution; it was Toussaint (2005) who identified the connection to world music traditions. The claim that folk musicians "independently arrived at the same solution" is an engaging framing but is presented as though it has historical or cognitive grounding. The relationship is mathematical, not historical — the same distributional property can arise from different generative processes. The Euclidean appendix claims test (`appendix-euclidean-claims.test.mjs`) tests pattern arithmetic, not this historical claim; it needs a prose correction.
+
+2. **Kopanitsa grouping 2+2+3+2+2 missing.** The guide says E(4,11) = 3+3+3+2 is a kopanitsa variant. This is true (Rice 1994, Goldberg 2015 both describe this), but the *most commonly cited* kopanitsa grouping in the literature is 2+2+3+2+2 (which has 5 groups summing to 11, not 4). The 2+2+3+2+2 grouping requires 5 accents, not 4 — so it is E(5,11), not E(4,11). E(5,11) at rotation 0 gives gaps 2-2-2-2-3, and with rotation 2 gives 2-3-2-2-2 — neither matches 2+2+3+2+2 cleanly (which would be gaps 2,2,3,2,2). The guide avoids this complexity by using E(4,11), which works but represents a less typical rendering. Under repositioning, this is acceptable — but should be noted.
+
+3. **"People dance in 7, 9, and 11 before they encounter 4/4"** (Ch 7 closing) — Evocative but unsourced. Rice (1994) describes the naturalness of these meters in village culture but does not make this specific developmental claim. The claim is probably directionally true but is presented as a fact.
+
+4. **Tupan and kaval in the patch** — The chapter patch (Rachenitsa Groove) uses MIDI note mappings without specifying the actual instrument sounds intended. This is a practical issue: readers using Poly with a General MIDI drum kit will not hear tupan and kaval, which are pitched folk instruments. The "Note" column should indicate that GM drum notes are being used as stand-ins, or actual GM note numbers should be specified.
+
+5. **Aksak "long" beats not exactly 3:2.** The guide implies that the 2+2+3 grouping uses integer cell durations. Goldberg (2015) — cited in Further Reading but not in the chapter text — empirically shows that "long" aksak beats in performance are not exactly 1.5× the "short" beats. This is the same non-isochronous issue as the Polak (2010) jembe data. The guide should note, as it does for the Malian jembe, that the integer ratios are an approximation of a performance practice that deviates from exact ratios.
+
+---
+
+### 2.6 Afrobeat (Chapter 4, theory-afrobeat)
+
+**What's solid:**
+- "Tony Allen described his approach as 'playing around the beat rather than on it'" — this is directly from Allen & Veal (2013), cited in Further Reading.
+- The sparse kick + continuous varied hi-hat + gated snare characterisation is accurate and well-supported by the cited documentary sources.
+- Phase gating for breathing grooves is a legitimate creative application with no ethnomusicological overclaim.
+- E(7,12) in 4/4 creating ternary-vs-binary tension is correctly identified as an Afrobeat fingerprint.
+
+**Issues:**
+
+1. **"Fela built the genre in 1960s and 70s Lagos, but it was his drummer Tony Allen who created its rhythmic vocabulary"** — This is a paraphrase from a common take but is contentious. Allen himself has been more careful about co-attribution. Fela's own rhythmic contributions to the genre (particularly the role of his horn arrangements in defining the rhythmic feel) are understated. This is a minor attribution issue.
+
+2. **Reference quality is worst here.** Refs 14-17 for this chapter are all YouTube videos and hobbyist production blogs. The Further Reading list has Allen & Veal (2013) and Veal (2000), which are legitimate. The inline citations should be replaced.
+
+3. **"Tony Allen's timing was precise but not quantised"** (Ch 4, macros section) — True, but the guide does not cite any measurement study confirming this. The Danielsen lab's work (cited elsewhere in the guide) has not specifically studied Allen recordings. This is a received-wisdom statement presented as fact.
+
+---
+
+### 2.7 Minimalism (Chapter 8, theory-minimalism)
+
+**What's solid:**
+- Cohn (1992) is cited in Further Reading and is the correct analytical framework for phase-shifting (transpositional combination of beat-class sets).
+- The Clapping Music pattern is correctly identified as non-Euclidean with gap sequence 1-1-2-1-2-2-1-2.
+- Drift as a Poly approximation of Reich's phasing is acknowledged as an approximation.
+- The Nancarrow tempo-ratio connection to per-lane tempo multipliers is correctly sourced to Gann (1995).
+
+**Issues:**
+
+1. **"Two identical patterns move at slightly different rates — West African and Indonesian musicians had known for centuries"** (Ch 8, opening) — This is the most contested generalisation in the guide. West African polymetric stacking uses fixed independent cycles, not deliberately different rates. Gamelan colotomic structure uses fixed hierarchical nesting, not gradual drift. The analogy Reich himself drew (to African music) was criticised by ethnomusicologists, including Agawu (2003, not cited). The guide adopts Reich's framing uncritically. Under repositioning, this can be flagged as "Reich's framing of the connection."
+
+2. **Drumming (1971) attribution** — The guide describes Drumming as using "gradual phase shifting." Drumming actually uses gradual *addition* of notes (building the pattern) and later *subtraction*, plus timbral transformation. The pure phase-shifting technique is from Piano Phase (1967) and Violin Phase (1967). Clapping Music (1972) uses discrete phase jumps, not gradual drift. The three pieces have different compositional techniques; the guide conflates them under "phase shifting." This is a factual error about Reich's actual compositional methods.
+
+3. **The Drift parameter as "phase shifting"** — Poly's Drift gradually shifts cycle position, which is closer to phase-shifting than to the additive process of Drumming. Calling Drift a model of Drumming is inaccurate; it models Piano Phase more accurately.
+
+---
+
+### 2.8 Electronic / Drum & Bass / Funk-Soul / Jazz / Brazilian
+
+These chapters are lower risk theoretically because they deal more with production convention than ethnomusicological claim. Issues found:
+
+**Electronic (Ch 9):**
+- "The fundamental difference between techno and house is often reducible to one parameter: swing" — Ref [36] is a Roger Linn blog post. This is a simplification that Linn himself makes, but it is contested in the academic literature (Butler 2006, cited in Further Reading, has a more nuanced account). The guide can say this; it just needs to attribute it to Linn rather than presenting it as fact.
+- Four-on-the-floor kick as E(4,4) is technically correct but trivially so — E(k,k) is a filled pattern. The guide correctly notes it is "the trivial case."
+
+**Drum & Bass (Ch 13):**
+- "Amen break — most sampled recording in music history" — Ref [38] is an Ethan Hein blog post. This claim is disputed (there are other candidates). The claim is common but needs the hedge "widely considered."
+- The half-time backbone characterisation is accurate and well-explained.
+
+**Funk/Soul (Ch 11):**
+- "Papa's Got a Brand New Bag" claim ("every instrument became a drum, every note locked to a groove") — accurate in spirit and consistent with the musicological literature on funk. No serious issues.
+- The ghost-note layering description is practically accurate.
+
+**Jazz (Ch 12):**
+- "Max Roach's four limbs did" — the guide says Max Roach's "four independent voices, each with its own periodicity" maps to Poly's lane independence. This is a creative application; Roach's actual polymetric approach is documented in Monson (1996, Saying Something, not cited) and Gridley (not cited). The claim is directionally accurate.
+- Ref [39] (Danielsen et al. 2023 Cambridge paper on five groove genres) is legitimately good academic work and is used appropriately in the Afro-Cuban section.
+
+**Brazilian (Ch 10):**
+- The bossa nova E(5,16) bass pattern is correctly identified. Schloss (referenced in Further Reading) is a legitimate source.
+- The maracatu description is minimal and could be richer, but nothing is wrong.
+
+---
+
+## Section 3: Patch-to-Theory Consistency Audit
+
+The CI tests (`theory-patch-conformance.test.mjs`, `theory-euclidean-guardrail.test.mjs`) verify that each theory-page patch has valid Euclidean (steps, hits, rotation) triples. Passing CI means the arithmetic is clean. What the tests do NOT check is whether the patch follows the page's own named rules. Manual audit findings:
+
+### 3.1 Chapter 2 (Sub-Saharan) vs. theory-sub-saharan-africa
+
+| Requirement from theory page | Chapter 2 patch |
+|---|---|
+| Bell lane in timeline mode (Rule 1) | ❌ No timeline mode specified |
+| Dance-beat lane for 3:2 matrix (Step 2 in construction) | ❌ No dance-beat lane |
+| Support drums rotated off dance beat (Rule 3) | ⚠️ Lane 3 rotation 0, Lane 4 rotation 2 — partial |
+| Lead drum phrase-gated (Rules 5/6) | ✅ Kotekan L1 used instead of phrase gating |
+| Each lane distinct register (Rule 7) | ✅ Different MIDI notes |
+
+The chapter patch is a reasonable introductory example; the theory-page patch is the rule-compliant version. They should be linked with a note explaining that the chapter patch is simplified and the theory page shows the fuller construction.
+
+### 3.2 Chapter 3 (Afro-Cuban) vs. theory-afro-cuban
+
+| Requirement | Chapter 3 patch |
+|---|---|
+| Clave in timeline mode with exact pattern (Rule 1) | ❌ Uses E(5,16) approximation, rotation 0 |
+| Bass avoids beat 1 (Rule 3) | ✅ Rotation 14 on tumbao lane |
+| Cáscara busy half on 3-side (Rule 2) | ✅ Rotation 1 places active hits appropriately |
+| Swing in 0.20-0.30 range (Rule 7) | ✅ Values 0.20-0.30 |
+| One free voice only (Rule 5) | ⚠️ Conga at 10% mutation + Quinto at 30% — borderline |
+
+The major inconsistency is clave approximation. The chapter text explicitly explains this is an approximation and links to the timeline-mode workflow for the exact pattern, so this is pedagogically honest — but the patch table header should say "(Euclidean approximation)" rather than just "Clave."
+
+### 3.3 Chapter 5 (Gamelan) vs. theory-gamelan
+
+| Requirement | Chapter 5 patch |
+|---|---|
+| Pokok melody layer (Rule 6) | ❌ No pokok lane |
+| Structural overlap at cycle boundary (Rule 4) | ❌ No doubled strokes |
+| No swing/humanize (construction step 5) | ✅ No swing values |
+| Binary colotomic ratios (Rule 7) | ✅ 4:8:16:32 |
+
+The Chapter 5 colotomic patch is correct; the kotekan patch lacks the pokok and structural overlap. The theory page construction requires both.
+
+### 3.4 Chapter 6 (Indian) — E(4,7) for rupak error
+
+As noted in Section 2.4 above: the guide uses E(4,7) to illustrate rupak's 3+2+2 structure. E(4,7) gives grouping 2+1+2+2 (gaps 2,1,2,2 from the Euclidean reference appendix, where E(4,7) is listed as "Longa variant"). E(3,7) at rotation 3 gives 3+2+2 and is the correct Euclidean illustration of rupak. The patch then uses 7 steps, 3 hits for the sam marker — which is E(3,7), the pattern that actually matches rupak's grouping. The prose and the patch are inconsistent with each other.
+
+### 3.5 Chapters 8, 11-14: No major patch inconsistencies
+
+The electronic, funk, jazz, and synthesis chapters have fewer specific ethnomusicological rule frameworks, so patch-to-theory consistency is less constraining. No significant errors found beyond those noted in Section 2.
+
+---
+
+## Section 4: Reference List Quality Assessment
+
+The references split into three distinct quality tiers. This is the guide's most significant credibility risk if positioned as a knowledge base.
+
+### Tier A: Legitimate peer-reviewed scholarship
+
+These sources are correctly cited and substantiate the claims made:
+- Toussaint (2005, 2013), Arom (1991), Locke (1982, 1998), Chernoff (1979), Anku (2000), Polak (2010), Polak & London (2014), Novotney (1998), Agawu (2006) — *Sub-Saharan*
+- Peñalosa (2009), Mauleón (1993), Uribe (1996), Washburne (1997) — *Afro-Cuban*
+- Tenzer (2000), Vitale (1990), Sumarsam (1995) — *Gamelan*
+- Clayton (2000), Nelson (2008), Kippen (1988) — *Indian Classical*
+- Brăiloiu (1951), Rice (1994), Goldberg (2015), Holzapfel (2015) — *Balkan*
+- Allen & Veal (2013), Veal (2000) — *Afrobeat*
+- Cohn (1992), Potter (2000), Gann (1995) — *Minimalism*
+- Butler (2006), Danielsen (2010), Danielsen et al. (2023) — *Electronic/Groove*
+- Reich (2002) — *Minimalism*
+
+### Tier B: Secondary / educational but legitimate
+
+- NIOS textbook (ref 22), Artium Academy blog (ref 21), Algorithmic Pattern / konnakol article (ref 24) — used for Indian Classical. Functional but not scholarly.
+- Chromatone Balkan page (ref 27), Fiveable (ref 26) — used for Balkan. Weak.
+- Schloss bossa nova article (ref 42) — university-hosted, legitimate.
+
+### Tier C: YouTube videos and hobbyist blogs used as primary citations
+
+These are the problem refs:
+- Ref 10, 11 — YouTube videos cited for the clave matrix (Chapter 3's most important claim)
+- Refs 14, 15 — YouTube videos for Afrobeat (Tony Allen)
+- Ref 16, 17 — hobbyist production blogs for Afrobeat
+- Ref 25 — YouTube konnakol video
+- Ref 26, 27 — educational aggregator pages for Balkan
+
+Refs 10-11 and 14-15 are the most damaging: citing a YouTube video as the authority for the clave matrix or Tony Allen's approach, when the guide's own Further Reading has Peñalosa (2009) and Allen & Veal (2013), makes the numbered reference list unreliable as scholarship.
+
+### Ref 2: Goldberg (2025)
+
+Ref [2] cites "Goldberg, D. (2025). 'Resultant Patterns in Phase-Shifted Rhythmic Structures.' Music Theory Online, 31(2)." MTO 31(2) does not appear to have published yet (journal is current through Vol 30 as of mid-2026). The URL points to `mto.25.31.2` — this may be a forward-reference to a forthcoming paper or a citation error. **Flag for verification.**
+
+---
+
+## Section 5: The Repositioning Framework
+
+Based on the above audit, the guide can be accurately repositioned as follows — and this repositioning is defensible, honest, and does not require removing most of the content.
+
+### Proposed repositioning statement (for Introduction page or a new "About This Guide" section)
+
+> This guide is not a comprehensive review of ethnomusicological literature. It is a practical companion to Poly's preset library and engine parameters, grounded in a curated reading of published scholarship. Two things follow from this.
+>
+> First, every numbered rule in the Theory Deep Dive pages summarises one or more specific published sources; those sources are listed on each page, and the Attribution notes say explicitly where a rule is the guide's own compression rather than a direct citation. The mathematics of Euclidean distribution and the named theoretical frameworks (clave matrix, tala, colotomic structure, kotekan, aksak) are drawn from that scholarship. Where we simplify — and we do simplify — the theory pages say so.
+>
+> Second, the patch recipes throughout this guide are designed to be idiomatic within the traditions they reference, not historically definitive. A Poly preset cannot replicate the microtiming profiles of a live jembe player, the exact bow pressure of a Balkan gadulka, or the precise clave orientation felt by a Cuban ensemble. What it can do is make those structural relationships — the timeline's inviolability, the clave's alignment rules, the interlocking complement — audible through an algorithmic system. The presets encode those structural relationships as starting points, not endpoints.
+>
+> For readers who want to go deeper into any tradition, the Further Reading section of each theory page lists the primary scholarship. For readers who want to build idiomatic grooves, the patch recipes and construction procedures on each page are designed to give you working results quickly.
+
+### What this frame lets you preserve
+
+- All the E(k,n) mathematics (correct)
+- All the theory deep-dive rule frameworks (well-sourced with appropriate attribution notes)
+- The CI test infrastructure (the strongest guarantor of factual accuracy)
+- All named pattern associations (correct and sourced)
+- The practical construction procedures
+
+### What needs corrective work before repositioning
+
+Roughly ordered by severity:
+
+1. **Fix the E(4,7)/rupak error** (Ch 6) — prose and patch misaligned; E(3,7) at rotation 3 is the correct rupak illustration.
+2. **Replace YouTube refs 10, 11, 14, 15 with Peñalosa, Allen & Veal** in the numbered citation list.
+3. **Correct the Drumming/Piano Phase/Clapping Music confusion** (Ch 8) — Reich's three pieces have distinct compositional processes; Drift models Piano Phase, not Drumming.
+4. **Correct "independently arrived at the same solution"** (Ch 7) — reframe as "the same distributional principle appears in both," not a historical convergence claim.
+5. **Add timeline-mode and dance-beat lane to Ch 2 patch**, or add a cross-reference note explaining why the chapter patch is simplified.
+6. **Add pokok lane to Ch 5 kotekan patch** or explain the omission.
+7. **Verify or correct Ref 2** (Goldberg 2025 / MTO 31(2)).
+8. **Limit Ch 6 scope to Hindustani** or add a paragraph acknowledging the Carnatic system is not covered.
+9. **Caveat "centuries" claim** for Ewe tradition.
+10. **Note that E(4,11) is a less typical kopanitsa rendering** and that the primary form (2+2+3+2+2 = E(5,11)) is not Euclidean in the same clean way.
+11. **Correct/source Tony Allen attribution** — note Fela's co-contribution.
+12. **Upgrade Tier C in-chapter refs** (Balkan, Afrobeat) to the Tier A sources already in Further Reading.
+
+---
+
+## Section 6: Enhancement Opportunities (Literature Pass)
+
+If you decide to do a detailed literature pass, these are the highest-value additions by tradition:
+
+| Tradition | Missing Source | What It Would Add |
+|---|---|---|
+| Sub-Saharan | Kubik, G. (1999). *Africa and the Blues*. | African rhythmic retentions in diaspora music — bridges Ch 2 and Ch 4 |
+| Sub-Saharan | Charry, E. (2000). *Mande Music*. | Correct the Manding "same cycle" oversimplification |
+| Sub-Saharan | Agawu, K. (2003). *Representing African Music*. | Methodological critique of Western rhythm analysis of African music |
+| Afro-Cuban | Acosta, L. (2004). *Cubano Be, Cubano Bop*. | Historical depth on clave evolution |
+| Indian Classical | Kippen, J. (1988). *The Tabla of Lucknow* | Theka elaboration (already in Further Reading, should be in inline refs for Ch 6) |
+| Indian Classical | Powers, H. (1980). "India" in New Grove | Carnatic tala system |
+| Balkan | Brăiloiu (1951) | Should be in inline citations, not just Further Reading |
+| Balkan | Peycheva, L. & Dimov, V. (various) | Bulgarian wedding music scholarship in Bulgarian — enriches Ch 7 |
+| Minimalism | Scherzinger, M. (2010) | African-minimalist connection (more critical than Reich's framing) |
+| Electronic | Born, G. & Hesmondhalgh, D. (2000). *Western Music and Its Others* | Frame for why cross-cultural combinations work or don't |
+
+---
+
+## Section 7: Summary Scores
+
+| Domain | Current State | Primary Issues |
+|---|---|---|
+| Euclidean mathematics | ✅ Correct | None |
+| CI test coverage | ✅ Strong | AccentMask float gap not relevant here |
+| Sub-Saharan theory | 🟡 Good with caveats | "Centuries" claim, Manding oversimplification, dance-beat patch gap |
+| Afro-Cuban theory | 🟡 Good with caveats | YouTube primary refs, clave approximation not flagged in ch. patch |
+| Gamelan theory | 🟡 Good with caveats | Polos/sangsih onbeat/offbeat is style-dependent, pokok missing from ch. patch |
+| Indian Classical theory | 🔴 Has real errors | E(4,7)/rupak error, Drumming/Piano Phase confusion (minimalism), Carnatic gap, weak inline refs |
+| Balkan theory | 🟡 Good with caveats | Kopanitsa grouping, non-integer long-beat caveat needed, "independently" overclaim |
+| Afrobeat theory | 🟡 Adequate | Ref quality poor, Allen/Fela attribution care needed |
+| Minimalism theory | 🔴 Has real errors | Drumming vs. Piano Phase vs. Clapping Music conflation |
+| Electronic/D&B/Funk/Jazz | 🟢 Mostly fine | Minor sourcing issues, no serious errors |
+| Brazilian | 🟢 Fine | Thin but accurate |
+| Reference list | 🔴 Uneven | YouTube/blog in inline refs for key claims |
+| Patch-theory consistency | 🟡 Mechanically verified | Polos/sangsih, dance-beat, pokok, rupak prose/patch mismatch |
+
+---
+
+*This audit was produced from direct reading of all site `.mdx` source files and cross-referenced against the cited scholarship and the engine's test harness. All pattern arithmetic verified against the engine's Bjorklund/Bresenham implementation. Errors in the scores or findings should be reported as issues.*

@@ -4,14 +4,18 @@ class: gated
 
 # Music-Theory Audit Remediation Plan (M001–M005)
 
-> **Status:** current (2026-08-23) — plan accepted, no slice executed yet.
+> **Status:** current (2026-08-25) — M001/S01–S04 landed; M001/S05–S06 and
+> M002–M005 not started. The per-row `Status` column is the authoritative
+> record; this line names the last slice boundary crossed.
 > **Lifecycle:** Planning artifact. Drives milestones M001–M005. Rows move from
 > `open` to `done` as slices land; the plan is archived when the ledger is clear.
 > **Upstream input:** the August 2026 external music-theory audit of the Poly
-> Guide (`poly_theory_audit.md`, held outside the repo in the owner's research
-> archive). Every finding in that document — the twelve ranked corrective items
-> in its Section 5, plus every sub-finding in Sections 1–4 and every enrichment
-> source in Section 6 — is enumerated below as exactly one ledger row.
+> Guide, landed verbatim alongside this plan as
+> [`poly_theory_audit.md`](poly_theory_audit.md) (`class: archived`) so every
+> "Audit §" citation below resolves without leaving the tree. Every finding in
+> that document — the twelve ranked corrective items in its Section 5, plus
+> every sub-finding in Sections 1–4 and every enrichment source in Section 6 —
+> is enumerated below as exactly one ledger row.
 > **Numbering:** Milestone IDs here are the **GSD scheme** (`M001`–`M005`),
 > assigned by `gsd_milestone_generate_id` against this project's GSD database.
 > An earlier draft of this plan used the repo's legacy commit-message milestone
@@ -24,7 +28,11 @@ class: gated
 > M001/S01 — asserts every finding ID F01–F54 is present, each carries exactly
 > one valid severity, disposition, and status token, each names a real slice
 > that appears in that milestone's breakdown table below, and no `_pending_`
-> placeholder survives.
+> placeholder survives. It also guards the "Related issues" table: its
+> ledger cross-references must resolve, no issue may be both tabled and
+> declared absent, and "Out of scope" may cite only issues the table carries.
+> Whether each tabled issue is still open on the tracker is *not* machine-
+> checked — that needs the network — so it is a human step at slice close.
 
 ## Why this plan exists
 
@@ -150,7 +158,7 @@ numbered item addressed at the location named in the "Fix lands in" column.
 | F49 | §6 | Peycheva, L. & Dimov, V. | Bulgarian wedding-music scholarship; enriches Ch 7 | M005/S04 | Cited | `open` |
 | F50 | §6 | Scherzinger, M. (2010). | A more critical account of the African–minimalist connection than Reich's own | M005/S05 | Cited | `open` |
 | F51 | §6 | Born, G. & Hesmondhalgh, D. (2000). *Western Music and Its Others*. | Frame for why cross-cultural combination works or does not | M005/S05 | Cited | `open` |
-| F52 | §6, 2.1 | Arom's later methodological writings. | Strengthens the sub-Saharan methodology section | M005/S01 | Cited | `open` |
+| F52 | 2.1 ("Key missing source") | Arom's later methodological writings. | Strengthens the sub-Saharan methodology section | M005/S01 | Cited | `open` |
 | F53 | 2.8 (Brazilian) | Maracatu treatment is thin (accurate, but minimal). | Richer maracatu section | M005/S06 | Section expanded | `open` |
 
 ---
@@ -165,7 +173,7 @@ claim test so it cannot regress.
 
 | Slice | Scope | Findings |
 |---|---|---|
-| S01 | Ledger + conformance harness. Land this plan doc and `theory-audit-remediation.test.mjs`; extend `prose-pattern-claims`/`prose-conformance-claims` with the assertion helpers the later slices need. | infrastructure |
+| S01 | Ledger + conformance harness. Land this plan doc and `theory-audit-remediation.test.mjs`; land the shared assertion helpers the later slices write their per-claim cases against (`site/tests/helpers/prose-claims.mjs`, covered by `prose-claim-helpers.test.mjs`) and wire the new suites into `check-doc-conformance.sh` (asserted by `doc-conformance-wiring.test.mjs`). | infrastructure |
 | S02 | Ch 6 rupak: E(4,7) → E(3,7) at the rotation that yields 3+2+2; reconcile prose with the existing patch. Same Ch 6 slice also lands the tintal-skeleton-as-analogy reframe and, in the euclidean-reference appendix, an explicit phase-convention statement so the E(3,16) row can be verified without re-deriving Bjorklund (closes issue #91). | F01, F12, F54 |
 | S03 | Ch 8 Reich: separate *Drumming* (additive), *Piano/Violin Phase* (gradual phasing), *Clapping Music* (discrete jumps); re-anchor Drift to *Piano Phase*. | F02, F03 |
 | S04 | Ch 7 Balkan: drop the independent-convergence claim; reconcile the kopanitsa grouping; add the non-integer long-beat caveat with Goldberg inline. | F04, F05, F06 |
@@ -282,28 +290,42 @@ The mechanical half of that verdict is `docs/audits/theory-audit-remediation.tes
 plus the per-claim tests each slice adds. The editorial half is a human re-read —
 which is why every row names a *location*, not just a fix.
 
-## Related open issues
+## Related issues
 
-Every currently-open GitHub issue that overlaps this plan's remit is enumerated
-here so the two views cannot silently drift. A row is either **closed by** a
-ledger finding (the finding's verification, when it lands, is what will close
-the issue) or **not closed here** — retained on the issue tracker because it is
-an engine or preset change that this documentation-and-tests plan deliberately
-does not build.
+Every GitHub issue that overlaps this plan's remit is enumerated here so the two
+views cannot silently drift. A row is either **closed by** a ledger finding (the
+finding's verification is what closes the issue) or **not closed here** —
+retained on the issue tracker because it is an engine or preset change that this
+documentation-and-tests plan deliberately does not build. Rows stay in the table
+after their issue closes, so the finding ↔ issue link survives; the Relationship
+cell records the closure.
 
 | Issue | Ledger row | Relationship |
 |---|---|---|
-| [#91](https://github.com/JimAKennedy/poly/issues/91) | F54 | Closed by F54. The E(3,16) appendix row is correct under Poly's phase convention; F54 makes that convention explicit next to the table so a reader can verify without re-deriving Bjorklund. |
+| [#91](https://github.com/JimAKennedy/poly/issues/91) — **closed** | F54 | Closed by F54, which landed in M001/S02; the issue was closed on the tracker 2026-08-25. The E(3,16) appendix row is correct under Poly's phase convention, and an arithmetic case re-derives the printed row from `bjorklund(16, 3)`. What was actually missing was the convention itself: F54 states it in a "Phase Convention" preamble so a reader arriving at a different rotation can tell a phase difference from an error without re-deriving Bjorklund. |
+| [#150](https://github.com/JimAKennedy/poly/issues/150) | F31, F32 | Not closed here. #150 proposes tempo-relative non-isochronous subdivision profiles (samba, Malian jembe) citing the same Polak (2010) / Polak & London (2014) evidence F31 discloses. F31/F32 state in prose that Humanize is random jitter and not those profiles; building the profiles stays on the issue tracker. |
+| [#151](https://github.com/JimAKennedy/poly/issues/151) | F31, F10 | Not closed here. #151 proposes replacing white-noise humanize with a correlated 1/f process. That is the engine half of the same gap F31 discloses, and it is also what would let F10's "precise but not quantised" characterisation be modelled rather than merely hedged. |
+| [#152](https://github.com/JimAKennedy/poly/issues/152) | F18, F38–F40 | Not closed here. #152 proposes a timeline-relative constraint so mutation and fills respect the clave/bell matrix. This plan only makes Ch 3's clave claims properly sourced (F18) and its patch construction self-consistent (F38–F40); teaching the engine about the timeline lane is the tracker's. |
+| [#153](https://github.com/JimAKennedy/poly/issues/153) | F27, F29, F30, F33 | Not closed here. #153 proposes kotekan mode variants (norot, telu, empat) and controlled polos–sangsih overlap — the engine counterpart to four gamelan disclosure rows: norot reverses the Rule 3 onbeat/offbeat relationship (F27), practice overlaps at structural tones against strict complementation (F29), Rule 5's never-mix instruction is stronger than Tenzer (F30), and kotekan polos is the missing named style (F33). |
+| [#154](https://github.com/JimAKennedy/poly/issues/154) | F43 | Not closed here. #154 proposes a tihai generator solving the same Nelson (2008) arithmetic — `(Length × 3) + (Gap × 2)` — that F43 adds as a hand-worked example on the theory page. F43 documents the calculation; #154 would automate it. |
 | [#156](https://github.com/JimAKennedy/poly/issues/156) | F31 | Not closed here. F31 discloses that Humanize applies random jitter rather than the systematic, style-specific subdivision profiles Polak (2010) documents; the exact non-Euclidean-timeline preset work #156 tracks stays on the issue tracker. |
 | [#157](https://github.com/JimAKennedy/poly/issues/157) | F32 | Not closed here. F32 pairs the Balkan long-beat honesty note with F06 (Goldberg inline); cell-aware swing for aksak — a real engine change — stays on the issue tracker as #157. |
+
+Open issues deliberately **absent** from this table, so their absence is a
+recorded judgement rather than an oversight: #149 (tempo-dependent swing range),
+#155 (coupled call-and-response gating) and #158 (metric-position-aware ghost
+notes) are engine enhancements whose subject matter the audit raised no finding
+against; #100 (`appendix-presets.mdx` preset coverage) is a documentation gap
+outside the audit's remit.
 
 ## Out of scope
 
 - **Engine or plugin behaviour changes.** Every row is documentation, website,
-  or test. Two findings (F31 Humanize-vs-systematic-microtiming, F34 GM stand-in
-  notes) point at real engine limitations; this plan *discloses* them rather than
-  building features. Existing enhancement issues #156 (exact non-Euclidean
-  timelines as presets) and #157 (cell-aware swing for aksak) are where those
-  would land, and are unchanged by this plan.
+  or test. Several findings (F31 Humanize-vs-systematic-microtiming, F34 GM
+  stand-in notes, F27/F29/F30/F33 gamelan interlock behaviour, F43 tihai
+  arithmetic) point at real engine limitations; this plan *discloses* them
+  rather than building features. The existing enhancement issues in the table
+  above — #150, #151, #152, #153, #154, #156, #157 — are where those would land,
+  and every one of them is unchanged by this plan.
 - **A comprehensive ethnomusicology review.** The audit's own conclusion is that
   the guide should not be positioned as one. M003/S01 states that in the guide.

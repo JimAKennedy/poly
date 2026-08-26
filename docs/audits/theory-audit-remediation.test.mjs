@@ -23,9 +23,20 @@
 //   5. Each finding row cites a `M0xx/Syy` slice that appears in that
 //      milestone's own breakdown table.
 //   6. No `_pending_` placeholder survives anywhere in the ledger.
+//   7. Every ledger ID cross-referenced from the "Related issues" table
+//      resolves to a real finding row.
+//   8. No issue is both carried in that table and declared deliberately
+//      absent from it.
+//   9. "Out of scope" cites only issues that table carries, so the two prose
+//      sites cannot drift apart.
 //
-// Failure messages always name the offending finding ID; slice-reference
-// failures additionally name the unresolvable token.
+// Whether an issue is still *open on GitHub* is deliberately not asserted —
+// that needs the network, and CI runs this offline. Items 7-9 guard the
+// structure; keeping the table's membership true to the tracker is a human
+// step at slice close.
+//
+// Failure messages always name the offending finding ID or issue number;
+// slice-reference failures additionally name the unresolvable token.
 //
 // Run: node --test docs/audits/theory-audit-remediation.test.mjs
 
@@ -278,4 +289,96 @@ test('no _pending_ placeholder survives in any finding row', () => {
   for (const f of findings) {
     assert.ok(!f.row.includes('_pending_'), `${f.id}: row still contains _pending_ placeholder`);
   }
+});
+
+// --- Related-issues table -----------------------------------------------
+//
+// The "Related issues" section claims to enumerate every GitHub issue
+// overlapping this plan's remit, and the "Out of scope" section names a subset
+// of the same issues. Whether an issue is *open on GitHub* is not
+// checkable offline, so these cases guard the parts that are: that the table's
+// ledger cross-references resolve, that an issue is not simultaneously tabled
+// and declared absent, and that the two prose sites cite the same issue set.
+// The desync these were written against was an "Out of scope" list naming only
+// two of the seven engine issues the table carries.
+
+const ISSUES_HEADING = '## Related issues';
+const OUT_OF_SCOPE_HEADING = '## Out of scope';
+
+function sectionLines(heading) {
+  const start = lines.findIndex((l) => l.trimEnd() === heading);
+  assert.ok(start !== -1, `plan doc has no "${heading}" section`);
+  let end = lines.length;
+  for (let i = start + 1; i < lines.length; i++) {
+    if (/^##\s/.test(lines[i])) {
+      end = i;
+      break;
+    }
+  }
+  return lines.slice(start + 1, end);
+}
+
+function issueNumbers(text) {
+  return new Set((text.match(/#(\d+)\b/g) || []).map((m) => m.slice(1)));
+}
+
+const issuesSection = sectionLines(ISSUES_HEADING);
+
+// Rows of the issues table: first cell is an issue link, second is ledger IDs.
+const issueRows = [];
+for (const line of issuesSection) {
+  const t = line.trimEnd();
+  if (!isTableRow(t) || isSeparator(t)) continue;
+  const c = cells(t);
+  if (c.length < 3) continue;
+  const num = c[0].match(/#(\d+)\b/);
+  if (!num) continue; // header row
+  issueRows.push({ issue: num[1], ledger: c[1], relationship: c[2] });
+}
+
+// Prose after the table records issues deliberately left out, so their absence
+// is a judgement rather than an oversight.
+const absentProse = issuesSection
+  .filter((l) => !isTableRow(l.trimEnd()))
+  .join('\n');
+const absentIssues = issueNumbers(absentProse);
+
+test('Related issues: the table is non-empty and every row cites resolvable ledger findings', () => {
+  assert.ok(issueRows.length > 0, 'Related issues table has no issue rows');
+  for (const row of issueRows) {
+    const ids = row.ledger.match(/F\d{2}/g) || [];
+    assert.ok(
+      ids.length >= 1 || row.ledger === '—',
+      `#${row.issue}: ledger cell names no finding (cell: ${JSON.stringify(row.ledger)})`,
+    );
+    for (const id of ids) {
+      assert.ok(
+        byId.has(id),
+        `#${row.issue}: ledger cell cites ${id}, which is not a finding row in this doc`,
+      );
+    }
+  }
+});
+
+test('Related issues: no issue is both tabled and declared deliberately absent', () => {
+  const tabled = new Set(issueRows.map((r) => r.issue));
+  const both = [...tabled].filter((n) => absentIssues.has(n));
+  assert.deepEqual(
+    both,
+    [],
+    `issue(s) both listed in the table and declared absent: ${both.map((n) => `#${n}`).join(', ')}`,
+  );
+});
+
+test('Out of scope cites only issues the Related-issues table carries', () => {
+  const tabled = new Set(issueRows.map((r) => r.issue));
+  const cited = issueNumbers(sectionLines(OUT_OF_SCOPE_HEADING).join('\n'));
+  const unlisted = [...cited].filter((n) => !tabled.has(n));
+  assert.deepEqual(
+    unlisted,
+    [],
+    `Out of scope names issue(s) absent from the Related issues table: ${unlisted
+      .map((n) => `#${n}`)
+      .join(', ')}`,
+  );
 });
