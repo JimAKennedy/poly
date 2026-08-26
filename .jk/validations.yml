@@ -1,0 +1,58 @@
+# Validation tokens for the jk-standards delivery workflow.
+#
+# A slice in docs/plans/<slug>/ledger.md names TOKENS, never commands — the
+# ledger says which class of assurance the slice owes, and this file says how
+# that assurance is obtained in this repo. The `ledger` check asserts that
+# every token a ledger cites appears here, so a typo fails rather than
+# silently skipping a gate.
+#
+# The set mirrors the CI job graph in .github/workflows/ci.yml, so a slice that
+# passes its tokens locally is a slice CI is likely to agree with. Tokens are
+# ordered cheapest-first: a slice normally owes `format` plus whichever of the
+# subject-matter tokens its change actually touches, and `gate` before it ships.
+
+# Formatting, whitespace, and the pinned clang-format. Seconds.
+format: pre-commit run --all-files
+
+# Engine + plugin unit and golden tests. The inner loop for C++ work; assumes
+# `build/` is already configured (scripts/build.sh does that once).
+unit: cmake --build build --config Release --parallel && ctest --test-dir build --build-config Release --output-on-failure
+
+# The engine compiles and passes its tests with no VST3 SDK present — the
+# boundary the architecture depends on. Slower than `unit` because it
+# configures a second build tree; owed by any slice touching engine/.
+engine-isolation: cmake -S . -B build-engine -DCMAKE_BUILD_TYPE=Release -DPOLY_ENGINE_ONLY=ON && cmake --build build-engine --parallel && ctest --test-dir build-engine --output-on-failure
+
+# No allocation, locks, or blocking calls on the audio thread. Owed by any
+# slice touching process(), renderRange(), or setActive().
+rt-safety: bash scripts/check-realtime-safety.sh
+
+# The doc-conformance guardrail suite: euclidean claims, preset tables, prose
+# claims, and the audit ledgers. Owed by any slice touching site prose or the
+# data those claims are derived from. Needs site/node_modules (npm ci in site/).
+doc-conformance: bash scripts/check-doc-conformance.sh
+
+# The jk-standards doc-discipline checks: taxonomy, drift, status prose,
+# file:line refs, snippet regions, and ledger conformance.
+doc-discipline: jk-standards all
+
+# Region markers referenced by docs resolve to real markers in the tree.
+snippet-regions: bash scripts/check-snippet-regions.sh
+
+# Site unit tests (node --test over site/tests).
+site-unit: npm --prefix site test
+
+# The full local site-verify pipeline: Playwright end-to-end gates, sample
+# equivalence, macro-diff, and first-bar parity. Minutes, not seconds.
+e2e: bash scripts/site-verify-local.sh
+
+# WebUI Playwright specs against the mock and wasm hosts.
+webui-e2e: npm --prefix webui test
+
+# The checked-in WASM artifacts match a fresh build of the engine they claim
+# to be. Owed by any slice touching engine/ or the wasm bindings.
+wasm-freshness: bash scripts/check-wasm-freshness.sh
+
+# The whole pre-push gate: format, RT safety, snippet regions, build, tests,
+# and pluginval. The token a slice owes before /jk:ship, not during /jk:next.
+gate: bash scripts/pre-push-check.sh

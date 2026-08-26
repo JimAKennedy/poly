@@ -8,6 +8,13 @@ doc_roots:
 
 exempt_dirs:
   - docs/reviews/          # dated reviews: frozen, line refs pinned by date
+  # Delivery-workflow artifacts: ledgers, per-slice implementation plans, and
+  # evidence files. Exempt for the same reason as docs/reviews/ — a plan cites
+  # exact file:line targets pinned to the commit it was written against, and an
+  # evidence file records what a gate returned at a point in time. Neither is an
+  # enduring doc that should be re-dated as the tree moves. Governance for this
+  # tree is the `ledger` check, not the prose checks.
+  - docs/plans/
 
 taxonomy:
   classes: [generated, gated, archived]
@@ -43,6 +50,11 @@ count_drift:
     - '(?:the|all)\s+categories'
 
 drift_map: .github/docs-drift-map.yml   # existing file, format-compatible
+
+ledger:                       # delivery ledgers (jk-standards ledger-standard)
+  roots:
+    - docs/plans
+  validations: .jk/validations.yml
 
 doc_drift:
   deps_only_manifests:        # parity with poly PR #140: Dependabot version
