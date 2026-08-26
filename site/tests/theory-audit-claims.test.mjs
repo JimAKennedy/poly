@@ -207,8 +207,9 @@ const FINDINGS = [
     rule:
       'Ch 2 must not assert an unsourced multi-century depth for Ewe ensemble practice. Ethnomusicological ' +
       'fieldwork documenting Ewe drumming dates from the mid-twentieth century; depth before that is poorly ' +
-      'attested (audit 2.1.2, §5.9). The claim may be kept only as something the tradition understands about ' +
-      'itself, bounded by what the documentary record supports. Ledger F07.',
+      'attested (audit 2.1.2, §5.9). The claim is therefore bounded by the documentary record and carried by ' +
+      'two Tier-A sources: Jones (1959, ref-6), the two-volume study built largely on Ewe material, and Locke ' +
+      '(1982, fr-locke-1982), the Ethnomusicology 26(2) analysis of Southern Ewe dance drumming. Ledger F07.',
     // The pre-correction sentence asserted the organising logic had held "for
     // centuries" as bare fact. Any unhedged multi-century assertion reverses
     // the reframe; Ch 2 has no legitimate use of these constructions.
@@ -216,9 +217,17 @@ const FINDINGS = [
       /\bfor centuries\b/i,
       /\bfor hundreds of years\b/i,
     ],
+    // An earlier pass hedged to "understood within the tradition as
+    // considerably older than that record". That clause was dropped rather
+    // than cited: no source meeting this guide's bar could be found for Ewe
+    // musical time depth, and a hedge is still a claim. What remains is only
+    // what the documentary record supports, and both citations are pinned so
+    // the sentence cannot drift back to a bare assertion.
     present: [
-      'documented in ethnomusicological fieldwork from the mid-twentieth century',
-      'understood within the tradition',
+      'documented in the ethnomusicological literature since the mid-twentieth century',
+      'Studies in African Music',
+      'ref-6',
+      'fr-locke-1982',
     ],
   },
   {
