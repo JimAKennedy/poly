@@ -75,12 +75,36 @@ Uses `jk_warnings.cmake` from `cmake/` — `-Wall -Wextra` (GCC/Clang), `/W4` (M
 
 Poly's polymetric engine uses variable-length cycles (`LaneConfig`) which don't map to drumcore's fixed `[10][32]` bar-grid model. The engine is independent. A thin adapter for MIDI export interop may come later.
 
-## Memory Auto-Capture
+## Delivery Workflow
 
-After completing a task, evaluate whether insights should be persisted:
-- **Decisions** — architectural choices, library selections
-- **Gotchas** — non-obvious pitfalls
-- **Conventions** — coding patterns, naming rules
-- **Patterns** — reusable approaches
+Programme planning lives in **delivery ledgers** under `docs/plans/<slug>/`, in the
+format defined by jk-standards' ledger standard and enforced by its `ledger`
+check: milestones own slices, slices own rows, and each slice carries a
+definition of done plus the validation tokens it owes. The file is the state,
+git is the history — there is no database to keep in step.
 
-Use `capture_thought` to store in `.gsd/gsd.db`. Categories: `architecture`, `convention`, `gotcha`, `pattern`, `preference`, `environment`.
+Validation tokens are named in a ledger and resolved to real commands by
+`.jk/validations.yml`. A slice normally owes `format` plus whichever
+subject-matter tokens its change touches (`unit`, `rt-safety`, `doc-conformance`,
+`e2e`, …), with `gate` reserved for shipping.
+
+The `/jk:*` commands drive the loop — `assess` a vision or audit document into a
+ledger, `plan` a slice, `next` one task at a time, `ship` the milestone, `close`
+it. They are vendored via `jk-standards install-commands` and pinned in
+`skills-lock.json`; `/jk:status` reads the current state without writing.
+
+Commits that implement a ledger carry `Plan:`, `Slice:` and `Rows:` trailers, so
+the join between the tree and the plan is a `git log --grep` away in either
+direction.
+
+## Persisting What You Learn
+
+Insights outlive the task that produced them, so write them where they will be
+read again rather than into a scratch note:
+
+- **Architectural decisions** — `ARCHITECTURE.md`, or the ledger row that records
+  the choice and what verified it
+- **Gotchas and conventions** — the Key Conventions section above; a gotcha that
+  cost an hour once will cost it again
+- **Reusable patterns** — the relevant doc under `docs/`, or a skill in
+  `jk-standards` when the pattern is portable beyond poly
