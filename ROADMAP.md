@@ -9,8 +9,10 @@ help is most welcome.
 
 - **Shipped work** is recorded in the [CHANGELOG](CHANGELOG.md).
 - **Release milestones** are tracked as
-  [GitHub milestones](https://github.com/JimAKennedy/poly/milestones); GSD phase
-  planning lives under `.gsd/` in the repo.
+  [GitHub milestones](https://github.com/JimAKennedy/poly/milestones); the
+  milestone, slice, and task decomposition behind them lives in delivery ledgers
+  under `docs/plans/`, where each slice carries its definition of done and the
+  validations it owes.
 - **Forward work** is tracked as
   [GitHub issues](https://github.com/JimAKennedy/poly/issues) and grouped below.
 - **New here?** See [CONTRIBUTING.md](CONTRIBUTING.md) and jump straight to the
