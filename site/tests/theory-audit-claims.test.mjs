@@ -353,6 +353,53 @@ const FINDINGS = [
     // missing citation link is the only thing this case can catch.
     presentRegex: [/#fr-monson-1996/],
   },
+
+  {
+    id: 'S06-F16-foundations',
+    file: '01-foundations.mdx',
+    rule:
+      'The guide equates the lcm convergence point of independent lanes with tradition-specific ' +
+      'terms. The translation is useful and stays, but neither tradition uses its term for the ' +
+      'coincidence of independent cycle lengths, so each site says the borrowing is the ' +
+      "guide's own (audit \u00a71). Ledger F16.",
+    // Append-only: nothing here is wrong, so there is no forbidden phrase.
+    present: [
+      'Chapters 5 and 6 name this point with terms borrowed from gamelan and Indian classical practice',
+      "the borrowing is this guide's own",
+    ],
+  },
+  {
+    id: 'S06-F16-gamelan',
+    file: '05-gamelan.mdx',
+    rule:
+      'The guide equates the lcm convergence point of independent lanes with tradition-specific ' +
+      'terms. The translation is useful and stays, but neither tradition uses its term for the ' +
+      'coincidence of independent cycle lengths, so each site says the borrowing is the ' +
+      "guide's own (audit \u00a71). Ledger F16.",
+    // Append-only, as above.
+    present: [
+      "Calling them gong strokes is this guide's shorthand",
+      'not the coincidence of lanes whose cycle lengths are independent',
+    ],
+  },
+  {
+    id: 'S06-F16-indian',
+    file: '06-indian-classical.mdx',
+    rule:
+      'The guide equates the lcm convergence point of independent lanes with tradition-specific ' +
+      'terms. The translation is useful and stays, but neither tradition uses its term for the ' +
+      'coincidence of independent cycle lengths, so each site says the borrowing is the ' +
+      "guide's own (audit \u00a71). Ledger F16.",
+    // The only one of the three with a sentence to retire: "*is* sam" is an
+    // identity claim. normalizeProse strips the asterisks, so the forbidden
+    // phrase is written without markup.
+    forbidden: ['that shared downbeat is sam'],
+    present: [
+      'This guide calls that shared downbeat sam',
+      'the borrowing is ours',
+      'a fixed point in one metric frame rather than a coincidence between independent ones',
+    ],
+  },
 ];
 
 const srcCache = new Map();
@@ -395,6 +442,9 @@ test('theory-audit-claims covers at least the S02, S03, S04, S05, and S06 findin
     'S06-F13',
     'S06-F14',
     'S06-F15',
+    'S06-F16-foundations',
+    'S06-F16-gamelan',
+    'S06-F16-indian',
   ]) {
     assert.ok(
       REGISTERED_CASE_IDS.has(req),

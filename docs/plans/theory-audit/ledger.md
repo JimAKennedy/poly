@@ -145,22 +145,22 @@ green.
 **Plan:** M001-S06-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M001-S06.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Ch 4 credits Fela and Allen jointly rather than assigning the rhythmic
+- [x] Ch 4 credits Fela and Allen jointly rather than assigning the rhythmic
       vocabulary to one of them
-- [ ] Ch 4's Allen timing claim reads as characterisation, not measurement
-- [ ] Ch 8 attributes the "known for centuries" framing to Reich rather than
+- [x] Ch 4's Allen timing claim reads as characterisation, not measurement
+- [x] Ch 8 attributes the "known for centuries" framing to Reich rather than
       asserting it in the guide's own voice
-- [ ] Ch 9's techno-vs-house swing claim is attributed to Linn and cross-refers
+- [x] Ch 9's techno-vs-house swing claim is attributed to Linn and cross-refers
       to Butler's contrary reading
-- [ ] Ch 13's Amen-break superlative is hedged
-- [ ] Ch 12's Roach independence claim carries a scholarly citation
-- [ ] The lcm-as-sam / lcm-as-gong translation is marked as the guide's own
+- [x] Ch 13's Amen-break superlative is hedged
+- [x] Ch 12's Roach independence claim carries a scholarly citation
+- [x] The lcm-as-sam / lcm-as-gong translation is marked as the guide's own
       informal translation at all three sites
-- [ ] Each of the seven is locked by a named case in `theory-audit-claims.test.mjs`
+- [x] Each of the seven is locked by a named case in `theory-audit-claims.test.mjs`
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
@@ -170,7 +170,7 @@ green.
 | F13 | Ch 9 states the techno-vs-house difference "is often reducible to one parameter: swing" as fact, cited to a Roger Linn blog; contested by Butler (2006) | `P1` | `source` | `09-electronic.mdx` | Case `S06-F13` asserts inline attribution to Linn and the presence of a Butler cross-reference | `done` |
 | F14 | Ch 13 calls the Amen break "the most sampled recording in music history" — disputed | `P1` | `reframe` | `13-drum-and-bass.mdx` | Case `S06-F14` asserts a "widely considered"-class hedge on the superlative | `done` |
 | F15 | Ch 12's Max Roach polymetric-independence claim is directionally right but uncited; Monson (1996) and Gridley are the authorities | `P1` | `source` | `12-jazz.mdx` | Case `S06-F15` asserts the Roach passage carries an inline `fr-monson-1996` citation that resolves in the reference appendix | `done` |
-| F16 | The guide translates lcm convergence as "sam" (Indian) and "gong stroke" (gamelan); neither tradition uses the term that way internally | `P1` | `disclose` | `01-foundations.mdx`, `06-indian-classical.mdx`, `05-gamelan.mdx` | Case `S06-F16` asserts a translation caveat is present at each of the three sites | `open` |
+| F16 | The guide translates lcm convergence as "sam" (Indian) and "gong stroke" (gamelan); neither tradition uses the term that way internally | `P1` | `disclose` | `01-foundations.mdx`, `06-indian-classical.mdx`, `05-gamelan.mdx` | Case `S06-F16` asserts a translation caveat is present at each of the three sites | `done` |
 
 ### Slice M001/S07 — Harness migration to the ledger
 

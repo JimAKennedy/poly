@@ -19,7 +19,7 @@ here to decide what to do; each task's own commit ticks its box.
 - [x] Task 3 — Chapter 9: attribute the swing claim to Linn (F13)
 - [x] Task 4 — Chapter 13: hedge the Amen-break superlative (F14)
 - [x] Task 5 — Chapter 12: cite Monson for Roach's independence (F15)
-- [ ] Task 6 — Mark the lcm translation at all three sites (F16)
+- [x] Task 6 — Mark the lcm translation at all three sites (F16)
 
 ## Definition of Done
 
