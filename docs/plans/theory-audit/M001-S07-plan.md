@@ -9,6 +9,16 @@ plan of record — this ledger is — so the gate is guarding a file nobody will
 maintain, and the two disagree about which slices exist. This slice moves the
 gate onto the ledger and retires the doc.
 
+## Task status
+
+The executable state of this plan. `/jk:next` reads the first unchecked box
+here to decide what to do; each task's own commit ticks its box.
+
+- [ ] Task 1 — Repoint the parser at the ledger
+- [ ] Task 2 — Related-issues guards against the list form
+- [ ] Task 3 — Archive the plan doc and repoint its neighbours
+- [ ] Task 4 — Evidence and ledger close-out
+
 ## Definition of Done
 
 Copied verbatim from the slice. Every task below argues against *this* text.
