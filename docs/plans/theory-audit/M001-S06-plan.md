@@ -77,6 +77,16 @@ being deleted silently. **Every task below adds its own IDs to that list in the
 same commit**, so no commit leaves the list lagging the cases it added. Rename
 the test to name S06 as well when Task 1 first extends it.
 
+**Which assertion fires first.** `assertClaim` checks `forbidden`, then
+`forbiddenRegex`, then `present`, then `presentRegex`, and throws on the *first*
+violation it finds. So a claim carrying a `forbidden` phrase fails on that
+phrase while the uncorrected sentence is still in place — it never reaches the
+`present` checks. That is the expected first failure and it is the stronger
+signal, because the message names the exact phrase and so proves the case reads
+the right file and the right sentence. A claim with no `forbidden` entry fails
+on a missing `present` phrase instead. Each task below says which to expect;
+if you see the other one, the claim does not match the prose you think it does.
+
 **Two references already exist; do not add them.**
 `fr-butler-2006` (Butler, *Unlocking the Groove*) and `fr-monson-1996` (Monson,
 *Saying Something*) are both already in `appendix-references.mdx`. F13 and F15
@@ -127,9 +137,11 @@ The current sentences are:
      Allen's recordings.
 
 2. Run `node --test site/tests/theory-audit-claims.test.mjs` and **watch both
-   fail** on the missing `present` phrases. If either fails on `forbidden`
-   instead, the phrase you wrote does not match the current prose — fix the
-   claim, not the chapter.
+   fail on their `forbidden` phrases** — `who created its rhythmic vocabulary`
+   and `timing was precise but not quantised`. Both claims carry a `forbidden`
+   entry, so that is the first check each can violate. A failure on `present`
+   instead would mean the forbidden phrase does not match the current prose:
+   fix the claim, not the chapter.
 
 3. Edit `04-afrobeat.mdx`. The agreed replacements, reviewed 2026-08-28:
 
@@ -208,7 +220,9 @@ and the analogy was criticised by Agawu.
    `02-sub-saharan-africa.mdx`, so there is no conflict — each claim asserts
    against its own file.
 
-2. Run the test and **watch it fail** on the missing `present` phrases.
+2. Run the test and **watch it fail on the `forbidden` phrase**
+   `musicians had known for centuries`, which is the first check this claim can
+   violate.
 
 3. Edit the chapter opening. The agreed replacement, reviewed 2026-08-28 —
    drop the "discovered something that … had known for centuries" clause, keep
@@ -265,7 +279,10 @@ Currently stated as fact, with the blog in a bare footnote:
    `rule` cites audit 2.8 (Electronic) and Butler (2006) as the contrary
    reading.
 
-2. Run the test and **watch it fail**.
+2. Run the test and **watch it fail on the `forbidden` phrase**
+   `difference between techno and house is often reducible to one parameter`.
+   The Butler `presentRegex` is not reached until that phrase is gone, so it is
+   checked for the first time in step 4.
 
 3. Edit the paragraph. The agreed replacement, reviewed 2026-08-28:
 
@@ -317,7 +334,8 @@ against a catalogue; it is disputed rather than false.
    `present` includes the hedged construction from step 3. `rule` cites audit
    2.8 (D&B) and records that no sampling census establishes the superlative.
 
-2. Run the test and **watch it fail**.
+2. Run the test and **watch it fail on the `forbidden` phrase**
+   `became the most sampled recording in music history`.
 
 3. Edit the sentence. The agreed replacement, reviewed 2026-08-28 — replace
    `became the most sampled recording in music history <sup>` with:
@@ -363,7 +381,10 @@ The claim is directionally right and entirely uncited:
    rather than `present` because the citation is a markdown link.
    `rule` cites audit 2.8 (Jazz) and names Monson (1996) as the authority.
 
-2. Run the test and **watch it fail** on the missing citation link.
+2. Run the test and **watch it fail on the missing `presentRegex`** — the
+   citation link. Unlike the other tasks, `S06-F15` carries no `forbidden`
+   entry: nothing in the Roach passage is wrong, it is simply uncited, so a
+   missing-present failure is the correct and only signal here.
 
 3. Add the citation. The agreed replacement, reviewed 2026-08-28:
 
@@ -422,10 +443,21 @@ so all three carry a note.
    mapping is this guide's informal translation, not a term either tradition
    uses for lcm convergence.
 
+   `S06-F16-indian` additionally carries
+   `forbidden: ['that shared downbeat is sam']`, because that site alone has a
+   sentence to retire rather than a note to add — the other two sites are
+   append-only and need no `forbidden` entry. Write the phrase without the `*`
+   markup around `is`: `normalizeProse` strips punctuation before matching.
+
    Three IDs rather than one because `assertClaim` asserts a single claim
    against a single file: one case cannot span three sources.
 
-2. Run the test and **watch all three fail**.
+2. Run the test and **watch all three fail, for two different reasons**.
+   `S06-F16-indian` fails on its `forbidden` phrase
+   `that shared downbeat is sam` — normalization strips the `*` around `is`, so
+   write the phrase without markup. `S06-F16-foundations` and
+   `S06-F16-gamelan` are append-only: neither has a `forbidden` entry, so each
+   fails on its missing `present` caveat.
 
 3. Edit each site. The agreed wording, reviewed 2026-08-28:
 
