@@ -34,7 +34,7 @@ repos:
       - id: cmakelint
 
   - repo: https://github.com/JimAKennedy/jk-standards
-    rev: v0.13.0
+    rev: v0.13.1
     hooks:
       - id: doc-taxonomy
       - id: status-prose
@@ -71,4 +71,8 @@ repos:
   # endregion:local-hooks
 
 ci:
-  skip: [doc-taxonomy, status-prose, file-line-refs, check-pragma-once, check-realtime-safety, check-snippet-regions, pre-push-check]
+  # Every jk-standards hook is skipped here and runs in the site-lint CI job
+  # instead, which checks out with fetch-depth: 0. pre-commit.ci uses a
+  # shallow clone, and these checks need real history: doc-drift needs a
+  # merge base, and ledger resolves the commit SHAs its evidence files name.
+  skip: [doc-taxonomy, status-prose, file-line-refs, ledger, check-pragma-once, check-realtime-safety, check-snippet-regions, pre-push-check]
