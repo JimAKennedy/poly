@@ -262,6 +262,37 @@ const FINDINGS = [
       'Toussaint describes as the most commonly used',
     ],
   },
+
+  {
+    id: 'S06-F09',
+    file: '04-afrobeat.mdx',
+    rule:
+      "Ch 4 must not assign Afrobeat's rhythmic vocabulary to Tony Allen alone. The attribution is " +
+      'contested: Allen co-attributed it throughout his own account, and Fela\'s horn arranging shaped ' +
+      'the rhythmic feel (audit 2.6.1, §5.11). The corrected sentence credits the partnership and cites ' +
+      'Allen & Veal (2013, fr-allen-veal-2013), the autobiography in which Allen states the ' +
+      'collaboration. Ledger F09.',
+    forbidden: ['who created its rhythmic vocabulary'],
+    present: [
+      'came out of that partnership rather than from either alone',
+      'co-attributed the result throughout his own account of it',
+    ],
+    presentRegex: [/#fr-allen-veal-2013/],
+  },
+  {
+    id: 'S06-F10',
+    file: '04-afrobeat.mdx',
+    rule:
+      "Ch 4 must not present Allen's micro-timing as a measured fact. No timing study of his recordings " +
+      'has been published, so "precise but not quantised" is received characterisation rather than ' +
+      'measurement (audit 2.6.3). The Humanize bullet keeps the musical guidance and marks the claim as ' +
+      'description. Ledger F10.',
+    forbidden: ["timing was precise but not quantised"],
+    present: [
+      'is usually described as precise but unquantised',
+      'that is a characterisation rather than a measurement',
+    ],
+  },
 ];
 
 const srcCache = new Map();
@@ -285,7 +316,7 @@ for (const f of FINDINGS) {
   registerCase(f.id);
 }
 
-test('theory-audit-claims covers at least the S02, S03, S04, and S05 findings', () => {
+test('theory-audit-claims covers at least the S02, S03, S04, S05, and S06 findings', () => {
   for (const req of [
     'S02-F01',
     'S02-F12',
@@ -298,6 +329,8 @@ test('theory-audit-claims covers at least the S02, S03, S04, and S05 findings', 
     'S05-F07',
     'S05-F08',
     'S05-F08-appendix',
+    'S06-F09',
+    'S06-F10',
   ]) {
     assert.ok(
       REGISTERED_CASE_IDS.has(req),
