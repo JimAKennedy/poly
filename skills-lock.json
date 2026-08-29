@@ -38,7 +38,7 @@
       "source": "JimAKennedy/jk-standards",
       "sourceType": "github",
       "commandPath": "commands/assess.md",
-      "computedHash": "72ab7b44f837910c14f1ecbf1474b1f048d0033bce339637d484091f4a0c866a"
+      "computedHash": "fd2483846afee344bd33ed0726ffb6e02c460728177a75e6c2929330c4510f9a"
     },
     "close": {
       "source": "JimAKennedy/jk-standards",
@@ -50,13 +50,13 @@
       "source": "JimAKennedy/jk-standards",
       "sourceType": "github",
       "commandPath": "commands/next.md",
-      "computedHash": "3de1183e4284b9e9b945cfec2531b6a375014319cdcbe34d6f6ee76cf4150b8a"
+      "computedHash": "db55910c5f6479ffe453cbb945e352c458766798b066be11a4babe9c1bfac1cd"
     },
     "plan": {
       "source": "JimAKennedy/jk-standards",
       "sourceType": "github",
       "commandPath": "commands/plan.md",
-      "computedHash": "06fb969515148001aa8d8fbdb0d7a024b9c90344a859f1f5b9f34cea6bea2427"
+      "computedHash": "10b938db65241fc5dd4a28a0cc4e47fa6a2c37025e1523c9b92c99a6dddc73c7"
     },
     "ship": {
       "source": "JimAKennedy/jk-standards",
