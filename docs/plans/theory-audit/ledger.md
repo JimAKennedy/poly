@@ -142,9 +142,10 @@ green.
 ### Slice M001/S06 — Attribution care and remaining hedges
 
 **Depends:** M001/S01
+**Plan:** M001-S06-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M001-S06.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
