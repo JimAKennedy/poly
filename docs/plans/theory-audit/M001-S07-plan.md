@@ -14,8 +14,8 @@ gate onto the ledger and retires the doc.
 The executable state of this plan. `/jk:next` reads the first unchecked box
 here to decide what to do; each task's own commit ticks its box.
 
-- [ ] Task 1 — Repoint the parser at the ledger
-- [ ] Task 2 — Related-issues guards against the list form
+- [x] Task 1 — Repoint the parser at the ledger
+- [x] Task 2 — Related-issues guards against the list form
 - [ ] Task 3 — Archive the plan doc and repoint its neighbours
 - [ ] Task 4 — Evidence and ledger close-out
 

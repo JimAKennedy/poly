@@ -1,42 +1,45 @@
-// Completeness gate for docs/audits/M001-theory-audit-remediation-plan.md.
+// Completeness gate for docs/plans/theory-audit/ledger.md.
 //
-// The plan doc names this test as the mechanical enforcement of its own
-// completeness (see the "Completeness" line in the doc's front matter). It
-// asserts structural invariants that a later slice would otherwise be free to
-// silently break — dropping a row, blanking a token, leaving `_pending_`
-// behind, or citing a phantom slice.
+// The ledger is the plan of record for the M001-M005 music-theory audit
+// remediation. `jk-standards ledger` checks its structure — ID shape, status
+// vocabulary, definition-of-done presence, validation tokens, placeholders —
+// but has no idea that this particular programme owes exactly 54 findings, and
+// does not look at the Related-issues list at all. That is this file's job.
+// The overlap on status tokens and placeholders is deliberate belt-and-braces.
 //
-// Contract (fixed here, not scraped from the doc, so a doc + code drift is
-// detected rather than silently reconciled):
-//   1. Every finding ID F01–F54 appears exactly once as a ledger row.
-//   2. Each finding row carries exactly one valid severity token
-//      (`P0` / `P1` / `P2`).
-//        - M001–M004 tables have explicit Sev/Disp columns.
-//        - M005 rows have no Sev/Disp columns; the M005 section header
-//          declares the whole milestone as P2 enrichment, so those rows are
-//          treated as implicit P2 / `enrich`.
-//   3. Each finding row carries exactly one valid disposition token
+// Contract (fixed here, not scraped from the ledger, so a ledger + code drift
+// is detected rather than silently reconciled):
+//   1. Every finding ID F01-F54 appears exactly once as a ledger row.
+//   2. Every row ID is well-formed: `F` + two digits (an audit finding) or
+//      `H` + two digits (a harness row this programme added for itself).
+//   3. Each row carries exactly one valid severity token
+//      (`P0` / `P1` / `P2`). Unlike the retired plan doc, the ledger carries
+//      explicit Sev/Disp columns on every row including M005's, so an absent
+//      token is a failure rather than an implicit P2.
+//   4. Each row carries exactly one valid disposition token
 //      (`correct` / `source` / `reframe` / `disclose` / `patch-align` /
 //       `enrich` / `verify` / `accept`).
-//   4. Each finding row carries exactly one valid status token
+//   5. Each row carries exactly one valid status token
 //      (`open` / `in-progress` / `done` / `accepted`).
-//   5. Each finding row cites a `M0xx/Syy` slice that appears in that
-//      milestone's own breakdown table.
-//   6. No `_pending_` placeholder survives anywhere in the ledger.
-//   7. Every ledger ID cross-referenced from the "Related issues" table
-//      resolves to a real finding row.
-//   8. No issue is both carried in that table and declared deliberately
+//   6. Every row sits under a real slice by nesting, and no row table declares
+//      a `Slice` column. The retired plan doc linked rows to slices through
+//      such a column plus a separate breakdown table, which let the two
+//      disagree; nesting makes "every row belongs to a real slice" true by
+//      construction.
+//   7. No `_pending_` placeholder survives anywhere in the ledger.
+//   8. Every ledger ID cross-referenced from the "Related issues" table
+//      resolves to a real row.
+//   9. No issue is both carried in that table and declared deliberately
 //      absent from it.
-//   9. "Out of scope" cites only issues that table carries, so the two prose
+//  10. "Out of scope" cites only issues that table carries, so the two prose
 //      sites cannot drift apart.
 //
 // Whether an issue is still *open on GitHub* is deliberately not asserted —
-// that needs the network, and CI runs this offline. Items 7-9 guard the
-// structure; keeping the table's membership true to the tracker is a human
-// step at slice close.
+// that needs the network, and CI runs this offline. Items 8-10 guard the
+// structure; keeping the membership true to the tracker is a human step at
+// slice close.
 //
-// Failure messages always name the offending finding ID or issue number;
-// slice-reference failures additionally name the unresolvable token.
+// Failure messages always name the offending row ID or issue number.
 //
 // Run: node --test docs/audits/theory-audit-remediation.test.mjs
 
@@ -47,8 +50,8 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const DOC = join(HERE, 'M001-theory-audit-remediation-plan.md');
-const md = readFileSync(DOC, 'utf8');
+const LEDGER = join(HERE, '..', 'plans', 'theory-audit', 'ledger.md');
+const md = readFileSync(LEDGER, 'utf8');
 const lines = md.split('\n');
 
 const SEVERITIES = new Set(['P0', 'P1', 'P2']);
@@ -67,8 +70,6 @@ const STATUSES = new Set(['open', 'in-progress', 'done', 'accepted']);
 // The full finding-ID contract. Duplicated here rather than scraped so a row
 // deleted from BOTH the ledger and the code still fails loudly.
 const EXPECTED_IDS = Array.from({ length: 54 }, (_, i) => `F${String(i + 1).padStart(2, '0')}`);
-
-const MILESTONES = ['M001', 'M002', 'M003', 'M004', 'M005'];
 
 // Split a markdown table row into trimmed cell strings (drops the leading and
 // trailing empties produced by the border pipes).
@@ -94,34 +95,40 @@ function backtickToken(cell) {
   return m ? m[1] : null;
 }
 
-// Extract every `M0xx/Syy` reference in a cell.
-function sliceRefs(cell) {
-  return (cell.match(/M0\d{2}\/S\d{2}/g) || []);
-}
+// Walk the ledger and collect:
+//   - rows: [{id, sev, disp, status, milestone, slice, row, rowNum}]
+//   - sliceIds: Set<'M001/S07'>   (every slice heading seen)
+//   - sliceColumnSeen: boolean    (any row table declaring a `Slice` column)
+//
+// Rows attach to the slice heading above them. There is no breakdown table to
+// resolve against, which is the point: nesting cannot disagree with itself.
+function parseLedger() {
+  const rows = [];
+  const sliceIds = new Set();
+  let sliceColumnSeen = false;
 
-// Walk the doc and collect:
-//   - findings: [{id, sev, disp, slice, status, rowNum, milestone}]
-//   - breakdowns: Map<milestone, Set<sliceId>>   (from the "Milestone breakdown" tables)
-function parseDoc() {
-  const findings = [];
-  const breakdowns = new Map(MILESTONES.map((m) => [m, new Set()]));
+  const MILESTONE_H2 = /^##\s+Milestone\s+(M\d{3})\b/;
+  const SLICE_H3 = /^###\s+Slice\s+(M\d{3})\/(S\d{2})\b/;
 
   let currentMilestone = null;
-  // Table state:
-  //   mode: 'finding' | 'breakdown' | null
-  //   headerCells: string[] (lower-cased) for the active table
-  //   idxId, idxSev, idxDisp, idxSlice, idxStatus, idxBreakdownSlice
+  let currentSlice = null;
   let table = null;
 
-  const H3 = /^###\s+(M0\d{2})\b/;
-
   for (let i = 0; i < lines.length; i++) {
-    const raw = lines[i];
-    const line = raw.trimEnd();
+    const line = lines[i].trimEnd();
 
-    const h3 = line.match(H3);
-    if (h3) {
-      currentMilestone = h3[1];
+    const mh = line.match(MILESTONE_H2);
+    if (mh) {
+      currentMilestone = mh[1];
+      currentSlice = null;
+      table = null;
+      continue;
+    }
+
+    const sh = line.match(SLICE_H3);
+    if (sh) {
+      currentSlice = `${sh[1]}/${sh[2]}`;
+      sliceIds.add(currentSlice);
       table = null;
       continue;
     }
@@ -135,179 +142,153 @@ function parseDoc() {
 
     const c = cells(line);
 
-    // Detect a table header we care about by column-name shape.
     if (!table) {
       const lower = c.map((h) => h.toLowerCase());
-      const idxId = lower.findIndex((h) => h === 'id');
-      const idxSlice = lower.findIndex((h) => h === 'slice');
-      const idxStatus = lower.findIndex((h) => h === 'status');
-      const idxSev = lower.findIndex((h) => h === 'sev');
-      const idxDisp = lower.findIndex((h) => h === 'disp');
-      const idxBreakdownSlice = lower.findIndex((h) => h === 'slice');
-      const idxScope = lower.findIndex((h) => h === 'scope');
-      const idxFindings = lower.findIndex((h) => h === 'findings');
+      const idxId = lower.indexOf('id');
+      const idxItem = lower.indexOf('item');
+      const idxStatus = lower.indexOf('status');
 
-      if (idxId !== -1 && idxSlice !== -1 && idxStatus !== -1) {
+      if (idxId !== -1 && idxItem !== -1 && idxStatus !== -1) {
+        if (lower.includes('slice')) sliceColumnSeen = true;
         table = {
-          mode: 'finding',
           idxId,
-          idxSev,
-          idxDisp,
-          idxSlice,
+          idxSev: lower.indexOf('sev'),
+          idxDisp: lower.indexOf('disp'),
           idxStatus,
         };
-        continue;
       }
-      if (idxBreakdownSlice !== -1 && idxScope !== -1 && idxFindings !== -1) {
-        table = {
-          mode: 'breakdown',
-          idxSlice: idxBreakdownSlice,
-        };
-        continue;
-      }
-      // Not a table we track — leave table null so the next header can be
-      // detected without a stale layout.
       continue;
     }
 
-    if (table.mode === 'finding') {
-      const id = c[table.idxId];
-      if (!/^F\d+$/.test(id)) {
-        // Not a finding row (e.g. stray row shape) — drop the table state so
-        // the next real header re-arms it.
-        table = null;
-        continue;
-      }
-      const sevCell = table.idxSev !== -1 ? c[table.idxSev] : '';
-      const dispCell = table.idxDisp !== -1 ? c[table.idxDisp] : '';
-      findings.push({
-        id,
-        sev: table.idxSev !== -1 ? backtickToken(sevCell) : 'P2',
-        disp: table.idxDisp !== -1 ? backtickToken(dispCell) : 'enrich',
-        sevExplicit: table.idxSev !== -1,
-        dispExplicit: table.idxDisp !== -1,
-        slice: c[table.idxSlice] || '',
-        status: backtickToken(c[table.idxStatus] || ''),
-        row: line,
-        rowNum: i + 1,
-        milestone: currentMilestone,
-      });
+    const id = c[table.idxId];
+    if (!/^[FH]\d{2}$/.test(id)) {
+      // Not a row of this table — drop the layout so the next header re-arms.
+      table = null;
       continue;
     }
 
-    if (table.mode === 'breakdown') {
-      const sliceCell = c[table.idxSlice] || '';
-      const m = sliceCell.match(/^S\d{2}$/);
-      if (m && currentMilestone) {
-        breakdowns.get(currentMilestone).add(sliceCell);
-      }
-      continue;
-    }
+    rows.push({
+      id,
+      sev: backtickToken(c[table.idxSev] || ''),
+      disp: backtickToken(c[table.idxDisp] || ''),
+      status: backtickToken(c[table.idxStatus] || ''),
+      milestone: currentMilestone,
+      slice: currentSlice,
+      row: line,
+      rowNum: i + 1,
+    });
   }
 
-  return { findings, breakdowns };
+  return { rows, sliceIds, sliceColumnSeen };
 }
 
-const { findings, breakdowns } = parseDoc();
-const byId = new Map(findings.map((f) => [f.id, f]));
+const { rows, sliceIds, sliceColumnSeen } = parseLedger();
+const byId = new Map(rows.map((r) => [r.id, r]));
+const findingRows = rows.filter((r) => r.id.startsWith('F'));
 
-test('doc exists and is substantial', () => {
-  assert.ok(md.length > 5000, 'plan doc should be substantial');
+test('ledger exists and is substantial', () => {
+  assert.ok(md.length > 5000, 'ledger should be substantial');
 });
 
-test('every finding ID F01–F54 appears exactly once', () => {
-  const missing = EXPECTED_IDS.filter((id) => !byId.has(id));
+test('every finding ID F01\u2013F54 appears exactly once', () => {
+  const seen = new Set(findingRows.map((r) => r.id));
+  const missing = EXPECTED_IDS.filter((id) => !seen.has(id));
   assert.deepEqual(missing, [], `missing finding IDs: ${missing.join(', ')}`);
 
   const counts = new Map();
-  for (const f of findings) counts.set(f.id, (counts.get(f.id) || 0) + 1);
+  for (const r of findingRows) counts.set(r.id, (counts.get(r.id) || 0) + 1);
   const duplicates = [...counts.entries()].filter(([, n]) => n > 1).map(([id]) => id);
   assert.deepEqual(duplicates, [], `duplicate finding rows: ${duplicates.join(', ')}`);
 
-  const unexpected = findings.map((f) => f.id).filter((id) => !EXPECTED_IDS.includes(id));
+  const unexpected = findingRows.map((r) => r.id).filter((id) => !EXPECTED_IDS.includes(id));
   assert.deepEqual(unexpected, [], `unexpected finding IDs: ${unexpected.join(', ')}`);
 });
 
-test('every finding row carries exactly one valid severity token', () => {
-  for (const id of EXPECTED_IDS) {
-    const f = byId.get(id);
-    if (!f) continue;
+test('every row carries a well-formed ID', () => {
+  // The F-only case above cannot see an `H`-prefixed typo, because a malformed
+  // harness ID simply never enters findingRows.
+  const malformed = rows.filter((r) => !/^(F\d{2}|H\d{2})$/.test(r.id)).map((r) => r.id);
+  assert.deepEqual(malformed, [], `malformed row IDs: ${malformed.join(', ')}`);
+});
+
+test('every row carries exactly one valid severity token', () => {
+  for (const r of rows) {
     assert.ok(
-      f.sev !== null && SEVERITIES.has(f.sev),
-      `${id}: severity token missing or invalid (got ${JSON.stringify(f.sev)}; expected one of P0/P1/P2)`,
+      r.sev !== null && SEVERITIES.has(r.sev),
+      `${r.id}: severity token missing or invalid (got ${JSON.stringify(r.sev)}; expected one of P0/P1/P2)`,
     );
   }
 });
 
-test('every finding row carries exactly one valid disposition token', () => {
-  for (const id of EXPECTED_IDS) {
-    const f = byId.get(id);
-    if (!f) continue;
+test('every row carries exactly one valid disposition token', () => {
+  for (const r of rows) {
     assert.ok(
-      f.disp !== null && DISPOSITIONS.has(f.disp),
-      `${id}: disposition token missing or invalid (got ${JSON.stringify(f.disp)}; expected one of ${[...DISPOSITIONS].join('/')})`,
+      r.disp !== null && DISPOSITIONS.has(r.disp),
+      `${r.id}: disposition token missing or invalid (got ${JSON.stringify(r.disp)}; expected one of ${[...DISPOSITIONS].join('/')})`,
     );
   }
 });
 
-test('every finding row carries exactly one valid status token', () => {
-  for (const id of EXPECTED_IDS) {
-    const f = byId.get(id);
-    if (!f) continue;
+test('every row carries exactly one valid status token', () => {
+  for (const r of rows) {
     assert.ok(
-      f.status !== null && STATUSES.has(f.status),
-      `${id}: status token missing or invalid (got ${JSON.stringify(f.status)}; expected one of ${[...STATUSES].join('/')})`,
+      r.status !== null && STATUSES.has(r.status),
+      `${r.id}: status token missing or invalid (got ${JSON.stringify(r.status)}; expected one of ${[...STATUSES].join('/')})`,
     );
   }
 });
 
-test('every finding row cites a slice present in that milestone\'s breakdown table', () => {
-  for (const id of EXPECTED_IDS) {
-    const f = byId.get(id);
-    if (!f) continue;
-    const refs = sliceRefs(f.slice);
-    assert.ok(
-      refs.length >= 1,
-      `${id}: slice cell has no M0xx/Syy reference (cell: ${JSON.stringify(f.slice)})`,
-    );
-    for (const ref of refs) {
-      const [milestone, slice] = ref.split('/');
-      const known = breakdowns.get(milestone);
-      assert.ok(
-        known && known.size > 0,
-        `${id}: slice reference ${ref} names milestone ${milestone} which has no breakdown table in this doc`,
-      );
-      assert.ok(
-        known.has(slice),
-        `${id}: slice reference ${ref} does not resolve — ${milestone}'s breakdown table has slices {${[...known].sort().join(', ')}}`,
-      );
-    }
+test('every row sits under a real slice, and no row table declares a Slice column', () => {
+  assert.equal(
+    sliceColumnSeen,
+    false,
+    'row tables must link rows to slices by nesting, not by a Slice column',
+  );
+
+  assert.ok(
+    sliceIds.size >= 1,
+    'no slice headings parsed — the nesting check would otherwise pass vacuously',
+  );
+
+  const orphans = rows.filter((r) => r.slice === null).map((r) => r.id);
+  assert.deepEqual(orphans, [], `row(s) not nested under any slice: ${orphans.join(', ')}`);
+});
+
+test('no _pending_ placeholder survives in any row', () => {
+  for (const r of rows) {
+    assert.ok(!r.row.includes('_pending_'), `${r.id}: row still contains _pending_ placeholder`);
   }
 });
 
-test('no _pending_ placeholder survives in any finding row', () => {
-  for (const f of findings) {
-    assert.ok(!f.row.includes('_pending_'), `${f.id}: row still contains _pending_ placeholder`);
-  }
-});
-
-// --- Related-issues table -----------------------------------------------
+// --- Related issues -----------------------------------------------------
 //
 // The "Related issues" section claims to enumerate every GitHub issue
-// overlapping this plan's remit, and the "Out of scope" section names a subset
-// of the same issues. Whether an issue is *open on GitHub* is not
-// checkable offline, so these cases guard the parts that are: that the table's
-// ledger cross-references resolve, that an issue is not simultaneously tabled
-// and declared absent, and that the two prose sites cite the same issue set.
-// The desync these were written against was an "Out of scope" list naming only
-// two of the seven engine issues the table carries.
+// overlapping this programme's remit, and "Out of scope" names a subset of the
+// same issues. Whether an issue is *open on GitHub* is not checkable offline,
+// so these cases guard the parts that are: that the list's row cross-references
+// resolve, that an issue is not simultaneously listed and declared absent, and
+// that the two prose sites cite the same issue set. The desync these were
+// written against was an "Out of scope" list naming only two of the seven
+// engine issues the section carried.
+//
+// The ledger writes this section as a bullet list rather than a table, because
+// the `ledger` check's parser reads any table under a slice as that slice's
+// rows. Entries wrap across lines, so continuation lines are folded into the
+// bullet above before the issue number and row references are read.
+//
+// NOTE: the second guard is currently VACUOUS. The ledger carries no
+// absent-prose, so `absentIssues` is empty and nothing can collide with the
+// listed set. It is retained deliberately: it costs nothing and it bites the
+// day someone records a deliberately-absent issue in this section. An
+// always-passing test that nobody has explained is worse than no test, so this
+// is the explanation.
 
 const ISSUES_HEADING = '## Related issues';
 const OUT_OF_SCOPE_HEADING = '## Out of scope';
 
 function sectionLines(heading) {
   const start = lines.findIndex((l) => l.trimEnd() === heading);
-  assert.ok(start !== -1, `plan doc has no "${heading}" section`);
+  assert.ok(start !== -1, `ledger has no "${heading}" section`);
   let end = lines.length;
   for (let i = start + 1; i < lines.length; i++) {
     if (/^##\s/.test(lines[i])) {
@@ -322,62 +303,72 @@ function issueNumbers(text) {
   return new Set((text.match(/#(\d+)\b/g) || []).map((m) => m.slice(1)));
 }
 
+const isBullet = (l) => /^\s*-\s+/.test(l);
+const isContinuation = (l) => /^\s+\S/.test(l);
+
 const issuesSection = sectionLines(ISSUES_HEADING);
 
-// Rows of the issues table: first cell is an issue link, second is ledger IDs.
-const issueRows = [];
+// Fold each bullet and its wrapped continuation lines into one string, so an
+// issue number and its row reference are seen together even when the paragraph
+// breaks between them.
+const issueEntries = [];
 for (const line of issuesSection) {
-  const t = line.trimEnd();
-  if (!isTableRow(t) || isSeparator(t)) continue;
-  const c = cells(t);
-  if (c.length < 3) continue;
-  const num = c[0].match(/#(\d+)\b/);
-  if (!num) continue; // header row
-  issueRows.push({ issue: num[1], ledger: c[1], relationship: c[2] });
+  if (isBullet(line)) {
+    issueEntries.push(line);
+  } else if (issueEntries.length && isContinuation(line)) {
+    issueEntries[issueEntries.length - 1] += ' ' + line.trim();
+  }
 }
 
-// Prose after the table records issues deliberately left out, so their absence
-// is a judgement rather than an oversight.
+const issueBullets = issueEntries
+  .map((text) => {
+    const num = text.match(/#(\d+)\b/);
+    return num ? { issue: num[1], rowRefs: text.match(/[FH]\d{2}/g) || [], text } : null;
+  })
+  .filter(Boolean);
+
+// Prose that is neither a bullet nor its continuation records issues
+// deliberately left out, so their absence is a judgement rather than an
+// oversight.
 const absentProse = issuesSection
-  .filter((l) => !isTableRow(l.trimEnd()))
+  .filter((l) => !isBullet(l) && !isContinuation(l))
   .join('\n');
 const absentIssues = issueNumbers(absentProse);
 
-test('Related issues: the table is non-empty and every row cites resolvable ledger findings', () => {
-  assert.ok(issueRows.length > 0, 'Related issues table has no issue rows');
-  for (const row of issueRows) {
-    const ids = row.ledger.match(/F\d{2}/g) || [];
+test('Related issues: the list is non-empty and every entry cites resolvable ledger rows', () => {
+  assert.ok(issueBullets.length > 0, 'Related issues list has no issue entries');
+  for (const entry of issueBullets) {
     assert.ok(
-      ids.length >= 1 || row.ledger === '—',
-      `#${row.issue}: ledger cell names no finding (cell: ${JSON.stringify(row.ledger)})`,
+      entry.rowRefs.length >= 1,
+      `#${entry.issue}: entry names no ledger row (entry: ${JSON.stringify(entry.text)})`,
     );
-    for (const id of ids) {
+    for (const id of entry.rowRefs) {
       assert.ok(
         byId.has(id),
-        `#${row.issue}: ledger cell cites ${id}, which is not a finding row in this doc`,
+        `#${entry.issue}: entry cites ${id}, which is not a row in this ledger`,
       );
     }
   }
 });
 
-test('Related issues: no issue is both tabled and declared deliberately absent', () => {
-  const tabled = new Set(issueRows.map((r) => r.issue));
-  const both = [...tabled].filter((n) => absentIssues.has(n));
+test('Related issues: no issue is both listed and declared deliberately absent', () => {
+  const listed = new Set(issueBullets.map((e) => e.issue));
+  const both = [...listed].filter((n) => absentIssues.has(n));
   assert.deepEqual(
     both,
     [],
-    `issue(s) both listed in the table and declared absent: ${both.map((n) => `#${n}`).join(', ')}`,
+    `issue(s) both listed and declared absent: ${both.map((n) => `#${n}`).join(', ')}`,
   );
 });
 
-test('Out of scope cites only issues the Related-issues table carries', () => {
-  const tabled = new Set(issueRows.map((r) => r.issue));
+test('Out of scope cites only issues the Related-issues list carries', () => {
+  const listed = new Set(issueBullets.map((e) => e.issue));
   const cited = issueNumbers(sectionLines(OUT_OF_SCOPE_HEADING).join('\n'));
-  const unlisted = [...cited].filter((n) => !tabled.has(n));
+  const unlisted = [...cited].filter((n) => !listed.has(n));
   assert.deepEqual(
     unlisted,
     [],
-    `Out of scope names issue(s) absent from the Related issues table: ${unlisted
+    `Out of scope names issue(s) absent from the Related issues list: ${unlisted
       .map((n) => `#${n}`)
       .join(', ')}`,
   );
