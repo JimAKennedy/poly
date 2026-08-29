@@ -16,7 +16,7 @@ here to decide what to do; each task's own commit ticks its box.
 
 - [x] Task 1 — Chapter 4: Fela/Allen co-attribution and Allen's timing (F09, F10)
 - [x] Task 2 — Chapter 8: attribute Reich's framing to Reich (F11)
-- [ ] Task 3 — Chapter 9: attribute the swing claim to Linn (F13)
+- [x] Task 3 — Chapter 9: attribute the swing claim to Linn (F13)
 - [ ] Task 4 — Chapter 13: hedge the Amen-break superlative (F14)
 - [ ] Task 5 — Chapter 12: cite Monson for Roach's independence (F15)
 - [ ] Task 6 — Mark the lcm translation at all three sites (F16)

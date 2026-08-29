@@ -312,6 +312,22 @@ const FINDINGS = [
       'neither drifts deliberately',
     ],
   },
+
+  {
+    id: 'S06-F13',
+    file: '09-electronic.mdx',
+    rule:
+      'Ch 9 must not state the techno-versus-house distinction as a settled reduction to one parameter. ' +
+      'The claim is Roger Linn\'s, made on a blog, and Butler (2006, fr-butler-2006) treats the ' +
+      'distinction as resting on tempo, timbre and arrangement as much as on micro-timing ' +
+      '(audit 2.8, Electronic). The corrected paragraph names Linn in the sentence and cross-refers to ' +
+      'Butler. ref-36 stays: re-tiering it is M002/S06. Ledger F13.',
+    forbidden: ['difference between techno and house is often reducible to one parameter'],
+    present: ['Roger Linn, whose drum machines shaped both genres, argues that'],
+    // The cross-reference is a markdown link; normalizeProse strips the markup,
+    // so the anchor has to be matched against the raw source.
+    presentRegex: [/#fr-butler-2006/],
+  },
 ];
 
 const srcCache = new Map();
@@ -351,6 +367,7 @@ test('theory-audit-claims covers at least the S02, S03, S04, S05, and S06 findin
     'S06-F09',
     'S06-F10',
     'S06-F11',
+    'S06-F13',
   ]) {
     assert.ok(
       REGISTERED_CASE_IDS.has(req),
