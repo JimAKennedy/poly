@@ -34,7 +34,7 @@ programme's commits and nothing else.
 relative to its source is corrected, and each correction is locked by a named
 test case so it cannot silently regress.
 **Branch:** milestone/M001-theory-corrections
-**Status:** in-progress
+**Status:** done
 **Demo:** Re-read the audit's Section 5 items 1, 3, 4, 9, 10, 11 against the
 site; each is addressed at the cited location, and `npm --prefix site test` is
 green.
