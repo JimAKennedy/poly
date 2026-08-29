@@ -9,8 +9,10 @@ help is most welcome.
 
 - **Shipped work** is recorded in the [CHANGELOG](CHANGELOG.md).
 - **Release milestones** are tracked as
-  [GitHub milestones](https://github.com/JimAKennedy/poly/milestones); GSD phase
-  planning lives under `.gsd/` in the repo.
+  [GitHub milestones](https://github.com/JimAKennedy/poly/milestones); the
+  milestone, slice, and task decomposition behind them lives in delivery ledgers
+  under `docs/plans/`, where each slice carries its definition of done and the
+  validations it owes.
 - **Forward work** is tracked as
   [GitHub issues](https://github.com/JimAKennedy/poly/issues) and grouped below.
 - **New here?** See [CONTRIBUTING.md](CONTRIBUTING.md) and jump straight to the
@@ -30,7 +32,6 @@ mergeable.
 |-------|-------|--------|
 | [#172](https://github.com/JimAKennedy/poly/issues/172) | Cubase nightly failure | `cubase-nightly-failure` |
 | [#142](https://github.com/JimAKennedy/poly/issues/142) | Sanitizer nightly failure: TSAN-PLUGIN | `sanitizer-failure` |
-| [#91](https://github.com/JimAKennedy/poly/issues/91) | `appendix-euclidean-reference.mdx`: E(3,16) row shows incorrect pattern | `bug` |
 | [#89](https://github.com/JimAKennedy/poly/issues/89) | `tests-e2e/reich-play.spec.ts` flaky: timing threshold too tight | `bug` |
 
 ## Priority 2 — Documentation and onboarding

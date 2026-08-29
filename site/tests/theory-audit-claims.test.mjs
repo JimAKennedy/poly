@@ -262,6 +262,144 @@ const FINDINGS = [
       'Toussaint describes as the most commonly used',
     ],
   },
+
+  {
+    id: 'S06-F09',
+    file: '04-afrobeat.mdx',
+    rule:
+      "Ch 4 must not assign Afrobeat's rhythmic vocabulary to Tony Allen alone. The attribution is " +
+      'contested: Allen co-attributed it throughout his own account, and Fela\'s horn arranging shaped ' +
+      'the rhythmic feel (audit 2.6.1, §5.11). The corrected sentence credits the partnership and cites ' +
+      'Allen & Veal (2013, fr-allen-veal-2013), the autobiography in which Allen states the ' +
+      'collaboration. Ledger F09.',
+    forbidden: ['who created its rhythmic vocabulary'],
+    present: [
+      'came out of that partnership rather than from either alone',
+      'co-attributed the result throughout his own account of it',
+    ],
+    presentRegex: [/#fr-allen-veal-2013/],
+  },
+  {
+    id: 'S06-F10',
+    file: '04-afrobeat.mdx',
+    rule:
+      "Ch 4 must not present Allen's micro-timing as a measured fact. No timing study of his recordings " +
+      'has been published, so "precise but not quantised" is received characterisation rather than ' +
+      'measurement (audit 2.6.3). The Humanize bullet keeps the musical guidance and marks the claim as ' +
+      'description. Ledger F10.',
+    forbidden: ["timing was precise but not quantised"],
+    present: [
+      'is usually described as precise but unquantised',
+      'that is a characterisation rather than a measurement',
+    ],
+  },
+
+  {
+    id: 'S06-F11',
+    file: '08-minimalism.mdx',
+    rule:
+      "Ch 8 must not assert in its own voice that West African and Indonesian musicians already knew " +
+      'what the minimalists discovered. That is Reich\'s own framing of his work, and it was criticised ' +
+      'as a misreading of both traditions (audit 2.7.1). The traditions also differ from phasing and ' +
+      'from each other: African ensembles stack fixed independent cycles, gamelan nests fixed cycles ' +
+      'hierarchically, and neither drifts deliberately. The corrected opening attributes the framing to ' +
+      'Reich and states that distinction. Ledger F11.',
+    forbidden: ['musicians had known for centuries'],
+    present: [
+      'Reich framed his own discovery as arriving at something',
+      'West African ensembles stack fixed independent cycles',
+      'gamelan nests fixed cycles hierarchically',
+      'neither drifts deliberately',
+    ],
+  },
+
+  {
+    id: 'S06-F13',
+    file: '09-electronic.mdx',
+    rule:
+      'Ch 9 must not state the techno-versus-house distinction as a settled reduction to one parameter. ' +
+      'The claim is Roger Linn\'s, made on a blog, and Butler (2006, fr-butler-2006) treats the ' +
+      'distinction as resting on tempo, timbre and arrangement as much as on micro-timing ' +
+      '(audit 2.8, Electronic). The corrected paragraph names Linn in the sentence and cross-refers to ' +
+      'Butler. ref-36 stays: re-tiering it is M002/S06. Ledger F13.',
+    forbidden: ['difference between techno and house is often reducible to one parameter'],
+    present: ['Roger Linn, whose drum machines shaped both genres, argues that'],
+    // The cross-reference is a markdown link; normalizeProse strips the markup,
+    // so the anchor has to be matched against the raw source.
+    presentRegex: [/#fr-butler-2006/],
+  },
+
+  {
+    id: 'S06-F14',
+    file: '13-drum-and-bass.mdx',
+    rule:
+      'Ch 13 must not certify the Amen break as the most sampled recording in history. The claim is ' +
+      'widely repeated and plausible but has never been established against a catalogue, so it is ' +
+      'disputed rather than false (audit 2.8, D&B). The corrected sentence reports the consensus ' +
+      'instead of asserting the superlative. Ledger F14.',
+    forbidden: ['became the most sampled recording in music history'],
+    present: ['is widely described as the most sampled recording in music history'],
+  },
+
+  {
+    id: 'S06-F15',
+    file: '12-jazz.mdx',
+    rule:
+      "Ch 12's claim that Max Roach treated each limb as an independent melodic voice is directionally " +
+      'right but was uncited. Monson (1996, fr-monson-1996) is the authority the audit names ' +
+      '(audit 2.8, Jazz). Nothing in the passage is wrong, so this claim carries no forbidden phrase: ' +
+      'it asserts only that the citation is present. Ledger F15.',
+    // No `forbidden` entry. The passage is accurate and merely uncited, so the
+    // missing citation link is the only thing this case can catch.
+    presentRegex: [/#fr-monson-1996/],
+  },
+
+  {
+    id: 'S06-F16-foundations',
+    file: '01-foundations.mdx',
+    rule:
+      'The guide equates the lcm convergence point of independent lanes with tradition-specific ' +
+      'terms. The translation is useful and stays, but neither tradition uses its term for the ' +
+      'coincidence of independent cycle lengths, so each site says the borrowing is the ' +
+      "guide's own (audit \u00a71). Ledger F16.",
+    // Append-only: nothing here is wrong, so there is no forbidden phrase.
+    present: [
+      'Chapters 5 and 6 name this point with terms borrowed from gamelan and Indian classical practice',
+      "the borrowing is this guide's own",
+    ],
+  },
+  {
+    id: 'S06-F16-gamelan',
+    file: '05-gamelan.mdx',
+    rule:
+      'The guide equates the lcm convergence point of independent lanes with tradition-specific ' +
+      'terms. The translation is useful and stays, but neither tradition uses its term for the ' +
+      'coincidence of independent cycle lengths, so each site says the borrowing is the ' +
+      "guide's own (audit \u00a71). Ledger F16.",
+    // Append-only, as above.
+    present: [
+      "Calling them gong strokes is this guide's shorthand",
+      'not the coincidence of lanes whose cycle lengths are independent',
+    ],
+  },
+  {
+    id: 'S06-F16-indian',
+    file: '06-indian-classical.mdx',
+    rule:
+      'The guide equates the lcm convergence point of independent lanes with tradition-specific ' +
+      'terms. The translation is useful and stays, but neither tradition uses its term for the ' +
+      'coincidence of independent cycle lengths, so each site says the borrowing is the ' +
+      "guide's own (audit \u00a71). Ledger F16.",
+    // The only one of the three with a sentence to retire: "*is* sam" is an
+    // identity claim. normalizeProse strips the asterisks, so the forbidden
+    // phrase is written without markup.
+    forbidden: ['that shared downbeat is sam'],
+    present: [
+      'This guide calls that shared downbeat sam',
+      'the borrowing is ours',
+      'a fixed point in one metric frame rather than a coincidence between independent ones',
+    ],
+  },
 ];
 
 const srcCache = new Map();
@@ -285,7 +423,7 @@ for (const f of FINDINGS) {
   registerCase(f.id);
 }
 
-test('theory-audit-claims covers at least the S02, S03, S04, and S05 findings', () => {
+test('theory-audit-claims covers at least the S02, S03, S04, S05, and S06 findings', () => {
   for (const req of [
     'S02-F01',
     'S02-F12',
@@ -298,6 +436,15 @@ test('theory-audit-claims covers at least the S02, S03, S04, and S05 findings', 
     'S05-F07',
     'S05-F08',
     'S05-F08-appendix',
+    'S06-F09',
+    'S06-F10',
+    'S06-F11',
+    'S06-F13',
+    'S06-F14',
+    'S06-F15',
+    'S06-F16-foundations',
+    'S06-F16-gamelan',
+    'S06-F16-indian',
   ]) {
     assert.ok(
       REGISTERED_CASE_IDS.has(req),

@@ -19,6 +19,18 @@
 .claude/skills/*
 !.claude/skills/poly-site/
 
+# -----------------------------------------------------------------------------
+# Vendored workflow commands, on the same footing as the skills above: installed
+# by `jk-standards install-commands --dest .claude/commands/jk` and pinned by the
+# `commands` block of skills-lock.json, never hand-edited here. They arrive under
+# the `jk` subdirectory so they are namespaced as /jk:<name> rather than claiming
+# bare command names poly may want for itself.
+#
+# Only the vendored subdirectory is ignored, not `.claude/commands/` — a
+# poly-local command authored here is tracked like any other source file.
+# -----------------------------------------------------------------------------
+.claude/commands/jk/
+
 # Generic-agent skills dir (`install-skills` default --dest). Nothing in poly
 # reads it; it exists only when a harness installs skills without --dest.
 .agents/

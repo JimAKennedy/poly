@@ -1,38 +1,18 @@
 ---
-class: gated
+class: archived
 ---
 
 # Music-Theory Audit Remediation Plan (M001–M005)
 
-> **Status:** current (2026-08-25) — M001/S01–S05 landed; M001/S06 and
-> M002–M005 not started. The per-row `Status` column is the authoritative
-> record; this line names the last slice boundary crossed.
-> **Lifecycle:** Planning artifact. Drives milestones M001–M005. Rows move from
-> `open` to `done` as slices land; the plan is archived when the ledger is clear.
-> **Upstream input:** the August 2026 external music-theory audit of the Poly
-> Guide, landed verbatim alongside this plan as
-> [`poly_theory_audit.md`](poly_theory_audit.md) (`class: archived`) so every
-> "Audit §" citation below resolves without leaving the tree. Every finding in
-> that document — the twelve ranked corrective items in its Section 5, plus
-> every sub-finding in Sections 1–4 and every enrichment source in Section 6 —
-> is enumerated below as exactly one ledger row.
-> **Numbering:** Milestone IDs here are the **GSD scheme** (`M001`–`M005`),
-> assigned by `gsd_milestone_generate_id` against this project's GSD database.
-> An earlier draft of this plan used the repo's legacy commit-message milestone
-> numbering (`M074`–`M078`); those numbers are retired and appear nowhere in
-> this document. Slice IDs (`S01`, `S02`, …) below are **provisional** — they
-> reflect this plan's own decomposition and are reconciled against the real
-> slice records when `gsd_plan_milestone` runs.
-> **Completeness:** Mechanically enforced by
-> `docs/audits/theory-audit-remediation.test.mjs` (`node --test`), built in
-> M001/S01 — asserts every finding ID F01–F54 is present, each carries exactly
-> one valid severity, disposition, and status token, each names a real slice
-> that appears in that milestone's breakdown table below, and no `_pending_`
-> placeholder survives. It also guards the "Related issues" table: its
-> ledger cross-references must resolve, no issue may be both tabled and
-> declared absent, and "Out of scope" may cite only issues the table carries.
-> Whether each tabled issue is still open on the tracker is *not* machine-
-> checked — that needs the network — so it is a human step at slice close.
+> **Archived (2026-08-28)** — superseded by
+> [the theory-audit delivery ledger](../plans/theory-audit/ledger.md), which is
+> now the plan of record for milestones M001–M005 and the file
+> `theory-audit-remediation.test.mjs` guards. The finding tables below are kept
+> as the historical decomposition, and as the mapping from each finding to its
+> "Audit §" citation in [poly_theory_audit.md](poly_theory_audit.md) — the
+> ledger's rows do not carry that column. Do not edit them to reflect later
+> work: their `Status` column froze on 2026-08-28, and the ledger is the live
+> record.
 
 ## Why this plan exists
 

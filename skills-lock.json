@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "jkStandardsVersion": "0.11.0",
+  "jkStandardsVersion": "0.13.0",
   "skills": {
     "branch-discipline": {
       "source": "JimAKennedy/jk-standards",
@@ -31,6 +31,44 @@
       "sourceType": "github",
       "skillPath": "skills/sanitizer-ci-setup/SKILL.md",
       "computedHash": "11e6342461772c27998956bae598893259eb804b57dffb7f438b73ce742d0177"
+    }
+  },
+  "commands": {
+    "assess": {
+      "source": "JimAKennedy/jk-standards",
+      "sourceType": "github",
+      "commandPath": "commands/assess.md",
+      "computedHash": "fd2483846afee344bd33ed0726ffb6e02c460728177a75e6c2929330c4510f9a"
+    },
+    "close": {
+      "source": "JimAKennedy/jk-standards",
+      "sourceType": "github",
+      "commandPath": "commands/close.md",
+      "computedHash": "b985a292d4923b26aaa9ce3fdecfd39b8811c8efb81b91b4a4114fc1edc1b96d"
+    },
+    "next": {
+      "source": "JimAKennedy/jk-standards",
+      "sourceType": "github",
+      "commandPath": "commands/next.md",
+      "computedHash": "13d3220be4e6fa0eac672e4c8ed4ab78ec0900eb65280a5b75c330f98938c9bf"
+    },
+    "plan": {
+      "source": "JimAKennedy/jk-standards",
+      "sourceType": "github",
+      "commandPath": "commands/plan.md",
+      "computedHash": "aecc00c58d3bdddd16955e7e52fc8e2d590c08831604545afe7b65d120548b55"
+    },
+    "ship": {
+      "source": "JimAKennedy/jk-standards",
+      "sourceType": "github",
+      "commandPath": "commands/ship.md",
+      "computedHash": "bad5117c43ed35e039f70f9bd57deb75c3c66cc7dc1fe456586dcb638ae273cb"
+    },
+    "status": {
+      "source": "JimAKennedy/jk-standards",
+      "sourceType": "github",
+      "commandPath": "commands/status.md",
+      "computedHash": "a5b8a5cbf57398d2fafd2be9c8af1ebe314d66662718d6bec1d68323dacefc81"
     }
   }
 }
