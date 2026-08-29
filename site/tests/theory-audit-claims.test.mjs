@@ -340,6 +340,19 @@ const FINDINGS = [
     forbidden: ['became the most sampled recording in music history'],
     present: ['is widely described as the most sampled recording in music history'],
   },
+
+  {
+    id: 'S06-F15',
+    file: '12-jazz.mdx',
+    rule:
+      "Ch 12's claim that Max Roach treated each limb as an independent melodic voice is directionally " +
+      'right but was uncited. Monson (1996, fr-monson-1996) is the authority the audit names ' +
+      '(audit 2.8, Jazz). Nothing in the passage is wrong, so this claim carries no forbidden phrase: ' +
+      'it asserts only that the citation is present. Ledger F15.',
+    // No `forbidden` entry. The passage is accurate and merely uncited, so the
+    // missing citation link is the only thing this case can catch.
+    presentRegex: [/#fr-monson-1996/],
+  },
 ];
 
 const srcCache = new Map();
@@ -381,6 +394,7 @@ test('theory-audit-claims covers at least the S02, S03, S04, S05, and S06 findin
     'S06-F11',
     'S06-F13',
     'S06-F14',
+    'S06-F15',
   ]) {
     assert.ok(
       REGISTERED_CASE_IDS.has(req),
