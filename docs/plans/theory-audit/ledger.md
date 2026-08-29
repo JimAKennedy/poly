@@ -173,9 +173,10 @@ green.
 
 ### Slice M001/S07 — Harness migration to the ledger
 
-**Validation:** format, site-unit, doc-conformance, doc-discipline, gate
+**Plan:** M001-S07-plan.md
+**Validation:** format, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M001-S07.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
