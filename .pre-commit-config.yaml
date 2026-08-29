@@ -39,6 +39,10 @@ repos:
       - id: doc-taxonomy
       - id: status-prose
       - id: file-line-refs
+      # Delivery ledgers under docs/plans/. Pinned here rather than left to the
+      # doc-discipline validation token, which resolves `jk-standards` from
+      # PATH and so gates against whatever version happens to be installed.
+      - id: ledger
 
   # region:local-hooks
   - repo: local
