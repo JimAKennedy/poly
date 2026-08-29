@@ -293,6 +293,25 @@ const FINDINGS = [
       'that is a characterisation rather than a measurement',
     ],
   },
+
+  {
+    id: 'S06-F11',
+    file: '08-minimalism.mdx',
+    rule:
+      "Ch 8 must not assert in its own voice that West African and Indonesian musicians already knew " +
+      'what the minimalists discovered. That is Reich\'s own framing of his work, and it was criticised ' +
+      'as a misreading of both traditions (audit 2.7.1). The traditions also differ from phasing and ' +
+      'from each other: African ensembles stack fixed independent cycles, gamelan nests fixed cycles ' +
+      'hierarchically, and neither drifts deliberately. The corrected opening attributes the framing to ' +
+      'Reich and states that distinction. Ledger F11.',
+    forbidden: ['musicians had known for centuries'],
+    present: [
+      'Reich framed his own discovery as arriving at something',
+      'West African ensembles stack fixed independent cycles',
+      'gamelan nests fixed cycles hierarchically',
+      'neither drifts deliberately',
+    ],
+  },
 ];
 
 const srcCache = new Map();
@@ -331,6 +350,7 @@ test('theory-audit-claims covers at least the S02, S03, S04, S05, and S06 findin
     'S05-F08-appendix',
     'S06-F09',
     'S06-F10',
+    'S06-F11',
   ]) {
     assert.ok(
       REGISTERED_CASE_IDS.has(req),
