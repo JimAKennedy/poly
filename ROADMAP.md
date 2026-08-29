@@ -32,7 +32,6 @@ mergeable.
 |-------|-------|--------|
 | [#172](https://github.com/JimAKennedy/poly/issues/172) | Cubase nightly failure | `cubase-nightly-failure` |
 | [#142](https://github.com/JimAKennedy/poly/issues/142) | Sanitizer nightly failure: TSAN-PLUGIN | `sanitizer-failure` |
-| [#91](https://github.com/JimAKennedy/poly/issues/91) | `appendix-euclidean-reference.mdx`: E(3,16) row shows incorrect pattern | `bug` |
 | [#89](https://github.com/JimAKennedy/poly/issues/89) | `tests-e2e/reich-play.spec.ts` flaky: timing threshold too tight | `bug` |
 
 ## Priority 2 — Documentation and onboarding
