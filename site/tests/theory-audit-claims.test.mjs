@@ -328,6 +328,18 @@ const FINDINGS = [
     // so the anchor has to be matched against the raw source.
     presentRegex: [/#fr-butler-2006/],
   },
+
+  {
+    id: 'S06-F14',
+    file: '13-drum-and-bass.mdx',
+    rule:
+      'Ch 13 must not certify the Amen break as the most sampled recording in history. The claim is ' +
+      'widely repeated and plausible but has never been established against a catalogue, so it is ' +
+      'disputed rather than false (audit 2.8, D&B). The corrected sentence reports the consensus ' +
+      'instead of asserting the superlative. Ledger F14.',
+    forbidden: ['became the most sampled recording in music history'],
+    present: ['is widely described as the most sampled recording in music history'],
+  },
 ];
 
 const srcCache = new Map();
@@ -368,6 +380,7 @@ test('theory-audit-claims covers at least the S02, S03, S04, S05, and S06 findin
     'S06-F10',
     'S06-F11',
     'S06-F13',
+    'S06-F14',
   ]) {
     assert.ok(
       REGISTERED_CASE_IDS.has(req),
