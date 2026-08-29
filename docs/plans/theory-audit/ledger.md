@@ -176,27 +176,27 @@ green.
 **Plan:** M001-S07-plan.md
 **Validation:** format, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M001-S07.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] `theory-audit-remediation.test.mjs` reads this ledger, not the retired
+- [x] `theory-audit-remediation.test.mjs` reads this ledger, not the retired
       plan doc, and still fails if any of F01–F54 goes missing or gains a
       second home
-- [ ] The test asserts rows sit under a real slice by nesting, with no
+- [x] The test asserts rows sit under a real slice by nesting, with no
       cross-referencing slice column
-- [ ] The three Related-issues guards survive the migration, rewritten against
+- [x] The three Related-issues guards survive the migration, rewritten against
       this ledger's list form: every issue cites a row that resolves, no issue
       is both listed and declared deliberately absent, and "Out of scope" cites
       only issues the list carries
-- [ ] `docs/audits/M001-theory-audit-remediation-plan.md` is `class: archived`
+- [x] `docs/audits/M001-theory-audit-remediation-plan.md` is `class: archived`
       and names this ledger as its successor
-- [ ] `jk-standards ledger` and `jk-standards doc-taxonomy` both pass
+- [x] `jk-standards ledger` and `jk-standards doc-taxonomy` both pass
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| H03 | The completeness test reads the retired plan doc, so the ledger and the plan doc are two sources of truth for the same 54 findings | `P1` | `correct` | `docs/audits/theory-audit-remediation.test.mjs` | The test's fixture path is `docs/plans/theory-audit/ledger.md` and all 10 of its cases still run — 7 finding-completeness and 3 Related-issues guards; deleting any F-row from the ledger fails it | `open` |
-| H04 | The retired plan doc still presents as current, so a reader may act on its stale statuses | `P1` | `disclose` | `docs/audits/M001-theory-audit-remediation-plan.md` | `jk-standards doc-taxonomy` accepts the `archived` class and the doc names its successor | `open` |
+| H03 | The completeness test reads the retired plan doc, so the ledger and the plan doc are two sources of truth for the same 54 findings | `P1` | `correct` | `docs/audits/theory-audit-remediation.test.mjs` | The test's fixture path is `docs/plans/theory-audit/ledger.md` and all 11 of its cases still run — 8 finding-completeness and 3 Related-issues guards; deleting any F-row from the ledger fails it | `done` |
+| H04 | The retired plan doc still presents as current, so a reader may act on its stale statuses | `P1` | `disclose` | `docs/audits/M001-theory-audit-remediation-plan.md` | `jk-standards doc-taxonomy` accepts the `archived` class and the doc names its successor | `done` |
 
 ---
 
