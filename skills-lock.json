@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "jkStandardsVersion": "0.13.0",
+  "jkStandardsVersion": "0.13.2",
   "skills": {
     "branch-discipline": {
       "source": "JimAKennedy/jk-standards",
@@ -44,7 +44,7 @@
       "source": "JimAKennedy/jk-standards",
       "sourceType": "github",
       "commandPath": "commands/close.md",
-      "computedHash": "b985a292d4923b26aaa9ce3fdecfd39b8811c8efb81b91b4a4114fc1edc1b96d"
+      "computedHash": "413755ec2648338156908fd599064a9d54076b7d0a4b871eb13d635690ec7f27"
     },
     "next": {
       "source": "JimAKennedy/jk-standards",
