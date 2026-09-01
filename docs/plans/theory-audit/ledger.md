@@ -216,18 +216,18 @@ named-theory claim.
 **Plan:** M002-S01-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M002-S01.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Reference [2]'s publication status is established from the publisher, and
+- [x] Reference [2]'s publication status is established from the publisher, and
       the finding records which it was
-- [ ] The appendix entry states the resolved status: real, replaced, or marked
+- [x] The appendix entry states the resolved status: real, replaced, or marked
       forthcoming
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F17 | Ref [2] cites Goldberg (2025), *Music Theory Online* 31(2); MTO is current through Vol 30 as of mid-2026, so the URL is a forward reference and may be a citation error | `P0` | `verify` | `appendix-references.mdx` `ref-2` | Resolution recorded in this row; the appendix entry either cites a real issue or is marked forthcoming, asserted by a case in `citation-tier.test.mjs` | `open` |
+| F17 | Ref [2] cited Goldberg (2025), *Music Theory Online* 31(2) under the title "Resultant Patterns in Phase-Shifted Rhythmic Structures". Resolved 2026-09-01 against the publisher: the venue, volume, year, author and URL are real and correctly paired, and MTO is current through Vol 32 No 2 (June 2026) — so the audit's stated reason, a forward reference past Vol 30, does not hold. The title is what was wrong. MTO 31(2) carries Goldberg's "Music Theory as an Instrument of Nationalism: Notation, Identity, and Systemization in Dobri Hristov's Conception of Bulgarian Meter", and no MTO issue carries the printed title. A real article cited under a fabricated title, corrected in place. The entry stays uncited until M002/S05 draws on it for Ch 7 | `P0` | `verify` | `appendix-references.mdx` `ref-2` | Cases `S01-F17` and `S01-F17-tree` in `site/tests/citation-tier.test.mjs`: the entry carries the real title and the MTO 31(2) URL, and the fabricated title appears in no doc under the docs root | `done` |
 
 ### Slice M002/S02 — Chapter 3 clave citations
 

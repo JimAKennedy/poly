@@ -16,15 +16,15 @@ This slice records what the reference actually is and corrects it in place.
 The executable state of this plan. `/jk:next` reads the first unchecked box
 here to decide what to do; the task's own commit ticks it.
 
-- [ ] Task 1 — Resolve `ref-2` against the publisher, correct it, and lock it (F17)
+- [x] Task 1 — Resolve `ref-2` against the publisher, correct it, and lock it (F17)
 
 ## Definition of Done
 
 Copied verbatim from the slice. The task below argues against *this* text.
 
-- [ ] Reference [2]'s publication status is established from the publisher, and
+- [x] Reference [2]'s publication status is established from the publisher, and
       the finding records which it was
-- [ ] The appendix entry states the resolved status: real, replaced, or marked
+- [x] The appendix entry states the resolved status: real, replaced, or marked
       forthcoming
 
 ## Validation
