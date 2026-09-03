@@ -71,6 +71,38 @@ generated:
   - doc: site/src/content/docs/appendix-euclidean-reference.mdx
     command: node scripts/generate-euclidean-appendix.mjs
 
+boundaries:
+  # Engine isolation is poly's core architectural principle (CLAUDE.md): the
+  # engine is a pure C++ static library with zero VST3 dependencies, and the
+  # plugin layer feeds it. The `engine-isolation` CI job proves this by
+  # configuring a second build tree with -DPOLY_ENGINE_ONLY=ON; this rule
+  # catches the same mistake at pre-commit, before a full build is spent on it.
+  #
+  # The pattern matches include directives only, not identifiers. engine/
+  # legitimately *names* Steinberg::Vst::ParamID in a comment explaining what
+  # the engine's own param ids map onto, and forbidding the bare word would
+  # make that comment unwriteable.
+  rules:
+    - name: engine-must-not-include-vst3
+      from: engine
+      forbid: '#include\s*[<"](pluginterfaces|public\.sdk|vstgui|vstgui4)/'
+      extensions: [".cpp", ".h", ".hpp"]
+      hint: the engine must build with no VST3 SDK present — keep SDK types in plugin/source
+
+research_provenance:
+  # The guide summarises other people's scholarship, so its bibliography is
+  # load-bearing: a citation pointing at an anchor that does not exist is a
+  # claim with no source behind it. Configuring this turns on the anchor arms
+  # — duplicate ids, and every inline citation resolving to a real entry.
+  #
+  # anchor_pattern and phrase are left at their defaults: the default
+  # '(ref|fr)-[A-Za-z0-9-]+' already matches this guide's ref-N / fr-author-year
+  # convention exactly.
+  bib_file: site/src/content/docs/appendix-references.mdx
+  doc_roots:
+    - path: site/src/content/docs
+      extensions: [".mdx"]
+
 behavioral_claims:
   sources:
     - type: gtest

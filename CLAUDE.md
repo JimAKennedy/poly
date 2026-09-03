@@ -50,6 +50,21 @@ See `ARCHITECTURE.md` for the current architecture. Active roadmap is public
 - All `new` expressions in `plugin/source/` that transfer ownership to VST3/VSTGUI must have `// ownership-transfer`
 - The NFR review scanner flags unannotated raw `new` — this comment suppresses the finding
 
+### jk-standards Check Configuration
+- Patterns in `jk-standards.yaml` (`boundaries.rules[].forbid`, `count_drift.triggers`,
+  `status_prose.forbidden_extra[].pattern`) are **Python `re`**, not POSIX or PCRE
+- POSIX classes like `[[:space:]]` are not supported — Python parses them as a
+  literal character set (`[`, `:`, `s`, `p`, `a`, `c`, `e`) and reports only a
+  `FutureWarning`, so the rule still passes while silently matching nothing
+- **A green check is not evidence a rule works.** Before trusting a new rule,
+  prove it is non-vacuous: confirm it produces zero matches where it should pass
+  *and* non-zero matches somewhere it should fire. The engine-isolation rule was
+  verified as 0 matches under `engine/`, 15 under `plugin/source/`
+- Match include directives rather than bare identifiers when forbidding a
+  dependency: `engine/include/poly/params_def.h` legitimately names
+  `Steinberg::Vst::ParamID` in a comment, and a bare-word rule would ban the
+  comment along with the dependency
+
 ### Pre-Push Quality Gate
 The pre-push hook (`scripts/pre-push-check.sh`) enforces quality checks automatically:
 1. **Blocks direct pushes to main** — use a feature branch and PR instead
