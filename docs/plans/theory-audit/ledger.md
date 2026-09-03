@@ -231,9 +231,10 @@ named-theory claim.
 
 ### Slice M002/S02 — Chapter 3 clave citations
 
+**Plan:** M002-S02-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M002-S02.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
