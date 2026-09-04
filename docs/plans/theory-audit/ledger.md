@@ -247,9 +247,10 @@ named-theory claim.
 
 ### Slice M002/S03 — Chapter 4 Afrobeat citations
 
+**Plan:** M002-S03-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M002-S03.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
