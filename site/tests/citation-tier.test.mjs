@@ -48,6 +48,24 @@ const CLAIMS = [
     present: ['Music Theory as an Instrument of Nationalism', 'Dobri Hristov'],
     presentRegex: [/mto\.25\.31\.2\.goldberg\.pdf/],
   },
+  {
+    id: 'S02-F18',
+    file: '03-afro-cuban.mdx',
+    rule:
+      'ledger F18. The clave matrix is Ch 3\'s central theoretical claim and was ' +
+      'cited to a YouTube video (ref-10) while Peñalosa (2009) sat unused in ' +
+      'Further Reading. The gap sentence carries a second, different claim: that ' +
+      'E(k,n) can only generate gaps of two consecutive values. That is Toussaint ' +
+      '(2005, ref-1), not Peñalosa — citing Peñalosa for it would replace a bad ' +
+      'citation with a wrong one',
+    // forbiddenRegex, not forbidden: the guide cites a numbered reference for a
+    // claim as <sup>[N](…)</sup> and lists one bibliographically as a plain
+    // link. Only the superscript form is a named-theory claim, and prose
+    // normalisation does not reliably see markup.
+    forbiddenRegex: [/<sup>\[10\]\(\/appendix-references\/#ref-10\)<\/sup>/],
+    // #ref-1\) cannot match #ref-10) — the paren must follow the 1.
+    presentRegex: [/#fr-penalosa-2009/, /#ref-1\)/],
+  },
 ];
 
 registerClaimTests({ test, assert, claims: CLAIMS, loadSource });

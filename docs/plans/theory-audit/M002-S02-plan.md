@@ -13,7 +13,7 @@ onto its real source.
 The executable state of this plan. `/jk:next` reads the first unchecked box
 here to decide what to do; each task's own commit ticks its box.
 
-- [ ] Task 1 — Chapter 3: re-cite the clave-matrix and gap claims
+- [x] Task 1 — Chapter 3: re-cite the clave-matrix and gap claims
 - [ ] Task 2 — Companion page: drop the video citation from the clave claim (F18)
 
 ## Definition of Done
