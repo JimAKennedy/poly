@@ -82,6 +82,28 @@ const CLAIMS = [
     // mis-sourced.
     presentRegex: [/#fr-penalosa-2009/],
   },
+  {
+    id: 'S03-F19',
+    file: '04-afrobeat.mdx',
+    rule:
+      "ledger F19. Ch 4's opening cited a YouTube video (ref-14) while Allen & " +
+      'Veal (2013) sat unused in Further Reading — and already sat in the same ' +
+      'sentence, added by M001/S06. The phrase-architecture claim was uncited ' +
+      'and takes Veal (2000), credited by the companion page for ensemble ' +
+      'arranging and form. The lane-behaviour sentence is a claim about Poly, ' +
+      'not about Afrobeat, so it takes no source at all: ref-17 was an Afro ' +
+      'House production guide, a different genre, and re-citing it to Veal ' +
+      'would swap a wrong-tier citation for a wrong-claim one',
+    forbiddenRegex: [
+      /<sup>\[14\]\(\/appendix-references\/#ref-14\)<\/sup>/,
+      /<sup>\[17\]\(\/appendix-references\/#ref-17\)<\/sup>/,
+    ],
+    // #fr-veal-2000 is absent from the chapter today, so that arm is a real
+    // lock this slice establishes. #fr-allen-veal-2013 is already present —
+    // M001/S06 put it there — so it is a standing guard against a later edit
+    // stripping it out, not something this slice creates.
+    presentRegex: [/#fr-allen-veal-2013/, /#fr-veal-2000/],
+  },
 ];
 
 registerClaimTests({ test, assert, claims: CLAIMS, loadSource });

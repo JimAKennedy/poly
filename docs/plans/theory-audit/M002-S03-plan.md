@@ -12,15 +12,15 @@ the autobiography and the standard biography — sat unused in Further Reading.
 The executable state of this plan. `/jk:next` reads the first unchecked box
 here to decide what to do; the task's own commit ticks it.
 
-- [ ] Task 1 — Chapter 4: source the opening and phrase claims, drop the rest (F19)
+- [x] Task 1 — Chapter 4: source the opening and phrase claims, drop the rest (F19)
 
 ## Definition of Done
 
 Copied verbatim from the slice. The task below argues against *this* text.
 
-- [ ] Chapter 4's opening and phrase-gating claims cite Allen & Veal (2013) or
+- [x] Chapter 4's opening and phrase-gating claims cite Allen & Veal (2013) or
       Veal (2000) inline
-- [ ] Refs [14]–[17] no longer carry a named-theory claim in Chapter 4
+- [x] Refs [14]–[17] no longer carry a named-theory claim in Chapter 4
 
 ## Validation
 

@@ -254,17 +254,17 @@ named-theory claim.
 **Plan:** M002-S03-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M002-S03.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Chapter 4's opening and phrase-gating claims cite Allen & Veal (2013) or
+- [x] Chapter 4's opening and phrase-gating claims cite Allen & Veal (2013) or
       Veal (2000) inline
-- [ ] Refs [14]–[17] no longer carry a named-theory claim in Chapter 4
+- [x] Refs [14]–[17] no longer carry a named-theory claim in Chapter 4
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F19 | Refs [14]–[17] for Afrobeat are YouTube videos and production blogs, while Allen & Veal (2013) and Veal (2000) sit unused in Further Reading | `P0` | `source` | `04-afrobeat.mdx`, `appendix-references.mdx` | The Tier-A citation check passes for Ch 4 | `open` |
+| F19 | Refs [14]–[17] for Afrobeat were YouTube videos and production blogs, while Allen & Veal (2013) and Veal (2000) sat unused in Further Reading. Resolved 2026-09-04. Ch 4 carried only two of the four: ref-14 on the opening, whose sentence already cited Allen & Veal after M001/S06, so the superscript was simply dropped; and ref-17 on a sentence describing Poly lane behaviour rather than Afrobeat. That citation was removed with no replacement — a project-specific claim is declared as the project's own under the research-provenance classes, and ref-17 was an Afro House production guide, a different genre, so re-citing it to Veal would have swapped a wrong-tier citation for a wrong-claim one. The definition of done's phrase-gating claim was uncited altogether and gained Veal (2000). Refs [15] and [16] carried no claim anywhere and needed no edit | `P0` | `source` | `04-afrobeat.mdx` | Case `S03-F19` in `site/tests/citation-tier.test.mjs` forbids the superscript claim form of both ref-14 and ref-17 in `04-afrobeat.mdx` and requires `fr-allen-veal-2013` and `fr-veal-2000`. F23's Tier-A check, which M002/S06 builds, is not what proves this slice | `done` |
 
 ### Slice M002/S04 — Chapter 6 Indian-classical citations
 
