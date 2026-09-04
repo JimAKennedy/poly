@@ -14,14 +14,14 @@ The executable state of this plan. `/jk:next` reads the first unchecked box
 here to decide what to do; each task's own commit ticks its box.
 
 - [x] Task 1 — Chapter 3: re-cite the clave-matrix and gap claims
-- [ ] Task 2 — Companion page: drop the video citation from the clave claim (F18)
+- [x] Task 2 — Companion page: drop the video citation from the clave claim (F18)
 
 ## Definition of Done
 
 Copied verbatim from the slice. Both tasks below argue against *this* text.
 
-- [ ] The clave-matrix and non-Euclidean-gap claims cite Peñalosa (2009) inline
-- [ ] Refs [10] and [11] no longer carry a named-theory claim in Chapter 3
+- [x] The clave-matrix and non-Euclidean-gap claims cite Peñalosa (2009) inline
+- [x] Refs [10] and [11] no longer carry a named-theory claim in Chapter 3
 
 ## Validation
 

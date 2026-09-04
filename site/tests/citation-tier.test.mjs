@@ -66,6 +66,22 @@ const CLAIMS = [
     // #ref-1\) cannot match #ref-10) — the paren must follow the 1.
     presentRegex: [/#fr-penalosa-2009/, /#ref-1\)/],
   },
+  {
+    id: 'S02-F18-theory',
+    file: 'theory-afro-cuban.mdx',
+    rule:
+      'ledger F18. The companion page cited the same YouTube video (ref-10) for ' +
+      'the same clave-matrix claim, on a sentence that already carried Peñalosa ' +
+      '— the real source sitting next to the video. The Sources "See also refs ' +
+      '[10]-[13]" listing is a bibliographic pointer, not a named-theory claim, ' +
+      'and deliberately survives',
+    forbiddenRegex: [/<sup>\[10\]\(\/appendix-references\/#ref-10\)<\/sup>/],
+    // Standing guard, not a lock this slice establishes: the page already
+    // carried four fr-penalosa-2009 citations. It bites if a later edit strips
+    // Peñalosa out, which would leave the claim unsourced rather than
+    // mis-sourced.
+    presentRegex: [/#fr-penalosa-2009/],
+  },
 ];
 
 registerClaimTests({ test, assert, claims: CLAIMS, loadSource });
