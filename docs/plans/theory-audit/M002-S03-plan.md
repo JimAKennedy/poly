@@ -181,7 +181,9 @@ it, M002/S02 extended it. Append to it. Do not add cases to
     F19's `Status` to `done`, and rewrite its `Verification` cell to name case
     `S03-F19` in `site/tests/citation-tier.test.mjs` — the cell currently
     forward-references the Tier-A check M002/S06 builds, which cannot be what
-    proves this slice. In the `Item` cell record that refs [15] and [16] carried
+    proves this slice. Correct its `Lands in` cell to the files this slice
+    actually modified — `04-afrobeat.mdx` alone — rather than the
+    `appendix-references.mdx` it currently names and never touches. In the `Item` cell record that refs [15] and [16] carried
     no claim to begin with, that line 49's citation was removed rather than
     re-sourced because the sentence is Poly's own, and that the companion page's
     Sources listing was deliberately left. Use no `|` in either cell.

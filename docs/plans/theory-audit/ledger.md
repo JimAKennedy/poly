@@ -19,7 +19,11 @@ repoints its completeness test at this file.
 **Row vocabulary.** Beyond the required columns, each row carries a severity
 (`P0` factually wrong · `P1` overclaimed or under-sourced · `P2` enrichment) and
 a disposition (`correct` · `source` · `reframe` · `disclose` · `patch-align` ·
-`enrich` · `verify`). Both are informational; the `ledger` check ignores them.
+`enrich` · `verify`), and a `Lands in` pointer. All three are informational; the
+`ledger` check ignores them, since the standard requires only `ID`, `Item`,
+`Verification` and `Status`. `Lands in` is a forecast while a row is open and a
+record once it closes, so the slice that closes a row corrects it to the files
+actually modified — it is not a claim any test enforces.
 
 **Numbering.** Milestone IDs M001–M005 collide with Poly's legacy
 commit-message milestones from the plugin work. The `Plan:` trailer
@@ -243,7 +247,7 @@ named-theory claim.
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F18 | Refs [10] and [11] — YouTube videos — were the inline citations for the clave matrix, the most important theoretical claim in Ch 3, while Peñalosa (2009) sat unused in Further Reading. Resolved 2026-09-04: ref-10's three claim citations moved to Peñalosa, with Toussaint (ref-1) taking the Euclidean-gap half of the line 79 sentence, which Peñalosa does not support. Ref [11] carried no claim anywhere in the tree to begin with, so it needed no edit. The companion page keeps its Sources "See also refs [10]-[13]" listing, a bibliographic pointer rather than a named-theory claim | `P0` | `source` | `03-afro-cuban.mdx`, `appendix-references.mdx` | Cases `S02-F18` and `S02-F18-theory` in `site/tests/citation-tier.test.mjs` forbid the superscript claim form of ref-10 in `03-afro-cuban.mdx` and `theory-afro-cuban.mdx` and require `fr-penalosa-2009` in each. F23's Tier-A check, which M002/S06 builds, is not what proves this slice | `done` |
+| F18 | Refs [10] and [11] — YouTube videos — were the inline citations for the clave matrix, the most important theoretical claim in Ch 3, while Peñalosa (2009) sat unused in Further Reading. Resolved 2026-09-04: ref-10's three claim citations moved to Peñalosa, with Toussaint (ref-1) taking the Euclidean-gap half of the line 79 sentence, which Peñalosa does not support. Ref [11] carried no claim anywhere in the tree to begin with, so it needed no edit. The companion page keeps its Sources "See also refs [10]-[13]" listing, a bibliographic pointer rather than a named-theory claim | `P0` | `source` | `03-afro-cuban.mdx`, `theory-afro-cuban.mdx` | Cases `S02-F18` and `S02-F18-theory` in `site/tests/citation-tier.test.mjs` forbid the superscript claim form of ref-10 in `03-afro-cuban.mdx` and `theory-afro-cuban.mdx` and require `fr-penalosa-2009` in each. F23's Tier-A check, which M002/S06 builds, is not what proves this slice | `done` |
 
 ### Slice M002/S03 — Chapter 4 Afrobeat citations
 
