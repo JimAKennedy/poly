@@ -289,18 +289,18 @@ named-theory claim.
 **Plan:** M002-S05-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M002-S05.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The aksak-definition and svatbarska-muzika claims cite Brăiloiu (1951),
+- [x] The aksak-definition and svatbarska-muzika claims cite Brăiloiu (1951),
       Rice (1994) or Goldberg (2015) inline
-- [ ] Refs [26] and [27] no longer carry a named-theory claim in Chapter 7
-- [ ] The `S04-F06` long-beat lock still passes after the citation edits
+- [x] Refs [26] and [27] no longer carry a named-theory claim in Chapter 7
+- [x] The `S04-F06` long-beat lock still passes after the citation edits
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F21 | Refs [26] and [27] for Balkan are educational aggregator pages, while Brăiloiu, Rice and Goldberg sit in Further Reading only | `P1` | `source` | `07-balkan.mdx`, `appendix-references.mdx` | The Tier-A citation check passes for Ch 7, and case `S04-F06` still passes | `open` |
+| F21 | Refs [26] (Fiveable) and [27] (Chromatone) for Balkan were educational aggregator pages, while Brăiloiu, Rice and Goldberg sat in Further Reading only. Resolved 2026-09-07. The aksak definition took Brăiloiu (1951), who coined the term and whose paper is the two/three-cell theory of additive meter; the svatbarska-muzika claim took Rice (1994), the standard ethnography of Bulgarian practice. Goldberg (2015) stayed where it already was, on the long-beat timing claim, being the authority for neither of these two. The companion page needed no edit and keeps its Sources listing, a plain-link bibliographic pointer that also stops both references orphaning once their claims moved | `P1` | `source` | `07-balkan.mdx` | Case `S05-F21` in `site/tests/citation-tier.test.mjs` forbids any superscript containing a ref-26 or ref-27 link in `07-balkan.mdx` and requires `fr-brailoiu-1951` and `fr-rice-1994`, and case `S04-F06` still passes — asserted by name, since the edits bracket the line it guards. F23's Tier-A check, which M002/S06 builds, is not what proves this slice | `done` |
 
 ### Slice M002/S06 — Reference tiers and the tier check
 

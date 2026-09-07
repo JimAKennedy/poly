@@ -13,16 +13,16 @@ practice, sat in Further Reading only.
 The executable state of this plan. `/jk:next` reads the first unchecked box
 here to decide what to do; the task's own commit ticks it.
 
-- [ ] Task 1 — Chapter 7: cite Brăiloiu for aksak and Rice for svatbarska (F21)
+- [x] Task 1 — Chapter 7: cite Brăiloiu for aksak and Rice for svatbarska (F21)
 
 ## Definition of Done
 
 Copied verbatim from the slice. The task below argues against *this* text.
 
-- [ ] The aksak-definition and svatbarska-muzika claims cite Brăiloiu (1951),
+- [x] The aksak-definition and svatbarska-muzika claims cite Brăiloiu (1951),
       Rice (1994) or Goldberg (2015) inline
-- [ ] Refs [26] and [27] no longer carry a named-theory claim in Chapter 7
-- [ ] The `S04-F06` long-beat lock still passes after the citation edits
+- [x] Refs [26] and [27] no longer carry a named-theory claim in Chapter 7
+- [x] The `S04-F06` long-beat lock still passes after the citation edits
 
 ## Validation
 

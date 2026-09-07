@@ -142,6 +142,21 @@ const CLAIMS = [
     // unsourced rather than mis-sourced.
     presentRegex: [/#fr-clayton-2000/],
   },
+  {
+    id: 'S05-F21',
+    file: '07-balkan.mdx',
+    rule:
+      'ledger F21. Ch 7 cited an educational aggregator (ref-26, Fiveable) for ' +
+      'the definition of aksak and a theory blog (ref-27, Chromatone) for ' +
+      'svatbarska muzika, while Brăiloiu — who coined the term — and Rice, whose ' +
+      'ethnography is the standard on Bulgarian practice, sat in Further Reading ' +
+      'only. Goldberg (2015) stays where it is, cited at the long-beat timing ' +
+      'claim, and is not the authority for either of these two',
+    forbiddenRegex: [/<sup>[^<]*#ref-2[67][^<]*<\/sup>/],
+    // Both arms are unsatisfied in the chapter today — it cites only
+    // fr-goldberg-2015 — so each is a real lock this task establishes.
+    presentRegex: [/#fr-brailoiu-1951/, /#fr-rice-1994/],
+  },
 ];
 
 registerClaimTests({ test, assert, claims: CLAIMS, loadSource });
