@@ -104,6 +104,27 @@ const CLAIMS = [
     // stripping it out, not something this slice creates.
     presentRegex: [/#fr-allen-veal-2013/, /#fr-veal-2000/],
   },
+  {
+    id: 'S04-F20',
+    file: '06-indian-classical.mdx',
+    rule:
+      "ledger F20. Ch 6's tala and layakari claims were cited to a commercial " +
+      'blog, a school textbook PDF and a konnakol video, while Clayton (2000) ' +
+      'and Kippen (1988) sat unused in Further Reading — the chapter cited none ' +
+      'of the three scholarly sources even once. The theka claim was uncited ' +
+      'altogether and takes Kippen, whose subject is theka elaboration. ref-25 ' +
+      'was off-topic as well as low-tier: konnakol is Carnatic vocal percussion, ' +
+      'not rhythmic augmentation ratios',
+    // Generalised from the single-reference form M002/S02 and S03 used, which
+    // cannot see a multi-reference block like
+    // <sup>[21](…), [22](…)</sup>. Matching any <sup> containing a ref-21..25
+    // link catches both, and still cannot match the Sources "See also" listing,
+    // which is a plain link with no <sup> around it.
+    forbiddenRegex: [/<sup>[^<]*#ref-2[1-5][^<]*<\/sup>/],
+    // Both arms are unsatisfied in the chapter today, so each is a real lock
+    // this task establishes rather than a standing guard.
+    presentRegex: [/#fr-clayton-2000/, /#fr-kippen-1988/],
+  },
 ];
 
 registerClaimTests({ test, assert, claims: CLAIMS, loadSource });

@@ -13,7 +13,7 @@ high-school textbook PDF and a konnakol video instead.
 The executable state of this plan. `/jk:next` reads the first unchecked box
 here to decide what to do; each task's own commit ticks its box.
 
-- [ ] Task 1 — Chapter 6: source the tala, theka and layakari claims
+- [x] Task 1 — Chapter 6: source the tala, theka and layakari claims
 - [ ] Task 2 — Companion page: drop the video citations from two claims (F20)
 
 ## Definition of Done
