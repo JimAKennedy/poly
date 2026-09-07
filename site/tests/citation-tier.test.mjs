@@ -161,6 +161,38 @@ const CLAIMS = [
 
 registerClaimTests({ test, assert, claims: CLAIMS, loadSource });
 
+// M002/S06 task 1. Every bibliography entry declares a tier, so the Tier-A rule
+// in `S06-claims-are-tier-a` has something to resolve against and a new
+// reference cannot arrive untiered. Tier values follow the audit's definitions
+// (docs/audits/poly_theory_audit.md section 4): A peer-reviewed scholarship or
+// a primary source, B secondary but legitimate, C hobbyist media.
+export const TIER_RE = /<span id="((?:ref|fr)-[A-Za-z0-9.-]+)"([^>]*)>/g;
+
+export async function readTierMap(bibPath) {
+  const text = await readFile(bibPath, 'utf8');
+  const tiers = new Map();
+  for (const m of text.matchAll(TIER_RE)) {
+    const tier = /data-tier="([^"]*)"/.exec(m[2] ?? '');
+    tiers.set(m[1], tier ? tier[1] : null);
+  }
+  return tiers;
+}
+
+test('S06-tiers-declared: every bibliography entry declares a valid tier', async () => {
+  const tiers = await readTierMap(join(DOCS, 'appendix-references.mdx'));
+  assert.ok(tiers.size > 0, 'no bibliography entries found — the span pattern has drifted');
+  const bad = [...tiers.entries()]
+    .filter(([, t]) => !['A', 'B', 'C'].includes(t))
+    .map(([id, t]) => `${id} (${t === null ? 'no data-tier' : `data-tier="${t}"`})`);
+  assert.deepEqual(
+    bad,
+    [],
+    `${bad.length} of ${tiers.size} entries lack a valid tier:\n  ${bad.join('\n  ')}\n` +
+      'Add data-tier="A"|"B"|"C" to the entry span. Authority: audit section 4 — ' +
+      'A peer-reviewed or primary, B secondary but legitimate, C hobbyist media.',
+  );
+});
+
 test(`S01-F17-tree: the fabricated ref-2 title appears in no doc`, async () => {
   const entries = await readdir(DOCS, { withFileTypes: true });
   const offenders = [];
