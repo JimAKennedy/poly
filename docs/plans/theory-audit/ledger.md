@@ -268,9 +268,10 @@ named-theory claim.
 
 ### Slice M002/S04 — Chapter 6 Indian-classical citations
 
+**Plan:** M002-S04-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M002-S04.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
