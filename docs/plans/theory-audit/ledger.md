@@ -315,7 +315,12 @@ named-theory claim.
 - [ ] The "Spanish tinge" attribution cites Lomax's Morton interviews
 - [ ] A new check fails when a Tier-B or Tier-C source is the inline citation
       for a named-theory claim
-- [ ] The check is wired into `scripts/check-doc-conformance.sh`
+- [ ] The check is wired into `scripts/check-doc-conformance.sh` **and**
+      added to the `REQUIRED` set in
+      `site/tests/doc-conformance-wiring.test.mjs`. That file's own header
+      states the contract — adding a guardrail means adding it to both — and
+      the runner alone leaves the new check undefended against a later edit
+      quietly dropping it
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
