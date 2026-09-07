@@ -271,17 +271,17 @@ named-theory claim.
 **Plan:** M002-S04-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M002-S04.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Chapter 6's tala, laya and theka claims cite Clayton (2000), Nelson
+- [x] Chapter 6's tala, laya and theka claims cite Clayton (2000), Nelson
       (2008) or Kippen (1988) inline
-- [ ] Refs [21]–[25] no longer carry a named-theory claim in Chapter 6
+- [x] Refs [21]–[25] no longer carry a named-theory claim in Chapter 6
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F20 | Refs [21]–[25] for Ch 6 include a commercial blog, a high-school textbook PDF and a YouTube konnakol video, while Clayton, Nelson and Kippen sit unused in Further Reading | `P1` | `source` | `06-indian-classical.mdx`, `appendix-references.mdx` | The Tier-A citation check passes for Ch 6 | `open` |
+| F20 | Refs [21]–[25] for Ch 6 included a commercial blog, a high-school textbook PDF and a YouTube konnakol video, while Clayton, Nelson and Kippen sat unused in Further Reading — the chapter cited none of the three even once. Resolved 2026-09-07. The tala and layakari claims moved to Clayton (2000), and the theka claim, which was uncited rather than mis-cited, gained Kippen (1988). ref-25 was off-topic as well as low-tier: a konnakol video standing in for layakari, where konnakol is Carnatic vocal percussion and layakari is augmentation ratios. Nelson (2008) is deliberately unused, its tihai and mora arithmetic being M004/S04's subject. The companion page keeps its Sources "See also refs [21]-[25]" listing, a bibliographic pointer rather than a named-theory claim | `P1` | `source` | `06-indian-classical.mdx`, `theory-indian-classical.mdx` | Cases `S04-F20` and `S04-F20-theory` in `site/tests/citation-tier.test.mjs` forbid any superscript containing a ref-21 to ref-25 link in either file and require `fr-clayton-2000`, plus `fr-kippen-1988` in the chapter. The pattern is generalised from the single-reference form S02 and S03 used, which cannot match this page's two-references-in-one-sup blocks. F23's Tier-A check, which M002/S06 builds, is not what proves this slice | `done` |
 
 ### Slice M002/S05 — Chapter 7 Balkan citations
 

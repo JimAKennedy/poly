@@ -125,6 +125,23 @@ const CLAIMS = [
     // this task establishes rather than a standing guard.
     presentRegex: [/#fr-clayton-2000/, /#fr-kippen-1988/],
   },
+  {
+    id: 'S04-F20-theory',
+    file: 'theory-indian-classical.mdx',
+    rule:
+      'ledger F20. The companion page cited the same commercial blog and school ' +
+      'textbook PDF for its tala definition, on a sentence already carrying ' +
+      'Clayton, and cited a journal PDF and a pubpub article for the layakari ' +
+      'ratios. The Sources "See also" listing is a bibliographic pointer, not a ' +
+      'named-theory claim, and deliberately survives',
+    // This page puts two references inside one <sup>, which the single-reference
+    // pattern M002/S02 and S03 used cannot see. Hence the generalised form.
+    forbiddenRegex: [/<sup>[^<]*#ref-2[1-5][^<]*<\/sup>/],
+    // Standing guard, not a lock this task establishes: the page already cites
+    // Clayton. It bites if a later edit strips Clayton out, leaving the claims
+    // unsourced rather than mis-sourced.
+    presentRegex: [/#fr-clayton-2000/],
+  },
 ];
 
 registerClaimTests({ test, assert, claims: CLAIMS, loadSource });

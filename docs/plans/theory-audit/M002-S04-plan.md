@@ -14,15 +14,15 @@ The executable state of this plan. `/jk:next` reads the first unchecked box
 here to decide what to do; each task's own commit ticks its box.
 
 - [x] Task 1 — Chapter 6: source the tala, theka and layakari claims
-- [ ] Task 2 — Companion page: drop the video citations from two claims (F20)
+- [x] Task 2 — Companion page: drop the video citations from two claims (F20)
 
 ## Definition of Done
 
 Copied verbatim from the slice. Both tasks below argue against *this* text.
 
-- [ ] Chapter 6's tala, laya and theka claims cite Clayton (2000), Nelson
+- [x] Chapter 6's tala, laya and theka claims cite Clayton (2000), Nelson
       (2008) or Kippen (1988) inline
-- [ ] Refs [21]–[25] no longer carry a named-theory claim in Chapter 6
+- [x] Refs [21]–[25] no longer carry a named-theory claim in Chapter 6
 
 ## Validation
 
