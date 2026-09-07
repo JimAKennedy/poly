@@ -312,9 +312,10 @@ named-theory claim.
 ### Slice M002/S06 — Reference tiers and the tier check
 
 **Depends:** M002/S01, M002/S02, M002/S03, M002/S04, M002/S05
+**Plan:** M002-S06-plan.md
 **Validation:** format, site-unit, doc-conformance, doc-discipline, gate
 **Evidence:** evidence/M002-S06.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
