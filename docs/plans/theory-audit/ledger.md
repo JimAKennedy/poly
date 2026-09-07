@@ -16,6 +16,13 @@ Rows H01–H04 are the harness this programme needs to lock its own corrections.
 programme's plan of record until this ledger existed. M001/S07 archives it and
 repoints its completeness test at this file.
 
+**Row series.** `F01`–`F54` are the audit's findings, one row each, and that
+range is closed. `H01`–`H04` are the harness this programme needed to lock its
+own corrections. `B01`–`B09` are bibliography defects this programme found
+itself, in M006 — the audit drew its Tier-C list from the chapters it reviewed,
+so it never saw the orphaned, duplicated and low-tier entries that M002's own
+work surfaced.
+
 **Row vocabulary.** Beyond the required columns, each row carries a severity
 (`P0` factually wrong · `P1` overclaimed or under-sourced · `P2` enrichment) and
 a disposition (`correct` · `source` · `reframe` · `disclose` · `patch-align` ·
@@ -658,6 +665,78 @@ highest-value additions per tradition, each cited at the claim it supports.
 
 ---
 
+## Milestone M006 — Bibliography Hygiene
+
+**Vision:** Every reference in the guide is cited by something, cited at a tier
+that supports the claim it carries, and appears exactly once.
+**Branch:** milestone/M006-bibliography-hygiene
+**Status:** planned
+**Demo:** `grep -rn citation-tier-ok site/src/content/docs` returns nothing, the
+appendix has no entry that no page cites, and no two entries name the same work.
+
+M002 fixed every reference the audit flagged. Doing so surfaced three classes of
+defect the audit did not see, because its Tier-C list was drawn from the
+chapters it reviewed rather than from the bibliography as a whole. This
+milestone is that follow-on work, and its rows carry the `B` prefix to say
+plainly that they are ours rather than the audit's.
+
+### Slice M006/S01 — Upgrade the seven suppressed claim citations
+
+**Depends:** M002/S06
+**Validation:** format, site-unit, doc-conformance
+**Evidence:** evidence/M006-S01.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] Each of the seven claims either cites a Tier-A source or no longer makes
+      a claim requiring one
+- [ ] `grep -rn citation-tier-ok site/src/content/docs` returns nothing, and the
+      tier check's live suppression count is zero
+
+| ID | Item | Sev | Disp | Lands in | Verification | Status |
+|---|---|---|---|---|---|---|
+| B01 | Ch 1 cites Wikipedia's "Euclidean Rhythm" for a named-theory claim, where Toussaint (ref-1) is cited in the same chapter | `P1` | `source` | `01-foundations.mdx` | The `citation-tier-ok` suppression on this citation is removed and `citation-tier.test.mjs` still passes | `open` |
+| B02 | Ch 3 cites Sher Music publisher sample pages for a named-theory claim, where Mauleón (1993) sits in Further Reading | `P1` | `source` | `03-afro-cuban.mdx` | As B01, for this citation | `open` |
+| B03 | Ch 5 cites a Gamelan New Zealand community PDF for a named-theory claim, where Tenzer, Vitale and Sumarsam sit in Further Reading | `P1` | `source` | `05-gamelan.mdx` | As B01, for this citation | `open` |
+| B04 | Ch 8 cites Wikipedia's "Steve Reich" for a named-theory claim, where Reich (2002), Potter and Gann sit in Further Reading | `P1` | `source` | `08-minimalism.mdx` | As B01, for this citation | `open` |
+| B05 | Ch 8 cites an All Classical Portland radio article for a named-theory claim | `P1` | `source` | `08-minimalism.mdx` | As B01, for this citation | `open` |
+| B06 | Ch 9 and its companion cite the Brettworks blog for the Linn swing claim; M001/S06 attributed the claim to Linn in prose but left the reference | `P1` | `source` | `09-electronic.mdx`, `theory-electronic-breakbeat.mdx` | As B01, for both citations | `open` |
+| B07 | Ch 13 cites the Ethan Hein blog for a named-theory claim about the Amen break | `P1` | `source` | `13-drum-and-bass.mdx` | As B01, for this citation | `open` |
+
+### Slice M006/S02 — Resolve the orphaned references
+
+**Depends:** M002/S06
+**Validation:** format, site-unit, doc-conformance
+**Evidence:** evidence/M006-S02.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] Every numbered reference is cited by at least one page, or is retired
+      with the reason recorded
+- [ ] A check fails when an appendix entry is cited by nothing
+
+| ID | Item | Sev | Disp | Lands in | Verification | Status |
+|---|---|---|---|---|---|---|
+| B08 | Eighteen numbered references and two Further Reading entries are cited by no page. Four were orphaned by M002 moving claims onto scholarship; the rest predate it. An uncited entry is either dead weight or a source nobody checked — ref-2 was the fabricated-title citation S01 found, and nothing cited it | `P1` | `correct` | `appendix-references.mdx`, `site/tests/citation-tier.test.mjs` | `citation-tier.test.mjs` asserts every entry is cited by at least one page, with retired entries deleted rather than exempted | `open` |
+
+### Slice M006/S03 — De-duplicate the appendix
+
+**Depends:** M002/S06
+**Validation:** format, site-unit, doc-conformance
+**Evidence:** evidence/M006-S03.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] No two appendix entries name the same work
+- [ ] A check fails when two entries share a title and year
+
+| ID | Item | Sev | Disp | Lands in | Verification | Status |
+|---|---|---|---|---|---|---|
+| B09 | `ref-1` and `fr-toussaint-2005` are the same 2005 BRIDGES paper listed twice, at different weights in the same appendix. ref-1 is cited in six files and the duplicate in none, so the two cannot disagree today, but nothing stops a later citation picking the wrong one | `P2` | `correct` | `appendix-references.mdx`, `site/tests/citation-tier.test.mjs` | `citation-tier.test.mjs` asserts no two entries share a normalised title and year, and the sweep that finds them is recorded in this row | `open` |
+
 ## Sequencing
 
 ```
@@ -665,7 +744,9 @@ M001 (corrections) ──┬──> M003 (repositioning) ──┐
                      │                            ├──> M004 (patch alignment)
 M002 (citations) ────┴────────────────────────────┘
                      │
-                     └──> M005 (enrichment)
+                     ├──> M005 (enrichment)
+                     │
+                     └──> M006 (bibliography hygiene)
 ```
 
 - **M001/S01 was the hard prerequisite for everything** — it landed the harness
@@ -683,6 +764,12 @@ M002 (citations) ────┴────────────────
   gamelan rules as reworded there, and on M004/S01–S04 for the same reason
   M002/S06 depends on its milestone: the checklist fails while any patch still
   diverges silently.
+- **M006 depends on M002/S06** throughout, and is the milestone that burns down
+  what M002/S06 suppresses. Its S01 removes the seven `citation-tier-ok` markers
+  one claim at a time, so the tier check only becomes unconditionally true when
+  M006/S01 closes. Its S02 and S03 add the uncited-entry and duplicate-entry
+  assertions to the same host, which is why they wait for the host to exist
+  rather than racing it.
 - **M005 depends on M002/S06** throughout: a reference added after the tier
   check exists must arrive carrying a tier. M005 is genuinely last, but it is
   queued rather than written off — every P0 and P1 row closes in M001–M004.

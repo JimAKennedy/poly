@@ -1,6 +1,6 @@
 // Completeness gate for docs/plans/theory-audit/ledger.md.
 //
-// The ledger is the plan of record for the M001-M005 music-theory audit
+// The ledger is the plan of record for the M001-M006 music-theory audit
 // remediation. `jk-standards ledger` checks its structure — ID shape, status
 // vocabulary, definition-of-done presence, validation tokens, placeholders —
 // but has no idea that this particular programme owes exactly 54 findings, and
@@ -10,8 +10,17 @@
 // Contract (fixed here, not scraped from the ledger, so a ledger + code drift
 // is detected rather than silently reconciled):
 //   1. Every finding ID F01-F54 appears exactly once as a ledger row.
-//   2. Every row ID is well-formed: `F` + two digits (an audit finding) or
-//      `H` + two digits (a harness row this programme added for itself).
+//   2. Every row ID is well-formed, in one of three series:
+//        `F` + two digits — one of the audit's 54 findings. Closed: F01-F54
+//          is a 1:1 map to docs/audits/poly_theory_audit.md, so an F55 is a
+//          failure, not an addition.
+//        `H` + two digits — a harness row this programme added for itself
+//          (the enumeration gate, the claim helpers).
+//        `B` + two digits — a bibliography defect this programme found itself
+//          rather than inheriting from the audit. M006 owns these: the
+//          audit's Tier-C list named nine refs, all fixed by M002, and did
+//          not see the orphaned, duplicated and low-tier entries M002's own
+//          work surfaced.
 //   3. Each row carries exactly one valid severity token
 //      (`P0` / `P1` / `P2`). Unlike the retired plan doc, the ledger carries
 //      explicit Sev/Disp columns on every row including M005's, so an absent
@@ -205,9 +214,9 @@ test('every finding ID F01\u2013F54 appears exactly once', () => {
 });
 
 test('every row carries a well-formed ID', () => {
-  // The F-only case above cannot see an `H`-prefixed typo, because a malformed
-  // harness ID simply never enters findingRows.
-  const malformed = rows.filter((r) => !/^(F\d{2}|H\d{2})$/.test(r.id)).map((r) => r.id);
+  // The F-only case above cannot see an `H`- or `B`-prefixed typo, because a
+  // malformed non-F ID simply never enters findingRows.
+  const malformed = rows.filter((r) => !/^(F\d{2}|H\d{2}|B\d{2})$/.test(r.id)).map((r) => r.id);
   assert.deepEqual(malformed, [], `malformed row IDs: ${malformed.join(', ')}`);
 });
 
