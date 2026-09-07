@@ -4,10 +4,12 @@ import { pageUrl, editLaneParam, expandStrip } from './test-helpers.mjs';
 // ---------------------------------------------------------------------------
 // MIDI-channel Auto sentinel symmetric encoding (M073 S03 T02).
 //
-// The WebUI now shares the single -1↔Auto mapping the C++ native/state paths
-// use: the channel control writes `Math.round(norm * 16) - 1` (range -1..15,
-// where norm 0 → -1 Auto) and reads it back raw, and both display surfaces
-// label ch<0 as 'Auto' else 'CH '+ch. This spec proves that mapping is
+// The WebUI shares the single -1↔Auto mapping the C++ native/state paths use:
+// the channel control writes `Math.round(norm * 16) - 1` (range -1..15, where
+// norm 0 → -1 Auto) and reads it back raw. The stored value is the MIDI *wire*
+// channel, 0-15. Both display surfaces label ch<0 as 'Auto' else 'CH '+(ch+1),
+// because MIDI channels are numbered 1-16 everywhere a human reads them — a
+// lane storing 0 is the channel Cubase calls 1. This spec proves that mapping is
 // symmetric through the mock host's real begin/perform/end edit gesture:
 //   - editing the channel to norm 0 lands lane.ch === -1 (Auto), not 0/explicit;
 //   - editing to (N+1)/16 lands lane.ch === N exactly, with no off-by-one;
@@ -68,8 +70,8 @@ test.describe('MIDI channel Auto↔explicit symmetric round-trip (mock host)', (
     const ch = await editChannelReadCh(page, chNorm(9));
     expect(ch).toBe(9);
 
-    expect(await statLabel(page)).toContain('CH 9');
-    expect(await sliderLabel(page)).toBe('CH 9');
+    expect(await statLabel(page)).toContain('CH 10'); // wire 9 is DAW channel 10
+    expect(await sliderLabel(page)).toBe('CH 10');
   });
 
   test('every explicit channel 0..15 round-trips exactly (symmetric, no drift)', async ({ page }) => {
@@ -79,8 +81,27 @@ test.describe('MIDI channel Auto↔explicit symmetric round-trip (mock host)', (
     for (let n = 0; n <= 15; n++) {
       const ch = await editChannelReadCh(page, chNorm(n));
       expect(ch, `channel ${n} should store exactly ${n}`).toBe(n);
-      expect(await sliderLabel(page)).toBe('CH ' + n);
+      expect(await sliderLabel(page)).toBe('CH ' + (n + 1));
     }
+  });
+
+  // The defect this pins: both labels printed the stored wire value, so a lane
+  // reading 'CH 1' emitted wire channel 1, which every DAW shows as channel 2.
+  // The engine value, the state format and the VST3 event are all correct at
+  // 0-15; only the label was wrong, so the fix is +1 at display time and the
+  // stored values asserted below must stay untouched.
+  test('the label reads one above the stored wire channel, matching DAW numbering', async ({ page }) => {
+    await page.goto(pageUrl);
+    await expandStrip(page, 0);
+
+    // Lowest explicit channel: stored 0, shown as the DAW's channel 1.
+    expect(await editChannelReadCh(page, chNorm(0))).toBe(0);
+    expect(await sliderLabel(page)).toBe('CH 1');
+
+    // Highest: stored 15, shown as 16 — never 17, so the label cannot run off
+    // the end of the 16-channel range.
+    expect(await editChannelReadCh(page, chNorm(15))).toBe(15);
+    expect(await sliderLabel(page)).toBe('CH 16');
   });
 
   test('toggling Auto → explicit → Auto tracks symmetrically (no stuck value)', async ({ page }) => {
@@ -90,7 +111,7 @@ test.describe('MIDI channel Auto↔explicit symmetric round-trip (mock host)', (
     expect(await statLabel(page)).toMatch(/^Auto\b/);
 
     expect(await editChannelReadCh(page, chNorm(5))).toBe(5); // explicit 5
-    expect(await statLabel(page)).toContain('CH 5');
+    expect(await statLabel(page)).toContain('CH 6'); // wire 5 is DAW channel 6
 
     expect(await editChannelReadCh(page, 0)).toBe(-1); // back to Auto
     expect(await statLabel(page)).toMatch(/^Auto\b/);
