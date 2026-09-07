@@ -16,29 +16,36 @@ This separation is deliberate. The engine generates patterns based on Euclidean 
 
 Each lane in Poly has a `midiChannel` parameter that determines which MIDI channel its output events are sent on. The parameter accepts two kinds of values:
 
-- **-1 (Auto)** -- uses the lane index as the channel. Lane 0 sends on Channel 0, Lane 1 on Channel 1, and so on. This is the default for new patches.
-- **0-15** -- explicit channel assignment. The lane always sends on the specified channel, regardless of its position in the lane list.
+- **Auto** -- uses the lane's position as the channel. The first lane sends on Channel 1, the second on Channel 2, and so on. This is the default for new patches.
+- **Channel 1-16** -- explicit assignment. The lane always sends on the channel you pick, regardless of its position in the lane list.
+
+Poly numbers channels 1-16, the same way Cubase and every other DAW does. The
+underlying `midiChannel` parameter stores the MIDI *wire* value, which is
+0-15 with `-1` reserved for Auto, so a lane displayed as Channel 1 is stored as
+`0`. That distinction only matters if you are reading a saved patch or the
+parameter automation directly; everywhere Poly shows you a channel, it shows
+the number your DAW shows.
 
 In the engine, the channel resolution is straightforward: if `midiChannel` is non-negative, the lane uses that value directly; otherwise it falls back to the lane index. The result is stamped on every `NoteEvent` the lane produces, and the plugin's processor passes it through to the VST3 output event list unchanged.
 
 ### Single-Instrument Setup (Default)
 
-The simplest configuration is all lanes on the same channel. Set every lane's MIDI channel to 0 (or leave them all on Auto with only Channel 0 matters to your instrument). All notes flow to a single drum kit -- Groove Agent, Battery, Kontakt, or whatever sits downstream. This is how the factory presets work: the routing is invisible because there is nothing to route. One instrument receives everything, and the kit mapping within that instrument determines what each MIDI note sounds like.
+The simplest configuration is all lanes on the same channel. Set every lane's MIDI channel to 1, or leave them on Auto if only Channel 1 matters to your instrument. All notes flow to a single drum kit -- Groove Agent, Battery, Kontakt, or whatever sits downstream. This is how the factory presets work: the routing is invisible because there is nothing to route. One instrument receives everything, and the kit mapping within that instrument determines what each MIDI note sounds like.
 
 For most creative work with a single drum kit, this is all you need. The per-lane channel becomes interesting when you want to break out of a single instrument.
 
 ### Multi-Instrument Setup
 
-Assign lanes to different MIDI channels and you can drive separate instruments from a single Poly instance. A kick and snare go to an acoustic kit on Channel 0. A hi-hat goes to an electronic kit on Channel 1. A percussion lane goes to a world percussion library on Channel 2. Each instrument receives only the lanes assigned to its channel, and each can have its own processing chain, mix level, and spatial positioning.
+Assign lanes to different MIDI channels and you can drive separate instruments from a single Poly instance. A kick and snare go to an acoustic kit on Channel 1. A hi-hat goes to an electronic kit on Channel 2. A percussion lane goes to a world percussion library on Channel 3. Each instrument receives only the lanes assigned to its channel, and each can have its own processing chain, mix level, and spatial positioning.
 
 <PolyPatch title="Multi-Instrument Routing" preset="Custom: Multi-Output">
 
 | Lane | Role | Note | MIDI Ch | Target |
 |------|------|------|---------|--------|
-| 1 | Kick | 36 | 0 | Groove Agent (acoustic kit) |
-| 2 | Snare | 38 | 0 | Groove Agent (acoustic kit) |
-| 3 | Hi-hat | 42 | 1 | Battery (electronic kit) |
-| 4 | Perc | 63 | 2 | Kontakt (world percussion) |
+| 1 | Kick | 36 | 1 | Groove Agent (acoustic kit) |
+| 2 | Snare | 38 | 1 | Groove Agent (acoustic kit) |
+| 3 | Hi-hat | 42 | 2 | Battery (electronic kit) |
+| 4 | Perc | 63 | 3 | Kontakt (world percussion) |
 
 </PolyPatch>
 
@@ -107,7 +114,7 @@ The full GM percussion map runs from note 35 (Kick 2) through note 81 (Triangle 
 
 ### Note Map and MIDI Channel Interaction
 
-The Note Map applies to all notes regardless of their MIDI channel. A kick on Channel 0 and a kick on Channel 2 will both be remapped if note 36 has a non-identity mapping. This is by design -- the Note Map is a pitch transformation layer, not a channel-aware router. If you need channel-specific remapping, use different source notes on different lanes and remap each independently.
+The Note Map applies to all notes regardless of their MIDI channel. A kick on Channel 1 and a kick on Channel 3 will both be remapped if note 36 has a non-identity mapping. This is by design -- the Note Map is a pitch transformation layer, not a channel-aware router. If you need channel-specific remapping, use different source notes on different lanes and remap each independently.
 
 <ListenFor>
 
