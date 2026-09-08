@@ -29,7 +29,7 @@ import CodeSnippet from '../../components/CodeSnippet.astro';
 import EuclideanDiagram from '../../components/EuclideanDiagram.astro';
 import PolyPreviewCard from '../../components/PolyPreviewCard.astro';
 
-Cuban music is organised around clave. Not a specific instrument, not a particular song form, but a rhythmic matrix — a two-bar pattern that every musician in the ensemble feels, whether or not anyone is playing it aloud.<sup>[10](/appendix-references/#ref-10)</sup> The clave is the gravitational centre of the arrangement. Parts that align with it feel grounded. Parts that push against it create tension. Parts that ignore it sound wrong.
+Cuban music is organised around clave. Not a specific instrument, not a particular song form, but a rhythmic matrix — a two-bar pattern that every musician in the ensemble feels, whether or not anyone is playing it aloud ([Peñalosa 2009](/appendix-references/#fr-penalosa-2009)). The clave is the gravitational centre of the arrangement. Parts that align with it feel grounded. Parts that push against it create tension. Parts that ignore it sound wrong.
 
 :::note[Theory deep dive]
 For the explicit alignment rules — direction, the bombo and ponche, what "crossed" means precisely, and the part archetypes — see [The Clave Matrix: Afro-Cuban](/theory-afro-cuban/).
@@ -45,7 +45,7 @@ Before there is clave, there is tresillo. Three onsets across eight pulses — E
 
 The tresillo groups eight pulses as 3-3-2: two long intervals followed by a short one. This asymmetry creates a forward momentum that wants to resolve on the next downbeat — the same generative tension found in E(7,12), compressed into a smaller frame.
 
-You hear the tresillo everywhere: in the bass tumbaos of Cuban son, in the montuno piano figures of salsa, in the kick patterns of reggaeton, in the habanera rhythm that Jelly Roll Morton called "the Spanish tinge." It is arguably the most widely distributed rhythmic pattern on earth.
+You hear the tresillo everywhere: in the bass tumbaos of Cuban son, in the montuno piano figures of salsa, in the kick patterns of reggaeton, in the habanera rhythm that Jelly Roll Morton called "the Spanish tinge" ([Lomax 1950](/appendix-references/#fr-lomax-1950)). It is arguably the most widely distributed rhythmic pattern on earth.
 
 ## The Cinquillo and Its Relationship to Tresillo
 
@@ -53,6 +53,7 @@ Where tresillo distributes three hits across eight pulses, the cinquillo distrib
 
 <EuclideanDiagram steps={8} hits={5} />
 
+{/* citation-tier-ok: the cited artefact is Sher Music's marketing sample pages, not Mauleon's book. fr-mauleon-1993 is the same author's Salsa Guidebook, already in Further Reading at Tier A. M006/B02 owns the upgrade. */}
 The cinquillo was central to nineteenth-century Cuban contradanza and remains embedded in the conga patterns of modern salsa. When you layer tresillo and cinquillo in Poly, their interlocking creates a composite pattern that covers nearly every pulse — dense but never cluttered, because the underlying distributions are mathematically balanced.<sup>[13](/appendix-references/#ref-13)</sup>
 
 ## Rotation and the Two Faces of a Pattern
@@ -76,7 +77,7 @@ The full 16-pulse son clave inherits this rotational logic from the tresillo but
 Both the son clave and the rumba clave are *non*-Euclidean patterns. They share four of five hits and differ by a single displacement on the 3-side:
 
 **Son clave 3-2** (16 pulses): `x . . x . . x . . . x . x . . .`
-Hits at positions 0, 3, 6, 10, 12. Inter-onset gaps: 3-3-4-2-4. The 2-gap between hits 4 and 5 (positions 10 and 12) is the asymmetry that no Euclidean distribution produces — E(k,n) can only generate patterns whose gaps take one of two consecutive values (here, 3s and 4s).<sup>[10](/appendix-references/#ref-10)</sup>
+Hits at positions 0, 3, 6, 10, 12. Inter-onset gaps: 3-3-4-2-4 ([Peñalosa 2009](/appendix-references/#fr-penalosa-2009)). The 2-gap between hits 4 and 5 (positions 10 and 12) is the asymmetry that no Euclidean distribution produces — E(k,n) can only generate patterns whose gaps take one of two consecutive values (here, 3s and 4s).<sup>[1](/appendix-references/#ref-1)</sup>
 
 **Rumba clave 3-2** (16 pulses): `x . . x . . . x . . x . x . . .`
 Hits at positions 0, 3, 7, 10, 12. Inter-onset gaps: 3-4-3-2-4. The third hit shifts from pulse 6 to pulse 7, widening the gap on the 3-side and creating a different — but still non-Euclidean — asymmetry that gives rumba its characteristic lurch.

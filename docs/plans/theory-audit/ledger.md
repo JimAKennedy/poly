@@ -16,10 +16,21 @@ Rows H01–H04 are the harness this programme needs to lock its own corrections.
 programme's plan of record until this ledger existed. M001/S07 archives it and
 repoints its completeness test at this file.
 
+**Row series.** `F01`–`F54` are the audit's findings, one row each, and that
+range is closed. `H01`–`H04` are the harness this programme needed to lock its
+own corrections. `B01`–`B09` are bibliography defects this programme found
+itself, in M006 — the audit drew its Tier-C list from the chapters it reviewed,
+so it never saw the orphaned, duplicated and low-tier entries that M002's own
+work surfaced.
+
 **Row vocabulary.** Beyond the required columns, each row carries a severity
 (`P0` factually wrong · `P1` overclaimed or under-sourced · `P2` enrichment) and
 a disposition (`correct` · `source` · `reframe` · `disclose` · `patch-align` ·
-`enrich` · `verify`). Both are informational; the `ledger` check ignores them.
+`enrich` · `verify`), and a `Lands in` pointer. All three are informational; the
+`ledger` check ignores them, since the standard requires only `ID`, `Item`,
+`Verification` and `Status`. `Lands in` is a forecast while a row is open and a
+record once it closes, so the slice that closes a row corrects it to the files
+actually modified — it is not a claim any test enforces.
 
 **Numbering.** Milestone IDs M001–M005 collide with Poly's legacy
 commit-message milestones from the plugin work. The `Plan:` trailer
@@ -206,112 +217,123 @@ green.
 **Vision:** No load-bearing theoretical claim in the guide is cited to a video
 or a hobbyist blog, and a check keeps it that way.
 **Branch:** milestone/M002-citation-integrity
-**Status:** planned
+**Status:** in-progress
 **Demo:** The audit's Section 4 Tier-C list is empty for inline citations, and
 the new tier test fails if a Tier-B or Tier-C source is attached to a
 named-theory claim.
 
 ### Slice M002/S01 — Reference [2] resolution
 
+**Plan:** M002-S01-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M002-S01.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Reference [2]'s publication status is established from the publisher, and
+- [x] Reference [2]'s publication status is established from the publisher, and
       the finding records which it was
-- [ ] The appendix entry states the resolved status: real, replaced, or marked
+- [x] The appendix entry states the resolved status: real, replaced, or marked
       forthcoming
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F17 | Ref [2] cites Goldberg (2025), *Music Theory Online* 31(2); MTO is current through Vol 30 as of mid-2026, so the URL is a forward reference and may be a citation error | `P0` | `verify` | `appendix-references.mdx` `ref-2` | Resolution recorded in this row; the appendix entry either cites a real issue or is marked forthcoming, asserted by a case in `citation-tier.test.mjs` | `open` |
+| F17 | Ref [2] cited Goldberg (2025), *Music Theory Online* 31(2) under the title "Resultant Patterns in Phase-Shifted Rhythmic Structures". Resolved 2026-09-01 against the publisher: the venue, volume, year, author and URL are real and correctly paired, and MTO is current through Vol 32 No 2 (June 2026) — so the audit's stated reason, a forward reference past Vol 30, does not hold. The title is what was wrong. MTO 31(2) carries Goldberg's "Music Theory as an Instrument of Nationalism: Notation, Identity, and Systemization in Dobri Hristov's Conception of Bulgarian Meter", and no MTO issue carries the printed title. A real article cited under a fabricated title, corrected in place. The entry stays uncited until M002/S05 draws on it for Ch 7 | `P0` | `verify` | `appendix-references.mdx` `ref-2` | Cases `S01-F17` and `S01-F17-tree` in `site/tests/citation-tier.test.mjs`: the entry carries the real title and the MTO 31(2) URL, and the fabricated title appears in no doc under the docs root | `done` |
 
 ### Slice M002/S02 — Chapter 3 clave citations
 
+**Plan:** M002-S02-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M002-S02.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The clave-matrix and non-Euclidean-gap claims cite Peñalosa (2009) inline
-- [ ] Refs [10] and [11] no longer carry a named-theory claim in Chapter 3
+- [x] The clave-matrix and non-Euclidean-gap claims cite Peñalosa (2009) inline
+- [x] Refs [10] and [11] no longer carry a named-theory claim in Chapter 3
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F18 | Refs [10] and [11] — YouTube videos — are the inline citations for the clave matrix, the most important theoretical claim in Ch 3, while Peñalosa (2009) sits unused in Further Reading | `P0` | `source` | `03-afro-cuban.mdx`, `appendix-references.mdx` | The Tier-A citation check (F23) passes for Ch 3 | `open` |
+| F18 | Refs [10] and [11] — YouTube videos — were the inline citations for the clave matrix, the most important theoretical claim in Ch 3, while Peñalosa (2009) sat unused in Further Reading. Resolved 2026-09-04: ref-10's three claim citations moved to Peñalosa, with Toussaint (ref-1) taking the Euclidean-gap half of the line 79 sentence, which Peñalosa does not support. Ref [11] carried no claim anywhere in the tree to begin with, so it needed no edit. The companion page keeps its Sources "See also refs [10]-[13]" listing, a bibliographic pointer rather than a named-theory claim | `P0` | `source` | `03-afro-cuban.mdx`, `theory-afro-cuban.mdx` | Cases `S02-F18` and `S02-F18-theory` in `site/tests/citation-tier.test.mjs` forbid the superscript claim form of ref-10 in `03-afro-cuban.mdx` and `theory-afro-cuban.mdx` and require `fr-penalosa-2009` in each. F23's Tier-A check, which M002/S06 builds, is not what proves this slice | `done` |
 
 ### Slice M002/S03 — Chapter 4 Afrobeat citations
 
+**Plan:** M002-S03-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M002-S03.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Chapter 4's opening and phrase-gating claims cite Allen & Veal (2013) or
+- [x] Chapter 4's opening and phrase-gating claims cite Allen & Veal (2013) or
       Veal (2000) inline
-- [ ] Refs [14]–[17] no longer carry a named-theory claim in Chapter 4
+- [x] Refs [14]–[17] no longer carry a named-theory claim in Chapter 4
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F19 | Refs [14]–[17] for Afrobeat are YouTube videos and production blogs, while Allen & Veal (2013) and Veal (2000) sit unused in Further Reading | `P0` | `source` | `04-afrobeat.mdx`, `appendix-references.mdx` | The Tier-A citation check passes for Ch 4 | `open` |
+| F19 | Refs [14]–[17] for Afrobeat were YouTube videos and production blogs, while Allen & Veal (2013) and Veal (2000) sat unused in Further Reading. Resolved 2026-09-04. Ch 4 carried only two of the four: ref-14 on the opening, whose sentence already cited Allen & Veal after M001/S06, so the superscript was simply dropped; and ref-17 on a sentence describing Poly lane behaviour rather than Afrobeat. That citation was removed with no replacement — a project-specific claim is declared as the project's own under the research-provenance classes, and ref-17 was an Afro House production guide, a different genre, so re-citing it to Veal would have swapped a wrong-tier citation for a wrong-claim one. The definition of done's phrase-gating claim was uncited altogether and gained Veal (2000). Refs [15] and [16] carried no claim anywhere and needed no edit | `P0` | `source` | `04-afrobeat.mdx` | Case `S03-F19` in `site/tests/citation-tier.test.mjs` forbids the superscript claim form of both ref-14 and ref-17 in `04-afrobeat.mdx` and requires `fr-allen-veal-2013` and `fr-veal-2000`. F23's Tier-A check, which M002/S06 builds, is not what proves this slice | `done` |
 
 ### Slice M002/S04 — Chapter 6 Indian-classical citations
 
+**Plan:** M002-S04-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M002-S04.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Chapter 6's tala, laya and theka claims cite Clayton (2000), Nelson
+- [x] Chapter 6's tala, laya and theka claims cite Clayton (2000), Nelson
       (2008) or Kippen (1988) inline
-- [ ] Refs [21]–[25] no longer carry a named-theory claim in Chapter 6
+- [x] Refs [21]–[25] no longer carry a named-theory claim in Chapter 6
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F20 | Refs [21]–[25] for Ch 6 include a commercial blog, a high-school textbook PDF and a YouTube konnakol video, while Clayton, Nelson and Kippen sit unused in Further Reading | `P1` | `source` | `06-indian-classical.mdx`, `appendix-references.mdx` | The Tier-A citation check passes for Ch 6 | `open` |
+| F20 | Refs [21]–[25] for Ch 6 included a commercial blog, a high-school textbook PDF and a YouTube konnakol video, while Clayton, Nelson and Kippen sat unused in Further Reading — the chapter cited none of the three even once. Resolved 2026-09-07. The tala and layakari claims moved to Clayton (2000), and the theka claim, which was uncited rather than mis-cited, gained Kippen (1988). ref-25 was off-topic as well as low-tier: a konnakol video standing in for layakari, where konnakol is Carnatic vocal percussion and layakari is augmentation ratios. Nelson (2008) is deliberately unused, its tihai and mora arithmetic being M004/S04's subject. The companion page keeps its Sources "See also refs [21]-[25]" listing, a bibliographic pointer rather than a named-theory claim | `P1` | `source` | `06-indian-classical.mdx`, `theory-indian-classical.mdx` | Cases `S04-F20` and `S04-F20-theory` in `site/tests/citation-tier.test.mjs` forbid any superscript containing a ref-21 to ref-25 link in either file and require `fr-clayton-2000`, plus `fr-kippen-1988` in the chapter. The pattern is generalised from the single-reference form S02 and S03 used, which cannot match this page's two-references-in-one-sup blocks. F23's Tier-A check, which M002/S06 builds, is not what proves this slice | `done` |
 
 ### Slice M002/S05 — Chapter 7 Balkan citations
 
 **Depends:** M001/S04
+**Plan:** M002-S05-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M002-S05.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The aksak-definition and svatbarska-muzika claims cite Brăiloiu (1951),
+- [x] The aksak-definition and svatbarska-muzika claims cite Brăiloiu (1951),
       Rice (1994) or Goldberg (2015) inline
-- [ ] Refs [26] and [27] no longer carry a named-theory claim in Chapter 7
-- [ ] The `S04-F06` long-beat lock still passes after the citation edits
+- [x] Refs [26] and [27] no longer carry a named-theory claim in Chapter 7
+- [x] The `S04-F06` long-beat lock still passes after the citation edits
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F21 | Refs [26] and [27] for Balkan are educational aggregator pages, while Brăiloiu, Rice and Goldberg sit in Further Reading only | `P1` | `source` | `07-balkan.mdx`, `appendix-references.mdx` | The Tier-A citation check passes for Ch 7, and case `S04-F06` still passes | `open` |
+| F21 | Refs [26] (Fiveable) and [27] (Chromatone) for Balkan were educational aggregator pages, while Brăiloiu, Rice and Goldberg sat in Further Reading only. Resolved 2026-09-07. The aksak definition took Brăiloiu (1951), who coined the term and whose paper is the two/three-cell theory of additive meter; the svatbarska-muzika claim took Rice (1994), the standard ethnography of Bulgarian practice. Goldberg (2015) stayed where it already was, on the long-beat timing claim, being the authority for neither of these two. The companion page needed no edit and keeps its Sources listing, a plain-link bibliographic pointer that also stops both references orphaning once their claims moved | `P1` | `source` | `07-balkan.mdx` | Case `S05-F21` in `site/tests/citation-tier.test.mjs` forbids any superscript containing a ref-26 or ref-27 link in `07-balkan.mdx` and requires `fr-brailoiu-1951` and `fr-rice-1994`, and case `S04-F06` still passes — asserted by name, since the edits bracket the line it guards. F23's Tier-A check, which M002/S06 builds, is not what proves this slice | `done` |
 
 ### Slice M002/S06 — Reference tiers and the tier check
 
 **Depends:** M002/S01, M002/S02, M002/S03, M002/S04, M002/S05
+**Plan:** M002-S06-plan.md
 **Validation:** format, site-unit, doc-conformance, doc-discipline, gate
 **Evidence:** evidence/M002-S06.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Every entry in the reference appendix carries a declared tier
-- [ ] The "Spanish tinge" attribution cites Lomax's Morton interviews
-- [ ] A new check fails when a Tier-B or Tier-C source is the inline citation
+- [x] Every entry in the reference appendix carries a declared tier
+- [x] The "Spanish tinge" attribution cites Lomax's Morton interviews
+- [x] A new check fails when a Tier-B or Tier-C source is the inline citation
       for a named-theory claim
-- [ ] The check is wired into `scripts/check-doc-conformance.sh`
+- [x] The check is wired into `scripts/check-doc-conformance.sh` **and**
+      added to the `REQUIRED` set in
+      `site/tests/doc-conformance-wiring.test.mjs`. That file's own header
+      states the contract — adding a guardrail means adding it to both — and
+      the runner alone leaves the new check undefended against a later edit
+      quietly dropping it
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F22 | Ch 3's "the habanera rhythm that Jelly Roll Morton called 'the Spanish tinge'" is accurate but uncited; Lomax's Morton interviews (1950) are the primary source | `P1` | `source` | `03-afro-cuban.mdx` | The Lomax citation resolves in the appendix, asserted by `citation-tier.test.mjs` | `open` |
-| F23 | The reference list mixes peer-reviewed scholarship and hobbyist media at equal citation weight, with no mechanism preventing regression | `P1` | `source` | `appendix-references.mdx`, `site/tests/citation-tier.test.mjs` | `citation-tier.test.mjs` asserts every reference carries a declared tier and every inline citation on a named-theory claim resolves to a Tier-A source; `doc-conformance-wiring.test.mjs` asserts the script runs it | `open` |
+| F22 | Ch 3's "the habanera rhythm that Jelly Roll Morton called 'the Spanish tinge'" is accurate but was uncited; Lomax's Morton interviews (1950) are the primary source. Resolved 2026-09-08. No Lomax entry existed anywhere in the appendix, so this added a Further Reading entry as well as the inline citation — Mister Jelly Roll (1950) is the book built from the Library of Congress interviews in which Morton uses the phrase, and is tiered A as a primary source | `P1` | `source` | `03-afro-cuban.mdx`, `appendix-references.mdx` | Case `S06-F22` in `site/tests/citation-tier.test.mjs` requires `fr-lomax-1950` in the chapter. It carries no forbidden arm, because nothing wrong was removed — an uncited claim was sourced — so it can only fail on the present side | `done` |
+| F23 | The reference list mixed peer-reviewed scholarship and hobbyist media at equal citation weight, with no mechanism preventing regression. Resolved 2026-09-08. All 99 entries — 100 after F22 added Lomax — declare a tier on the span they already carried, so the tier cannot drift from the entry, and a claim citation may not resolve below Tier A. The rule is mechanisable because the guide's own grammar separates claims from bibliography: a superscript marks a claim, a plain link marks a listing, so the Sources sections that deliberately point at low-tier refs are out of scope structurally rather than exempted one at a time. It ships with 10 live suppressions across 9 files covering 8 references, each carrying a reason read from the claim it sits on and naming the M006 row that owns the upgrade. M006/S01 is one row short: ref-42 has none, recorded in this slice's evidence | `P1` | `source` | `appendix-references.mdx`, `site/tests/citation-tier.test.mjs`, `site/tests/doc-conformance-wiring.test.mjs`, `scripts/check-doc-conformance.sh`, and the nine chapter and companion pages carrying a suppression | Cases `S06-tiers-declared` and `S06-claims-are-tier-a` in `site/tests/citation-tier.test.mjs`, both proved non-vacuous: the first catches a missing and an invalid tier by name, the second reports a citation again when its marker moves one line too far and fails 18 citations when Toussaint is flipped to Tier B. `doc-conformance-wiring.test.mjs` names the file in `REQUIRED`, which failed by name until the runner listed it too | `done` |
 
 ---
 
@@ -644,6 +666,78 @@ highest-value additions per tradition, each cited at the claim it supports.
 
 ---
 
+## Milestone M006 — Bibliography Hygiene
+
+**Vision:** Every reference in the guide is cited by something, cited at a tier
+that supports the claim it carries, and appears exactly once.
+**Branch:** milestone/M006-bibliography-hygiene
+**Status:** planned
+**Demo:** `grep -rn citation-tier-ok site/src/content/docs` returns nothing, the
+appendix has no entry that no page cites, and no two entries name the same work.
+
+M002 fixed every reference the audit flagged. Doing so surfaced three classes of
+defect the audit did not see, because its Tier-C list was drawn from the
+chapters it reviewed rather than from the bibliography as a whole. This
+milestone is that follow-on work, and its rows carry the `B` prefix to say
+plainly that they are ours rather than the audit's.
+
+### Slice M006/S01 — Upgrade the seven suppressed claim citations
+
+**Depends:** M002/S06
+**Validation:** format, site-unit, doc-conformance
+**Evidence:** evidence/M006-S01.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] Each of the seven claims either cites a Tier-A source or no longer makes
+      a claim requiring one
+- [ ] `grep -rn citation-tier-ok site/src/content/docs` returns nothing, and the
+      tier check's live suppression count is zero
+
+| ID | Item | Sev | Disp | Lands in | Verification | Status |
+|---|---|---|---|---|---|---|
+| B01 | Ch 1 cites Wikipedia's "Euclidean Rhythm" for a named-theory claim, where Toussaint (ref-1) is cited in the same chapter | `P1` | `source` | `01-foundations.mdx` | The `citation-tier-ok` suppression on this citation is removed and `citation-tier.test.mjs` still passes | `open` |
+| B02 | Ch 3 cites Sher Music publisher sample pages for a named-theory claim, where Mauleón (1993) sits in Further Reading | `P1` | `source` | `03-afro-cuban.mdx` | As B01, for this citation | `open` |
+| B03 | Ch 5 cites a Gamelan New Zealand community PDF for a named-theory claim, where Tenzer, Vitale and Sumarsam sit in Further Reading | `P1` | `source` | `05-gamelan.mdx` | As B01, for this citation | `open` |
+| B04 | Ch 8 cites Wikipedia's "Steve Reich" for a named-theory claim, where Reich (2002), Potter and Gann sit in Further Reading | `P1` | `source` | `08-minimalism.mdx` | As B01, for this citation | `open` |
+| B05 | Ch 8 cites an All Classical Portland radio article for a named-theory claim | `P1` | `source` | `08-minimalism.mdx` | As B01, for this citation | `open` |
+| B06 | Ch 9 and its companion cite the Brettworks blog for the Linn swing claim; M001/S06 attributed the claim to Linn in prose but left the reference | `P1` | `source` | `09-electronic.mdx`, `theory-electronic-breakbeat.mdx` | As B01, for both citations | `open` |
+| B07 | Ch 13 cites the Ethan Hein blog for a named-theory claim about the Amen break | `P1` | `source` | `13-drum-and-bass.mdx` | As B01, for this citation | `open` |
+
+### Slice M006/S02 — Resolve the orphaned references
+
+**Depends:** M002/S06
+**Validation:** format, site-unit, doc-conformance
+**Evidence:** evidence/M006-S02.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] Every numbered reference is cited by at least one page, or is retired
+      with the reason recorded
+- [ ] A check fails when an appendix entry is cited by nothing
+
+| ID | Item | Sev | Disp | Lands in | Verification | Status |
+|---|---|---|---|---|---|---|
+| B08 | Eighteen numbered references and two Further Reading entries are cited by no page. Four were orphaned by M002 moving claims onto scholarship; the rest predate it. An uncited entry is either dead weight or a source nobody checked — ref-2 was the fabricated-title citation S01 found, and nothing cited it | `P1` | `correct` | `appendix-references.mdx`, `site/tests/citation-tier.test.mjs` | `citation-tier.test.mjs` asserts every entry is cited by at least one page, with retired entries deleted rather than exempted | `open` |
+
+### Slice M006/S03 — De-duplicate the appendix
+
+**Depends:** M002/S06
+**Validation:** format, site-unit, doc-conformance
+**Evidence:** evidence/M006-S03.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] No two appendix entries name the same work
+- [ ] A check fails when two entries share a title and year
+
+| ID | Item | Sev | Disp | Lands in | Verification | Status |
+|---|---|---|---|---|---|---|
+| B09 | `ref-1` and `fr-toussaint-2005` are the same 2005 BRIDGES paper listed twice, at different weights in the same appendix. ref-1 is cited in six files and the duplicate in none, so the two cannot disagree today, but nothing stops a later citation picking the wrong one | `P2` | `correct` | `appendix-references.mdx`, `site/tests/citation-tier.test.mjs` | `citation-tier.test.mjs` asserts no two entries share a normalised title and year, and the sweep that finds them is recorded in this row | `open` |
+
 ## Sequencing
 
 ```
@@ -651,7 +745,9 @@ M001 (corrections) ──┬──> M003 (repositioning) ──┐
                      │                            ├──> M004 (patch alignment)
 M002 (citations) ────┴────────────────────────────┘
                      │
-                     └──> M005 (enrichment)
+                     ├──> M005 (enrichment)
+                     │
+                     └──> M006 (bibliography hygiene)
 ```
 
 - **M001/S01 was the hard prerequisite for everything** — it landed the harness
@@ -669,6 +765,12 @@ M002 (citations) ────┴────────────────
   gamelan rules as reworded there, and on M004/S01–S04 for the same reason
   M002/S06 depends on its milestone: the checklist fails while any patch still
   diverges silently.
+- **M006 depends on M002/S06** throughout, and is the milestone that burns down
+  what M002/S06 suppresses. Its S01 removes the seven `citation-tier-ok` markers
+  one claim at a time, so the tier check only becomes unconditionally true when
+  M006/S01 closes. Its S02 and S03 add the uncited-entry and duplicate-entry
+  assertions to the same host, which is why they wait for the host to exist
+  rather than racing it.
 - **M005 depends on M002/S06** throughout: a reference added after the tier
   check exists must arrive carrying a tier. M005 is genuinely last, but it is
   queued rather than written off — every P0 and P1 row closes in M001–M004.
