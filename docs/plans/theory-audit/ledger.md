@@ -332,7 +332,7 @@ named-theory claim.
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F22 | Ch 3's "the habanera rhythm that Jelly Roll Morton called 'the Spanish tinge'" is accurate but uncited; Lomax's Morton interviews (1950) are the primary source | `P1` | `source` | `03-afro-cuban.mdx` | The Lomax citation resolves in the appendix, asserted by `citation-tier.test.mjs` | `open` |
+| F22 | Ch 3's "the habanera rhythm that Jelly Roll Morton called 'the Spanish tinge'" is accurate but was uncited; Lomax's Morton interviews (1950) are the primary source. Resolved 2026-09-08. No Lomax entry existed anywhere in the appendix, so this added a Further Reading entry as well as the inline citation — Mister Jelly Roll (1950) is the book built from the Library of Congress interviews in which Morton uses the phrase, and is tiered A as a primary source | `P1` | `source` | `03-afro-cuban.mdx`, `appendix-references.mdx` | Case `S06-F22` in `site/tests/citation-tier.test.mjs` requires `fr-lomax-1950` in the chapter. It carries no forbidden arm, because nothing wrong was removed — an uncited claim was sourced — so it can only fail on the present side | `done` |
 | F23 | The reference list mixes peer-reviewed scholarship and hobbyist media at equal citation weight, with no mechanism preventing regression | `P1` | `source` | `appendix-references.mdx`, `site/tests/citation-tier.test.mjs` | `citation-tier.test.mjs` asserts every reference carries a declared tier and every inline citation on a named-theory claim resolves to a Tier-A source; `doc-conformance-wiring.test.mjs` asserts the script runs it | `open` |
 
 ---

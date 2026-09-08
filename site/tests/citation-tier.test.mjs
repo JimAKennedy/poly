@@ -157,6 +157,20 @@ const CLAIMS = [
     // fr-goldberg-2015 — so each is a real lock this task establishes.
     presentRegex: [/#fr-brailoiu-1951/, /#fr-rice-1994/],
   },
+  {
+    id: 'S06-F22',
+    file: '03-afro-cuban.mdx',
+    rule:
+      'ledger F22. Ch 3 attributes "the Spanish tinge" to Jelly Roll Morton. The ' +
+      'attribution is accurate but was uncited, and no Lomax entry existed ' +
+      'anywhere in the appendix — so this needed a new Further Reading entry as ' +
+      'well as an inline citation. Lomax\'s Mister Jelly Roll (1950) is the book ' +
+      'built from the Library of Congress interviews in which Morton uses the ' +
+      'phrase, so it is a primary source',
+    // No forbidden arm: nothing wrong is being removed here. An uncited claim is
+    // being sourced, so this case can only ever fail on the present side.
+    presentRegex: [/#fr-lomax-1950/],
+  },
 ];
 
 registerClaimTests({ test, assert, claims: CLAIMS, loadSource });

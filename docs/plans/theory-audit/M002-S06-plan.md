@@ -16,7 +16,7 @@ here to decide what to do; each task's own commit ticks its box.
 
 - [x] Task 1 — Tier all 99 entries and assert every entry declares one
 - [x] Task 2 — Enforce Tier A on claim citations, with the reasoned hatch
-- [ ] Task 3 — The Lomax attribution (F22)
+- [x] Task 3 — The Lomax attribution (F22)
 - [ ] Task 4 — Wire into the runner and REQUIRED, run `gate`, close the slice (F23)
 
 ## Definition of Done
