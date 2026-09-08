@@ -217,7 +217,7 @@ green.
 **Vision:** No load-bearing theoretical claim in the guide is cited to a video
 or a hobbyist blog, and a check keeps it that way.
 **Branch:** milestone/M002-citation-integrity
-**Status:** in-progress
+**Status:** done
 **Demo:** The audit's Section 4 Tier-C list is empty for inline citations, and
 the new tier test fails if a Tier-B or Tier-C source is attached to a
 named-theory claim.
