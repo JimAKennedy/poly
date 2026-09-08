@@ -193,6 +193,53 @@ test('S06-tiers-declared: every bibliography entry declares a valid tier', async
   );
 });
 
+// M002/S06 task 2. The rule F23 asks for: a named-theory claim may not cite a
+// source below Tier A. The guide's citation grammar is what makes that
+// mechanisable without judging prose — a <sup> marks a claim, a plain link
+// marks bibliography — so the Sources "See also" listings that deliberately
+// point at low-tier refs are out of scope structurally rather than one by one.
+//
+// Escape hatch: `citation-tier-ok: <reason>` on the citing line or the line
+// immediately above it, written as an MDX comment. Deliberately narrow — there
+// is no file-level or global form, because several exceptions for several
+// different reasons must not collapse into one blanket waiver. The live
+// suppression count is printed so a rising number is visible rather than silent.
+const SUP_RE = /<sup>[^<]*<\/sup>/g;
+const REF_IN_SUP_RE = /#((?:ref|fr)-[A-Za-z0-9.-]+)/g;
+const HATCH = 'citation-tier-ok';
+
+test('S06-claims-are-tier-a: every claim citation resolves to a Tier-A source', async () => {
+  const tiers = await readTierMap(join(DOCS, 'appendix-references.mdx'));
+  const files = (await readdir(DOCS)).filter((f) => f.endsWith('.mdx') && f !== 'appendix-references.mdx');
+
+  const violations = [];
+  let suppressed = 0;
+
+  for (const file of files.sort()) {
+    const lines = (await readFile(join(DOCS, file), 'utf8')).split('\n');
+    lines.forEach((line, i) => {
+      const exempt = line.includes(HATCH) || (i > 0 && lines[i - 1].includes(HATCH));
+      for (const block of line.match(SUP_RE) ?? []) {
+        for (const [, anchor] of block.matchAll(REF_IN_SUP_RE)) {
+          const tier = tiers.get(anchor) ?? 'undeclared';
+          if (tier === 'A') continue;
+          if (exempt) { suppressed += 1; continue; }
+          violations.push(`${file}:${i + 1} cites ${anchor} (tier ${tier})`);
+        }
+      }
+    });
+  }
+
+  console.log(`    S06-claims-are-tier-a: ${suppressed} live suppression(s) via ${HATCH}`);
+  assert.deepEqual(
+    violations,
+    [],
+    `${violations.length} claim citation(s) resolve below Tier A:\n  ${violations.join('\n  ')}\n` +
+      `Cite a Tier-A source, or add {/* ${HATCH}: <reason> */} on the line above ` +
+      'saying why this source is acceptable here or which row owns replacing it.',
+  );
+});
+
 test(`S01-F17-tree: the fabricated ref-2 title appears in no doc`, async () => {
   const entries = await readdir(DOCS, { withFileTypes: true });
   const offenders = [];
