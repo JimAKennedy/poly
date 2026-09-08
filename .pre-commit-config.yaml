@@ -34,7 +34,7 @@ repos:
       - id: cmakelint
 
   - repo: https://github.com/JimAKennedy/jk-standards
-    rev: v0.13.1
+    rev: v0.13.2
     hooks:
       - id: doc-taxonomy
       - id: status-prose
