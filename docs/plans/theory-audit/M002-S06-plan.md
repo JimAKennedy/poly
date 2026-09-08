@@ -17,17 +17,17 @@ here to decide what to do; each task's own commit ticks its box.
 - [x] Task 1 — Tier all 99 entries and assert every entry declares one
 - [x] Task 2 — Enforce Tier A on claim citations, with the reasoned hatch
 - [x] Task 3 — The Lomax attribution (F22)
-- [ ] Task 4 — Wire into the runner and REQUIRED, run `gate`, close the slice (F23)
+- [x] Task 4 — Wire into the runner and REQUIRED, run `gate`, close the slice (F23)
 
 ## Definition of Done
 
 Copied verbatim from the slice. Every task below argues against *this* text.
 
-- [ ] Every entry in the reference appendix carries a declared tier
-- [ ] The "Spanish tinge" attribution cites Lomax's Morton interviews
-- [ ] A new check fails when a Tier-B or Tier-C source is the inline citation
+- [x] Every entry in the reference appendix carries a declared tier
+- [x] The "Spanish tinge" attribution cites Lomax's Morton interviews
+- [x] A new check fails when a Tier-B or Tier-C source is the inline citation
       for a named-theory claim
-- [ ] The check is wired into `scripts/check-doc-conformance.sh` **and**
+- [x] The check is wired into `scripts/check-doc-conformance.sh` **and**
       added to the `REQUIRED` set in
       `site/tests/doc-conformance-wiring.test.mjs`. That file's own header
       states the contract — adding a guardrail means adding it to both — and

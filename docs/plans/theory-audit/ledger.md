@@ -315,15 +315,15 @@ named-theory claim.
 **Plan:** M002-S06-plan.md
 **Validation:** format, site-unit, doc-conformance, doc-discipline, gate
 **Evidence:** evidence/M002-S06.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Every entry in the reference appendix carries a declared tier
-- [ ] The "Spanish tinge" attribution cites Lomax's Morton interviews
-- [ ] A new check fails when a Tier-B or Tier-C source is the inline citation
+- [x] Every entry in the reference appendix carries a declared tier
+- [x] The "Spanish tinge" attribution cites Lomax's Morton interviews
+- [x] A new check fails when a Tier-B or Tier-C source is the inline citation
       for a named-theory claim
-- [ ] The check is wired into `scripts/check-doc-conformance.sh` **and**
+- [x] The check is wired into `scripts/check-doc-conformance.sh` **and**
       added to the `REQUIRED` set in
       `site/tests/doc-conformance-wiring.test.mjs`. That file's own header
       states the contract — adding a guardrail means adding it to both — and
@@ -333,7 +333,7 @@ named-theory claim.
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
 | F22 | Ch 3's "the habanera rhythm that Jelly Roll Morton called 'the Spanish tinge'" is accurate but was uncited; Lomax's Morton interviews (1950) are the primary source. Resolved 2026-09-08. No Lomax entry existed anywhere in the appendix, so this added a Further Reading entry as well as the inline citation — Mister Jelly Roll (1950) is the book built from the Library of Congress interviews in which Morton uses the phrase, and is tiered A as a primary source | `P1` | `source` | `03-afro-cuban.mdx`, `appendix-references.mdx` | Case `S06-F22` in `site/tests/citation-tier.test.mjs` requires `fr-lomax-1950` in the chapter. It carries no forbidden arm, because nothing wrong was removed — an uncited claim was sourced — so it can only fail on the present side | `done` |
-| F23 | The reference list mixes peer-reviewed scholarship and hobbyist media at equal citation weight, with no mechanism preventing regression | `P1` | `source` | `appendix-references.mdx`, `site/tests/citation-tier.test.mjs` | `citation-tier.test.mjs` asserts every reference carries a declared tier and every inline citation on a named-theory claim resolves to a Tier-A source; `doc-conformance-wiring.test.mjs` asserts the script runs it | `open` |
+| F23 | The reference list mixed peer-reviewed scholarship and hobbyist media at equal citation weight, with no mechanism preventing regression. Resolved 2026-09-08. All 99 entries — 100 after F22 added Lomax — declare a tier on the span they already carried, so the tier cannot drift from the entry, and a claim citation may not resolve below Tier A. The rule is mechanisable because the guide's own grammar separates claims from bibliography: a superscript marks a claim, a plain link marks a listing, so the Sources sections that deliberately point at low-tier refs are out of scope structurally rather than exempted one at a time. It ships with 10 live suppressions across 9 files covering 8 references, each carrying a reason read from the claim it sits on and naming the M006 row that owns the upgrade. M006/S01 is one row short: ref-42 has none, recorded in this slice's evidence | `P1` | `source` | `appendix-references.mdx`, `site/tests/citation-tier.test.mjs`, `site/tests/doc-conformance-wiring.test.mjs`, `scripts/check-doc-conformance.sh`, and the nine chapter and companion pages carrying a suppression | Cases `S06-tiers-declared` and `S06-claims-are-tier-a` in `site/tests/citation-tier.test.mjs`, both proved non-vacuous: the first catches a missing and an invalid tier by name, the second reports a citation again when its marker moves one line too far and fails 18 citations when Toussaint is flipped to Tier B. `doc-conformance-wiring.test.mjs` names the file in `REQUIRED`, which failed by name until the runner listed it too | `done` |
 
 ---
 

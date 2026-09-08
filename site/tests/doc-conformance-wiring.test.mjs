@@ -53,6 +53,9 @@ const REQUIRED = [
   'site/tests/prose-claim-helpers.test.mjs',
   // M001 S02+ shared theory-audit-remediation prose-claim host (D010).
   'site/tests/theory-audit-claims.test.mjs',
+  // M002 S06 citation-tier gate: every bibliography entry declares a tier,
+  // and a named-theory claim may not cite below Tier A.
+  'site/tests/citation-tier.test.mjs',
   // M001 S01 audit-ledger completeness gates.
   'docs/audits/theory-audit-remediation.test.mjs',
   'docs/audits/parity-matrix.test.mjs',
