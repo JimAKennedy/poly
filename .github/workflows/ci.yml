@@ -28,6 +28,10 @@ jobs:
         run: bash scripts/check-site-readme.sh
       - name: Site-readme guard contract + green/red behavior proof
         run: node --test scripts/check-site-readme.mjs
+      - name: scripts/README.md lists every script and nothing that is gone
+        run: bash scripts/check-scripts-readme.sh
+      - name: Scripts-readme guard contract + green/red behavior proof
+        run: node --test scripts/check-scripts-readme.mjs
 
   build:
     strategy:
