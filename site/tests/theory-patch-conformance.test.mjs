@@ -2,7 +2,8 @@
 //
 // The nine "Theory Deep Dive" pages each state numbered counterpoint rules and
 // then print a <PolyPatch> lane table meant to *demonstrate* those rules. The
-// 2026 conformance review (git 5a8785a:docs/theory-conformance-review.md, §4)
+// 2026 conformance review (`docs/reviews/2026-07-30-theory-conformance-review.md`,
+// §4 — tracked on main since 2026-09-08; previously only as git 5a8785a)
 // found that all nine tables contradict their own page's rules. This harness
 // encodes, per defect, the rule-satisfaction predicate the fix must pass.
 //
