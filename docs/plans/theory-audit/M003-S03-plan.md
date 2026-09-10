@@ -14,7 +14,7 @@ The executable state of this plan. `/jk:next` reads the first unchecked box
 here to decide what to do; each task's own commit ticks its box.
 
 - [x] Task 1 — Chapter 2: mark the Manding same-cycle flattening (F26)
-- [ ] Task 2 — Gamelan Rules 3, 4 and 5: style-dependence, and lock Rule 4 (F27, F29, F30)
+- [x] Task 2 — Gamelan Rules 3, 4 and 5: style-dependence, and lock Rule 4 (F27, F29, F30)
 - [ ] Task 3 — Chapter 6: layakari is not a subdivision change (F28)
 
 ## Definition of Done

@@ -82,6 +82,45 @@ const CLAIMS = [
     // removed, only qualified.
     present: ['pedagogical simplification', 'Charry', 'distinct cycle lengths'],
   },
+  {
+    id: 'S03-F27',
+    file: 'theory-gamelan.mdx',
+    rule:
+      'ledger F27. Rule 3 presented the polos-onbeat / sangsih-offbeat division ' +
+      'of labour as general, when in norot the relationship is effectively ' +
+      'reversed. Style-dependent, not a law of the tradition',
+    // Not bare 'norot': Rule 5 already names the style, so that arm would pass
+    // before the edit and prove nothing about Rule 3.
+    present: ['style-dependent', 'in norot the relationship is effectively reversed'],
+  },
+  {
+    id: 'S03-F30',
+    file: 'theory-gamelan.mdx',
+    rule:
+      "ledger F30. Rule 5's absolute prohibition on mixing interlock styles " +
+      'mid-phrase is stronger than Tenzer, who documents stylistic mixing within ' +
+      'a single kebyar performance. The advice survives as a starting discipline ' +
+      'rather than a rule of the tradition',
+    forbidden: ['mixing interlock styles mid-phrase is not idiomatic'],
+    // Not bare 'Tenzer' nor the #fr-tenzer-2000 anchor: Rule 4 already carries
+    // both, so either arm would pass before the edit.
+    present: ['reliable default', 'stylistic mixing'],
+  },
+  {
+    id: 'S03-F29',
+    file: 'theory-gamelan.mdx',
+    rule:
+      "ledger F29, an accept row. Rule 4's strict-complementation honesty is " +
+      'already present; this case exists so a later edit cannot drop it. It ' +
+      'therefore passes on the day it is written — the proof that it is not ' +
+      'vacuous is in the evidence file, where the sentence was deleted and the ' +
+      'case watched to fail',
+    present: [
+      'Strict complementation is only the textbook case',
+      'the overlap marks structure',
+    ],
+    presentRegex: [/#fr-tenzer-2000/],
+  },
 ];
 
 registerClaimTests({ test, assert, claims: CLAIMS, loadSource });
