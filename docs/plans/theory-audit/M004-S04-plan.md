@@ -7,7 +7,7 @@ divergence marker, which is why this slice was left independent of M004/S05
 
 ## Task status
 
-- [ ] Task 1 — Work the tihai arithmetic through with the patch's own numbers
+- [x] Task 1 — Work the tihai arithmetic through with the patch's own numbers
 - [ ] Task 2 — Close the slice
 
 ## Definition of Done

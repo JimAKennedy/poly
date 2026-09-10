@@ -456,6 +456,46 @@ const CHECKLIST = [
     ],
   },
   {
+    page: 'theory-indian-classical.mdx',
+    patch: 'Rule-Checked Tintal Structure',
+    rules: [
+      {
+        id: 'ind-tihai-worked',
+        description: "Rule 6: the tihai's arithmetic is worked through, not just stated",
+        check: ({ rows }, { block }) => {
+          const tihai = findLane(rows, /tihai/i);
+          if (!tihai) return 'no tihai lane found';
+          const phrase = cellNum(tihai, 'Phrase Len');
+          const gap = cellNum(tihai, 'Gap');
+          const cycle = tihai.steps;
+          if (!Number.isFinite(phrase) || !Number.isFinite(gap)) {
+            return 'the tihai lane carries no Phrase Len / Gap cells to work from';
+          }
+          // Derived from the lane, never from a literal: a test carrying its own
+          // copy of 5, 0.5 and 16 would check nothing about the page, and the
+          // row's whole point is that the arithmetic is checked rather than
+          // asserted.
+          const product = 3 * phrase + 2 * gap;
+          // Only the prose counts, not the table the numbers came from.
+          const lines = block.split('\n');
+          const lastRow = lines.map((l) => /^\s*\|/.test(l)).lastIndexOf(true);
+          const prose = lines.slice(lastRow + 1).join('\n');
+          const missing = [String(phrase), String(gap), String(product)].filter(
+            (n) => !new RegExp(`(^|[^0-9.])${n.replace('.', '\\.')}([^0-9]|$)`).test(prose),
+          );
+          if (missing.length) {
+            return `the page states Rule 6's formula but never works it: the prose beside the patch ` +
+              `does not print ${missing.join(', ')} (3 × ${phrase} + 2 × ${gap} = ${product})`;
+          }
+          return product === cycle
+            ? null
+            : `3 × ${phrase} + 2 × ${gap} = ${product}, which does not close the lane's ` +
+                `${cycle}-matra cycle; Rule 6 says a tihai that misses sam is a failed one`;
+        },
+      },
+    ],
+  },
+  {
     page: 'theory-afro-cuban.mdx',
     patch: 'Rule-Checked Son Ensemble (3-2)',
     rules: [

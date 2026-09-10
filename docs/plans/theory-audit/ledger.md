@@ -544,7 +544,7 @@ row is either ✅ or carries a documented divergence.
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F43 | The tihai discussion gives the principle but no worked example; Nelson (2008)'s formula — (Length × 3) + (Gap × 2) = beats remaining to sam — should be shown with real numbers | `P1` | `enrich` | `theory-indian-classical.mdx` Rule 6 | An arithmetic case re-derives the printed worked example from the formula, alongside the existing tihai case in `theory-patch-conformance.test.mjs` | `open` |
+| F43 | The tihai discussion gives the principle but no worked example; Nelson (2008)'s formula — (Length × 3) + (Gap × 2) = beats remaining to sam — should be shown with real numbers | `P1` | `enrich` | `theory-indian-classical.mdx` Rule 6 | Case `ind-tihai-worked` reads Phrase Len and Gap from the lane, derives 3 × phrase + 2 × gap, and asserts the prose prints both operands and the product and that the product closes the lane's cycle — so changing the lane fails the case, not just changing the prose | `done` |
 
 ### Slice M004/S05 — Named-rule conformance checklist
 
