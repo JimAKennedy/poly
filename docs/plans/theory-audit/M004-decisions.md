@@ -63,3 +63,22 @@ on the user's behalf.
 - **Finding:** `theory-electronic-breakbeat` (9 rules) and `theory-minimalism`
   (8 rules) carry no assertion whatsoever. Folded into S05's scope rather than
   left for M007, because they are the only two pages with zero coverage.
+
+## 2026-09-10 — executing M004/S05
+
+- **Decision, under the pre-agreed policy:** `theory-electronic-breakbeat`'s
+  patch violates its own Rule 7 — the kick's E(5,16) at rotation 3 puts an onset
+  on pulse 12, one of the snare's two slots. Marked `patch-divergence-ok` with
+  the untriaged reason and opened as ledger row B15 under M007/S02, rather than
+  fixed here — **Why:** this is the "checklist finds something no F-row covers"
+  case, and the fix is a musical choice between moving the rotation and
+  qualifying the rule.
+- **Judgment call:** Task 2's cases were written with the checklist data and its
+  iteration together, so no case was watched to fail for lack of the mechanism —
+  the plan's step 2 asked for that red. The mutation round is what establishes
+  non-vacuity instead, and every rule was watched to fail on its own terms —
+  **Why:** the ordering would have proved the harness ran, and the mutations
+  prove each predicate bites, which is the property the definition of done
+  actually names. Recorded rather than glossed.
+- **Correction:** the plan's step 2 asserts the five seeded rules "hold today".
+  Four do. `ebb-kick-avoids-snare` does not, which is how B15 was found.

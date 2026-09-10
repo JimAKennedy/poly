@@ -12,7 +12,7 @@ three ways this mechanism could rot.
 ## Task status
 
 - [x] Task 1 — Reach every patch in a file, not just the first
-- [ ] Task 2 — The checklist and the divergence marker, proved on two theory pages
+- [x] Task 2 — The checklist and the divergence marker, proved on two theory pages
 - [ ] Task 3 — Chapter entries, with markers naming the rows that own the gaps
 - [ ] Task 4 — Close the slice and run the shipping gate
 

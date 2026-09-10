@@ -829,6 +829,7 @@ asserts any of them.
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
 | B13 | 83 numbered rules across nine theory pages have never been checked against the patch meant to demonstrate them. The 2026-07-30 review found nine such contradictions by hand and all nine are now fixed, which is evidence the class is real rather than that it is exhausted | `P1` | `patch-align` | `site/tests/theory-patch-conformance.test.mjs` | Every checkable rule has a checklist entry, each with a mutation proof recorded in the evidence file | `open` |
+| B15 | `theory-electronic-breakbeat`'s own patch contradicts its Rule 7, "the kick syncopates against the snare, avoiding its slots": the chopped kick is E(5,16) at rotation 3, whose onsets on a 16-pulse grid are {3,6,9,12,15}, and the backbeat snare's are {4,12}. Pulse 12 is shared. Found by the M004/S05 checklist on the first newly-checked rule, and suppressed there with a `patch-divergence-ok` marker so the slice could close; the fix is either a rotation that clears the snare or a qualification to Rule 7, and that is a musical decision this row exists to put to a human | `P1` | `patch-align` | `theory-electronic-breakbeat.mdx` patch, Rule 7 | Case `ebb-kick-avoids-snare` passes with no divergence marker | `open` |
 
 ### Slice M007/S03 — Burn down the divergence markers
 

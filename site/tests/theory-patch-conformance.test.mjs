@@ -339,3 +339,158 @@ test('S05-parse-by-title: each <PolyPatch> in a file is addressable by title', a
       'title is being ignored and the second patch is still unreachable',
   );
 });
+
+// --- M004/S05: the named-rule checklist ------------------------------------
+
+// The nine tests above hand-write one predicate per known defect. That cannot
+// notice a *new* contradiction: an unchecked page is invisible. The checklist
+// below is declared as data and iterated, so a page with no entry is a missing
+// row in a structure rather than an absence nobody can see.
+//
+// Rule ids are descriptive, not positional. A page that renumbers its rules
+// would leave a positional id pointing at the wrong text silently.
+//
+// Coverage here is M004/S05's: the three chapter patches its sibling slices
+// need, plus the only two theory pages carrying no assertion at all. The
+// remaining rules across the other nine theory pages are M007's — see the
+// ledger, not this comment, for what that owns.
+
+// A divergence marker is an MDX comment sitting immediately above the patch it
+// concerns:
+//
+//   {/* patch-divergence-ok: <rule-id> — <written reason> */}
+//
+// It satisfies exactly the rule it names, on exactly the patch that follows it.
+// Not the page, not the next rule, not by proximity. In-band so it cannot drift
+// from what it excuses; greppable on one fixed token so `grep -rn
+// patch-divergence-ok site/` is the audit report; reasoned; and counted, below,
+// so the number cannot shrink into silence.
+const MARKER_RE = /\{\/\*\s*patch-divergence-ok:\s*([a-z0-9-]+)\s*—\s*([\s\S]*?)\*\/\}/g;
+
+function markersFor(src) {
+  const found = new Map();
+  for (const m of src.matchAll(MARKER_RE)) {
+    const after = src.slice(m.index + m[0].length);
+    const next = after.match(/<PolyPatch title="([^"]+)"/);
+    if (!next) continue; // a marker with no patch after it excuses nothing
+    found.set(`${next[1]}::${m[1]}`, m[2].trim().replace(/\s+/g, ' '));
+  }
+  return found;
+}
+
+const cellPct = (row, col) => parseFloat(String(row.cell[col] ?? '').replace('%', ''));
+const cellNum = (row, col) => parseFloat(String(row.cell[col] ?? ''));
+
+const CHECKLIST = [
+  {
+    page: 'theory-minimalism.mdx',
+    patch: 'Rule-Checked Phase Study',
+    rules: [
+      {
+        id: 'min-one-variable',
+        description: 'Rule 1: one process at a time, moving one variable',
+        check: ({ rows }) => {
+          const moving = rows.filter((r) => cellNum(r, 'Drift') !== 0);
+          return moving.length === 1
+            ? null
+            : `${moving.length} lanes carry non-zero Drift (${moving.map((r) => r.role).join(', ') || 'none'}); ` +
+                'Rule 1 moves exactly one variable';
+        },
+      },
+      {
+        id: 'min-voices-flat',
+        description: 'Rule 4: voices are dynamically flat and timbrally near-identical',
+        check: ({ rows }) => {
+          const voices = rows.filter((r) => /voice/i.test(r.role));
+          const vels = new Set(voices.map((r) => cellNum(r, 'Velocity')));
+          return vels.size === 1
+            ? null
+            : `the ${voices.length} voice lanes carry velocities ${[...vels].join(', ')}; ` +
+                'Rule 4 keeps them dynamically flat';
+        },
+      },
+      {
+        id: 'min-deterministic',
+        description: 'Rule 8: determinism is the aesthetic',
+        check: ({ rows }) => {
+          const random = rows.filter((r) => cellPct(r, 'Mutation') !== 0);
+          return random.length === 0
+            ? null
+            : `${random.map((r) => r.role).join(', ')} carry non-zero Mutation; Rule 8 is deterministic`;
+        },
+      },
+    ],
+  },
+  {
+    page: 'theory-electronic-breakbeat.mdx',
+    patch: 'Rule-Checked Jungle Frame',
+    rules: [
+      {
+        id: 'ebb-anchor-immutable',
+        description: 'Rule 1: the anchor is immutable',
+        check: ({ rows }) => {
+          const anchor = findLane(rows, /snare/i);
+          if (!anchor) return 'no snare lane found; Rule 1 needs an anchor to be immutable';
+          return cellPct(anchor, 'Mutation') === 0
+            ? null
+            : `the anchor "${anchor.role}" carries ${anchor.cell.Mutation} Mutation; Rule 1 keeps it immutable`;
+        },
+      },
+      {
+        id: 'ebb-kick-avoids-snare',
+        description: "Rule 7: the kick syncopates against the snare, avoiding its slots",
+        check: ({ rows }) => {
+          const snare = findLane(rows, /snare/i);
+          const kick = findLane(rows, /kick/i);
+          if (!snare || !kick) return 'need both a snare and a kick lane to check Rule 7';
+          const sg = laneOnPulseGrid(snare, 16);
+          const kg = laneOnPulseGrid(kick, 16);
+          const clash = kg.filter((p) => sg.includes(p));
+          return clash.length === 0
+            ? null
+            : `kick onsets ${JSON.stringify(kg)} intersect snare slots ${JSON.stringify(sg)} at ` +
+                `${JSON.stringify(clash)}; Rule 7 has the kick avoid them`;
+        },
+      },
+    ],
+  },
+];
+
+let liveMarkers = 0;
+
+for (const entry of CHECKLIST) {
+  for (const rule of entry.rules) {
+    test(`${entry.page} [${rule.id}]: ${rule.description}`, async () => {
+      const path = join(DOCS, entry.page);
+      const src = await readFile(path, 'utf8');
+      const rel = relative(REPO, path);
+      const patch = parsePolyPatch(src, entry.patch);
+      assert.ok(
+        patch.rows.length > 0,
+        `${rel}: the checklist names patch "${entry.patch}" but no lane rows were parsed for it — ` +
+          'the patch was renamed, removed, or its table is malformed',
+      );
+
+      const excuse = markersFor(src).get(`${entry.patch}::${rule.id}`);
+      const failure = rule.check(patch);
+      if (excuse) {
+        liveMarkers += 1;
+        assert.ok(
+          failure,
+          `${rel}: "${entry.patch}" carries a patch-divergence-ok marker for ${rule.id}, but the rule ` +
+            'passes — remove the marker rather than leaving a suppression nobody needs',
+        );
+        return;
+      }
+      assert.equal(failure, null, `${rel} "${entry.patch}" [${rule.id}]: ${failure}`);
+    });
+  }
+}
+
+test('patch-divergence-ok suppression count', () => {
+  // Printed, not asserted against a number: a rising count is signal, and an
+  // invisible count is rot. The assertion that matters is above — a marker on a
+  // rule that passes fails its own case.
+  console.log(`  patch-divergence-ok: ${liveMarkers} live suppression(s)`);
+  assert.ok(liveMarkers >= 0);
+});
