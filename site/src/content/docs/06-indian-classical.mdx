@@ -1,7 +1,7 @@
 ---
 class: gated
 title: "6. Indian Classical: Tala Cycles and Rhythmic Arithmetic"
-description: The tala system of Hindustani and Carnatic music — how cycle lengths of 7, 10, and 16 beats create rhythmic architecture through subdivision and recombination.
+description: The Hindustani tala system — how cycle lengths of 7, 10, and 16 beats create rhythmic architecture through subdivision and recombination.
 patternClaims:
   - label: "Rupak tal 3+2+2 illustration"
     pattern: "x . . x . x ."
@@ -22,6 +22,16 @@ import EuclideanDiagram from '../../components/EuclideanDiagram.astro';
 import PolyPreviewCard from '../../components/PolyPreviewCard.astro';
 
 Indian classical music thinks about rhythm differently from almost every other tradition in this guide. Where West African drumming layers multiple independent cycles and Cuban music anchors everything to a clave, the tala system treats the rhythmic cycle itself as an architectural space ([Clayton 2000](/appendix-references/#fr-clayton-2000)) — a canvas with named landmarks, internal subdivisions, and a gravitational centre that every performer feels pulling them home.
+
+:::note[Scope]
+This chapter covers **Hindustani** practice — the North Indian tradition, its
+talas, and its theka. Carnatic music, the South Indian tradition, has its own
+tala system: different tala families, a different way of counting them out, and
+*solkattu* and *konnakol* as a spoken rhythmic vocabulary with no direct
+Hindustani equivalent. None of that is covered here. Nelson's *Solkattu Manual*
+in the [reference appendix](/appendix-references/#fr-nelson-2008) is where to
+start on it.
+:::
 
 :::note[Theory deep dive]
 For the structural rules stated explicitly — theka as identity, sam as cadence, khali as negative space, layakari ratios, and exact tihai arithmetic — see [Tala Architecture: Indian Classical](/theory-indian-classical/).
@@ -54,6 +64,10 @@ In Poly, you can model this sam-khali architecture by setting stronger velocity 
 The concept of *layakari* — rhythmic augmentation and diminution — maps directly to Poly's subdivision parameter ([Clayton 2000](/appendix-references/#fr-clayton-2000)). A tabla player performing in *dugun* (double speed) plays two notes for every beat; in *tigun* (triple speed), three; in *chaugun* (quadruple speed), four.
 
 Set Lane 1 to subdivision 1/4 for the basic pulse. Set Lane 2 to 1/8 for dugun. Set Lane 3 to 1/16 for chaugun. All three share the same step count and hit pattern, but the subdivision change compresses the same rhythmic shape into progressively smaller time spans. The result is a layered acceleration that Indian classical musicians spend years learning to control.
+
+:::note[A simplification]
+This mapping is a practical approximation, not the thing itself. True *layakari* is **the same phrase** performed at a multiple of the base speed — the player's material is unchanged and only its rate moves. Changing a lane's subdivision instead changes **hit density**: more onsets fall in the cycle, and the pattern a lane plays is no longer the one it played before. The result sounds like layered acceleration and is a good way to get there in Poly, but a tabla player performing *chaugun* is not adding hits — they are playing the same composition four times as fast.
+:::
 
 <PolyPatch title="Tintal-Inspired Groove" preset="Tintal Groove">
 

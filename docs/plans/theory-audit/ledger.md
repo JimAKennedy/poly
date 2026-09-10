@@ -18,10 +18,12 @@ repoints its completeness test at this file.
 
 **Row series.** `F01`–`F54` are the audit's findings, one row each, and that
 range is closed. `H01`–`H04` are the harness this programme needed to lock its
-own corrections. `B01`–`B09` are bibliography defects this programme found
-itself, in M006 — the audit drew its Tier-C list from the chapters it reviewed,
-so it never saw the orphaned, duplicated and low-tier entries that M002's own
-work surfaced.
+own corrections. The `B` series is defects this programme found itself
+rather than inheriting from the audit. `B01`–`B09` are bibliography defects, in
+M006 — the audit drew its Tier-C list from the chapters it reviewed, so it never
+saw the orphaned, duplicated and low-tier entries that M002's own work
+surfaced. `B10` onward are other discovered defects, wherever the slice that
+found one sits; a `B` row says only that the audit did not name it.
 
 **Row vocabulary.** Beyond the required columns, each row carries a severity
 (`P0` factually wrong · `P1` overclaimed or under-sourced · `P2` enrichment) and
@@ -349,103 +351,110 @@ each simplification it names is disclosed at the point of use.
 ### Slice M003/S01 — About This Guide
 
 **Depends:** M001/S06
+**Plan:** M003-S01-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M003-S01.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] An "About This Guide" page carries the audit's repositioning statement
-- [ ] It is reachable from the introduction and from all twelve `theory-*.mdx`
+- [x] An "About This Guide" page carries the audit's repositioning statement
+- [x] It is reachable from the introduction and from all twelve `theory-*.mdx`
       pages
-- [ ] It names the guide's deliberate scope exclusions, including the
+- [x] It names the guide's deliberate scope exclusions, including the
       son-clave/rumba-clave precedence debate
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F24 | The guide has no statement of what it is and is not; the audit supplies a four-paragraph repositioning statement and judges it defensible | `P1` | `reframe` | New About page, `introduction.mdx`, every `theory-*.mdx` | Case `S01-F24` asserts the About page exists and is linked from the introduction and all twelve theory pages | `open` |
-| F36 | Whether rumba clave predates or postdates son clave is debated (Acosta 2004, Moore 2006); the audit judges the guide may legitimately sidestep it under the repositioning frame | `P1` | `accept` | New About page | Case `S01-F36` asserts the exclusion is named on the About page, so the sidestep is declared rather than silent | `open` |
+| F24 | The guide had no statement of what it is and is not; the audit supplies a four-paragraph repositioning statement and judges it defensible. Resolved 2026-09-09. The statement was extracted from the audit by script rather than transcribed, so the four paragraphs are verbatim. The eleven companion pages take the link in their existing italic preamble; `theory-counterpoint-overview.mdx` has no preamble and instead links upward from its own "None of this is original research" paragraph, which is left intact so the local and global statements agree by reference rather than by copy | `P1` | `reframe` | `about-this-guide.mdx`, `introduction.mdx`, all twelve `theory-*.mdx`, `site/astro.config.mjs`, `.github/docs-drift-map.yml` | Case `S01-F24` in `site/tests/scope-framing.test.mjs` asserts the page exists and that all thirteen pages link to it. The theory set is discovered by glob and its count asserted at twelve, so a glob matching nothing cannot pass vacuously, and every missing file is named rather than the first | `done` |
+| F36 | Whether rumba clave predates or postdates son clave is debated (Acosta 2004, Moore 2006); the audit judges the guide may legitimately sidestep it under the repositioning frame. Resolved 2026-09-09. The About page names it under "What this guide does not cover" and says why the sidestep is legitimate rather than merely convenient: both claves are given as they are played, and the rules for aligning parts to either are the same whichever came first, so nothing in the guide depends on the answer | `P1` | `accept` | `about-this-guide.mdx` | Case `S01-F36` in `site/tests/scope-framing.test.mjs` requires the debate, Acosta and Moore all named on the About page, so the sidestep cannot become silent again | `done` |
 
 ### Slice M003/S02 — Chapter 6 scope
 
+**Plan:** M003-S02-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M003-S02.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Chapter 6's front-matter description and its in-page scope note both say
+- [x] Chapter 6's front-matter description and its in-page scope note both say
       Hindustani, and neither promises Carnatic coverage
-- [ ] The absence of the Carnatic tala system is stated rather than implied
+- [x] The absence of the Carnatic tala system is stated rather than implied
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F25 | Ch 6 is described as covering "Hindustani and Carnatic" but the Carnatic tala system — solkattu/konnakol, different tala families, a different conceptual frame — is absent | `P1` | `correct` | `06-indian-classical.mdx` front matter and scope note | Case `S02-F25` asserts the description and scope note agree on Hindustani-only and that the Carnatic absence is stated | `open` |
+| F25 | Ch 6 was described as covering "Hindustani and Carnatic" but the Carnatic tala system — solkattu/konnakol, different tala families, a different conceptual frame — is absent. Resolved 2026-09-09. The word Carnatic appeared exactly once in the chapter, in the description making the promise, so this removed a false promise rather than relabelling content. The same overclaim sat in the deep-dive index row of `theory-counterpoint-overview.mdx`, advertising "Hindustani and Carnatic rhythm" one click from the page that now says Carnatic is absent; it was corrected with it. The Scope note is about this chapter rather than the guide, because M004/S04 will add a tihai worked example from Nelson's Solkattu Manual to the companion page and the appendix already lists that source | `P1` | `correct` | `06-indian-classical.mdx`, `theory-counterpoint-overview.mdx` | Cases `S02-F25` and `S02-F25-overview` in `site/tests/scope-framing.test.mjs`. The first forbids the phrase and requires Carnatic, solkattu and konnakol to be named — the requiring arm is load-bearing, since deleting the word alone would pass a forbid-only check while leaving the absence unstated. The second guards the index row and was proved to bite independently | `done` |
 
 ### Slice M003/S03 — Simplification disclosures
 
+**Plan:** M003-S03-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M003-S03.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The Manding same-cycle presentation is marked as a pedagogical flattening
+- [x] The Manding same-cycle presentation is marked as a pedagogical flattening
       and cites Charry
-- [ ] Gamelan Rule 3's polos/sangsih assignment is marked style-dependent, with
+- [x] Gamelan Rule 3's polos/sangsih assignment is marked style-dependent, with
       *norot* named as the reversing case
-- [ ] The layakari section says plainly that Poly's subdivision change is not
+- [x] The layakari section says plainly that Poly's subdivision change is not
       what layakari does to hit density
-- [ ] Gamelan Rule 5's "choose one and keep it" is hedged to match Tenzer
-- [ ] Gamelan Rule 4's existing strict-complementation honesty is locked by a
+- [x] Gamelan Rule 5's "choose one and keep it" is hedged to match Tenzer
+- [x] Gamelan Rule 4's existing strict-complementation honesty is locked by a
       test, so a later edit cannot drop it
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F26 | Ch 2 characterises Manding ensembles as all sharing one cycle length; Manding dunun ensembles do use distinct lengths in many contexts. Pedagogical flattening, not error | `P1` | `disclose` | `02-sub-saharan-africa.mdx` "Manding Traditions" | Case `S03-F26` asserts the simplification note is present and cites Charry (2000), which F44 adds | `open` |
-| F27 | Gamelan Rule 3 states polos leans onbeat and sangsih offbeat; in *norot* the relationship is effectively reversed. Style-dependent, presented as general | `P1` | `disclose` | `theory-gamelan.mdx` Rule 3 | Case `S03-F27` asserts the style-dependence caveat naming *norot* | `open` |
-| F28 | Ch 6 maps layakari ratios onto Poly's per-lane subdivision; true layakari is the same phrase at 2×/3× speed, and changing subdivision changes hit density | `P1` | `disclose` | `06-indian-classical.mdx` layakari section | Case `S03-F28` asserts the simplification note distinguishing phrase-speed from hit density | `open` |
-| F29 | `theory-gamelan.mdx` Rule 4 already states honestly that strict complementation is only the textbook case; nothing stops a later edit removing it | `P1` | `accept` | `theory-gamelan.mdx` Rule 4 | Case `S03-F29` extracts Rule 4 and asserts the existing overlap-at-structural-tones honesty statement and its Tenzer citation survive | `open` |
-| F30 | Gamelan Rule 5 says to choose one interlock style and never mix mid-phrase — stronger than Tenzer, who allows stylistic mixing within a kebyar performance | `P1` | `reframe` | `theory-gamelan.mdx` Rule 5 | Case `S03-F30` asserts hedged phrasing and forbids the absolute prohibition | `open` |
+| F26 | Ch 2 characterised Manding ensembles as all sharing one cycle length; Manding dunun ensembles do use distinct lengths in many contexts. Pedagogical flattening, not error. Resolved 2026-09-09. The chapter now marks it as a pedagogical simplification, says the dunun, sangban and kenkeni relationship varies by repertoire and region, and gives the reason the shared cycle is used — the shortest route to a playable patch that sounds idiomatic. Charry (2000) is named as plain text with no anchor, deliberately: the appendix entry is F44's in M005/S01, whose verification reads "cited inline at the F26 disclosure", so linking now would point at nothing and fail research-provenance. F44 converts the name to a citation | `P1` | `disclose` | `02-sub-saharan-africa.mdx` | Case `S03-F26` in `site/tests/scope-framing.test.mjs` requires "pedagogical simplification", "Charry" and "distinct cycle lengths" in the chapter. It carries no forbidden arm — the original sentence is not wrong and was not removed, only qualified | `done` |
+| F27 | Gamelan Rule 3 stated polos leans onbeat and sangsih offbeat; in *norot* the relationship is effectively reversed. Style-dependent, presented as general. Resolved 2026-09-09. Rule 3 now marks the division style-dependent, names norot as the reversing case with sangsih taking the beat-coincident tones, and asks the reader to treat it as the common case rather than the general one | `P1` | `disclose` | `theory-gamelan.mdx` | Case `S03-F27` in `site/tests/scope-framing.test.mjs` requires "style-dependent" and "in norot the relationship is effectively reversed". It deliberately does not assert bare norot, which Rule 5 already names and which would therefore have passed before the edit | `done` |
+| F28 | Ch 6 mapped layakari ratios onto Poly's per-lane subdivision; true layakari is the same phrase at 2×/3× speed, and changing subdivision changes hit density. Resolved 2026-09-09. The mapping stays — it is a good way to get the sound in Poly — but is now marked a practical approximation, with the distinction stated plainly: layakari moves the rate of unchanged material, while a subdivision change alters how many onsets fall in the cycle, so the lane no longer plays the pattern it played before. A tabla player performing chaugun is not adding hits | `P1` | `disclose` | `06-indian-classical.mdx` | Case `S03-F28` in `site/tests/scope-framing.test.mjs` requires "hit density", "the same phrase" and "simplification". It carries no forbidden arm — the workflow is legitimate and was not removed, only qualified | `done` |
+| F29 | `theory-gamelan.mdx` Rule 4 already stated honestly that strict complementation is only the textbook case; nothing stopped a later edit removing it. Resolved 2026-09-09. No prose changed — this row added only the lock, which is what an accept disposition means here | `P1` | `accept` | `theory-gamelan.mdx` | Case `S03-F29` requires "Strict complementation is only the textbook case", "the overlap marks structure" and the `fr-tenzer-2000` anchor. It passed on the day it was written, so it was proved non-vacuous by deleting the first sentence and watching it fail by name, recorded in the evidence | `done` |
+| F30 | Gamelan Rule 5 said to choose one interlock style and never mix mid-phrase — stronger than Tenzer, who allows stylistic mixing within a kebyar performance. Resolved 2026-09-09. The practical advice survives as the reliable default and safest starting discipline, but is now marked a discipline rather than a rule of the tradition, citing Tenzer for the mixing he documents within a single kebyar performance | `P1` | `reframe` | `theory-gamelan.mdx` | Case `S03-F30` forbids "mixing interlock styles mid-phrase is not idiomatic" and requires "reliable default" and "stylistic mixing". It deliberately does not assert Tenzer or the tenzer anchor, both of which Rule 4 already carries | `done` |
 
 ### Slice M003/S04 — Non-isochrony honesty
 
+**Plan:** M003-S04-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M003-S04.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] `theory-sub-saharan-africa.mdx` states explicitly that Humanize is random
+- [x] `theory-sub-saharan-africa.mdx` states explicitly that Humanize is random
       jitter, against Polak's systematic style-specific profiles — not merely
       that it is an approximation
-- [ ] Both non-isochrony disclosures are locked by tests, so the Balkan one
+- [x] Both non-isochrony disclosures are locked by tests, so the Balkan one
       already in the tree cannot be dropped
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F31 | Rule 8's Humanize approximation is flagged as an approximation but the guide never says *how* it differs: Humanize is random jitter, Polak (2010) documents systematic style-specific subdivision profiles | `P1` | `disclose` | `theory-sub-saharan-africa.mdx` Rule 8 and construction step 5 | Case `S04-F31` asserts the explicit random-versus-systematic contrast, not just the word "approximation" | `open` |
-| F32 | The audit asks that Balkan aksak be given the same non-isochrony honesty as the Malian jembe; `theory-balkan.mdx` Rule 8 already gives it, citing Goldberg (2015), but nothing locks it | `P1` | `disclose` | `theory-balkan.mdx` Rule 8 | Case `S04-F32` extracts Rule 8 and asserts the sub-3:2 statement, its `fr-goldberg-2015` citation, and the notated-versus-played disclosure survive | `open` |
+| F31 | Rule 8's Humanize approximation was flagged as an approximation but the guide never said *how* it differs: Humanize is random jitter, Polak (2010) documents systematic style-specific subdivision profiles. Resolved 2026-09-09. Verified in `engine/src/engine.cpp` rather than taken on trust — `applyTimingShifts` derives `jitterPpq` from `deterministicRand`, so Humanize is seeded and reproducible but carries no per-position structure. Construction step 5 now says jitter reproduces the presence of non-isochrony and not its shape, and that a straight grid plus noise is still not the feel. Rule 8 is unchanged: it states what the scholarship found, and the contrast belongs where Humanize is named | `P1` | `disclose` | `theory-sub-saharan-africa.mdx` construction step 5 | Case `S04-F31` in `site/tests/scope-framing.test.mjs` requires "random jitter" and "systematic profile". It deliberately does not assert bare "systematic", which the page already contained inside "systematically" | `done` |
+| B10 | `theory-sub-saharan-africa.mdx` construction step 5 said "until Poly ships subdivision-profile support", which understated the engine: `microTimingMs` is a per-step timing array, exposed to the WebUI as the micro-timing bars through the `setMicroTiming` bridge action and clamped to ±20 ms. What Poly lacks is a jembe *profile* to load, not the mechanism to express one. Found while planning F31, not named by the audit. Resolved 2026-09-09. The step now names per-step micro-timing as where such a profile would be entered, one step at a time, and says the missing piece is the measured data | `P2` | `correct` | `theory-sub-saharan-africa.mdx` construction step 5 | Case `S04-B10` forbids the old phrasing and requires micro-timing to be named | `done` |
+| F32 | The audit asked that Balkan aksak be given the same non-isochrony honesty as the Malian jembe; `theory-balkan.mdx` Rule 8 already gave it, citing Goldberg (2015), but nothing locked it. Resolved 2026-09-09. **No prose changed** — `git diff` on the page is empty, and the row added only the lock, which is what the audit's own judgement of this item amounted to | `P1` | `disclose` | `theory-balkan.mdx` | Case `S04-F32` in `site/tests/scope-framing.test.mjs` requires "systematic, style-defining tendency", "the grid version is the" and the `fr-goldberg-2015` anchor. It passed on the day it was written, so it was proved non-vacuous by deleting the style-defining phrase and watching it fail by name, then restoring to a byte-identical file | `done` |
 
 ### Slice M003/S05 — Remaining framing items
 
 **Validation:** format, site-unit, doc-conformance, gate
+**Plan:** M003-S05-plan.md
 **Evidence:** evidence/M003-S05.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Gamelan Rule 5 names *kotekan polos* among its interlock styles and links
-      it to the pokok lane
-- [ ] The Rachenitsa patch table says its tupan and kaval notes are GM drum
-      stand-ins, not the named instruments
-- [ ] Chapter 5's cyclic-time opening carries a citation
+- [x] Gamelan Rule 5 says a third part may double the pokok tones instead of
+      interlocking, cross-referenced to Rule 6 and to Construction's Pokok lane
+- [x] The Rachenitsa patch table carries a `Note` column matching
+      `presets.json`, and a line naming the GM sounds and flagging that kaval
+      and gadulka have no GM drum equivalent
+- [x] Chapter 5's cyclic-time opening carries a citation
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F33 | Gamelan Rule 5's named interlock styles omit *kotekan polos* — a third player on structural pokok tones, directly relevant to a user adding a third melodic lane | `P2` | `enrich` | `theory-gamelan.mdx` Rule 5 | Case `S05-F33` asserts the style is named and cross-links to the M004/S03 pokok lane | `open` |
-| F34 | Ch 7's Rachenitsa patch names tupan and kaval — pitched folk instruments — without noting the MIDI notes are GM drum stand-ins | `P1` | `patch-align` | `07-balkan.mdx` Rachenitsa patch table | The patch-conformance suite asserts the stand-in note is present on the patch table | `open` |
-| F35 | Ch 5 opens "time is not a line — it is a circle": legitimate but uncited, and unsourced it reads as orientalist; Tenzer (2000) grounds it | `P1` | `source` | `05-gamelan.mdx` chapter opening | Case `S05-F35` asserts the opening carries a citation that resolves in the appendix | `open` |
+| F33 | Gamelan Rule 5's named interlock styles omit a third part that doubles the structural pokok tones rather than interlocking with the pair — directly relevant to a user adding a third melodic lane. Amended during planning: the audit (§125) named this practice *kotekan polos* and cited nothing for the term, and the guide's own Rule 3 already uses *polos* for one of the interlocking pair, so adopting it as a style name would collide with the page's established usage. Amended again during execution: no source in this repo attests the practice either, so the sentence carries no citation — it asserts nothing the page does not already contain, since Rule 6 makes pokok what the interlock elaborates and Construction step 2 and patch Lane 5 already build a Pokok lane. Both the term and its attribution are M006/S04 row B11. The audit also miscounted the rule as listing five styles; it lists four | `P2` | `enrich` | `theory-gamelan.mdx` Rule 5 | Case `S05-F33` asserts a third part doubling the pokok is offered and cross-referenced to Rule 6, and forbids the unattested label | `done` |
+| F34 | Ch 7's Rachenitsa patch table carries no note information at all, so a reader cannot tell what any lane will sound like on a GM kit. Amended during planning: the audit (§176) asked the "Note" column to mark tupan and kaval as stand-ins, but the table has no `Note` column and the premise is backwards. The tupan is a double-headed bass drum, so its two lanes map to GM kick and side stick — a drum standing in for a drum — which the Role column already says by naming them "Tupan bass" and "Tupan rim". The real stand-ins are lane 3, a woodblock for the kaval (an end-blown flute), and lane 4, a hi-hat for the gadulka (a bowed fiddle), which the audit does not mention. Note numbers and GM names are taken from the `Rachenitsa 7/8` record in `presets.json` | `P1` | `patch-align` | `07-balkan.mdx` Rachenitsa patch table | Case `S05-F34` asserts the table's `Note` column matches every lane's `noteNumber` in `presets.json`, and that the line beneath names each `roleLabel` and flags kaval and gadulka as having no GM drum equivalent | `done` |
+| F35 | Ch 5 opens "time is not a line — it is a circle": legitimate but uncited, and unsourced it reads as orientalist; Tenzer (2000) grounds it | `P1` | `source` | `05-gamelan.mdx` chapter opening | Case `S05-F35` asserts the opening carries a citation that resolves in the appendix | `done` |
 
 ---
 
@@ -737,6 +746,22 @@ plainly that they are ours rather than the audit's.
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
 | B09 | `ref-1` and `fr-toussaint-2005` are the same 2005 BRIDGES paper listed twice, at different weights in the same appendix. ref-1 is cited in six files and the duplicate in none, so the two cannot disagree today, but nothing stops a later citation picking the wrong one | `P2` | `correct` | `appendix-references.mdx`, `site/tests/citation-tier.test.mjs` | `citation-tier.test.mjs` asserts no two entries share a normalised title and year, and the sweep that finds them is recorded in this row | `open` |
+
+### Slice M006/S04 — Unattested terms
+
+**Validation:** format, site-unit, doc-conformance
+**Evidence:** evidence/M006-S04.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] *Kotekan polos*, and the practice Rule 5 describes without it, are either
+      cited to a tier-A or tier-B source, or recorded here as unverifiable and
+      deliberately left uncited
+
+| ID | Item | Sev | Disp | Lands in | Verification | Status |
+|---|---|---|---|---|---|---|
+| B11 | The audit (§125) asserts *kotekan polos* — "a third player playing only the structural pokok tones" — as a named interlock style, citing nothing for the term. Nothing in the repo attests either the term or the practice: `fr-tenzer-2000` is annotated "the authoritative analysis of kotekan varieties", which argues Tenzer could cover it but is not evidence that he does. M003/S05 wrote the practice into Rule 5 with no citation and no label, forbidding the label in case `S05-F33`, on the grounds that Rule 6 and Construction's Pokok lane already ground it internally. This row owns both open questions: whether the term has an attestation, and whether any source documents the practice so Rule 5 can cite it. Found while planning and executing M003/S05, not named by the audit as a defect in itself | `P2` | `source` | `theory-gamelan.mdx` Rule 5 | Either Rule 5 names the term and/or cites the practice with a resolving tier-A/B reference, or this row is `accepted` with the reason recorded | `open` |
 
 ## Sequencing
 

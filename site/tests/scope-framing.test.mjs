@@ -1,0 +1,343 @@
+// Scope-and-framing cases for the M003 milestone of the theory-audit ledger
+// (docs/plans/theory-audit/ledger.md).
+//
+// M003/S01 creates this file with the F36 case; later M003 slices extend it —
+// S02 with Chapter 6's Hindustani scope, S03 with the simplification
+// disclosures, S04 with the non-isochrony statements, S05 with the remaining
+// framing items.
+//
+// It is wired into scripts/check-doc-conformance.sh and named in the REQUIRED
+// array of doc-conformance-wiring.test.mjs. Both are necessary: nothing in CI
+// runs `npm --prefix site test` (poly issue #272), so a host outside the runner
+// is a lock that never runs on the remote, and a host the runner names but
+// REQUIRED does not is one a later edit can quietly drop.
+
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { readFile, readdir } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+import { registerClaimTests } from './helpers/prose-claims.mjs';
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const DOCS = join(HERE, '..', 'src', 'content', 'docs');
+
+const loadSource = (file) => readFile(join(DOCS, file), 'utf8');
+
+const CLAIMS = [
+  {
+    id: 'S01-F36',
+    file: 'about-this-guide.mdx',
+    rule:
+      'ledger F36. Whether rumba clave predates or postdates son clave is debated ' +
+      '(Acosta 2004, Moore 2006). The audit judges the guide may legitimately ' +
+      'sidestep the question under the repositioning frame — but a sidestep that ' +
+      'is never stated is indistinguishable from not knowing, so the About page ' +
+      'declares it as a deliberate exclusion',
+    present: ['rumba clave predates or postdates', 'Acosta', 'Moore'],
+  },
+  {
+    id: 'S02-F25',
+    file: '06-indian-classical.mdx',
+    rule:
+      'ledger F25. The chapter was described as covering "Hindustani and Carnatic" ' +
+      'while the Carnatic tala system — solkattu and konnakol, different tala ' +
+      'families, a different conceptual frame — is absent. The word Carnatic ' +
+      'appeared exactly once in the file, in the description making the promise. ' +
+      'The description now says Hindustani, and the absence is stated in the ' +
+      'chapter rather than left to be inferred from what is missing',
+    forbidden: ['Hindustani and Carnatic'],
+    // The load-bearing arm. Deleting the word from the description alone would
+    // satisfy `forbidden` while leaving the absence unstated — passing the check
+    // and failing the definition-of-done item that matters.
+    present: ['Carnatic', 'solkattu', 'konnakol'],
+  },
+  {
+    id: 'S02-F25-overview',
+    file: 'theory-counterpoint-overview.mdx',
+    rule:
+      'ledger F25. The chapter was described as covering "Hindustani and Carnatic" ' +
+      'while the Carnatic tala system — solkattu and konnakol, different tala ' +
+      'families, a different conceptual frame — is absent. The word Carnatic ' +
+      'appeared exactly once in the file, in the description making the promise. ' +
+      'The description now says Hindustani, and the absence is stated in the ' +
+      'chapter rather than left to be inferred from what is missing',
+    // No `present` arm: the deep-dive index states no scope of its own. It only
+    // has to stop advertising one the chapter cannot back.
+    forbidden: ['Hindustani and Carnatic'],
+  },
+  {
+    id: 'S03-F26',
+    file: '02-sub-saharan-africa.mdx',
+    rule:
+      'ledger F26. Manding dunun ensembles do use distinct cycle lengths in many ' +
+      'contexts, so the chapter\'s shared-cycle presentation is a pedagogical ' +
+      'flattening rather than an error. Charry (2000), Mande Music, is the ' +
+      'authority that corrects it. The name is deliberately unlinked here: the ' +
+      'appendix entry is added by F44 in M005/S01, whose own verification reads ' +
+      '"cited inline at the F26 disclosure", so an anchor now would point at ' +
+      'nothing and fail research-provenance',
+    // No forbidden arm: the existing sentence is not wrong and is not being
+    // removed, only qualified.
+    present: ['pedagogical simplification', 'Charry', 'distinct cycle lengths'],
+  },
+  {
+    id: 'S03-F27',
+    file: 'theory-gamelan.mdx',
+    rule:
+      'ledger F27. Rule 3 presented the polos-onbeat / sangsih-offbeat division ' +
+      'of labour as general, when in norot the relationship is effectively ' +
+      'reversed. Style-dependent, not a law of the tradition',
+    // Not bare 'norot': Rule 5 already names the style, so that arm would pass
+    // before the edit and prove nothing about Rule 3.
+    present: ['style-dependent', 'in norot the relationship is effectively reversed'],
+  },
+  {
+    id: 'S03-F30',
+    file: 'theory-gamelan.mdx',
+    rule:
+      "ledger F30. Rule 5's absolute prohibition on mixing interlock styles " +
+      'mid-phrase is stronger than Tenzer, who documents stylistic mixing within ' +
+      'a single kebyar performance. The advice survives as a starting discipline ' +
+      'rather than a rule of the tradition',
+    forbidden: ['mixing interlock styles mid-phrase is not idiomatic'],
+    // Not bare 'Tenzer' nor the #fr-tenzer-2000 anchor: Rule 4 already carries
+    // both, so either arm would pass before the edit.
+    present: ['reliable default', 'stylistic mixing'],
+  },
+  {
+    id: 'S03-F29',
+    file: 'theory-gamelan.mdx',
+    rule:
+      "ledger F29, an accept row. Rule 4's strict-complementation honesty is " +
+      'already present; this case exists so a later edit cannot drop it. It ' +
+      'therefore passes on the day it is written — the proof that it is not ' +
+      'vacuous is in the evidence file, where the sentence was deleted and the ' +
+      'case watched to fail',
+    present: [
+      'Strict complementation is only the textbook case',
+      'the overlap marks structure',
+    ],
+    presentRegex: [/#fr-tenzer-2000/],
+  },
+  {
+    id: 'S03-F28',
+    file: '06-indian-classical.mdx',
+    rule:
+      'ledger F28. True layakari performs the same compositional phrase at 2x or ' +
+      '3x speed; changing a lane subdivision changes how many hits fall in the ' +
+      'cycle. The mapping is a useful Poly workflow and a conceptual ' +
+      'simplification, and the chapter now says which it is',
+    // No forbidden arm: the mapping is a legitimate workflow and stays.
+    present: ['hit density', 'the same phrase', 'simplification'],
+  },
+  {
+    id: 'S04-F31',
+    file: 'theory-sub-saharan-africa.mdx',
+    rule:
+      'ledger F31. The guide flagged Humanize as an approximation of Rule 8 ' +
+      'without saying how it differs. Verified in engine/src/engine.cpp: ' +
+      'applyTimingShifts derives jitterPpq from deterministicRand, so Humanize is ' +
+      'random jitter — seeded and reproducible, but with no per-position ' +
+      'structure. Polak (2010) documents a stable short-medium-long subdivision ' +
+      'profile, which is exactly the structure jitter lacks',
+    // Not bare 'systematic': the page already contains "systematically", and
+    // containsClaim matches substrings after normalisation, so that arm would
+    // have passed before the edit.
+    present: ['random jitter', 'systematic profile'],
+  },
+  {
+    id: 'S04-B10',
+    file: 'theory-sub-saharan-africa.mdx',
+    rule:
+      'ledger B10, found while planning F31 rather than named by the audit. ' +
+      '"until Poly ships subdivision-profile support" understates the engine: ' +
+      'microTimingMs is a per-step array, reachable from the WebUI through the ' +
+      'setMicroTiming bridge action and clamped to 20ms either way. What Poly ' +
+      'lacks is a measured jembe profile to load, not the mechanism to hold one',
+    forbidden: ['until Poly ships subdivision-profile support'],
+    present: ['micro-timing'],
+  },
+  {
+    id: 'S04-F32',
+    file: 'theory-balkan.mdx',
+    rule:
+      'ledger F32. Rule 8 already gives Balkan aksak the non-isochrony honesty ' +
+      'the audit asked for — the long beat is measurably under 3:2, and that is a ' +
+      'style-defining tendency rather than sloppiness. Nothing changed here; this ' +
+      'case exists so a later edit cannot drop it. It therefore passes on the day ' +
+      'it is written, and the proof it is not vacuous is in the evidence, where ' +
+      'the phrase was deleted and the case watched to fail',
+    // 'systematic, style-defining tendency' rather than bare 'systematic': the
+    // word alone is too weak to prove Rule 8 in particular survived.
+    present: ['systematic, style-defining tendency', 'the grid version is the'],
+    presentRegex: [/#fr-goldberg-2015/],
+  },
+  {
+    id: 'S05-F35',
+    file: '05-gamelan.mdx',
+    rule:
+      'ledger F35. "Time is not a line — it is a circle" is a legitimate ' +
+      'characterisation, but unsourced it reads as assertion rather than ' +
+      'scholarship. Tenzer (2000) discusses cyclic structure directly and is ' +
+      'already in the appendix at tier A',
+    // The bounded span is what ties the citation to the opening paragraph
+    // rather than to any later one: 05-gamelan.mdx cites Vitale further down,
+    // and an unbounded match would be satisfied by that instead.
+    presentRegex: [/time is not a line[\s\S]{0,400}#fr-tenzer-2000/],
+  },
+  {
+    id: 'S05-F33',
+    file: 'theory-gamelan.mdx',
+    rule:
+      'ledger F33. Rule 5 lists interlock styles and says pick one; it does not ' +
+      'say an added part need not interlock at all. A third part may double the ' +
+      'pokok tones instead — which is what Construction step 2 and patch Lane 5 ' +
+      'already build, and Rule 6 is why it belongs. The sentence carries no ' +
+      'citation on purpose: no source in this repo attests the practice, and the ' +
+      'audit\'s name for it, *kotekan polos*, is unsourced and collides with ' +
+      "Rule 3's use of *polos* for one of the pair. M006 row B11 owns both",
+    // 'pokok' alone is pre-satisfied by Rule 6 and cannot fail first; the
+    // presentRegex arm is what drives the red. 'third part', not
+    // 'third (?:part|lane)': Construction step 4 already says 'a sparse third
+    // lane' and the patch names a 'Pokok melody' lane, so the lane alternative
+    // would match material that predates this slice.
+    present: ['pokok'],
+    presentRegex: [/third part[\s\S]{0,300}pokok/],
+    forbidden: ['kotekan polos'],
+  },
+];
+
+registerClaimTests({ test, assert, claims: CLAIMS, loadSource });
+
+// M003/S01 task 2. F24 asks that the About page be reachable, not merely
+// present — from the introduction and from every theory page. That is thirteen
+// near-identical edits, which is exactly where one gets missed, so this case
+// reports every file that lacks the link rather than stopping at the first.
+//
+// The theory set is discovered by glob rather than hard-coded, so a thirteenth
+// deep dive added later is covered by construction. The count is asserted too:
+// a glob that silently matches nothing would otherwise let the whole case pass
+// vacuously.
+const ABOUT_LINK = '/about-this-guide/';
+
+test('S01-F24: the About page exists and is reachable from the introduction and every theory page', async () => {
+  const entries = await readdir(DOCS);
+  assert.ok(
+    entries.includes('about-this-guide.mdx'),
+    'about-this-guide.mdx is missing — F24 requires the page itself, not only links to it',
+  );
+
+  const theory = entries.filter((f) => f.startsWith('theory-') && f.endsWith('.mdx')).sort();
+  assert.equal(
+    theory.length,
+    12,
+    `expected 12 theory-*.mdx pages, found ${theory.length} — if a deep dive was ` +
+      'added or removed, update this count deliberately rather than loosening the check',
+  );
+
+  const missing = [];
+  for (const file of ['introduction.mdx', ...theory]) {
+    const src = await readFile(join(DOCS, file), 'utf8');
+    if (!src.includes(ABOUT_LINK)) missing.push(file);
+  }
+  assert.deepEqual(
+    missing,
+    [],
+    `${missing.length} of ${theory.length + 1} page(s) do not link to ${ABOUT_LINK}:\n  ` +
+      missing.join('\n  '),
+  );
+});
+
+// S05-F34 — the Rachenitsa patch table's Note column, and the GM stand-in line
+// beneath it.
+//
+// This case does not fit the CLAIMS array: its authority is not prose but the
+// preset record, so it compares the hand-written table against presets.json
+// cell by cell. The oracle is src/generated/presets.json, the same copy
+// preset-table-conformance.test.mjs imports; site/public/webui/presets.json is
+// a byte-identical second copy.
+//
+// The column header is `Note` and its cells are bare note numbers on purpose:
+// that is exactly what PresetTable emits for this column, so if 07-balkan.mdx
+// is ever migrated off the hand-written PolyPatch table the column is a
+// drop-in rather than a conflict.
+test('S05-F34 (07-balkan.mdx): Rachenitsa Note column matches presets.json', async () => {
+  const presets = JSON.parse(
+    await readFile(join(HERE, '..', 'src', 'generated', 'presets.json'), 'utf8'),
+  );
+  const records = Array.isArray(presets) ? presets : (presets.presets ?? []);
+  const record = records.find((p) => p.name === 'Rachenitsa 7/8');
+  assert.ok(record, 'preset "Rachenitsa 7/8" not found in src/generated/presets.json');
+
+  const src = await loadSource('07-balkan.mdx');
+
+  const block = src.slice(src.indexOf('<PolyPatch title="Rachenitsa Groove"'));
+  assert.ok(
+    block.startsWith('<PolyPatch'),
+    '07-balkan.mdx no longer contains <PolyPatch title="Rachenitsa Groove">',
+  );
+  const close = block.indexOf('</PolyPatch>');
+  assert.ok(close > 0, 'the Rachenitsa PolyPatch block is not closed');
+
+  const cells = (line) =>
+    line
+      .split('|')
+      .slice(1, -1)
+      .map((c) => c.trim());
+  const lines = block
+    .slice(0, close)
+    .split('\n')
+    .filter((l) => /^\s*\|/.test(l));
+  const headers = cells(lines[0]);
+  const rows = lines.slice(2).map(cells);
+
+  const note = headers.indexOf('Note');
+  assert.notEqual(
+    note,
+    -1,
+    `the Rachenitsa table has no "Note" column, so a reader cannot tell what any ` +
+      `lane sounds like on a GM kit. Headers: ${headers.join(', ')}`,
+  );
+
+  const lanes = record.lanes.slice(0, rows.length);
+  assert.equal(
+    rows.length,
+    lanes.length,
+    `the table has ${rows.length} lane row(s) but the preset has ${record.lanes.length}`,
+  );
+  lanes.forEach((lane, i) => {
+    assert.equal(
+      rows[i][note],
+      String(lane.noteNumber),
+      `Rachenitsa lane ${i + 1} Note cell is "${rows[i][note]}" but presets.json ` +
+        `says ${lane.noteNumber} — the table and the preset must not diverge`,
+    );
+  });
+
+  // The stand-in line: every lane's GM sound named, and the two pitched
+  // instruments called out. roleLabel is the repo's own name for the sound, and
+  // the only attestation in the tree for note 76 — 17-midi-routing-note-map.mdx
+  // corroborates 36, 37 and 42 but does not list 76.
+  // Bounded to the region between the table and the next heading: an
+  // end-of-file window would let a mention anywhere later in the chapter
+  // satisfy the assertion.
+  const tail = block.slice(close);
+  const nextHeading = tail.indexOf('\n## ');
+  const after = nextHeading === -1 ? tail : tail.slice(0, nextHeading);
+  for (const lane of lanes) {
+    assert.ok(
+      after.toLowerCase().includes(lane.roleLabel.toLowerCase()),
+      `the line beneath the Rachenitsa table does not name the GM sound ` +
+        `"${lane.roleLabel}" (note ${lane.noteNumber})`,
+    );
+  }
+  for (const pitched of ['kaval', 'gadulka']) {
+    assert.ok(
+      new RegExp(`${pitched}[\\s\\S]{0,400}no GM drum`, 'i').test(after),
+      `the line beneath the Rachenitsa table does not say the ${pitched} has no ` +
+        `GM drum equivalent — it is a pitched instrument the kit cannot produce`,
+    );
+  }
+});
