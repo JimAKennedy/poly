@@ -470,6 +470,7 @@ row is either ✅ or carries a documented divergence.
 
 ### Slice M004/S01 — Chapter 2 patch
 
+**Depends:** M004/S05
 **Validation:** format, site-unit, doc-conformance, e2e
 **Evidence:** evidence/M004-S01.md
 **Status:** open
@@ -483,10 +484,11 @@ row is either ✅ or carries a documented divergence.
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F37 | The Ch 2 patch omits the timeline-mode bell lane (Rule 1) and the dance-beat lane (construction Step 2) that `theory-sub-saharan-africa` requires | `P1` | `patch-align` | `02-sub-saharan-africa.mdx` patch | Rule-compliance assertion in the extended `theory-patch-conformance.test.mjs` (F42), or a documented-divergence marker it accepts | `open` |
+| F37 | The Ch 2 Ewe patch omits the dance-beat lane that `theory-sub-saharan-africa` construction step 2 requires — a low drum at 12 steps, 4 hits, E(4,12). Amended during planning: the other half of the audit's finding is already satisfied, since the `Ewe Polymetric Ensemble` preset carries `timeline: true` on its bell lane (Rule 1). What is missing is the dance-beat lane, and the fact that the patch table has no `Timeline` column, so the bell's mode is invisible to a reader — which is what the slice's second definition-of-done item is about | `P1` | `patch-align` | `02-sub-saharan-africa.mdx` Ewe patch | The named-rule checklist asserts the dance-beat lane is present and that the table renders `Timeline`, or accepts a documented-divergence marker | `open` |
 
 ### Slice M004/S02 — Chapter 3 patch
 
+**Depends:** M004/S05
 **Validation:** format, site-unit, doc-conformance, e2e
 **Evidence:** evidence/M004-S02.md
 **Status:** open
@@ -504,10 +506,11 @@ row is either ✅ or carries a documented divergence.
 |---|---|---|---|---|---|---|
 | F38 | Ch 3's clave lane is the E(5,16) approximation while the theory page's is an exact timeline pattern; the patch header says only "Clave" with no cross-reference | `P1` | `patch-align` | `03-afro-cuban.mdx` patch header | The header carries the approximation marker and the cross-reference link, asserted by the patch-conformance suite | `open` |
 | F39 | The theory-page tumbao lane (16 steps, 6 hits, rotation 14) satisfies the beat-1-avoidance rule but is an unusual configuration presented without its onset positions | `P1` | `patch-align` | `theory-afro-cuban.mdx` Lane 2 | The onset list is rendered and checked against `site/src/audio/bjorklund.ts` | `open` |
-| F40 | Ch 3's patch has conga at 10% mutation and quinto at 30% against the theory page's one-free-voice rule | `P1` | `patch-align` | `03-afro-cuban.mdx` patch | Rule-compliance assertion in the patch-conformance suite, or a documented divergence it accepts | `open` |
+| F40 | Ch 3's patch was reported as conga at 10% mutation and quinto at 30% against the theory page's one-free-voice rule. Amended during planning: the premise does not exist in the tree. The `Cuban Son Montuno` preset carries `mutationRate` 0.00 on all five lanes, the patch table has no Mutation column, and there is no quinto lane at all — quinto is a rumba voice and this is a son ensemble. M070 conformed the factory presets after the audit was written, which is the likely cause. The row closes on a lock asserting the one-free-voice rule still holds, not on an assertion that nothing is wrong | `P1` | `verify` | `03-afro-cuban.mdx` patch | The named-rule checklist asserts no lane exceeds the one-free-voice variation budget, and fails if a future edit raises a second lane's mutation above zero | `open` |
 
 ### Slice M004/S03 — Chapter 5 patch
 
+**Depends:** M004/S05
 **Validation:** format, site-unit, doc-conformance, e2e
 **Evidence:** evidence/M004-S03.md
 **Status:** open
@@ -540,7 +543,7 @@ row is either ✅ or carries a documented divergence.
 
 ### Slice M004/S05 — Named-rule conformance checklist
 
-**Depends:** M003/S03, M004/S01, M004/S02, M004/S03, M004/S04
+**Depends:** M003/S03
 **Validation:** format, site-unit, doc-conformance, doc-discipline, gate
 **Evidence:** evidence/M004-S05.md
 **Status:** open
@@ -787,9 +790,14 @@ M002 (citations) ────┴────────────────
 - **M003/S01 depends on M001/S06** because a repositioning statement should
   describe a guide whose overclaims are already hedged, not promise it.
 - **M004/S05 depends on M003/S03** because the named-rule checklist encodes the
-  gamelan rules as reworded there, and on M004/S01–S04 for the same reason
-  M002/S06 depends on its milestone: the checklist fails while any patch still
-  diverges silently.
+  gamelan rules as reworded there. It runs **first** within its milestone, and
+  M004/S01–S03 depend on it. The original order had S05 last, on the M002/S06
+  precedent that a burn-down slice follows the work it burns down — but the two
+  are not alike. S05 builds the machinery its siblings are verified by: F37,
+  F40 and F41 all name the extended suite or the divergence marker as their
+  verification, so with S05 last the escape hatch would be reached for before it
+  was designed, and each chapter slice would assert ad hoc against an oracle
+  that did not exist yet. S04 needs neither and stays independent.
 - **M006 depends on M002/S06** throughout, and is the milestone that burns down
   what M002/S06 suppresses. Its S01 removes the seven `citation-tier-ok` markers
   one claim at a time, so the tier check only becomes unconditionally true when
