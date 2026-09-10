@@ -67,6 +67,21 @@ const CLAIMS = [
     // has to stop advertising one the chapter cannot back.
     forbidden: ['Hindustani and Carnatic'],
   },
+  {
+    id: 'S03-F26',
+    file: '02-sub-saharan-africa.mdx',
+    rule:
+      'ledger F26. Manding dunun ensembles do use distinct cycle lengths in many ' +
+      'contexts, so the chapter\'s shared-cycle presentation is a pedagogical ' +
+      'flattening rather than an error. Charry (2000), Mande Music, is the ' +
+      'authority that corrects it. The name is deliberately unlinked here: the ' +
+      'appendix entry is added by F44 in M005/S01, whose own verification reads ' +
+      '"cited inline at the F26 disclosure", so an anchor now would point at ' +
+      'nothing and fail research-provenance',
+    // No forbidden arm: the existing sentence is not wrong and is not being
+    // removed, only qualified.
+    present: ['pedagogical simplification', 'Charry', 'distinct cycle lengths'],
+  },
 ];
 
 registerClaimTests({ test, assert, claims: CLAIMS, loadSource });
