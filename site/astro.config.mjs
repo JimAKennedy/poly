@@ -38,6 +38,7 @@ export default defineConfig({
 			customCss: ['./src/styles/custom.css'],
 			sidebar: [
 				{ label: 'Introduction', slug: 'introduction' },
+				{ label: 'About This Guide', slug: 'about-this-guide' },
 				{ label: 'Using Poly', slug: 'guide-using-poly' },
 				{
 					label: 'Chapters',

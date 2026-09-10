@@ -288,6 +288,14 @@ cannot_drift:
       Narrative framing of what Poly is and who the guide is for. Describes
       intent and reading order rather than any code surface.
 
+  - doc: "site/src/content/docs/about-this-guide.mdx"
+    reason: >-
+      States the guide's scope and provenance — what it is, what it is not, and
+      which questions it deliberately leaves open. Describes the guide's own
+      position rather than any code surface, so touch-correlation has nothing to
+      mirror. Its accuracy is gated by cases S01-F24 and S01-F36 in
+      site/tests/scope-framing.test.mjs instead.
+
   - doc: "site/src/content/docs/01-foundations.mdx"
     reason: >-
       Teaches Euclidean rhythm and cycle independence as musical concepts.

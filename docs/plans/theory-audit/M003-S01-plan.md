@@ -12,7 +12,7 @@ makes it reachable from every page that needs it.
 The executable state of this plan. `/jk:next` reads the first unchecked box
 here to decide what to do; each task's own commit ticks its box.
 
-- [ ] Task 1 — The About page, its scope exclusions, and the lock host (F36)
+- [x] Task 1 — The About page, its scope exclusions, and the lock host (F36)
 - [ ] Task 2 — Reachability from the introduction and all twelve theory pages (F24)
 
 ## Definition of Done

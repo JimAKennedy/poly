@@ -365,7 +365,7 @@ each simplification it names is disclosed at the point of use.
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
 | F24 | The guide has no statement of what it is and is not; the audit supplies a four-paragraph repositioning statement and judges it defensible | `P1` | `reframe` | New About page, `introduction.mdx`, every `theory-*.mdx` | Case `S01-F24` asserts the About page exists and is linked from the introduction and all twelve theory pages | `open` |
-| F36 | Whether rumba clave predates or postdates son clave is debated (Acosta 2004, Moore 2006); the audit judges the guide may legitimately sidestep it under the repositioning frame | `P1` | `accept` | New About page | Case `S01-F36` asserts the exclusion is named on the About page, so the sidestep is declared rather than silent | `open` |
+| F36 | Whether rumba clave predates or postdates son clave is debated (Acosta 2004, Moore 2006); the audit judges the guide may legitimately sidestep it under the repositioning frame. Resolved 2026-09-09. The About page names it under "What this guide does not cover" and says why the sidestep is legitimate rather than merely convenient: both claves are given as they are played, and the rules for aligning parts to either are the same whichever came first, so nothing in the guide depends on the answer | `P1` | `accept` | `about-this-guide.mdx` | Case `S01-F36` in `site/tests/scope-framing.test.mjs` requires the debate, Acosta and Moore all named on the About page, so the sidestep cannot become silent again | `done` |
 
 ### Slice M003/S02 — Chapter 6 scope
 
