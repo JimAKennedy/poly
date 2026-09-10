@@ -174,6 +174,19 @@ const CLAIMS = [
     present: ['systematic, style-defining tendency', 'the grid version is the'],
     presentRegex: [/#fr-goldberg-2015/],
   },
+  {
+    id: 'S05-F35',
+    file: '05-gamelan.mdx',
+    rule:
+      'ledger F35. "Time is not a line — it is a circle" is a legitimate ' +
+      'characterisation, but unsourced it reads as assertion rather than ' +
+      'scholarship. Tenzer (2000) discusses cyclic structure directly and is ' +
+      'already in the appendix at tier A',
+    // The bounded span is what ties the citation to the opening paragraph
+    // rather than to any later one: 05-gamelan.mdx cites Vitale further down,
+    // and an unbounded match would be satisfied by that instead.
+    presentRegex: [/time is not a line[\s\S]{0,400}#fr-tenzer-2000/],
+  },
 ];
 
 registerClaimTests({ test, assert, claims: CLAIMS, loadSource });
