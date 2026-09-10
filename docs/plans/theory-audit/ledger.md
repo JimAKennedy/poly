@@ -544,9 +544,10 @@ row is either ✅ or carries a documented divergence.
 ### Slice M004/S05 — Named-rule conformance checklist
 
 **Depends:** M003/S03
+**Plan:** M004-S05-plan.md
 **Validation:** format, site-unit, doc-conformance, doc-discipline, gate
 **Evidence:** evidence/M004-S05.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
