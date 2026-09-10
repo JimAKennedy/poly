@@ -456,6 +456,36 @@ const CHECKLIST = [
     ],
   },
   {
+    page: 'theory-afro-cuban.mdx',
+    patch: 'Rule-Checked Son Ensemble (3-2)',
+    rules: [
+      {
+        id: 'ac-tumbao-onsets-rendered',
+        description: "Rule 3: the tumbao's onset positions are printed, not left to be derived",
+        check: ({ rows }, { block }) => {
+          const tumbao = findLane(rows, /tumbao/i);
+          if (!tumbao) return 'no tumbao lane found';
+          const want = laneOnsets(tumbao);
+          if (!want) return 'the tumbao lane is in timeline mode; its onsets cannot be derived here';
+          // Asserted against the derivation, never against a literal: the point
+          // is that the printed prose and the (steps, hits, rotation) spelling
+          // cannot drift apart. A hard-coded list would let them.
+          const printed = block.match(/\{([0-9,\s]+)\}/);
+          if (!printed) {
+            return `rotation ${tumbao.rotation} is an unusual spelling and the page prints no onset ` +
+              `set for it; Rule 3's claim rests on ${JSON.stringify(want)}`;
+          }
+          const got = printed[1].split(',').map((n) => parseInt(n.trim(), 10));
+          const same = got.length === want.length && got.every((v, i) => v === want[i]);
+          return same
+            ? null
+            : `the page prints onsets ${JSON.stringify(got)} but ` +
+                `E(${tumbao.hits},${tumbao.steps}) at rotation ${tumbao.rotation} is ${JSON.stringify(want)}`;
+        },
+      },
+    ],
+  },
+  {
     page: '02-sub-saharan-africa.mdx',
     patch: 'Ewe-Inspired Polymetric Ensemble',
     rules: [

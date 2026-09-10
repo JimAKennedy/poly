@@ -10,7 +10,7 @@ page's lane (F39), and a row whose premise turned out not to exist (F40).
 ## Task status
 
 - [x] Task 1 — Name the clave lane an approximation and link the exact construction
-- [ ] Task 2 — Render the theory tumbao's onset positions
+- [x] Task 2 — Render the theory tumbao's onset positions
 - [ ] Task 3 — Close F40 on its lock, and close the slice
 
 ## Definition of Done
