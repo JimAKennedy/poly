@@ -82,3 +82,18 @@ on the user's behalf.
   actually names. Recorded rather than glossed.
 - **Correction:** the plan's step 2 asserts the five seeded rules "hold today".
   Four do. `ebb-kick-avoids-snare` does not, which is how B15 was found.
+- **Finding, recorded rather than chased:** the Chapter 2 Ewe table binds
+  `preset="Sub-Saharan: Agbekor"`, but the preset's lanes (cowbell 12/7, conga
+  5/4, tom 3/2, snare 7/4) agree with the table on lane 1 only — the table reads
+  bell 12/7, support 12/3, responding 5/3, lead 7/5. `polypatch-preset-
+  resolution.test.mjs` says the attribute "renders only as an italic display
+  sub-title; it resolves nothing at runtime", so the contract is that the name
+  resolves, not that the lanes match, and S01 is a doc edit rather than an
+  engine change — **Why recorded:** a reader who loads the named preset gets
+  something different from the printed table, which is a real conformance
+  question. It is outside M004's rows and outside the checklist's remit, so it
+  is noted here for a human rather than turned into work nobody asked for.
+- **Decision:** S01 adds the dance-beat lane as lane 2 rather than appending it,
+  renumbering the lanes below — **Why:** the theory page's construction lays
+  bell, then dance beat, then supports, then lead, and a table that reads in
+  construction order is the thing the reader is meant to follow.
