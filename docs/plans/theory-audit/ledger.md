@@ -564,7 +564,7 @@ row is either ✅ or carries a documented divergence.
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F42 | The CI tests verify theory-page patches carry valid Euclidean triples but never that a patch follows its page's own named rules — the gap every one of F37–F41 lives in | `P1` | `patch-align` | `site/tests/theory-patch-conformance.test.mjs` | The suite carries a per-page named-rule checklist; removing a required lane from any chapter patch fails it, and adding the divergence marker passes it | `open` |
+| F42 | The CI tests verify theory-page patches carry valid Euclidean triples but never that a patch follows its page's own named rules — the gap every one of F37–F41 lives in. Closed by a per-page checklist declared as data and iterated, so a page with no entry is a missing row rather than an invisible absence, together with the `patch-divergence-ok` marker contract. Coverage is this slice's: the three chapter patches S01–S03 need, plus `theory-minimalism` and `theory-electronic-breakbeat`, the only two theory pages that carried no assertion at all. The remaining rules across the other nine theory pages are M007's. The first newly-checked rule found a tenth contradiction of the class the 2026-07-30 review found nine of — see B15 | `P1` | `patch-align` | `site/tests/theory-patch-conformance.test.mjs` | The checklist carries eleven rules across five patches; each was watched to fail on its own terms, a marker satisfies only the rule it names, a marker on a passing rule fails, and the live suppression count is printed | `done` |
 
 ---
 

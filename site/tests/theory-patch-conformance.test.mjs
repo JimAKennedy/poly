@@ -20,6 +20,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import presetsData from '../src/generated/presets.json' with { type: 'json' };
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -454,7 +455,104 @@ const CHECKLIST = [
       },
     ],
   },
+  {
+    page: '02-sub-saharan-africa.mdx',
+    patch: 'Ewe-Inspired Polymetric Ensemble',
+    rules: [
+      {
+        id: 'ssa-dance-beat',
+        description: 'construction step 2: a low drum lays the dance beat, 12 steps, 4 hits',
+        check: ({ rows }) => {
+          const beat = rows.find((r) => r.steps === 12 && r.hits === 4);
+          return beat
+            ? null
+            : 'no lane at 12 steps / 4 hits — theory-sub-saharan-africa construction step 2 lays ' +
+                'the dance beat as E(4,12), every third pulse, and the parts are learned against it';
+        },
+      },
+      {
+        id: 'ssa-timeline-legible',
+        description: "Rule 1: the timeline's fixity is legible from the table",
+        check: ({ columns }) =>
+          columns.includes('Timeline')
+            ? null
+            : `the table has no Timeline column (${columns.join(', ')}), so a reader cannot see ` +
+              'that the bell runs in timeline mode — which Rule 1 makes the patch depend on',
+      },
+    ],
+  },
+  {
+    page: '03-afro-cuban.mdx',
+    patch: 'Cuban Son Ensemble',
+    rules: [
+      {
+        id: 'ac-clave-approximation',
+        description: 'the clave lane names itself the Euclidean approximation and links the exact construction',
+        check: ({ rows }, { block }) => {
+          const clave = findLane(rows, /clave/i);
+          if (!clave) return 'no clave lane found';
+          const problems = [];
+          if (!/approx/i.test(clave.cell.Role)) {
+            problems.push(`the clave lane header reads "${clave.cell.Role}" and does not mark itself an approximation`);
+          }
+          if (!/\]\(\//.test(block)) {
+            problems.push('the patch carries no link to the exact-timeline construction');
+          }
+          return problems.length ? problems.join('; ') : null;
+        },
+      },
+      {
+        id: 'ac-one-free-voice',
+        description: 'Rule 5: the variation budget belongs to one voice at a time',
+        check: (_patch, { preset }) => {
+          if (!preset) return 'preset "Cuban Son Montuno" not found in src/generated/presets.json';
+          const busy = preset.lanes.filter((l) => (l.mutationRate ?? 0) > 0);
+          return busy.length <= 1
+            ? null
+            : `${busy.length} lanes carry a mutation budget (${busy.map((l) => l.roleLabel).join(', ')}); ` +
+                'theory-afro-cuban Rule 5 gives it to one voice at a time';
+        },
+      },
+    ],
+  },
+  {
+    page: '05-gamelan.mdx',
+    patch: 'Balinese Kotekan Interlocking',
+    rules: [
+      {
+        id: 'gam-pokok-layer',
+        description: 'Rule 6: the interlock serves a pokok melody',
+        check: ({ rows }) =>
+          findLane(rows, /pokok/i)
+            ? null
+            : `no pokok lane among ${rows.map((r) => r.role).join(', ')} — theory-gamelan Rule 6 ` +
+              'makes the kotekan an ornamentation system over a slower core melody',
+      },
+      {
+        id: 'gam-structural-overlap',
+        description: 'Rule 4: the parts overlap at structural tones',
+        check: ({ rows }) => {
+          const polos = findLane(rows, /polos/i);
+          const sangsih = findLane(rows, /sangsih/i);
+          if (!polos || !sangsih) return 'need both a polos and a sangsih lane to check Rule 4';
+          const derived = /^L\d+$/i.test(String(sangsih.cell.Kotekan ?? ''));
+          if (derived) {
+            return `sangsih is ${sangsih.cell.Kotekan}, the strict complement of polos, so the pair ` +
+              'intersect nowhere by construction — Rule 4 wants doubled strokes at cadence points ' +
+              'and calls an everywhere-empty intersection mechanical';
+          }
+          const a = new Set(laneOnsets(polos) ?? []);
+          const shared = (laneOnsets(sangsih) ?? []).filter((i) => a.has(i));
+          return shared.length > 0
+            ? null
+            : 'polos and sangsih share no onset; Rule 4 wants overlap at structural tones';
+        },
+      },
+    ],
+  },
 ];
+
+const PRESETS = Array.isArray(presetsData) ? presetsData : (presetsData.presets ?? []);
 
 let liveMarkers = 0;
 
@@ -471,8 +569,16 @@ for (const entry of CHECKLIST) {
           'the patch was renamed, removed, or its table is malformed',
       );
 
+      // The patch's own source window, and the preset it binds to if it names
+      // one — a rule about a header or a mutation budget cannot be settled from
+      // the parsed lane table alone.
+      const start = src.indexOf(`<PolyPatch title="${entry.patch}"`);
+      const block = src.slice(start, src.indexOf('</PolyPatch>', start));
+      const presetName = block.match(/preset="([^"]+)"/)?.[1] ?? null;
+      const preset = presetName ? (PRESETS.find((p) => p.name === presetName) ?? null) : null;
+
       const excuse = markersFor(src).get(`${entry.patch}::${rule.id}`);
-      const failure = rule.check(patch);
+      const failure = rule.check(patch, { src, block, preset });
       if (excuse) {
         liveMarkers += 1;
         assert.ok(
