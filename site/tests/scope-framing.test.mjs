@@ -159,6 +159,21 @@ const CLAIMS = [
     forbidden: ['until Poly ships subdivision-profile support'],
     present: ['micro-timing'],
   },
+  {
+    id: 'S04-F32',
+    file: 'theory-balkan.mdx',
+    rule:
+      'ledger F32. Rule 8 already gives Balkan aksak the non-isochrony honesty ' +
+      'the audit asked for — the long beat is measurably under 3:2, and that is a ' +
+      'style-defining tendency rather than sloppiness. Nothing changed here; this ' +
+      'case exists so a later edit cannot drop it. It therefore passes on the day ' +
+      'it is written, and the proof it is not vacuous is in the evidence, where ' +
+      'the phrase was deleted and the case watched to fail',
+    // 'systematic, style-defining tendency' rather than bare 'systematic': the
+    // word alone is too weak to prove Rule 8 in particular survived.
+    present: ['systematic, style-defining tendency', 'the grid version is the'],
+    presentRegex: [/#fr-goldberg-2015/],
+  },
 ];
 
 registerClaimTests({ test, assert, claims: CLAIMS, loadSource });

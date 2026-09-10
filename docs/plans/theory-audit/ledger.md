@@ -418,21 +418,21 @@ each simplification it names is disclosed at the point of use.
 **Plan:** M003-S04-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M003-S04.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] `theory-sub-saharan-africa.mdx` states explicitly that Humanize is random
+- [x] `theory-sub-saharan-africa.mdx` states explicitly that Humanize is random
       jitter, against Polak's systematic style-specific profiles — not merely
       that it is an approximation
-- [ ] Both non-isochrony disclosures are locked by tests, so the Balkan one
+- [x] Both non-isochrony disclosures are locked by tests, so the Balkan one
       already in the tree cannot be dropped
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
 | F31 | Rule 8's Humanize approximation was flagged as an approximation but the guide never said *how* it differs: Humanize is random jitter, Polak (2010) documents systematic style-specific subdivision profiles. Resolved 2026-09-09. Verified in `engine/src/engine.cpp` rather than taken on trust — `applyTimingShifts` derives `jitterPpq` from `deterministicRand`, so Humanize is seeded and reproducible but carries no per-position structure. Construction step 5 now says jitter reproduces the presence of non-isochrony and not its shape, and that a straight grid plus noise is still not the feel. Rule 8 is unchanged: it states what the scholarship found, and the contrast belongs where Humanize is named | `P1` | `disclose` | `theory-sub-saharan-africa.mdx` construction step 5 | Case `S04-F31` in `site/tests/scope-framing.test.mjs` requires "random jitter" and "systematic profile". It deliberately does not assert bare "systematic", which the page already contained inside "systematically" | `done` |
 | B10 | `theory-sub-saharan-africa.mdx` construction step 5 said "until Poly ships subdivision-profile support", which understated the engine: `microTimingMs` is a per-step timing array, exposed to the WebUI as the micro-timing bars through the `setMicroTiming` bridge action and clamped to ±20 ms. What Poly lacks is a jembe *profile* to load, not the mechanism to express one. Found while planning F31, not named by the audit. Resolved 2026-09-09. The step now names per-step micro-timing as where such a profile would be entered, one step at a time, and says the missing piece is the measured data | `P2` | `correct` | `theory-sub-saharan-africa.mdx` construction step 5 | Case `S04-B10` forbids the old phrasing and requires micro-timing to be named | `done` |
-| F32 | The audit asks that Balkan aksak be given the same non-isochrony honesty as the Malian jembe; `theory-balkan.mdx` Rule 8 already gives it, citing Goldberg (2015), but nothing locks it | `P1` | `disclose` | `theory-balkan.mdx` Rule 8 | Case `S04-F32` extracts Rule 8 and asserts the sub-3:2 statement, its `fr-goldberg-2015` citation, and the notated-versus-played disclosure survive | `open` |
+| F32 | The audit asked that Balkan aksak be given the same non-isochrony honesty as the Malian jembe; `theory-balkan.mdx` Rule 8 already gave it, citing Goldberg (2015), but nothing locked it. Resolved 2026-09-09. **No prose changed** — `git diff` on the page is empty, and the row added only the lock, which is what the audit's own judgement of this item amounted to | `P1` | `disclose` | `theory-balkan.mdx` | Case `S04-F32` in `site/tests/scope-framing.test.mjs` requires "systematic, style-defining tendency", "the grid version is the" and the `fr-goldberg-2015` anchor. It passed on the day it was written, so it was proved non-vacuous by deleting the style-defining phrase and watching it fail by name, then restoring to a byte-identical file | `done` |
 
 ### Slice M003/S05 — Remaining framing items
 
