@@ -132,6 +132,33 @@ const CLAIMS = [
     // No forbidden arm: the mapping is a legitimate workflow and stays.
     present: ['hit density', 'the same phrase', 'simplification'],
   },
+  {
+    id: 'S04-F31',
+    file: 'theory-sub-saharan-africa.mdx',
+    rule:
+      'ledger F31. The guide flagged Humanize as an approximation of Rule 8 ' +
+      'without saying how it differs. Verified in engine/src/engine.cpp: ' +
+      'applyTimingShifts derives jitterPpq from deterministicRand, so Humanize is ' +
+      'random jitter — seeded and reproducible, but with no per-position ' +
+      'structure. Polak (2010) documents a stable short-medium-long subdivision ' +
+      'profile, which is exactly the structure jitter lacks',
+    // Not bare 'systematic': the page already contains "systematically", and
+    // containsClaim matches substrings after normalisation, so that arm would
+    // have passed before the edit.
+    present: ['random jitter', 'systematic profile'],
+  },
+  {
+    id: 'S04-B10',
+    file: 'theory-sub-saharan-africa.mdx',
+    rule:
+      'ledger B10, found while planning F31 rather than named by the audit. ' +
+      '"until Poly ships subdivision-profile support" understates the engine: ' +
+      'microTimingMs is a per-step array, reachable from the WebUI through the ' +
+      'setMicroTiming bridge action and clamped to 20ms either way. What Poly ' +
+      'lacks is a measured jembe profile to load, not the mechanism to hold one',
+    forbidden: ['until Poly ships subdivision-profile support'],
+    present: ['micro-timing'],
+  },
 ];
 
 registerClaimTests({ test, assert, claims: CLAIMS, loadSource });

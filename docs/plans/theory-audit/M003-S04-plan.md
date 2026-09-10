@@ -13,7 +13,7 @@ difference and locks both.
 The executable state of this plan. `/jk:next` reads the first unchecked box
 here to decide what to do; each task's own commit ticks its box.
 
-- [ ] Task 1 — Sub-Saharan: random jitter versus systematic profile, and what Poly actually has (F31, B10)
+- [x] Task 1 — Sub-Saharan: random jitter versus systematic profile, and what Poly actually has (F31, B10)
 - [ ] Task 2 — Lock the Balkan long-beat honesty (F32)
 
 ## Definition of Done
