@@ -490,9 +490,10 @@ row is either ✅ or carries a documented divergence.
 ### Slice M004/S02 — Chapter 3 patch
 
 **Depends:** M004/S05
+**Plan:** M004-S02-plan.md
 **Validation:** format, site-unit, doc-conformance, e2e
 **Evidence:** evidence/M004-S02.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
