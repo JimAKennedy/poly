@@ -97,3 +97,29 @@ on the user's behalf.
   renumbering the lanes below — **Why:** the theory page's construction lays
   bell, then dance beat, then supports, then lead, and a table that reads in
   construction order is the thing the reader is meant to follow.
+- **Q:** The `e2e` token rebuilds the WASM and dirties `webui/poly_engine.{js,wasm}`
+  on every run, non-reproducibly, and S02 and S03 both owe `e2e`. How should the
+  rest of the run handle it? — **A:** Revert the artifacts after each `e2e` run.
+- **Decision:** after each `e2e` run, restore both files from `origin/main` and
+  stage explicit paths rather than `git add -A` — **Why:** a milestone that
+  changes no engine source should not ship a 137-byte binary delta, and a
+  reviewer cannot tell toolchain churn from a real change in a `.wasm` diff.
+- **Q:** Should the non-reproducibility and the `git add -A` hazard be recorded
+  beyond this conversation? — **A:** All three — a poly issue, a CLAUDE.md note,
+  and a B row.
+- **Decision:** issue [#282](https://github.com/JimAKennedy/poly/issues/282)
+  opened, a "The e2e Gate Rewrites Committed Artifacts" section added to
+  CLAUDE.md, and row B16 added to M004/S02 as `accepted` with #282 named as its
+  owner — **Why:** the ledger records the finding, the issue owns the fix, and
+  CLAUDE.md is where the next person will actually trip over it.
+- **Mistake, recorded:** M004/S01's close commit swept `webui/poly_engine.{js,wasm}`
+  in via `git add -A` after the `e2e` run. Reverted in its own commit. This is
+  the second time `git add -A` has pulled unrelated files into a commit in this
+  programme; explicit staging is now the rule for the rest of the run.
+- **Finding:** `docs/audits/theory-audit-remediation.test.mjs` matched ledger row
+  references in the Related-issues section with `/[FH]\d{2}/`, so an entry citing
+  a `B` row read as citing no row at all. This is the same `[FH]` versus `[FHB]`
+  defect M003/S04 fixed in the table-row parser, in a second place the earlier
+  fix did not reach. Corrected to `/[FHB]\d{2}/` and proved both ways: the #282
+  entry now resolves, and changing its citation to a non-existent `B99` still
+  fails.

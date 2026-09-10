@@ -65,6 +65,26 @@ See `ARCHITECTURE.md` for the current architecture. Active roadmap is public
   `Steinberg::Vst::ParamID` in a comment, and a bare-word rule would ban the
   comment along with the dependency
 
+### The e2e Gate Rewrites Committed Artifacts
+
+`scripts/site-verify-local.sh` — the `e2e` validation token — rebuilds the WASM
+engine and copies `poly_engine.js` and `poly_engine.wasm` over the committed
+copies in `webui/`. Running it always leaves those two files dirty.
+
+- **Never `git add -A` after running `e2e`.** Stage explicit paths. A milestone
+  that touches no engine source has no business committing a new `.wasm`, and
+  the sweep is easy to miss in a large commit.
+- The rebuild is **not byte-reproducible** on every machine: a run with no
+  source change moved the `.wasm` by 137 bytes and added a trailing-whitespace
+  line to the `.js` that `pre-commit` then strips — so `e2e` and `format`
+  interfere, and `pre-commit run --all-files` fails until the artifacts are
+  restored.
+- Restore with `git checkout origin/main -- webui/poly_engine.js
+  webui/poly_engine.wasm` before committing, unless a deliberate engine change
+  is being shipped.
+
+Tracked as [#282](https://github.com/JimAKennedy/poly/issues/282).
+
 ### Pre-Push Quality Gate
 The pre-push hook (`scripts/pre-push-check.sh`) enforces quality checks automatically:
 1. **Blocks direct pushes to main** — use a feature branch and PR instead

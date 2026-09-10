@@ -509,6 +509,7 @@ row is either ✅ or carries a documented divergence.
 | F38 | Ch 3's clave lane is the E(5,16) approximation while the theory page's is an exact timeline pattern; the patch header says only "Clave" with no cross-reference | `P1` | `patch-align` | `03-afro-cuban.mdx` patch header | Case `ac-clave-approximation` in the named-rule checklist, passing with no divergence marker; both arms — the header naming the approximation and the link to the exact construction — proved to fail separately | `done` |
 | F39 | The theory-page tumbao lane (16 steps, 6 hits, rotation 14) satisfies the beat-1-avoidance rule but is an unusual configuration presented without its onset positions | `P1` | `patch-align` | `theory-afro-cuban.mdx` Lane 2 | The onset list is rendered and checked against `site/src/audio/bjorklund.ts` | `open` |
 | F40 | Ch 3's patch was reported as conga at 10% mutation and quinto at 30% against the theory page's one-free-voice rule. Amended during planning: the premise does not exist in the tree. The `Cuban Son Montuno` preset carries `mutationRate` 0.00 on all five lanes, the patch table has no Mutation column, and there is no quinto lane at all — quinto is a rumba voice and this is a son ensemble. M070 conformed the factory presets after the audit was written, which is the likely cause. The row closes on a lock asserting the one-free-voice rule still holds, not on an assertion that nothing is wrong | `P1` | `verify` | `03-afro-cuban.mdx` patch | The named-rule checklist asserts no lane exceeds the one-free-voice variation budget, and fails if a future edit raises a second lane's mutation above zero | `open` |
+| B16 | The `e2e` token runs `scripts/site-verify-local.sh`, which rebuilds the WASM engine and copies `poly_engine.js` and `poly_engine.wasm` over the committed artifacts, so every run dirties the tree. The rebuild is not byte-reproducible: during M004, which changes no engine source, the `.wasm` moved 142014 → 142151 bytes and the `.js` gained a trailing-whitespace line that `pre-commit` then strips, so `e2e` and `format` interfere. M004/S01's close swept both files in via `git add -A` and they were reverted. Found while running M004/S02 | `P2` | `accept` | `scripts/site-verify-local.sh`, `webui/poly_engine.{js,wasm}` | Recorded and owned by [#282](https://github.com/JimAKennedy/poly/issues/282); this programme reverts the artifacts after each `e2e` run and stages explicit paths rather than `git add -A` | `accepted` |
 
 ### Slice M004/S03 — Chapter 5 patch
 
@@ -897,6 +898,10 @@ M002 (citations) ────┴────────────────
 Every open issue overlapping this programme's remit is enumerated here, so the
 two views cannot silently drift.
 
+- [#282](https://github.com/JimAKennedy/poly/issues/282) — **not closed here**.
+  B16 records that `e2e` rebuilds the committed WASM artifacts non-reproducibly
+  and that this programme reverts them after each run; making the build
+  reproducible is tracker work, not audit remediation.
 - [#91](https://github.com/JimAKennedy/poly/issues/91) — **closed by F54**. The
   E(3,16) appendix row is correct under Poly's phase convention; F54 makes that
   convention explicit next to the table.
