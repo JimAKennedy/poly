@@ -103,3 +103,9 @@ reference [2] carry a fabricated title into M002.
   theory)" — a listing, not a citation at a claim, which is the distinction M002
   built the tier check around. The remaining work was real: the dance-beat
   sentence now names him where the methodology is asserted.
+- **Mistake, recorded:** M005/S03's evidence file was written with
+  `site-unit → 221 tests` in the same command block as the run that produced the
+  number, so it recorded a guess rather than a result; the run returned 222.
+  Corrected in a follow-up commit — **Lesson:** write evidence counts after
+  reading the output, never in the same block as the command producing it. An
+  evidence file whose numbers were predicted rather than read is not evidence.
