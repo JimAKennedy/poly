@@ -36,19 +36,25 @@ const REPO = join(HERE, '..', '..');
 // by-column-name cell map plus parsed steps/hits/rotation. The first five
 // columns are canonical across every theory page: Lane | Role | Steps | Hits |
 // Rotation; later columns vary per page and are read by header name.
-function parsePolyPatch(src) {
+// `title` selects one of a file's <PolyPatch> blocks by its title attribute.
+// Omitting it keeps the original behaviour exactly — the first block in the
+// file — because the nine review-defect tests above call it that way and this
+// parser must stay a pure extension for them (M004/S05 task 1).
+function parsePolyPatch(src, title = null) {
   const lines = src.split('\n');
   let inBlock = false;
   let columns = null;
   const rows = [];
+  const opensWanted = (line) =>
+    title === null ? line.includes('<PolyPatch') : line.includes(`<PolyPatch title="${title}"`);
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    if (line.includes('<PolyPatch')) {
+    if (!inBlock && opensWanted(line)) {
       inBlock = true;
       continue;
     }
-    if (line.includes('</PolyPatch>')) break;
     if (!inBlock) continue;
+    if (line.includes('</PolyPatch>')) break;
     if (!/^\s*\|/.test(line)) continue;
     const cells = line
       .split('|')
@@ -292,4 +298,44 @@ test('theory-afrobeat: Spread column present, bell/shekere on separate strata, h
     fail.push(`hat carries ${hat.cell.Mutation} mutation — Rules 4 & 7 assign the mutation budget to the colour voices\n  ${relPath}:${hat.lineno}`);
 
   assert.equal(fail.length, 0, `\n${fail.join('\n')}`);
+});
+
+// --- M004/S05: multi-patch parsing ----------------------------------------
+
+// Chapter 2 carries two patches (Ewe, Manding) and Chapter 5 two (Balinese
+// kotekan, Javanese colotomy). parsePolyPatch read the first table in a file,
+// so the second of each was unreachable — and the first was only addressable
+// by position, which is not the same as saying which one you meant.
+//
+// Asserted against the file, not against transcribed lane data: the default
+// parse must equal the first title's parse, and the second title's must differ.
+test('S05-parse-by-title: each <PolyPatch> in a file is addressable by title', async () => {
+  const path = join(DOCS, '05-gamelan.mdx');
+  const src = await readFile(path, 'utf8');
+
+  const titles = [...src.matchAll(/<PolyPatch title="([^"]+)"/g)].map((m) => m[1]);
+  assert.ok(
+    titles.length >= 2,
+    `05-gamelan.mdx is expected to carry two patches; found ${titles.length} (${titles.join(', ')})`,
+  );
+
+  const roles = (patch) => patch.rows.map((r) => r.role);
+  const first = parsePolyPatch(src, titles[0]);
+  const second = parsePolyPatch(src, titles[1]);
+
+  assert.ok(first.rows.length > 0, `no lane rows parsed for "${titles[0]}"`);
+  assert.ok(second.rows.length > 0, `no lane rows parsed for "${titles[1]}"`);
+
+  assert.deepEqual(
+    roles(parsePolyPatch(src)),
+    roles(first),
+    'omitting the title must stay byte-identical to the previous behaviour: the ' +
+      "first patch in the file. The nine existing tests depend on this default.",
+  );
+  assert.notDeepEqual(
+    roles(second),
+    roles(first),
+    `selecting "${titles[1]}" returned the same lanes as "${titles[0]}" — the ` +
+      'title is being ignored and the second patch is still unreachable',
+  );
 });
