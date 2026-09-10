@@ -20,6 +20,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import presetsData from '../src/generated/presets.json' with { type: 'json' };
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -36,19 +37,25 @@ const REPO = join(HERE, '..', '..');
 // by-column-name cell map plus parsed steps/hits/rotation. The first five
 // columns are canonical across every theory page: Lane | Role | Steps | Hits |
 // Rotation; later columns vary per page and are read by header name.
-function parsePolyPatch(src) {
+// `title` selects one of a file's <PolyPatch> blocks by its title attribute.
+// Omitting it keeps the original behaviour exactly — the first block in the
+// file — because the nine review-defect tests above call it that way and this
+// parser must stay a pure extension for them (M004/S05 task 1).
+function parsePolyPatch(src, title = null) {
   const lines = src.split('\n');
   let inBlock = false;
   let columns = null;
   const rows = [];
+  const opensWanted = (line) =>
+    title === null ? line.includes('<PolyPatch') : line.includes(`<PolyPatch title="${title}"`);
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    if (line.includes('<PolyPatch')) {
+    if (!inBlock && opensWanted(line)) {
       inBlock = true;
       continue;
     }
-    if (line.includes('</PolyPatch>')) break;
     if (!inBlock) continue;
+    if (line.includes('</PolyPatch>')) break;
     if (!/^\s*\|/.test(line)) continue;
     const cells = line
       .split('|')
@@ -292,4 +299,398 @@ test('theory-afrobeat: Spread column present, bell/shekere on separate strata, h
     fail.push(`hat carries ${hat.cell.Mutation} mutation — Rules 4 & 7 assign the mutation budget to the colour voices\n  ${relPath}:${hat.lineno}`);
 
   assert.equal(fail.length, 0, `\n${fail.join('\n')}`);
+});
+
+// --- M004/S05: multi-patch parsing ----------------------------------------
+
+// Chapter 2 carries two patches (Ewe, Manding) and Chapter 5 two (Balinese
+// kotekan, Javanese colotomy). parsePolyPatch read the first table in a file,
+// so the second of each was unreachable — and the first was only addressable
+// by position, which is not the same as saying which one you meant.
+//
+// Asserted against the file, not against transcribed lane data: the default
+// parse must equal the first title's parse, and the second title's must differ.
+test('S05-parse-by-title: each <PolyPatch> in a file is addressable by title', async () => {
+  const path = join(DOCS, '05-gamelan.mdx');
+  const src = await readFile(path, 'utf8');
+
+  const titles = [...src.matchAll(/<PolyPatch title="([^"]+)"/g)].map((m) => m[1]);
+  assert.ok(
+    titles.length >= 2,
+    `05-gamelan.mdx is expected to carry two patches; found ${titles.length} (${titles.join(', ')})`,
+  );
+
+  const roles = (patch) => patch.rows.map((r) => r.role);
+  const first = parsePolyPatch(src, titles[0]);
+  const second = parsePolyPatch(src, titles[1]);
+
+  assert.ok(first.rows.length > 0, `no lane rows parsed for "${titles[0]}"`);
+  assert.ok(second.rows.length > 0, `no lane rows parsed for "${titles[1]}"`);
+
+  assert.deepEqual(
+    roles(parsePolyPatch(src)),
+    roles(first),
+    'omitting the title must stay byte-identical to the previous behaviour: the ' +
+      "first patch in the file. The nine existing tests depend on this default.",
+  );
+  assert.notDeepEqual(
+    roles(second),
+    roles(first),
+    `selecting "${titles[1]}" returned the same lanes as "${titles[0]}" — the ` +
+      'title is being ignored and the second patch is still unreachable',
+  );
+});
+
+// --- M004/S05: the named-rule checklist ------------------------------------
+
+// The nine tests above hand-write one predicate per known defect. That cannot
+// notice a *new* contradiction: an unchecked page is invisible. The checklist
+// below is declared as data and iterated, so a page with no entry is a missing
+// row in a structure rather than an absence nobody can see.
+//
+// Rule ids are descriptive, not positional. A page that renumbers its rules
+// would leave a positional id pointing at the wrong text silently.
+//
+// Coverage here is M004/S05's: the three chapter patches its sibling slices
+// need, plus the only two theory pages carrying no assertion at all. The
+// remaining rules across the other nine theory pages are M007's — see the
+// ledger, not this comment, for what that owns.
+
+// A divergence marker is an MDX comment sitting immediately above the patch it
+// concerns:
+//
+//   {/* patch-divergence-ok: <rule-id> — <written reason> */}
+//
+// It satisfies exactly the rule it names, on exactly the patch that follows it.
+// Not the page, not the next rule, not by proximity. In-band so it cannot drift
+// from what it excuses; greppable on one fixed token so `grep -rn
+// patch-divergence-ok site/` is the audit report; reasoned; and counted, below,
+// so the number cannot shrink into silence.
+const MARKER_RE = /\{\/\*\s*patch-divergence-ok:\s*([a-z0-9-]+)\s*—\s*([\s\S]*?)\*\/\}/g;
+
+function markersFor(src) {
+  const found = new Map();
+  for (const m of src.matchAll(MARKER_RE)) {
+    const after = src.slice(m.index + m[0].length);
+    const next = after.match(/<PolyPatch title="([^"]+)"/);
+    if (!next) continue; // a marker with no patch after it excuses nothing
+    found.set(`${next[1]}::${m[1]}`, m[2].trim().replace(/\s+/g, ' '));
+  }
+  return found;
+}
+
+const cellPct = (row, col) => parseFloat(String(row.cell[col] ?? '').replace('%', ''));
+const cellNum = (row, col) => parseFloat(String(row.cell[col] ?? ''));
+
+const CHECKLIST = [
+  {
+    page: 'theory-minimalism.mdx',
+    patch: 'Rule-Checked Phase Study',
+    rules: [
+      {
+        id: 'min-one-variable',
+        description: 'Rule 1: one process at a time, moving one variable',
+        check: ({ rows }) => {
+          const moving = rows.filter((r) => cellNum(r, 'Drift') !== 0);
+          return moving.length === 1
+            ? null
+            : `${moving.length} lanes carry non-zero Drift (${moving.map((r) => r.role).join(', ') || 'none'}); ` +
+                'Rule 1 moves exactly one variable';
+        },
+      },
+      {
+        id: 'min-voices-flat',
+        description: 'Rule 4: voices are dynamically flat and timbrally near-identical',
+        check: ({ rows }) => {
+          const voices = rows.filter((r) => /voice/i.test(r.role));
+          const vels = new Set(voices.map((r) => cellNum(r, 'Velocity')));
+          return vels.size === 1
+            ? null
+            : `the ${voices.length} voice lanes carry velocities ${[...vels].join(', ')}; ` +
+                'Rule 4 keeps them dynamically flat';
+        },
+      },
+      {
+        id: 'min-deterministic',
+        description: 'Rule 8: determinism is the aesthetic',
+        check: ({ rows }) => {
+          const random = rows.filter((r) => cellPct(r, 'Mutation') !== 0);
+          return random.length === 0
+            ? null
+            : `${random.map((r) => r.role).join(', ')} carry non-zero Mutation; Rule 8 is deterministic`;
+        },
+      },
+    ],
+  },
+  {
+    page: 'theory-electronic-breakbeat.mdx',
+    patch: 'Rule-Checked Jungle Frame',
+    rules: [
+      {
+        id: 'ebb-anchor-immutable',
+        description: 'Rule 1: the anchor is immutable',
+        check: ({ rows }) => {
+          const anchor = findLane(rows, /snare/i);
+          if (!anchor) return 'no snare lane found; Rule 1 needs an anchor to be immutable';
+          return cellPct(anchor, 'Mutation') === 0
+            ? null
+            : `the anchor "${anchor.role}" carries ${anchor.cell.Mutation} Mutation; Rule 1 keeps it immutable`;
+        },
+      },
+      {
+        id: 'ebb-kick-avoids-snare',
+        description: "Rule 7: the kick syncopates against the snare, avoiding its slots",
+        check: ({ rows }) => {
+          const snare = findLane(rows, /snare/i);
+          const kick = findLane(rows, /kick/i);
+          if (!snare || !kick) return 'need both a snare and a kick lane to check Rule 7';
+          const sg = laneOnPulseGrid(snare, 16);
+          const kg = laneOnPulseGrid(kick, 16);
+          const clash = kg.filter((p) => sg.includes(p));
+          return clash.length === 0
+            ? null
+            : `kick onsets ${JSON.stringify(kg)} intersect snare slots ${JSON.stringify(sg)} at ` +
+                `${JSON.stringify(clash)}; Rule 7 has the kick avoid them`;
+        },
+      },
+    ],
+  },
+  {
+    page: 'theory-indian-classical.mdx',
+    patch: 'Rule-Checked Tintal Structure',
+    rules: [
+      {
+        id: 'ind-tihai-worked',
+        description: "Rule 6: the tihai's arithmetic is worked through, not just stated",
+        check: ({ rows }, { block }) => {
+          const tihai = findLane(rows, /tihai/i);
+          if (!tihai) return 'no tihai lane found';
+          const phrase = cellNum(tihai, 'Phrase Len');
+          const gap = cellNum(tihai, 'Gap');
+          const cycle = tihai.steps;
+          if (!Number.isFinite(phrase) || !Number.isFinite(gap)) {
+            return 'the tihai lane carries no Phrase Len / Gap cells to work from';
+          }
+          // Derived from the lane, never from a literal: a test carrying its own
+          // copy of 5, 0.5 and 16 would check nothing about the page, and the
+          // row's whole point is that the arithmetic is checked rather than
+          // asserted.
+          const product = 3 * phrase + 2 * gap;
+          // Only the prose counts, not the table the numbers came from.
+          const lines = block.split('\n');
+          const lastRow = lines.map((l) => /^\s*\|/.test(l)).lastIndexOf(true);
+          const prose = lines.slice(lastRow + 1).join('\n');
+          const missing = [String(phrase), String(gap), String(product)].filter(
+            (n) => !new RegExp(`(^|[^0-9.])${n.replace('.', '\\.')}([^0-9]|$)`).test(prose),
+          );
+          if (missing.length) {
+            return `the page states Rule 6's formula but never works it: the prose beside the patch ` +
+              `does not print ${missing.join(', ')} (3 × ${phrase} + 2 × ${gap} = ${product})`;
+          }
+          return product === cycle
+            ? null
+            : `3 × ${phrase} + 2 × ${gap} = ${product}, which does not close the lane's ` +
+                `${cycle}-matra cycle; Rule 6 says a tihai that misses sam is a failed one`;
+        },
+      },
+    ],
+  },
+  {
+    page: 'theory-afro-cuban.mdx',
+    patch: 'Rule-Checked Son Ensemble (3-2)',
+    rules: [
+      {
+        id: 'ac-theory-one-free-voice',
+        description: 'Rule 5: the variation budget belongs to one voice at a time',
+        check: ({ rows }) => {
+          const busy = rows.filter((r) => cellPct(r, 'Mutation') > 0);
+          return busy.length <= 1
+            ? null
+            : `${busy.length} lanes carry a variation budget ` +
+                `(${busy.map((r) => `${r.role} ${r.cell.Mutation}`).join(', ')}); ` +
+                'Rule 5 gives it to one voice at a time, and the construction names the quinto';
+        },
+      },
+      {
+        id: 'ac-tumbao-onsets-rendered',
+        description: "Rule 3: the tumbao's onset positions are printed, not left to be derived",
+        check: ({ rows }, { block }) => {
+          const tumbao = findLane(rows, /tumbao/i);
+          if (!tumbao) return 'no tumbao lane found';
+          const want = laneOnsets(tumbao);
+          if (!want) return 'the tumbao lane is in timeline mode; its onsets cannot be derived here';
+          // Asserted against the derivation, never against a literal: the point
+          // is that the printed prose and the (steps, hits, rotation) spelling
+          // cannot drift apart. A hard-coded list would let them.
+          const printed = block.match(/\{([0-9,\s]+)\}/);
+          if (!printed) {
+            return `rotation ${tumbao.rotation} is an unusual spelling and the page prints no onset ` +
+              `set for it; Rule 3's claim rests on ${JSON.stringify(want)}`;
+          }
+          const got = printed[1].split(',').map((n) => parseInt(n.trim(), 10));
+          const same = got.length === want.length && got.every((v, i) => v === want[i]);
+          return same
+            ? null
+            : `the page prints onsets ${JSON.stringify(got)} but ` +
+                `E(${tumbao.hits},${tumbao.steps}) at rotation ${tumbao.rotation} is ${JSON.stringify(want)}`;
+        },
+      },
+    ],
+  },
+  {
+    page: '02-sub-saharan-africa.mdx',
+    patch: 'Ewe-Inspired Polymetric Ensemble',
+    rules: [
+      {
+        id: 'ssa-dance-beat',
+        description: 'construction step 2: a low drum lays the dance beat, 12 steps, 4 hits',
+        check: ({ rows }) => {
+          const beat = rows.find((r) => r.steps === 12 && r.hits === 4);
+          return beat
+            ? null
+            : 'no lane at 12 steps / 4 hits — theory-sub-saharan-africa construction step 2 lays ' +
+                'the dance beat as E(4,12), every third pulse, and the parts are learned against it';
+        },
+      },
+      {
+        id: 'ssa-timeline-legible',
+        description: "Rule 1: the timeline's fixity is legible from the table",
+        check: ({ columns }) =>
+          columns.includes('Timeline')
+            ? null
+            : `the table has no Timeline column (${columns.join(', ')}), so a reader cannot see ` +
+              'that the bell runs in timeline mode — which Rule 1 makes the patch depend on',
+      },
+    ],
+  },
+  {
+    page: '03-afro-cuban.mdx',
+    patch: 'Cuban Son Ensemble',
+    rules: [
+      {
+        id: 'ac-clave-approximation',
+        description: 'the clave lane names itself the Euclidean approximation and links the exact construction',
+        check: ({ rows }, { block }) => {
+          const clave = findLane(rows, /clave/i);
+          if (!clave) return 'no clave lane found';
+          const problems = [];
+          if (!/approx/i.test(clave.cell.Role)) {
+            problems.push(`the clave lane header reads "${clave.cell.Role}" and does not mark itself an approximation`);
+          }
+          if (!/\]\(\//.test(block)) {
+            problems.push('the patch carries no link to the exact-timeline construction');
+          }
+          return problems.length ? problems.join('; ') : null;
+        },
+      },
+      {
+        id: 'ac-one-free-voice',
+        description: 'Rule 5: the variation budget belongs to one voice at a time',
+        check: (_patch, { preset }) => {
+          if (!preset) return 'preset "Cuban Son Montuno" not found in src/generated/presets.json';
+          const busy = preset.lanes.filter((l) => (l.mutationRate ?? 0) > 0);
+          return busy.length <= 1
+            ? null
+            : `${busy.length} lanes carry a mutation budget (${busy.map((l) => l.roleLabel).join(', ')}); ` +
+                'theory-afro-cuban Rule 5 gives it to one voice at a time';
+        },
+      },
+    ],
+  },
+  {
+    page: '05-gamelan.mdx',
+    patch: 'Balinese Kotekan Interlocking',
+    rules: [
+      {
+        id: 'gam-pokok-layer',
+        description: 'Rule 6: the interlock serves a pokok melody',
+        check: ({ rows }) =>
+          findLane(rows, /pokok/i)
+            ? null
+            : `no pokok lane among ${rows.map((r) => r.role).join(', ')} — theory-gamelan Rule 6 ` +
+              'makes the kotekan an ornamentation system over a slower core melody',
+      },
+      {
+        id: 'gam-structural-overlap',
+        description: 'Rule 4: a deliberate doubling marks the cycle boundary',
+        // Construction step 4, not Rule 4's headline. Rule 4 asks the pair to
+        // overlap at structural tones, but its own parenthetical says Poly's
+        // Kotekan L-mode implements the strict case and that doublings come
+        // "via a third lane or accent masks until kotekan modes ship" — and
+        // theory-gamelan's own reference patch uses L6. A predicate demanding
+        // pair-overlap therefore condemns the worked example the rule is drawn
+        // from, and earns a suppression nobody could ever burn down. So this
+        // checks what step 4 specifies: a lane outside the pair striking the
+        // gong point together with a pair lane.
+        check: ({ rows }) => {
+          const polos = findLane(rows, /polos/i);
+          const sangsih = findLane(rows, /sangsih/i);
+          if (!polos || !sangsih) return 'need both a polos and a sangsih lane to check Rule 4';
+          // Sangsih's own triple is not what sounds when its Kotekan cell is
+          // L<n>: the engine derives its onsets from the source lane. Polos is
+          // the pair member the table actually describes.
+          const pair = new Set([polos.role, sangsih.role]);
+          const atBoundary = (r) => (laneOnsets(r) ?? []).includes(0);
+          if (!atBoundary(polos)) {
+            return `polos sounds on ${JSON.stringify(laneOnsets(polos))} and not on the cycle ` +
+              'boundary, so nothing can double it there; Rule 4 marks structure at the gong point';
+          }
+          const doubling = rows.filter((r) => !pair.has(r.role) && atBoundary(r));
+          return doubling.length > 0
+            ? null
+            : 'no lane outside the kotekan pair sounds on the cycle boundary, so the gong point ' +
+                'carries no deliberate doubling — construction step 4 adds a sparse third lane there';
+        },
+      },
+    ],
+  },
+];
+
+const PRESETS = Array.isArray(presetsData) ? presetsData : (presetsData.presets ?? []);
+
+let liveMarkers = 0;
+
+for (const entry of CHECKLIST) {
+  for (const rule of entry.rules) {
+    test(`${entry.page} [${rule.id}]: ${rule.description}`, async () => {
+      const path = join(DOCS, entry.page);
+      const src = await readFile(path, 'utf8');
+      const rel = relative(REPO, path);
+      const patch = parsePolyPatch(src, entry.patch);
+      assert.ok(
+        patch.rows.length > 0,
+        `${rel}: the checklist names patch "${entry.patch}" but no lane rows were parsed for it — ` +
+          'the patch was renamed, removed, or its table is malformed',
+      );
+
+      // The patch's own source window, and the preset it binds to if it names
+      // one — a rule about a header or a mutation budget cannot be settled from
+      // the parsed lane table alone.
+      const start = src.indexOf(`<PolyPatch title="${entry.patch}"`);
+      const block = src.slice(start, src.indexOf('</PolyPatch>', start));
+      const presetName = block.match(/preset="([^"]+)"/)?.[1] ?? null;
+      const preset = presetName ? (PRESETS.find((p) => p.name === presetName) ?? null) : null;
+
+      const excuse = markersFor(src).get(`${entry.patch}::${rule.id}`);
+      const failure = rule.check(patch, { src, block, preset });
+      if (excuse) {
+        liveMarkers += 1;
+        assert.ok(
+          failure,
+          `${rel}: "${entry.patch}" carries a patch-divergence-ok marker for ${rule.id}, but the rule ` +
+            'passes — remove the marker rather than leaving a suppression nobody needs',
+        );
+        return;
+      }
+      assert.equal(failure, null, `${rel} "${entry.patch}" [${rule.id}]: ${failure}`);
+    });
+  }
+}
+
+test('patch-divergence-ok suppression count', () => {
+  // Printed, not asserted against a number: a rising count is signal, and an
+  // invisible count is rot. The assertion that matters is above — a marker on a
+  // rule that passes fails its own case.
+  console.log(`  patch-divergence-ok: ${liveMarkers} live suppression(s)`);
+  assert.ok(liveMarkers >= 0);
 });

@@ -470,93 +470,106 @@ row is either ✅ or carries a documented divergence.
 
 ### Slice M004/S01 — Chapter 2 patch
 
+**Depends:** M004/S05
+**Plan:** M004-S01-plan.md
 **Validation:** format, site-unit, doc-conformance, e2e
 **Evidence:** evidence/M004-S01.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The Chapter 2 patch either carries the timeline-mode bell lane and the
+- [x] The Chapter 2 patch either carries the timeline-mode bell lane and the
       dance-beat lane its theory page requires, or cross-references the fuller
       theory-page construction in band
-- [ ] The choice is legible from the patch table alone
+- [x] The choice is legible from the patch table alone
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F37 | The Ch 2 patch omits the timeline-mode bell lane (Rule 1) and the dance-beat lane (construction Step 2) that `theory-sub-saharan-africa` requires | `P1` | `patch-align` | `02-sub-saharan-africa.mdx` patch | Rule-compliance assertion in the extended `theory-patch-conformance.test.mjs` (F42), or a documented-divergence marker it accepts | `open` |
+| F37 | The Ch 2 Ewe patch omits the dance-beat lane that `theory-sub-saharan-africa` construction step 2 requires — a low drum at 12 steps, 4 hits, E(4,12). Amended during planning: the other half of the audit's finding is already satisfied, since the `Ewe Polymetric Ensemble` preset carries `timeline: true` on its bell lane (Rule 1). What is missing is the dance-beat lane, and the fact that the patch table has no `Timeline` column, so the bell's mode is invisible to a reader — which is what the slice's second definition-of-done item is about | `P1` | `patch-align` | `02-sub-saharan-africa.mdx` Ewe patch | Cases `ssa-dance-beat` and `ssa-timeline-legible` in the named-rule checklist, both passing with no divergence marker — the two markers S05 left naming this row are removed | `done` |
 
 ### Slice M004/S02 — Chapter 3 patch
 
+**Depends:** M004/S05
+**Plan:** M004-S02-plan.md
 **Validation:** format, site-unit, doc-conformance, e2e
 **Evidence:** evidence/M004-S02.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The Chapter 3 clave lane header marks itself as the Euclidean
+- [x] The Chapter 3 clave lane header marks itself as the Euclidean
       approximation and links to the exact-timeline construction
-- [ ] The theory-page tumbao lane's onset positions are rendered, not left to
+- [x] The theory-page tumbao lane's onset positions are rendered, not left to
       the reader to derive
-- [ ] The conga and quinto mutation settings either satisfy the one-free-voice
+- [x] The conga and quinto mutation settings either satisfy the one-free-voice
       rule or carry a divergence note
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F38 | Ch 3's clave lane is the E(5,16) approximation while the theory page's is an exact timeline pattern; the patch header says only "Clave" with no cross-reference | `P1` | `patch-align` | `03-afro-cuban.mdx` patch header | The header carries the approximation marker and the cross-reference link, asserted by the patch-conformance suite | `open` |
-| F39 | The theory-page tumbao lane (16 steps, 6 hits, rotation 14) satisfies the beat-1-avoidance rule but is an unusual configuration presented without its onset positions | `P1` | `patch-align` | `theory-afro-cuban.mdx` Lane 2 | The onset list is rendered and checked against `site/src/audio/bjorklund.ts` | `open` |
-| F40 | Ch 3's patch has conga at 10% mutation and quinto at 30% against the theory page's one-free-voice rule | `P1` | `patch-align` | `03-afro-cuban.mdx` patch | Rule-compliance assertion in the patch-conformance suite, or a documented divergence it accepts | `open` |
+| F38 | Ch 3's clave lane is the E(5,16) approximation while the theory page's is an exact timeline pattern; the patch header says only "Clave" with no cross-reference | `P1` | `patch-align` | `03-afro-cuban.mdx` patch header | Case `ac-clave-approximation` in the named-rule checklist, passing with no divergence marker; both arms — the header naming the approximation and the link to the exact construction — proved to fail separately | `done` |
+| F39 | The theory-page tumbao lane (16 steps, 6 hits, rotation 14) satisfies the beat-1-avoidance rule but is an unusual configuration presented without its onset positions | `P1` | `patch-align` | `theory-afro-cuban.mdx` Lane 2 | Case `ac-tumbao-onsets-rendered` asserts the printed set equals the derivation from the shared verifier, so the prose and the (steps, hits, rotation) spelling cannot drift apart | `done` |
+| F40 | The son-ensemble patch carried three lanes with a variation budget — Cáscara 5%, Conga marcha 10%, Quinto 30% — against Rule 5, "the variation budget belongs to one voice at a time", whose construction names the quinto as that voice. **Twice amended, and the first amendment was wrong.** The audit's `Lands in` said `03-afro-cuban.mdx`; planning checked that file, found `mutationRate` 0.00 across the `Cuban Son Montuno` preset and no quinto lane at all, and recorded the premise as non-existent. The premise is real and lives on `theory-afro-cuban.mdx`, whose patch is the one with a quinto. The oddity that should have caught it — the audit naming a quinto in a son ensemble, when the theory page says the quinto is the free voice *in rumba* — was read as evidence the audit was wrong rather than as evidence the wrong table was being read. Cáscara and Conga marcha are now 0%, leaving the quinto the sole free voice | `P1` | `patch-align` | `theory-afro-cuban.mdx` patch | Case `ac-theory-one-free-voice` asserts at most one lane carries a non-zero Mutation, and names the offenders when more do | `done` |
+| B16 | The `e2e` token runs `scripts/site-verify-local.sh`, which rebuilds the WASM engine and copies `poly_engine.js` and `poly_engine.wasm` over the committed artifacts, so every run dirties the tree. The rebuild is not byte-reproducible: during M004, which changes no engine source, the `.wasm` moved 142014 → 142151 bytes and the `.js` gained a trailing-whitespace line that `pre-commit` then strips, so `e2e` and `format` interfere. M004/S01's close swept both files in via `git add -A` and they were reverted. Found while running M004/S02 | `P2` | `accept` | `scripts/site-verify-local.sh`, `webui/poly_engine.{js,wasm}` | Recorded and owned by [#282](https://github.com/JimAKennedy/poly/issues/282); this programme reverts the artifacts after each `e2e` run and stages explicit paths rather than `git add -A` | `accepted` |
 
 ### Slice M004/S03 — Chapter 5 patch
 
+**Depends:** M004/S05
+**Plan:** M004-S03-plan.md
 **Validation:** format, site-unit, doc-conformance, e2e
 **Evidence:** evidence/M004-S03.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The Chapter 5 kotekan patch carries a pokok layer, as `theory-gamelan`
+- [x] The Chapter 5 kotekan patch carries a pokok layer, as `theory-gamelan`
       Rule 6 requires
-- [ ] It carries structural overlap at the cycle boundary, as Rule 4 requires
+- [x] It carries structural overlap at the cycle boundary, as Rule 4 requires
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F41 | The Ch 5 kotekan patch has no pokok (structural melody) layer, required by `theory-gamelan` Rule 6, and no structural overlap at the cycle boundary, required by Rule 4 | `P1` | `patch-align` | `05-gamelan.mdx` patch | Rule-compliance assertion for Rules 4 and 6 in the patch-conformance suite | `open` |
+| F41 | The Ch 5 kotekan patch has no pokok (structural melody) layer, required by `theory-gamelan` Rule 6, and no structural overlap at the cycle boundary, required by Rule 4 | `P1` | `patch-align` | `05-gamelan.mdx` patch | Cases `gam-pokok-layer` and `gam-structural-overlap` in the named-rule checklist, both passing with no divergence marker. Rule 4 is checked as construction step 4 specifies it — a lane outside the kotekan pair sounding at the cycle boundary — because Rule 4 as written demands pair-overlap that Poly's Kotekan L-mode cannot produce, as its own parenthetical says | `done` |
 
 ### Slice M004/S04 — Tihai worked example
 
+**Plan:** M004-S04-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M004-S04.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The tihai discussion shows Nelson's formula with real numbers, not just
+- [x] The tihai discussion shows Nelson's formula with real numbers, not just
       the principle
-- [ ] The arithmetic in the example is checked, not asserted
+- [x] The arithmetic in the example is checked, not asserted
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F43 | The tihai discussion gives the principle but no worked example; Nelson (2008)'s formula — (Length × 3) + (Gap × 2) = beats remaining to sam — should be shown with real numbers | `P1` | `enrich` | `theory-indian-classical.mdx` Rule 6 | An arithmetic case re-derives the printed worked example from the formula, alongside the existing tihai case in `theory-patch-conformance.test.mjs` | `open` |
+| F43 | The tihai discussion gives the principle but no worked example; Nelson (2008)'s formula — (Length × 3) + (Gap × 2) = beats remaining to sam — should be shown with real numbers | `P1` | `enrich` | `theory-indian-classical.mdx` Rule 6 | Case `ind-tihai-worked` reads Phrase Len and Gap from the lane, derives 3 × phrase + 2 × gap, and asserts the prose prints both operands and the product and that the product closes the lane's cycle — so changing the lane fails the case, not just changing the prose | `done` |
 
 ### Slice M004/S05 — Named-rule conformance checklist
 
-**Depends:** M003/S03, M004/S01, M004/S02, M004/S03, M004/S04
+**Depends:** M003/S03
+**Plan:** M004-S05-plan.md
 **Validation:** format, site-unit, doc-conformance, doc-discipline, gate
 **Evidence:** evidence/M004-S05.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] `theory-patch-conformance.test.mjs` checks each theory page's patches
-      against that page's own named rules, not only that their Euclidean
-      triples are valid
-- [ ] A rule a patch deliberately breaks is satisfied by an in-band divergence
+- [x] `theory-patch-conformance.test.mjs` carries a per-page named-rule
+      checklist declared as data, covering the Chapter 2, 3 and 5 patches its
+      sibling slices need and the two theory pages that carry no assertion at
+      all today, `theory-electronic-breakbeat` and `theory-minimalism`
+- [x] A rule a patch deliberately breaks is satisfied by an in-band divergence
       marker carrying a written reason, and by nothing else
-- [ ] A patch that silently drops a rule fails the suite
+- [x] A patch that silently drops a rule fails the suite
+- [x] Every rule in the checklist is proved to fail when its lane is removed
+- [x] The remaining rule coverage is owned by M007, named here, not left
+      implicit
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F42 | The CI tests verify theory-page patches carry valid Euclidean triples but never that a patch follows its page's own named rules — the gap every one of F37–F41 lives in | `P1` | `patch-align` | `site/tests/theory-patch-conformance.test.mjs` | The suite carries a per-page named-rule checklist; removing a required lane from any chapter patch fails it, and adding the divergence marker passes it | `open` |
+| F42 | The CI tests verify theory-page patches carry valid Euclidean triples but never that a patch follows its page's own named rules — the gap every one of F37–F41 lives in. Closed by a per-page checklist declared as data and iterated, so a page with no entry is a missing row rather than an invisible absence, together with the `patch-divergence-ok` marker contract. Coverage is this slice's: the three chapter patches S01–S03 need, plus `theory-minimalism` and `theory-electronic-breakbeat`, the only two theory pages that carried no assertion at all. The remaining rules across the other nine theory pages are M007's. The first newly-checked rule found a tenth contradiction of the class the 2026-07-30 review found nine of — see B15 | `P1` | `patch-align` | `site/tests/theory-patch-conformance.test.mjs` | The checklist carries eleven rules across five patches; each was watched to fail on its own terms, a marker satisfies only the rule it names, a marker on a passing rule fails, and the live suppression count is printed | `done` |
 
 ---
 
@@ -763,6 +776,83 @@ plainly that they are ours rather than the audit's.
 |---|---|---|---|---|---|---|
 | B11 | The audit (§125) asserts *kotekan polos* — "a third player playing only the structural pokok tones" — as a named interlock style, citing nothing for the term. Nothing in the repo attests either the term or the practice: `fr-tenzer-2000` is annotated "the authoritative analysis of kotekan varieties", which argues Tenzer could cover it but is not evidence that he does. M003/S05 wrote the practice into Rule 5 with no citation and no label, forbidding the label in case `S05-F33`, on the grounds that Rule 6 and Construction's Pokok lane already ground it internally. This row owns both open questions: whether the term has an attestation, and whether any source documents the practice so Rule 5 can cite it. Found while planning and executing M003/S05, not named by the audit as a defect in itself | `P2` | `source` | `theory-gamelan.mdx` Rule 5 | Either Rule 5 names the term and/or cites the practice with a resolving tier-A/B reference, or this row is `accepted` with the reason recorded | `open` |
 
+## Milestone M007 — Named-rule coverage
+
+**Vision:** Every mechanically checkable rule a theory page states is checked
+against that page's patch, so the guide's rules and its worked examples cannot
+drift apart unnoticed.
+**Branch:** milestone/M007-named-rule-coverage
+**Status:** planned
+**Demo:** Count the checklist's rule entries against the pages' numbered rules;
+every checkable rule is present, and every omission carries a recorded verdict.
+
+M004/S05 builds the checklist mechanism and proves it on five chapter patches
+and the two theory pages that had no assertion. This milestone carries it to
+the rest. The sizing was measured while planning M004/S05: eleven theory pages
+state 92 numbered rules between them, of which nine were asserted — one
+predicate per page, each encoding one defect from the 2026-07-30 conformance
+review. Those nine all pass. The other 83 have never been checked against a
+patch, which is where this milestone's findings will come from.
+
+Not every numbered rule is mechanically checkable. "The timeline never varies"
+and "each part alone must be playable and idiomatic" are prose judgments a lane
+table cannot settle, so the first slice triages the 92 before the second
+asserts any of them.
+
+### Slice M007/S01 — Rule triage
+
+**Depends:** M004/S05
+**Validation:** format, doc-conformance
+**Evidence:** evidence/M007-S01.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] Every numbered rule on every theory page is classified checkable or not,
+      with a one-line reason recorded for each not-checkable verdict
+- [ ] The triage lives beside the checklist, so a rule added to a theory page
+      without a verdict is visible
+
+| ID | Item | Sev | Disp | Lands in | Verification | Status |
+|---|---|---|---|---|---|---|
+| B12 | The eleven theory pages state 92 numbered rules and nine are asserted, but which of the remaining 83 a lane table can settle has never been decided. Until that verdict is recorded, "this rule is not checked" and "this rule is not checkable" are indistinguishable | `P2` | `verify` | `site/tests/theory-patch-conformance.test.mjs` triage table | A case asserts every numbered rule on every theory page carries a triage verdict, and fails when a page gains a rule that has none | `open` |
+
+### Slice M007/S02 — Roll out the checkable rules
+
+**Depends:** M007/S01
+**Validation:** format, site-unit, doc-conformance
+**Evidence:** evidence/M007-S02.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] Every rule triaged checkable carries a checklist entry
+- [ ] Each entry is proved to fail when the lane it guards is removed
+- [ ] A patch violating a rule either carries a divergence marker with a written
+      reason or is corrected
+
+| ID | Item | Sev | Disp | Lands in | Verification | Status |
+|---|---|---|---|---|---|---|
+| B13 | 83 numbered rules across nine theory pages have never been checked against the patch meant to demonstrate them. The 2026-07-30 review found nine such contradictions by hand and all nine are now fixed, which is evidence the class is real rather than that it is exhausted | `P1` | `patch-align` | `site/tests/theory-patch-conformance.test.mjs` | Every checkable rule has a checklist entry, each with a mutation proof recorded in the evidence file | `open` |
+| B15 | `theory-electronic-breakbeat`'s own patch contradicts its Rule 7, "the kick syncopates against the snare, avoiding its slots": the chopped kick is E(5,16) at rotation 3, whose onsets on a 16-pulse grid are {3,6,9,12,15}, and the backbeat snare's are {4,12}. Pulse 12 is shared. Found by the M004/S05 checklist on the first newly-checked rule, and suppressed there with a `patch-divergence-ok` marker so the slice could close; the fix is either a rotation that clears the snare or a qualification to Rule 7, and that is a musical decision this row exists to put to a human | `P1` | `patch-align` | `theory-electronic-breakbeat.mdx` patch, Rule 7 | Case `ebb-kick-avoids-snare` passes with no divergence marker | `open` |
+
+### Slice M007/S03 — Burn down the divergence markers
+
+**Depends:** M007/S02
+**Validation:** format, site-unit, doc-conformance, gate
+**Evidence:** evidence/M007-S03.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] Every `patch-divergence-ok` marker either is replaced by a corrected patch
+      or carries a reason a reviewer has accepted
+- [ ] No marker carries the untriaged placeholder reason
+
+| ID | Item | Sev | Disp | Lands in | Verification | Status |
+|---|---|---|---|---|---|---|
+| B14 | Markers opened during M004 and M007/S02 with the reason "found by the checklist, not yet triaged" are a backlog, not a decision. A suppression nobody has read since it was written is indistinguishable from a defect | `P2` | `verify` | theory and chapter pages carrying `patch-divergence-ok` | A case fails on any marker still carrying the untriaged placeholder reason, and the suite prints the live marker count | `open` |
+
 ## Sequencing
 
 ```
@@ -787,9 +877,14 @@ M002 (citations) ────┴────────────────
 - **M003/S01 depends on M001/S06** because a repositioning statement should
   describe a guide whose overclaims are already hedged, not promise it.
 - **M004/S05 depends on M003/S03** because the named-rule checklist encodes the
-  gamelan rules as reworded there, and on M004/S01–S04 for the same reason
-  M002/S06 depends on its milestone: the checklist fails while any patch still
-  diverges silently.
+  gamelan rules as reworded there. It runs **first** within its milestone, and
+  M004/S01–S03 depend on it. The original order had S05 last, on the M002/S06
+  precedent that a burn-down slice follows the work it burns down — but the two
+  are not alike. S05 builds the machinery its siblings are verified by: F37,
+  F40 and F41 all name the extended suite or the divergence marker as their
+  verification, so with S05 last the escape hatch would be reached for before it
+  was designed, and each chapter slice would assert ad hoc against an oracle
+  that did not exist yet. S04 needs neither and stays independent.
 - **M006 depends on M002/S06** throughout, and is the milestone that burns down
   what M002/S06 suppresses. Its S01 removes the seven `citation-tier-ok` markers
   one claim at a time, so the tier check only becomes unconditionally true when
@@ -805,6 +900,10 @@ M002 (citations) ────┴────────────────
 Every open issue overlapping this programme's remit is enumerated here, so the
 two views cannot silently drift.
 
+- [#282](https://github.com/JimAKennedy/poly/issues/282) — **not closed here**.
+  B16 records that `e2e` rebuilds the committed WASM artifacts non-reproducibly
+  and that this programme reverts them after each run; making the build
+  reproducible is tracker work, not audit remediation.
 - [#91](https://github.com/JimAKennedy/poly/issues/91) — **closed by F54**. The
   E(3,16) appendix row is correct under Poly's phase convention; F54 makes that
   convention explicit next to the table.

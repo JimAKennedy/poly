@@ -336,7 +336,7 @@ for (const line of issuesSection) {
 const issueBullets = issueEntries
   .map((text) => {
     const num = text.match(/#(\d+)\b/);
-    return num ? { issue: num[1], rowRefs: text.match(/[FH]\d{2}/g) || [], text } : null;
+    return num ? { issue: num[1], rowRefs: text.match(/[FHB]\d{2}/g) || [], text } : null;
   })
   .filter(Boolean);
 
