@@ -1,0 +1,71 @@
+# M005 — decisions
+
+Append-only. One entry per question asked, answer given, or judgment call made
+on the user's behalf.
+
+## 2026-09-10 — planning M005, front-loaded
+
+M005 is unlike M001–M004. Those corrected and locked things already in the tree,
+where every claim was checkable against a file. M005 **imports external facts**:
+bibliography entries for works whose existence, titles, publishers and subject
+matter cannot be verified from this repo. `research_provenance` checks that a
+citation's anchor resolves — not that the work exists or supports the claim
+attached to it. That gap is jk-standards#85, still open, and it is what let
+reference [2] carry a fabricated title into M002.
+
+- **Q:** How should the eight new bibliography entries be sourced? — **A:**
+  Verify each online before adding it.
+- **Decision:** every work is confirmed by web search for author, exact title,
+  year, publisher and enough subject matter to justify the claim it is cited
+  for; anything unconfirmable becomes a row rather than an entry — **Why:** it
+  is the only option meeting the standard M002 set and B11 enforces.
+
+### Verification results
+
+| Work | Verdict |
+|---|---|
+| Charry, E. (2000). *Mande Music: Traditional and Modern Music of the Maninka and Mandinka of Western Africa*. University of Chicago Press | as stated; jembe drumming is one of its four spheres |
+| Kubik, G. (1999). *Africa and the Blues*. University Press of Mississippi | as stated |
+| Agawu, K. (2003). *Representing African Music: Postcolonial Notes, Queries, Positions*. Routledge | as stated |
+| Acosta, L. (2003). *Cubano Be, Cubano Bop: One Hundred Years of Jazz in Cuba*. Smithsonian Books | **year wrong in ledger** — 2003, not 2004 |
+| Powers, H. (1980). "India, subcontinent of". *The New Grove Dictionary of Music and Musicians*, vol. 9 | article confirmed; the *Carnatic tala* specific claim was not |
+| Born, G. & Hesmondhalgh, D., eds. (2000). *Western Music and Its Others: Difference, Representation, and Appropriation in Music*. University of California Press | as stated, but they are **editors** |
+| Silverman, C. (2007). "Bulgarian Wedding Music between Folk and Chalga: Politics, Markets and Current Directions". *Muzikologija* | on-topic and openly accessible |
+| Peycheva, L. & Dimov, V. (2002). *The Zurna Tradition in Southwest Bulgaria: Romani Musicians in Practice*. Bŭlgarsko muzikoznanie | verifiable, but on **zurna**, not wedding music |
+| Crook, L. (2009). *Focus: Music of Northeast Brazil*, 2nd ed. Routledge | covers Candomblé, Afoxé and **Maracatu** |
+| Arom's "later methodological writings" | **not found.** The 2004 Cambridge edition is a paperback reissue of the 1991 already in the appendix; the 1985 French original predates it |
+
+- **Q:** F49 names Peycheva & Dimov for Bulgarian wedding music, but their
+  verifiable work is on the zurna tradition. Silverman (2007) is directly on
+  svatbarska muzika. How should S04 proceed? — **A:** Cite both.
+- **Decision:** Silverman (2007) carries the wedding-music claim and Peycheva &
+  Dimov (2002) is cited where Chapter 7 touches Romani musicianship — **Why:**
+  the row's named scholars stay in the bibliography where their work actually
+  supports something, rather than being attached to a subject they do not cover.
+- **Q:** F52 asks for Arom's later methodological writings, which do not appear
+  to exist as a distinct work. What should happen to the row? — **A:** Cite the
+  1991 more fully instead.
+- **Decision:** F52 becomes an inline citation to the existing `fr-arom-1991`
+  from `theory-sub-saharan-africa.mdx`'s methodology material, and its `Item`
+  records why no later work was added — **Why:** the row's intent is that the
+  methodology section leans on Arom; the specific bibliographic claim behind it
+  is unsupported and saying so is better than inventing an entry to satisfy it.
+- **Q:** Two rows are underspecified — how should they be handled? — **A:** Pin
+  both down before planning.
+- **Decision:** F52 resolved as above; F53's scope is fixed to naming the
+  maracatu ensemble's parts — caixa, alfaia, mineiro, agbê and gonguê — and
+  citing Crook (2009), which covers maracatu directly — **Why:** "the section is
+  thin" is not a scope; the parts and the source are.
+
+### Findings recorded rather than acted on
+
+- **F47's year is wrong.** The ledger says Acosta (2004); the book is 2003.
+- **F48's premise is stale.** It says "Kippen (1988) is in Further Reading
+  only", but `06-indian-classical.mdx` already cites it inline — M002/S04 did
+  that. What remains of F48 is Powers alone.
+- **F48's Powers claim is partly unconfirmed.** The *New Grove* "India" article
+  exists and Powers wrote it, but that it covers the Carnatic tala system
+  specifically was not established, so the citation is attached to Indian
+  art-music theory generally rather than to a Carnatic tala claim.
+- **F51's authors are editors.** Born and Hesmondhalgh edited the volume; the
+  entry says so rather than presenting them as authors.

@@ -599,7 +599,7 @@ highest-value additions per tradition, each cited at the claim it supports.
 | F44 | Charry, E. (2000), *Mande Music*, is absent; it is what corrects the Manding same-cycle oversimplification | `P2` | `enrich` | `appendix-references.mdx`, `02-sub-saharan-africa.mdx` | Cited inline at the F26 disclosure; the entry resolves and carries a tier | `open` |
 | F45 | Kubik, G. (1999), *Africa and the Blues*, is absent; it covers the African rhythmic retentions that bridge Ch 2 and Ch 4 | `P2` | `enrich` | `appendix-references.mdx`, `02-sub-saharan-africa.mdx` | Cited inline; the entry resolves and carries a tier | `open` |
 | F46 | Agawu, K. (2003), *Representing African Music*, is absent; the appendix carries Agawu (2006) instead, which is a different argument and does not ground F11 | `P2` | `enrich` | `appendix-references.mdx`, `08-minimalism.mdx` | Cited inline at the F11 reframe; the entry resolves and carries a tier | `open` |
-| F52 | Arom's later methodological writings are absent; the appendix carries Arom (1991) only | `P2` | `enrich` | `appendix-references.mdx`, `theory-sub-saharan-africa.mdx` | Cited in the sub-Saharan methodology section; the entry resolves and carries a tier | `open` |
+| F52 | The sub-Saharan methodology material does not cite Arom, though `fr-arom-1991` is in the appendix. **Amended during planning: the audit asks for "Arom's later methodological writings", and no such distinct work was found.** The 2004 Cambridge edition of *African Polyphony and Polyrhythm* is a paperback reissue of the 1991 volume already cited, and the 1985 *Polyphonies instrumentales d'Afrique centrale* predates it. Rather than invent an entry to satisfy the row, this closes by citing the existing 1991 entry inline where the methodology is discussed | `P2` | `enrich` | `theory-sub-saharan-africa.mdx` | `fr-arom-1991` cited inline from the methodology material; the citation resolves | `open` |
 
 ### Slice M005/S02 — Afro-Cuban sources
 
@@ -615,7 +615,7 @@ highest-value additions per tradition, each cited at the claim it supports.
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F47 | Acosta, L. (2004), *Cubano Be, Cubano Bop*, is absent; it is the historical depth behind clave evolution | `P2` | `enrich` | `appendix-references.mdx`, `03-afro-cuban.mdx` | Cited inline; the entry resolves and carries a tier | `open` |
+| F47 | Acosta, L., *Cubano Be, Cubano Bop: One Hundred Years of Jazz in Cuba*, is absent; it is the historical depth behind clave evolution, and it covers the "Spanish tinge" in early New Orleans jazz that M001/S05 attributed to Lomax. Amended during planning: the audit dates it 2004; verification puts it at 2003, Smithsonian Books, translated by Daniel S. Whitesell | `P2` | `enrich` | `appendix-references.mdx`, `03-afro-cuban.mdx` | Cited inline; the entry resolves and carries a tier | `open` |
 
 ### Slice M005/S03 — Indian-classical sources
 
@@ -632,7 +632,7 @@ highest-value additions per tradition, each cited at the claim it supports.
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F48 | Powers, H. (1980), "India", *New Grove*, is absent, and Kippen (1988) is in Further Reading only; between them they cover the Carnatic tala system and theka elaboration | `P2` | `enrich` | `appendix-references.mdx`, `06-indian-classical.mdx` | Both cited inline; the entries resolve and carry tiers | `open` |
+| F48 | Powers, H. (1980), "India, subcontinent of", *The New Grove Dictionary of Music and Musicians* vol. 9, is absent. Amended during planning on two counts. The row also says Kippen (1988) is in Further Reading only; it is not — `06-indian-classical.mdx` already cites it inline, added by M002/S04, so that half is already done. And verification confirmed the Powers article exists and is his, but not that it covers the Carnatic tala system specifically, so the citation is attached to Indian art-music theory generally rather than to a Carnatic tala claim | `P2` | `enrich` | `appendix-references.mdx`, `06-indian-classical.mdx` | Powers cited inline; the entry resolves and carries a tier | `open` |
 
 ### Slice M005/S04 — Balkan sources
 
@@ -648,7 +648,7 @@ highest-value additions per tradition, each cited at the claim it supports.
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F49 | Peycheva, L. & Dimov, V. — Bulgarian wedding-music scholarship — are absent, and Ch 7's svatbarska-muzika material has no scholarly citation | `P2` | `enrich` | `appendix-references.mdx`, `07-balkan.mdx` | Cited inline; the entry resolves and carries a tier | `open` |
+| F49 | Ch 7's svatbarska-muzika material has no scholarly citation. Amended during planning: the audit names Peycheva & Dimov, whose verifiable output is *The Zurna Tradition in Southwest Bulgaria: Romani Musicians in Practice* (2002) — a different subject. Silverman, C. (2007), "Bulgarian Wedding Music between Folk and Chalga: Politics, Markets and Current Directions", *Muzikologija*, is squarely on the topic and openly accessible. Both are added: Silverman carries the wedding-music claim, Peycheva & Dimov are cited where the chapter touches Romani musicianship | `P2` | `enrich` | `appendix-references.mdx`, `07-balkan.mdx` | Both cited inline; both entries resolve and carry tiers | `open` |
 
 ### Slice M005/S05 — Minimalism and electronic sources
 
@@ -667,7 +667,7 @@ highest-value additions per tradition, each cited at the claim it supports.
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
 | F50 | Scherzinger (2010) gives a more critical account of the African–minimalist connection than Reich's own; it is in the appendix and cited from `theory-minimalism.mdx`, but the chapter that makes the claim does not cite it | `P2` | `enrich` | `08-minimalism.mdx` | Cited inline alongside the F11 reframe; the citation resolves | `open` |
-| F51 | Born, G. & Hesmondhalgh, D. (2000), *Western Music and Its Others*, is absent; it frames why cross-cultural combination works or does not | `P2` | `enrich` | `appendix-references.mdx`, `14-synthesis.mdx` | Cited inline; the entry resolves and carries a tier | `open` |
+| F51 | Born, G. & Hesmondhalgh, D., eds. (2000), *Western Music and Its Others: Difference, Representation, and Appropriation in Music*, University of California Press, is absent; it frames why cross-cultural combination works or does not. Amended during planning: they are the volume's **editors**, not its authors, and the entry says so | `P2` | `enrich` | `appendix-references.mdx`, `14-synthesis.mdx` | Cited inline; the entry resolves and carries a tier | `open` |
 
 ### Slice M005/S06 — Brazilian maracatu
 
@@ -684,7 +684,7 @@ highest-value additions per tradition, each cited at the claim it supports.
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F53 | The maracatu treatment is thin — accurate, but three paragraphs covering density and dynamics with no named ensemble parts and no citations | `P2` | `enrich` | `10-brazilian.mdx` "Maracatu" section | The section names the ensemble's parts and carries resolving citations, asserted by a prose-conformance case | `open` |
+| F53 | The maracatu treatment is thin — accurate, but three paragraphs covering density and dynamics with no named ensemble parts and no citations. Amended during planning to fix a scope the row leaves open: the section names the baque virado ensemble's parts — caixa, alfaia, mineiro, agbê and gonguê — and cites Crook, L. (2009), *Focus: Music of Northeast Brazil*, 2nd ed., Routledge, whose Afro-Brazilian traditions chapter covers maracatu directly | `P2` | `enrich` | `10-brazilian.mdx` "Maracatu" section | The section names the ensemble's parts and carries resolving citations, asserted by a prose-conformance case | `open` |
 
 ---
 
