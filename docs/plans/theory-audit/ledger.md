@@ -349,9 +349,10 @@ each simplification it names is disclosed at the point of use.
 ### Slice M003/S01 — About This Guide
 
 **Depends:** M001/S06
+**Plan:** M003-S01-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M003-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
