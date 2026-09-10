@@ -123,3 +123,28 @@ on the user's behalf.
   fix did not reach. Corrected to `/[FHB]\d{2}/` and proved both ways: the #282
   entry now resolves, and changing its citation to a non-existent `B99` still
   fails.
+- **Correction to an earlier decision, and it was my error.** F40's premise is
+  real. The first amendment recorded it as non-existent after checking
+  `03-afro-cuban.mdx`, the file the audit's `Lands in` named. The finding lives
+  on `theory-afro-cuban.mdx`, whose patch carries Cáscara 5%, Conga marcha 10%
+  and Quinto 30% — three lanes against Rule 5's one. The audit was wrong about
+  *where*, not about *what*.
+- **Q:** How should Task 3 handle it? — **A:** Re-amend F40 to the theory page
+  and fix the patch.
+- **Q:** My earlier amendment is committed and wrong — how should the record
+  handle it? — **A:** Correct the Item cell and say so in the commit.
+- **Decision:** F40's `Lands in` moves to `theory-afro-cuban.mdx`, its `Item`
+  states both the real finding and that the first amendment checked the wrong
+  file, a new rule `ac-theory-one-free-voice` asserts at most one lane carries a
+  non-zero Mutation, and the Cáscara and Conga marcha budgets are zeroed so the
+  quinto alone holds it — **Why:** the ledger should end up true with the error
+  still visible, rather than quietly right.
+- **What should have caught it sooner:** the audit named a quinto in a *son*
+  ensemble, and the theory page itself says the quinto is the free voice *in
+  rumba*. That oddity was noticed and read as evidence the audit was wrong,
+  when it was evidence the wrong table was being read. Trusting a row's
+  `Lands in` over the rule it cites is the same defect class the audit keeps
+  exhibiting, now reproduced from the other side.
+- **Decision:** `ac-one-free-voice` on Chapter 3's preset is kept alongside the
+  new theory-page rule — **Why:** it is correct as written and locks a side that
+  currently complies only through M070's preset conformance.

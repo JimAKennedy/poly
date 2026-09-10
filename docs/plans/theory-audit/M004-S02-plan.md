@@ -11,15 +11,15 @@ page's lane (F39), and a row whose premise turned out not to exist (F40).
 
 - [x] Task 1 — Name the clave lane an approximation and link the exact construction
 - [x] Task 2 — Render the theory tumbao's onset positions
-- [ ] Task 3 — Close F40 on its lock, and close the slice
+- [x] Task 3 — Close F40 on its lock, and close the slice
 
 ## Definition of Done
 
-- [ ] The Chapter 3 clave lane header marks itself as the Euclidean
+- [x] The Chapter 3 clave lane header marks itself as the Euclidean
       approximation and links to the exact-timeline construction
-- [ ] The theory-page tumbao lane's onset positions are rendered, not left to
+- [x] The theory-page tumbao lane's onset positions are rendered, not left to
       the reader to derive
-- [ ] The conga and quinto mutation settings either satisfy the one-free-voice
+- [x] The conga and quinto mutation settings either satisfy the one-free-voice
       rule or carry a divergence note
 
 ## Validation
@@ -139,12 +139,14 @@ Closes **F40**; closes the slice. **Changes no patch.**
 **Files:** `docs/plans/theory-audit/ledger.md`,
 `docs/plans/theory-audit/evidence/M004-S02.md`, this plan
 
-1. **Confirm `ac-one-free-voice` passes** and carries no marker. Then prove it
-   bites, because a row closing on a lock that cannot fail closes on nothing:
-   raise two lanes' `mutationRate` in `site/src/generated/presets.json`, watch
-   the rule fail naming them, and restore. That file is generated and carries
-   no uncommitted work at this point, so `git checkout HEAD --` is safe for it
-   — confirm with `git status --porcelain` afterwards.
+1. **Repaired during execution.** This step assumed F40's premise did not
+   exist, on the strength of the row's `Lands in` naming `03-afro-cuban.mdx`.
+   It does exist, on `theory-afro-cuban.mdx`: Cáscara 5%, Conga marcha 10%,
+   Quinto 30%, three lanes against Rule 5's one. Add a rule
+   `ac-theory-one-free-voice` on that page asserting at most one lane carries a
+   non-zero Mutation, watch it fail naming all three, zero the Cáscara and
+   Conga marcha budgets so the quinto alone holds it, and prove the rule bites
+   by restoring one of them.
 
 2. **Close F40** as `done`, naming `ac-one-free-voice` in its `Verification`.
    Its `Item` already records that the premise does not exist; do not restate

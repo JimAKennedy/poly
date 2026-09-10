@@ -460,6 +460,18 @@ const CHECKLIST = [
     patch: 'Rule-Checked Son Ensemble (3-2)',
     rules: [
       {
+        id: 'ac-theory-one-free-voice',
+        description: 'Rule 5: the variation budget belongs to one voice at a time',
+        check: ({ rows }) => {
+          const busy = rows.filter((r) => cellPct(r, 'Mutation') > 0);
+          return busy.length <= 1
+            ? null
+            : `${busy.length} lanes carry a variation budget ` +
+                `(${busy.map((r) => `${r.role} ${r.cell.Mutation}`).join(', ')}); ` +
+                'Rule 5 gives it to one voice at a time, and the construction names the quinto';
+        },
+      },
+      {
         id: 'ac-tumbao-onsets-rendered',
         description: "Rule 3: the tumbao's onset positions are printed, not left to be derived",
         check: ({ rows }, { block }) => {

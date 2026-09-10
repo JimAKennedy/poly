@@ -493,22 +493,22 @@ row is either ✅ or carries a documented divergence.
 **Plan:** M004-S02-plan.md
 **Validation:** format, site-unit, doc-conformance, e2e
 **Evidence:** evidence/M004-S02.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The Chapter 3 clave lane header marks itself as the Euclidean
+- [x] The Chapter 3 clave lane header marks itself as the Euclidean
       approximation and links to the exact-timeline construction
-- [ ] The theory-page tumbao lane's onset positions are rendered, not left to
+- [x] The theory-page tumbao lane's onset positions are rendered, not left to
       the reader to derive
-- [ ] The conga and quinto mutation settings either satisfy the one-free-voice
+- [x] The conga and quinto mutation settings either satisfy the one-free-voice
       rule or carry a divergence note
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
 | F38 | Ch 3's clave lane is the E(5,16) approximation while the theory page's is an exact timeline pattern; the patch header says only "Clave" with no cross-reference | `P1` | `patch-align` | `03-afro-cuban.mdx` patch header | Case `ac-clave-approximation` in the named-rule checklist, passing with no divergence marker; both arms — the header naming the approximation and the link to the exact construction — proved to fail separately | `done` |
 | F39 | The theory-page tumbao lane (16 steps, 6 hits, rotation 14) satisfies the beat-1-avoidance rule but is an unusual configuration presented without its onset positions | `P1` | `patch-align` | `theory-afro-cuban.mdx` Lane 2 | Case `ac-tumbao-onsets-rendered` asserts the printed set equals the derivation from the shared verifier, so the prose and the (steps, hits, rotation) spelling cannot drift apart | `done` |
-| F40 | Ch 3's patch was reported as conga at 10% mutation and quinto at 30% against the theory page's one-free-voice rule. Amended during planning: the premise does not exist in the tree. The `Cuban Son Montuno` preset carries `mutationRate` 0.00 on all five lanes, the patch table has no Mutation column, and there is no quinto lane at all — quinto is a rumba voice and this is a son ensemble. M070 conformed the factory presets after the audit was written, which is the likely cause. The row closes on a lock asserting the one-free-voice rule still holds, not on an assertion that nothing is wrong | `P1` | `verify` | `03-afro-cuban.mdx` patch | The named-rule checklist asserts no lane exceeds the one-free-voice variation budget, and fails if a future edit raises a second lane's mutation above zero | `open` |
+| F40 | The son-ensemble patch carried three lanes with a variation budget — Cáscara 5%, Conga marcha 10%, Quinto 30% — against Rule 5, "the variation budget belongs to one voice at a time", whose construction names the quinto as that voice. **Twice amended, and the first amendment was wrong.** The audit's `Lands in` said `03-afro-cuban.mdx`; planning checked that file, found `mutationRate` 0.00 across the `Cuban Son Montuno` preset and no quinto lane at all, and recorded the premise as non-existent. The premise is real and lives on `theory-afro-cuban.mdx`, whose patch is the one with a quinto. The oddity that should have caught it — the audit naming a quinto in a son ensemble, when the theory page says the quinto is the free voice *in rumba* — was read as evidence the audit was wrong rather than as evidence the wrong table was being read. Cáscara and Conga marcha are now 0%, leaving the quinto the sole free voice | `P1` | `patch-align` | `theory-afro-cuban.mdx` patch | Case `ac-theory-one-free-voice` asserts at most one lane carries a non-zero Mutation, and names the offenders when more do | `done` |
 | B16 | The `e2e` token runs `scripts/site-verify-local.sh`, which rebuilds the WASM engine and copies `poly_engine.js` and `poly_engine.wasm` over the committed artifacts, so every run dirties the tree. The rebuild is not byte-reproducible: during M004, which changes no engine source, the `.wasm` moved 142014 → 142151 bytes and the `.js` gained a trailing-whitespace line that `pre-commit` then strips, so `e2e` and `format` interfere. M004/S01's close swept both files in via `git add -A` and they were reverted. Found while running M004/S02 | `P2` | `accept` | `scripts/site-verify-local.sh`, `webui/poly_engine.{js,wasm}` | Recorded and owned by [#282](https://github.com/JimAKennedy/poly/issues/282); this programme reverts the artifacts after each `e2e` run and stages explicit paths rather than `git add -A` | `accepted` |
 
 ### Slice M004/S03 — Chapter 5 patch
