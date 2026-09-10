@@ -344,7 +344,7 @@ named-theory claim.
 **Vision:** The guide states plainly what it is, what it is not, and exactly
 where it simplifies, so a reader can calibrate every claim it makes.
 **Branch:** milestone/M003-scope-repositioning
-**Status:** planned
+**Status:** done
 **Demo:** The audit's Section 5 repositioning statement is live on the site, and
 each simplification it names is disclosed at the point of use.
 
