@@ -439,16 +439,16 @@ each simplification it names is disclosed at the point of use.
 **Validation:** format, site-unit, doc-conformance, gate
 **Plan:** M003-S05-plan.md
 **Evidence:** evidence/M003-S05.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Gamelan Rule 5 says a third part may double the pokok tones instead of
+- [x] Gamelan Rule 5 says a third part may double the pokok tones instead of
       interlocking, cross-referenced to Rule 6 and to Construction's Pokok lane
-- [ ] The Rachenitsa patch table carries a `Note` column matching
+- [x] The Rachenitsa patch table carries a `Note` column matching
       `presets.json`, and a line naming the GM sounds and flagging that kaval
       and gadulka have no GM drum equivalent
-- [ ] Chapter 5's cyclic-time opening carries a citation
+- [x] Chapter 5's cyclic-time opening carries a citation
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|

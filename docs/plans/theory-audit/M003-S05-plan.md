@@ -13,16 +13,16 @@ evidence are recorded in the rows' `Item` cells and summarised under
 - [x] Task 1 — Cite Chapter 5's cyclic-time opening (F35)
 - [x] Task 2 — Give Gamelan Rule 5 its third-part case (F33)
 - [x] Task 3 — Give the Rachenitsa table its Note column and stand-in line (F34)
-- [ ] Task 4 — Close the slice and run the shipping gate
+- [x] Task 4 — Close the slice and run the shipping gate
 
 ## Definition of Done
 
-- [ ] Gamelan Rule 5 says a third part may double the pokok tones instead of
+- [x] Gamelan Rule 5 says a third part may double the pokok tones instead of
       interlocking, cross-referenced to Rule 6 and to Construction's Pokok lane
-- [ ] The Rachenitsa patch table carries a `Note` column matching
+- [x] The Rachenitsa patch table carries a `Note` column matching
       `presets.json`, and a line naming the GM sounds and flagging that kaval
       and gadulka have no GM drum equivalent
-- [ ] Chapter 5's cyclic-time opening carries a citation
+- [x] Chapter 5's cyclic-time opening carries a citation
 
 ## Validation
 
