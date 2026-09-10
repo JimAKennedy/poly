@@ -352,19 +352,19 @@ each simplification it names is disclosed at the point of use.
 **Plan:** M003-S01-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M003-S01.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] An "About This Guide" page carries the audit's repositioning statement
-- [ ] It is reachable from the introduction and from all twelve `theory-*.mdx`
+- [x] An "About This Guide" page carries the audit's repositioning statement
+- [x] It is reachable from the introduction and from all twelve `theory-*.mdx`
       pages
-- [ ] It names the guide's deliberate scope exclusions, including the
+- [x] It names the guide's deliberate scope exclusions, including the
       son-clave/rumba-clave precedence debate
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F24 | The guide has no statement of what it is and is not; the audit supplies a four-paragraph repositioning statement and judges it defensible | `P1` | `reframe` | New About page, `introduction.mdx`, every `theory-*.mdx` | Case `S01-F24` asserts the About page exists and is linked from the introduction and all twelve theory pages | `open` |
+| F24 | The guide had no statement of what it is and is not; the audit supplies a four-paragraph repositioning statement and judges it defensible. Resolved 2026-09-09. The statement was extracted from the audit by script rather than transcribed, so the four paragraphs are verbatim. The eleven companion pages take the link in their existing italic preamble; `theory-counterpoint-overview.mdx` has no preamble and instead links upward from its own "None of this is original research" paragraph, which is left intact so the local and global statements agree by reference rather than by copy | `P1` | `reframe` | `about-this-guide.mdx`, `introduction.mdx`, all twelve `theory-*.mdx`, `site/astro.config.mjs`, `.github/docs-drift-map.yml` | Case `S01-F24` in `site/tests/scope-framing.test.mjs` asserts the page exists and that all thirteen pages link to it. The theory set is discovered by glob and its count asserted at twelve, so a glob matching nothing cannot pass vacuously, and every missing file is named rather than the first | `done` |
 | F36 | Whether rumba clave predates or postdates son clave is debated (Acosta 2004, Moore 2006); the audit judges the guide may legitimately sidestep it under the repositioning frame. Resolved 2026-09-09. The About page names it under "What this guide does not cover" and says why the sidestep is legitimate rather than merely convenient: both claves are given as they are played, and the rules for aligning parts to either are the same whichever came first, so nothing in the guide depends on the answer | `P1` | `accept` | `about-this-guide.mdx` | Case `S01-F36` in `site/tests/scope-framing.test.mjs` requires the debate, Acosta and Moore all named on the About page, so the sidestep cannot become silent again | `done` |
 
 ### Slice M003/S02 — Chapter 6 scope

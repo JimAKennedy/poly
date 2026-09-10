@@ -13,16 +13,16 @@ The executable state of this plan. `/jk:next` reads the first unchecked box
 here to decide what to do; each task's own commit ticks its box.
 
 - [x] Task 1 — The About page, its scope exclusions, and the lock host (F36)
-- [ ] Task 2 — Reachability from the introduction and all twelve theory pages (F24)
+- [x] Task 2 — Reachability from the introduction and all twelve theory pages (F24)
 
 ## Definition of Done
 
 Copied verbatim from the slice. Both tasks below argue against *this* text.
 
-- [ ] An "About This Guide" page carries the audit's repositioning statement
-- [ ] It is reachable from the introduction and from all twelve `theory-*.mdx`
+- [x] An "About This Guide" page carries the audit's repositioning statement
+- [x] It is reachable from the introduction and from all twelve `theory-*.mdx`
       pages
-- [ ] It names the guide's deliberate scope exclusions, including the
+- [x] It names the guide's deliberate scope exclusions, including the
       son-clave/rumba-clave precedence debate
 
 ## Validation

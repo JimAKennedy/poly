@@ -14,7 +14,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -40,3 +40,42 @@ const CLAIMS = [
 ];
 
 registerClaimTests({ test, assert, claims: CLAIMS, loadSource });
+
+// M003/S01 task 2. F24 asks that the About page be reachable, not merely
+// present — from the introduction and from every theory page. That is thirteen
+// near-identical edits, which is exactly where one gets missed, so this case
+// reports every file that lacks the link rather than stopping at the first.
+//
+// The theory set is discovered by glob rather than hard-coded, so a thirteenth
+// deep dive added later is covered by construction. The count is asserted too:
+// a glob that silently matches nothing would otherwise let the whole case pass
+// vacuously.
+const ABOUT_LINK = '/about-this-guide/';
+
+test('S01-F24: the About page exists and is reachable from the introduction and every theory page', async () => {
+  const entries = await readdir(DOCS);
+  assert.ok(
+    entries.includes('about-this-guide.mdx'),
+    'about-this-guide.mdx is missing — F24 requires the page itself, not only links to it',
+  );
+
+  const theory = entries.filter((f) => f.startsWith('theory-') && f.endsWith('.mdx')).sort();
+  assert.equal(
+    theory.length,
+    12,
+    `expected 12 theory-*.mdx pages, found ${theory.length} — if a deep dive was ` +
+      'added or removed, update this count deliberately rather than loosening the check',
+  );
+
+  const missing = [];
+  for (const file of ['introduction.mdx', ...theory]) {
+    const src = await readFile(join(DOCS, file), 'utf8');
+    if (!src.includes(ABOUT_LINK)) missing.push(file);
+  }
+  assert.deepEqual(
+    missing,
+    [],
+    `${missing.length} of ${theory.length + 1} page(s) do not link to ${ABOUT_LINK}:\n  ` +
+      missing.join('\n  '),
+  );
+});
