@@ -372,17 +372,17 @@ each simplification it names is disclosed at the point of use.
 **Plan:** M003-S02-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M003-S02.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Chapter 6's front-matter description and its in-page scope note both say
+- [x] Chapter 6's front-matter description and its in-page scope note both say
       Hindustani, and neither promises Carnatic coverage
-- [ ] The absence of the Carnatic tala system is stated rather than implied
+- [x] The absence of the Carnatic tala system is stated rather than implied
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F25 | Ch 6 is described as covering "Hindustani and Carnatic" but the Carnatic tala system — solkattu/konnakol, different tala families, a different conceptual frame — is absent | `P1` | `correct` | `06-indian-classical.mdx` front matter and scope note | Case `S02-F25` asserts the description and scope note agree on Hindustani-only and that the Carnatic absence is stated | `open` |
+| F25 | Ch 6 was described as covering "Hindustani and Carnatic" but the Carnatic tala system — solkattu/konnakol, different tala families, a different conceptual frame — is absent. Resolved 2026-09-09. The word Carnatic appeared exactly once in the chapter, in the description making the promise, so this removed a false promise rather than relabelling content. The same overclaim sat in the deep-dive index row of `theory-counterpoint-overview.mdx`, advertising "Hindustani and Carnatic rhythm" one click from the page that now says Carnatic is absent; it was corrected with it. The Scope note is about this chapter rather than the guide, because M004/S04 will add a tihai worked example from Nelson's Solkattu Manual to the companion page and the appendix already lists that source | `P1` | `correct` | `06-indian-classical.mdx`, `theory-counterpoint-overview.mdx` | Cases `S02-F25` and `S02-F25-overview` in `site/tests/scope-framing.test.mjs`. The first forbids the phrase and requires Carnatic, solkattu and konnakol to be named — the requiring arm is load-bearing, since deleting the word alone would pass a forbid-only check while leaving the absence unstated. The second guards the index row and was proved to bite independently | `done` |
 
 ### Slice M003/S03 — Simplification disclosures
 

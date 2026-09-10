@@ -12,15 +12,15 @@ promise. This slice makes the scope claim true and says plainly what is absent.
 The executable state of this plan. `/jk:next` reads the first unchecked box
 here to decide what to do; the task's own commit ticks it.
 
-- [ ] Task 1 — Scope Chapter 6 to Hindustani and state the Carnatic absence (F25)
+- [x] Task 1 — Scope Chapter 6 to Hindustani and state the Carnatic absence (F25)
 
 ## Definition of Done
 
 Copied verbatim from the slice. The task below argues against *this* text.
 
-- [ ] Chapter 6's front-matter description and its in-page scope note both say
+- [x] Chapter 6's front-matter description and its in-page scope note both say
       Hindustani, and neither promises Carnatic coverage
-- [ ] The absence of the Carnatic tala system is stated rather than implied
+- [x] The absence of the Carnatic tala system is stated rather than implied
 
 ## Validation
 

@@ -37,6 +37,36 @@ const CLAIMS = [
       'declares it as a deliberate exclusion',
     present: ['rumba clave predates or postdates', 'Acosta', 'Moore'],
   },
+  {
+    id: 'S02-F25',
+    file: '06-indian-classical.mdx',
+    rule:
+      'ledger F25. The chapter was described as covering "Hindustani and Carnatic" ' +
+      'while the Carnatic tala system — solkattu and konnakol, different tala ' +
+      'families, a different conceptual frame — is absent. The word Carnatic ' +
+      'appeared exactly once in the file, in the description making the promise. ' +
+      'The description now says Hindustani, and the absence is stated in the ' +
+      'chapter rather than left to be inferred from what is missing',
+    forbidden: ['Hindustani and Carnatic'],
+    // The load-bearing arm. Deleting the word from the description alone would
+    // satisfy `forbidden` while leaving the absence unstated — passing the check
+    // and failing the definition-of-done item that matters.
+    present: ['Carnatic', 'solkattu', 'konnakol'],
+  },
+  {
+    id: 'S02-F25-overview',
+    file: 'theory-counterpoint-overview.mdx',
+    rule:
+      'ledger F25. The chapter was described as covering "Hindustani and Carnatic" ' +
+      'while the Carnatic tala system — solkattu and konnakol, different tala ' +
+      'families, a different conceptual frame — is absent. The word Carnatic ' +
+      'appeared exactly once in the file, in the description making the promise. ' +
+      'The description now says Hindustani, and the absence is stated in the ' +
+      'chapter rather than left to be inferred from what is missing',
+    // No `present` arm: the deep-dive index states no scope of its own. It only
+    // has to stop advertising one the chapter cannot back.
+    forbidden: ['Hindustani and Carnatic'],
+  },
 ];
 
 registerClaimTests({ test, assert, claims: CLAIMS, loadSource });
