@@ -517,13 +517,13 @@ row is either ✅ or carries a documented divergence.
 **Plan:** M004-S03-plan.md
 **Validation:** format, site-unit, doc-conformance, e2e
 **Evidence:** evidence/M004-S03.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The Chapter 5 kotekan patch carries a pokok layer, as `theory-gamelan`
+- [x] The Chapter 5 kotekan patch carries a pokok layer, as `theory-gamelan`
       Rule 6 requires
-- [ ] It carries structural overlap at the cycle boundary, as Rule 4 requires
+- [x] It carries structural overlap at the cycle boundary, as Rule 4 requires
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|

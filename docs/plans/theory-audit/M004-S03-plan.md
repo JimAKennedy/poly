@@ -12,13 +12,13 @@ cannot express.
 
 - [x] Task 1 — Redefine the Rule 4 predicate to what the page actually specifies
 - [x] Task 2 — Give the Chapter 5 kotekan patch its pokok layer
-- [ ] Task 3 — Close the slice
+- [x] Task 3 — Close the slice
 
 ## Definition of Done
 
-- [ ] The Chapter 5 kotekan patch carries a pokok layer, as `theory-gamelan`
+- [x] The Chapter 5 kotekan patch carries a pokok layer, as `theory-gamelan`
       Rule 6 requires
-- [ ] It carries structural overlap at the cycle boundary, as Rule 4 requires
+- [x] It carries structural overlap at the cycle boundary, as Rule 4 requires
 
 ## Validation
 
