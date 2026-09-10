@@ -69,3 +69,21 @@ reference [2] carry a fabricated title into M002.
   art-music theory generally rather than to a Carnatic tala claim.
 - **F51's authors are editors.** Born and Hesmondhalgh edited the volume; the
   entry says so rather than presenting them as authors.
+- **Q:** How should the tiers be assigned, given that Peycheva & Dimov (2002) is
+  in Bulgarian and unreadable here? — **A:** Tier A throughout, Peycheva & Dimov
+  at B, and state the verification limit as a fact rather than letting the tier
+  imply it.
+- **Decision:** every new entry is tier A except Peycheva & Dimov at B, and that
+  entry's annotation carries the fixed phrase **`contents unverified`** naming
+  what was confirmed — existence, authors, year, title, series — what was not,
+  and that a translation is being sought — **Why:** a downgraded tier is a
+  judgement about a work's quality, not about our ability to read it, and using
+  it to stand in for a caveat nobody wrote would put the uncertainty somewhere a
+  reader cannot see. The phrase is fixed so `grep -rn "contents unverified"
+  site/` enumerates the set, the way `patch-divergence-ok` and
+  `citation-tier-ok` do.
+- **Standing qualification on all ten works:** each was verified
+  bibliographically and by publishers' and reviewers' descriptions of its
+  subject matter. **None was read.** Entry annotations therefore say what a work
+  is cited *for*, and the plans forbid paraphrasing arguments nobody here has
+  followed. Peycheva & Dimov is the sharpest case, not the only one.

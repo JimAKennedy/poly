@@ -584,15 +584,18 @@ highest-value additions per tradition, each cited at the claim it supports.
 ### Slice M005/S01 — Sub-Saharan sources
 
 **Depends:** M002/S06, M003/S03
+**Plan:** M005-S01-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M005-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
-- [ ] Charry, Kubik, Agawu (2003) and Arom's later methodological writings are
-      in the reference appendix with declared tiers
+- [ ] Charry, Kubik and Agawu (2003) are in the reference appendix with
+      declared tiers
 - [ ] Each is cited at the claim it supports, not only listed
+- [ ] The existing `fr-arom-1991` entry is cited from the sub-Saharan
+      methodology material, no later Arom work having been found
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
@@ -604,9 +607,10 @@ highest-value additions per tradition, each cited at the claim it supports.
 ### Slice M005/S02 — Afro-Cuban sources
 
 **Depends:** M002/S06
+**Plan:** M005-S02-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M005-S02.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
@@ -620,15 +624,18 @@ highest-value additions per tradition, each cited at the claim it supports.
 ### Slice M005/S03 — Indian-classical sources
 
 **Depends:** M002/S04, M002/S06
+**Plan:** M005-S03-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M005-S03.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
 - [ ] Powers's *New Grove* "India" article is in the appendix with a declared
-      tier and cited where the Carnatic absence is stated
-- [ ] Kippen is cited inline at the theka discussion, not only in Further Reading
+      tier and cited for Indian art-music theory, its coverage of the Carnatic
+      tala system specifically being unconfirmed
+- [ ] Kippen's existing inline citation in Chapter 6 is confirmed and locked,
+      the row's claim that he is in Further Reading only being stale
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
@@ -637,14 +644,18 @@ highest-value additions per tradition, each cited at the claim it supports.
 ### Slice M005/S04 — Balkan sources
 
 **Depends:** M002/S05, M002/S06
+**Plan:** M005-S04-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M005-S04.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
-- [ ] Peycheva & Dimov are in the appendix with a declared tier and cited at
-      the svatbarska-muzika discussion
+- [ ] Silverman (2007) is in the appendix with a declared tier and cited at the
+      svatbarska-muzika discussion
+- [ ] Peycheva & Dimov are in the appendix with a declared tier, cited where the
+      chapter touches Romani musicianship, and their entry states plainly that
+      the work's contents are unverified pending translation
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
@@ -653,9 +664,10 @@ highest-value additions per tradition, each cited at the claim it supports.
 ### Slice M005/S05 — Minimalism and electronic sources
 
 **Depends:** M001/S06, M002/S06
+**Plan:** M005-S05-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M005-S05.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
@@ -672,9 +684,10 @@ highest-value additions per tradition, each cited at the claim it supports.
 ### Slice M005/S06 — Brazilian maracatu
 
 **Depends:** M002/S06
+**Plan:** M005-S06-plan.md
 **Validation:** format, site-unit, doc-conformance, gate
 **Evidence:** evidence/M005-S06.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
