@@ -7,11 +7,11 @@ contradicted them.
 
 ## Task status
 
-- [ ] Task 1 — Add Acosta and cite him at the clave-evolution discussion
+- [x] Task 1 — Add Acosta and cite him at the clave-evolution discussion
 
 ## Definition of Done
 
-- [ ] Acosta is in the reference appendix with a declared tier and cited at the
+- [x] Acosta is in the reference appendix with a declared tier and cited at the
       clave-evolution discussion
 
 ## Validation

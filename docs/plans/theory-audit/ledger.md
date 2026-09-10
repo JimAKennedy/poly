@@ -610,16 +610,16 @@ highest-value additions per tradition, each cited at the claim it supports.
 **Plan:** M005-S02-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M005-S02.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Acosta is in the reference appendix with a declared tier and cited at the
+- [x] Acosta is in the reference appendix with a declared tier and cited at the
       clave-evolution discussion
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F47 | Acosta, L., *Cubano Be, Cubano Bop: One Hundred Years of Jazz in Cuba*, is absent; it is the historical depth behind clave evolution, and it covers the "Spanish tinge" in early New Orleans jazz that M001/S05 attributed to Lomax. Amended during planning: the audit dates it 2004; verification puts it at 2003, Smithsonian Books, translated by Daniel S. Whitesell | `P2` | `enrich` | `appendix-references.mdx`, `03-afro-cuban.mdx` | Cited inline; the entry resolves and carries a tier | `open` |
+| F47 | Acosta, L., *Cubano Be, Cubano Bop: One Hundred Years of Jazz in Cuba*, is absent; it is the historical depth behind clave evolution, and it covers the "Spanish tinge" in early New Orleans jazz that M001/S05 attributed to Lomax. Amended during planning: the audit dates it 2004; verification puts it at 2003, Smithsonian Books, translated by Daniel S. Whitesell | `P2` | `enrich` | `appendix-references.mdx`, `03-afro-cuban.mdx` | Cases `M005/S01` (entry) and `M005 F47` (citation) — the entry resolves at tier A and is cited beside Lomax at the Spanish-tinge passage | `done` |
 
 ### Slice M005/S03 — Indian-classical sources
 

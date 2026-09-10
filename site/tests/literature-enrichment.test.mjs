@@ -34,6 +34,7 @@ const ENTRIES = [
   { anchor: 'fr-charry-2000', tier: 'A', row: 'F44' },
   { anchor: 'fr-kubik-1999', tier: 'A', row: 'F45' },
   { anchor: 'fr-agawu-2003', tier: 'A', row: 'F46' },
+  { anchor: 'fr-acosta-2003', tier: 'A', row: 'F47' },
 ];
 
 test('M005/S01: the sub-Saharan sources are in the appendix with declared tiers', async () => {
@@ -91,6 +92,13 @@ const CITATIONS = [
     anchor: 'fr-arom-1991',
     near: 'Western transcription usually omits',
     why: "Arom's referent theory is the methodology behind the dance-beat claim; the Sources listing is not a citation at a claim",
+  },
+  {
+    row: 'F47',
+    file: '03-afro-cuban.mdx',
+    anchor: 'fr-acosta-2003',
+    near: 'the Spanish tinge',
+    why: 'Acosta covers the Cuban presence in New Orleans behind the phrase Lomax records Morton using',
   },
 ];
 
