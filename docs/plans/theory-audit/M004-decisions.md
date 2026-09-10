@@ -37,3 +37,29 @@ on the user's behalf.
   satisfied — the `Ewe Polymetric Ensemble` preset carries `timeline: true` on
   its bell lane — **Why:** the row would otherwise licence work that is already
   done, and the remaining gap is narrower than the audit describes.
+- **Q:** With the nine review defects already fixed, S05's real cost is how many
+  of the 92 numbered rules the checklist covers. Which scope? — **A:** Create a
+  new milestone for the comprehensive option, then proceed with the narrow scope
+  under this slice.
+- **Decision:** M007 — Named-rule coverage created, three slices, rows B12–B14,
+  depending on M004/S05. S05's definition of done narrowed to the mechanism plus
+  the five patches its siblings need and the two theory pages with no assertion,
+  and gains an item naming M007 as the owner of the rest — **Why:** the DoD's
+  literal reading is a tenfold expansion over 83 never-checked rules, which is a
+  milestone rather than a slice; naming the owner in the DoD keeps the boundary
+  explicit instead of implied by silence.
+- **Q:** When the checklist finds a patch breaking a rule that no F-row covers,
+  what should the unattended run do? — **A:** Mark it, open a B row, keep moving.
+- **Decision:** an untriaged finding gets a `patch-divergence-ok` marker with the
+  reason "found by the checklist, not yet triaged" and a B row naming the page
+  and rule; M007/S03's B14 fails on any marker still carrying that placeholder —
+  **Why:** the suite stays green and the finding stays greppable and tracked,
+  without a slice widening to chase it; the placeholder check stops the backlog
+  becoming permanent by inattention.
+- **Finding, recorded rather than acted on:** the 2026-07-30 conformance
+  review's nine defects are all fixed — the harness is green on all nine. The
+  concern that S05 would open red on M069's work was wrong. The real exposure is
+  the 83 rules never checked at all, which is what M007 owns.
+- **Finding:** `theory-electronic-breakbeat` (9 rules) and `theory-minimalism`
+  (8 rules) carry no assertion whatsoever. Folded into S05's scope rather than
+  left for M007, because they are the only two pages with zero coverage.

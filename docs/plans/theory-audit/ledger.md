@@ -550,12 +550,16 @@ row is either ✅ or carries a documented divergence.
 
 **Definition of Done**
 
-- [ ] `theory-patch-conformance.test.mjs` checks each theory page's patches
-      against that page's own named rules, not only that their Euclidean
-      triples are valid
+- [ ] `theory-patch-conformance.test.mjs` carries a per-page named-rule
+      checklist declared as data, covering the Chapter 2, 3 and 5 patches its
+      sibling slices need and the two theory pages that carry no assertion at
+      all today, `theory-electronic-breakbeat` and `theory-minimalism`
 - [ ] A rule a patch deliberately breaks is satisfied by an in-band divergence
       marker carrying a written reason, and by nothing else
 - [ ] A patch that silently drops a rule fails the suite
+- [ ] Every rule in the checklist is proved to fail when its lane is removed
+- [ ] The remaining rule coverage is owned by M007, named here, not left
+      implicit
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
@@ -765,6 +769,82 @@ plainly that they are ours rather than the audit's.
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
 | B11 | The audit (§125) asserts *kotekan polos* — "a third player playing only the structural pokok tones" — as a named interlock style, citing nothing for the term. Nothing in the repo attests either the term or the practice: `fr-tenzer-2000` is annotated "the authoritative analysis of kotekan varieties", which argues Tenzer could cover it but is not evidence that he does. M003/S05 wrote the practice into Rule 5 with no citation and no label, forbidding the label in case `S05-F33`, on the grounds that Rule 6 and Construction's Pokok lane already ground it internally. This row owns both open questions: whether the term has an attestation, and whether any source documents the practice so Rule 5 can cite it. Found while planning and executing M003/S05, not named by the audit as a defect in itself | `P2` | `source` | `theory-gamelan.mdx` Rule 5 | Either Rule 5 names the term and/or cites the practice with a resolving tier-A/B reference, or this row is `accepted` with the reason recorded | `open` |
+
+## Milestone M007 — Named-rule coverage
+
+**Vision:** Every mechanically checkable rule a theory page states is checked
+against that page's patch, so the guide's rules and its worked examples cannot
+drift apart unnoticed.
+**Branch:** milestone/M007-named-rule-coverage
+**Status:** planned
+**Demo:** Count the checklist's rule entries against the pages' numbered rules;
+every checkable rule is present, and every omission carries a recorded verdict.
+
+M004/S05 builds the checklist mechanism and proves it on five chapter patches
+and the two theory pages that had no assertion. This milestone carries it to
+the rest. The sizing was measured while planning M004/S05: eleven theory pages
+state 92 numbered rules between them, of which nine were asserted — one
+predicate per page, each encoding one defect from the 2026-07-30 conformance
+review. Those nine all pass. The other 83 have never been checked against a
+patch, which is where this milestone's findings will come from.
+
+Not every numbered rule is mechanically checkable. "The timeline never varies"
+and "each part alone must be playable and idiomatic" are prose judgments a lane
+table cannot settle, so the first slice triages the 92 before the second
+asserts any of them.
+
+### Slice M007/S01 — Rule triage
+
+**Depends:** M004/S05
+**Validation:** format, doc-conformance
+**Evidence:** evidence/M007-S01.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] Every numbered rule on every theory page is classified checkable or not,
+      with a one-line reason recorded for each not-checkable verdict
+- [ ] The triage lives beside the checklist, so a rule added to a theory page
+      without a verdict is visible
+
+| ID | Item | Sev | Disp | Lands in | Verification | Status |
+|---|---|---|---|---|---|---|
+| B12 | The eleven theory pages state 92 numbered rules and nine are asserted, but which of the remaining 83 a lane table can settle has never been decided. Until that verdict is recorded, "this rule is not checked" and "this rule is not checkable" are indistinguishable | `P2` | `verify` | `site/tests/theory-patch-conformance.test.mjs` triage table | A case asserts every numbered rule on every theory page carries a triage verdict, and fails when a page gains a rule that has none | `open` |
+
+### Slice M007/S02 — Roll out the checkable rules
+
+**Depends:** M007/S01
+**Validation:** format, site-unit, doc-conformance
+**Evidence:** evidence/M007-S02.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] Every rule triaged checkable carries a checklist entry
+- [ ] Each entry is proved to fail when the lane it guards is removed
+- [ ] A patch violating a rule either carries a divergence marker with a written
+      reason or is corrected
+
+| ID | Item | Sev | Disp | Lands in | Verification | Status |
+|---|---|---|---|---|---|---|
+| B13 | 83 numbered rules across nine theory pages have never been checked against the patch meant to demonstrate them. The 2026-07-30 review found nine such contradictions by hand and all nine are now fixed, which is evidence the class is real rather than that it is exhausted | `P1` | `patch-align` | `site/tests/theory-patch-conformance.test.mjs` | Every checkable rule has a checklist entry, each with a mutation proof recorded in the evidence file | `open` |
+
+### Slice M007/S03 — Burn down the divergence markers
+
+**Depends:** M007/S02
+**Validation:** format, site-unit, doc-conformance, gate
+**Evidence:** evidence/M007-S03.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] Every `patch-divergence-ok` marker either is replaced by a corrected patch
+      or carries a reason a reviewer has accepted
+- [ ] No marker carries the untriaged placeholder reason
+
+| ID | Item | Sev | Disp | Lands in | Verification | Status |
+|---|---|---|---|---|---|---|
+| B14 | Markers opened during M004 and M007/S02 with the reason "found by the checklist, not yet triaged" are a backlog, not a decision. A suppression nobody has read since it was written is indistinguishable from a defect | `P2` | `verify` | theory and chapter pages carrying `patch-divergence-ok` | A case fails on any marker still carrying the untriaged placeholder reason, and the suite prints the live marker count | `open` |
 
 ## Sequencing
 
