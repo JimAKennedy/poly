@@ -531,9 +531,10 @@ row is either ✅ or carries a documented divergence.
 
 ### Slice M004/S04 — Tihai worked example
 
+**Plan:** M004-S04-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M004-S04.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
