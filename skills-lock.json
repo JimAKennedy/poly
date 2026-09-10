@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "jkStandardsVersion": "0.13.2",
+  "jkStandardsVersion": "0.15.0",
   "skills": {
     "branch-discipline": {
       "source": "JimAKennedy/jk-standards",
@@ -40,17 +40,23 @@
       "commandPath": "commands/assess.md",
       "computedHash": "fd2483846afee344bd33ed0726ffb6e02c460728177a75e6c2929330c4510f9a"
     },
+    "auto": {
+      "source": "JimAKennedy/jk-standards",
+      "sourceType": "github",
+      "commandPath": "commands/auto.md",
+      "computedHash": "5c8c8ed6ad8b796240485987c259deb0b889f87124fc68929eb3ebeaa63decf0"
+    },
     "close": {
       "source": "JimAKennedy/jk-standards",
       "sourceType": "github",
       "commandPath": "commands/close.md",
-      "computedHash": "413755ec2648338156908fd599064a9d54076b7d0a4b871eb13d635690ec7f27"
+      "computedHash": "b581052c94a0a9d407a8584d8a8e7ed2df0bd97973f086b1619e08e79c1c273a"
     },
     "next": {
       "source": "JimAKennedy/jk-standards",
       "sourceType": "github",
       "commandPath": "commands/next.md",
-      "computedHash": "13d3220be4e6fa0eac672e4c8ed4ab78ec0900eb65280a5b75c330f98938c9bf"
+      "computedHash": "f1f32e57c7bfd51b029ba4031987d7516101eba4f8bf486643e6626fa1eec457"
     },
     "plan": {
       "source": "JimAKennedy/jk-standards",
@@ -62,7 +68,7 @@
       "source": "JimAKennedy/jk-standards",
       "sourceType": "github",
       "commandPath": "commands/ship.md",
-      "computedHash": "bad5117c43ed35e039f70f9bd57deb75c3c66cc7dc1fe456586dcb638ae273cb"
+      "computedHash": "e324d4981b0d8162ef4d6e8f3c01ac0475d7ef395a0bfa6330b0275e12433b54"
     },
     "status": {
       "source": "JimAKennedy/jk-standards",
