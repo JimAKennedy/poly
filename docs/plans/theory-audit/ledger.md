@@ -527,7 +527,7 @@ row is either ✅ or carries a documented divergence.
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F41 | The Ch 5 kotekan patch has no pokok (structural melody) layer, required by `theory-gamelan` Rule 6, and no structural overlap at the cycle boundary, required by Rule 4 | `P1` | `patch-align` | `05-gamelan.mdx` patch | Rule-compliance assertion for Rules 4 and 6 in the patch-conformance suite | `open` |
+| F41 | The Ch 5 kotekan patch has no pokok (structural melody) layer, required by `theory-gamelan` Rule 6, and no structural overlap at the cycle boundary, required by Rule 4 | `P1` | `patch-align` | `05-gamelan.mdx` patch | Cases `gam-pokok-layer` and `gam-structural-overlap` in the named-rule checklist, both passing with no divergence marker. Rule 4 is checked as construction step 4 specifies it — a lane outside the kotekan pair sounding at the cycle boundary — because Rule 4 as written demands pair-overlap that Poly's Kotekan L-mode cannot produce, as its own parenthetical says | `done` |
 
 ### Slice M004/S04 — Tihai worked example
 

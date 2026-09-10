@@ -11,7 +11,7 @@ cannot express.
 ## Task status
 
 - [x] Task 1 — Redefine the Rule 4 predicate to what the page actually specifies
-- [ ] Task 2 — Give the Chapter 5 kotekan patch its pokok layer
+- [x] Task 2 — Give the Chapter 5 kotekan patch its pokok layer
 - [ ] Task 3 — Close the slice
 
 ## Definition of Done
