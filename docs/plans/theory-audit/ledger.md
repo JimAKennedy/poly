@@ -437,21 +437,23 @@ each simplification it names is disclosed at the point of use.
 ### Slice M003/S05 — Remaining framing items
 
 **Validation:** format, site-unit, doc-conformance, gate
+**Plan:** M003-S05-plan.md
 **Evidence:** evidence/M003-S05.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
-- [ ] Gamelan Rule 5 names *kotekan polos* among its interlock styles and links
-      it to the pokok lane
-- [ ] The Rachenitsa patch table says its tupan and kaval notes are GM drum
-      stand-ins, not the named instruments
+- [ ] Gamelan Rule 5 says a third part may double the pokok tones instead of
+      interlocking, cited and cross-linked to Rule 6
+- [ ] The Rachenitsa patch table carries a `Note` column matching
+      `presets.json`, and a line naming the GM sounds and flagging that kaval
+      and gadulka have no GM drum equivalent
 - [ ] Chapter 5's cyclic-time opening carries a citation
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F33 | Gamelan Rule 5's named interlock styles omit *kotekan polos* — a third player on structural pokok tones, directly relevant to a user adding a third melodic lane | `P2` | `enrich` | `theory-gamelan.mdx` Rule 5 | Case `S05-F33` asserts the style is named and cross-links to the M004/S03 pokok lane | `open` |
-| F34 | Ch 7's Rachenitsa patch names tupan and kaval — pitched folk instruments — without noting the MIDI notes are GM drum stand-ins | `P1` | `patch-align` | `07-balkan.mdx` Rachenitsa patch table | The patch-conformance suite asserts the stand-in note is present on the patch table | `open` |
+| F33 | Gamelan Rule 5's named interlock styles omit a third part that doubles the structural pokok tones rather than interlocking with the pair — directly relevant to a user adding a third melodic lane. Amended during planning: the audit (§125) named this practice *kotekan polos* and cited nothing for the term, and the guide's own Rule 3 already uses *polos* for one of the interlocking pair, so adopting it as a style name would collide with the page's established usage. The rule gains the substance without the label, cited to Tenzer (2000) and cross-linked to Rule 6. The sourcing question is M006/S04 row B11. The audit also miscounted the rule as listing five styles; it lists four | `P2` | `enrich` | `theory-gamelan.mdx` Rule 5 | Case `S05-F33` asserts a third part doubling the pokok is offered, cited to `fr-tenzer-2000` and linked to Rule 6, and forbids the unattested label | `open` |
+| F34 | Ch 7's Rachenitsa patch table carries no note information at all, so a reader cannot tell what any lane will sound like on a GM kit. Amended during planning: the audit (§176) asked the "Note" column to mark tupan and kaval as stand-ins, but the table has no `Note` column and the premise is backwards. The tupan is a double-headed bass drum, so its two lanes map to GM kick and side stick — a drum standing in for a drum — which the Role column already says by naming them "Tupan bass" and "Tupan rim". The real stand-ins are lane 3, a woodblock for the kaval (an end-blown flute), and lane 4, a hi-hat for the gadulka (a bowed fiddle), which the audit does not mention. Note numbers and GM names are taken from the `Rachenitsa 7/8` record in `presets.json` | `P1` | `patch-align` | `07-balkan.mdx` Rachenitsa patch table | Case `S05-F34` asserts the table's `Note` column matches every lane's `noteNumber` in `presets.json`, and that the line beneath names each `roleLabel` and flags kaval and gadulka as having no GM drum equivalent | `open` |
 | F35 | Ch 5 opens "time is not a line — it is a circle": legitimate but uncited, and unsourced it reads as orientalist; Tenzer (2000) grounds it | `P1` | `source` | `05-gamelan.mdx` chapter opening | Case `S05-F35` asserts the opening carries a citation that resolves in the appendix | `open` |
 
 ---
@@ -744,6 +746,21 @@ plainly that they are ours rather than the audit's.
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
 | B09 | `ref-1` and `fr-toussaint-2005` are the same 2005 BRIDGES paper listed twice, at different weights in the same appendix. ref-1 is cited in six files and the duplicate in none, so the two cannot disagree today, but nothing stops a later citation picking the wrong one | `P2` | `correct` | `appendix-references.mdx`, `site/tests/citation-tier.test.mjs` | `citation-tier.test.mjs` asserts no two entries share a normalised title and year, and the sweep that finds them is recorded in this row | `open` |
+
+### Slice M006/S04 — Unattested terms
+
+**Validation:** format, site-unit, doc-conformance
+**Evidence:** evidence/M006-S04.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] *Kotekan polos* is either cited to a tier-A or tier-B source and named in
+      Rule 5, or recorded here as unverifiable and deliberately left out
+
+| ID | Item | Sev | Disp | Lands in | Verification | Status |
+|---|---|---|---|---|---|---|
+| B11 | The audit (§125) asserts *kotekan polos* — "a third player playing only the structural pokok tones" — as a named interlock style, citing nothing for the term. Nothing in the repo attests it, and the guide's Rule 3 already uses *polos* for one of the interlocking pair. M003/S05 wrote the practice into Rule 5 without the label and forbids it in case `S05-F33`; this row owns finding an attestation or recording the term as unverifiable. Found while planning M003/S05, not named by the audit as a defect in itself | `P2` | `source` | `theory-gamelan.mdx` Rule 5 | Either Rule 5 names the term with a resolving tier-A/B citation, or this row is `accepted` with the reason recorded | `open` |
 
 ## Sequencing
 
