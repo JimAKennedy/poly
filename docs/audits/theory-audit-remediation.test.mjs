@@ -170,7 +170,11 @@ function parseLedger() {
     }
 
     const id = c[table.idxId];
-    if (!/^[FH]\d{2}$/.test(id)) {
+    // [FHB], not [FH]: the B series must be accepted here and not only by the
+    // malformed-ID assertion below. A row this rejects drops `table`, so every
+    // later row in the same table is skipped silently — which is how a B row
+    // sitting between two F rows made the F row after it report as missing.
+    if (!/^[FHB]\d{2}$/.test(id)) {
       // Not a row of this table — drop the layout so the next header re-arms.
       table = null;
       continue;

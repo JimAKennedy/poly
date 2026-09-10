@@ -18,10 +18,12 @@ repoints its completeness test at this file.
 
 **Row series.** `F01`–`F54` are the audit's findings, one row each, and that
 range is closed. `H01`–`H04` are the harness this programme needed to lock its
-own corrections. `B01`–`B09` are bibliography defects this programme found
-itself, in M006 — the audit drew its Tier-C list from the chapters it reviewed,
-so it never saw the orphaned, duplicated and low-tier entries that M002's own
-work surfaced.
+own corrections. The `B` series is defects this programme found itself
+rather than inheriting from the audit. `B01`–`B09` are bibliography defects, in
+M006 — the audit drew its Tier-C list from the chapters it reviewed, so it never
+saw the orphaned, duplicated and low-tier entries that M002's own work
+surfaced. `B10` onward are other discovered defects, wherever the slice that
+found one sits; a `B` row says only that the audit did not name it.
 
 **Row vocabulary.** Beyond the required columns, each row carries a severity
 (`P0` factually wrong · `P1` overclaimed or under-sourced · `P2` enrichment) and
@@ -413,9 +415,10 @@ each simplification it names is disclosed at the point of use.
 
 ### Slice M003/S04 — Non-isochrony honesty
 
+**Plan:** M003-S04-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M003-S04.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
@@ -428,6 +431,7 @@ each simplification it names is disclosed at the point of use.
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
 | F31 | Rule 8's Humanize approximation is flagged as an approximation but the guide never says *how* it differs: Humanize is random jitter, Polak (2010) documents systematic style-specific subdivision profiles | `P1` | `disclose` | `theory-sub-saharan-africa.mdx` Rule 8 and construction step 5 | Case `S04-F31` asserts the explicit random-versus-systematic contrast, not just the word "approximation" | `open` |
+| B10 | `theory-sub-saharan-africa.mdx` construction step 5 says "until Poly ships subdivision-profile support", which understates the engine: `microTimingMs` is a per-step timing array, exposed to the WebUI as the micro-timing bars through the `setMicroTiming` bridge action and clamped to ±20 ms. What Poly lacks is a jembe *profile* to load, not the mechanism to express one. Found while planning F31, not named by the audit | `P2` | `correct` | `theory-sub-saharan-africa.mdx` construction step 5 | Case `S04-B10` forbids the "until Poly ships subdivision-profile support" phrasing and requires the per-step micro-timing control to be named as where a profile would go | `open` |
 | F32 | The audit asks that Balkan aksak be given the same non-isochrony honesty as the Malian jembe; `theory-balkan.mdx` Rule 8 already gives it, citing Goldberg (2015), but nothing locks it | `P1` | `disclose` | `theory-balkan.mdx` Rule 8 | Case `S04-F32` extracts Rule 8 and asserts the sub-3:2 statement, its `fr-goldberg-2015` citation, and the notated-versus-played disclosure survive | `open` |
 
 ### Slice M003/S05 — Remaining framing items
