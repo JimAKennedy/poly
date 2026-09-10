@@ -7,7 +7,7 @@ contradicted them.
 
 ## Task status
 
-- [ ] Task 1 — Add Silverman and cite the svatbarska-muzika claim
+- [x] Task 1 — Add Silverman and cite the svatbarska-muzika claim
 - [ ] Task 2 — Add Peycheva & Dimov, stating what is unverified
 
 ## Definition of Done

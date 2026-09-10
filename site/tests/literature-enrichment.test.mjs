@@ -36,6 +36,7 @@ const ENTRIES = [
   { anchor: 'fr-agawu-2003', tier: 'A', row: 'F46' },
   { anchor: 'fr-acosta-2003', tier: 'A', row: 'F47' },
   { anchor: 'fr-powers-1980', tier: 'A', row: 'F48' },
+  { anchor: 'fr-silverman-2007', tier: 'A', row: 'F49' },
 ];
 
 test('M005/S01: the sub-Saharan sources are in the appendix with declared tiers', async () => {
@@ -117,6 +118,13 @@ const CITATIONS = [
     anchor: 'fr-kippen-1988',
     near: 'learns by rote',
     why: 'M002/S04 cited Kippen at the theka claim; the row says he is in Further Reading only, which is stale',
+  },
+  {
+    row: 'F49',
+    file: '07-balkan.mdx',
+    anchor: 'fr-silverman-2007',
+    near: 'svatbarska muzika',
+    why: "Rice is cited there for the tempos; Silverman is the source for the tradition's own history and politics",
   },
 ];
 
