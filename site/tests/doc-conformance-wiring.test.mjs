@@ -56,6 +56,7 @@ const REQUIRED = [
   // M003 S01 scope-and-framing gate: the About page's repositioning statement
   // and its declared scope exclusions.
   'site/tests/scope-framing.test.mjs',
+  'site/tests/literature-enrichment.test.mjs',
   // M002 S06 citation-tier gate: every bibliography entry declares a tier,
   // and a named-theory claim may not cite below Tier A.
   'site/tests/citation-tier.test.mjs',

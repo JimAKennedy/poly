@@ -7,7 +7,7 @@ contradicted them.
 
 ## Task status
 
-- [ ] Task 1 — Add Charry, Kubik and Agawu (2003) to the appendix
+- [x] Task 1 — Add Charry, Kubik and Agawu (2003) to the appendix
 - [ ] Task 2 — Cite each at the claim it supports, and cite Arom's 1991
 
 ## Definition of Done
