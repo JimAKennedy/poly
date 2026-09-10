@@ -572,22 +572,34 @@ const CHECKLIST = [
       },
       {
         id: 'gam-structural-overlap',
-        description: 'Rule 4: the parts overlap at structural tones',
+        description: 'Rule 4: a deliberate doubling marks the cycle boundary',
+        // Construction step 4, not Rule 4's headline. Rule 4 asks the pair to
+        // overlap at structural tones, but its own parenthetical says Poly's
+        // Kotekan L-mode implements the strict case and that doublings come
+        // "via a third lane or accent masks until kotekan modes ship" — and
+        // theory-gamelan's own reference patch uses L6. A predicate demanding
+        // pair-overlap therefore condemns the worked example the rule is drawn
+        // from, and earns a suppression nobody could ever burn down. So this
+        // checks what step 4 specifies: a lane outside the pair striking the
+        // gong point together with a pair lane.
         check: ({ rows }) => {
           const polos = findLane(rows, /polos/i);
           const sangsih = findLane(rows, /sangsih/i);
           if (!polos || !sangsih) return 'need both a polos and a sangsih lane to check Rule 4';
-          const derived = /^L\d+$/i.test(String(sangsih.cell.Kotekan ?? ''));
-          if (derived) {
-            return `sangsih is ${sangsih.cell.Kotekan}, the strict complement of polos, so the pair ` +
-              'intersect nowhere by construction — Rule 4 wants doubled strokes at cadence points ' +
-              'and calls an everywhere-empty intersection mechanical';
+          // Sangsih's own triple is not what sounds when its Kotekan cell is
+          // L<n>: the engine derives its onsets from the source lane. Polos is
+          // the pair member the table actually describes.
+          const pair = new Set([polos.role, sangsih.role]);
+          const atBoundary = (r) => (laneOnsets(r) ?? []).includes(0);
+          if (!atBoundary(polos)) {
+            return `polos sounds on ${JSON.stringify(laneOnsets(polos))} and not on the cycle ` +
+              'boundary, so nothing can double it there; Rule 4 marks structure at the gong point';
           }
-          const a = new Set(laneOnsets(polos) ?? []);
-          const shared = (laneOnsets(sangsih) ?? []).filter((i) => a.has(i));
-          return shared.length > 0
+          const doubling = rows.filter((r) => !pair.has(r.role) && atBoundary(r));
+          return doubling.length > 0
             ? null
-            : 'polos and sangsih share no onset; Rule 4 wants overlap at structural tones';
+            : 'no lane outside the kotekan pair sounds on the cycle boundary, so the gong point ' +
+                'carries no deliberate doubling — construction step 4 adds a sparse third lane there';
         },
       },
     ],
