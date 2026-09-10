@@ -148,3 +148,19 @@ on the user's behalf.
 - **Decision:** `ac-one-free-voice` on Chapter 3's preset is kept alongside the
   new theory-page rule — **Why:** it is correct as written and locks a side that
   currently complies only through M070's preset conformance.
+- **Q:** `gam-structural-overlap` demands the kotekan pair share an onset, which
+  Poly's Kotekan L-mode cannot produce, and Rule 4's own parenthetical says so.
+  How should S03 resolve it? — **A:** Redefine it to match construction step 4.
+- **Decision:** the rule becomes "a lane outside the kotekan pair strikes at the
+  cycle boundary together with a pair lane" — **Why:** the predicate S05 shipped
+  condemned `theory-gamelan`'s own reference patch, which uses `L6`, and Rule 4
+  already discloses that L-mode implements the strict case "until kotekan modes
+  ship". A rule that demands the impossible earns a suppression that can never
+  be burned down, which is worse than an honest weaker rule.
+- **Q:** Should the uncontested pokok half proceed regardless? — **A:** Yes, add
+  the pokok lane.
+- **Decision:** Chapter 5 gains a mid-register pokok lane, 8 steps, 4 hits, at
+  1/4 against the pair's 1/16 — **Why:** it matches construction step 2 and the
+  theory page's own `Pokok melody` lane, and it gives gamelan Rule 5's
+  cross-reference a real pokok lane to point at, which M003/S05 deliberately
+  left pointing at Construction because none existed.

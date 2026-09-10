@@ -514,9 +514,10 @@ row is either ✅ or carries a documented divergence.
 ### Slice M004/S03 — Chapter 5 patch
 
 **Depends:** M004/S05
+**Plan:** M004-S03-plan.md
 **Validation:** format, site-unit, doc-conformance, e2e
 **Evidence:** evidence/M004-S03.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
