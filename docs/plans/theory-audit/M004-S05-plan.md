@@ -14,19 +14,19 @@ three ways this mechanism could rot.
 - [x] Task 1 — Reach every patch in a file, not just the first
 - [x] Task 2 — The checklist and the divergence marker, proved on two theory pages
 - [x] Task 3 — Chapter entries, with markers naming the rows that own the gaps
-- [ ] Task 4 — Close the slice and run the shipping gate
+- [x] Task 4 — Close the slice and run the shipping gate
 
 ## Definition of Done
 
-- [ ] `theory-patch-conformance.test.mjs` carries a per-page named-rule
+- [x] `theory-patch-conformance.test.mjs` carries a per-page named-rule
       checklist declared as data, covering the Chapter 2, 3 and 5 patches its
       sibling slices need and the two theory pages that carry no assertion at
       all today, `theory-electronic-breakbeat` and `theory-minimalism`
-- [ ] A rule a patch deliberately breaks is satisfied by an in-band divergence
+- [x] A rule a patch deliberately breaks is satisfied by an in-band divergence
       marker carrying a written reason, and by nothing else
-- [ ] A patch that silently drops a rule fails the suite
-- [ ] Every rule in the checklist is proved to fail when its lane is removed
-- [ ] The remaining rule coverage is owned by M007, named here, not left
+- [x] A patch that silently drops a rule fails the suite
+- [x] Every rule in the checklist is proved to fail when its lane is removed
+- [x] The remaining rule coverage is owned by M007, named here, not left
       implicit
 
 ## Validation
