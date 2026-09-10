@@ -386,9 +386,10 @@ each simplification it names is disclosed at the point of use.
 
 ### Slice M003/S03 — Simplification disclosures
 
+**Plan:** M003-S03-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M003-S03.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
