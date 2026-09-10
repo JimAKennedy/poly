@@ -187,6 +187,26 @@ const CLAIMS = [
     // and an unbounded match would be satisfied by that instead.
     presentRegex: [/time is not a line[\s\S]{0,400}#fr-tenzer-2000/],
   },
+  {
+    id: 'S05-F33',
+    file: 'theory-gamelan.mdx',
+    rule:
+      'ledger F33. Rule 5 lists interlock styles and says pick one; it does not ' +
+      'say an added part need not interlock at all. A third part may double the ' +
+      'pokok tones instead — which is what Construction step 2 and patch Lane 5 ' +
+      'already build, and Rule 6 is why it belongs. The sentence carries no ' +
+      'citation on purpose: no source in this repo attests the practice, and the ' +
+      'audit\'s name for it, *kotekan polos*, is unsourced and collides with ' +
+      "Rule 3's use of *polos* for one of the pair. M006 row B11 owns both",
+    // 'pokok' alone is pre-satisfied by Rule 6 and cannot fail first; the
+    // presentRegex arm is what drives the red. 'third part', not
+    // 'third (?:part|lane)': Construction step 4 already says 'a sparse third
+    // lane' and the patch names a 'Pokok melody' lane, so the lane alternative
+    // would match material that predates this slice.
+    present: ['pokok'],
+    presentRegex: [/third part[\s\S]{0,300}pokok/],
+    forbidden: ['kotekan polos'],
+  },
 ];
 
 registerClaimTests({ test, assert, claims: CLAIMS, loadSource });

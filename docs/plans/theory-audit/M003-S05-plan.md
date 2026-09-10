@@ -11,7 +11,7 @@ evidence are recorded in the rows' `Item` cells and summarised under
 ## Task status
 
 - [x] Task 1 — Cite Chapter 5's cyclic-time opening (F35)
-- [ ] Task 2 — Give Gamelan Rule 5 its third-part case (F33)
+- [x] Task 2 — Give Gamelan Rule 5 its third-part case (F33)
 - [ ] Task 3 — Give the Rachenitsa table its Note column and stand-in line (F34)
 - [ ] Task 4 — Close the slice and run the shipping gate
 
