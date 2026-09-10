@@ -11,7 +11,7 @@ should not follow them.
 
 ## Task status
 
-- [ ] Task 1 — Lay the dance beat and make the timeline legible
+- [x] Task 1 — Lay the dance beat and make the timeline legible
 - [ ] Task 2 — Close the slice
 
 ## Definition of Done

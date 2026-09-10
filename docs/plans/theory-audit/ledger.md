@@ -485,7 +485,7 @@ row is either ✅ or carries a documented divergence.
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F37 | The Ch 2 Ewe patch omits the dance-beat lane that `theory-sub-saharan-africa` construction step 2 requires — a low drum at 12 steps, 4 hits, E(4,12). Amended during planning: the other half of the audit's finding is already satisfied, since the `Ewe Polymetric Ensemble` preset carries `timeline: true` on its bell lane (Rule 1). What is missing is the dance-beat lane, and the fact that the patch table has no `Timeline` column, so the bell's mode is invisible to a reader — which is what the slice's second definition-of-done item is about | `P1` | `patch-align` | `02-sub-saharan-africa.mdx` Ewe patch | The named-rule checklist asserts the dance-beat lane is present and that the table renders `Timeline`, or accepts a documented-divergence marker | `open` |
+| F37 | The Ch 2 Ewe patch omits the dance-beat lane that `theory-sub-saharan-africa` construction step 2 requires — a low drum at 12 steps, 4 hits, E(4,12). Amended during planning: the other half of the audit's finding is already satisfied, since the `Ewe Polymetric Ensemble` preset carries `timeline: true` on its bell lane (Rule 1). What is missing is the dance-beat lane, and the fact that the patch table has no `Timeline` column, so the bell's mode is invisible to a reader — which is what the slice's second definition-of-done item is about | `P1` | `patch-align` | `02-sub-saharan-africa.mdx` Ewe patch | Cases `ssa-dance-beat` and `ssa-timeline-legible` in the named-rule checklist, both passing with no divergence marker — the two markers S05 left naming this row are removed | `done` |
 
 ### Slice M004/S02 — Chapter 3 patch
 
