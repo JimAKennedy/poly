@@ -121,6 +121,17 @@ const CLAIMS = [
     ],
     presentRegex: [/#fr-tenzer-2000/],
   },
+  {
+    id: 'S03-F28',
+    file: '06-indian-classical.mdx',
+    rule:
+      'ledger F28. True layakari performs the same compositional phrase at 2x or ' +
+      '3x speed; changing a lane subdivision changes how many hits fall in the ' +
+      'cycle. The mapping is a useful Poly workflow and a conceptual ' +
+      'simplification, and the chapter now says which it is',
+    // No forbidden arm: the mapping is a legitimate workflow and stays.
+    present: ['hit density', 'the same phrase', 'simplification'],
+  },
 ];
 
 registerClaimTests({ test, assert, claims: CLAIMS, loadSource });

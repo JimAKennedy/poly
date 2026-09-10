@@ -15,20 +15,20 @@ here to decide what to do; each task's own commit ticks its box.
 
 - [x] Task 1 — Chapter 2: mark the Manding same-cycle flattening (F26)
 - [x] Task 2 — Gamelan Rules 3, 4 and 5: style-dependence, and lock Rule 4 (F27, F29, F30)
-- [ ] Task 3 — Chapter 6: layakari is not a subdivision change (F28)
+- [x] Task 3 — Chapter 6: layakari is not a subdivision change (F28)
 
 ## Definition of Done
 
 Copied verbatim from the slice. The tasks below argue against *this* text.
 
-- [ ] The Manding same-cycle presentation is marked as a pedagogical flattening
+- [x] The Manding same-cycle presentation is marked as a pedagogical flattening
       and cites Charry
-- [ ] Gamelan Rule 3's polos/sangsih assignment is marked style-dependent, with
+- [x] Gamelan Rule 3's polos/sangsih assignment is marked style-dependent, with
       *norot* named as the reversing case
-- [ ] The layakari section says plainly that Poly's subdivision change is not
+- [x] The layakari section says plainly that Poly's subdivision change is not
       what layakari does to hit density
-- [ ] Gamelan Rule 5's "choose one and keep it" is hedged to match Tenzer
-- [ ] Gamelan Rule 4's existing strict-complementation honesty is locked by a
+- [x] Gamelan Rule 5's "choose one and keep it" is hedged to match Tenzer
+- [x] Gamelan Rule 4's existing strict-complementation honesty is locked by a
       test, so a later edit cannot drop it
 
 ## Validation

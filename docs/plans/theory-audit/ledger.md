@@ -389,25 +389,25 @@ each simplification it names is disclosed at the point of use.
 **Plan:** M003-S03-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M003-S03.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The Manding same-cycle presentation is marked as a pedagogical flattening
+- [x] The Manding same-cycle presentation is marked as a pedagogical flattening
       and cites Charry
-- [ ] Gamelan Rule 3's polos/sangsih assignment is marked style-dependent, with
+- [x] Gamelan Rule 3's polos/sangsih assignment is marked style-dependent, with
       *norot* named as the reversing case
-- [ ] The layakari section says plainly that Poly's subdivision change is not
+- [x] The layakari section says plainly that Poly's subdivision change is not
       what layakari does to hit density
-- [ ] Gamelan Rule 5's "choose one and keep it" is hedged to match Tenzer
-- [ ] Gamelan Rule 4's existing strict-complementation honesty is locked by a
+- [x] Gamelan Rule 5's "choose one and keep it" is hedged to match Tenzer
+- [x] Gamelan Rule 4's existing strict-complementation honesty is locked by a
       test, so a later edit cannot drop it
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
 | F26 | Ch 2 characterised Manding ensembles as all sharing one cycle length; Manding dunun ensembles do use distinct lengths in many contexts. Pedagogical flattening, not error. Resolved 2026-09-09. The chapter now marks it as a pedagogical simplification, says the dunun, sangban and kenkeni relationship varies by repertoire and region, and gives the reason the shared cycle is used — the shortest route to a playable patch that sounds idiomatic. Charry (2000) is named as plain text with no anchor, deliberately: the appendix entry is F44's in M005/S01, whose verification reads "cited inline at the F26 disclosure", so linking now would point at nothing and fail research-provenance. F44 converts the name to a citation | `P1` | `disclose` | `02-sub-saharan-africa.mdx` | Case `S03-F26` in `site/tests/scope-framing.test.mjs` requires "pedagogical simplification", "Charry" and "distinct cycle lengths" in the chapter. It carries no forbidden arm — the original sentence is not wrong and was not removed, only qualified | `done` |
 | F27 | Gamelan Rule 3 stated polos leans onbeat and sangsih offbeat; in *norot* the relationship is effectively reversed. Style-dependent, presented as general. Resolved 2026-09-09. Rule 3 now marks the division style-dependent, names norot as the reversing case with sangsih taking the beat-coincident tones, and asks the reader to treat it as the common case rather than the general one | `P1` | `disclose` | `theory-gamelan.mdx` | Case `S03-F27` in `site/tests/scope-framing.test.mjs` requires "style-dependent" and "in norot the relationship is effectively reversed". It deliberately does not assert bare norot, which Rule 5 already names and which would therefore have passed before the edit | `done` |
-| F28 | Ch 6 maps layakari ratios onto Poly's per-lane subdivision; true layakari is the same phrase at 2×/3× speed, and changing subdivision changes hit density | `P1` | `disclose` | `06-indian-classical.mdx` layakari section | Case `S03-F28` asserts the simplification note distinguishing phrase-speed from hit density | `open` |
+| F28 | Ch 6 mapped layakari ratios onto Poly's per-lane subdivision; true layakari is the same phrase at 2×/3× speed, and changing subdivision changes hit density. Resolved 2026-09-09. The mapping stays — it is a good way to get the sound in Poly — but is now marked a practical approximation, with the distinction stated plainly: layakari moves the rate of unchanged material, while a subdivision change alters how many onsets fall in the cycle, so the lane no longer plays the pattern it played before. A tabla player performing chaugun is not adding hits | `P1` | `disclose` | `06-indian-classical.mdx` | Case `S03-F28` in `site/tests/scope-framing.test.mjs` requires "hit density", "the same phrase" and "simplification". It carries no forbidden arm — the workflow is legitimate and was not removed, only qualified | `done` |
 | F29 | `theory-gamelan.mdx` Rule 4 already stated honestly that strict complementation is only the textbook case; nothing stopped a later edit removing it. Resolved 2026-09-09. No prose changed — this row added only the lock, which is what an accept disposition means here | `P1` | `accept` | `theory-gamelan.mdx` | Case `S03-F29` requires "Strict complementation is only the textbook case", "the overlap marks structure" and the `fr-tenzer-2000` anchor. It passed on the day it was written, so it was proved non-vacuous by deleting the first sentence and watching it fail by name, recorded in the evidence | `done` |
 | F30 | Gamelan Rule 5 said to choose one interlock style and never mix mid-phrase — stronger than Tenzer, who allows stylistic mixing within a kebyar performance. Resolved 2026-09-09. The practical advice survives as the reliable default and safest starting discipline, but is now marked a discipline rather than a rule of the tradition, citing Tenzer for the mixing he documents within a single kebyar performance | `P1` | `reframe` | `theory-gamelan.mdx` | Case `S03-F30` forbids "mixing interlock styles mid-phrase is not idiomatic" and requires "reliable default" and "stylistic mixing". It deliberately does not assert Tenzer or the tenzer anchor, both of which Rule 4 already carries | `done` |
 
