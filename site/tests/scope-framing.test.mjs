@@ -249,3 +249,95 @@ test('S01-F24: the About page exists and is reachable from the introduction and 
       missing.join('\n  '),
   );
 });
+
+// S05-F34 — the Rachenitsa patch table's Note column, and the GM stand-in line
+// beneath it.
+//
+// This case does not fit the CLAIMS array: its authority is not prose but the
+// preset record, so it compares the hand-written table against presets.json
+// cell by cell. The oracle is src/generated/presets.json, the same copy
+// preset-table-conformance.test.mjs imports; site/public/webui/presets.json is
+// a byte-identical second copy.
+//
+// The column header is `Note` and its cells are bare note numbers on purpose:
+// that is exactly what PresetTable emits for this column, so if 07-balkan.mdx
+// is ever migrated off the hand-written PolyPatch table the column is a
+// drop-in rather than a conflict.
+test('S05-F34 (07-balkan.mdx): Rachenitsa Note column matches presets.json', async () => {
+  const presets = JSON.parse(
+    await readFile(join(HERE, '..', 'src', 'generated', 'presets.json'), 'utf8'),
+  );
+  const records = Array.isArray(presets) ? presets : (presets.presets ?? []);
+  const record = records.find((p) => p.name === 'Rachenitsa 7/8');
+  assert.ok(record, 'preset "Rachenitsa 7/8" not found in src/generated/presets.json');
+
+  const src = await loadSource('07-balkan.mdx');
+
+  const block = src.slice(src.indexOf('<PolyPatch title="Rachenitsa Groove"'));
+  assert.ok(
+    block.startsWith('<PolyPatch'),
+    '07-balkan.mdx no longer contains <PolyPatch title="Rachenitsa Groove">',
+  );
+  const close = block.indexOf('</PolyPatch>');
+  assert.ok(close > 0, 'the Rachenitsa PolyPatch block is not closed');
+
+  const cells = (line) =>
+    line
+      .split('|')
+      .slice(1, -1)
+      .map((c) => c.trim());
+  const lines = block
+    .slice(0, close)
+    .split('\n')
+    .filter((l) => /^\s*\|/.test(l));
+  const headers = cells(lines[0]);
+  const rows = lines.slice(2).map(cells);
+
+  const note = headers.indexOf('Note');
+  assert.notEqual(
+    note,
+    -1,
+    `the Rachenitsa table has no "Note" column, so a reader cannot tell what any ` +
+      `lane sounds like on a GM kit. Headers: ${headers.join(', ')}`,
+  );
+
+  const lanes = record.lanes.slice(0, rows.length);
+  assert.equal(
+    rows.length,
+    lanes.length,
+    `the table has ${rows.length} lane row(s) but the preset has ${record.lanes.length}`,
+  );
+  lanes.forEach((lane, i) => {
+    assert.equal(
+      rows[i][note],
+      String(lane.noteNumber),
+      `Rachenitsa lane ${i + 1} Note cell is "${rows[i][note]}" but presets.json ` +
+        `says ${lane.noteNumber} — the table and the preset must not diverge`,
+    );
+  });
+
+  // The stand-in line: every lane's GM sound named, and the two pitched
+  // instruments called out. roleLabel is the repo's own name for the sound, and
+  // the only attestation in the tree for note 76 — 17-midi-routing-note-map.mdx
+  // corroborates 36, 37 and 42 but does not list 76.
+  // Bounded to the region between the table and the next heading: an
+  // end-of-file window would let a mention anywhere later in the chapter
+  // satisfy the assertion.
+  const tail = block.slice(close);
+  const nextHeading = tail.indexOf('\n## ');
+  const after = nextHeading === -1 ? tail : tail.slice(0, nextHeading);
+  for (const lane of lanes) {
+    assert.ok(
+      after.toLowerCase().includes(lane.roleLabel.toLowerCase()),
+      `the line beneath the Rachenitsa table does not name the GM sound ` +
+        `"${lane.roleLabel}" (note ${lane.noteNumber})`,
+    );
+  }
+  for (const pitched of ['kaval', 'gadulka']) {
+    assert.ok(
+      new RegExp(`${pitched}[\\s\\S]{0,400}no GM drum`, 'i').test(after),
+      `the line beneath the Rachenitsa table does not say the ${pitched} has no ` +
+        `GM drum equivalent — it is a pitched instrument the kit cannot produce`,
+    );
+  }
+});
