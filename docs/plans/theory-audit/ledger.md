@@ -464,7 +464,7 @@ each simplification it names is disclosed at the point of use.
 rules or carries an in-band note explaining why it deliberately does not, and CI
 enforces the choice.
 **Branch:** milestone/M004-patch-theory-consistency
-**Status:** planned
+**Status:** done
 **Demo:** Re-run the audit's Section 3 tables against the site; every ❌ and ⚠️
 row is either ✅ or carries a documented divergence.
 
