@@ -56,3 +56,56 @@ test('M005/S01: the sub-Saharan sources are in the appendix with declared tiers'
   );
   assert.deepEqual(wrongTier, [], wrongTier.join('\n  '));
 });
+
+// Each citation is bound to a phrase from the passage it belongs to, not to the
+// page as a whole. An unbounded match would pass on a page that cites the work
+// somewhere else entirely, which is how a citation ends up attached to nothing.
+const CITATIONS = [
+  {
+    row: 'F44',
+    file: '02-sub-saharan-africa.mdx',
+    anchor: 'fr-charry-2000',
+    near: 'pedagogical simplification',
+    why: "Charry is what corrects the same-cycle simplification, so he belongs in the note that admits it",
+  },
+  {
+    row: 'F45',
+    file: '02-sub-saharan-africa.mdx',
+    anchor: 'fr-kubik-1999',
+    // Bound to the body sentence, not the bare place-name: the frontmatter
+    // description also says "West and Central African drumming", and matching
+    // that first would have tested a window with no citation in it.
+    near: 'it is the polymetric drumming of West and Central Africa',
+    why: "Kubik traces retentions through the Western and Central Sudanic belt, which is the scope the chapter's opening claims",
+  },
+  {
+    row: 'F46',
+    file: '08-minimalism.mdx',
+    anchor: 'fr-agawu-2003',
+    near: 'West African and Indonesian musicians already knew',
+    why: 'the F11 reframe is where the guide handles the African–minimalist connection',
+  },
+  {
+    row: 'F52',
+    file: 'theory-sub-saharan-africa.mdx',
+    anchor: 'fr-arom-1991',
+    near: 'Western transcription usually omits',
+    why: "Arom's referent theory is the methodology behind the dance-beat claim; the Sources listing is not a citation at a claim",
+  },
+];
+
+for (const c of CITATIONS) {
+  test(`M005 ${c.row}: ${c.file} cites ${c.anchor} at its claim`, async () => {
+    const src = await readFile(join(DOCS, c.file), 'utf8');
+    const i = src.indexOf(c.near);
+    assert.notEqual(i, -1, `${c.file}: the passage phrase ${JSON.stringify(c.near)} is gone, so this case can no longer bind to it`);
+    // 600 characters is roughly a paragraph: wide enough for a citation at the
+    // end of the sentence or the next, narrow enough that a mention elsewhere
+    // on the page cannot satisfy it.
+    const window = src.slice(i, i + 600);
+    assert.ok(
+      window.includes(`#${c.anchor}`),
+      `${c.file} [${c.row}]: ${c.anchor} is not cited near ${JSON.stringify(c.near)} — ${c.why}`,
+    );
+  });
+}

@@ -8,14 +8,14 @@ contradicted them.
 ## Task status
 
 - [x] Task 1 — Add Charry, Kubik and Agawu (2003) to the appendix
-- [ ] Task 2 — Cite each at the claim it supports, and cite Arom's 1991
+- [x] Task 2 — Cite each at the claim it supports, and cite Arom's 1991
 
 ## Definition of Done
 
-- [ ] Charry, Kubik and Agawu (2003) are in the reference appendix with
+- [x] Charry, Kubik and Agawu (2003) are in the reference appendix with
       declared tiers
-- [ ] Each is cited at the claim it supports, not only listed
-- [ ] The existing `fr-arom-1991` entry is cited from the sub-Saharan
+- [x] Each is cited at the claim it supports, not only listed
+- [x] The existing `fr-arom-1991` entry is cited from the sub-Saharan
       methodology material, no later Arom work having been found
 
 ## Validation

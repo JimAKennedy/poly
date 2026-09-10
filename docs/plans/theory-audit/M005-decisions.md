@@ -87,3 +87,19 @@ reference [2] carry a fabricated title into M002.
   subject matter. **None was read.** Entry annotations therefore say what a work
   is cited *for*, and the plans forbid paraphrasing arguments nobody here has
   followed. Peycheva & Dimov is the sharpest case, not the only one.
+
+## 2026-09-10 — executing M005
+
+- **Judgment call, M005/S01 task 2:** F45 says Kubik covers "the African
+  rhythmic retentions that bridge Ch 2 and Ch 4", but Chapter 2 has no such
+  passage. Kubik is cited instead at the opening's claim that the subject is
+  "the polymetric drumming of West and Central Africa", which his survey of the
+  Western and Central Sudanic belt supports directly — **Why:** the alternative
+  was to write a diaspora passage to host the citation, which every M005 plan
+  forbids. The diaspora thread is mentioned as what Chapter 4 picks up rather
+  than asserted as a claim of its own.
+- **Finding:** F52's premise was half stale. `theory-sub-saharan-africa.mdx`
+  already listed Arom under `## Sources` as "Primary: [Arom 1991] (referent
+  theory)" — a listing, not a citation at a claim, which is the distinction M002
+  built the tier check around. The remaining work was real: the dance-beat
+  sentence now names him where the methodology is asserted.

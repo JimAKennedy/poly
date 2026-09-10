@@ -587,22 +587,22 @@ highest-value additions per tradition, each cited at the claim it supports.
 **Plan:** M005-S01-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M005-S01.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Charry, Kubik and Agawu (2003) are in the reference appendix with
+- [x] Charry, Kubik and Agawu (2003) are in the reference appendix with
       declared tiers
-- [ ] Each is cited at the claim it supports, not only listed
-- [ ] The existing `fr-arom-1991` entry is cited from the sub-Saharan
+- [x] Each is cited at the claim it supports, not only listed
+- [x] The existing `fr-arom-1991` entry is cited from the sub-Saharan
       methodology material, no later Arom work having been found
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F44 | Charry, E. (2000), *Mande Music*, is absent; it is what corrects the Manding same-cycle oversimplification | `P2` | `enrich` | `appendix-references.mdx`, `02-sub-saharan-africa.mdx` | Cited inline at the F26 disclosure; the entry resolves and carries a tier | `open` |
-| F45 | Kubik, G. (1999), *Africa and the Blues*, is absent; it covers the African rhythmic retentions that bridge Ch 2 and Ch 4 | `P2` | `enrich` | `appendix-references.mdx`, `02-sub-saharan-africa.mdx` | Cited inline; the entry resolves and carries a tier | `open` |
-| F46 | Agawu, K. (2003), *Representing African Music*, is absent; the appendix carries Agawu (2006) instead, which is a different argument and does not ground F11 | `P2` | `enrich` | `appendix-references.mdx`, `08-minimalism.mdx` | Cited inline at the F11 reframe; the entry resolves and carries a tier | `open` |
-| F52 | The sub-Saharan methodology material does not cite Arom, though `fr-arom-1991` is in the appendix. **Amended during planning: the audit asks for "Arom's later methodological writings", and no such distinct work was found.** The 2004 Cambridge edition of *African Polyphony and Polyrhythm* is a paperback reissue of the 1991 volume already cited, and the 1985 *Polyphonies instrumentales d'Afrique centrale* predates it. Rather than invent an entry to satisfy the row, this closes by citing the existing 1991 entry inline where the methodology is discussed | `P2` | `enrich` | `theory-sub-saharan-africa.mdx` | `fr-arom-1991` cited inline from the methodology material; the citation resolves | `open` |
+| F44 | Charry, E. (2000), *Mande Music*, is absent; it is what corrects the Manding same-cycle oversimplification | `P2` | `enrich` | `appendix-references.mdx`, `02-sub-saharan-africa.mdx` | Case `M005 F44` asserts `fr-charry-2000` is cited inside the F26 simplification note, bound to its "pedagogical simplification" phrase | `done` |
+| F45 | Kubik, G. (1999), *Africa and the Blues*, is absent; it covers the African rhythmic retentions that bridge Ch 2 and Ch 4 | `P2` | `enrich` | `appendix-references.mdx`, `02-sub-saharan-africa.mdx` | Case `M005 F45` asserts `fr-kubik-1999` is cited at the chapter opening's West-and-Central-Africa scope claim | `done` |
+| F46 | Agawu, K. (2003), *Representing African Music*, is absent; the appendix carries Agawu (2006) instead, which is a different argument and does not ground F11 | `P2` | `enrich` | `appendix-references.mdx`, `08-minimalism.mdx` | Case `M005 F46` asserts `fr-agawu-2003` is cited at the F11 reframe, bound to its "West African and Indonesian musicians already knew" phrase | `done` |
+| F52 | The sub-Saharan methodology material does not cite Arom, though `fr-arom-1991` is in the appendix. **Amended during planning: the audit asks for "Arom's later methodological writings", and no such distinct work was found.** The 2004 Cambridge edition of *African Polyphony and Polyrhythm* is a paperback reissue of the 1991 volume already cited, and the 1985 *Polyphonies instrumentales d'Afrique centrale* predates it. Rather than invent an entry to satisfy the row, this closes by citing the existing 1991 entry inline where the methodology is discussed | `P2` | `enrich` | `theory-sub-saharan-africa.mdx` | Case `M005 F52` asserts `fr-arom-1991` is cited at the dance-beat methodology claim, not merely listed under Sources | `done` |
 
 ### Slice M005/S02 — Afro-Cuban sources
 
