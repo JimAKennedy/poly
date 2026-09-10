@@ -534,13 +534,13 @@ row is either ✅ or carries a documented divergence.
 **Plan:** M004-S04-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M004-S04.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The tihai discussion shows Nelson's formula with real numbers, not just
+- [x] The tihai discussion shows Nelson's formula with real numbers, not just
       the principle
-- [ ] The arithmetic in the example is checked, not asserted
+- [x] The arithmetic in the example is checked, not asserted
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|

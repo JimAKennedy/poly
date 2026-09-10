@@ -8,13 +8,13 @@ divergence marker, which is why this slice was left independent of M004/S05
 ## Task status
 
 - [x] Task 1 — Work the tihai arithmetic through with the patch's own numbers
-- [ ] Task 2 — Close the slice
+- [x] Task 2 — Close the slice
 
 ## Definition of Done
 
-- [ ] The tihai discussion shows Nelson's formula with real numbers, not just
+- [x] The tihai discussion shows Nelson's formula with real numbers, not just
       the principle
-- [ ] The arithmetic in the example is checked, not asserted
+- [x] The arithmetic in the example is checked, not asserted
 
 ## Validation
 
