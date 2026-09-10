@@ -13,12 +13,12 @@ evidence are recorded in the rows' `Item` cells and summarised under
 - [x] Task 1 — Cite Chapter 5's cyclic-time opening (F35)
 - [ ] Task 2 — Give Gamelan Rule 5 its third-part case (F33)
 - [ ] Task 3 — Give the Rachenitsa table its Note column and stand-in line (F34)
-- [ ] Task 4 — Close the slice, register B11, run the shipping gate
+- [ ] Task 4 — Close the slice and run the shipping gate
 
 ## Definition of Done
 
 - [ ] Gamelan Rule 5 says a third part may double the pokok tones instead of
-      interlocking, cited and cross-linked to Rule 6
+      interlocking, cross-referenced to Rule 6 and to Construction's Pokok lane
 - [ ] The Rachenitsa patch table carries a `Note` column matching
       `presets.json`, and a line naming the GM sounds and flagging that kaval
       and gadulka have no GM drum equivalent
@@ -29,7 +29,7 @@ evidence are recorded in the rows' `Item` cells and summarised under
 | Token | Command |
 |---|---|
 | `format` | `pre-commit run --all-files` |
-| `site-unit` | `node --test site/tests/` |
+| `site-unit` | `npm --prefix site test` |
 | `doc-conformance` | `bash scripts/check-doc-conformance.sh` |
 | `gate` | `bash scripts/pre-push-check.sh` |
 
@@ -48,8 +48,9 @@ None is a judgement call — each is settled by a file in the repo.
    pokok tones", with no source.** Nothing in the repo attests the term, and
    the guide's own Rule 3 already uses *polos* for one of the interlocking
    pair, so adopting it as a style name would collide with the page's
-   established usage. Task 2 writes the substance and omits the label; the
-   sourcing question becomes row B11 in M006, which owns the bibliography.
+   established usage. Task 2 writes the substance and omits the label. Both the
+   term and the question of who, if anyone, documents the practice become row
+   B11 in M006, which owns the bibliography.
 3. **§176 says the "Note" column should mark tupan and kaval as GM stand-ins.**
    The table has no `Note` column, and the premise is backwards: the tupan is a
    double-headed bass drum, so its two lanes map to GM kick and side stick —
@@ -135,7 +136,7 @@ involved.
 
 4. **Run it and watch it pass.**
 
-5. **Check.** `node --test site/tests/` (`site-unit`) and
+5. **Check.** `npm --prefix site test` (`site-unit`) and
    `bash scripts/check-doc-conformance.sh` (`doc-conformance`) both green, then
    `pre-commit run --all-files` (`format`).
 
@@ -159,10 +160,20 @@ The gap the audit identified is real and matters to a Poly user adding a third
 melodic lane — it is only the label that is unsourced.
 
 Write the substance: a third part may double the pokok tones rather than
-interlock with the pair. Cite `fr-tenzer-2000`, whose appendix annotation is
-"The authoritative analysis of kotekan varieties", and cross-link Rule 6, which
-is the rule that establishes pokok as what the interlock elaborates. Do **not**
-write *kotekan polos*.
+interlock with the pair. Do **not** write *kotekan polos*, and do **not**
+attach a citation to the sentence.
+
+**Why it carries no citation.** Execution found that no source in this repo
+attests the practice. `fr-tenzer-2000` is annotated "The authoritative analysis
+of kotekan varieties", which is an argument that Tenzer *could* cover it, not
+evidence that he does — and citing on that basis would swap the audit's
+unsourced term for an unsourced attribution, which is the same defect B11 was
+opened for. The sentence needs no external source, because it asserts nothing
+the guide does not already contain: Rule 6 establishes pokok as what the
+interlock elaborates, Construction step 2 builds a "Pokok" lane (mid-register,
+8 steps, 4-8 hits, "Rule 6's melody proxy"), and the page's patch carries it as
+Lane 5, "Pokok melody". Rule 5's addition is a cross-reference to its own page.
+B11 now owns the attribution question as well as the term.
 
 Cross-link Rule 6 on the same page, not Chapter 5's patch. Chapter 5's patch has
 no pokok layer today — that absence is F41, which M004/S03 fixes and which is
@@ -177,30 +188,33 @@ was written.
      file: 'theory-gamelan.mdx',
      rule: 'Rule 5 offers a third part doubling the pokok, cited and linked to Rule 6',
      present: ['pokok'],
-     presentRegex: [
-       /third (?:part|lane)[\s\S]{0,300}pokok/,
-       /third (?:part|lane)[\s\S]{0,300}#fr-tenzer-2000/,
-     ],
+     presentRegex: [/third part[\s\S]{0,300}pokok/],
      forbidden: ['kotekan polos'],
    },
    ```
 
+   `third part`, not `third (?:part|lane)`: Construction step 4 already says
+   "a sparse third lane", and the patch below it names a "Pokok melody" lane, so
+   the `lane` alternative risks matching material that has always been there.
+   Bind the case to Rule 5's own new wording instead.
+
    The `forbidden` arm is the one that keeps the decision from eroding: it
    fails if a later edit reintroduces the unattested label. Note that `pokok`
    already appears in Rule 6, so the bare `present: ['pokok']` arm is
-   pre-satisfied and cannot fail first — the two `presentRegex` arms are what
-   must drive the red. Check this by running step 2 and reading which assertion
+   pre-satisfied and cannot fail first — the `presentRegex` arm is what must
+   drive the red. Check this by running step 2 and reading which assertion
    fails.
 
-2. **Run it and watch it fail**, for the right reason: one of the
-   `presentRegex` arms, not the `present` arm.
+2. **Run it and watch it fail**, for the right reason: the `presentRegex`
+   arm, not the `present` arm.
 
 3. **Extend Rule 5** in `theory-gamelan.mdx` with a sentence in the rule's
-   existing voice, naming the practice descriptively, citing
-   `[Tenzer 2000](/appendix-references/#fr-tenzer-2000)`, and linking Rule 6 by
-   the anchor convention the page already uses for internal rule references.
-   Check how Rule 4's parenthetical refers to Poly's own features and match that
-   register. Keep it to one or two sentences; this is an `enrich`, not a rewrite.
+   existing voice, naming the practice descriptively and pointing at Rule 6 and
+   at Construction's Pokok lane. The page cross-references its own rules in
+   plain text — `(Rule 6)`, `(Rule 4)` — and defines no rule anchors, so follow
+   that. Check how Rule 4's parenthetical refers to Poly's own features and
+   match that register. Keep it to one or two sentences; this is an `enrich`,
+   not a rewrite.
 
 4. **Run it and watch it pass.**
 
@@ -288,32 +302,27 @@ migrating chapters is not this slice's work.
 
 ---
 
-## Task 4 — Close the slice, register B11, run the shipping gate
+## Task 4 — Close the slice and run the shipping gate
 
 Closes no findings row; closes the slice. Consumes everything above.
 
 **Files:** `docs/plans/theory-audit/ledger.md`,
 `docs/plans/theory-audit/evidence/M003-S05.md`, this plan
 
-1. **Register B11 in M006.** Add a slice `M006/S04 — Unattested terms`, with
-   validation `format, site-unit, doc-conformance`, evidence
-   `evidence/M006-S04.md`, status `open`, and one row:
-
-   - **B11**, `P2`, disposition `source`, lands in
-     `site/src/content/docs/theory-gamelan.mdx` Rule 5, status `open`. Its
-     `Item` records that the audit asserted *kotekan polos* as a named interlock
-     style with no source, that M003/S05 wrote the practice without the label,
-     and that M006 owns finding an attestation or recording the term as
-     unverifiable.
-
-   Its definition of done: the term is either cited to a tier-A or tier-B source
-   and named in Rule 5, or recorded in the ledger as unverifiable and left out.
+1. **Confirm B11 is present and still open.** `M006/S04 — Unattested terms`
+   and its row **B11** were added to the ledger by the planning commit and
+   amended by the repair commit, so this task does not create them. Confirm the
+   slice is `open`, that B11 is `open`, and that B11's `Item` names both open
+   questions — the term's attestation and whether any source documents the
+   practice Rule 5 now describes.
 
    B11 stays `open` — it is work this slice deliberately does not do. Do not
    mark it `accepted` to make the ledger tidy; that would claim a decision was
    final when it has been deferred.
 
-2. **Verify the row parser sees B11.** The ledger guard's row regex is
+2. **Re-verify the row parser sees B11.** This was proved once at planning
+   time by mutation, and is worth repeating because the repair commit rewrote
+   B11's row. The ledger guard's row regex is
    `/^[FHB]\d{2}$/` — a row it rejects sets `table = null` and silently skips
    every later row in that table, which is how B01–B09 went unvalidated once
    before. Run `node --test docs/audits/theory-audit-remediation.test.mjs` and
@@ -325,7 +334,7 @@ Closes no findings row; closes the slice. Consumes everything above.
    slice `Status` to `done`.
 
 4. **Run every token the slice declares**, in this order:
-   `pre-commit run --all-files`, `node --test site/tests/`,
+   `pre-commit run --all-files`, `npm --prefix site test`,
    `bash scripts/check-doc-conformance.sh`, then `bash scripts/pre-push-check.sh`
    for `gate`. `gate` is the full pre-push suite including the native build and
    `ctest`; it is slow, and it is the token this slice owes because S05 is the
@@ -353,8 +362,25 @@ none directly; it closes the slice and runs `gate`.
 **Row coverage.** F35 → Task 1, verification produced at step 1 (`S05-F35`).
 F33 → Task 2, verification at step 1 (`S05-F33`), with step 5 proving the
 `forbidden` arm bites. F34 → Task 3, verification at step 1 (`S05-F34`), with
-step 6 proving the preset oracle bites. B11 is created by Task 4 and closed by
-M006, not here.
+step 6 proving the preset oracle bites. B11 was created by the planning commit
+and is closed by M006, not here; Task 4 only confirms it is present and open.
+
+**Repair, after Task 1 had landed.** Execution found that Task 2's "cite
+Tenzer" instruction could not be honestly followed: no source in this repo
+attests that a third part doubles the pokok rather than interlocking, and
+citing on the strength of an appendix annotation would have swapped the audit's
+unsourced term for an unsourced attribution. The DoD item, the row, the regex
+and step 3 were changed to ground the sentence on Rule 6 and Construction's
+Pokok lane instead, and B11 grew to own the attribution question. Task 1's
+Tenzer citation is untouched and remains correct — the audit named that source
+for that claim specifically. Task 3 was not touched: its oracle is
+`presets.json`, with no external source involved.
+
+Two further defects were corrected in the same pass. The Validation table gave
+`site-unit` as `node --test site/tests/`, which collects one file from the repo
+root and exits 1; the token is `npm --prefix site test`. Task 1 hit this and
+followed the plan's own instruction to prefer `.jk/validations.yml`. And Task 4
+told the executor to create B11, which the planning commit had already done.
 
 **Placeholder scan.** No TBDs, no "similar to task N", no reference to a helper
 no task defines. `registerClaimTests` and `normalizeProse` are existing exports

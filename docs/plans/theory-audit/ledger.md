@@ -444,7 +444,7 @@ each simplification it names is disclosed at the point of use.
 **Definition of Done**
 
 - [ ] Gamelan Rule 5 says a third part may double the pokok tones instead of
-      interlocking, cited and cross-linked to Rule 6
+      interlocking, cross-referenced to Rule 6 and to Construction's Pokok lane
 - [ ] The Rachenitsa patch table carries a `Note` column matching
       `presets.json`, and a line naming the GM sounds and flagging that kaval
       and gadulka have no GM drum equivalent
@@ -452,7 +452,7 @@ each simplification it names is disclosed at the point of use.
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F33 | Gamelan Rule 5's named interlock styles omit a third part that doubles the structural pokok tones rather than interlocking with the pair — directly relevant to a user adding a third melodic lane. Amended during planning: the audit (§125) named this practice *kotekan polos* and cited nothing for the term, and the guide's own Rule 3 already uses *polos* for one of the interlocking pair, so adopting it as a style name would collide with the page's established usage. The rule gains the substance without the label, cited to Tenzer (2000) and cross-linked to Rule 6. The sourcing question is M006/S04 row B11. The audit also miscounted the rule as listing five styles; it lists four | `P2` | `enrich` | `theory-gamelan.mdx` Rule 5 | Case `S05-F33` asserts a third part doubling the pokok is offered, cited to `fr-tenzer-2000` and linked to Rule 6, and forbids the unattested label | `open` |
+| F33 | Gamelan Rule 5's named interlock styles omit a third part that doubles the structural pokok tones rather than interlocking with the pair — directly relevant to a user adding a third melodic lane. Amended during planning: the audit (§125) named this practice *kotekan polos* and cited nothing for the term, and the guide's own Rule 3 already uses *polos* for one of the interlocking pair, so adopting it as a style name would collide with the page's established usage. Amended again during execution: no source in this repo attests the practice either, so the sentence carries no citation — it asserts nothing the page does not already contain, since Rule 6 makes pokok what the interlock elaborates and Construction step 2 and patch Lane 5 already build a Pokok lane. Both the term and its attribution are M006/S04 row B11. The audit also miscounted the rule as listing five styles; it lists four | `P2` | `enrich` | `theory-gamelan.mdx` Rule 5 | Case `S05-F33` asserts a third part doubling the pokok is offered and cross-referenced to Rule 6, and forbids the unattested label | `open` |
 | F34 | Ch 7's Rachenitsa patch table carries no note information at all, so a reader cannot tell what any lane will sound like on a GM kit. Amended during planning: the audit (§176) asked the "Note" column to mark tupan and kaval as stand-ins, but the table has no `Note` column and the premise is backwards. The tupan is a double-headed bass drum, so its two lanes map to GM kick and side stick — a drum standing in for a drum — which the Role column already says by naming them "Tupan bass" and "Tupan rim". The real stand-ins are lane 3, a woodblock for the kaval (an end-blown flute), and lane 4, a hi-hat for the gadulka (a bowed fiddle), which the audit does not mention. Note numbers and GM names are taken from the `Rachenitsa 7/8` record in `presets.json` | `P1` | `patch-align` | `07-balkan.mdx` Rachenitsa patch table | Case `S05-F34` asserts the table's `Note` column matches every lane's `noteNumber` in `presets.json`, and that the line beneath names each `roleLabel` and flags kaval and gadulka as having no GM drum equivalent | `open` |
 | F35 | Ch 5 opens "time is not a line — it is a circle": legitimate but uncited, and unsourced it reads as orientalist; Tenzer (2000) grounds it | `P1` | `source` | `05-gamelan.mdx` chapter opening | Case `S05-F35` asserts the opening carries a citation that resolves in the appendix | `done` |
 
@@ -755,12 +755,13 @@ plainly that they are ours rather than the audit's.
 
 **Definition of Done**
 
-- [ ] *Kotekan polos* is either cited to a tier-A or tier-B source and named in
-      Rule 5, or recorded here as unverifiable and deliberately left out
+- [ ] *Kotekan polos*, and the practice Rule 5 describes without it, are either
+      cited to a tier-A or tier-B source, or recorded here as unverifiable and
+      deliberately left uncited
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| B11 | The audit (§125) asserts *kotekan polos* — "a third player playing only the structural pokok tones" — as a named interlock style, citing nothing for the term. Nothing in the repo attests it, and the guide's Rule 3 already uses *polos* for one of the interlocking pair. M003/S05 wrote the practice into Rule 5 without the label and forbids it in case `S05-F33`; this row owns finding an attestation or recording the term as unverifiable. Found while planning M003/S05, not named by the audit as a defect in itself | `P2` | `source` | `theory-gamelan.mdx` Rule 5 | Either Rule 5 names the term with a resolving tier-A/B citation, or this row is `accepted` with the reason recorded | `open` |
+| B11 | The audit (§125) asserts *kotekan polos* — "a third player playing only the structural pokok tones" — as a named interlock style, citing nothing for the term. Nothing in the repo attests either the term or the practice: `fr-tenzer-2000` is annotated "the authoritative analysis of kotekan varieties", which argues Tenzer could cover it but is not evidence that he does. M003/S05 wrote the practice into Rule 5 with no citation and no label, forbidding the label in case `S05-F33`, on the grounds that Rule 6 and Construction's Pokok lane already ground it internally. This row owns both open questions: whether the term has an attestation, and whether any source documents the practice so Rule 5 can cite it. Found while planning and executing M003/S05, not named by the audit as a defect in itself | `P2` | `source` | `theory-gamelan.mdx` Rule 5 | Either Rule 5 names the term and/or cites the practice with a resolving tier-A/B reference, or this row is `accepted` with the reason recorded | `open` |
 
 ## Sequencing
 
