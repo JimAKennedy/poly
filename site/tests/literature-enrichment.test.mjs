@@ -35,6 +35,7 @@ const ENTRIES = [
   { anchor: 'fr-kubik-1999', tier: 'A', row: 'F45' },
   { anchor: 'fr-agawu-2003', tier: 'A', row: 'F46' },
   { anchor: 'fr-acosta-2003', tier: 'A', row: 'F47' },
+  { anchor: 'fr-powers-1980', tier: 'A', row: 'F48' },
 ];
 
 test('M005/S01: the sub-Saharan sources are in the appendix with declared tiers', async () => {
@@ -99,6 +100,23 @@ const CITATIONS = [
     anchor: 'fr-acosta-2003',
     near: 'the Spanish tinge',
     why: 'Acosta covers the Cuban presence in New Orleans behind the phrase Lomax records Morton using',
+  },
+  {
+    row: 'F48',
+    file: '06-indian-classical.mdx',
+    anchor: 'fr-powers-1980',
+    near: 'None of that is covered here',
+    why: "Powers's New Grove survey is the wider frame this chapter narrows from; it is cited for Indian art-music theory generally, its coverage of the Carnatic tala system specifically being unconfirmed",
+  },
+  {
+    // Passes on the day it is written: M002/S04 added this citation. The case
+    // exists so a later edit cannot drop it, and its non-vacuity is the
+    // deletion test in the evidence file, not this assertion passing.
+    row: 'F48-kippen',
+    file: '06-indian-classical.mdx',
+    anchor: 'fr-kippen-1988',
+    near: 'learns by rote',
+    why: 'M002/S04 cited Kippen at the theka claim; the row says he is in Further Reading only, which is stale',
   },
 ];
 

@@ -627,19 +627,19 @@ highest-value additions per tradition, each cited at the claim it supports.
 **Plan:** M005-S03-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M005-S03.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Powers's *New Grove* "India" article is in the appendix with a declared
+- [x] Powers's *New Grove* "India" article is in the appendix with a declared
       tier and cited for Indian art-music theory, its coverage of the Carnatic
       tala system specifically being unconfirmed
-- [ ] Kippen's existing inline citation in Chapter 6 is confirmed and locked,
+- [x] Kippen's existing inline citation in Chapter 6 is confirmed and locked,
       the row's claim that he is in Further Reading only being stale
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F48 | Powers, H. (1980), "India, subcontinent of", *The New Grove Dictionary of Music and Musicians* vol. 9, is absent. Amended during planning on two counts. The row also says Kippen (1988) is in Further Reading only; it is not — `06-indian-classical.mdx` already cites it inline, added by M002/S04, so that half is already done. And verification confirmed the Powers article exists and is his, but not that it covers the Carnatic tala system specifically, so the citation is attached to Indian art-music theory generally rather than to a Carnatic tala claim | `P2` | `enrich` | `appendix-references.mdx`, `06-indian-classical.mdx` | Powers cited inline; the entry resolves and carries a tier | `open` |
+| F48 | Powers, H. (1980), "India, subcontinent of", *The New Grove Dictionary of Music and Musicians* vol. 9, is absent. Amended during planning on two counts. The row also says Kippen (1988) is in Further Reading only; it is not — `06-indian-classical.mdx` already cites it inline, added by M002/S04, so that half is already done. And verification confirmed the Powers article exists and is his, but not that it covers the Carnatic tala system specifically, so the citation is attached to Indian art-music theory generally rather than to a Carnatic tala claim | `P2` | `enrich` | `appendix-references.mdx`, `06-indian-classical.mdx` | Cases `M005/S01` (entry), `M005 F48` (Powers cited at the scope statement) and `M005 F48-kippen` (Kippen's existing inline citation locked, proved by deletion) | `done` |
 
 ### Slice M005/S04 — Balkan sources
 

@@ -7,14 +7,14 @@ contradicted them.
 
 ## Task status
 
-- [ ] Task 1 — Add Powers, cite him, and lock Kippen's existing citation
+- [x] Task 1 — Add Powers, cite him, and lock Kippen's existing citation
 
 ## Definition of Done
 
-- [ ] Powers's *New Grove* "India" article is in the appendix with a declared
+- [x] Powers's *New Grove* "India" article is in the appendix with a declared
       tier and cited for Indian art-music theory, its coverage of the Carnatic
       tala system specifically being unconfirmed
-- [ ] Kippen's existing inline citation in Chapter 6 is confirmed and locked,
+- [x] Kippen's existing inline citation in Chapter 6 is confirmed and locked,
       the row's claim that he is in Further Reading only being stale
 
 ## Validation
