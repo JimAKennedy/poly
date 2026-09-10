@@ -474,14 +474,14 @@ row is either ✅ or carries a documented divergence.
 **Plan:** M004-S01-plan.md
 **Validation:** format, site-unit, doc-conformance, e2e
 **Evidence:** evidence/M004-S01.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The Chapter 2 patch either carries the timeline-mode bell lane and the
+- [x] The Chapter 2 patch either carries the timeline-mode bell lane and the
       dance-beat lane its theory page requires, or cross-references the fuller
       theory-page construction in band
-- [ ] The choice is legible from the patch table alone
+- [x] The choice is legible from the patch table alone
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|

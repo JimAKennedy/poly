@@ -12,14 +12,14 @@ should not follow them.
 ## Task status
 
 - [x] Task 1 — Lay the dance beat and make the timeline legible
-- [ ] Task 2 — Close the slice
+- [x] Task 2 — Close the slice
 
 ## Definition of Done
 
-- [ ] The Chapter 2 patch either carries the timeline-mode bell lane and the
+- [x] The Chapter 2 patch either carries the timeline-mode bell lane and the
       dance-beat lane its theory page requires, or cross-references the fuller
       theory-page construction in band
-- [ ] The choice is legible from the patch table alone
+- [x] The choice is legible from the patch table alone
 
 ## Validation
 
