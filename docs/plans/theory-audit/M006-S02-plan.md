@@ -6,16 +6,16 @@ planning, and three ledger amendments follow from what that found.
 
 ## Task status
 
-- [ ] Task 1 — Assert every entry is cited, or says it is unread
-- [ ] Task 2 — Delete the tier-C orphans
-- [ ] Task 3 — Place or retire the tier-A and tier-B orphans
-- [ ] Task 4 — Close the slice
+- [x] Task 1 — Assert every entry is cited, or says it is unread
+- [x] Task 2 — Delete the tier-C orphans
+- [x] Task 3 — Place or retire the tier-A and tier-B orphans
+- [x] Task 4 — Close the slice
 
 ## Definition of Done
 
-- [ ] Every numbered reference is cited by at least one page, or is retired
+- [x] Every numbered reference is cited by at least one page, or is retired
       with the reason recorded
-- [ ] A check fails when an appendix entry is neither cited by a page nor
+- [x] A check fails when an appendix entry is neither cited by a page nor
       carries the `contents unverified` phrase, which is the one stated
       exception and is itself in-band, greppable and reasoned
 

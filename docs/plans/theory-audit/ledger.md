@@ -748,19 +748,19 @@ plainly that they are ours rather than the audit's.
 **Plan:** M006-S02-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M006-S02.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Every numbered reference is cited by at least one page, or is retired
+- [x] Every numbered reference is cited by at least one page, or is retired
       with the reason recorded
-- [ ] A check fails when an appendix entry is neither cited by a page nor
+- [x] A check fails when an appendix entry is neither cited by a page nor
       carries the `contents unverified` phrase, which is the one stated
       exception and is itself in-band, greppable and reasoned
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| B08 | Eighteen numbered references and two Further Reading entries are cited by no page. Four were orphaned by M002 moving claims onto scholarship; the rest predate it. An uncited entry is either dead weight or a source nobody checked — ref-2 was the fabricated-title citation S01 found, and nothing cited it | `P1` | `correct` | `appendix-references.mdx`, `site/tests/citation-tier.test.mjs` | `citation-tier.test.mjs` asserts every entry is either cited by at least one page or carries the `contents unverified` phrase, with retired entries deleted rather than exempted. That phrase is the one stated exception: M005 added `fr-peycheva-dimov-2002` uncited on purpose, because no claim in the guide was confirmed to rest on it and writing one to host a citation is what that milestone forbade | `open` |
+| B08 | Appendix entries cited by no page. **Amended during execution: the row's premise was largely wrong.** It counted eighteen numbered references and two Further Reading entries as uncited; measuring found seventeen of the twenty-one sat inside range listings — `See also refs [21]–[25]` — which hyperlink only their endpoints, so the interior entries were pointed at in prose and unreachable by anchor. Ten such ranges existed, one per theory page, covering refs 4–43 almost continuously. They are now expanded into explicit links, which resolved seventeen. Of the four genuine orphans, `ref-3` (Wikipedia) and `ref-45` (a sequencer blog) were retired as tier-C dead weight — `ref-3` having been orphaned by this milestone's own B01 re-point — while `ref-2` (Goldberg on Bulgarian metre and nationalism, the article M002 found behind the fabricated title) is listed in `theory-balkan`'s Sources, and `fr-toussaint-2013` with its review `ref-44` are listed in the Euclidean appendix every table of which applies Toussaint's result. `fr-toussaint-2005` was retired here as both an orphan and B09's duplicate | `P1` | `correct` | `appendix-references.mdx`, ten theory pages, `site/tests/literature-enrichment.test.mjs` | Case `M006/S02` asserts every entry is cited by a page or declares its contents unverified; the ranges are expanded rather than the check taught to parse a prose convention | `done` |
 
 ### Slice M006/S03 — De-duplicate the appendix
 

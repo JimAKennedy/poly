@@ -264,3 +264,42 @@ test('M006/S01: no suppression remains in the files this slice clears', async ()
       live.join('\n  '),
   );
 });
+
+// --- M006/S02: no entry is cited by nothing --------------------------------
+
+// B08 called these orphans "either dead weight or a source nobody checked".
+// Measuring found that most were neither: seventeen of twenty-one sat inside
+// range listings — "See also refs [21]–[25]" — which hyperlinked only their
+// endpoints, so the interior entries were pointed at in prose and unreachable
+// by anchor. M006/S02 expanded all ten ranges into explicit links rather than
+// teaching this check to parse a prose convention that could drift.
+//
+// The one exception is an entry that says its own contents are unread. That
+// phrase is fixed and in-band so the set stays greppable; see M005/S04.
+test('M006/S02: every appendix entry is cited by a page, or says it is unread', async () => {
+  const app = await readFile(APPENDIX, 'utf8');
+  const entries = [...app.matchAll(/id="((?:ref|fr)-[A-Za-z0-9-]+)"/g)].map((m) => m[1]);
+
+  const cited = new Set();
+  for (const f of (await readdir(DOCS)).filter((f) => f.endsWith('.mdx'))) {
+    if (f === 'appendix-references.mdx') continue;
+    const src = await readFile(join(DOCS, f), 'utf8');
+    for (const m of src.matchAll(/#((?:ref|fr)-[A-Za-z0-9-]+)/g)) cited.add(m[1]);
+  }
+
+  const unread = new Set(
+    [...app.matchAll(/id="((?:ref|fr)-[A-Za-z0-9-]+)"[\s\S]*?<\/span>/g)]
+      .filter((m) => m[0].includes('contents unverified'))
+      .map((m) => m[1]),
+  );
+
+  const orphans = entries.filter((e) => !cited.has(e) && !unread.has(e));
+  assert.deepEqual(
+    orphans,
+    [],
+    `${orphans.length} appendix entr(ies) are cited by no page and do not declare their contents ` +
+      `unverified:\n  ${orphans.join('\n  ')}\n` +
+      'Either cite it where it genuinely supports a claim, list it in the relevant page\'s Sources ' +
+      'section, or retire it with the reason recorded in the ledger row.',
+  );
+});
