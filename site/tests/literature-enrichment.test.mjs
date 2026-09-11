@@ -127,6 +127,13 @@ const CITATIONS = [
     near: 'svatbarska muzika',
     why: "Rice is cited there for the tempos; Silverman is the source for the tradition's own history and politics",
   },
+  {
+    row: 'F50',
+    file: '08-minimalism.mdx',
+    anchor: 'fr-scherzinger-2010',
+    near: 'West African and Indonesian musicians already knew',
+    why: 'the entry and the theory page already cite Scherzinger; the chapter making the claim did not',
+  },
 ];
 
 for (const c of CITATIONS) {

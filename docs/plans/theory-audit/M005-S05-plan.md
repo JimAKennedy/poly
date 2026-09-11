@@ -7,7 +7,7 @@ contradicted them.
 
 ## Task status
 
-- [ ] Task 1 — Cite Scherzinger in Chapter 8 itself
+- [x] Task 1 — Cite Scherzinger in Chapter 8 itself
 - [ ] Task 2 — Add Born & Hesmondhalgh and cite them in Chapter 14
 
 ## Definition of Done
