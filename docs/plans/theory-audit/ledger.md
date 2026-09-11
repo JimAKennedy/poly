@@ -578,113 +578,126 @@ row is either ✅ or carries a documented divergence.
 **Vision:** The bibliography carries the sources the audit identifies as the
 highest-value additions per tradition, each cited at the claim it supports.
 **Branch:** milestone/M005-literature-enrichment
-**Status:** planned
+**Status:** done
 **Demo:** The audit's Section 6 table has no unaddressed row.
 
 ### Slice M005/S01 — Sub-Saharan sources
 
 **Depends:** M002/S06, M003/S03
+**Plan:** M005-S01-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M005-S01.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Charry, Kubik, Agawu (2003) and Arom's later methodological writings are
-      in the reference appendix with declared tiers
-- [ ] Each is cited at the claim it supports, not only listed
+- [x] Charry, Kubik and Agawu (2003) are in the reference appendix with
+      declared tiers
+- [x] Each is cited at the claim it supports, not only listed
+- [x] The existing `fr-arom-1991` entry is cited from the sub-Saharan
+      methodology material, no later Arom work having been found
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F44 | Charry, E. (2000), *Mande Music*, is absent; it is what corrects the Manding same-cycle oversimplification | `P2` | `enrich` | `appendix-references.mdx`, `02-sub-saharan-africa.mdx` | Cited inline at the F26 disclosure; the entry resolves and carries a tier | `open` |
-| F45 | Kubik, G. (1999), *Africa and the Blues*, is absent; it covers the African rhythmic retentions that bridge Ch 2 and Ch 4 | `P2` | `enrich` | `appendix-references.mdx`, `02-sub-saharan-africa.mdx` | Cited inline; the entry resolves and carries a tier | `open` |
-| F46 | Agawu, K. (2003), *Representing African Music*, is absent; the appendix carries Agawu (2006) instead, which is a different argument and does not ground F11 | `P2` | `enrich` | `appendix-references.mdx`, `08-minimalism.mdx` | Cited inline at the F11 reframe; the entry resolves and carries a tier | `open` |
-| F52 | Arom's later methodological writings are absent; the appendix carries Arom (1991) only | `P2` | `enrich` | `appendix-references.mdx`, `theory-sub-saharan-africa.mdx` | Cited in the sub-Saharan methodology section; the entry resolves and carries a tier | `open` |
+| F44 | Charry, E. (2000), *Mande Music*, is absent; it is what corrects the Manding same-cycle oversimplification | `P2` | `enrich` | `appendix-references.mdx`, `02-sub-saharan-africa.mdx` | Case `M005 F44` asserts `fr-charry-2000` is cited inside the F26 simplification note, bound to its "pedagogical simplification" phrase | `done` |
+| F45 | Kubik, G. (1999), *Africa and the Blues*, is absent; it covers the African rhythmic retentions that bridge Ch 2 and Ch 4 | `P2` | `enrich` | `appendix-references.mdx`, `02-sub-saharan-africa.mdx` | Case `M005 F45` asserts `fr-kubik-1999` is cited at the chapter opening's West-and-Central-Africa scope claim | `done` |
+| F46 | Agawu, K. (2003), *Representing African Music*, is absent; the appendix carries Agawu (2006) instead, which is a different argument and does not ground F11 | `P2` | `enrich` | `appendix-references.mdx`, `08-minimalism.mdx` | Case `M005 F46` asserts `fr-agawu-2003` is cited at the F11 reframe, bound to its "West African and Indonesian musicians already knew" phrase | `done` |
+| F52 | The sub-Saharan methodology material does not cite Arom, though `fr-arom-1991` is in the appendix. **Amended during planning: the audit asks for "Arom's later methodological writings", and no such distinct work was found.** The 2004 Cambridge edition of *African Polyphony and Polyrhythm* is a paperback reissue of the 1991 volume already cited, and the 1985 *Polyphonies instrumentales d'Afrique centrale* predates it. Rather than invent an entry to satisfy the row, this closes by citing the existing 1991 entry inline where the methodology is discussed | `P2` | `enrich` | `theory-sub-saharan-africa.mdx` | Case `M005 F52` asserts `fr-arom-1991` is cited at the dance-beat methodology claim, not merely listed under Sources | `done` |
 
 ### Slice M005/S02 — Afro-Cuban sources
 
 **Depends:** M002/S06
+**Plan:** M005-S02-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M005-S02.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Acosta is in the reference appendix with a declared tier and cited at the
+- [x] Acosta is in the reference appendix with a declared tier and cited at the
       clave-evolution discussion
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F47 | Acosta, L. (2004), *Cubano Be, Cubano Bop*, is absent; it is the historical depth behind clave evolution | `P2` | `enrich` | `appendix-references.mdx`, `03-afro-cuban.mdx` | Cited inline; the entry resolves and carries a tier | `open` |
+| F47 | Acosta, L., *Cubano Be, Cubano Bop: One Hundred Years of Jazz in Cuba*, is absent; it is the historical depth behind clave evolution, and it covers the "Spanish tinge" in early New Orleans jazz that M001/S05 attributed to Lomax. Amended during planning: the audit dates it 2004; verification puts it at 2003, Smithsonian Books, translated by Daniel S. Whitesell | `P2` | `enrich` | `appendix-references.mdx`, `03-afro-cuban.mdx` | Cases `M005/S01` (entry) and `M005 F47` (citation) — the entry resolves at tier A and is cited beside Lomax at the Spanish-tinge passage | `done` |
 
 ### Slice M005/S03 — Indian-classical sources
 
 **Depends:** M002/S04, M002/S06
+**Plan:** M005-S03-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M005-S03.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Powers's *New Grove* "India" article is in the appendix with a declared
-      tier and cited where the Carnatic absence is stated
-- [ ] Kippen is cited inline at the theka discussion, not only in Further Reading
+- [x] Powers's *New Grove* "India" article is in the appendix with a declared
+      tier and cited for Indian art-music theory, its coverage of the Carnatic
+      tala system specifically being unconfirmed
+- [x] Kippen's existing inline citation in Chapter 6 is confirmed and locked,
+      the row's claim that he is in Further Reading only being stale
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F48 | Powers, H. (1980), "India", *New Grove*, is absent, and Kippen (1988) is in Further Reading only; between them they cover the Carnatic tala system and theka elaboration | `P2` | `enrich` | `appendix-references.mdx`, `06-indian-classical.mdx` | Both cited inline; the entries resolve and carry tiers | `open` |
+| F48 | Powers, H. (1980), "India, subcontinent of", *The New Grove Dictionary of Music and Musicians* vol. 9, is absent. Amended during planning on two counts. The row also says Kippen (1988) is in Further Reading only; it is not — `06-indian-classical.mdx` already cites it inline, added by M002/S04, so that half is already done. And verification confirmed the Powers article exists and is his, but not that it covers the Carnatic tala system specifically, so the citation is attached to Indian art-music theory generally rather than to a Carnatic tala claim | `P2` | `enrich` | `appendix-references.mdx`, `06-indian-classical.mdx` | Cases `M005/S01` (entry), `M005 F48` (Powers cited at the scope statement) and `M005 F48-kippen` (Kippen's existing inline citation locked, proved by deletion) | `done` |
 
 ### Slice M005/S04 — Balkan sources
 
 **Depends:** M002/S05, M002/S06
+**Plan:** M005-S04-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M005-S04.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Peycheva & Dimov are in the appendix with a declared tier and cited at
-      the svatbarska-muzika discussion
+- [x] Silverman (2007) is in the appendix with a declared tier and cited at the
+      svatbarska-muzika discussion
+- [x] Peycheva & Dimov are in the appendix with a declared tier, cited where the
+      chapter touches Romani musicianship, and their entry states plainly that
+      the work's contents are unverified pending translation
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F49 | Peycheva, L. & Dimov, V. — Bulgarian wedding-music scholarship — are absent, and Ch 7's svatbarska-muzika material has no scholarly citation | `P2` | `enrich` | `appendix-references.mdx`, `07-balkan.mdx` | Cited inline; the entry resolves and carries a tier | `open` |
+| F49 | Ch 7's svatbarska-muzika material has no scholarly citation. Amended during planning: the audit names Peycheva & Dimov, whose verifiable output is *The Zurna Tradition in Southwest Bulgaria: Romani Musicians in Practice* (2002) — a different subject. Silverman, C. (2007), "Bulgarian Wedding Music between Folk and Chalga: Politics, Markets and Current Directions", *Muzikologija*, is squarely on the topic and openly accessible. Both are added: Silverman carries the wedding-music claim, Peycheva & Dimov are cited where the chapter touches Romani musicianship | `P2` | `enrich` | `appendix-references.mdx`, `07-balkan.mdx` | Cases `M005 F49` (Silverman cited at the svatbarska passage) and `M005/S04` (the Peycheva & Dimov entry carries `contents unverified`). **Peycheva & Dimov are listed but cited by nothing**: Chapter 7 has no Romani-musicianship passage and `theory-balkan.mdx` Rule 7 already attributes ensemble tightness to Rice, so there is no claim here their book was confirmed to support, and none was written to host it. A deliberate orphan — M006/S02 row B08 should not read it as rot | `done` |
 
 ### Slice M005/S05 — Minimalism and electronic sources
 
 **Depends:** M001/S06, M002/S06
+**Plan:** M005-S05-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M005-S05.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Scherzinger's critical account is cited in Chapter 8 itself, not only in
+- [x] Scherzinger's critical account is cited in Chapter 8 itself, not only in
       the theory page and the appendix
-- [ ] Born & Hesmondhalgh are in the appendix with a declared tier and cited
+- [x] Born & Hesmondhalgh are in the appendix with a declared tier and cited
       where the guide argues cross-cultural combination
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F50 | Scherzinger (2010) gives a more critical account of the African–minimalist connection than Reich's own; it is in the appendix and cited from `theory-minimalism.mdx`, but the chapter that makes the claim does not cite it | `P2` | `enrich` | `08-minimalism.mdx` | Cited inline alongside the F11 reframe; the citation resolves | `open` |
-| F51 | Born, G. & Hesmondhalgh, D. (2000), *Western Music and Its Others*, is absent; it frames why cross-cultural combination works or does not | `P2` | `enrich` | `appendix-references.mdx`, `14-synthesis.mdx` | Cited inline; the entry resolves and carries a tier | `open` |
+| F50 | Scherzinger (2010) gives a more critical account of the African–minimalist connection than Reich's own; it is in the appendix and cited from `theory-minimalism.mdx`, but the chapter that makes the claim does not cite it | `P2` | `enrich` | `08-minimalism.mdx` | Case `M005 F50` asserts `fr-scherzinger-2010` is cited from `08-minimalism.mdx` at the F11 reframe, beside Agawu (2003) | `done` |
+| F51 | Born, G. & Hesmondhalgh, D., eds. (2000), *Western Music and Its Others: Difference, Representation, and Appropriation in Music*, University of California Press, is absent; it frames why cross-cultural combination works or does not. Amended during planning: they are the volume's **editors**, not its authors, and the entry says so | `P2` | `enrich` | `appendix-references.mdx`, `14-synthesis.mdx` | Cases `M005/S01` (entry, tier A, `eds.`) and `M005 F51` (cited at the Cross-Pollination section, which gained a Further Reading subsection for Chapter 14) | `done` |
 
 ### Slice M005/S06 — Brazilian maracatu
 
 **Depends:** M002/S06
+**Plan:** M005-S06-plan.md
 **Validation:** format, site-unit, doc-conformance, gate
 **Evidence:** evidence/M005-S06.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The maracatu section describes the ensemble's named parts and their
+- [x] The maracatu section describes the ensemble's named parts and their
       rhythmic relationship, not only its density and weight
-- [ ] Its claims carry citations that resolve
+- [x] Its claims carry citations that resolve
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F53 | The maracatu treatment is thin — accurate, but three paragraphs covering density and dynamics with no named ensemble parts and no citations | `P2` | `enrich` | `10-brazilian.mdx` "Maracatu" section | The section names the ensemble's parts and carries resolving citations, asserted by a prose-conformance case | `open` |
+| F53 | The maracatu treatment is thin — accurate, but three paragraphs covering density and dynamics with no named ensemble parts and no citations. Amended during planning to fix a scope the row leaves open: the section names the baque virado ensemble's parts — caixa, alfaia, mineiro, agbê and gonguê — and cites Crook, L. (2009), *Focus: Music of Northeast Brazil*, 2nd ed., Routledge, whose Afro-Brazilian traditions chapter covers maracatu directly | `P2` | `enrich` | `10-brazilian.mdx` "Maracatu" section | Cases `M005/S01` (entry) and `M005 F53` (Crook cited at the section), plus `M005/S06` asserting all five ensemble parts are named as a set | `done` |
 
 ---
 

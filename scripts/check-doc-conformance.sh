@@ -46,6 +46,7 @@ TESTS=(
     site/tests/theory-audit-claims.test.mjs
     site/tests/citation-tier.test.mjs
     site/tests/scope-framing.test.mjs
+    site/tests/literature-enrichment.test.mjs
     docs/audits/theory-audit-remediation.test.mjs
     docs/audits/parity-matrix.test.mjs
     docs/audits/gap-closure-plan.test.mjs
