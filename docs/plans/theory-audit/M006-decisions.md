@@ -47,3 +47,20 @@ any plan was written, on the M005 standard.
   suppression in place — **Why:** the row's own text names that interview as
   "the primary source this should cite", and a primary source in a professional
   publication is a real upgrade over commentary quoting it second-hand.
+- **Q:** S02 must resolve 20 orphaned entries, ranging from tier-A scholarship
+  to YouTube links. What policy? — **A:** Delete tier C, find homes for tier A/B.
+- **Decision:** the seven tier-C orphans are deleted, since M002's own argument
+  is that such sources were never fit to carry a claim and an uncited one is
+  pure dead weight; each tier-A and tier-B orphan is cited where it genuinely
+  supports an existing claim, and retired with a reason where it has no honest
+  home — **Why:** it keeps scholarship the guide may want (`ref-2` is the
+  Goldberg article M002 found behind the fabricated title, and it is about
+  Bulgarian meter) without writing passages to justify references, which is what
+  M005/S04 halted rather than do.
+- **Measured, not assumed:** 109 appendix entries, 21 orphaned — 18 numbered and
+  3 in Further Reading. B08 says "eighteen numbered references and two Further
+  Reading entries", which was right when written; M005 made it three by adding
+  `fr-peycheva-dimov-2002` on purpose, and the stated exception covers it.
+- **Interaction:** `fr-toussaint-2005` is both an orphan (S02) and B09's
+  duplicate (S03). De-duplicating removes it, so S03 reduces S02's list by one.
+  Whichever runs second must re-measure rather than trust a count taken earlier.

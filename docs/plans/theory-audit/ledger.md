@@ -719,9 +719,10 @@ plainly that they are ours rather than the audit's.
 ### Slice M006/S01 — Upgrade the seven suppressed claim citations
 
 **Depends:** M002/S06
+**Plan:** M006-S01-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M006-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
@@ -744,9 +745,10 @@ plainly that they are ours rather than the audit's.
 ### Slice M006/S02 — Resolve the orphaned references
 
 **Depends:** M002/S06
+**Plan:** M006-S02-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M006-S02.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
@@ -763,9 +765,10 @@ plainly that they are ours rather than the audit's.
 ### Slice M006/S03 — De-duplicate the appendix
 
 **Depends:** M002/S06
+**Plan:** M006-S03-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M006-S03.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
@@ -778,9 +781,10 @@ plainly that they are ours rather than the audit's.
 
 ### Slice M006/S04 — Unattested terms
 
+**Plan:** M006-S04-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M006-S04.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
