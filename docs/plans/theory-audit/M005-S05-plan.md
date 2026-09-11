@@ -8,13 +8,13 @@ contradicted them.
 ## Task status
 
 - [x] Task 1 — Cite Scherzinger in Chapter 8 itself
-- [ ] Task 2 — Add Born & Hesmondhalgh and cite them in Chapter 14
+- [x] Task 2 — Add Born & Hesmondhalgh and cite them in Chapter 14
 
 ## Definition of Done
 
-- [ ] Scherzinger's critical account is cited in Chapter 8 itself, not only in
+- [x] Scherzinger's critical account is cited in Chapter 8 itself, not only in
       the theory page and the appendix
-- [ ] Born & Hesmondhalgh are in the appendix with a declared tier and cited
+- [x] Born & Hesmondhalgh are in the appendix with a declared tier and cited
       where the guide argues cross-cultural combination
 
 ## Validation

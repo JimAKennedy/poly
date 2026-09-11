@@ -667,19 +667,19 @@ highest-value additions per tradition, each cited at the claim it supports.
 **Plan:** M005-S05-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M005-S05.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Scherzinger's critical account is cited in Chapter 8 itself, not only in
+- [x] Scherzinger's critical account is cited in Chapter 8 itself, not only in
       the theory page and the appendix
-- [ ] Born & Hesmondhalgh are in the appendix with a declared tier and cited
+- [x] Born & Hesmondhalgh are in the appendix with a declared tier and cited
       where the guide argues cross-cultural combination
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
 | F50 | Scherzinger (2010) gives a more critical account of the African–minimalist connection than Reich's own; it is in the appendix and cited from `theory-minimalism.mdx`, but the chapter that makes the claim does not cite it | `P2` | `enrich` | `08-minimalism.mdx` | Case `M005 F50` asserts `fr-scherzinger-2010` is cited from `08-minimalism.mdx` at the F11 reframe, beside Agawu (2003) | `done` |
-| F51 | Born, G. & Hesmondhalgh, D., eds. (2000), *Western Music and Its Others: Difference, Representation, and Appropriation in Music*, University of California Press, is absent; it frames why cross-cultural combination works or does not. Amended during planning: they are the volume's **editors**, not its authors, and the entry says so | `P2` | `enrich` | `appendix-references.mdx`, `14-synthesis.mdx` | Cited inline; the entry resolves and carries a tier | `open` |
+| F51 | Born, G. & Hesmondhalgh, D., eds. (2000), *Western Music and Its Others: Difference, Representation, and Appropriation in Music*, University of California Press, is absent; it frames why cross-cultural combination works or does not. Amended during planning: they are the volume's **editors**, not its authors, and the entry says so | `P2` | `enrich` | `appendix-references.mdx`, `14-synthesis.mdx` | Cases `M005/S01` (entry, tier A, `eds.`) and `M005 F51` (cited at the Cross-Pollination section, which gained a Further Reading subsection for Chapter 14) | `done` |
 
 ### Slice M005/S06 — Brazilian maracatu
 

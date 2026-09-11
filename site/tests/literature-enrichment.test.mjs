@@ -37,6 +37,7 @@ const ENTRIES = [
   { anchor: 'fr-acosta-2003', tier: 'A', row: 'F47' },
   { anchor: 'fr-powers-1980', tier: 'A', row: 'F48' },
   { anchor: 'fr-silverman-2007', tier: 'A', row: 'F49' },
+  { anchor: 'fr-born-hesmondhalgh-2000', tier: 'A', row: 'F51' },
   { anchor: 'fr-peycheva-dimov-2002', tier: 'B', row: 'F49' },
 ];
 
@@ -133,6 +134,13 @@ const CITATIONS = [
     anchor: 'fr-scherzinger-2010',
     near: 'West African and Indonesian musicians already knew',
     why: 'the entry and the theory page already cite Scherzinger; the chapter making the claim did not',
+  },
+  {
+    row: 'F51',
+    file: '14-synthesis.mdx',
+    anchor: 'fr-born-hesmondhalgh-2000',
+    near: 'Cross-Pollination: Why It Works',
+    why: "the volume is about musical borrowing and the representation of difference, which is this section's subject",
   },
 ];
 
