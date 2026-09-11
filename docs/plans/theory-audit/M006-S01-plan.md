@@ -7,7 +7,7 @@ planning, and three ledger amendments follow from what that found.
 ## Task status
 
 - [x] Task 1 — Re-point the six citations whose replacements are already here
-- [ ] Task 2 — Add the Linn interview and cite it in both places (B06)
+- [x] Task 2 — Add the Linn interview and cite it in both places (B06)
 - [ ] Task 3 — Add Harrison and cite the Amen-break claim (B07)
 - [ ] Task 4 — Close the slice on a zero suppression count
 

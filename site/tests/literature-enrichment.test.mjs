@@ -150,6 +150,20 @@ const CITATIONS = [
     near: 'Maracatu: Weight and Repetition',
     why: "Crook's Afro-Brazilian traditions chapter covers maracatu directly",
   },
+  {
+    row: 'B06',
+    file: '09-electronic.mdx',
+    anchor: 'fr-linn-attack-2020',
+    near: 'reduces to one parameter: swing',
+    why: "the marker says Brett's blog is not Linn speaking and names this interview as the primary source",
+  },
+  {
+    row: 'B06-theory',
+    file: 'theory-electronic-breakbeat.mdx',
+    anchor: 'fr-linn-attack-2020',
+    near: 'descended from hardware sequencers',
+    why: 'same source and same defect as 09-electronic, which the marker states outright',
+  },
 ];
 
 for (const c of CITATIONS) {
