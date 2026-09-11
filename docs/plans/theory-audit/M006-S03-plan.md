@@ -6,13 +6,13 @@ planning, and three ledger amendments follow from what that found.
 
 ## Task status
 
-- [ ] Task 1 — Retire the duplicate and assert no two entries share a work
-- [ ] Task 2 — Close the slice
+- [x] Task 1 — Retire the duplicate and assert no two entries share a work
+- [x] Task 2 — Close the slice
 
 ## Definition of Done
 
-- [ ] No two appendix entries name the same work
-- [ ] A check fails when two entries share a title and year
+- [x] No two appendix entries name the same work
+- [x] A check fails when two entries share a title and year
 
 ## Validation
 

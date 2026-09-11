@@ -768,16 +768,16 @@ plainly that they are ours rather than the audit's.
 **Plan:** M006-S03-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M006-S03.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] No two appendix entries name the same work
-- [ ] A check fails when two entries share a title and year
+- [x] No two appendix entries name the same work
+- [x] A check fails when two entries share a title and year
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| B09 | `ref-1` and `fr-toussaint-2005` are the same 2005 BRIDGES paper listed twice, at different weights in the same appendix. ref-1 is cited in six files and the duplicate in none, so the two cannot disagree today, but nothing stops a later citation picking the wrong one | `P2` | `correct` | `appendix-references.mdx`, `site/tests/citation-tier.test.mjs` | `citation-tier.test.mjs` asserts no two entries share a normalised title and year, and the sweep that finds them is recorded in this row | `open` |
+| B09 | `ref-1` and `fr-toussaint-2005` are the same 2005 BRIDGES paper listed twice, at different weights in the same appendix. ref-1 is cited in six files and the duplicate in none, so the two cannot disagree today, but nothing stops a later citation picking the wrong one | `P2` | `correct` | `appendix-references.mdx`, `site/tests/citation-tier.test.mjs` | Case `M006/S03` asserts no two entries share a normalised year and title. The sweep found **two** collisions, not the one the row names: `ref-1`/`fr-toussaint-2005`, retired in S02, and `ref-5`/`fr-arom-1991` — both Arom (1991), unknown to this row. 108 entries compared | `done` |
 
 ### Slice M006/S04 — Unattested terms
 

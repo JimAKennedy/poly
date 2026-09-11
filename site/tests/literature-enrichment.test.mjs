@@ -303,3 +303,52 @@ test('M006/S02: every appendix entry is cited by a page, or says it is unread', 
       'section, or retire it with the reason recorded in the ledger row.',
   );
 });
+
+// --- M006/S03: no work is listed twice -------------------------------------
+
+// ref-1 and fr-toussaint-2005 were the same 2005 BRIDGES paper, listed twice in
+// one appendix at different weights. Nothing cited the duplicate, so they could
+// not disagree — the defect was that nothing stopped a later citation picking
+// the wrong one.
+//
+// Normalised rather than compared literally: the two entries phrased the same
+// paper differently, which is precisely why it went unnoticed. An exact-string
+// check would have found nothing and reported success.
+const normaliseWork = (s) =>
+  s
+    .toLowerCase()
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim();
+
+test('M006/S03: no two appendix entries name the same work', async () => {
+  const app = await readFile(APPENDIX, 'utf8');
+  const seen = new Map();
+  const clashes = [];
+  // Per line, not per span: a numbered entry wraps only its bracketed number in
+  // the span and carries its bibliography on the rest of the line, while a
+  // Further Reading entry wraps the lot. A span-spanning regex reads across
+  // neighbouring entries and invents collisions.
+  for (const line of app.split('\n')) {
+    const anchor = line.match(/id="((?:ref|fr)-[A-Za-z0-9-]+)"/)?.[1];
+    if (!anchor) continue;
+    const text = normaliseWork(line.replace(/id="[^"]*"/, ''));
+    const year = text.match(/\b(19|20)\d{2}\b/)?.[0];
+    if (!year) continue;
+    // Title words, not the whole entry: publisher and URL differ between a DOI
+    // and a PDF of the same paper, which is how the Toussaint duplicate hid.
+    const words = text
+      .split(' ')
+      .filter((w) => w.length > 4 && !/^\d+$/.test(w) && !/^(19|20)\d{2}$/.test(w));
+    if (words.length < 5) continue;
+    const key = `${year}|${words.slice(0, 6).join(' ')}`;
+    if (seen.has(key)) clashes.push(`${seen.get(key)} and ${anchor}: ${key}`);
+    else seen.set(key, anchor);
+  }
+  assert.deepEqual(
+    clashes,
+    [],
+    `${clashes.length} pair(s) of appendix entries name the same work:\n  ${clashes.join('\n  ')}\n` +
+      'Keep the cited one and retire the other; two entries for one work let a later citation pick the wrong.',
+  );
+});
