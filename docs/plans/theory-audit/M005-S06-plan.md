@@ -7,7 +7,7 @@ contradicted them.
 
 ## Task status
 
-- [ ] Task 1 — Name the maracatu ensemble's parts and cite Crook
+- [x] Task 1 — Name the maracatu ensemble's parts and cite Crook
 - [ ] Task 2 — Close the slice and run the shipping gate
 
 ## Definition of Done

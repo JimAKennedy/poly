@@ -697,7 +697,7 @@ highest-value additions per tradition, each cited at the claim it supports.
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F53 | The maracatu treatment is thin — accurate, but three paragraphs covering density and dynamics with no named ensemble parts and no citations. Amended during planning to fix a scope the row leaves open: the section names the baque virado ensemble's parts — caixa, alfaia, mineiro, agbê and gonguê — and cites Crook, L. (2009), *Focus: Music of Northeast Brazil*, 2nd ed., Routledge, whose Afro-Brazilian traditions chapter covers maracatu directly | `P2` | `enrich` | `10-brazilian.mdx` "Maracatu" section | The section names the ensemble's parts and carries resolving citations, asserted by a prose-conformance case | `open` |
+| F53 | The maracatu treatment is thin — accurate, but three paragraphs covering density and dynamics with no named ensemble parts and no citations. Amended during planning to fix a scope the row leaves open: the section names the baque virado ensemble's parts — caixa, alfaia, mineiro, agbê and gonguê — and cites Crook, L. (2009), *Focus: Music of Northeast Brazil*, 2nd ed., Routledge, whose Afro-Brazilian traditions chapter covers maracatu directly | `P2` | `enrich` | `10-brazilian.mdx` "Maracatu" section | Cases `M005/S01` (entry) and `M005 F53` (Crook cited at the section), plus `M005/S06` asserting all five ensemble parts are named as a set | `done` |
 
 ---
 

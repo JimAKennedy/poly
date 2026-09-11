@@ -38,6 +38,7 @@ const ENTRIES = [
   { anchor: 'fr-powers-1980', tier: 'A', row: 'F48' },
   { anchor: 'fr-silverman-2007', tier: 'A', row: 'F49' },
   { anchor: 'fr-born-hesmondhalgh-2000', tier: 'A', row: 'F51' },
+  { anchor: 'fr-crook-2009', tier: 'A', row: 'F53' },
   { anchor: 'fr-peycheva-dimov-2002', tier: 'B', row: 'F49' },
 ];
 
@@ -142,6 +143,13 @@ const CITATIONS = [
     near: 'Cross-Pollination: Why It Works',
     why: "the volume is about musical borrowing and the representation of difference, which is this section's subject",
   },
+  {
+    row: 'F53',
+    file: '10-brazilian.mdx',
+    anchor: 'fr-crook-2009',
+    near: 'Maracatu: Weight and Repetition',
+    why: "Crook's Afro-Brazilian traditions chapter covers maracatu directly",
+  },
 ];
 
 for (const c of CITATIONS) {
@@ -174,5 +182,26 @@ test('M005/S04: the unread source says so in its own entry', async () => {
     'the Peycheva & Dimov entry does not carry the phrase "contents unverified". Its bibliographic ' +
       'details were confirmed but the work is in Bulgarian and has not been read here; the entry has to ' +
       'say that, because no tier value can.',
+  );
+});
+
+// The maracatu ensemble's parts, as F53 scopes them. Named as a set so dropping
+// one fails by name rather than leaving the section quietly thinner than the row
+// says it should be. What verification established is the instruments and their
+// roles; a per-part account of each pattern is not something any source here
+// supports, and the section does not attempt one.
+const MARACATU_PARTS = ['caixa', 'alfaia', 'mineiro', 'agbê', 'gonguê'];
+
+test('M005/S06: the maracatu section names the ensemble it describes', async () => {
+  const src = await readFile(join(DOCS, '10-brazilian.mdx'), 'utf8');
+  const i = src.indexOf('## Maracatu: Weight and Repetition');
+  assert.notEqual(i, -1, '10-brazilian.mdx: the Maracatu section heading is gone');
+  const section = src.slice(i, src.indexOf('\n## ', i + 5));
+  const missing = MARACATU_PARTS.filter((part) => !section.toLowerCase().includes(part.toLowerCase()));
+  assert.deepEqual(
+    missing,
+    [],
+    `the maracatu section does not name ${missing.join(', ')} — F53 asks it to describe the ` +
+      'ensemble rather than only its density and weight',
   );
 });
