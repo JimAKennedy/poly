@@ -8,13 +8,13 @@ contradicted them.
 ## Task status
 
 - [x] Task 1 — Name the maracatu ensemble's parts and cite Crook
-- [ ] Task 2 — Close the slice and run the shipping gate
+- [x] Task 2 — Close the slice and run the shipping gate
 
 ## Definition of Done
 
-- [ ] The maracatu section describes the ensemble's named parts and their
+- [x] The maracatu section describes the ensemble's named parts and their
       rhythmic relationship, not only its density and weight
-- [ ] Its claims carry citations that resolve
+- [x] Its claims carry citations that resolve
 
 ## Validation
 

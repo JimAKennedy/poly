@@ -687,13 +687,13 @@ highest-value additions per tradition, each cited at the claim it supports.
 **Plan:** M005-S06-plan.md
 **Validation:** format, site-unit, doc-conformance, gate
 **Evidence:** evidence/M005-S06.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The maracatu section describes the ensemble's named parts and their
+- [x] The maracatu section describes the ensemble's named parts and their
       rhythmic relationship, not only its density and weight
-- [ ] Its claims carry citations that resolve
+- [x] Its claims carry citations that resolve
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
