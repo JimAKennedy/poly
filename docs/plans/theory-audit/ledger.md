@@ -706,7 +706,7 @@ highest-value additions per tradition, each cited at the claim it supports.
 **Vision:** Every reference in the guide is cited by something, cited at a tier
 that supports the claim it carries, and appears exactly once.
 **Branch:** milestone/M006-bibliography-hygiene
-**Status:** planned
+**Status:** done
 **Demo:** `grep -rn citation-tier-ok site/src/content/docs` returns nothing, the
 appendix has no entry that no page cites, and no two entries name the same work.
 
