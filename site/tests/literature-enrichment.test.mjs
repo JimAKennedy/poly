@@ -19,7 +19,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -203,5 +203,43 @@ test('M005/S06: the maracatu section names the ensemble it describes', async () 
     [],
     `the maracatu section does not name ${missing.join(', ')} — F53 asks it to describe the ` +
       'ensemble rather than only its density and weight',
+  );
+});
+
+// --- M006/S01: the citation-tier suppressions ------------------------------
+
+// M002 shipped ten `citation-tier-ok` markers, each naming the M006 row that
+// owns its upgrade. This asserts the rows this slice closes have none left.
+//
+// The upgrade pattern is M002's own: a named-theory claim is a <sup>[N]</sup>,
+// a bibliographic listing is a plain link, so moving a claim onto a Tier-A
+// Further Reading source means removing the superscript and adding an inline
+// author-year link. Both halves are asserted, because removing the superscript
+// alone would take the claim out of the tier check's scope rather than source
+// it — an evasion that would look exactly like a fix.
+// Keyed on the files this task clears, not on row ids in the marker text: the
+// two ref-42 markers predate B17 and say "No M006 row owns ref-42 yet", so a
+// row-id match silently misses exactly the pair the row was created for.
+const FILES_CLEARED = [
+  '01-foundations.mdx', // B01
+  '03-afro-cuban.mdx', // B02
+  '05-gamelan.mdx', // B03
+  '08-minimalism.mdx', // B04 and B05
+  '10-brazilian.mdx', // B17
+  'appendix-euclidean-reference.mdx', // B17
+];
+
+test('M006/S01: no suppression remains in the files this slice clears', async () => {
+  const live = [];
+  for (const f of FILES_CLEARED) {
+    const src = await readFile(join(DOCS, f), 'utf8');
+    const n = [...src.matchAll(/citation-tier-ok:/g)].length;
+    if (n) live.push(`${f} (${n})`);
+  }
+  assert.deepEqual(
+    live,
+    [],
+    `${live.length} citation-tier-ok suppression(s) still name a row M006/S01 closes:\n  ` +
+      live.join('\n  '),
   );
 });
