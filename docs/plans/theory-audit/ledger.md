@@ -706,7 +706,7 @@ highest-value additions per tradition, each cited at the claim it supports.
 **Vision:** Every reference in the guide is cited by something, cited at a tier
 that supports the claim it carries, and appears exactly once.
 **Branch:** milestone/M006-bibliography-hygiene
-**Status:** planned
+**Status:** done
 **Demo:** `grep -rn citation-tier-ok site/src/content/docs` returns nothing, the
 appendix has no entry that no page cites, and no two entries name the same work.
 
@@ -719,75 +719,82 @@ plainly that they are ours rather than the audit's.
 ### Slice M006/S01 — Upgrade the seven suppressed claim citations
 
 **Depends:** M002/S06
+**Plan:** M006-S01-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M006-S01.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Each of the seven claims either cites a Tier-A source or no longer makes
-      a claim requiring one
-- [ ] `grep -rn citation-tier-ok site/src/content/docs` returns nothing, and the
+- [x] Each of the eight claims either cites a Tier-A source, cites the primary
+      source it was standing in for, or no longer makes a claim requiring one
+- [x] `grep -rn citation-tier-ok site/src/content/docs` returns nothing, and the
       tier check's live suppression count is zero
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| B01 | Ch 1 cites Wikipedia's "Euclidean Rhythm" for a named-theory claim, where Toussaint (ref-1) is cited in the same chapter | `P1` | `source` | `01-foundations.mdx` | The `citation-tier-ok` suppression on this citation is removed and `citation-tier.test.mjs` still passes | `open` |
-| B02 | Ch 3 cites Sher Music publisher sample pages for a named-theory claim, where Mauleón (1993) sits in Further Reading | `P1` | `source` | `03-afro-cuban.mdx` | As B01, for this citation | `open` |
-| B03 | Ch 5 cites a Gamelan New Zealand community PDF for a named-theory claim, where Tenzer, Vitale and Sumarsam sit in Further Reading | `P1` | `source` | `05-gamelan.mdx` | As B01, for this citation | `open` |
-| B04 | Ch 8 cites Wikipedia's "Steve Reich" for a named-theory claim, where Reich (2002), Potter and Gann sit in Further Reading | `P1` | `source` | `08-minimalism.mdx` | As B01, for this citation | `open` |
-| B05 | Ch 8 cites an All Classical Portland radio article for a named-theory claim | `P1` | `source` | `08-minimalism.mdx` | As B01, for this citation | `open` |
-| B06 | Ch 9 and its companion cite the Brettworks blog for the Linn swing claim; M001/S06 attributed the claim to Linn in prose but left the reference | `P1` | `source` | `09-electronic.mdx`, `theory-electronic-breakbeat.mdx` | As B01, for both citations | `open` |
-| B07 | Ch 13 cites the Ethan Hein blog for a named-theory claim about the Amen break | `P1` | `source` | `13-drum-and-bass.mdx` | As B01, for this citation | `open` |
+| B01 | Ch 1 cites Wikipedia's "Euclidean Rhythm" for a named-theory claim, where Toussaint (ref-1) is cited in the same chapter | `P1` | `source` | `01-foundations.mdx` | The `citation-tier-ok` suppression on this citation is removed and `citation-tier.test.mjs` still passes | `done` |
+| B02 | Ch 3 cites Sher Music publisher sample pages for a named-theory claim, where Mauleón (1993) sits in Further Reading | `P1` | `source` | `03-afro-cuban.mdx` | As B01, for this citation | `done` |
+| B03 | Ch 5 cites a Gamelan New Zealand community PDF for a named-theory claim, where Tenzer, Vitale and Sumarsam sit in Further Reading | `P1` | `source` | `05-gamelan.mdx` | As B01, for this citation | `done` |
+| B04 | Ch 8 cites Wikipedia's "Steve Reich" for a named-theory claim, where Reich (2002), Potter and Gann sit in Further Reading | `P1` | `source` | `08-minimalism.mdx` | As B01, for this citation | `done` |
+| B05 | Ch 8 cites an All Classical Portland radio article for a named-theory claim | `P1` | `source` | `08-minimalism.mdx` | As B01, for this citation | `done` |
+| B06 | Ch 9 and its companion cite the Brettworks blog for the Linn swing claim; M001/S06 attributed the claim to Linn in prose but left the reference | `P1` | `source` | `09-electronic.mdx`, `theory-electronic-breakbeat.mdx` | As B01, for both citations | `done` |
+| B07 | Ch 13 cites the Ethan Hein blog for a named-theory claim about the Amen break | `P1` | `source` | `13-drum-and-bass.mdx` | As B01, for this citation | `done` |
+| B17 | `ref-42` — Schloss, "The Brazilian Groove: Ginga and Rhythmic Feel", a university-hosted PDF — is cited for a broad evaluative claim in `10-brazilian.mdx` and again for the bossa nova pattern in `appendix-euclidean-reference.mdx`. Both carry `citation-tier-ok` markers that say outright no M006 row owns them: "M006/S01 carries B01–B07 for seven sources and this is the eighth". Added during planning to close that gap. Replacements are already in the appendix at tier A — `fr-sandroni-2001` and `fr-fryer-2000` for the Brazilian claim, `ref-1` for the Toussaint result | `P1` | `source` | `10-brazilian.mdx`, `appendix-euclidean-reference.mdx` | Both `citation-tier-ok` suppressions are removed and `citation-tier.test.mjs` still passes | `done` |
 
 ### Slice M006/S02 — Resolve the orphaned references
 
 **Depends:** M002/S06
+**Plan:** M006-S02-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M006-S02.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Every numbered reference is cited by at least one page, or is retired
+- [x] Every numbered reference is cited by at least one page, or is retired
       with the reason recorded
-- [ ] A check fails when an appendix entry is cited by nothing
+- [x] A check fails when an appendix entry is neither cited by a page nor
+      carries the `contents unverified` phrase, which is the one stated
+      exception and is itself in-band, greppable and reasoned
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| B08 | Eighteen numbered references and two Further Reading entries are cited by no page. Four were orphaned by M002 moving claims onto scholarship; the rest predate it. An uncited entry is either dead weight or a source nobody checked — ref-2 was the fabricated-title citation S01 found, and nothing cited it | `P1` | `correct` | `appendix-references.mdx`, `site/tests/citation-tier.test.mjs` | `citation-tier.test.mjs` asserts every entry is cited by at least one page, with retired entries deleted rather than exempted | `open` |
+| B08 | Appendix entries cited by no page. **Amended during execution: the row's premise was largely wrong.** It counted eighteen numbered references and two Further Reading entries as uncited; measuring found seventeen of the twenty-one sat inside range listings — `See also refs [21]–[25]` — which hyperlink only their endpoints, so the interior entries were pointed at in prose and unreachable by anchor. Ten such ranges existed, one per theory page, covering refs 4–43 almost continuously. They are now expanded into explicit links, which resolved seventeen. Of the four genuine orphans, `ref-3` (Wikipedia) and `ref-45` (a sequencer blog) were retired as tier-C dead weight — `ref-3` having been orphaned by this milestone's own B01 re-point — while `ref-2` (Goldberg on Bulgarian metre and nationalism, the article M002 found behind the fabricated title) is listed in `theory-balkan`'s Sources, and `fr-toussaint-2013` with its review `ref-44` are listed in the Euclidean appendix every table of which applies Toussaint's result. `fr-toussaint-2005` was retired here as both an orphan and B09's duplicate | `P1` | `correct` | `appendix-references.mdx`, ten theory pages, `site/tests/literature-enrichment.test.mjs` | Case `M006/S02` asserts every entry is cited by a page or declares its contents unverified; the ranges are expanded rather than the check taught to parse a prose convention | `done` |
 
 ### Slice M006/S03 — De-duplicate the appendix
 
 **Depends:** M002/S06
+**Plan:** M006-S03-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M006-S03.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] No two appendix entries name the same work
-- [ ] A check fails when two entries share a title and year
+- [x] No two appendix entries name the same work
+- [x] A check fails when two entries share a title and year
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| B09 | `ref-1` and `fr-toussaint-2005` are the same 2005 BRIDGES paper listed twice, at different weights in the same appendix. ref-1 is cited in six files and the duplicate in none, so the two cannot disagree today, but nothing stops a later citation picking the wrong one | `P2` | `correct` | `appendix-references.mdx`, `site/tests/citation-tier.test.mjs` | `citation-tier.test.mjs` asserts no two entries share a normalised title and year, and the sweep that finds them is recorded in this row | `open` |
+| B09 | `ref-1` and `fr-toussaint-2005` are the same 2005 BRIDGES paper listed twice, at different weights in the same appendix. ref-1 is cited in six files and the duplicate in none, so the two cannot disagree today, but nothing stops a later citation picking the wrong one | `P2` | `correct` | `appendix-references.mdx`, `site/tests/citation-tier.test.mjs` | Case `M006/S03` asserts no two entries share a normalised year and title. The sweep found **two** collisions, not the one the row names: `ref-1`/`fr-toussaint-2005`, retired in S02, and `ref-5`/`fr-arom-1991` — both Arom (1991), unknown to this row. 108 entries compared | `done` |
 
 ### Slice M006/S04 — Unattested terms
 
+**Plan:** M006-S04-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M006-S04.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] *Kotekan polos*, and the practice Rule 5 describes without it, are either
+- [x] *Kotekan polos*, and the practice Rule 5 describes without it, are either
       cited to a tier-A or tier-B source, or recorded here as unverifiable and
       deliberately left uncited
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| B11 | The audit (§125) asserts *kotekan polos* — "a third player playing only the structural pokok tones" — as a named interlock style, citing nothing for the term. Nothing in the repo attests either the term or the practice: `fr-tenzer-2000` is annotated "the authoritative analysis of kotekan varieties", which argues Tenzer could cover it but is not evidence that he does. M003/S05 wrote the practice into Rule 5 with no citation and no label, forbidding the label in case `S05-F33`, on the grounds that Rule 6 and Construction's Pokok lane already ground it internally. This row owns both open questions: whether the term has an attestation, and whether any source documents the practice so Rule 5 can cite it. Found while planning and executing M003/S05, not named by the audit as a defect in itself | `P2` | `source` | `theory-gamelan.mdx` Rule 5 | Either Rule 5 names the term and/or cites the practice with a resolving tier-A/B reference, or this row is `accepted` with the reason recorded | `open` |
+| B11 | The audit (§125) asserts *kotekan polos* — "a third player playing only the structural pokok tones" — as a named interlock style, citing nothing for the term. Nothing in the repo attests either the term or the practice: `fr-tenzer-2000` is annotated "the authoritative analysis of kotekan varieties", which argues Tenzer could cover it but is not evidence that he does. M003/S05 wrote the practice into Rule 5 with no citation and no label, forbidding the label in case `S05-F33`, on the grounds that Rule 6 and Construction's Pokok lane already ground it internally. This row owns both open questions: whether the term has an attestation, and whether any source documents the practice so Rule 5 can cite it. Found while planning and executing M003/S05, not named by the audit as a defect in itself | `P2` | `source` | `theory-gamelan.mdx` Rule 5 | Closed on evidence: sources agree *polos* is one of the two interlocking parts, the on-beat one paired with *sangsih*, and the *pokok* is the main melody on calung and ugal that kotekan embellishes. The term does not denote a third player on pokok tones, so there is nothing to attest and no prose changed. `S05-F33`'s forbidden arm, re-proved to bite, is what keeps the label out | `accepted` |
 
 ## Milestone M007 — Named-rule coverage
 
