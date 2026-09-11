@@ -164,6 +164,13 @@ const CITATIONS = [
     near: 'descended from hardware sequencers',
     why: 'same source and same defect as 09-electronic, which the marker states outright',
   },
+  {
+    row: 'B07',
+    file: '13-drum-and-bass.mdx',
+    anchor: 'fr-harrison-2025',
+    near: 'widely described as the most sampled recording',
+    why: "Harrison's chapter documents the break's history; the hedge stays, because he grounds the history rather than counting the samples",
+  },
 ];
 
 for (const c of CITATIONS) {

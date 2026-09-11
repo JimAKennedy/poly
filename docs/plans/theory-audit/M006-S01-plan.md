@@ -8,14 +8,14 @@ planning, and three ledger amendments follow from what that found.
 
 - [x] Task 1 — Re-point the six citations whose replacements are already here
 - [x] Task 2 — Add the Linn interview and cite it in both places (B06)
-- [ ] Task 3 — Add Harrison and cite the Amen-break claim (B07)
-- [ ] Task 4 — Close the slice on a zero suppression count
+- [x] Task 3 — Add Harrison and cite the Amen-break claim (B07)
+- [x] Task 4 — Close the slice on a zero suppression count
 
 ## Definition of Done
 
-- [ ] Each of the eight claims either cites a Tier-A source, cites the primary
+- [x] Each of the eight claims either cites a Tier-A source, cites the primary
       source it was standing in for, or no longer makes a claim requiring one
-- [ ] `grep -rn citation-tier-ok site/src/content/docs` returns nothing, and the
+- [x] `grep -rn citation-tier-ok site/src/content/docs` returns nothing, and the
       tier check's live suppression count is zero
 
 ## Validation

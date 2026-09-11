@@ -722,13 +722,13 @@ plainly that they are ours rather than the audit's.
 **Plan:** M006-S01-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M006-S01.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Each of the eight claims either cites a Tier-A source, cites the primary
+- [x] Each of the eight claims either cites a Tier-A source, cites the primary
       source it was standing in for, or no longer makes a claim requiring one
-- [ ] `grep -rn citation-tier-ok site/src/content/docs` returns nothing, and the
+- [x] `grep -rn citation-tier-ok site/src/content/docs` returns nothing, and the
       tier check's live suppression count is zero
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
@@ -739,7 +739,7 @@ plainly that they are ours rather than the audit's.
 | B04 | Ch 8 cites Wikipedia's "Steve Reich" for a named-theory claim, where Reich (2002), Potter and Gann sit in Further Reading | `P1` | `source` | `08-minimalism.mdx` | As B01, for this citation | `done` |
 | B05 | Ch 8 cites an All Classical Portland radio article for a named-theory claim | `P1` | `source` | `08-minimalism.mdx` | As B01, for this citation | `done` |
 | B06 | Ch 9 and its companion cite the Brettworks blog for the Linn swing claim; M001/S06 attributed the claim to Linn in prose but left the reference | `P1` | `source` | `09-electronic.mdx`, `theory-electronic-breakbeat.mdx` | As B01, for both citations | `done` |
-| B07 | Ch 13 cites the Ethan Hein blog for a named-theory claim about the Amen break | `P1` | `source` | `13-drum-and-bass.mdx` | As B01, for this citation | `open` |
+| B07 | Ch 13 cites the Ethan Hein blog for a named-theory claim about the Amen break | `P1` | `source` | `13-drum-and-bass.mdx` | As B01, for this citation | `done` |
 | B17 | `ref-42` — Schloss, "The Brazilian Groove: Ginga and Rhythmic Feel", a university-hosted PDF — is cited for a broad evaluative claim in `10-brazilian.mdx` and again for the bossa nova pattern in `appendix-euclidean-reference.mdx`. Both carry `citation-tier-ok` markers that say outright no M006 row owns them: "M006/S01 carries B01–B07 for seven sources and this is the eighth". Added during planning to close that gap. Replacements are already in the appendix at tier A — `fr-sandroni-2001` and `fr-fryer-2000` for the Brazilian claim, `ref-1` for the Toussaint result | `P1` | `source` | `10-brazilian.mdx`, `appendix-euclidean-reference.mdx` | Both `citation-tier-ok` suppressions are removed and `citation-tier.test.mjs` still passes | `done` |
 
 ### Slice M006/S02 — Resolve the orphaned references
