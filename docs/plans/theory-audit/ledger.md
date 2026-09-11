@@ -578,7 +578,7 @@ row is either ✅ or carries a documented divergence.
 **Vision:** The bibliography carries the sources the audit identifies as the
 highest-value additions per tradition, each cited at the claim it supports.
 **Branch:** milestone/M005-literature-enrichment
-**Status:** planned
+**Status:** done
 **Demo:** The audit's Section 6 table has no unaddressed row.
 
 ### Slice M005/S01 — Sub-Saharan sources
