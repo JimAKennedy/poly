@@ -725,8 +725,8 @@ plainly that they are ours rather than the audit's.
 
 **Definition of Done**
 
-- [ ] Each of the seven claims either cites a Tier-A source or no longer makes
-      a claim requiring one
+- [ ] Each of the eight claims either cites a Tier-A source, cites the primary
+      source it was standing in for, or no longer makes a claim requiring one
 - [ ] `grep -rn citation-tier-ok site/src/content/docs` returns nothing, and the
       tier check's live suppression count is zero
 
@@ -739,6 +739,7 @@ plainly that they are ours rather than the audit's.
 | B05 | Ch 8 cites an All Classical Portland radio article for a named-theory claim | `P1` | `source` | `08-minimalism.mdx` | As B01, for this citation | `open` |
 | B06 | Ch 9 and its companion cite the Brettworks blog for the Linn swing claim; M001/S06 attributed the claim to Linn in prose but left the reference | `P1` | `source` | `09-electronic.mdx`, `theory-electronic-breakbeat.mdx` | As B01, for both citations | `open` |
 | B07 | Ch 13 cites the Ethan Hein blog for a named-theory claim about the Amen break | `P1` | `source` | `13-drum-and-bass.mdx` | As B01, for this citation | `open` |
+| B17 | `ref-42` — Schloss, "The Brazilian Groove: Ginga and Rhythmic Feel", a university-hosted PDF — is cited for a broad evaluative claim in `10-brazilian.mdx` and again for the bossa nova pattern in `appendix-euclidean-reference.mdx`. Both carry `citation-tier-ok` markers that say outright no M006 row owns them: "M006/S01 carries B01–B07 for seven sources and this is the eighth". Added during planning to close that gap. Replacements are already in the appendix at tier A — `fr-sandroni-2001` and `fr-fryer-2000` for the Brazilian claim, `ref-1` for the Toussaint result | `P1` | `source` | `10-brazilian.mdx`, `appendix-euclidean-reference.mdx` | Both `citation-tier-ok` suppressions are removed and `citation-tier.test.mjs` still passes | `open` |
 
 ### Slice M006/S02 — Resolve the orphaned references
 
@@ -751,11 +752,13 @@ plainly that they are ours rather than the audit's.
 
 - [ ] Every numbered reference is cited by at least one page, or is retired
       with the reason recorded
-- [ ] A check fails when an appendix entry is cited by nothing
+- [ ] A check fails when an appendix entry is neither cited by a page nor
+      carries the `contents unverified` phrase, which is the one stated
+      exception and is itself in-band, greppable and reasoned
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| B08 | Eighteen numbered references and two Further Reading entries are cited by no page. Four were orphaned by M002 moving claims onto scholarship; the rest predate it. An uncited entry is either dead weight or a source nobody checked — ref-2 was the fabricated-title citation S01 found, and nothing cited it | `P1` | `correct` | `appendix-references.mdx`, `site/tests/citation-tier.test.mjs` | `citation-tier.test.mjs` asserts every entry is cited by at least one page, with retired entries deleted rather than exempted | `open` |
+| B08 | Eighteen numbered references and two Further Reading entries are cited by no page. Four were orphaned by M002 moving claims onto scholarship; the rest predate it. An uncited entry is either dead weight or a source nobody checked — ref-2 was the fabricated-title citation S01 found, and nothing cited it | `P1` | `correct` | `appendix-references.mdx`, `site/tests/citation-tier.test.mjs` | `citation-tier.test.mjs` asserts every entry is either cited by at least one page or carries the `contents unverified` phrase, with retired entries deleted rather than exempted. That phrase is the one stated exception: M005 added `fr-peycheva-dimov-2002` uncited on purpose, because no claim in the guide was confirmed to rest on it and writing one to host a citation is what that milestone forbade | `open` |
 
 ### Slice M006/S03 — De-duplicate the appendix
 
