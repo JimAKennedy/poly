@@ -37,6 +37,7 @@ const ENTRIES = [
   { anchor: 'fr-acosta-2003', tier: 'A', row: 'F47' },
   { anchor: 'fr-powers-1980', tier: 'A', row: 'F48' },
   { anchor: 'fr-silverman-2007', tier: 'A', row: 'F49' },
+  { anchor: 'fr-peycheva-dimov-2002', tier: 'B', row: 'F49' },
 ];
 
 test('M005/S01: the sub-Saharan sources are in the appendix with declared tiers', async () => {
@@ -143,3 +144,20 @@ for (const c of CITATIONS) {
     );
   });
 }
+
+// Peycheva & Dimov is the one entry whose contents nobody here has been able to
+// read: the work is in Bulgarian. Rather than let a tier-B rating stand in for a
+// caveat nobody wrote, the entry says so in a fixed phrase, so
+// `grep -rn "contents unverified" site/` enumerates every entry in that state.
+test('M005/S04: the unread source says so in its own entry', async () => {
+  const src = await readFile(APPENDIX, 'utf8');
+  const i = src.indexOf('id="fr-peycheva-dimov-2002"');
+  assert.notEqual(i, -1, 'fr-peycheva-dimov-2002 is missing from the appendix');
+  const entry = src.slice(i, src.indexOf('</span>', i));
+  assert.ok(
+    entry.includes('contents unverified'),
+    'the Peycheva & Dimov entry does not carry the phrase "contents unverified". Its bibliographic ' +
+      'details were confirmed but the work is in Bulgarian and has not been read here; the entry has to ' +
+      'say that, because no tier value can.',
+  );
+});

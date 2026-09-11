@@ -647,19 +647,19 @@ highest-value additions per tradition, each cited at the claim it supports.
 **Plan:** M005-S04-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M005-S04.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Silverman (2007) is in the appendix with a declared tier and cited at the
+- [x] Silverman (2007) is in the appendix with a declared tier and cited at the
       svatbarska-muzika discussion
-- [ ] Peycheva & Dimov are in the appendix with a declared tier, cited where the
+- [x] Peycheva & Dimov are in the appendix with a declared tier, cited where the
       chapter touches Romani musicianship, and their entry states plainly that
       the work's contents are unverified pending translation
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| F49 | Ch 7's svatbarska-muzika material has no scholarly citation. Amended during planning: the audit names Peycheva & Dimov, whose verifiable output is *The Zurna Tradition in Southwest Bulgaria: Romani Musicians in Practice* (2002) — a different subject. Silverman, C. (2007), "Bulgarian Wedding Music between Folk and Chalga: Politics, Markets and Current Directions", *Muzikologija*, is squarely on the topic and openly accessible. Both are added: Silverman carries the wedding-music claim, Peycheva & Dimov are cited where the chapter touches Romani musicianship | `P2` | `enrich` | `appendix-references.mdx`, `07-balkan.mdx` | Both cited inline; both entries resolve and carry tiers | `open` |
+| F49 | Ch 7's svatbarska-muzika material has no scholarly citation. Amended during planning: the audit names Peycheva & Dimov, whose verifiable output is *The Zurna Tradition in Southwest Bulgaria: Romani Musicians in Practice* (2002) — a different subject. Silverman, C. (2007), "Bulgarian Wedding Music between Folk and Chalga: Politics, Markets and Current Directions", *Muzikologija*, is squarely on the topic and openly accessible. Both are added: Silverman carries the wedding-music claim, Peycheva & Dimov are cited where the chapter touches Romani musicianship | `P2` | `enrich` | `appendix-references.mdx`, `07-balkan.mdx` | Cases `M005 F49` (Silverman cited at the svatbarska passage) and `M005/S04` (the Peycheva & Dimov entry carries `contents unverified`). **Peycheva & Dimov are listed but cited by nothing**: Chapter 7 has no Romani-musicianship passage and `theory-balkan.mdx` Rule 7 already attributes ensemble tightness to Rice, so there is no claim here their book was confirmed to support, and none was written to host it. A deliberate orphan — M006/S02 row B08 should not read it as rot | `done` |
 
 ### Slice M005/S05 — Minimalism and electronic sources
 

@@ -109,3 +109,16 @@ reference [2] carry a fabricated title into M002.
   Corrected in a follow-up commit — **Lesson:** write evidence counts after
   reading the output, never in the same block as the command producing it. An
   evidence file whose numbers were predicted rather than read is not evidence.
+- **Planned halt fired, M005/S04 task 2.** Chapter 7 has no Romani-musicianship
+  passage, and `theory-balkan.mdx` has none either — its Rule 7 covers
+  wedding-band tightness and already attributes that to Rice. **Q:** how should
+  it resolve? — **A:** add the entry and cite it from the theory page if a claim
+  fits; if none does, add it and record that nothing needs it.
+- **Decision:** the entry is added, tier B, carrying `contents unverified`, and
+  cites nothing — **Why:** attaching it to Rule 7 would assert that a book
+  nobody here has read supports a claim already attributed to someone else, and
+  writing a passage to host it is what the plan forbids.
+- **Interaction flagged:** this creates a deliberately orphaned entry, and
+  M006/S02's B08 exists to burn down entries cited by no page. F49's
+  `Verification` says so explicitly, so the burn-down does not delete a source
+  that was added advisedly.

@@ -8,13 +8,13 @@ contradicted them.
 ## Task status
 
 - [x] Task 1 — Add Silverman and cite the svatbarska-muzika claim
-- [ ] Task 2 — Add Peycheva & Dimov, stating what is unverified
+- [x] Task 2 — Add Peycheva & Dimov, stating what is unverified
 
 ## Definition of Done
 
-- [ ] Silverman (2007) is in the appendix with a declared tier and cited at the
+- [x] Silverman (2007) is in the appendix with a declared tier and cited at the
       svatbarska-muzika discussion
-- [ ] Peycheva & Dimov are in the appendix with a declared tier, cited where the
+- [x] Peycheva & Dimov are in the appendix with a declared tier, cited where the
       chapter touches Romani musicianship, and their entry states plainly that
       the work's contents are unverified pending translation
 
