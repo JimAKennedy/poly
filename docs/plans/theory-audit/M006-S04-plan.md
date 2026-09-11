@@ -6,11 +6,11 @@ planning, and three ledger amendments follow from what that found.
 
 ## Task status
 
-- [ ] Task 1 — Close B11 on the evidence
+- [x] Task 1 — Close B11 on the evidence
 
 ## Definition of Done
 
-- [ ] *Kotekan polos*, and the practice Rule 5 describes without it, are either
+- [x] *Kotekan polos*, and the practice Rule 5 describes without it, are either
       cited to a tier-A or tier-B source, or recorded here as unverifiable and
       deliberately left uncited
 

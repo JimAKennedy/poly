@@ -784,17 +784,17 @@ plainly that they are ours rather than the audit's.
 **Plan:** M006-S04-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M006-S04.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] *Kotekan polos*, and the practice Rule 5 describes without it, are either
+- [x] *Kotekan polos*, and the practice Rule 5 describes without it, are either
       cited to a tier-A or tier-B source, or recorded here as unverifiable and
       deliberately left uncited
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| B11 | The audit (§125) asserts *kotekan polos* — "a third player playing only the structural pokok tones" — as a named interlock style, citing nothing for the term. Nothing in the repo attests either the term or the practice: `fr-tenzer-2000` is annotated "the authoritative analysis of kotekan varieties", which argues Tenzer could cover it but is not evidence that he does. M003/S05 wrote the practice into Rule 5 with no citation and no label, forbidding the label in case `S05-F33`, on the grounds that Rule 6 and Construction's Pokok lane already ground it internally. This row owns both open questions: whether the term has an attestation, and whether any source documents the practice so Rule 5 can cite it. Found while planning and executing M003/S05, not named by the audit as a defect in itself | `P2` | `source` | `theory-gamelan.mdx` Rule 5 | Either Rule 5 names the term and/or cites the practice with a resolving tier-A/B reference, or this row is `accepted` with the reason recorded | `open` |
+| B11 | The audit (§125) asserts *kotekan polos* — "a third player playing only the structural pokok tones" — as a named interlock style, citing nothing for the term. Nothing in the repo attests either the term or the practice: `fr-tenzer-2000` is annotated "the authoritative analysis of kotekan varieties", which argues Tenzer could cover it but is not evidence that he does. M003/S05 wrote the practice into Rule 5 with no citation and no label, forbidding the label in case `S05-F33`, on the grounds that Rule 6 and Construction's Pokok lane already ground it internally. This row owns both open questions: whether the term has an attestation, and whether any source documents the practice so Rule 5 can cite it. Found while planning and executing M003/S05, not named by the audit as a defect in itself | `P2` | `source` | `theory-gamelan.mdx` Rule 5 | Closed on evidence: sources agree *polos* is one of the two interlocking parts, the on-beat one paired with *sangsih*, and the *pokok* is the main melody on calung and ugal that kotekan embellishes. The term does not denote a third player on pokok tones, so there is nothing to attest and no prose changed. `S05-F33`'s forbidden arm, re-proved to bite, is what keeps the label out | `accepted` |
 
 ## Milestone M007 — Named-rule coverage
 
