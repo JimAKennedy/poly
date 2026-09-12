@@ -822,9 +822,10 @@ asserts any of them.
 ### Slice M007/S01 — Rule triage
 
 **Depends:** M004/S05
+**Plan:** M007-S01-plan.md
 **Validation:** format, doc-conformance
 **Evidence:** evidence/M007-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
@@ -840,9 +841,10 @@ asserts any of them.
 ### Slice M007/S02 — Roll out the checkable rules
 
 **Depends:** M007/S01
+**Plan:** M007-S02-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M007-S02.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
@@ -859,9 +861,10 @@ asserts any of them.
 ### Slice M007/S03 — Burn down the divergence markers
 
 **Depends:** M007/S02
+**Plan:** M007-S03-plan.md
 **Validation:** format, site-unit, doc-conformance, gate
 **Evidence:** evidence/M007-S03.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
