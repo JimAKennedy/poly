@@ -16,7 +16,7 @@ mechanism.
 - [x] 1. Correct `Cuban Son Montuno`'s clave lane to the exact son clave
 - [x] 2. Add the `Rumba Clave` preset
 - [x] 3. Add the `Clapping Music` preset
-- [ ] 4. Retire the guide's workaround framing, and close the slice
+- [x] 4. Retire the guide's workaround framing, and close the slice
 
 ## Definition of Done
 
