@@ -730,6 +730,89 @@ CHECKLIST.push(
   },
 );
 
+CHECKLIST.push(
+  {
+    page: 'theory-afro-cuban.mdx',
+    patch: null,
+    rules: [
+      {
+        id: 'ac-clave-unvaried',
+        description: 'Rule 1: the clave is the referent and never varies',
+        check: ({ rows }) => {
+          const clave = findLane(rows, /clave/i);
+          if (!clave) return `no clave lane among ${roles(rows)}`;
+          return pct(clave, 'Mutation') === 0
+            ? null
+            : `the clave carries ${clave.cell.Mutation} mutation; Rule 1 makes it the referent, which never varies`;
+        },
+      },
+      {
+        id: 'ac-lilt-band',
+        description: 'Rule 7: the feel is a lilt — swing between 0.2 and 0.3, ensemble-wide',
+        check: ({ rows }) => {
+          const out = rows.filter((r) => {
+            const v = num(r, 'Swing');
+            return !Number.isFinite(v) || v < 0.2 || v > 0.3;
+          });
+          return out.length === 0
+            ? null
+            : `${out.map((r) => `${r.role} ${r.cell.Swing}`).join(', ')} sit outside 0.2-0.3; ` +
+                'Rule 7 puts Cuban subdivision between straight sixteenths and triplets, ensemble-wide';
+        },
+      },
+    ],
+  },
+  {
+    page: 'theory-electronic-breakbeat.mdx',
+    patch: null,
+    rules: [
+      {
+        id: 'ebb-polymeter-loop-length',
+        description: 'Rule 3: polymeter comes from a loop length, not free phase',
+        check: ({ rows }) => {
+          const anchor = findLane(rows, /snare \(fixed\)|backbeat snare/i);
+          if (!anchor) return 'no anchor lane to measure loop lengths against';
+          // "Rigid in itself, shifting only against the frame": every lane's
+          // step count is a whole number of steps, and at least one differs
+          // from the anchor's frame.
+          const differing = rows.filter((r) => r.steps !== anchor.steps);
+          return differing.length > 0
+            ? null
+            : `every lane runs ${anchor.steps} steps; Rule 3 makes the breathing come from a loop of a different length`;
+        },
+      },
+      {
+        id: 'ebb-snare-backbeat-fixed',
+        description: 'Rule 6: the snare backbeat is the fixed stratum',
+        check: ({ rows }) => {
+          const snare = findLane(rows, /snare \(fixed\)|backbeat snare/i);
+          if (!snare) return `no backbeat snare among ${roles(rows)}`;
+          const g = laneOnPulseGrid(snare, 16);
+          if (g.length !== 2) return `the snare strikes ${g.length} times on the 16-pulse grid; Rule 6 holds a half-time backbeat`;
+          return pct(snare, 'Mutation') === 0
+            ? null
+            : `the backbeat snare carries ${snare.cell.Mutation} mutation; Rule 6 makes it the listener's anchor`;
+        },
+      },
+      {
+        id: 'ebb-ghost-rolls',
+        description: 'Rule 8: the ghost layer rolls continuously at low velocity',
+        check: ({ rows }) => {
+          const ghost = findLane(rows, /ghost/i);
+          if (!ghost) return `no ghost lane among ${roles(rows)}`;
+          const quietest = Math.min(...rows.map((r) => num(r, 'Velocity')));
+          if (ghost.hits < ghost.steps * 0.6) {
+            return `the ghost layer strikes ${ghost.hits} of ${ghost.steps}; Rule 8 asks for a near-continuous stream`;
+          }
+          return num(ghost, 'Velocity') === quietest
+            ? null
+            : `the ghost layer at velocity ${ghost.cell.Velocity} is not the quietest voice; Rule 8 keeps it low`;
+        },
+      },
+    ],
+  },
+);
+
 let liveMarkers = 0;
 
 for (const entry of CHECKLIST) {
@@ -794,13 +877,13 @@ test('patch-divergence-ok suppression count', () => {
 // against.
 const RULE_TRIAGE = {
   'theory-afro-cuban.mdx': {
-    1: { checkable: true, why: 'the clave lane takes no mutation' },
+    1: { checkable: true, case: 'ac-clave-unvaried', why: 'the clave lane takes no mutation' },
     2: { checkable: false, why: 'asks which half of a part is "busy" relative to the clave sides, a judgement the table reports no cell for' },
     3: { checkable: true, case: 'ac-tumbao-onsets-rendered', why: 'asserted: theory-afro-cuban tumbao case' },
     4: { checkable: false, why: '"archetype part" is a repertoire fact about named patterns, not a property of steps, hits or rotation' },
     5: { checkable: true, case: 'ac-theory-one-free-voice', why: 'asserted: ac-theory-one-free-voice' },
     6: { checkable: false, why: '"almost no doubled strong accents" sets no threshold the table can settle' },
-    7: { checkable: true, why: 'Swing sits in 0.2-0.3 ensemble-wide' },
+    7: { checkable: true, case: 'ac-lilt-band', why: 'Swing sits in 0.2-0.3 ensemble-wide' },
     8: { checkable: false, why: 'concerns section-scale behaviour over time — crossing and resolving — not a state any single patch has' },
   },
   'theory-afrobeat.mdx': {
@@ -835,13 +918,13 @@ const RULE_TRIAGE = {
   },
   'theory-electronic-breakbeat.mdx': {
     1: { checkable: true, case: 'ebb-anchor-immutable', why: 'asserted: ebb-anchor-immutable' },
-    2: { checkable: true, why: 'layers own slots — snares on 2 and 4, open hats on the offbeat eighths' },
-    3: { checkable: true, why: 'polymeter comes from a loop length of 3, 5, 6 or 7 against the 4-unit frame' },
+    2: { checkable: false, why: 'forbids a layer wandering between territories, which is a change over time; a static patch assigns each lane one position set and cannot wander. Coinciding with another layer is not wandering — a sixteenth hat stream crossing the backbeat keeps its own territory' },
+    3: { checkable: true, case: 'ebb-polymeter-loop-length', why: 'polymeter comes from a loop length of 3, 5, 6 or 7 against the 4-unit frame' },
     4: { checkable: false, why: 'names swing percentages, and this page\'s patch table carries no Swing column' },
     5: { checkable: false, why: 'energy management across 8, 16 and 32-bar boundaries is arrangement, not a patch state' },
-    6: { checkable: true, why: 'the snare holds the half-time backbeat' },
+    6: { checkable: true, case: 'ebb-snare-backbeat-fixed', why: 'the snare holds the half-time backbeat' },
     7: { checkable: true, case: 'ebb-kick-avoids-snare', why: 'asserted: ebb-kick-avoids-snare' },
-    8: { checkable: true, why: 'the ghost layer is near-continuous at low velocity' },
+    8: { checkable: true, case: 'ebb-ghost-rolls', why: 'the ghost layer is near-continuous at low velocity' },
     9: { checkable: false, why: 'two-bar question and answer is a phrasing relation between bars, and a patch describes one cycle' },
   },
   'theory-funk-soul.mdx': {
