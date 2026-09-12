@@ -1135,6 +1135,79 @@ GrooveState makeCubanSon() {
     return s;
 }
 
+GrooveState makeRumbaClave() {
+    GrooveState s{};
+    s.activeLaneCount = 5;
+    s.seed = 143;
+
+    // Guaguanco texture built on the rumba clave. The clave is hand-authored
+    // for the same reason as makeCubanSon's: lockReferentLane would otherwise
+    // bake E(5,16), which is neither clave.
+    auto& clave = s.lanes[0];
+    clave.id = 0;
+    clave.role = Role::AnchorPulse;
+    clave.midiNote = 75;
+    clave.cycle = {16, 16};
+    clave.hitCount = 5;
+    clave.baseVelocity = 100;
+    clave.probability = 1.0f;
+    // Rumba clave 3-2: onsets 0, 3, 7, 10, 12, gaps 3-4-3-2-4. The third
+    // stroke sits on 7 where the son clave puts it on 6.
+    clave.timeline = true;
+    clave.fixedPatternLength = 16;
+    clave.fixedPattern = {true,  false, false, true,  false, false, false, true,
+                          false, false, true,  false, true,  false, false, false};
+
+    auto& palitos = s.lanes[1];
+    palitos.id = 1;
+    palitos.role = Role::Accent;
+    palitos.midiNote = 37;
+    palitos.cycle = {16, 16};
+    palitos.hitCount = 9;
+    palitos.baseVelocity = 78;
+    palitos.probability = 1.0f;
+    palitos.ghostFloor = 45;
+
+    auto& salidor = s.lanes[2];
+    salidor.id = 2;
+    salidor.role = Role::Backbeat;
+    salidor.midiNote = 64;
+    salidor.cycle = {16, 16};
+    salidor.hitCount = 4;
+    salidor.rotation = 2;
+    salidor.baseVelocity = 95;
+    salidor.probability = 1.0f;
+
+    auto& tresGolpes = s.lanes[3];
+    tresGolpes.id = 3;
+    tresGolpes.role = Role::Ghost;
+    tresGolpes.midiNote = 62;
+    tresGolpes.cycle = {16, 16};
+    tresGolpes.hitCount = 6;
+    tresGolpes.rotation = 3;
+    tresGolpes.baseVelocity = 82;
+    tresGolpes.probability = 0.9f;
+    tresGolpes.ghostFloor = 50;
+
+    // The quinto is the free voice in rumba -- the one part that improvises
+    // against the fixed clave, which is why it alone carries mutation here.
+    auto& quinto = s.lanes[4];
+    quinto.id = 4;
+    quinto.role = Role::Shimmer;
+    quinto.midiNote = 63;
+    quinto.cycle = {16, 16};
+    quinto.hitCount = 7;
+    quinto.rotation = 1;
+    quinto.baseVelocity = 88;
+    quinto.probability = 0.85f;
+    quinto.ghostFloor = 40;
+    quinto.mutationRate = 0.3f;
+
+    s.macros.syncopation = 0.5f;
+    s.macros.density = 0.55f;
+    return s;
+}
+
 GrooveState makeAfrobeatLagos() {
     GrooveState s{};
     s.activeLaneCount = 6;
@@ -2611,6 +2684,8 @@ GrooveState makeFactoryPresetRaw(int index) {
         return makeBalkanFunk();
     case 42:
         return makeCompositionalArc();
+    case 43:
+        return makeRumbaClave();
     default:
         return GrooveState{};
     }
@@ -2734,6 +2809,8 @@ const PresetInfo& getFactoryPresetInfo(int index) {
         {"Balkan Funk", "7/8 aksak with funk ghost notes and micro-timing on the hi-hat", "Balkan / Eastern European"},
         {"Compositional Arc", "Six-lane layered build — three continuous lanes plus three gated ornamental voices",
          "Minimalist / Compositional"},
+        {"Rumba Clave", "Guaguancó texture on the exact rumba clave — palitos, salidor, tres golpes, and a free quinto",
+         "Latin / Brazilian"},
     };
     static constexpr PresetInfo kEmpty{"", "", "Foundational"};
     if (index >= 0 && index < kFactoryPresetCount)

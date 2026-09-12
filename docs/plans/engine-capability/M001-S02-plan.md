@@ -14,7 +14,7 @@ mechanism.
 ## Task status
 
 - [x] 1. Correct `Cuban Son Montuno`'s clave lane to the exact son clave
-- [ ] 2. Add the `Rumba Clave` preset
+- [x] 2. Add the `Rumba Clave` preset
 - [ ] 3. Add the `Clapping Music` preset
 - [ ] 4. Retire the guide's workaround framing, and close the slice
 
@@ -64,9 +64,13 @@ mechanism.
     builder
   - `engine/src/presets.cpp` — the builder, the `{name, description, category}`
     registry entry, and the index dispatch that returns it
-  - `plugin/source/webui/web_ui_view.cpp` — one `kWebPresetLaneNames` row. A
-    `static_assert` dimensions this array to `kFactoryPresetCount`, so omitting
-    the row fails to compile rather than crashing a host.
+  - `plugin/source/webui/web_ui_view.cpp` — **no row, deliberately.**
+    `kWebPresetLaneNames` is declared `[kFactoryPresetCount][kMaxLanes]` but is
+    initialised sparsely: only the first 14 rows carry bespoke labels, and every
+    preset from index 14 on zero-fills to null and falls back to default lane
+    names at the `applyPreset` call site. Appending a row would give it index
+    14 — `makeEweAgbekor` — and relabel that preset's lanes. The `static_assert`
+    pins the array's extent to the preset count; it cannot detect a missing row.
   - `docs/preset-taxonomy.md` — two hardcoded counts. `count_drift` triggers on
     `factory presets` and `presets ... are grouped`, so a missed count fails
     `doc-discipline`.
@@ -117,8 +121,8 @@ mechanism.
    hand-authored rumba pattern, plus supporting lanes consistent with the
    existing `Cuban Son Montuno` texture. Add the registry entry with category
    `Latin / Brazilian`, and the index dispatch case.
-4. Add the `kWebPresetLaneNames` row. The `static_assert` will refuse to compile
-   without it.
+4. Add no `kWebPresetLaneNames` row — see the context note above. The preset
+   takes default lane names, as every preset from index 14 on already does.
 5. Update both hardcoded counts in `docs/preset-taxonomy.md` from 43 to 44, and
    place the preset in its category listing.
 6. Build and run `unit`; watch it pass. Regenerate `presets.json`.

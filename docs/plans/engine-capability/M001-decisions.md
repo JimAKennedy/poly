@@ -130,3 +130,16 @@ milestone's review can see what shaped it without reconstructing it from diffs.
   — **Why:** Tasks 2 and 3 insert presets, and every index after the insertion
   point shifts. An index-pinned test would keep passing while checking a
   different preset.
+
+## 2026-09-12 — executing M001/S02 task 2
+
+- **Decision:** No `kWebPresetLaneNames` row is added for the new presets, and
+  the plan's step saying one was required — enforced by a `static_assert` — was
+  corrected. — **Why:** The array is declared to `kFactoryPresetCount` but
+  initialised sparsely: only 14 rows carry bespoke labels, and presets from
+  index 14 on zero-fill to null and fall back to default lane names through the
+  null guard at the `applyPreset` call site. Appending a row would have given it
+  index 14, relabelling `makeEweAgbekor`'s lanes. The `static_assert` pins the
+  extent, not the row count, so it cannot catch an omission. Resolved in flight:
+  adding the row would introduce a bug, and omitting it matches how 29 existing
+  presets already behave.

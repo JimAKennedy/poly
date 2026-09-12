@@ -289,3 +289,18 @@ TEST(PresetTimelines, CubanSonClaveIsExactNotItsEuclideanNeighbour) {
     EXPECT_FALSE(matchesEuclidean(clave))
         << "the clave lane carries the Euclidean pattern rather than the exact son clave";
 }
+
+TEST(PresetTimelines, RumbaClaveIsExactNotItsEuclideanNeighbour) {
+    const int index = factoryPresetIndexByName("Rumba Clave");
+    ASSERT_GE(index, 0) << "no factory preset named Rumba Clave";
+    const poly::GrooveState state = poly::makeFactoryPreset(index);
+    const poly::LaneConfig& clave = state.lanes[0];
+
+    EXPECT_TRUE(clave.timeline);
+    EXPECT_EQ(clave.fixedPatternLength, 16);
+    // Rumba clave 3-2, as 03-afro-cuban.mdx states it: the third stroke moves
+    // from pulse 6 to 7, giving inter-onset gaps of 3-4-3-2-4.
+    EXPECT_EQ(timelineOnsets(clave), (std::vector<int>{0, 3, 7, 10, 12}));
+    EXPECT_FALSE(matchesEuclidean(clave))
+        << "the clave lane carries the Euclidean pattern rather than the exact rumba clave";
+}
