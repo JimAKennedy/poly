@@ -5,13 +5,13 @@
 
 ## Task status
 
-- [ ] Task 1 — Record a verdict for every numbered rule
+- [x] Task 1 — Record a verdict for every numbered rule
 
 ## Definition of Done
 
-- [ ] Every numbered rule on every theory page is classified checkable or not,
+- [x] Every numbered rule on every theory page is classified checkable or not,
       with a one-line reason recorded for each not-checkable verdict
-- [ ] The triage lives beside the checklist, so a rule added to a theory page
+- [x] The triage lives beside the checklist, so a rule added to a theory page
       without a verdict is visible
 
 ## Validation

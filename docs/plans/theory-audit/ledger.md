@@ -825,18 +825,18 @@ asserts any of them.
 **Plan:** M007-S01-plan.md
 **Validation:** format, doc-conformance
 **Evidence:** evidence/M007-S01.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Every numbered rule on every theory page is classified checkable or not,
+- [x] Every numbered rule on every theory page is classified checkable or not,
       with a one-line reason recorded for each not-checkable verdict
-- [ ] The triage lives beside the checklist, so a rule added to a theory page
+- [x] The triage lives beside the checklist, so a rule added to a theory page
       without a verdict is visible
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| B12 | The eleven theory pages state 92 numbered rules and nine are asserted, but which of the remaining 83 a lane table can settle has never been decided. Until that verdict is recorded, "this rule is not checked" and "this rule is not checkable" are indistinguishable | `P2` | `verify` | `site/tests/theory-patch-conformance.test.mjs` triage table | A case asserts every numbered rule on every theory page carries a triage verdict, and fails when a page gains a rule that has none | `open` |
+| B12 | The eleven theory pages state 92 numbered rules and nine are asserted, but which of the remaining 83 a lane table can settle has never been decided. Until that verdict is recorded, "this rule is not checked" and "this rule is not checkable" are indistinguishable | `P2` | `verify` | `site/tests/theory-patch-conformance.test.mjs` triage table | Case `M007/S01` asserts every numbered rule on every theory page carries a verdict, and separately that no not-checkable verdict lacks a reason. **92 rules triaged: 55 checkable, 37 not; 16 of the checkable already have cases, leaving 39 predicates for S02** — well above the fifteen-to-twenty-five estimated from headlines at planning | `done` |
 
 ### Slice M007/S02 — Roll out the checkable rules
 
