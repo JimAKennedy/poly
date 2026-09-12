@@ -796,21 +796,21 @@ const RULE_TRIAGE = {
   'theory-afro-cuban.mdx': {
     1: { checkable: true, why: 'the clave lane takes no mutation' },
     2: { checkable: false, why: 'asks which half of a part is "busy" relative to the clave sides, a judgement the table reports no cell for' },
-    3: { checkable: true, why: 'asserted: theory-afro-cuban tumbao case' },
+    3: { checkable: true, case: 'ac-tumbao-onsets-rendered', why: 'asserted: theory-afro-cuban tumbao case' },
     4: { checkable: false, why: '"archetype part" is a repertoire fact about named patterns, not a property of steps, hits or rotation' },
-    5: { checkable: true, why: 'asserted: ac-theory-one-free-voice' },
+    5: { checkable: true, case: 'ac-theory-one-free-voice', why: 'asserted: ac-theory-one-free-voice' },
     6: { checkable: false, why: '"almost no doubled strong accents" sets no threshold the table can settle' },
     7: { checkable: true, why: 'Swing sits in 0.2-0.3 ensemble-wide' },
     8: { checkable: false, why: 'concerns section-scale behaviour over time — crossing and resolving — not a state any single patch has' },
   },
   'theory-afrobeat.mdx': {
-    1: { checkable: true, why: 'a 12-step bell lane carrying no mutation' },
+    1: { checkable: true, case: 'afb-bell-unvaried', why: 'a 12-step bell lane carrying no mutation' },
     2: { checkable: false, why: '"do not poach" compares characteristic grid territories the table never names' },
-    3: { checkable: true, why: 'the kick runs three to four hits and does not vary' },
-    4: { checkable: true, why: 'the hat is continuous — a high hit count at its subdivision' },
-    5: { checkable: true, why: 'the snare is sparse and quiet rather than a struck backbeat' },
+    3: { checkable: true, case: 'afb-kick-sparse-fixed', why: 'the kick runs three to four hits and does not vary' },
+    4: { checkable: true, case: 'afb-hat-continuous', why: 'the hat is continuous — a high hit count at its subdivision' },
+    5: { checkable: true, case: 'afb-snare-whispers', why: 'the snare is sparse and quiet rather than a struck backbeat' },
     6: { checkable: false, why: 'enter and exit schedules measured in bars are arrangement, not a patch' },
-    7: { checkable: true, why: 'ostinatos repeat with minimal mutation' },
+    7: { checkable: true, case: 'afb-core-unvaried', why: 'ostinatos repeat with minimal mutation' },
     8: { checkable: false, why: '"dynamic range within any bar" is a performance contour; the table gives one velocity per lane, not a range within a bar' },
   },
   'theory-balkan.mdx': {
@@ -820,12 +820,12 @@ const RULE_TRIAGE = {
     4: { checkable: true, why: 'the tupan speaks with two lanes, a low stroke and a high one' },
     5: { checkable: true, why: 'density strata sit on the shared grid, which is Rule 1 measured across all lanes' },
     6: { checkable: true, why: 'Swing is zero' },
-    7: { checkable: true, why: 'Humanize is at or below 0.15' },
+    7: { checkable: false, why: 'names a Humanize bound, and this page\'s patch table carries no Humanize column' },
     8: { checkable: false, why: 'a claim about measured performance timing, not about anything the patch specifies' },
     9: { checkable: false, why: 'ornament placement before the long cell is not represented in a lane table' },
   },
   'theory-brazilian.mdx': {
-    1: { checkable: true, why: 'two surdo lanes, with the beat-2 answer louder than the beat-1 strike' },
+    1: { checkable: false, why: 'the patch models the surdo pair as a single lane, so the dialogue\'s dynamic contrast between the two drums is not expressible in it' },
     2: { checkable: true, why: 'asserted: theory-brazilian surdo case' },
     3: { checkable: true, why: 'the caixa never stops — continuous sixteenths' },
     4: { checkable: false, why: 'the call role is a performance function; no cell says which lane cues a break' },
@@ -834,13 +834,13 @@ const RULE_TRIAGE = {
     7: { checkable: false, why: 'states a relation between bossa and the wider system rather than a requirement on a patch' },
   },
   'theory-electronic-breakbeat.mdx': {
-    1: { checkable: true, why: 'asserted: ebb-anchor-immutable' },
+    1: { checkable: true, case: 'ebb-anchor-immutable', why: 'asserted: ebb-anchor-immutable' },
     2: { checkable: true, why: 'layers own slots — snares on 2 and 4, open hats on the offbeat eighths' },
     3: { checkable: true, why: 'polymeter comes from a loop length of 3, 5, 6 or 7 against the 4-unit frame' },
-    4: { checkable: true, why: 'swing is a bus: applied to the swung layers and zero on the kick' },
+    4: { checkable: false, why: 'names swing percentages, and this page\'s patch table carries no Swing column' },
     5: { checkable: false, why: 'energy management across 8, 16 and 32-bar boundaries is arrangement, not a patch state' },
     6: { checkable: true, why: 'the snare holds the half-time backbeat' },
-    7: { checkable: true, why: 'asserted: ebb-kick-avoids-snare' },
+    7: { checkable: true, case: 'ebb-kick-avoids-snare', why: 'asserted: ebb-kick-avoids-snare' },
     8: { checkable: true, why: 'the ghost layer is near-continuous at low velocity' },
     9: { checkable: false, why: 'two-bar question and answer is a phrasing relation between bars, and a patch describes one cycle' },
   },
@@ -863,7 +863,7 @@ const RULE_TRIAGE = {
     6: { checkable: true, why: 'asserted: gam-pokok-layer' },
     7: { checkable: true, why: 'stroke rates halve as instruments deepen — step counts in powers of two' },
     8: { checkable: true, why: 'velocity increases with depth, the gong heaviest' },
-    9: { checkable: true, why: 'density scales inversely with register — lower notes play fewer hits' },
+    9: { checkable: false, why: 'needs each lane\'s register, and this page\'s patch table carries no Note column; role names imply it but naming is not measurement' },
     10: { checkable: false, why: 'irama trades tempo against density across performances; a patch fixes one tempo' },
   },
   'theory-indian-classical.mdx': {
@@ -872,7 +872,7 @@ const RULE_TRIAGE = {
     3: { checkable: false, why: 'khali is marked by the bayan falling silent in a region, which needs per-step absence the table does not give' },
     4: { checkable: true, why: 'layakari speeds are exact ratios — subdivisions in defined multiples' },
     5: { checkable: true, why: 'a cross-grouping lane carries a step count foreign to the tala' },
-    6: { checkable: true, why: 'asserted: ind-tihai-worked' },
+    6: { checkable: true, case: 'ind-tihai-worked', why: 'asserted: ind-tihai-worked' },
     7: { checkable: false, why: 'theme-and-variation by systematic permutation is a performance grammar' },
     8: { checkable: false, why: 'a loudness contour marking architecture, which one velocity per lane cannot express' },
   },
@@ -887,28 +887,73 @@ const RULE_TRIAGE = {
     8: { checkable: true, why: 'ride and hat are the loudest constant voices, above snare and kick' },
   },
   'theory-minimalism.mdx': {
-    1: { checkable: true, why: 'asserted: min-one-variable' },
+    1: { checkable: true, case: 'min-one-variable', why: 'asserted: min-one-variable' },
     2: { checkable: true, why: 'the phased patterns are not rotationally symmetric' },
     3: { checkable: false, why: '"slow enough to inhabit, fast enough to remember" is a judgement about listening time' },
-    4: { checkable: true, why: 'asserted: min-voices-flat' },
+    4: { checkable: true, case: 'min-voices-flat', why: 'asserted: min-voices-flat' },
     5: { checkable: false, why: 'says an anchor is optional and changes the piece; it states no requirement to check' },
     6: { checkable: false, why: 'additive growth and contraction happen across repetitions, not within one patch' },
     7: { checkable: false, why: 'tempo-ratio counterpoint needs simultaneous tempi, which a single patch does not carry' },
-    8: { checkable: true, why: 'asserted: min-deterministic' },
+    8: { checkable: true, case: 'min-deterministic', why: 'asserted: min-deterministic' },
   },
   'theory-sub-saharan-africa.mdx': {
     1: { checkable: true, why: 'the timeline varies in nothing — no mutation, no drift' },
-    2: { checkable: true, why: 'every part has a fixed entry point: no lane drifts' },
+    2: { checkable: false, why: 'a fixed phase relationship is a property of playing over time; every rotation in a static table is fixed by construction, so the rule cannot fail here' },
     3: { checkable: true, why: 'asserted: theory-sub-saharan-africa support-drum case' },
     4: { checkable: false, why: 'whether the texture supports both a ternary and a binary hearing is an interpretive claim about the composite' },
     5: { checkable: true, why: 'the variation budget rises from timeline to support to lead' },
     6: { checkable: false, why: 'lead phrases resolving at cycle boundaries span one to four cycles' },
-    7: { checkable: true, why: 'register and rate separate the voices — note number against hit count' },
+    7: { checkable: false, why: 'needs each lane\'s register, and this page\'s patch table carries no Note column' },
     8: { checkable: false, why: 'a measured non-isochronous subdivision profile, which the lane table does not encode' },
     9: { checkable: false, why: 'call-and-response is a structural relation between players over time' },
 
   },
 };
+
+// A rule that is never registered is indistinguishable from a rule that passes.
+// That nearly shipped inside this milestone: the first theory-afrobeat block
+// appended to CHECKLIST *after* the loop that registers a test per rule, so all
+// five cases were silently skipped and the suite went from 26 tests to 26, green.
+//
+// So the triage names the case for every rule it marks checkable, and this
+// asserts the naming resolves in both directions: no triage entry names a case
+// that does not exist, and no checklist rule is missing from the triage. The
+// count of checkable rules still awaiting a case is printed, and M007/S02's
+// close requires it to be zero.
+test('M007/S02: every named case exists, and every case is named', async () => {
+  const registered = new Set();
+  for (const entry of CHECKLIST) for (const r of entry.rules) registered.add(`${entry.page}::${r.id}`);
+
+  const danglingNames = [];
+  const awaiting = [];
+  for (const [page, rules] of Object.entries(RULE_TRIAGE)) {
+    for (const [n, v] of Object.entries(rules)) {
+      if (!v.checkable) continue;
+      if (!v.case) {
+        // 'asserted: <name>' marks a rule covered by one of the nine
+        // hand-written per-page tests above rather than by the checklist.
+        if (!v.why?.startsWith('asserted')) awaiting.push(`${page} rule ${n}`);
+        continue;
+      }
+      if (!registered.has(`${page}::${v.case}`)) danglingNames.push(`${page} rule ${n} names ${v.case}, which is registered nowhere`);
+    }
+  }
+
+  const unnamed = [];
+  for (const key of registered) {
+    const [page, id] = key.split('::');
+    // Only theory pages carry numbered rules, so only they have triage entries.
+    // The checklist also covers three chapter patches, which M004/S05 added and
+    // which no rule triage governs.
+    if (!RULE_TRIAGE[page]) continue;
+    const named = Object.values(RULE_TRIAGE[page]).some((v) => v.case === id);
+    if (!named) unnamed.push(`${page} registers ${id}, which no triage entry names`);
+  }
+
+  assert.deepEqual(danglingNames, [], danglingNames.join('\n  '));
+  assert.deepEqual(unnamed, [], unnamed.join('\n  '));
+  console.log(`  M007/S02: ${awaiting.length} checkable rule(s) still awaiting a case`);
+});
 
 test('M007/S01: every numbered rule on every theory page carries a verdict', async () => {
   const files = (await readdir(DOCS)).filter((f) => f.startsWith('theory-') && f.endsWith('.mdx'));
