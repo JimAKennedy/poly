@@ -1125,6 +1125,52 @@ CHECKLIST.push({
   ],
 });
 
+CHECKLIST.push(
+  {
+    page: 'theory-funk-soul.mdx',
+    patch: null,
+    rules: [
+      {
+        id: 'fs-pocket-offsets',
+        description: 'Rule 6: the pocket is a fixed displacement field — kick behind, snare ahead, hat on top',
+        check: ({ rows }) => {
+          // The minus sign in the table is U+2212, not a hyphen.
+          const ms = (r) => parseFloat(String(r.cell.Timing ?? '').replace('\u2212', '-').replace('ms', ''));
+          const kick = findLane(rows, /kick/i);
+          const snare = findLane(rows, /snare backbeat|backbeat/i);
+          const hat = findLane(rows, /hat/i);
+          if (!kick || !snare || !hat) return 'need kick, backbeat snare and hat lanes to check Rule 6';
+          const problems = [];
+          if (!(ms(kick) > 0)) problems.push(`the kick sits at ${kick.cell.Timing}, not behind the grid`);
+          if (!(ms(snare) <= 0)) problems.push(`the snare sits at ${snare.cell.Timing}, not at or ahead of it`);
+          if (ms(hat) !== 0) problems.push(`the hat sits at ${hat.cell.Timing}, not on top`);
+          return problems.length ? problems.join('; ') : null;
+        },
+      },
+    ],
+  },
+  {
+    page: 'theory-jazz.mdx',
+    patch: null,
+    rules: [
+      {
+        id: 'jazz-voices-swing-differ',
+        description: "Rule 6: voices' swing ratios differ slightly",
+        // Half the rule. "Swing ratio follows tempo" needs a tempo, which a
+        // patch does not carry; "voices' ratios differ slightly" is a property
+        // of the table and is what this checks. Recorded rather than implied,
+        // as with theory-afrobeat Rule 4.
+        check: ({ rows }) => {
+          const values = [...new Set(rows.map((r) => num(r, 'Swing')))];
+          return values.length > 1
+            ? null
+            : `every lane swings at ${values[0]}; Rule 6 has the voices' ratios differ slightly`;
+        },
+      },
+    ],
+  },
+);
+
 let liveMarkers = 0;
 
 for (const entry of CHECKLIST) {
@@ -1243,7 +1289,7 @@ const RULE_TRIAGE = {
     4: { checkable: true, case: 'bal-tupan-two-strokes', why: 'the tupan speaks with two lanes, a low stroke and a high one' },
     5: { checkable: true, case: 'bal-density-strata', why: 'density strata sit on the shared grid, which is Rule 1 measured across all lanes' },
     6: { checkable: true, case: 'bal-no-swing', why: 'Swing is zero' },
-    7: { checkable: false, why: 'names a Humanize bound, and this page\'s patch table carries no Humanize column' },
+    7: { checkable: false, absentColumn: 'Humanize', why: 'names a Humanize bound, and this page\'s patch table carries no Humanize column' },
     8: { checkable: false, why: 'a claim about measured performance timing, not about anything the patch specifies' },
     9: { checkable: false, why: 'ornament placement before the long cell is not represented in a lane table' },
   },
@@ -1253,14 +1299,14 @@ const RULE_TRIAGE = {
     3: { checkable: true, case: 'bra-caixa-continuous', why: 'the caixa never stops — continuous sixteenths' },
     4: { checkable: false, why: 'the call role is a performance function; no cell says which lane cues a break' },
     5: { checkable: false, why: '"around the beat, not against the meter" needs an interpretation of displacement the table does not supply' },
-    6: { checkable: false, why: 'a micro-timing profile within each beat, which the lane table does not carry' },
+    6: { checkable: false, absentColumn: 'Timing', why: 'a micro-timing profile within each beat, which the lane table does not carry' },
     7: { checkable: false, why: 'states a relation between bossa and the wider system rather than a requirement on a patch' },
   },
   'theory-electronic-breakbeat.mdx': {
     1: { checkable: true, case: 'ebb-anchor-immutable', why: 'asserted: ebb-anchor-immutable' },
     2: { checkable: false, why: 'forbids a layer wandering between territories, which is a change over time; a static patch assigns each lane one position set and cannot wander. Coinciding with another layer is not wandering — a sixteenth hat stream crossing the backbeat keeps its own territory' },
     3: { checkable: true, case: 'ebb-polymeter-loop-length', why: 'polymeter comes from a loop length of 3, 5, 6 or 7 against the 4-unit frame' },
-    4: { checkable: false, why: 'names swing percentages, and this page\'s patch table carries no Swing column' },
+    4: { checkable: false, absentColumn: 'Swing', why: 'names swing percentages, and this page\'s patch table carries no Swing column' },
     5: { checkable: false, why: 'energy management across 8, 16 and 32-bar boundaries is arrangement, not a patch state' },
     6: { checkable: true, case: 'ebb-snare-backbeat-fixed', why: 'the snare holds the half-time backbeat' },
     7: { checkable: true, case: 'ebb-kick-avoids-snare', why: 'asserted: ebb-kick-avoids-snare' },
@@ -1273,7 +1319,7 @@ const RULE_TRIAGE = {
     3: { checkable: true, case: 'fs-kick-sparse', why: 'the kick runs three to five hits' },
     4: { checkable: true, case: 'fs-ghosts-quietest', why: 'ghost strokes sit at the low end of the dynamic range' },
     5: { checkable: true, case: 'fs-one-syncopator', why: 'one syncopator at a time — only one lane carries an intricate figure' },
-    6: { checkable: false, why: 'a fixed micro-offset field in milliseconds, which the lane table does not report' },
+    6: { checkable: true, case: 'fs-pocket-offsets', why: 'the Timing column reports each voice\'s micro-offset in milliseconds' },
     7: { checkable: false, why: 'fills every four or eight bars are arrangement across bars' },
     8: { checkable: false, why: 'states which of Rules 1-6 a neo-soul variant relaxes; it is a meta-rule, not a patch property' },
   },
@@ -1286,7 +1332,7 @@ const RULE_TRIAGE = {
     6: { checkable: true, why: 'asserted: gam-pokok-layer' },
     7: { checkable: true, case: 'gam-strata-halve', why: 'stroke rates halve as instruments deepen — step counts in powers of two' },
     8: { checkable: true, case: 'gam-gong-heaviest', why: 'velocity increases with depth, the gong heaviest' },
-    9: { checkable: false, why: 'needs each lane\'s register, and this page\'s patch table carries no Note column; role names imply it but naming is not measurement' },
+    9: { checkable: false, absentColumn: 'Note', why: 'needs each lane\'s register, and this page\'s patch table carries no Note column; role names imply it but naming is not measurement' },
     10: { checkable: false, why: 'irama trades tempo against density across performances; a patch fixes one tempo' },
   },
   'theory-indian-classical.mdx': {
@@ -1305,7 +1351,7 @@ const RULE_TRIAGE = {
     3: { checkable: true, why: 'asserted: theory-jazz comping case' },
     4: { checkable: false, why: '"nothing repeats verbatim, nothing is unrelated" describes variation across choruses' },
     5: { checkable: false, why: 'the form is the meter — chorus structure over 12 or 32 bars' },
-    6: { checkable: false, why: 'the swing ratio varies with tempo and between voices; the table holds one swing value' },
+    6: { checkable: true, case: 'jazz-voices-swing-differ', why: 'the table holds one swing value per lane, so "voices\' ratios differ slightly" is settleable; the tempo half of the rule is not, and the case says so' },
     7: { checkable: false, why: 'superimpositions resolving at a form boundary span bars a patch does not describe' },
     8: { checkable: true, case: 'jazz-dynamics-inverted', why: 'ride and hat are the loudest constant voices, above snare and kick' },
   },
@@ -1326,7 +1372,7 @@ const RULE_TRIAGE = {
     4: { checkable: false, why: 'whether the texture supports both a ternary and a binary hearing is an interpretive claim about the composite' },
     5: { checkable: true, case: 'ssa-variation-in-lead', why: 'the variation budget rises from timeline to support to lead' },
     6: { checkable: false, why: 'lead phrases resolving at cycle boundaries span one to four cycles' },
-    7: { checkable: false, why: 'needs each lane\'s register, and this page\'s patch table carries no Note column' },
+    7: { checkable: false, absentColumn: 'Note', why: 'needs each lane\'s register, and this page\'s patch table carries no Note column' },
     8: { checkable: false, why: 'a measured non-isochronous subdivision profile, which the lane table does not encode' },
     9: { checkable: false, why: 'call-and-response is a structural relation between players over time' },
 
@@ -1343,6 +1389,31 @@ const RULE_TRIAGE = {
 // that does not exist, and no checklist rule is missing from the triage. The
 // count of checkable rules still awaiting a case is printed, and M007/S02's
 // close requires it to be zero.
+// The triage's checkable verdicts were audited against the patch tables during
+// M007/S02 — six flipped because they named a column their page lacked. The
+// reverse audit was never run, and two verdicts were wrong in the other
+// direction: theory-funk-soul Rule 6 and theory-jazz Rule 6 each said the table
+// did not carry a value it does carry.
+//
+// A false "not checkable" is invisible. There is no case to register and
+// nothing to fail, so nothing catches it. This does: a verdict that excuses
+// itself by naming an absent column must name a column that is genuinely absent.
+test('M007: a not-checkable verdict naming an absent column is telling the truth', async () => {
+  const wrong = [];
+  for (const [page, rules] of Object.entries(RULE_TRIAGE)) {
+    const needed = Object.entries(rules).filter(([, v]) => v.absentColumn);
+    if (!needed.length) continue;
+    const src = await readFile(join(DOCS, page), 'utf8');
+    const { columns } = parsePolyPatch(src);
+    for (const [n, v] of needed) {
+      if (columns.includes(v.absentColumn)) {
+        wrong.push(`${page} rule ${n} is excused because there is no ${v.absentColumn} column, but the table has one`);
+      }
+    }
+  }
+  assert.deepEqual(wrong, [], wrong.join('\n  '));
+});
+
 test('M007/S02: every named case exists, and every case is named', async () => {
   const registered = new Set();
   for (const entry of CHECKLIST) for (const r of entry.rules) registered.add(`${entry.page}::${r.id}`);
