@@ -802,7 +802,7 @@ plainly that they are ours rather than the audit's.
 against that page's patch, so the guide's rules and its worked examples cannot
 drift apart unnoticed.
 **Branch:** milestone/M007-named-rule-coverage
-**Status:** planned
+**Status:** done
 **Demo:** Count the checklist's rule entries against the pages' numbered rules;
 every checkable rule is present, and every omission carries a recorded verdict.
 
