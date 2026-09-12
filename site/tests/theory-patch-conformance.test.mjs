@@ -648,6 +648,88 @@ const CHECKLIST = [
 
 const PRESETS = Array.isArray(presetsData) ? presetsData : (presetsData.presets ?? []);
 
+// --- M007/S02: the rule rollout, page by page ------------------------------
+
+// Helpers shared by the rolled-out rules. Each returns null when the rule holds
+// and a message naming what the patch does instead when it does not.
+const pct = (row, col) => parseFloat(String(row.cell[col] ?? '').replace('%', ''));
+const num = (row, col) => parseFloat(String(row.cell[col] ?? ''));
+const roles = (rows) => rows.map((r) => r.role).join(', ');
+
+CHECKLIST.push(
+  {
+    page: 'theory-afrobeat.mdx',
+    patch: null, // first patch on the page
+    rules: [
+      {
+        id: 'afb-bell-unvaried',
+        description: 'Rule 1: the 12-pulse bell timeline runs unchanged',
+        check: ({ rows }) => {
+          const bell = findLane(rows, /bell/i);
+          if (!bell) return `no bell lane among ${roles(rows)}`;
+          if (bell.steps !== 12) return `the bell runs ${bell.steps} steps; Rule 1 keeps the 12-pulse timeline`;
+          return pct(bell, 'Mutation') === 0
+            ? null
+            : `the bell carries ${bell.cell.Mutation} mutation; Rule 1 says the timeline runs unchanged`;
+        },
+      },
+      {
+        id: 'afb-kick-sparse-fixed',
+        description: 'Rule 3: the kick is three to four hits and does not vary',
+        check: ({ rows }) => {
+          const kick = findLane(rows, /kick/i);
+          if (!kick) return `no kick lane among ${roles(rows)}`;
+          if (kick.hits < 3 || kick.hits > 4) {
+            return `the kick has ${kick.hits} hits; Rule 3 asks for three to four per cycle`;
+          }
+          return pct(kick, 'Mutation') === 0
+            ? null
+            : `the kick carries ${kick.cell.Mutation} mutation; Rule 3 says it does not vary bar to bar`;
+        },
+      },
+      {
+        id: 'afb-hat-continuous',
+        description: 'Rule 4: the hi-hat is continuous',
+        check: ({ rows }) => {
+          const hat = findLane(rows, /hat/i);
+          if (!hat) return `no hat lane among ${roles(rows)}`;
+          // "Steady eighths or sixteenths": most of the grid struck. The
+          // accent-contour half of Rule 4 is not checked here — a per-step
+          // dynamic contour is not something the table reports.
+          return hat.hits >= hat.steps * 0.75
+            ? null
+            : `the hat strikes ${hat.hits} of ${hat.steps}; Rule 4 asks for a continuous stream`;
+        },
+      },
+      {
+        id: 'afb-snare-whispers',
+        description: 'Rule 5: the snare whispers rather than striking a backbeat',
+        check: ({ rows }) => {
+          const snare = findLane(rows, /snare|cross-stick/i);
+          const bell = findLane(rows, /bell/i);
+          if (!snare || !bell) return 'need a snare and a bell lane to check Rule 5';
+          return num(snare, 'Velocity') < num(bell, 'Velocity')
+            ? null
+            : `the snare is at velocity ${snare.cell.Velocity} against the bell's ${bell.cell.Velocity}; ` +
+                'Rule 5 keeps it conversational rather than struck';
+        },
+      },
+      {
+        id: 'afb-core-unvaried',
+        description: 'Rule 7: the core trio repeats; variation is a section event',
+        check: ({ rows }) => {
+          const core = rows.filter((r) => /bell|kick|hat/i.test(r.role));
+          const varying = core.filter((r) => pct(r, 'Mutation') > 0);
+          return varying.length === 0
+            ? null
+            : `${varying.map((r) => `${r.role} ${r.cell.Mutation}`).join(', ')} carry mutation; ` +
+                'Rule 7 keeps the core trio repeating and puts the drama in which voices are present';
+        },
+      },
+    ],
+  },
+);
+
 let liveMarkers = 0;
 
 for (const entry of CHECKLIST) {
