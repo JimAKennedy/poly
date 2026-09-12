@@ -802,7 +802,7 @@ plainly that they are ours rather than the audit's.
 against that page's patch, so the guide's rules and its worked examples cannot
 drift apart unnoticed.
 **Branch:** milestone/M007-named-rule-coverage
-**Status:** planned
+**Status:** done
 **Demo:** Count the checklist's rule entries against the pages' numbered rules;
 every checkable rule is present, and every omission carries a recorded verdict.
 
@@ -822,56 +822,59 @@ asserts any of them.
 ### Slice M007/S01 — Rule triage
 
 **Depends:** M004/S05
+**Plan:** M007-S01-plan.md
 **Validation:** format, doc-conformance
 **Evidence:** evidence/M007-S01.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Every numbered rule on every theory page is classified checkable or not,
+- [x] Every numbered rule on every theory page is classified checkable or not,
       with a one-line reason recorded for each not-checkable verdict
-- [ ] The triage lives beside the checklist, so a rule added to a theory page
+- [x] The triage lives beside the checklist, so a rule added to a theory page
       without a verdict is visible
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| B12 | The eleven theory pages state 92 numbered rules and nine are asserted, but which of the remaining 83 a lane table can settle has never been decided. Until that verdict is recorded, "this rule is not checked" and "this rule is not checkable" are indistinguishable | `P2` | `verify` | `site/tests/theory-patch-conformance.test.mjs` triage table | A case asserts every numbered rule on every theory page carries a triage verdict, and fails when a page gains a rule that has none | `open` |
+| B12 | The eleven theory pages state 92 numbered rules and nine are asserted, but which of the remaining 83 a lane table can settle has never been decided. Until that verdict is recorded, "this rule is not checked" and "this rule is not checkable" are indistinguishable | `P2` | `verify` | `site/tests/theory-patch-conformance.test.mjs` triage table | Case `M007/S01` asserts every numbered rule on every theory page carries a verdict, and separately that no not-checkable verdict lacks a reason. **92 rules triaged: 55 checkable, 37 not; 16 of the checkable already have cases, leaving 39 predicates for S02** — well above the fifteen-to-twenty-five estimated from headlines at planning | `done` |
 
 ### Slice M007/S02 — Roll out the checkable rules
 
 **Depends:** M007/S01
+**Plan:** M007-S02-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M007-S02.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Every rule triaged checkable carries a checklist entry
-- [ ] Each entry is proved to fail when the lane it guards is removed
-- [ ] A patch violating a rule either carries a divergence marker with a written
+- [x] Every rule triaged checkable carries a checklist entry
+- [x] Each entry is proved to fail when the lane it guards is removed
+- [x] A patch violating a rule either carries a divergence marker with a written
       reason or is corrected
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| B13 | 83 numbered rules across nine theory pages have never been checked against the patch meant to demonstrate them. The 2026-07-30 review found nine such contradictions by hand and all nine are now fixed, which is evidence the class is real rather than that it is exhausted | `P1` | `patch-align` | `site/tests/theory-patch-conformance.test.mjs` | Every checkable rule has a checklist entry, each with a mutation proof recorded in the evidence file | `open` |
-| B15 | `theory-electronic-breakbeat`'s own patch contradicts its Rule 7, "the kick syncopates against the snare, avoiding its slots": the chopped kick is E(5,16) at rotation 3, whose onsets on a 16-pulse grid are {3,6,9,12,15}, and the backbeat snare's are {4,12}. Pulse 12 is shared. Found by the M004/S05 checklist on the first newly-checked rule, and suppressed there with a `patch-divergence-ok` marker so the slice could close; the fix is either a rotation that clears the snare or a qualification to Rule 7, and that is a musical decision this row exists to put to a human | `P1` | `patch-align` | `theory-electronic-breakbeat.mdx` patch, Rule 7 | Case `ebb-kick-avoids-snare` passes with no divergence marker | `open` |
+| B13 | 83 numbered rules across nine theory pages have never been checked against the patch meant to demonstrate them. The 2026-07-30 review found nine such contradictions by hand and all nine are now fixed, which is evidence the class is real rather than that it is exhausted | `P1` | `patch-align` | `site/tests/theory-patch-conformance.test.mjs` | Every rule the triage marks checkable carries a checklist entry, and the suite prints `0 checkable rule(s) still awaiting a case`. 26 predicates written across eleven pages, each proved to fail on its own terms. Three were written and deleted as unfalsifiable — `theory-electronic-breakbeat` Rule 2, `theory-gamelan` Rule 1 — joining `theory-sub-saharan-africa` Rule 2, which the triage had already caught: a rule whose predicate cannot be made to fail against a static patch is not checkable, however mechanical its wording. Final triage: 92 rules, 47 checkable, 45 not | `done` |
+| B15 | `theory-electronic-breakbeat`'s own patch contradicts its Rule 7, "the kick syncopates against the snare, avoiding its slots": the chopped kick is E(5,16) at rotation 3, whose onsets on a 16-pulse grid are {3,6,9,12,15}, and the backbeat snare's are {4,12}. Pulse 12 is shared. Found by the M004/S05 checklist on the first newly-checked rule, and suppressed there with a `patch-divergence-ok` marker so the slice could close; the fix is either a rotation that clears the snare or a qualification to Rule 7, and that is a musical decision this row exists to put to a human | `P1` | `patch-align` | `theory-electronic-breakbeat.mdx` patch, Rule 7 | Case `ebb-kick-avoids-snare` passes with no divergence marker: the kick moves to rotation 13, onsets {0,3,6,9,13}, clearing both snare slots while keeping the downbeat | `done` |
 
 ### Slice M007/S03 — Burn down the divergence markers
 
 **Depends:** M007/S02
+**Plan:** M007-S03-plan.md
 **Validation:** format, site-unit, doc-conformance, gate
 **Evidence:** evidence/M007-S03.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Every `patch-divergence-ok` marker either is replaced by a corrected patch
+- [x] Every `patch-divergence-ok` marker either is replaced by a corrected patch
       or carries a reason a reviewer has accepted
-- [ ] No marker carries the untriaged placeholder reason
+- [x] No marker carries the untriaged placeholder reason
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| B14 | Markers opened during M004 and M007/S02 with the reason "found by the checklist, not yet triaged" are a backlog, not a decision. A suppression nobody has read since it was written is indistinguishable from a defect | `P2` | `verify` | theory and chapter pages carrying `patch-divergence-ok` | A case fails on any marker still carrying the untriaged placeholder reason, and the suite prints the live marker count | `open` |
+| B14 | Markers opened during M004 and M007/S02 with the reason "found by the checklist, not yet triaged" are a backlog, not a decision. A suppression nobody has read since it was written is indistinguishable from a defect | `P2` | `verify` | theory and chapter pages carrying `patch-divergence-ok` | Case `M007/S03` fails on any marker still reading "not yet triaged", proved by adding one and watching it name the file and rule. The tree carries no markers at all: five of M004/S05's six were removed by the slices that owed them and the sixth went with B15. The suite still prints the live count, which is zero | `done` |
 
 ## Sequencing
 
