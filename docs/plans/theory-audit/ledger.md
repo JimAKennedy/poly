@@ -864,17 +864,17 @@ asserts any of them.
 **Plan:** M007-S03-plan.md
 **Validation:** format, site-unit, doc-conformance, gate
 **Evidence:** evidence/M007-S03.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Every `patch-divergence-ok` marker either is replaced by a corrected patch
+- [x] Every `patch-divergence-ok` marker either is replaced by a corrected patch
       or carries a reason a reviewer has accepted
-- [ ] No marker carries the untriaged placeholder reason
+- [x] No marker carries the untriaged placeholder reason
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| B14 | Markers opened during M004 and M007/S02 with the reason "found by the checklist, not yet triaged" are a backlog, not a decision. A suppression nobody has read since it was written is indistinguishable from a defect | `P2` | `verify` | theory and chapter pages carrying `patch-divergence-ok` | A case fails on any marker still carrying the untriaged placeholder reason, and the suite prints the live marker count | `open` |
+| B14 | Markers opened during M004 and M007/S02 with the reason "found by the checklist, not yet triaged" are a backlog, not a decision. A suppression nobody has read since it was written is indistinguishable from a defect | `P2` | `verify` | theory and chapter pages carrying `patch-divergence-ok` | Case `M007/S03` fails on any marker still reading "not yet triaged", proved by adding one and watching it name the file and rule. The tree carries no markers at all: five of M004/S05's six were removed by the slices that owed them and the sixth went with B15. The suite still prints the live count, which is zero | `done` |
 
 ## Sequencing
 

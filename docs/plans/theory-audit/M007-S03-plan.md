@@ -5,13 +5,13 @@
 
 ## Task status
 
-- [ ] Task 1 — Fail on any untriaged marker, and close the milestone
+- [x] Task 1 — Fail on any untriaged marker, and close the milestone
 
 ## Definition of Done
 
-- [ ] Every `patch-divergence-ok` marker either is replaced by a corrected patch
+- [x] Every `patch-divergence-ok` marker either is replaced by a corrected patch
       or carries a reason a reviewer has accepted
-- [ ] No marker carries the untriaged placeholder reason
+- [x] No marker carries the untriaged placeholder reason
 
 ## Validation
 

@@ -1164,6 +1164,34 @@ for (const entry of CHECKLIST) {
   }
 }
 
+// --- M007/S03: no marker may sit on the untriaged placeholder ---------------
+
+// A marker reading "found by the checklist, not yet triaged" is a backlog
+// entry, not a decision. M004/S05 introduced that wording deliberately so the
+// untriaged set stayed greppable; B14 is the row that requires the set to be
+// empty before the programme closes.
+//
+// This forbids the placeholder, not the mechanism. A marker carrying a reason
+// someone has actually accepted is fine, and the live count printed below is
+// signal rather than a number that must be zero.
+test('M007/S03: no divergence marker still carries the untriaged placeholder', async () => {
+  const stale = [];
+  for (const f of (await readdir(DOCS)).filter((f) => f.endsWith('.mdx'))) {
+    const src = await readFile(join(DOCS, f), 'utf8');
+    for (const m of src.matchAll(MARKER_RE)) {
+      if (/not yet triaged/i.test(m[2])) stale.push(`${f} (${m[1]})`);
+    }
+  }
+  assert.deepEqual(
+    stale,
+    [],
+    `${stale.length} divergence marker(s) still read "not yet triaged":\n  ${stale.join('\n  ')}\n` +
+      'Resolve the ledger row that owns each one. Deleting the marker without resolving the row ' +
+      'removes the record of a finding rather than the finding.',
+  );
+});
+
+
 test('patch-divergence-ok suppression count', () => {
   // Printed, not asserted against a number: a rising count is signal, and an
   // invisible count is rot. The assertion that matters is above — a marker on a
