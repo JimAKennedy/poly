@@ -1220,6 +1220,42 @@ CHECKLIST.push({
   ],
 });
 
+// Hits-per-step is not comparable across lanes whose Subdivision differs: a
+// 1/16 lane covers a quarter of the time an 1/4 lane does for the same step
+// count. Rate here is hits per whole note, which is comparable.
+const subdivisionWholeNotes = (row) => {
+  const m = /^(\d+)\/(\d+)$/.exec(String(row.cell.Subdivision ?? '').trim());
+  return m ? Number(m[1]) / Number(m[2]) : NaN;
+};
+const voiceRate = (row) => row.hits / (row.steps * subdivisionWholeNotes(row));
+
+CHECKLIST.push({
+  page: 'theory-gamelan.mdx',
+  patch: 'Rule-Checked Kotekan Over Colotomy',
+  rules: [
+    {
+      id: 'gamelan-density-inverts-register',
+      description: 'Rule 9: higher register plays denser, lower plays sparser',
+      check: ({ rows }) => {
+        const voices = rows.map((r) => ({ role: r.role, note: cellNum(r, 'Note'), rate: voiceRate(r) }));
+        const unreadable = voices.filter((v) => Number.isNaN(v.note) || Number.isNaN(v.rate));
+        if (unreadable.length)
+          return `${unreadable.map((v) => v.role).join(', ')}: no readable Note or Subdivision cell; Rule 9 compares register against rate`;
+        // Rule 9 describes a pyramid, not a total order: equal registers or
+        // equal rates are allowed, and only a strict inversion reads as foreign.
+        const byNote = [...voices].sort((a, b) => a.note - b.note);
+        for (let i = 1; i < byNote.length; i++) {
+          const lower = byNote[i - 1];
+          const higher = byNote[i];
+          if (higher.note > lower.note && higher.rate < lower.rate)
+            return `${higher.role} (note ${higher.note}) sits above ${lower.role} (note ${lower.note}) but plays sparser; Rule 9 makes the higher voice denser`;
+        }
+        return null;
+      },
+    },
+  ],
+});
+
 let liveMarkers = 0;
 
 for (const entry of CHECKLIST) {
@@ -1381,7 +1417,7 @@ const RULE_TRIAGE = {
     6: { checkable: true, why: 'asserted: gam-pokok-layer' },
     7: { checkable: true, case: 'gam-strata-halve', why: 'stroke rates halve as instruments deepen — step counts in powers of two' },
     8: { checkable: true, case: 'gam-gong-heaviest', why: 'velocity increases with depth, the gong heaviest' },
-    9: { checkable: false, absentColumn: 'Note', why: 'needs each lane\'s register, and this page\'s patch table carries no Note column; role names imply it but naming is not measurement' },
+    9: { checkable: true, case: 'gamelan-density-inverts-register', why: 'the patch table now carries a Note column, so register is measured rather than implied by role names' },
     10: { checkable: false, why: 'irama trades tempo against density across performances; a patch fixes one tempo' },
   },
   'theory-indian-classical.mdx': {
