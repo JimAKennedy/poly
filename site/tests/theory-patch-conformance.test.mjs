@@ -1171,6 +1171,31 @@ CHECKLIST.push(
   },
 );
 
+// Rule 7's bound is expressed in the unit the Humanize column uses: the engine's
+// Humanize parameter is 0-50 ms (params_def.h), and the rule's original "0.15"
+// was that fraction of the range. M001/S01 restated the rule in ms; this
+// constant is the same number the page now states.
+const BALKAN_HUMANIZE_MAX_MS = 7.5;
+
+CHECKLIST.push({
+  page: 'theory-balkan.mdx',
+  patch: 'Rule-Checked Kopanitsa (2+2+3+2+2)',
+  rules: [
+    {
+      id: 'balkan-humanize-bound',
+      description: `Rule 7: tight ensemble, Humanize <= ${BALKAN_HUMANIZE_MAX_MS} ms`,
+      check: ({ rows }) => {
+        // Negated comparison so an absent or unparseable column (NaN) fails
+        // rather than silently passing.
+        const loose = rows.filter((r) => !(cellNum(r, 'Humanize') <= BALKAN_HUMANIZE_MAX_MS));
+        if (loose.length === 0) return null;
+        const named = loose.map((r) => `${r.role} at ${r.cell.Humanize ?? 'no Humanize cell'}`).join(', ');
+        return `${named}; Rule 7 bounds Humanize at ${BALKAN_HUMANIZE_MAX_MS} ms`;
+      },
+    },
+  ],
+});
+
 let liveMarkers = 0;
 
 for (const entry of CHECKLIST) {
@@ -1289,7 +1314,7 @@ const RULE_TRIAGE = {
     4: { checkable: true, case: 'bal-tupan-two-strokes', why: 'the tupan speaks with two lanes, a low stroke and a high one' },
     5: { checkable: true, case: 'bal-density-strata', why: 'density strata sit on the shared grid, which is Rule 1 measured across all lanes' },
     6: { checkable: true, case: 'bal-no-swing', why: 'Swing is zero' },
-    7: { checkable: false, absentColumn: 'Humanize', why: 'names a Humanize bound, and this page\'s patch table carries no Humanize column' },
+    7: { checkable: true, case: 'balkan-humanize-bound', why: 'the patch table now carries a Humanize column, so the per-lane bound is readable' },
     8: { checkable: false, why: 'a claim about measured performance timing, not about anything the patch specifies' },
     9: { checkable: false, why: 'ornament placement before the long cell is not represented in a lane table' },
   },
