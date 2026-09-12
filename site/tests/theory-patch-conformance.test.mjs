@@ -813,6 +813,111 @@ CHECKLIST.push(
   },
 );
 
+CHECKLIST.push(
+  {
+    page: 'theory-balkan.mdx',
+    patch: null,
+    rules: [
+      {
+        id: 'bal-shared-cell-grid',
+        description: 'Rule 1: the cell sequence is fixed and shared by every voice',
+        check: ({ rows }) => {
+          const counts = [...new Set(rows.map((r) => r.steps))];
+          return counts.length === 1
+            ? null
+            : `lanes run ${counts.join(', ')} steps; Rule 1 has every voice agree on the cell grid`;
+        },
+      },
+      {
+        id: 'bal-quick-pulse',
+        description: 'Rule 3: a continuous quick-pulse stratum runs underneath',
+        check: ({ rows }) => {
+          const full = rows.filter((r) => r.hits === r.steps);
+          return full.length > 0
+            ? null
+            : `no lane articulates every pulse (densest is ${Math.max(...rows.map((r) => r.hits))} of ` +
+                `${rows[0]?.steps}); Rule 3 makes the unequal beats countable`;
+        },
+      },
+      {
+        id: 'bal-tupan-two-strokes',
+        description: 'Rule 4: the tupan speaks a two-stroke grammar',
+        check: ({ rows }) => {
+          const tupan = rows.filter((r) => /tupan/i.test(r.role));
+          if (tupan.length !== 2) return `${tupan.length} tupan lane(s); Rule 4 needs a low stroke and a stick stroke`;
+          const [a, b] = tupan.map((r) => num(r, 'Velocity'));
+          return a !== b
+            ? null
+            : `both tupan lanes sit at velocity ${a}; Rule 4 separates the low open stroke from the stick hand`;
+        },
+      },
+      {
+        id: 'bal-density-strata',
+        description: 'Rule 5: density strata on the shared grid',
+        check: ({ rows }) => {
+          const densities = [...new Set(rows.map((r) => r.hits))];
+          return densities.length >= 3
+            ? null
+            : `lanes carry ${densities.length} distinct hit count(s); Rule 5 layers sparse, mid and dense strata`;
+        },
+      },
+      {
+        id: 'bal-no-swing',
+        description: 'Rule 6: no swing — the asymmetry is metric, not micro-timing',
+        check: ({ rows }) => {
+          const swung = rows.filter((r) => num(r, 'Swing') !== 0);
+          return swung.length === 0
+            ? null
+            : `${swung.map((r) => `${r.role} ${r.cell.Swing}`).join(', ')} carry swing; Rule 6 keeps the asymmetry metric`;
+        },
+      },
+    ],
+  },
+  {
+    page: 'theory-brazilian.mdx',
+    patch: null,
+    rules: [
+      {
+        id: 'bra-caixa-continuous',
+        description: 'Rule 3: the caixa never stops',
+        check: ({ rows }) => {
+          const caixa = findLane(rows, /caixa/i);
+          if (!caixa) return `no caixa lane among ${roles(rows)}`;
+          return caixa.hits >= caixa.steps * 0.75
+            ? null
+            : `the caixa strikes ${caixa.hits} of ${caixa.steps}; Rule 3 makes it the connective tissue`;
+        },
+      },
+    ],
+  },
+  {
+    page: 'theory-minimalism.mdx',
+    patch: null,
+    rules: [
+      {
+        id: 'min-rotations-differ',
+        description: 'Rule 2: the phased pattern is not rotationally symmetric',
+        check: ({ rows }) => {
+          const voice = rows.find((r) => /phasing/i.test(r.role)) ?? rows[0];
+          const onsets = laneOnsets(voice);
+          if (!onsets) return 'the phasing voice is in timeline mode; its rotations cannot be derived here';
+          // Symmetric when some non-zero rotation maps the onset set onto
+          // itself: those phase positions sound identical and the process
+          // wastes them.
+          const set = new Set(onsets);
+          const symmetric = [];
+          for (let r = 1; r < voice.steps; r++) {
+            if (onsets.every((o) => set.has((o + r) % voice.steps))) symmetric.push(r);
+          }
+          return symmetric.length === 0
+            ? null
+            : `${voice.role} maps onto itself at rotation ${symmetric.join(', ')}; Rule 2 wants rotations that differ`;
+        },
+      },
+    ],
+  },
+);
+
 let liveMarkers = 0;
 
 for (const entry of CHECKLIST) {
@@ -897,12 +1002,12 @@ const RULE_TRIAGE = {
     8: { checkable: false, why: '"dynamic range within any bar" is a performance contour; the table gives one velocity per lane, not a range within a bar' },
   },
   'theory-balkan.mdx': {
-    1: { checkable: true, why: 'every lane shares the cell grid — the same step count' },
+    1: { checkable: true, case: 'bal-shared-cell-grid', why: 'every lane shares the cell grid — the same step count' },
     2: { checkable: true, why: 'asserted: theory-balkan tupan cell-head case' },
-    3: { checkable: true, why: 'some lane runs a continuous quick pulse — high hits at the finest subdivision' },
-    4: { checkable: true, why: 'the tupan speaks with two lanes, a low stroke and a high one' },
-    5: { checkable: true, why: 'density strata sit on the shared grid, which is Rule 1 measured across all lanes' },
-    6: { checkable: true, why: 'Swing is zero' },
+    3: { checkable: true, case: 'bal-quick-pulse', why: 'some lane runs a continuous quick pulse — high hits at the finest subdivision' },
+    4: { checkable: true, case: 'bal-tupan-two-strokes', why: 'the tupan speaks with two lanes, a low stroke and a high one' },
+    5: { checkable: true, case: 'bal-density-strata', why: 'density strata sit on the shared grid, which is Rule 1 measured across all lanes' },
+    6: { checkable: true, case: 'bal-no-swing', why: 'Swing is zero' },
     7: { checkable: false, why: 'names a Humanize bound, and this page\'s patch table carries no Humanize column' },
     8: { checkable: false, why: 'a claim about measured performance timing, not about anything the patch specifies' },
     9: { checkable: false, why: 'ornament placement before the long cell is not represented in a lane table' },
@@ -910,7 +1015,7 @@ const RULE_TRIAGE = {
   'theory-brazilian.mdx': {
     1: { checkable: false, why: 'the patch models the surdo pair as a single lane, so the dialogue\'s dynamic contrast between the two drums is not expressible in it' },
     2: { checkable: true, why: 'asserted: theory-brazilian surdo case' },
-    3: { checkable: true, why: 'the caixa never stops — continuous sixteenths' },
+    3: { checkable: true, case: 'bra-caixa-continuous', why: 'the caixa never stops — continuous sixteenths' },
     4: { checkable: false, why: 'the call role is a performance function; no cell says which lane cues a break' },
     5: { checkable: false, why: '"around the beat, not against the meter" needs an interpretation of displacement the table does not supply' },
     6: { checkable: false, why: 'a micro-timing profile within each beat, which the lane table does not carry' },
@@ -971,7 +1076,7 @@ const RULE_TRIAGE = {
   },
   'theory-minimalism.mdx': {
     1: { checkable: true, case: 'min-one-variable', why: 'asserted: min-one-variable' },
-    2: { checkable: true, why: 'the phased patterns are not rotationally symmetric' },
+    2: { checkable: true, case: 'min-rotations-differ', why: 'the phased patterns are not rotationally symmetric' },
     3: { checkable: false, why: '"slow enough to inhabit, fast enough to remember" is a judgement about listening time' },
     4: { checkable: true, case: 'min-voices-flat', why: 'asserted: min-voices-flat' },
     5: { checkable: false, why: 'says an anchor is optional and changes the piece; it states no requirement to check' },
