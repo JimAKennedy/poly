@@ -844,18 +844,18 @@ asserts any of them.
 **Plan:** M007-S02-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M007-S02.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Every rule triaged checkable carries a checklist entry
-- [ ] Each entry is proved to fail when the lane it guards is removed
-- [ ] A patch violating a rule either carries a divergence marker with a written
+- [x] Every rule triaged checkable carries a checklist entry
+- [x] Each entry is proved to fail when the lane it guards is removed
+- [x] A patch violating a rule either carries a divergence marker with a written
       reason or is corrected
 
 | ID | Item | Sev | Disp | Lands in | Verification | Status |
 |---|---|---|---|---|---|---|
-| B13 | 83 numbered rules across nine theory pages have never been checked against the patch meant to demonstrate them. The 2026-07-30 review found nine such contradictions by hand and all nine are now fixed, which is evidence the class is real rather than that it is exhausted | `P1` | `patch-align` | `site/tests/theory-patch-conformance.test.mjs` | Every checkable rule has a checklist entry, each with a mutation proof recorded in the evidence file | `open` |
+| B13 | 83 numbered rules across nine theory pages have never been checked against the patch meant to demonstrate them. The 2026-07-30 review found nine such contradictions by hand and all nine are now fixed, which is evidence the class is real rather than that it is exhausted | `P1` | `patch-align` | `site/tests/theory-patch-conformance.test.mjs` | Every rule the triage marks checkable carries a checklist entry, and the suite prints `0 checkable rule(s) still awaiting a case`. 26 predicates written across eleven pages, each proved to fail on its own terms. Three were written and deleted as unfalsifiable — `theory-electronic-breakbeat` Rule 2, `theory-gamelan` Rule 1 — joining `theory-sub-saharan-africa` Rule 2, which the triage had already caught: a rule whose predicate cannot be made to fail against a static patch is not checkable, however mechanical its wording. Final triage: 92 rules, 47 checkable, 45 not | `done` |
 | B15 | `theory-electronic-breakbeat`'s own patch contradicts its Rule 7, "the kick syncopates against the snare, avoiding its slots": the chopped kick is E(5,16) at rotation 3, whose onsets on a 16-pulse grid are {3,6,9,12,15}, and the backbeat snare's are {4,12}. Pulse 12 is shared. Found by the M004/S05 checklist on the first newly-checked rule, and suppressed there with a `patch-divergence-ok` marker so the slice could close; the fix is either a rotation that clears the snare or a qualification to Rule 7, and that is a musical decision this row exists to put to a human | `P1` | `patch-align` | `theory-electronic-breakbeat.mdx` patch, Rule 7 | Case `ebb-kick-avoids-snare` passes with no divergence marker: the kick moves to rotation 13, onsets {0,3,6,9,13}, clearing both snare slots while keeping the downbeat | `done` |
 
 ### Slice M007/S03 — Burn down the divergence markers

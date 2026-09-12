@@ -6,14 +6,14 @@
 ## Task status
 
 - [x] Task 1 — Rotate the breakbeat kick clear of the snare (B15)
-- [ ] Task 2 — Add a checklist entry for every rule triaged checkable
-- [ ] Task 3 — Close the slice
+- [x] Task 2 — Add a checklist entry for every rule triaged checkable
+- [x] Task 3 — Close the slice
 
 ## Definition of Done
 
-- [ ] Every rule triaged checkable carries a checklist entry
-- [ ] Each entry is proved to fail when the lane it guards is removed
-- [ ] A patch violating a rule either carries a divergence marker with a written
+- [x] Every rule triaged checkable carries a checklist entry
+- [x] Each entry is proved to fail when the lane it guards is removed
+- [x] A patch violating a rule either carries a divergence marker with a written
       reason or is corrected
 
 ## Validation
