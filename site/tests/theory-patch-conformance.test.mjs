@@ -1256,6 +1256,34 @@ CHECKLIST.push({
   ],
 });
 
+CHECKLIST.push({
+  page: 'theory-sub-saharan-africa.mdx',
+  patch: 'Rule-Checked Ewe Texture',
+  rules: [
+    {
+      id: 'ssa-register-and-rate-separate',
+      description: 'Rule 7: no two voices share both register and rate',
+      check: ({ rows }) => {
+        const voices = rows.map((r) => ({ role: r.role, note: cellNum(r, 'Note'), rate: voiceRate(r) }));
+        const unreadable = voices.filter((v) => Number.isNaN(v.note) || Number.isNaN(v.rate));
+        if (unreadable.length)
+          return `${unreadable.map((v) => v.role).join(', ')}: no readable Note or Subdivision cell; Rule 7 pairs register with rate`;
+        // Rule 7 asks for a distinct *combination* of register and note-rate.
+        // Sharing a rate is normal here -- the dance beat, kidi and sogo all
+        // run at the same rate and interlock by rotation. What the rule forbids
+        // is doubling: one pitch at one rate, which is not individually audible.
+        for (let i = 0; i < voices.length; i++) {
+          for (let j = i + 1; j < voices.length; j++) {
+            if (voices[i].note === voices[j].note && voices[i].rate === voices[j].rate)
+              return `${voices[i].role} and ${voices[j].role} share note ${voices[i].note} at the same rate; Rule 7 calls that doubling`;
+          }
+        }
+        return null;
+      },
+    },
+  ],
+});
+
 let liveMarkers = 0;
 
 for (const entry of CHECKLIST) {
@@ -1457,7 +1485,7 @@ const RULE_TRIAGE = {
     4: { checkable: false, why: 'whether the texture supports both a ternary and a binary hearing is an interpretive claim about the composite' },
     5: { checkable: true, case: 'ssa-variation-in-lead', why: 'the variation budget rises from timeline to support to lead' },
     6: { checkable: false, why: 'lead phrases resolving at cycle boundaries span one to four cycles' },
-    7: { checkable: false, absentColumn: 'Note', why: 'needs each lane\'s register, and this page\'s patch table carries no Note column' },
+    7: { checkable: true, case: 'ssa-register-and-rate-separate', why: 'the patch table now carries a Note column, so register pairs with rate as the rule states' },
     8: { checkable: false, why: 'a measured non-isochronous subdivision profile, which the lane table does not encode' },
     9: { checkable: false, why: 'call-and-response is a structural relation between players over time' },
 

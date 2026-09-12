@@ -59,17 +59,17 @@ than `E(5,16)`.
 **Plan:** M001-S01-plan.md
 **Validation:** format, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M001-S01.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Each of the four pages' patch table carries the column its rule needs, with
+- [x] Each of the four pages' patch table carries the column its rule needs, with
       values consistent with the page's own rules and the roles the table
       already names
-- [ ] Rule 7's Humanize bound is stated in the same unit the new column uses
-- [ ] Each of the four rules reads `checkable` in `RULE_TRIAGE`, with a predicate
+- [x] Rule 7's Humanize bound is stated in the same unit the new column uses
+- [x] Each of the four rules reads `checkable` in `RULE_TRIAGE`, with a predicate
       that has been shown to fail when the table is mutated
-- [ ] The `absentColumn` reverse audit names four fewer rules, and still fails if
+- [x] The `absentColumn` reverse audit names four fewer rules, and still fails if
       a verdict claims a column the table actually has
 
 | ID | Item | Kind | Lands in | Verification | Status |
@@ -77,7 +77,7 @@ than `E(5,16)`.
 | EC01 | `theory-balkan` Rule 7 ("Humanize ≤ 0.15") is unverifiable because the patch table has no `Humanize` column, though every lane carries `humanizeMs` and `PresetTable` already renders that column name | `column` | `theory-balkan.mdx`, `site/tests/theory-patch-conformance.test.mjs` | The rule's triage entry flips to `checkable` with a predicate reading the new column; the predicate is mutation-proved by raising a lane's Humanize above the bound and watching the named case fail | `done` |
 | EC02 | `theory-electronic-breakbeat` Rule 4 ("swing is a bus, not a per-note gesture") is unverifiable because the patch table has no `Swing` column, though every lane carries `swingAmount` | `column` | `theory-electronic-breakbeat.mdx`, `site/tests/theory-patch-conformance.test.mjs` | As EC01, mutation-proved by giving one lane a per-lane swing value the rule forbids | `done` |
 | EC03 | `theory-gamelan` Rule 9 (density scales inversely with register) is unverifiable because the patch table has no `Note` column, though every lane carries `noteNumber` | `column` | `theory-gamelan.mdx`, `site/tests/theory-patch-conformance.test.mjs` | As EC01, mutation-proved by inverting two lanes' note numbers so the density relation reverses | `done` |
-| EC04 | `theory-sub-saharan-africa` Rule 7 (register and rate separate the voices) is unverifiable because the patch table has no `Note` column | `column` | `theory-sub-saharan-africa.mdx`, `site/tests/theory-patch-conformance.test.mjs` | As EC01, mutation-proved by collapsing two voices onto one note number | `open` |
+| EC04 | `theory-sub-saharan-africa` Rule 7 (register and rate separate the voices) is unverifiable because the patch table has no `Note` column | `column` | `theory-sub-saharan-africa.mdx`, `site/tests/theory-patch-conformance.test.mjs` | As EC01, mutation-proved by collapsing two voices onto one note number | `done` |
 
 ### Slice M001/S02 — Exact timelines
 

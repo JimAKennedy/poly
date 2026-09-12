@@ -98,3 +98,20 @@ milestone's review can see what shaped it without reconstructing it from diffs.
   — **Why:** A row closes when its item is done, and #156 is not satisfied until
   all three patterns ship and the guide stops presenting the workaround as the
   only route.
+
+## 2026-09-12 — executing M001/S01 task 4 (plan repair)
+
+- **Q:** EC04's planned predicate would flag Kidi and Sogo as doubling, but they
+  interlock by rotation. How should Rule 7 be checked? — **A:** Distinct
+  combination of note and rate.
+- **Decision:** Rule 7 fails only when two lanes share both the same Note and
+  the same rate; the planned low/mid/high banding is dropped. — **Why:** Three
+  lanes in the shipped patch already share a rate of 2.67 (dance beat, kidi,
+  sogo), and kidi and sogo are both support djembes, so any coarse banding puts
+  them in one stratum at one rate and fails a patch the page ships as
+  rule-checked. The banding would have had to be gerrymandered until it passed.
+  The rule's own first sentence asks for a distinct *combination* of register
+  and note-rate, which is measurable without inventing thresholds.
+- **Halt:** the run stopped here rather than improvising around the wrong plan
+  step, per `/jk:auto` section 4. The plan's task 4 was repaired — steps 1, 4
+  and 6 — and tasks 1 to 3 were left as they landed.

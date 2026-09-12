@@ -14,7 +14,7 @@ rules on these same pages; no new mechanism is introduced.
 - [x] 1. `theory-balkan` — Humanize column, Rule 7 restated in ms (EC01)
 - [x] 2. `theory-electronic-breakbeat` — Swing column (EC02)
 - [x] 3. `theory-gamelan` — Note column (EC03)
-- [ ] 4. `theory-sub-saharan-africa` — Note column, and slice close-out (EC04)
+- [x] 4. `theory-sub-saharan-africa` — Note column, and slice close-out (EC04)
 
 ## Definition of Done
 
@@ -184,24 +184,25 @@ at the same rate" is the failure the rule names.
    `theory-sub-saharan-africa.mdx`, patch `Rule-Checked Ewe Texture`, rule:
    - `id: 'ssa-register-and-rate-separate'`
    - `description: 'Rule 7: no two voices share both stratum and rate'`
-   - `check`: for each row compute `stratum` by banding `cellNum(r, 'Note')`
-     into low / mid / high, and `rate` as `r.hits / r.steps`. Fail if any two
-     rows share a stratum and have equal rates, naming both roles. Define the
-     band boundaries as constants beside the rule so the test states its own
-     thresholds rather than hiding them in arithmetic.
+   - `check`: for each row read `cellNum(r, 'Note')` and compute its rate with
+     the `voiceRate` helper task 3 introduced. Fail if any two rows share both
+     the same Note and the same rate, naming both roles. Rule 7's first
+     sentence asks for a distinct *combination* of register and note-rate, so
+     no band boundaries are invented: the pair that is not individually audible
+     is the one at a single pitch and a single rate.
 2. Change the `RULE_TRIAGE` entry for `theory-sub-saharan-africa.mdx` rule `7`
    to `{ checkable: true, case: 'ssa-register-and-rate-separate', why: ... }`,
    removing the `absentColumn` field.
 3. Run the site suite and watch it fail.
 4. Add the `Note` column, giving each voice the register its role implies: bell
-   high, dunun low, accompaniment djembes mid, lead djembe high. The existing
-   `Hits`/`Steps` already differentiate the rates; choose notes so that no two
-   lanes collide in both dimensions.
+   high, dunun low, accompaniment djembes mid, lead djembe high. Kidi and sogo
+   are different drums and take different notes — sogo is the larger and lower
+   of the pair. Three lanes already share a rate of 2.67 (dance beat, kidi,
+   sogo), so the notes are what make their combinations distinct.
 5. Run and watch it pass.
-6. **Mutation-prove it:** move one accompaniment djembe into the dunun's stratum
-   and set its `Hits` equal to the dunun's, so two voices share stratum and
-   rate. Re-run, confirm the case fails naming both. Revert, confirm
-   `git diff --quiet`, re-run green.
+6. **Mutation-prove it:** set Kidi's Note equal to Sogo's. They already share a
+   rate, so this makes the combination non-distinct. Re-run, confirm the case
+   fails naming both. Revert, confirm `git diff --quiet`, re-run green.
 7. **Confirm the reverse audit moved.** Run the site suite and read the
    `absentColumn` audit's output: it must now name exactly one rule —
    `theory-brazilian` rule 6 — where it previously named five. If it names any
