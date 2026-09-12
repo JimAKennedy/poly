@@ -918,6 +918,213 @@ CHECKLIST.push(
   },
 );
 
+CHECKLIST.push(
+  {
+    page: 'theory-gamelan.mdx',
+    patch: null,
+    rules: [
+      {
+        id: 'gam-strata-halve',
+        description: 'Rule 7: stroke rates halve as instruments deepen',
+        check: ({ rows }) => {
+          const colotomic = rows.filter((r) => /gong|kenong|kempul|ketuk/i.test(r.role));
+          if (colotomic.length < 2) return `only ${colotomic.length} colotomic lane(s); Rule 7 nests them`;
+          const steps = colotomic.map((r) => r.steps).sort((a, b) => b - a);
+          const bad = steps.slice(1).filter((v, i) => steps[i] / v !== 2);
+          return bad.length === 0
+            ? null
+            : `colotomic step counts ${steps.join(', ')} are not successive halvings; Rule 7 makes the ratios powers of two`;
+        },
+      },
+      {
+        id: 'gam-gong-heaviest',
+        description: 'Rule 8: weight accrues to coincidence, and the gong takes all',
+        check: ({ rows }) => {
+          const gong = findLane(rows, /gong/i);
+          if (!gong) return `no gong lane among ${roles(rows)}`;
+          const loudest = Math.max(...rows.map((r) => num(r, 'Velocity')));
+          return num(gong, 'Velocity') === loudest
+            ? null
+            : `the gong at velocity ${gong.cell.Velocity} is not the heaviest event; Rule 8 gives it the weight`;
+        },
+      },
+    ],
+  },
+  {
+    page: 'theory-indian-classical.mdx',
+    patch: null,
+    rules: [
+      {
+        id: 'ind-theka-referent',
+        description: 'Rule 1: the theka is the referent and its skeleton persists',
+        check: ({ rows }) => {
+          const theka = findLane(rows, /theka/i);
+          if (!theka) return `no theka lane among ${roles(rows)}`;
+          return pct(theka, 'Mutation') === 0
+            ? null
+            : `the theka carries ${theka.cell.Mutation} mutation; Rule 1 keeps its structural bols audible`;
+        },
+      },
+      {
+        id: 'ind-layakari-ratios',
+        description: 'Rule 4: speed changes are exact ratios of the base pulse',
+        check: ({ rows }) => {
+          const denom = (r) => Number(String(r.cell.Subdivision ?? '').split('/')[1]);
+          const base = denom(findLane(rows, /theka/i) ?? rows[0]);
+          if (!base) return 'no theka subdivision to measure layakari against';
+          const off = rows.filter((r) => {
+            const d = denom(r);
+            return !d || !Number.isInteger(d / base);
+          });
+          return off.length === 0
+            ? null
+            : `${off.map((r) => `${r.role} ${r.cell.Subdivision}`).join(', ')} are not whole multiples of the ` +
+                `theka's 1/${base}; Rule 4 makes elaboration run at defined multiples`;
+        },
+      },
+      {
+        id: 'ind-cross-grouping-foreign',
+        description: 'Rule 5: cross-groupings are laid over the cycle in foreign units',
+        check: ({ rows }) => {
+          const cycle = (findLane(rows, /theka/i) ?? rows[0]).steps;
+          const loan = findLane(rows, /cross-group|loan/i);
+          if (!loan) return `no cross-grouping lane among ${roles(rows)}`;
+          return cycle % loan.steps !== 0
+            ? null
+            : `the cross-grouping runs ${loan.steps} steps, which divides the ${cycle}-matra cycle; ` +
+                'Rule 5 phrases in units foreign to the tala';
+        },
+      },
+    ],
+  },
+  {
+    page: 'theory-jazz.mdx',
+    patch: null,
+    rules: [
+      {
+        id: 'jazz-ride-constant',
+        description: 'Rule 1: the ride keeps the time, and its rhythm is constant',
+        check: ({ rows }) => {
+          const ride = findLane(rows, /ride/i);
+          if (!ride) return `no ride lane among ${roles(rows)}`;
+          return pct(ride, 'Mutation') === 0
+            ? null
+            : `the ride carries ${ride.cell.Mutation} mutation; Rule 1 keeps its rhythm constant while its dynamics breathe`;
+        },
+      },
+      {
+        id: 'jazz-hat-planted',
+        description: 'Rule 2: the foot hat is planted on 2 and 4',
+        check: ({ rows }) => {
+          const hat = findLane(rows, /hi-hat|hat/i);
+          if (!hat) return `no hi-hat lane among ${roles(rows)}`;
+          const g = laneOnPulseGrid(hat, 4);
+          return g.length === 2 && g.includes(1) && g.includes(3)
+            ? null
+            : `the foot hat sounds at ${JSON.stringify(g)} on a four-beat grid; Rule 2 plants it on 2 and 4`;
+        },
+      },
+      {
+        id: 'jazz-dynamics-inverted',
+        description: 'Rule 8: ride and hat are the loudest constant voices',
+        check: ({ rows }) => {
+          const ride = findLane(rows, /ride/i);
+          const snare = findLane(rows, /snare/i);
+          const kick = findLane(rows, /kick/i);
+          if (!ride || !snare || !kick) return 'need ride, snare and kick lanes to check Rule 8';
+          const v = (r) => num(r, 'Velocity');
+          return v(ride) > v(snare) && v(ride) > v(kick)
+            ? null
+            : `the ride at ${ride.cell.Velocity} does not sit above snare ${snare.cell.Velocity} and kick ` +
+                `${kick.cell.Velocity}; Rule 8 inverts the rock/funk balance`;
+        },
+      },
+    ],
+  },
+  {
+    page: 'theory-sub-saharan-africa.mdx',
+    patch: null,
+    rules: [
+      {
+        id: 'ssa-timeline-unvaried',
+        description: 'Rule 1: the timeline never varies',
+        check: ({ rows }) => {
+          const bell = findLane(rows, /gankogui|timeline|bell/i);
+          if (!bell) return `no timeline lane among ${roles(rows)}`;
+          return pct(bell, 'Mutation') === 0
+            ? null
+            : `the timeline carries ${bell.cell.Mutation} mutation; Rule 1 calls variation there an error, not expression`;
+        },
+      },
+      {
+        id: 'ssa-variation-in-lead',
+        description: 'Rule 5: the variation budget is concentrated in the lead drum',
+        check: ({ rows }) => {
+          const lead = findLane(rows, /lead|atsimevu/i);
+          if (!lead) return `no lead lane among ${roles(rows)}`;
+          const others = rows.filter((r) => r !== lead);
+          const over = others.filter((r) => pct(r, 'Mutation') >= pct(lead, 'Mutation'));
+          return over.length === 0
+            ? null
+            : `${over.map((r) => `${r.role} ${r.cell.Mutation}`).join(', ')} vary at or above the lead's ` +
+                `${lead.cell.Mutation}; Rule 5 concentrates the budget in the lead drum`;
+        },
+      },
+    ],
+  },
+);
+
+CHECKLIST.push({
+  page: 'theory-funk-soul.mdx',
+  patch: null,
+  rules: [
+    {
+      id: 'fs-the-one',
+      description: 'Rule 1: the One is sacred — some voice acknowledges the cycle downbeat',
+      check: ({ rows }) => {
+        const onDownbeat = rows.filter((r) => (laneOnsets(r) ?? []).includes(0));
+        return onDownbeat.length > 0
+          ? null
+          : `no lane strikes the cycle downbeat; Rule 1 has the kick or bass acknowledge the One`;
+      },
+    },
+    {
+      id: 'fs-kick-sparse',
+      description: 'Rule 3: the kick is sparse and phrase-shaped — three to five hits',
+      check: ({ rows }) => {
+        const kick = findLane(rows, /kick/i);
+        if (!kick) return `no kick lane among ${roles(rows)}`;
+        return kick.hits >= 3 && kick.hits <= 5
+          ? null
+          : `the kick has ${kick.hits} hits; Rule 3 asks for three to five per cycle, leaving room for the bass`;
+      },
+    },
+    {
+      id: 'fs-ghosts-quietest',
+      description: 'Rule 4: ghost notes sit at the extreme low end of the dynamic range',
+      check: ({ rows }) => {
+        const ghosts = findLane(rows, /ghost/i);
+        if (!ghosts) return `no ghost lane among ${roles(rows)}`;
+        const quietest = Math.min(...rows.map((r) => num(r, 'Velocity')));
+        return num(ghosts, 'Velocity') === quietest
+          ? null
+          : `the ghost lane at velocity ${ghosts.cell.Velocity} is not the quietest; Rule 4 puts it at the extreme low end`;
+      },
+    },
+    {
+      id: 'fs-one-syncopator',
+      description: 'Rule 5: one syncopator at a time',
+      check: ({ rows }) => {
+        const varying = rows.filter((r) => pct(r, 'Mutation') > 0);
+        return varying.length <= 1
+          ? null
+          : `${varying.map((r) => `${r.role} ${r.cell.Mutation}`).join(', ')} all vary; Rule 5 tolerates ` +
+              'only limited simultaneous syncopation';
+      },
+    },
+  ],
+});
+
 let liveMarkers = 0;
 
 for (const entry of CHECKLIST) {
@@ -1033,46 +1240,46 @@ const RULE_TRIAGE = {
     9: { checkable: false, why: 'two-bar question and answer is a phrasing relation between bars, and a patch describes one cycle' },
   },
   'theory-funk-soul.mdx': {
-    1: { checkable: true, why: 'some lane strikes the cycle downbeat' },
+    1: { checkable: true, case: 'fs-the-one', why: 'some lane strikes the cycle downbeat' },
     2: { checkable: true, why: 'asserted: theory-funk-soul backbeat case' },
-    3: { checkable: true, why: 'the kick runs three to five hits' },
-    4: { checkable: true, why: 'ghost strokes sit at the low end of the dynamic range' },
-    5: { checkable: true, why: 'one syncopator at a time — only one lane carries an intricate figure' },
+    3: { checkable: true, case: 'fs-kick-sparse', why: 'the kick runs three to five hits' },
+    4: { checkable: true, case: 'fs-ghosts-quietest', why: 'ghost strokes sit at the low end of the dynamic range' },
+    5: { checkable: true, case: 'fs-one-syncopator', why: 'one syncopator at a time — only one lane carries an intricate figure' },
     6: { checkable: false, why: 'a fixed micro-offset field in milliseconds, which the lane table does not report' },
     7: { checkable: false, why: 'fills every four or eight bars are arrangement across bars' },
     8: { checkable: false, why: 'states which of Rules 1-6 a neo-soul variant relaxes; it is a meta-rule, not a patch property' },
   },
   'theory-gamelan.mdx': {
-    1: { checkable: true, why: 'the composite of the pair strikes almost every pulse' },
+    1: { checkable: false, why: 'the pair\'s composite is complete by construction whenever sangsih runs Kotekan L-mode, which the engine derives as the strict complement, so a predicate over this patch cannot fail. A rule that cannot fail is not a checked rule' },
     2: { checkable: false, why: 'asks whether a part is playable and idiomatic for a human player, which no cell in the table reports' },
     3: { checkable: true, why: 'asserted: theory-gamelan polos case' },
     4: { checkable: true, why: 'asserted: gam-structural-overlap' },
     5: { checkable: false, why: 'naming an interlock style is a choice about repertoire, not a value any column holds' },
     6: { checkable: true, why: 'asserted: gam-pokok-layer' },
-    7: { checkable: true, why: 'stroke rates halve as instruments deepen — step counts in powers of two' },
-    8: { checkable: true, why: 'velocity increases with depth, the gong heaviest' },
+    7: { checkable: true, case: 'gam-strata-halve', why: 'stroke rates halve as instruments deepen — step counts in powers of two' },
+    8: { checkable: true, case: 'gam-gong-heaviest', why: 'velocity increases with depth, the gong heaviest' },
     9: { checkable: false, why: 'needs each lane\'s register, and this page\'s patch table carries no Note column; role names imply it but naming is not measurement' },
     10: { checkable: false, why: 'irama trades tempo against density across performances; a patch fixes one tempo' },
   },
   'theory-indian-classical.mdx': {
-    1: { checkable: true, why: 'the theka is the referent and runs in timeline mode' },
+    1: { checkable: true, case: 'ind-theka-referent', why: 'the theka is the referent and runs in timeline mode' },
     2: { checkable: false, why: 'phrases resolving on sam is a property of improvisation, not of the printed lanes' },
     3: { checkable: false, why: 'khali is marked by the bayan falling silent in a region, which needs per-step absence the table does not give' },
-    4: { checkable: true, why: 'layakari speeds are exact ratios — subdivisions in defined multiples' },
-    5: { checkable: true, why: 'a cross-grouping lane carries a step count foreign to the tala' },
+    4: { checkable: true, case: 'ind-layakari-ratios', why: 'layakari speeds are exact ratios — subdivisions in defined multiples' },
+    5: { checkable: true, case: 'ind-cross-grouping-foreign', why: 'a cross-grouping lane carries a step count foreign to the tala' },
     6: { checkable: true, case: 'ind-tihai-worked', why: 'asserted: ind-tihai-worked' },
     7: { checkable: false, why: 'theme-and-variation by systematic permutation is a performance grammar' },
     8: { checkable: false, why: 'a loudness contour marking architecture, which one velocity per lane cannot express' },
   },
   'theory-jazz.mdx': {
-    1: { checkable: true, why: 'the ride pattern is constant — no mutation' },
-    2: { checkable: true, why: 'the foot hat is planted on 2 and 4' },
+    1: { checkable: true, case: 'jazz-ride-constant', why: 'the ride pattern is constant — no mutation' },
+    2: { checkable: true, case: 'jazz-hat-planted', why: 'the foot hat is planted on 2 and 4' },
     3: { checkable: true, why: 'asserted: theory-jazz comping case' },
     4: { checkable: false, why: '"nothing repeats verbatim, nothing is unrelated" describes variation across choruses' },
     5: { checkable: false, why: 'the form is the meter — chorus structure over 12 or 32 bars' },
     6: { checkable: false, why: 'the swing ratio varies with tempo and between voices; the table holds one swing value' },
     7: { checkable: false, why: 'superimpositions resolving at a form boundary span bars a patch does not describe' },
-    8: { checkable: true, why: 'ride and hat are the loudest constant voices, above snare and kick' },
+    8: { checkable: true, case: 'jazz-dynamics-inverted', why: 'ride and hat are the loudest constant voices, above snare and kick' },
   },
   'theory-minimalism.mdx': {
     1: { checkable: true, case: 'min-one-variable', why: 'asserted: min-one-variable' },
@@ -1085,11 +1292,11 @@ const RULE_TRIAGE = {
     8: { checkable: true, case: 'min-deterministic', why: 'asserted: min-deterministic' },
   },
   'theory-sub-saharan-africa.mdx': {
-    1: { checkable: true, why: 'the timeline varies in nothing — no mutation, no drift' },
+    1: { checkable: true, case: 'ssa-timeline-unvaried', why: 'the timeline varies in nothing — no mutation, no drift' },
     2: { checkable: false, why: 'a fixed phase relationship is a property of playing over time; every rotation in a static table is fixed by construction, so the rule cannot fail here' },
     3: { checkable: true, why: 'asserted: theory-sub-saharan-africa support-drum case' },
     4: { checkable: false, why: 'whether the texture supports both a ternary and a binary hearing is an interpretive claim about the composite' },
-    5: { checkable: true, why: 'the variation budget rises from timeline to support to lead' },
+    5: { checkable: true, case: 'ssa-variation-in-lead', why: 'the variation budget rises from timeline to support to lead' },
     6: { checkable: false, why: 'lead phrases resolving at cycle boundaries span one to four cycles' },
     7: { checkable: false, why: 'needs each lane\'s register, and this page\'s patch table carries no Note column' },
     8: { checkable: false, why: 'a measured non-isochronous subdivision profile, which the lane table does not encode' },
