@@ -5,7 +5,7 @@
 
 ## Task status
 
-- [ ] Task 1 — Rotate the breakbeat kick clear of the snare (B15)
+- [x] Task 1 — Rotate the breakbeat kick clear of the snare (B15)
 - [ ] Task 2 — Add a checklist entry for every rule triaged checkable
 - [ ] Task 3 — Close the slice
 

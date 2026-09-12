@@ -38,3 +38,19 @@ Fourteen rules are already covered — nine from the 2026-07-30 review's harness
 five added by M004/S05 — so S02's likely addition is fifteen to twenty-five.
 That is an estimate from headlines; **S01's triage is the number that counts,**
 and the plans are written to consume it rather than this paragraph.
+
+## 2026-09-12 — executing M007
+
+- **Q:** S01's triage found 39 predicates still to write, not the 15–25
+  estimated when S02 was scoped as "every checkable rule". How should S02
+  proceed? — **A:** All 39, committed page by page.
+- **Decision:** the scope stands as decided; the rollout lands in page-sized
+  commits so each is reviewable — **Why:** it is what B13 asks for and what makes
+  the triage worth having, and a cap would leave a backlog inside the milestone
+  meant to close the programme.
+- **Why the estimate was low, recorded so the next estimate is better:** it came
+  from reading rule headlines, and the triage read the bodies. Headlines mislead
+  in both directions — `theory-balkan` Rule 7 reads "tight ensemble, minimal
+  humanize" and ends "Humanize ≤ 0.15", while `theory-electronic-breakbeat` Rule
+  5 reads "Arrangement is density automation" and concerns 8-, 16- and 32-bar
+  boundaries no patch describes.
