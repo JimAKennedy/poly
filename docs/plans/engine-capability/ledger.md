@@ -49,21 +49,24 @@ programme's commits and nothing else.
 kept — the patch tables report the values the engine already holds, and the
 claves the guide calls non-Euclidean ship as presets that play them.
 **Branch:** milestone/M001-already-deliverable
-**Status:** planned
+**Status:** in-progress
 **Demo:** Four rules that read "not checkable, absent column" now read
 `checkable` and are checked; loading `Cuban Son Montuno` plays a son clave rather
 than `E(5,16)`.
 
 ### Slice M001/S01 — Columns and their predicates
 
+**Plan:** M001-S01-plan.md
 **Validation:** format, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M001-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
 - [ ] Each of the four pages' patch table carries the column its rule needs, with
-      values that agree with `site/src/generated/presets.json`
+      values consistent with the page's own rules and the roles the table
+      already names
+- [ ] Rule 7's Humanize bound is stated in the same unit the new column uses
 - [ ] Each of the four rules reads `checkable` in `RULE_TRIAGE`, with a predicate
       that has been shown to fail when the table is mutated
 - [ ] The `absentColumn` reverse audit names four fewer rules, and still fails if
@@ -78,9 +81,10 @@ than `E(5,16)`.
 
 ### Slice M001/S02 — Exact timelines
 
+**Plan:** M001-S02-plan.md
 **Validation:** format, unit, engine-isolation, site-unit, doc-conformance
 **Evidence:** evidence/M001-S02.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
