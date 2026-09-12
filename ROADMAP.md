@@ -54,7 +54,6 @@ contributors who want to dig into the engine.
 |-------|-------|--------|
 | [#158](https://github.com/JimAKennedy/poly/issues/158) | Metric-position-aware ghost note placement (funk grammar) | `enhancement` |
 | [#157](https://github.com/JimAKennedy/poly/issues/157) | Cell-aware swing and long-beat feel for additive (aksak) meters | `enhancement` |
-| [#156](https://github.com/JimAKennedy/poly/issues/156) | Ship exact non-Euclidean timelines as first-class presets (clave, teleco-teco, Clapping Music, bell variants) | `enhancement` |
 | [#155](https://github.com/JimAKennedy/poly/issues/155) | Coupled call-and-response phrase gating (`responseSourceLane`) | `enhancement` |
 | [#154](https://github.com/JimAKennedy/poly/issues/154) | Phrase-position-aware fills and a tihai generator | `enhancement` |
 | [#153](https://github.com/JimAKennedy/poly/issues/153) | Kotekan modes: norot/telu/empat variants and controlled polos-sangsih overlap | `enhancement` |

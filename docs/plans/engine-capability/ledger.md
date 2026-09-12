@@ -49,7 +49,7 @@ programme's commits and nothing else.
 kept — the patch tables report the values the engine already holds, and the
 claves the guide calls non-Euclidean ship as presets that play them.
 **Branch:** milestone/M001-already-deliverable
-**Status:** in-progress
+**Status:** done
 **Demo:** Four rules that read "not checkable, absent column" now read
 `checkable` and are checked; loading `Cuban Son Montuno` plays a son clave rather
 than `E(5,16)`.
