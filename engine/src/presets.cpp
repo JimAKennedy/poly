@@ -1075,6 +1075,15 @@ GrooveState makeCubanSon() {
     clave.baseVelocity = 100;
     clave.probability = 1.0f;
     clave.swingAmount = 0.25f;
+    // Son clave 3-2, hand-authored rather than left to lockReferentLane's
+    // Euclidean bake. E(5,16) puts the fourth stroke on pulse 9; the son clave
+    // puts it on 10 -- the one-pulse difference at the ponche that Chapter 3
+    // names. A hand-authored reference also stops lockPresetReferent re-baking
+    // this lane, which is how the four existing exact timelines survive.
+    clave.timeline = true;
+    clave.fixedPatternLength = 16;
+    clave.fixedPattern = {true,  false, false, true,  false, false, true,  false,
+                          false, false, true,  false, true,  false, false, false};
 
     auto& cascara = s.lanes[1];
     cascara.id = 1;

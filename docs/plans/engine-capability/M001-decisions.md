@@ -115,3 +115,18 @@ milestone's review can see what shaped it without reconstructing it from diffs.
 - **Halt:** the run stopped here rather than improvising around the wrong plan
   step, per `/jk:auto` section 4. The plan's task 4 was repaired — steps 1, 4
   and 6 — and tasks 1 to 3 were left as they landed.
+
+## 2026-09-12 — executing M001/S02 task 1
+
+- **Decision:** The plan's step 6 asked for confirmation that the clave lane's
+  data changed in `presets.json`. It does not, and cannot: the emitter's schema
+  carries `timeline` and `fixedPatternLength` but not the pattern, so an exact
+  clave and a Euclidean bake serialise identically. The step's correct outcome
+  is a byte-identical file. — **Why:** Obviously right and too small to halt
+  for, so resolved in flight. The consequence is worth a reviewer's attention
+  and is recorded in the evidence rather than fixed here: widening the emitter's
+  schema is not this slice's work.
+- **Decision:** The clave test looks its preset up by name, not index.
+  — **Why:** Tasks 2 and 3 insert presets, and every index after the insertion
+  point shifts. An index-pinned test would keep passing while checking a
+  different preset.

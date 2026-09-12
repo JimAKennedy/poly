@@ -13,7 +13,7 @@ mechanism.
 
 ## Task status
 
-- [ ] 1. Correct `Cuban Son Montuno`'s clave lane to the exact son clave
+- [x] 1. Correct `Cuban Son Montuno`'s clave lane to the exact son clave
 - [ ] 2. Add the `Rumba Clave` preset
 - [ ] 3. Add the `Clapping Music` preset
 - [ ] 4. Retire the guide's workaround framing, and close the slice

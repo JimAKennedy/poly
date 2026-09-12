@@ -240,3 +240,52 @@ TEST(MidiChannel, StateRoundTrip) {
     EXPECT_EQ(loaded.lanes[2].midiChannel, 0);
     EXPECT_EQ(loaded.lanes[3].midiChannel, 15);
 }
+
+namespace {
+
+// Look a preset up by name rather than by index: inserting a preset shifts
+// every later index, and a test that pins one would start checking a different
+// preset without failing.
+int factoryPresetIndexByName(const char* name) {
+    for (int i = 0; i < poly::kFactoryPresetCount; ++i)
+        if (std::strcmp(poly::getFactoryPresetInfo(i).name, name) == 0)
+            return i;
+    return -1;
+}
+
+std::vector<int> timelineOnsets(const poly::LaneConfig& lane) {
+    std::vector<int> out;
+    for (int s = 0; s < lane.fixedPatternLength; ++s)
+        if (lane.fixedPattern[static_cast<size_t>(s)])
+            out.push_back(s);
+    return out;
+}
+
+// The distinction the guide draws in Chapter 3: the exact claves are not the
+// Euclidean patterns of the same hit count and cycle. Computed rather than
+// copied, so the test states the relationship instead of asserting two
+// hand-typed arrays.
+bool matchesEuclidean(const poly::LaneConfig& lane) {
+    std::array<bool, poly::kMaxSteps> euclid{};
+    poly::euclidean(lane.hitCount, lane.cycle.steps, lane.rotation, euclid);
+    for (int s = 0; s < lane.fixedPatternLength; ++s)
+        if (euclid[static_cast<size_t>(s)] != lane.fixedPattern[static_cast<size_t>(s)])
+            return false;
+    return true;
+}
+
+} // namespace
+
+TEST(PresetTimelines, CubanSonClaveIsExactNotItsEuclideanNeighbour) {
+    const int index = factoryPresetIndexByName("Cuban Son Montuno");
+    ASSERT_GE(index, 0) << "no factory preset named Cuban Son Montuno";
+    const poly::GrooveState state = poly::makeFactoryPreset(index);
+    const poly::LaneConfig& clave = state.lanes[0];
+
+    EXPECT_TRUE(clave.timeline) << "the clave must run in timeline mode to carry an exact pattern";
+    EXPECT_EQ(clave.fixedPatternLength, 16);
+    // Son clave 3-2, as theory-afro-cuban.mdx states it.
+    EXPECT_EQ(timelineOnsets(clave), (std::vector<int>{0, 3, 6, 10, 12}));
+    EXPECT_FALSE(matchesEuclidean(clave))
+        << "the clave lane carries the Euclidean pattern rather than the exact son clave";
+}
