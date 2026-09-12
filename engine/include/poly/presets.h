@@ -12,7 +12,7 @@ struct PresetInfo {
     const char* category;
 };
 
-static constexpr int kFactoryPresetCount = 44;
+static constexpr int kFactoryPresetCount = 45;
 static constexpr int kFactoryPresetCategoryCount = 10;
 
 // Ordered category list — presentation order for plugin submenus and site chips.
@@ -40,6 +40,7 @@ GrooveState makeEweEnsemble();
 GrooveState makeMandingDjembe();
 GrooveState makeCubanSon();
 GrooveState makeRumbaClave();
+GrooveState makeClappingMusic();
 GrooveState makeAfrobeatLagos();
 GrooveState makeBaliKotekan();
 GrooveState makeJavaColotomic();

@@ -304,3 +304,28 @@ TEST(PresetTimelines, RumbaClaveIsExactNotItsEuclideanNeighbour) {
     EXPECT_FALSE(matchesEuclidean(clave))
         << "the clave lane carries the Euclidean pattern rather than the exact rumba clave";
 }
+
+TEST(PresetTimelines, ClappingMusicShipsReichsAuthoredCell) {
+    const int index = factoryPresetIndexByName("Clapping Music");
+    ASSERT_GE(index, 0) << "no factory preset named Clapping Music";
+    const poly::GrooveState state = poly::makeFactoryPreset(index);
+    const poly::LaneConfig& steady = state.lanes[0];
+    const poly::LaneConfig& shifting = state.lanes[1];
+
+    // x x x . x x . x . x x .  -- the cell as 08-minimalism.mdx states it,
+    // gap sequence 1-1-2-1-2-2-1-2.
+    const std::vector<int> cell{0, 1, 2, 4, 5, 7, 9, 10};
+
+    EXPECT_TRUE(steady.timeline);
+    EXPECT_EQ(steady.fixedPatternLength, 12);
+    EXPECT_EQ(timelineOnsets(steady), cell);
+    EXPECT_FALSE(matchesEuclidean(steady)) << "Reich's cell is close to but not E(8,12): the opening run of three "
+                                              "claps breaks the strict 1-2 alternation Bjorklund produces";
+
+    // Both performers clap the same cell. Only the shift distinguishes them,
+    // and Clapping Music discretises it -- one position every twelve bars,
+    // then held -- rather than sliding as Piano Phase does.
+    EXPECT_EQ(timelineOnsets(shifting), cell);
+    EXPECT_FLOAT_EQ(steady.driftRate, 0.0f);
+    EXPECT_GT(shifting.driftRate, 0.0f);
+}

@@ -1208,6 +1208,56 @@ GrooveState makeRumbaClave() {
     return s;
 }
 
+GrooveState makeClappingMusic() {
+    GrooveState s{};
+    s.activeLaneCount = 2;
+    s.seed = 144;
+
+    // Reich's cell: x x x . x x . x . x x . -- eight claps across twelve
+    // quavers, gaps 1-1-2-1-2-2-1-2. Close to but not E(8,12): Bjorklund
+    // produces a strict 1-2 alternation, and the opening run of three claps is
+    // a run no E(k,12) yields at any rotation. Hand-authored for that reason.
+    const std::array<bool, kMaxSteps> cell = {true,  true, true,  false, true, true,
+                                              false, true, false, true,  true, false};
+
+    auto& steady = s.lanes[0];
+    steady.id = 0;
+    steady.role = Role::AnchorPulse;
+    steady.midiNote = 39;
+    steady.cycle = {12, 8};
+    steady.hitCount = 8;
+    steady.baseVelocity = 95;
+    steady.probability = 1.0f;
+    steady.noteDuration = 0.12f;
+    steady.timeline = true;
+    steady.fixedPatternLength = 12;
+    steady.fixedPattern = cell;
+
+    // Clapping Music discretises Piano Phase: the second performer jumps
+    // forward one position every twelve bars and holds, rather than sliding
+    // through every phase relationship. Drift is floored to whole steps, so it
+    // already holds between jumps; the rate is what makes it Reich's process.
+    // Twelve repetitions of a 12-step 1/8 cell span 18 bars of four quarters,
+    // so one step per 18 bars is one position per twelve repetitions.
+    auto& shifting = s.lanes[1];
+    shifting.id = 1;
+    shifting.role = Role::AnchorPulse;
+    shifting.midiNote = 39;
+    shifting.cycle = {12, 8};
+    shifting.hitCount = 8;
+    shifting.baseVelocity = 90;
+    shifting.probability = 1.0f;
+    shifting.noteDuration = 0.12f;
+    shifting.timeline = true;
+    shifting.fixedPatternLength = 12;
+    shifting.fixedPattern = cell;
+    shifting.driftRate = 1.0f / 18.0f;
+
+    s.macros.density = 0.5f;
+    s.macros.complexity = 0.2f;
+    return s;
+}
+
 GrooveState makeAfrobeatLagos() {
     GrooveState s{};
     s.activeLaneCount = 6;
@@ -2538,6 +2588,12 @@ namespace {
 bool isReferentLocked(const LaneConfig& cfg) {
     if (!cfg.timeline || cfg.probability != 1.0f || cfg.mutationRate != 0.0f || cfg.phraseLength != 0.0f)
         return false;
+    // A drifting lane is not a fixed reference: drift rotates which step of the
+    // pattern sounds, so the reference moves. lockPresetReferent already skips
+    // phasing lanes when choosing one; this is the same exclusion in the
+    // predicate that decides whether a lane *is* one.
+    if (cfg.driftRate != 0.0f)
+        return false;
     if (cfg.fixedPatternLength <= 0 || cfg.fixedPatternLength > kMaxSteps)
         return false;
     for (int s = 0; s < cfg.fixedPatternLength; ++s)
@@ -2686,6 +2742,8 @@ GrooveState makeFactoryPresetRaw(int index) {
         return makeCompositionalArc();
     case 43:
         return makeRumbaClave();
+    case 44:
+        return makeClappingMusic();
     default:
         return GrooveState{};
     }
@@ -2811,6 +2869,9 @@ const PresetInfo& getFactoryPresetInfo(int index) {
          "Minimalist / Compositional"},
         {"Rumba Clave", "Guaguancó texture on the exact rumba clave — palitos, salidor, tres golpes, and a free quinto",
          "Latin / Brazilian"},
+        {"Clapping Music",
+         "Reich's authored twelve-pulse cell, clapped steady against a partner shifting one position every twelve bars",
+         "Minimalist / Compositional"},
     };
     static constexpr PresetInfo kEmpty{"", "", "Foundational"};
     if (index >= 0 && index < kFactoryPresetCount)

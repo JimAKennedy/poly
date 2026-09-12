@@ -143,3 +143,23 @@ milestone's review can see what shaped it without reconstructing it from diffs.
   extent, not the row count, so it cannot catch an omission. Resolved in flight:
   adding the row would introduce a bug, and omitting it matches how 29 existing
   presets already behave.
+
+## 2026-09-12 — executing M001/S02 task 3
+
+- **Q:** Clapping Music's shifting lane satisfies the locked-referent
+  predicate, so the preset has two referents and
+  `EveryPresetHasExactlyOneLockedReferent` fails. How should this resolve?
+  — **A:** Exclude drift from the predicate.
+- **Decision:** `isReferentLocked` in `engine/src/presets.cpp` and its mirror in
+  `tests/preset_conformance_tests.cpp` now return false for a lane with a
+  non-zero `driftRate`. — **Why:** The predicate's own contract is that no
+  runtime input can move the reference, and drift rotates which step sounds
+  every bar; `lockPresetReferent` already excludes phasing lanes when choosing
+  a referent, so only the predicate was incomplete. Verified before changing it
+  that Clapping Music's shifting lane is the only drifting timeline lane in all
+  45 presets, so no other preset's referent count could move.
+- **Halt:** the run stopped to ask, because this is an engine change inside a
+  milestone whose vision says it needs no new engine capability. The two
+  alternatives were rejected on their merits and recorded in the question:
+  perturbing the second clapper would make it drop claps, which the piece does
+  not do, and deferring Clapping Music would leave #156 unclosed.

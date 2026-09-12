@@ -56,8 +56,8 @@ test('presets.json — schema shape', async () => {
   assert.ok(Array.isArray(parsed.presets), 'presets must be an array');
   assert.equal(
     parsed.presets.length,
-    44,
-    `presets.length=${parsed.presets.length}, expected 44`,
+    45,
+    `presets.length=${parsed.presets.length}, expected 45`,
   );
 
   parsed.presets.forEach((preset, pi) => {
