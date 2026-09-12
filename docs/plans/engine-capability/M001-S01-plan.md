@@ -12,7 +12,7 @@ rules on these same pages; no new mechanism is introduced.
 ## Task status
 
 - [x] 1. `theory-balkan` — Humanize column, Rule 7 restated in ms (EC01)
-- [ ] 2. `theory-electronic-breakbeat` — Swing column (EC02)
+- [x] 2. `theory-electronic-breakbeat` — Swing column (EC02)
 - [ ] 3. `theory-gamelan` — Note column (EC03)
 - [ ] 4. `theory-sub-saharan-africa` — Note column, and slice close-out (EC04)
 

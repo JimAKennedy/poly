@@ -1196,6 +1196,30 @@ CHECKLIST.push({
   ],
 });
 
+CHECKLIST.push({
+  page: 'theory-electronic-breakbeat.mdx',
+  patch: 'Rule-Checked Jungle Frame',
+  rules: [
+    {
+      id: 'ebb-swing-is-a-bus',
+      description: 'Rule 4: one swing value across swung layers; kick and clap straight',
+      check: ({ rows }) => {
+        const swung = rows.filter((r) => cellNum(r, 'Swing') !== 0);
+        const values = [...new Set(swung.map((r) => cellNum(r, 'Swing')))];
+        // An absent column reads as NaN, which is !== 0, so it lands here.
+        if (values.some((v) => Number.isNaN(v)))
+          return 'a lane has no readable Swing cell; Rule 4 is stated per lane';
+        if (values.length > 1)
+          return `swung layers carry ${values.length} distinct swing values (${values.join(', ')}); Rule 4 makes swing one bus`;
+        const straight = rows.filter((r) => /kick|clap/i.test(r.role) && cellNum(r, 'Swing') !== 0);
+        if (straight.length)
+          return `${straight.map((r) => r.role).join(', ')} carr${straight.length === 1 ? 'ies' : 'y'} swing; Rule 4 keeps kick and clap straight`;
+        return null;
+      },
+    },
+  ],
+});
+
 let liveMarkers = 0;
 
 for (const entry of CHECKLIST) {
@@ -1331,7 +1355,7 @@ const RULE_TRIAGE = {
     1: { checkable: true, case: 'ebb-anchor-immutable', why: 'asserted: ebb-anchor-immutable' },
     2: { checkable: false, why: 'forbids a layer wandering between territories, which is a change over time; a static patch assigns each lane one position set and cannot wander. Coinciding with another layer is not wandering — a sixteenth hat stream crossing the backbeat keeps its own territory' },
     3: { checkable: true, case: 'ebb-polymeter-loop-length', why: 'polymeter comes from a loop length of 3, 5, 6 or 7 against the 4-unit frame' },
-    4: { checkable: false, absentColumn: 'Swing', why: 'names swing percentages, and this page\'s patch table carries no Swing column' },
+    4: { checkable: true, case: 'ebb-swing-is-a-bus', why: 'the patch table now carries a Swing column, so the bus reading is checkable per lane' },
     5: { checkable: false, why: 'energy management across 8, 16 and 32-bar boundaries is arrangement, not a patch state' },
     6: { checkable: true, case: 'ebb-snare-backbeat-fixed', why: 'the snare holds the half-time backbeat' },
     7: { checkable: true, case: 'ebb-kick-avoids-snare', why: 'asserted: ebb-kick-avoids-snare' },
