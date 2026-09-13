@@ -24,6 +24,7 @@ import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import presetsData from '../src/generated/presets.json' with { type: 'json' };
+import { bjorklund, rotate } from '../src/lib/euclidean-claims.mjs';
 import { buildPresetTable, findPreset, formatNumber } from '../src/lib/preset-table-data.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -182,4 +183,44 @@ test('findPreset throws a named error for an unresolved preset', () => {
     /No Such Preset/,
     'findPreset must name the unresolved preset',
   );
+});
+
+// M005/S02 (PIPE02). Until schemaVersion 4 this question could not be asked of
+// presets.json at all: it carried `timeline` and `fixedPatternLength` but not
+// the pattern, so an authored clave and the Euclidean bake of the same hit
+// count and cycle serialised identically. M001/S02 authored three patterns the
+// guide states explicitly; this asserts the shipped data matches the prose AND
+// differs from the Euclidean neighbour, because matching the prose alone would
+// still pass if someone re-derived the lane from Bjorklund.
+const onsetsOf = (pattern) => pattern.flatMap((on, i) => (on ? [i] : []));
+
+test('timeline presets carry their authored pattern, not its Euclidean neighbour', () => {
+  const cases = [
+    { preset: 'Cuban Son Montuno', role: 'clave', onsets: [0, 3, 6, 10, 12], source: 'theory-afro-cuban.mdx' },
+    { preset: 'Rumba Clave', role: 'clave', onsets: [0, 3, 7, 10, 12], source: '03-afro-cuban.mdx' },
+    { preset: 'Clapping Music', role: 'clap', onsets: [0, 1, 2, 4, 5, 7, 9, 10], source: '08-minimalism.mdx' },
+  ];
+
+  for (const c of cases) {
+    const preset = presetsData.presets.find((p) => p.name === c.preset);
+    assert.ok(preset, `no factory preset named ${c.preset}`);
+    const lane = preset.lanes.find((l) => l.timeline && l.roleLabel === c.role);
+    assert.ok(lane, `${c.preset} has no timeline lane labelled ${c.role}`);
+
+    assert.deepStrictEqual(
+      lane.onsets,
+      c.onsets,
+      `${c.preset} ${c.role} onsets are ${JSON.stringify(lane.onsets)}, but ${c.source} states ${JSON.stringify(c.onsets)}`,
+    );
+
+    // Computed, not hand-typed: the claim is that the two differ, so both sides
+    // have to be derived or the test is just two literals sitting next to each
+    // other.
+    const euclidean = onsetsOf(rotate(bjorklund(lane.cycleSteps, lane.hits), lane.rotation));
+    assert.notDeepStrictEqual(
+      lane.onsets,
+      euclidean,
+      `${c.preset} ${c.role} carries E(${lane.hits},${lane.cycleSteps}) rather than the authored pattern ${c.source} states`,
+    );
+  }
 });

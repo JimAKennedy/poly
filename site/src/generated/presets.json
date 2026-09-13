@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "presetCount": 45,
   "categories": [
     "Foundational",
@@ -52,6 +52,12 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 4,
+          "onsets": [
+            0,
+            1,
+            2,
+            3
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -183,6 +189,10 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 3,
+          "onsets": [
+            0,
+            1
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -314,6 +324,9 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 2,
+          "onsets": [
+            0
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -417,6 +430,11 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 5,
+          "onsets": [
+            0,
+            2,
+            4
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -548,6 +566,11 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 5,
+          "onsets": [
+            0,
+            2,
+            4
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -679,6 +702,11 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 4,
+          "onsets": [
+            0,
+            1,
+            2
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -838,6 +866,11 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 5,
+          "onsets": [
+            0,
+            2,
+            4
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -941,6 +974,10 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 3,
+          "onsets": [
+            0,
+            1
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -1072,6 +1109,11 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 4,
+          "onsets": [
+            0,
+            1,
+            2
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -1203,6 +1245,15 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 12,
+          "onsets": [
+            0,
+            2,
+            4,
+            5,
+            7,
+            9,
+            11
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -1362,6 +1413,10 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 3,
+          "onsets": [
+            0,
+            1
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -1529,6 +1584,13 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 16,
+          "onsets": [
+            0,
+            3,
+            6,
+            10,
+            12
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -1632,6 +1694,10 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 3,
+          "onsets": [
+            0,
+            1
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -1771,6 +1837,11 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 4,
+          "onsets": [
+            0,
+            1,
+            2
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -1935,6 +2006,15 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 12,
+          "onsets": [
+            0,
+            2,
+            4,
+            5,
+            7,
+            9,
+            11
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -2150,6 +2230,9 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 32,
+          "onsets": [
+            0
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -2197,6 +2280,15 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 12,
+          "onsets": [
+            0,
+            2,
+            3,
+            5,
+            7,
+            8,
+            10
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -2272,6 +2364,15 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 12,
+          "onsets": [
+            0,
+            2,
+            3,
+            5,
+            7,
+            8,
+            10
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -2403,6 +2504,11 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 8,
+          "onsets": [
+            0,
+            3,
+            6
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -2506,6 +2612,13 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 16,
+          "onsets": [
+            0,
+            3,
+            6,
+            10,
+            12
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -2665,6 +2778,15 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 12,
+          "onsets": [
+            0,
+            2,
+            4,
+            5,
+            7,
+            9,
+            11
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -2852,6 +2974,13 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 8,
+          "onsets": [
+            0,
+            2,
+            3,
+            5,
+            6
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -3067,6 +3196,9 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 32,
+          "onsets": [
+            0
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -3114,6 +3246,12 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 16,
+          "onsets": [
+            0,
+            4,
+            8,
+            12
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -3245,6 +3383,11 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 7,
+          "onsets": [
+            0,
+            2,
+            4
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -3348,6 +3491,11 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 7,
+          "onsets": [
+            0,
+            2,
+            4
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -3479,6 +3627,12 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 11,
+          "onsets": [
+            0,
+            3,
+            6,
+            9
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -3610,6 +3764,13 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 12,
+          "onsets": [
+            0,
+            3,
+            5,
+            8,
+            10
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -3713,6 +3874,13 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 8,
+          "onsets": [
+            0,
+            2,
+            3,
+            5,
+            6
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -3872,6 +4040,12 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 4,
+          "onsets": [
+            0,
+            1,
+            2,
+            3
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -4003,6 +4177,12 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 4,
+          "onsets": [
+            0,
+            1,
+            2,
+            3
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -4134,6 +4314,12 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 4,
+          "onsets": [
+            0,
+            1,
+            2,
+            3
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -4265,6 +4451,10 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 4,
+          "onsets": [
+            1,
+            3
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -4424,6 +4614,13 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 16,
+          "onsets": [
+            0,
+            3,
+            6,
+            9,
+            12
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -4527,6 +4724,11 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 16,
+          "onsets": [
+            0,
+            5,
+            10
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -4658,6 +4860,12 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 16,
+          "onsets": [
+            0,
+            4,
+            8,
+            12
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -4789,6 +4997,12 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 4,
+          "onsets": [
+            0,
+            1,
+            2,
+            3
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -4920,6 +5134,11 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 4,
+          "onsets": [
+            0,
+            1,
+            2
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -5051,6 +5270,13 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 16,
+          "onsets": [
+            3,
+            6,
+            9,
+            12,
+            15
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -5182,6 +5408,10 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 8,
+          "onsets": [
+            0,
+            4
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -5313,6 +5543,11 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 8,
+          "onsets": [
+            0,
+            3,
+            6
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -5472,6 +5707,11 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 7,
+          "onsets": [
+            0,
+            2,
+            4
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -5603,6 +5843,12 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 4,
+          "onsets": [
+            0,
+            1,
+            2,
+            3
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -5790,6 +6036,13 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 16,
+          "onsets": [
+            0,
+            3,
+            7,
+            10,
+            12
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -5949,6 +6202,16 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 12,
+          "onsets": [
+            0,
+            1,
+            2,
+            4,
+            5,
+            7,
+            9,
+            10
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,
@@ -5977,6 +6240,16 @@
           "hasMicroTiming": false,
           "timeline": true,
           "fixedPatternLength": 12,
+          "onsets": [
+            0,
+            1,
+            2,
+            4,
+            5,
+            7,
+            9,
+            10
+          ],
           "kotekanSourceLane": -1,
           "phraseLength": 0,
           "phraseGap": 0,

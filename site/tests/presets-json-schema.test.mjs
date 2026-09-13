@@ -11,6 +11,28 @@ import { dirname, join } from 'node:path';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const PRESETS_PATH = join(HERE, '..', 'src', 'generated', 'presets.json');
+const PRESETS_HEADER_PATH = join(HERE, '..', '..', 'engine', 'include', 'poly', 'presets.h');
+
+// The expected preset count comes from the engine rather than a literal. A
+// hardcoded number had to be hand-edited once per preset added (twice in
+// M001/S02), and -- worse -- it agreed with a stale presets.json for as long as
+// nobody noticed, which is the failure M005/S01 fixed at source. Reading the
+// constant makes a stale file fail here too.
+//
+// A regex that stops matching must fail loudly, not silently assert nothing: if
+// the constant is ever renamed this throws rather than skipping the check.
+async function factoryPresetCountFromEngine() {
+  const header = await readFile(PRESETS_HEADER_PATH, 'utf8');
+  const match = /static constexpr int kFactoryPresetCount = (\d+);/.exec(header);
+  if (!match) {
+    throw new Error(
+      `kFactoryPresetCount not found in ${PRESETS_HEADER_PATH} -- was it renamed? ` +
+        'This test derives the expected preset count from it, so an unmatched ' +
+        'pattern is a broken check, not a passing one.',
+    );
+  }
+  return Number(match[1]);
+}
 
 // Closed enum — must match kFactoryPresetCategories in engine/src/presets.cpp.
 const EXPECTED_CATEGORIES = [
@@ -37,8 +59,8 @@ test('presets.json — schema shape', async () => {
   );
   assert.equal(
     parsed.schemaVersion,
-    3,
-    `schemaVersion=${parsed.schemaVersion}, expected 3 (M071 S04 D026 fields)`,
+    4,
+    `schemaVersion=${parsed.schemaVersion}, expected 4 (M005/S02 timeline onsets)`,
   );
 
   assert.ok(
@@ -54,10 +76,13 @@ test('presets.json — schema shape', async () => {
   const categorySet = new Set(EXPECTED_CATEGORIES);
 
   assert.ok(Array.isArray(parsed.presets), 'presets must be an array');
+  const expectedPresetCount = await factoryPresetCountFromEngine();
   assert.equal(
     parsed.presets.length,
-    45,
-    `presets.length=${parsed.presets.length}, expected 45`,
+    expectedPresetCount,
+    `presets.length=${parsed.presets.length}, but the engine's kFactoryPresetCount ` +
+      `is ${expectedPresetCount} -- presets.json is stale, or a preset was added ` +
+      'without regenerating it',
   );
 
   parsed.presets.forEach((preset, pi) => {
@@ -131,6 +156,35 @@ test('presets.json — schema shape', async () => {
           `${where}.${k}=${lane[k]} is not a number`,
         );
       });
+
+      // schemaVersion 4 (M005/S02): a timeline lane carries the onsets of its
+      // authored pattern, so a consumer can tell an authored pattern from a
+      // Euclidean one of the same hit count and cycle. A lane that is not in
+      // timeline mode carries no `onsets` at all -- the field's absence is what
+      // says the pattern is derived rather than written down.
+      if (lane.timeline) {
+        assert.ok(
+          Array.isArray(lane.onsets),
+          `${where} runs in timeline mode but carries no onsets array`,
+        );
+        assert.equal(
+          lane.onsets.length,
+          lane.hits,
+          `${where}.onsets has ${lane.onsets.length} entries against hits=${lane.hits}`,
+        );
+        lane.onsets.forEach((step) => {
+          assert.ok(
+            Number.isInteger(step) && step >= 0 && step < lane.fixedPatternLength,
+            `${where}.onsets contains ${step}, outside [0, ${lane.fixedPatternLength})`,
+          );
+        });
+      } else {
+        assert.equal(
+          lane.onsets,
+          undefined,
+          `${where} is not a timeline lane but carries an onsets array`,
+        );
+      }
       assert.equal(
         typeof lane.hasMicroTiming,
         'boolean',

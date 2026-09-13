@@ -1,5 +1,5 @@
 // Pure derivation of the appendix-presets parameter tables from the generated
-// presets.json (schemaVersion 3, see engine/tools/emit_presets.cpp and
+// presets.json (schemaVersion 4, see engine/tools/emit_presets.cpp and
 // site/scripts/generate-presets-json.mjs).
 //
 // PresetTable.astro renders EXACTLY the {headers, rows, macros} this module

@@ -436,7 +436,7 @@ changes, and it carries enough of a lane that a consumer can tell an authored
 pattern from a generated one.
 
 **Branch:** milestone/M005-preset-pipeline
-**Status:** planned
+**Status:** done
 **Demo:** Edit a preset, run `npm --prefix site run generate-presets` with no
 explicit build step, and see the change in the JSON; then ask the JSON alone
 whether `Cuban Son Montuno`'s clave is the son clave or `E(5,16)`, and get an
@@ -451,46 +451,48 @@ constraint on it.
 
 ### Slice M005/S01 — The generator rebuilds its emitter
 
+**Plan:** M005-S01-plan.md
 **Validation:** format, site-unit
 **Evidence:** evidence/M005-S01.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Editing `engine/src/presets.cpp` and running the generator produces JSON
+- [x] Editing `engine/src/presets.cpp` and running the generator produces JSON
       that reflects the edit, with no explicit build step
-- [ ] A stale `presets.json` fails the site suite mechanically, rather than
+- [x] A stale `presets.json` fails the site suite mechanically, rather than
       depending on someone noticing the count is wrong
-- [ ] The generator still succeeds from a clean tree, where the build directory
+- [x] The generator still succeeds from a clean tree, where the build directory
       does not yet exist
-- [ ] The hardcoded preset count in `presets-json-schema.test.mjs` is gone,
+- [x] The hardcoded preset count in `presets-json-schema.test.mjs` is gone,
       derived from `kFactoryPresetCount` instead
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| PIPE01 | `ensureEmitter()` in `site/scripts/generate-presets-json.mjs` returns as soon as the emitter binary exists and rebuilds it only when missing, so a change to `presets.cpp` silently emits stale JSON. The file's own header calls a stale `presets.json` "a silent correctness bug we already paid for", and M001/S02 paid it again: the generator wrote 43 presets after the engine had 44, and reported success | `tooling` | `site/scripts/generate-presets-json.mjs`, `site/tests/presets-json-schema.test.mjs` | The early return is removed so the build target always runs — cmake is incremental, so an unchanged tree costs a no-op. Proved by reproducing the M001 failure: edit a preset, run the generator with no explicit build, and watch the new value appear where it previously did not. The schema test derives its expected count from `kFactoryPresetCount` in `engine/include/poly/presets.h`, so a stale file fails the suite; proved by regenerating against a deliberately stale binary | `open` |
+| PIPE01 | `ensureEmitter()` in `site/scripts/generate-presets-json.mjs` returns as soon as the emitter binary exists and rebuilds it only when missing, so a change to `presets.cpp` silently emits stale JSON. The file's own header calls a stale `presets.json` "a silent correctness bug we already paid for", and M001/S02 paid it again: the generator wrote 43 presets after the engine had 44, and reported success | `tooling` | `site/scripts/generate-presets-json.mjs`, `site/tests/presets-json-schema.test.mjs` | The early return is removed so the build target always runs — cmake is incremental, so an unchanged tree costs a no-op. Proved by reproducing the M001 failure: edit a preset, run the generator with no explicit build, and watch the new value appear where it previously did not. The schema test derives its expected count from `kFactoryPresetCount` in `engine/include/poly/presets.h`, so a stale file fails the suite; proved by regenerating against a deliberately stale binary | `done` |
 
 ### Slice M005/S02 — `presets.json` carries the pattern
 
+**Plan:** M005-S02-plan.md
 **Validation:** format, unit, engine-isolation, site-unit, doc-conformance
 **Evidence:** evidence/M005-S02.md
-**Status:** open
+**Status:** done
 **Depends:** M005/S01
 
 **Definition of Done**
 
-- [ ] A lane running in timeline mode carries its step pattern in
+- [x] A lane running in timeline mode carries its step pattern in
       `site/src/generated/presets.json`
-- [ ] `schemaVersion` is bumped, and the generator rejects a JSON written at the
+- [x] `schemaVersion` is bumped, and the generator rejects a JSON written at the
       previous version rather than reading it as if the field were absent
-- [ ] A site test answers, from `presets.json` alone, whether `Cuban Son
+- [x] A site test answers, from `presets.json` alone, whether `Cuban Son
       Montuno`'s clave is the son clave or `E(5,16)` — the question M001 could
       not ask of that file
-- [ ] Every existing consumer of the file still passes
+- [x] Every existing consumer of the file still passes
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| PIPE02 | `engine/tools/emit_presets.cpp` (schemaVersion 3) writes `timeline` and `fixedPatternLength` but never `fixedPattern`, so an exact clave and a Euclidean bake of the same hit count and cycle serialise identically. M001/S02 made four presets carry hand-authored patterns and could not express the difference in the file the site reads: the plugin plays the right thing and nothing rendered from `presets.json` can show it | `tooling` | `engine/tools/emit_presets.cpp`, `site/src/generated/presets.json`, `site/tests/` | The emitter serialises the pattern for timeline lanes and bumps `schemaVersion`; the generator's version guard is updated to match. Proved by a site case that derives the onsets from the JSON and asserts they differ from `bjorklund` for the same hit count and cycle — the case fails against the pre-change file, which cannot answer it | `open` |
+| PIPE02 | `engine/tools/emit_presets.cpp` (schemaVersion 3) writes `timeline` and `fixedPatternLength` but never `fixedPattern`, so an exact clave and a Euclidean bake of the same hit count and cycle serialise identically. M001/S02 made four presets carry hand-authored patterns and could not express the difference in the file the site reads: the plugin plays the right thing and nothing rendered from `presets.json` can show it | `tooling` | `engine/tools/emit_presets.cpp`, `site/src/generated/presets.json`, `site/tests/` | The emitter serialises the pattern for timeline lanes and bumps `schemaVersion`; the generator's version guard is updated to match. Proved by a site case that derives the onsets from the JSON and asserts they differ from `bjorklund` for the same hit count and cycle — the case fails against the pre-change file, which cannot answer it | `done` |
 
 ## Sequencing
 

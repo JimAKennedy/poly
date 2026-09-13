@@ -25,7 +25,8 @@ interface JsonLane {
   rotation: number;
   velocity: number;
   probability: number;
-  // schemaVersion 3 (M071 S04): D026 parameter-table fields. The card runtime
+  // schemaVersion 3 (M071 S04): D026 parameter-table fields; schemaVersion 4
+  // (M005 S02) adds per-lane `onsets` for timeline lanes. The card runtime
   // ignores these — they exist so the appendix PresetTable renders engine truth.
   ghostFloor: number;
   swingAmount: number;

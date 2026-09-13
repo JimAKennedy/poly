@@ -109,5 +109,21 @@ Three assignments merited a real decision rather than an obvious placement:
 
 1. Append a new string to `kFactoryPresetCategories[]` in `engine/src/presets.cpp` (order matters — this is menu order).
 2. Update the count in the header comment and in this doc.
-3. Bump `schemaVersion` in `engine/tools/emit_presets.cpp` only if the JSON shape itself changes; adding a category string does not require a bump.
+3. Bump `schemaVersion` in `engine/tools/emit_presets.cpp` only if the JSON shape itself changes; adding a category string does not require a bump. See "JSON schema version" below for what the current version is.
 4. Regenerate the JSON as above.
+
+## JSON schema version
+
+`presets.json` is emitted at **schemaVersion 4**. The version is written by
+`engine/tools/emit_presets.cpp`, and `site/scripts/generate-presets-json.mjs`
+rejects any other value rather than reading an older shape as if the newer
+fields were merely absent — so a bump means the emitter, that guard, and
+`site/tests/presets-json-schema.test.mjs` all move together, in one commit.
+
+| Version | Added |
+|---|---|
+| 4 | Per-lane `onsets` for timeline lanes — the positions of a hand-authored pattern. A lane not in timeline mode carries no `onsets` at all, so the field's absence is what says a pattern is derived rather than written down (M005 S02). |
+| 3 | Per-preset `macros`, and the per-lane parameter-table fields the appendix renders (M071 S04). |
+
+Bump it when the shape changes, not when the data does: adding a preset or
+recategorising one leaves the shape alone.
