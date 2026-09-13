@@ -29,10 +29,11 @@ range is closed. Two later series have other origins.
 `deferrals.md`. `PIPE01`–`PIPE02` are M005's, and are defects this programme
 found in its own tooling while executing M001 — the role the theory-audit
 ledger's `B` series played for defects that programme found rather than
-inherited. Neither series is covered by the coverage claim above, which says
-every item in `deferrals.md` has a row, not that every row traces back to it.
-Both are marked on their own milestones rather than left for a reader to notice
-that nine rows trace to no source document. The `D` prefix the source document
+inherited. `GAP01`–`GAP02` are M006's, found the same way while shipping M005,
+and one of them has a tracker issue behind it. None of these series is covered
+by the coverage claim above, which says every item in `deferrals.md` has a row,
+not that every row traces back to it. Each is marked on its own milestone rather
+than left for a reader to notice that eleven rows trace to no source document. The `D` prefix the source document
 uses for its own section numbering is deliberately not reused here:
 `engine/src/presets.cpp` already carries row IDs `D017` and `D020` from the
 programme that landed in PR #171, and a second `D` numbering in the same tree
@@ -494,6 +495,71 @@ constraint on it.
 |---|---|---|---|---|---|
 | PIPE02 | `engine/tools/emit_presets.cpp` (schemaVersion 3) writes `timeline` and `fixedPatternLength` but never `fixedPattern`, so an exact clave and a Euclidean bake of the same hit count and cycle serialise identically. M001/S02 made four presets carry hand-authored patterns and could not express the difference in the file the site reads: the plugin plays the right thing and nothing rendered from `presets.json` can show it | `tooling` | `engine/tools/emit_presets.cpp`, `site/src/generated/presets.json`, `site/tests/` | The emitter serialises the pattern for timeline lanes and bumps `schemaVersion`; the generator's version guard is updated to match. Proved by a site case that derives the onsets from the JSON and asserts they differ from `bjorklund` for the same hit count and cycle — the case fails against the pre-change file, which cannot answer it | `done` |
 
+---
+
+## Milestone M006 — Gate parity
+
+**Source note.** Like M004 and M005, this milestone is not drawn from
+`deferrals.md`. Both rows were found while shipping M005: `site-lint` failed on
+a check that had run green nowhere locally, and the investigation found a second
+gap beside it. `GAP02` has a tracker issue, [#272](https://github.com/JimAKennedy/poly/issues/272),
+whose numbers have since drifted; `GAP01` has none.
+
+**Vision:** A developer can run every check CI will run, and every test in the
+tree runs somewhere in CI — so a green local gate means something, and a test
+file cannot be proven only on the machine that wrote it.
+
+**Branch:** milestone/M006-gate-parity
+**Status:** planned
+**Demo:** Add a doc-drift violation and a new site test on a branch; the local
+gate catches the first and CI runs the second, without anyone knowing a special
+incantation.
+
+**What this is not.** `scripts/pre-push-check.sh` is not at fault and does not
+need to grow. It runs clang-format, RT safety, snippet regions, the build and
+the tests, which is exactly what `CLAUDE.md` says it runs. The gap is that one
+check CI enforces has no local form at all, and that one directory of tests has
+no CI form at all.
+
+### Slice M006/S01 — `doc-drift` is runnable locally
+
+**Validation:** format, doc-discipline
+**Evidence:** evidence/M006-S01.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] A developer can run the `doc-drift` check against the default branch with
+      a documented command, without knowing to set an environment variable by
+      hand
+- [ ] The `doc-discipline` token no longer reports success while silently
+      skipping a check CI enforces — either it runs `doc-drift`, or a separate
+      declared token does and slices that owe it name it
+- [ ] A run genuinely unable to determine a base still explains why rather than
+      failing, so a detached or shallow checkout is not made unusable
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| GAP01 | `doc-drift` is enforced in CI and cannot be run locally by any documented command. `jk-standards all` reports `doc-drift: no --base or GITHUB_BASE_REF — skipped` and exits 0, so the `doc-discipline` token passes while the check never executes. M005 ran its whole validation set green and CI still failed on a doc-drift violation, found only by setting `GITHUB_BASE_REF` by hand afterwards; M001 satisfied the same rule incidentally, having changed `docs/preset-taxonomy.md` only because adding presets forced the count updates. A check that passes locally for the wrong reason is worse than one that is absent | `tooling` | `.jk/validations.yml`, `scripts/`, `CLAUDE.md` | Introduce a doc-drift violation on a branch and watch the local command fail; remove it and watch it pass. The skip path is proved separately by running where no base can be determined and reading the explanation | `open` |
+
+### Slice M006/S02 — Every site test runs in CI
+
+**Validation:** format, site-unit, doc-conformance
+**Evidence:** evidence/M006-S02.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] Every `site/tests/*.test.mjs` file runs in at least one CI job
+- [ ] A test file added to that directory cannot silently go unrun — something
+      fails if it is covered by nothing
+- [ ] #272's counts are corrected to what the tree holds, or the issue is closed
+      by this work
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| GAP02 | No CI job runs `npm --prefix site test`. The only `site/tests/**` files CI executes are those named in `scripts/check-doc-conformance.sh`, so 6 of 23 run nowhere: `bjorklund`, `dump-mode`, `preset-patterns`, `presets-json-schema`, `sample-loader`, `smf-writer`. Issue [#272](https://github.com/JimAKennedy/poly/issues/272) raised this as 7 of 21 and the numbers have drifted since. It is not hypothetical: `presets-json-schema.test.mjs` carries M005/S01's staleness guard, so the guard that catches a stale `presets.json` is itself unproven in CI | `tooling` | `.github/workflows/ci.yml`, `scripts/check-doc-conformance.sh` | A CI job runs the files, proved by pushing a branch with a deliberately failing case in one of the six and watching CI go red. The no-orphan guard is proved by adding a file covered by nothing and watching the check fail | `open` |
+
 ## Sequencing
 
 The graph is deliberately flat. No milestone depends on another: M001 needs no
@@ -523,7 +589,13 @@ the pressing problem it can be pulled forward whole, or slice by slice, without
 disturbing M002 or M003. Recorded explicitly so a later reader does not infer a
 dependency from the numbering.
 
-**M005 declares no dependency either, and that is deliberate.** Both M002 and
+**M006 declares no dependency and blocks nothing.** It is worth pulling forward
+anyway, for a reason the graph cannot express: M002, M003 and M004 will each run
+their validation sets locally and believe them, and GAP01 means one of those
+checks reports success without running. Every milestone after this one is
+cheaper to trust once it lands.
+
+**M005 declared no dependency either, and that was deliberate.** Both M002 and
 M003 would benefit from it landing first, and the milestone says so in prose —
 but a slice-level `Depends` would be a fiction: each can be completed by
 building the emitter by hand, which is how M001 finished. The recommendation is
