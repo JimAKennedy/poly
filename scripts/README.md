@@ -47,6 +47,9 @@ actually fails on regressions.
 - `check-doc-conformance.sh` — the doc-conformance guardrail suite for site
   prose: euclidean claims, preset tables, audit ledgers (the `doc-conformance`
   validation token).
+- `check-doc-discipline.sh` — the jk-standards doc checks with a base ref, so
+  `doc-drift` actually runs (the `doc-discipline` validation token). Bare
+  `jk-standards all` skips that check and still exits 0.
 - `check-personal-paths.sh` / `check-personal-paths.mjs` — no personal-machine
   paths in tracked files.
 - `check-pragma-once.sh` — every C/C++ header carries `#pragma once`.
