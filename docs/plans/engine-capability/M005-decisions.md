@@ -79,3 +79,26 @@ milestone's review can see what shaped it without reconstructing it from diffs.
   emitter is exactly the failure S01 exists to remove. The ledger already
   declares the dependency; the plan makes it a stop rather than something to
   discover.
+
+## 2026-09-13 — shipping M005 (CI failure)
+
+- **Q:** `site-lint` fails on doc-drift: `emit_presets.cpp` changed without
+  `docs/preset-taxonomy.md`. How should this land? — **A:** Document the schema
+  change.
+- **Decision:** `docs/preset-taxonomy.md` gains a "JSON schema version" section
+  recording that `presets.json` is emitted at schemaVersion 4 and what versions
+  3 and 4 added, with the existing "Adding a new category" step 3 pointing at
+  it. — **Why:** The doc already tells a reader *when* to bump the version and
+  never said what the current one is, so someone following that procedure had
+  no way to know. Real content rather than a `Docs-Not-Affected` suppression,
+  and narrower than weakening the drift rule — which would have let a genuine
+  taxonomy change through unnoticed.
+- **Finding, not fixed here:** the local gate cannot catch this class of
+  failure. `jk-standards all` reports `doc-drift: no --base or GITHUB_BASE_REF
+  — skipped` when run locally, and `scripts/pre-push-check.sh` sets no base
+  either, so both `doc-discipline` and the pre-push gate are structurally blind
+  to doc-drift. Seven gates ran green before the push and this one never
+  executed; it was found only by setting `GITHUB_BASE_REF` by hand after CI
+  failed. M001 passed the same rule incidentally — it changed
+  `docs/preset-taxonomy.md` only because adding two presets forced the count
+  updates. Worth an issue against the pre-push script.
