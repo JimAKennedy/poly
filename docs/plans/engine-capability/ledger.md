@@ -476,23 +476,23 @@ constraint on it.
 **Plan:** M005-S02-plan.md
 **Validation:** format, unit, engine-isolation, site-unit, doc-conformance
 **Evidence:** evidence/M005-S02.md
-**Status:** in-progress
+**Status:** done
 **Depends:** M005/S01
 
 **Definition of Done**
 
-- [ ] A lane running in timeline mode carries its step pattern in
+- [x] A lane running in timeline mode carries its step pattern in
       `site/src/generated/presets.json`
-- [ ] `schemaVersion` is bumped, and the generator rejects a JSON written at the
+- [x] `schemaVersion` is bumped, and the generator rejects a JSON written at the
       previous version rather than reading it as if the field were absent
-- [ ] A site test answers, from `presets.json` alone, whether `Cuban Son
+- [x] A site test answers, from `presets.json` alone, whether `Cuban Son
       Montuno`'s clave is the son clave or `E(5,16)` — the question M001 could
       not ask of that file
-- [ ] Every existing consumer of the file still passes
+- [x] Every existing consumer of the file still passes
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| PIPE02 | `engine/tools/emit_presets.cpp` (schemaVersion 3) writes `timeline` and `fixedPatternLength` but never `fixedPattern`, so an exact clave and a Euclidean bake of the same hit count and cycle serialise identically. M001/S02 made four presets carry hand-authored patterns and could not express the difference in the file the site reads: the plugin plays the right thing and nothing rendered from `presets.json` can show it | `tooling` | `engine/tools/emit_presets.cpp`, `site/src/generated/presets.json`, `site/tests/` | The emitter serialises the pattern for timeline lanes and bumps `schemaVersion`; the generator's version guard is updated to match. Proved by a site case that derives the onsets from the JSON and asserts they differ from `bjorklund` for the same hit count and cycle — the case fails against the pre-change file, which cannot answer it | `open` |
+| PIPE02 | `engine/tools/emit_presets.cpp` (schemaVersion 3) writes `timeline` and `fixedPatternLength` but never `fixedPattern`, so an exact clave and a Euclidean bake of the same hit count and cycle serialise identically. M001/S02 made four presets carry hand-authored patterns and could not express the difference in the file the site reads: the plugin plays the right thing and nothing rendered from `presets.json` can show it | `tooling` | `engine/tools/emit_presets.cpp`, `site/src/generated/presets.json`, `site/tests/` | The emitter serialises the pattern for timeline lanes and bumps `schemaVersion`; the generator's version guard is updated to match. Proved by a site case that derives the onsets from the JSON and asserts they differ from `bjorklund` for the same hit count and cycle — the case fails against the pre-change file, which cannot answer it | `done` |
 
 ## Sequencing
 
