@@ -119,3 +119,24 @@ test('pre-push hook invokes the shared runner (no wiring rot)', () => {
     'scripts/pre-push-check.sh no longer invokes scripts/check-doc-conformance.sh',
   );
 });
+
+// M006/S02 (GAP02). The runner above names WHICH guardrail files run. This
+// case guards the other half of the seam: that CI runs the whole site/tests
+// directory, so a file named in no runner still cannot go unrun.
+//
+// Before M006/S02 six files ran nowhere in CI -- including
+// presets-json-schema.test.mjs, which carries M005/S01's stale-presets.json
+// guard, so the check that catches a stale generated file was itself unproven.
+// Nothing noticed, because nothing was watching this seam.
+//
+// Asserts on the command rather than the step's `name`: a name is cosmetic and
+// a command is what executes.
+test('CI runs the whole site test suite, not only the named guardrails', () => {
+  const workflow = readFileSync(join(REPO, '.github', 'workflows', 'ci.yml'), 'utf8');
+  assert.match(
+    workflow,
+    /run:\s*npm --prefix site test\b/,
+    'no CI step runs `npm --prefix site test`, so any site/tests file not named in ' +
+      'check-doc-conformance.sh runs nowhere in CI — the gap M006/S02 closed',
+  );
+});

@@ -12,7 +12,7 @@ assertion that the step stays there.
 ## Task status
 
 - [x] 1. Run the whole site suite in CI
-- [ ] 2. Guard the step against quiet removal, and close the slice
+- [x] 2. Guard the step against quiet removal, and close the slice
 
 ## Definition of Done
 

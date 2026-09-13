@@ -548,19 +548,19 @@ no CI form at all.
 **Plan:** M006-S02-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M006-S02.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Every `site/tests/*.test.mjs` file runs in at least one CI job
-- [ ] A test file added to that directory cannot silently go unrun — something
+- [x] Every `site/tests/*.test.mjs` file runs in at least one CI job
+- [x] A test file added to that directory cannot silently go unrun — something
       fails if it is covered by nothing
-- [ ] #272's counts are corrected to what the tree holds, or the issue is closed
+- [x] #272's counts are corrected to what the tree holds, or the issue is closed
       by this work
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| GAP02 | No CI job runs `npm --prefix site test`. The only `site/tests/**` files CI executes are those named in `scripts/check-doc-conformance.sh`, so 6 of 23 run nowhere: `bjorklund`, `dump-mode`, `preset-patterns`, `presets-json-schema`, `sample-loader`, `smf-writer`. Issue [#272](https://github.com/JimAKennedy/poly/issues/272) raised this as 7 of 21 and the numbers have drifted since. It is not hypothetical: `presets-json-schema.test.mjs` carries M005/S01's staleness guard, so the guard that catches a stale `presets.json` is itself unproven in CI | `tooling` | `.github/workflows/ci.yml`, `scripts/check-doc-conformance.sh` | A CI job runs the files, proved by pushing a branch with a deliberately failing case in one of the six and watching CI go red. The no-orphan guard is proved by adding a file covered by nothing and watching the check fail | `open` |
+| GAP02 | No CI job runs `npm --prefix site test`. The only `site/tests/**` files CI executes are those named in `scripts/check-doc-conformance.sh`, so 6 of 23 run nowhere: `bjorklund`, `dump-mode`, `preset-patterns`, `presets-json-schema`, `sample-loader`, `smf-writer`. Issue [#272](https://github.com/JimAKennedy/poly/issues/272) raised this as 7 of 21 and the numbers have drifted since. It is not hypothetical: `presets-json-schema.test.mjs` carries M005/S01's staleness guard, so the guard that catches a stale `presets.json` is itself unproven in CI | `tooling` | `.github/workflows/ci.yml`, `scripts/check-doc-conformance.sh` | A CI job runs the files, proved by pushing a branch with a deliberately failing case in one of the six and watching CI go red. The no-orphan guard is proved by adding a file covered by nothing and watching the check fail | `done` |
 
 ## Sequencing
 
