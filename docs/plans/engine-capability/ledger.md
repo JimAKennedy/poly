@@ -30,7 +30,9 @@ range is closed. Two later series have other origins.
 found in its own tooling while executing M001 — the role the theory-audit
 ledger's `B` series played for defects that programme found rather than
 inherited. `GAP01`–`GAP02` are M006's, found the same way while shipping M005,
-and one of them has a tracker issue behind it. None of these series is covered
+and one of them has a tracker issue behind it. `GAP03`–`GAP04` are M007's,
+found while shipping M006 — the same family again, which is why M007 closes the
+class rather than a fourth instance. None of these series is covered
 by the coverage claim above, which says every item in `deferrals.md` has a row,
 not that every row traces back to it. Each is marked on its own milestone rather
 than left for a reader to notice that eleven rows trace to no source document. The `D` prefix the source document
@@ -562,6 +564,80 @@ no CI form at all.
 |---|---|---|---|---|---|
 | GAP02 | No CI job runs `npm --prefix site test`. The only `site/tests/**` files CI executes are those named in `scripts/check-doc-conformance.sh`, so 7 of 23 run nowhere: `bjorklund`, `doc-conformance-wiring`, `dump-mode`, `preset-patterns`, `presets-json-schema`, `sample-loader`, `smf-writer`. Issue [#272](https://github.com/JimAKennedy/poly/issues/272) raised this as 7 of 21 — the count was right and only the total has drifted. It is not hypothetical: `presets-json-schema.test.mjs` carries M005/S01's staleness guard, so the guard that catches a stale `presets.json` is itself unproven in CI | `tooling` | `.github/workflows/ci.yml`, `scripts/check-doc-conformance.sh` | A CI job runs the files, proved by pushing a branch with a deliberately failing case in one of the six and watching CI go red. The no-orphan guard is proved by adding a file covered by nothing and watching the check fail | `done` |
 
+---
+
+## Milestone M007 — Every guard is runnable
+
+**Source note.** Not drawn from `deferrals.md`. Found while shipping M006: CI's
+`code-quality` job failed on `check-scripts-readme.sh` after M006's complete
+validation set had gone green, which is the third consecutive ship where CI
+caught something no local gate could run.
+
+**This milestone is the survey M006 should have done.** M006's vision — "a
+developer can run every check CI will run" — already covers this. What M006
+actually did was close two named gaps under that banner without surveying the
+guard surface, so a third instance was waiting. Saying so here is cheaper than
+letting a later reader mistake M007 for a new idea.
+
+**Vision:** Every guard this repo enforces can be run by a documented local
+command, and a new guard cannot be added that only CI knows how to run.
+
+**Branch:** milestone/M007-runnable-guards
+**Status:** planned
+**Demo:** Run the declared tokens on a branch that breaks any guard in the repo,
+and see it fail before pushing rather than after.
+
+**The pattern this closes.** Every gap in this family has been found the same
+way — by CI going red after a green local run:
+
+| Found | What CI caught that no local command ran |
+|---|---|
+| M005's ship | `doc-drift`, skipped for want of a base ref |
+| M006's planning | 7 of 23 site test files, in no CI job |
+| M006's ship | `check-scripts-readme.sh`, in no local gate |
+
+Three instances, three separate fixes. The fourth would be found the same way,
+which is what `GAP04` is for.
+
+### Slice M007/S01 — The orphaned guards get a home
+
+**Validation:** format, doc-discipline
+**Evidence:** evidence/M007-S01.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] Every guard listed in `GAP03` is reachable from a command declared in
+      `.jk/validations.yml`
+- [ ] Running that command on a tree that breaks one of them fails, shown for at
+      least one guard of each kind — a `check-*.sh` and a `check-*.mjs`
+- [ ] `CLAUDE.md` names the command, as it now names the doc-discipline one
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| GAP03 | Eleven checks run in CI and from no documented local command. Six shell guards — `check-personal-paths.sh`, `check-sample-manifest.sh`, `check-scripts-readme.sh`, `check-site-assets.sh`, `check-site-readme.sh`, `check-spdx-headers.sh` — four of them in the `code-quality` job and two in `site-lint`. And five node checks: `check-bridge-schema-coverage.mjs` plus the four green/red contract proofs. None appears in `.jk/validations.yml`, `scripts/pre-push-check.sh`, `.pre-commit-config.yaml` or `scripts/check-doc-conformance.sh`. M006's own ship proved the cost: a complete validation set went green and CI failed on the third of them | `tooling` | `.jk/validations.yml`, `scripts/`, `CLAUDE.md` | The new token is run against a tree that breaks a guard and watched to fail, for one `check-*.sh` and one `check-*.mjs`; a guard whose failure path is never exercised is the defect this programme keeps finding | `open` |
+
+### Slice M007/S02 — Reachability is itself checked
+
+**Validation:** format, site-unit, doc-conformance
+**Evidence:** evidence/M007-S02.md
+**Status:** open
+**Depends:** M007/S01
+
+**Definition of Done**
+
+- [ ] A check fails if any `scripts/check-*` guard is reachable from no declared
+      token, the pre-push gate, `pre-commit`, or the doc-conformance runner
+- [ ] The check has been shown to fail by adding a guard reachable from nothing
+- [ ] A guard that genuinely cannot run locally — one needing Cubase, a
+      self-hosted runner, or a deployed URL — is declarable as such in-band,
+      with a reason, rather than needing the check disabled
+- [ ] The check itself runs in CI
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| GAP04 | Nothing enforces that a guard is runnable locally, so each gap in this family has been found by CI going red after a green local run — three times in three ships. Fixing the eleven in `GAP03` leaves the twelfth to be discovered the same way. `check-wasm-freshness.sh` shows the exception is real rather than theoretical: it compares deployed artifacts against a URL and cannot run from a clean checkout, so the check needs an in-band, reasoned escape hatch in the style this repo already uses | `tooling` | `site/tests/`, `.jk/validations.yml` | A guard reachable from nothing is added and the check watched to fail naming it; the escape hatch is exercised on a guard that genuinely cannot run locally, and the check confirmed to run in CI rather than only locally — the circularity M006/S02 had to correct | `open` |
+
 ## Sequencing
 
 The graph is deliberately flat. No milestone depends on another: M001 needs no
@@ -591,7 +667,12 @@ the pressing problem it can be pulled forward whole, or slice by slice, without
 disturbing M002 or M003. Recorded explicitly so a later reader does not infer a
 dependency from the numbering.
 
-**M006 declares no dependency and blocks nothing.** It is worth pulling forward
+**M007 depends on nothing and blocks nothing**, but has the same standing
+argument M006 had, one instance stronger: until it lands, every milestone runs
+its validation set and believes it, while eleven guards CI enforces run nowhere
+locally.
+
+**M006 declared no dependency and blocked nothing.** It is worth pulling forward
 anyway, for a reason the graph cannot express: M002, M003 and M004 will each run
 their validation sets locally and believe them, and GAP01 means one of those
 checks reports success without running. Every milestone after this one is
