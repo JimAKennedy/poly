@@ -43,7 +43,14 @@ function fail(msg) {
 }
 
 function ensureEmitter() {
-  if (existsSync(EMITTER)) return;
+  // The build is unconditional on purpose. This used to return as soon as the
+  // binary existed, which made a stale emitter indistinguishable from a current
+  // one: a change to engine/src/presets.cpp left the old binary in place and we
+  // emitted the previous engine's data while reporting success. M001/S02 hit
+  // exactly that -- 43 presets written after the engine had 44. cmake is
+  // incremental, so building every time costs a no-op on an unchanged tree,
+  // which is cheaper and more honest than any staleness check this script could
+  // implement against C++ sources.
   if (!existsSync(resolve(BUILD_DIR, 'CMakeCache.txt'))) {
     log('configuring cmake build-presets/ (first run, engine-only)');
     execSync(`cmake -S "${REPO_ROOT}" -B "${BUILD_DIR}" -DPOLY_ENGINE_ONLY=ON`, {

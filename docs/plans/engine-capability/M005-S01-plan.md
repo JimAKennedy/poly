@@ -11,7 +11,7 @@ retargeted; no mechanism is introduced.
 
 ## Task status
 
-- [ ] 1. Make the generator always build its emitter
+- [x] 1. Make the generator always build its emitter
 - [ ] 2. Derive the schema test's preset count from the engine header, and close
       the slice
 
