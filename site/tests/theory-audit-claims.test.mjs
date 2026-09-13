@@ -400,6 +400,20 @@ const FINDINGS = [
       'a fixed point in one metric frame rather than a coincidence between independent ones',
     ],
   },
+  {
+    id: 'M001-EC05',
+    file: 'theory-afro-cuban.mdx',
+    rule:
+      'The exact son and rumba claves are non-Euclidean, and until M001/S02 no shipped preset played one: ' +
+      "Cuban Son Montuno's clave lane carried the Euclidean bake. The page therefore sent readers to the " +
+      'timeline-mode workflow as the only way to obtain a true clave. Both presets now ship the exact ' +
+      'patterns, so the workflow is one route rather than the route.',
+    // The workaround-only framing is what must not come back. The workflow
+    // itself stays named and linked -- building a clave by hand is still a
+    // legitimate thing to do, and Chapter 3 teaches it.
+    forbidden: ['to get the true pattern'],
+    present: ['Cuban Son Montuno', 'Rumba Clave', 'ship them exactly'],
+  },
 ];
 
 const srcCache = new Map();

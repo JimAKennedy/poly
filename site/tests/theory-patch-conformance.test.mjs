@@ -1171,6 +1171,119 @@ CHECKLIST.push(
   },
 );
 
+// Rule 7's bound is expressed in the unit the Humanize column uses: the engine's
+// Humanize parameter is 0-50 ms (params_def.h), and the rule's original "0.15"
+// was that fraction of the range. M001/S01 restated the rule in ms; this
+// constant is the same number the page now states.
+const BALKAN_HUMANIZE_MAX_MS = 7.5;
+
+CHECKLIST.push({
+  page: 'theory-balkan.mdx',
+  patch: 'Rule-Checked Kopanitsa (2+2+3+2+2)',
+  rules: [
+    {
+      id: 'balkan-humanize-bound',
+      description: `Rule 7: tight ensemble, Humanize <= ${BALKAN_HUMANIZE_MAX_MS} ms`,
+      check: ({ rows }) => {
+        // Negated comparison so an absent or unparseable column (NaN) fails
+        // rather than silently passing.
+        const loose = rows.filter((r) => !(cellNum(r, 'Humanize') <= BALKAN_HUMANIZE_MAX_MS));
+        if (loose.length === 0) return null;
+        const named = loose.map((r) => `${r.role} at ${r.cell.Humanize ?? 'no Humanize cell'}`).join(', ');
+        return `${named}; Rule 7 bounds Humanize at ${BALKAN_HUMANIZE_MAX_MS} ms`;
+      },
+    },
+  ],
+});
+
+CHECKLIST.push({
+  page: 'theory-electronic-breakbeat.mdx',
+  patch: 'Rule-Checked Jungle Frame',
+  rules: [
+    {
+      id: 'ebb-swing-is-a-bus',
+      description: 'Rule 4: one swing value across swung layers; kick and clap straight',
+      check: ({ rows }) => {
+        const swung = rows.filter((r) => cellNum(r, 'Swing') !== 0);
+        const values = [...new Set(swung.map((r) => cellNum(r, 'Swing')))];
+        // An absent column reads as NaN, which is !== 0, so it lands here.
+        if (values.some((v) => Number.isNaN(v)))
+          return 'a lane has no readable Swing cell; Rule 4 is stated per lane';
+        if (values.length > 1)
+          return `swung layers carry ${values.length} distinct swing values (${values.join(', ')}); Rule 4 makes swing one bus`;
+        const straight = rows.filter((r) => /kick|clap/i.test(r.role) && cellNum(r, 'Swing') !== 0);
+        if (straight.length)
+          return `${straight.map((r) => r.role).join(', ')} carr${straight.length === 1 ? 'ies' : 'y'} swing; Rule 4 keeps kick and clap straight`;
+        return null;
+      },
+    },
+  ],
+});
+
+// Hits-per-step is not comparable across lanes whose Subdivision differs: a
+// 1/16 lane covers a quarter of the time an 1/4 lane does for the same step
+// count. Rate here is hits per whole note, which is comparable.
+const subdivisionWholeNotes = (row) => {
+  const m = /^(\d+)\/(\d+)$/.exec(String(row.cell.Subdivision ?? '').trim());
+  return m ? Number(m[1]) / Number(m[2]) : NaN;
+};
+const voiceRate = (row) => row.hits / (row.steps * subdivisionWholeNotes(row));
+
+CHECKLIST.push({
+  page: 'theory-gamelan.mdx',
+  patch: 'Rule-Checked Kotekan Over Colotomy',
+  rules: [
+    {
+      id: 'gamelan-density-inverts-register',
+      description: 'Rule 9: higher register plays denser, lower plays sparser',
+      check: ({ rows }) => {
+        const voices = rows.map((r) => ({ role: r.role, note: cellNum(r, 'Note'), rate: voiceRate(r) }));
+        const unreadable = voices.filter((v) => Number.isNaN(v.note) || Number.isNaN(v.rate));
+        if (unreadable.length)
+          return `${unreadable.map((v) => v.role).join(', ')}: no readable Note or Subdivision cell; Rule 9 compares register against rate`;
+        // Rule 9 describes a pyramid, not a total order: equal registers or
+        // equal rates are allowed, and only a strict inversion reads as foreign.
+        const byNote = [...voices].sort((a, b) => a.note - b.note);
+        for (let i = 1; i < byNote.length; i++) {
+          const lower = byNote[i - 1];
+          const higher = byNote[i];
+          if (higher.note > lower.note && higher.rate < lower.rate)
+            return `${higher.role} (note ${higher.note}) sits above ${lower.role} (note ${lower.note}) but plays sparser; Rule 9 makes the higher voice denser`;
+        }
+        return null;
+      },
+    },
+  ],
+});
+
+CHECKLIST.push({
+  page: 'theory-sub-saharan-africa.mdx',
+  patch: 'Rule-Checked Ewe Texture',
+  rules: [
+    {
+      id: 'ssa-register-and-rate-separate',
+      description: 'Rule 7: no two voices share both register and rate',
+      check: ({ rows }) => {
+        const voices = rows.map((r) => ({ role: r.role, note: cellNum(r, 'Note'), rate: voiceRate(r) }));
+        const unreadable = voices.filter((v) => Number.isNaN(v.note) || Number.isNaN(v.rate));
+        if (unreadable.length)
+          return `${unreadable.map((v) => v.role).join(', ')}: no readable Note or Subdivision cell; Rule 7 pairs register with rate`;
+        // Rule 7 asks for a distinct *combination* of register and note-rate.
+        // Sharing a rate is normal here -- the dance beat, kidi and sogo all
+        // run at the same rate and interlock by rotation. What the rule forbids
+        // is doubling: one pitch at one rate, which is not individually audible.
+        for (let i = 0; i < voices.length; i++) {
+          for (let j = i + 1; j < voices.length; j++) {
+            if (voices[i].note === voices[j].note && voices[i].rate === voices[j].rate)
+              return `${voices[i].role} and ${voices[j].role} share note ${voices[i].note} at the same rate; Rule 7 calls that doubling`;
+          }
+        }
+        return null;
+      },
+    },
+  ],
+});
+
 let liveMarkers = 0;
 
 for (const entry of CHECKLIST) {
@@ -1289,7 +1402,7 @@ const RULE_TRIAGE = {
     4: { checkable: true, case: 'bal-tupan-two-strokes', why: 'the tupan speaks with two lanes, a low stroke and a high one' },
     5: { checkable: true, case: 'bal-density-strata', why: 'density strata sit on the shared grid, which is Rule 1 measured across all lanes' },
     6: { checkable: true, case: 'bal-no-swing', why: 'Swing is zero' },
-    7: { checkable: false, absentColumn: 'Humanize', why: 'names a Humanize bound, and this page\'s patch table carries no Humanize column' },
+    7: { checkable: true, case: 'balkan-humanize-bound', why: 'the patch table now carries a Humanize column, so the per-lane bound is readable' },
     8: { checkable: false, why: 'a claim about measured performance timing, not about anything the patch specifies' },
     9: { checkable: false, why: 'ornament placement before the long cell is not represented in a lane table' },
   },
@@ -1306,7 +1419,7 @@ const RULE_TRIAGE = {
     1: { checkable: true, case: 'ebb-anchor-immutable', why: 'asserted: ebb-anchor-immutable' },
     2: { checkable: false, why: 'forbids a layer wandering between territories, which is a change over time; a static patch assigns each lane one position set and cannot wander. Coinciding with another layer is not wandering — a sixteenth hat stream crossing the backbeat keeps its own territory' },
     3: { checkable: true, case: 'ebb-polymeter-loop-length', why: 'polymeter comes from a loop length of 3, 5, 6 or 7 against the 4-unit frame' },
-    4: { checkable: false, absentColumn: 'Swing', why: 'names swing percentages, and this page\'s patch table carries no Swing column' },
+    4: { checkable: true, case: 'ebb-swing-is-a-bus', why: 'the patch table now carries a Swing column, so the bus reading is checkable per lane' },
     5: { checkable: false, why: 'energy management across 8, 16 and 32-bar boundaries is arrangement, not a patch state' },
     6: { checkable: true, case: 'ebb-snare-backbeat-fixed', why: 'the snare holds the half-time backbeat' },
     7: { checkable: true, case: 'ebb-kick-avoids-snare', why: 'asserted: ebb-kick-avoids-snare' },
@@ -1332,7 +1445,7 @@ const RULE_TRIAGE = {
     6: { checkable: true, why: 'asserted: gam-pokok-layer' },
     7: { checkable: true, case: 'gam-strata-halve', why: 'stroke rates halve as instruments deepen — step counts in powers of two' },
     8: { checkable: true, case: 'gam-gong-heaviest', why: 'velocity increases with depth, the gong heaviest' },
-    9: { checkable: false, absentColumn: 'Note', why: 'needs each lane\'s register, and this page\'s patch table carries no Note column; role names imply it but naming is not measurement' },
+    9: { checkable: true, case: 'gamelan-density-inverts-register', why: 'the patch table now carries a Note column, so register is measured rather than implied by role names' },
     10: { checkable: false, why: 'irama trades tempo against density across performances; a patch fixes one tempo' },
   },
   'theory-indian-classical.mdx': {
@@ -1372,7 +1485,7 @@ const RULE_TRIAGE = {
     4: { checkable: false, why: 'whether the texture supports both a ternary and a binary hearing is an interpretive claim about the composite' },
     5: { checkable: true, case: 'ssa-variation-in-lead', why: 'the variation budget rises from timeline to support to lead' },
     6: { checkable: false, why: 'lead phrases resolving at cycle boundaries span one to four cycles' },
-    7: { checkable: false, absentColumn: 'Note', why: 'needs each lane\'s register, and this page\'s patch table carries no Note column' },
+    7: { checkable: true, case: 'ssa-register-and-rate-separate', why: 'the patch table now carries a Note column, so register pairs with rate as the rule states' },
     8: { checkable: false, why: 'a measured non-isochronous subdivision profile, which the lane table does not encode' },
     9: { checkable: false, why: 'call-and-response is a structural relation between players over time' },
 

@@ -1075,6 +1075,15 @@ GrooveState makeCubanSon() {
     clave.baseVelocity = 100;
     clave.probability = 1.0f;
     clave.swingAmount = 0.25f;
+    // Son clave 3-2, hand-authored rather than left to lockReferentLane's
+    // Euclidean bake. E(5,16) puts the fourth stroke on pulse 9; the son clave
+    // puts it on 10 -- the one-pulse difference at the ponche that Chapter 3
+    // names. A hand-authored reference also stops lockPresetReferent re-baking
+    // this lane, which is how the four existing exact timelines survive.
+    clave.timeline = true;
+    clave.fixedPatternLength = 16;
+    clave.fixedPattern = {true,  false, false, true,  false, false, true,  false,
+                          false, false, true,  false, true,  false, false, false};
 
     auto& cascara = s.lanes[1];
     cascara.id = 1;
@@ -1123,6 +1132,129 @@ GrooveState makeCubanSon() {
 
     s.macros.swing = 0.25f;
     s.macros.syncopation = 0.4f;
+    return s;
+}
+
+GrooveState makeRumbaClave() {
+    GrooveState s{};
+    s.activeLaneCount = 5;
+    s.seed = 143;
+
+    // Guaguanco texture built on the rumba clave. The clave is hand-authored
+    // for the same reason as makeCubanSon's: lockReferentLane would otherwise
+    // bake E(5,16), which is neither clave.
+    auto& clave = s.lanes[0];
+    clave.id = 0;
+    clave.role = Role::AnchorPulse;
+    clave.midiNote = 75;
+    clave.cycle = {16, 16};
+    clave.hitCount = 5;
+    clave.baseVelocity = 100;
+    clave.probability = 1.0f;
+    // Rumba clave 3-2: onsets 0, 3, 7, 10, 12, gaps 3-4-3-2-4. The third
+    // stroke sits on 7 where the son clave puts it on 6.
+    clave.timeline = true;
+    clave.fixedPatternLength = 16;
+    clave.fixedPattern = {true,  false, false, true,  false, false, false, true,
+                          false, false, true,  false, true,  false, false, false};
+
+    auto& palitos = s.lanes[1];
+    palitos.id = 1;
+    palitos.role = Role::Accent;
+    palitos.midiNote = 37;
+    palitos.cycle = {16, 16};
+    palitos.hitCount = 9;
+    palitos.baseVelocity = 78;
+    palitos.probability = 1.0f;
+    palitos.ghostFloor = 45;
+
+    auto& salidor = s.lanes[2];
+    salidor.id = 2;
+    salidor.role = Role::Backbeat;
+    salidor.midiNote = 64;
+    salidor.cycle = {16, 16};
+    salidor.hitCount = 4;
+    salidor.rotation = 2;
+    salidor.baseVelocity = 95;
+    salidor.probability = 1.0f;
+
+    auto& tresGolpes = s.lanes[3];
+    tresGolpes.id = 3;
+    tresGolpes.role = Role::Ghost;
+    tresGolpes.midiNote = 62;
+    tresGolpes.cycle = {16, 16};
+    tresGolpes.hitCount = 6;
+    tresGolpes.rotation = 3;
+    tresGolpes.baseVelocity = 82;
+    tresGolpes.probability = 0.9f;
+    tresGolpes.ghostFloor = 50;
+
+    // The quinto is the free voice in rumba -- the one part that improvises
+    // against the fixed clave, which is why it alone carries mutation here.
+    auto& quinto = s.lanes[4];
+    quinto.id = 4;
+    quinto.role = Role::Shimmer;
+    quinto.midiNote = 63;
+    quinto.cycle = {16, 16};
+    quinto.hitCount = 7;
+    quinto.rotation = 1;
+    quinto.baseVelocity = 88;
+    quinto.probability = 0.85f;
+    quinto.ghostFloor = 40;
+    quinto.mutationRate = 0.3f;
+
+    s.macros.syncopation = 0.5f;
+    s.macros.density = 0.55f;
+    return s;
+}
+
+GrooveState makeClappingMusic() {
+    GrooveState s{};
+    s.activeLaneCount = 2;
+    s.seed = 144;
+
+    // Reich's cell: x x x . x x . x . x x . -- eight claps across twelve
+    // quavers, gaps 1-1-2-1-2-2-1-2. Close to but not E(8,12): Bjorklund
+    // produces a strict 1-2 alternation, and the opening run of three claps is
+    // a run no E(k,12) yields at any rotation. Hand-authored for that reason.
+    const std::array<bool, kMaxSteps> cell = {true,  true, true,  false, true, true,
+                                              false, true, false, true,  true, false};
+
+    auto& steady = s.lanes[0];
+    steady.id = 0;
+    steady.role = Role::AnchorPulse;
+    steady.midiNote = 39;
+    steady.cycle = {12, 8};
+    steady.hitCount = 8;
+    steady.baseVelocity = 95;
+    steady.probability = 1.0f;
+    steady.noteDuration = 0.12f;
+    steady.timeline = true;
+    steady.fixedPatternLength = 12;
+    steady.fixedPattern = cell;
+
+    // Clapping Music discretises Piano Phase: the second performer jumps
+    // forward one position every twelve bars and holds, rather than sliding
+    // through every phase relationship. Drift is floored to whole steps, so it
+    // already holds between jumps; the rate is what makes it Reich's process.
+    // Twelve repetitions of a 12-step 1/8 cell span 18 bars of four quarters,
+    // so one step per 18 bars is one position per twelve repetitions.
+    auto& shifting = s.lanes[1];
+    shifting.id = 1;
+    shifting.role = Role::AnchorPulse;
+    shifting.midiNote = 39;
+    shifting.cycle = {12, 8};
+    shifting.hitCount = 8;
+    shifting.baseVelocity = 90;
+    shifting.probability = 1.0f;
+    shifting.noteDuration = 0.12f;
+    shifting.timeline = true;
+    shifting.fixedPatternLength = 12;
+    shifting.fixedPattern = cell;
+    shifting.driftRate = 1.0f / 18.0f;
+
+    s.macros.density = 0.5f;
+    s.macros.complexity = 0.2f;
     return s;
 }
 
@@ -2456,6 +2588,12 @@ namespace {
 bool isReferentLocked(const LaneConfig& cfg) {
     if (!cfg.timeline || cfg.probability != 1.0f || cfg.mutationRate != 0.0f || cfg.phraseLength != 0.0f)
         return false;
+    // A drifting lane is not a fixed reference: drift rotates which step of the
+    // pattern sounds, so the reference moves. lockPresetReferent already skips
+    // phasing lanes when choosing one; this is the same exclusion in the
+    // predicate that decides whether a lane *is* one.
+    if (cfg.driftRate != 0.0f)
+        return false;
     if (cfg.fixedPatternLength <= 0 || cfg.fixedPatternLength > kMaxSteps)
         return false;
     for (int s = 0; s < cfg.fixedPatternLength; ++s)
@@ -2602,6 +2740,10 @@ GrooveState makeFactoryPresetRaw(int index) {
         return makeBalkanFunk();
     case 42:
         return makeCompositionalArc();
+    case 43:
+        return makeRumbaClave();
+    case 44:
+        return makeClappingMusic();
     default:
         return GrooveState{};
     }
@@ -2724,6 +2866,11 @@ const PresetInfo& getFactoryPresetInfo(int index) {
          "Experimental / Fusion"},
         {"Balkan Funk", "7/8 aksak with funk ghost notes and micro-timing on the hi-hat", "Balkan / Eastern European"},
         {"Compositional Arc", "Six-lane layered build — three continuous lanes plus three gated ornamental voices",
+         "Minimalist / Compositional"},
+        {"Rumba Clave", "Guaguancó texture on the exact rumba clave — palitos, salidor, tres golpes, and a free quinto",
+         "Latin / Brazilian"},
+        {"Clapping Music",
+         "Reich's authored twelve-pulse cell, clapped steady against a partner shifting one position every twelve bars",
          "Minimalist / Compositional"},
     };
     static constexpr PresetInfo kEmpty{"", "", "Foundational"};

@@ -6,7 +6,7 @@ class: gated
 
 # Poly Preset Taxonomy
 
-The 43 factory presets are grouped into 10 categories. This grouping is the source of truth for both the plugin's web UI preset browser (grouped `Category > Preset`) and the site's Try It category filter row.
+The 45 factory presets are grouped into 10 categories. This grouping is the source of truth for both the plugin's web UI preset browser (grouped `Category > Preset`) and the site's Try It category filter row.
 
 The category enum lives in the engine as `kFactoryPresetCategories[]` in `engine/src/presets.cpp`, and each `PresetInfo` entry in `kInfos[]` carries a `category` field that indexes into it. The JSON emitter (`engine/tools/emit_presets.cpp`) exports both the enum and each preset's category as `schemaVersion: 3`.
 
@@ -15,7 +15,7 @@ The category enum lives in the engine as `kFactoryPresetCategories[]` in `engine
 - 8-10 categories total
 - 2-8 presets per category (relaxed to 2-7 to fit Asian Traditions without an 11th category)
 - Each preset in exactly one category
-- Categories cover all 43 presets with no gaps
+- Categories cover all 45 presets with no gaps
 
 ## Ordering rationale
 
@@ -26,17 +26,17 @@ Categories are ordered from foundational/reference material at the top down thro
 | # | Category | Count | What lives here |
 |---|----------|-------|-----------------|
 | 1 | Foundational | 3 | Reference / demo grooves that show the engine's polymetric primitives without leaning on a style. |
-| 2 | Minimalist / Compositional | 5 | Process pieces (Reich phasing, Riley layered entry, Nancarrow tempi) plus the Compositional Arc build. |
+| 2 | Minimalist / Compositional | 6 | Process pieces (Reich phasing, Riley layered entry, Nancarrow tempi) plus the Compositional Arc build. |
 | 3 | House / Techno | 4 | Straight-four dance grooves — classic house, minimal techno, deep house, afro-house. |
 | 4 | Jazz / Funk / Soul | 5 | US-tradition swing and pocket grooves — bop ride, Elvin cascade, JB funk, neo-soul, J Dilla pocket. |
 | 5 | Breaks / Drum & Bass | 3 | Chopped-break lineage — classic breakbeat, jungle, liquid DnB. |
-| 6 | Latin / Brazilian | 5 | Cuban clave family plus Brazilian bossa/samba. |
+| 6 | Latin / Brazilian | 6 | Cuban clave family plus Brazilian bossa/samba. |
 | 7 | African | 5 | Sub-Saharan traditions and Afrobeat — Ewe, Manding djembe, Afrobeat 12/8, Afrobeat Lagos. |
 | 8 | Asian Traditions | 7 | Indonesian gamelan (Javanese colotomic, Balinese kotekan) plus Indian classical (Carnatic Adi tala, Hindustani Tintal, Rupak Tal). |
 | 9 | Balkan / Eastern European | 4 | Additive-cell grooves in 7/8 and 11/8 plus their funk fusion. |
 | 10 | Experimental / Fusion | 2 | Genre-crossing hybrids and glitch — IDM Glitch, Afro-Electronic Fusion. |
 
-Totals: 3 + 5 + 4 + 5 + 3 + 5 + 5 + 7 + 4 + 2 = **43**.
+Totals: 3 + 6 + 4 + 5 + 3 + 6 + 5 + 7 + 4 + 2 = **45**.
 
 ## Preset-to-category mapping
 
@@ -87,6 +87,8 @@ Indexes match `kInfos[]` order in `engine/src/presets.cpp`.
 | 40 | Afro-Electronic Fusion | Experimental / Fusion |
 | 41 | Balkan Funk | Balkan / Eastern European |
 | 42 | Compositional Arc | Minimalist / Compositional |
+| 43 | Rumba Clave | Latin / Brazilian |
+| 44 | Clapping Music | Minimalist / Compositional |
 
 ## Judgement calls worth flagging
 

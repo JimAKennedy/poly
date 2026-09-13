@@ -41,6 +41,10 @@ namespace {
 bool isLockedReferent(const poly::LaneConfig& cfg) {
     if (!cfg.timeline)
         return false;
+    // A drifting lane is not a fixed reference: drift rotates which step of the
+    // pattern sounds. Mirrors isReferentLocked in engine/src/presets.cpp.
+    if (cfg.driftRate != 0.0f)
+        return false;
     if (cfg.probability != 1.0f)
         return false;
     if (cfg.mutationRate != 0.0f)

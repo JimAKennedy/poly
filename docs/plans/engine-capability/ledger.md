@@ -49,54 +49,58 @@ programme's commits and nothing else.
 kept — the patch tables report the values the engine already holds, and the
 claves the guide calls non-Euclidean ship as presets that play them.
 **Branch:** milestone/M001-already-deliverable
-**Status:** planned
+**Status:** done
 **Demo:** Four rules that read "not checkable, absent column" now read
 `checkable` and are checked; loading `Cuban Son Montuno` plays a son clave rather
 than `E(5,16)`.
 
 ### Slice M001/S01 — Columns and their predicates
 
+**Plan:** M001-S01-plan.md
 **Validation:** format, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M001-S01.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Each of the four pages' patch table carries the column its rule needs, with
-      values that agree with `site/src/generated/presets.json`
-- [ ] Each of the four rules reads `checkable` in `RULE_TRIAGE`, with a predicate
+- [x] Each of the four pages' patch table carries the column its rule needs, with
+      values consistent with the page's own rules and the roles the table
+      already names
+- [x] Rule 7's Humanize bound is stated in the same unit the new column uses
+- [x] Each of the four rules reads `checkable` in `RULE_TRIAGE`, with a predicate
       that has been shown to fail when the table is mutated
-- [ ] The `absentColumn` reverse audit names four fewer rules, and still fails if
+- [x] The `absentColumn` reverse audit names four fewer rules, and still fails if
       a verdict claims a column the table actually has
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| EC01 | `theory-balkan` Rule 7 ("Humanize ≤ 0.15") is unverifiable because the patch table has no `Humanize` column, though every lane carries `humanizeMs` and `PresetTable` already renders that column name | `column` | `theory-balkan.mdx`, `site/tests/theory-patch-conformance.test.mjs` | The rule's triage entry flips to `checkable` with a predicate reading the new column; the predicate is mutation-proved by raising a lane's Humanize above the bound and watching the named case fail | `open` |
-| EC02 | `theory-electronic-breakbeat` Rule 4 ("swing is a bus, not a per-note gesture") is unverifiable because the patch table has no `Swing` column, though every lane carries `swingAmount` | `column` | `theory-electronic-breakbeat.mdx`, `site/tests/theory-patch-conformance.test.mjs` | As EC01, mutation-proved by giving one lane a per-lane swing value the rule forbids | `open` |
-| EC03 | `theory-gamelan` Rule 9 (density scales inversely with register) is unverifiable because the patch table has no `Note` column, though every lane carries `noteNumber` | `column` | `theory-gamelan.mdx`, `site/tests/theory-patch-conformance.test.mjs` | As EC01, mutation-proved by inverting two lanes' note numbers so the density relation reverses | `open` |
-| EC04 | `theory-sub-saharan-africa` Rule 7 (register and rate separate the voices) is unverifiable because the patch table has no `Note` column | `column` | `theory-sub-saharan-africa.mdx`, `site/tests/theory-patch-conformance.test.mjs` | As EC01, mutation-proved by collapsing two voices onto one note number | `open` |
+| EC01 | `theory-balkan` Rule 7 ("Humanize ≤ 0.15") is unverifiable because the patch table has no `Humanize` column, though every lane carries `humanizeMs` and `PresetTable` already renders that column name | `column` | `theory-balkan.mdx`, `site/tests/theory-patch-conformance.test.mjs` | The rule's triage entry flips to `checkable` with a predicate reading the new column; the predicate is mutation-proved by raising a lane's Humanize above the bound and watching the named case fail | `done` |
+| EC02 | `theory-electronic-breakbeat` Rule 4 ("swing is a bus, not a per-note gesture") is unverifiable because the patch table has no `Swing` column, though every lane carries `swingAmount` | `column` | `theory-electronic-breakbeat.mdx`, `site/tests/theory-patch-conformance.test.mjs` | As EC01, mutation-proved by giving one lane a per-lane swing value the rule forbids | `done` |
+| EC03 | `theory-gamelan` Rule 9 (density scales inversely with register) is unverifiable because the patch table has no `Note` column, though every lane carries `noteNumber` | `column` | `theory-gamelan.mdx`, `site/tests/theory-patch-conformance.test.mjs` | As EC01, mutation-proved by inverting two lanes' note numbers so the density relation reverses | `done` |
+| EC04 | `theory-sub-saharan-africa` Rule 7 (register and rate separate the voices) is unverifiable because the patch table has no `Note` column | `column` | `theory-sub-saharan-africa.mdx`, `site/tests/theory-patch-conformance.test.mjs` | As EC01, mutation-proved by collapsing two voices onto one note number | `done` |
 
 ### Slice M001/S02 — Exact timelines
 
+**Plan:** M001-S02-plan.md
 **Validation:** format, unit, engine-isolation, site-unit, doc-conformance
 **Evidence:** evidence/M001-S02.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Son clave, rumba clave and Clapping Music ship as presets whose lanes carry
+- [x] Son clave, rumba clave and Clapping Music ship as presets whose lanes carry
       hand-authored `fixedPattern` timelines, in the manner the four existing
       hand-authored timelines already use
-- [ ] `Cuban Son Montuno`'s clave lane is no longer the Euclidean pattern
+- [x] `Cuban Son Montuno`'s clave lane is no longer the Euclidean pattern
       `lockReferentLane` bakes
-- [ ] A test asserts each shipped timeline equals its published pattern and
+- [x] A test asserts each shipped timeline equals its published pattern and
       differs from the Euclidean pattern of the same hit count and cycle length
-- [ ] The guide's instruction to hand-build a true clave in timeline mode no
+- [x] The guide's instruction to hand-build a true clave in timeline mode no
       longer describes the only way to obtain one
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| EC05 | Issue #156, which the theory-audit ledger names as deferred: exact non-Euclidean timelines as first-class presets. Partly satisfied — the mechanism ships and four builders already hand-author exact patterns (`makeAfrobeat12_8`, `makeBossaNova`, `makeEweAgbekor`, `makeAfrobeatLagos`), covering the issue's bell variants and teleco-teco. Missing: clave and Clapping Music. The gap is visible in the guide, which tells the reader the exact son and rumba claves are non-Euclidean and to use the timeline-mode workflow to get the true pattern — a workaround the shipped `Cuban Son Montuno` preset needs, its clave lane being one of the 39 lanes `lockReferentLane` bakes from `euclidean()` | `tracker` | `engine/src/presets.cpp`, `tests/preset_tests.cpp`, `theory-afro-cuban.mdx` | A gtest asserts the clave lanes' `fixedPattern` matches the published son and rumba patterns and is not the Euclidean pattern of the same hit count and cycle; the site suite asserts the guide no longer presents the workaround as the only route | `open` |
+| EC05 | Issue #156, which the theory-audit ledger names as deferred: exact non-Euclidean timelines as first-class presets. Partly satisfied — the mechanism ships and four builders already hand-author exact patterns (`makeAfrobeat12_8`, `makeBossaNova`, `makeEweAgbekor`, `makeAfrobeatLagos`), covering the issue's bell variants and teleco-teco. Missing: clave and Clapping Music. The gap is visible in the guide, which tells the reader the exact son and rumba claves are non-Euclidean and to use the timeline-mode workflow to get the true pattern — a workaround the shipped `Cuban Son Montuno` preset needs, its clave lane being one of the 39 lanes `lockReferentLane` bakes from `euclidean()` | `tracker` | `engine/src/presets.cpp`, `tests/preset_tests.cpp`, `theory-afro-cuban.mdx` | A gtest asserts the clave lanes' `fixedPattern` matches the published son and rumba patterns and is not the Euclidean pattern of the same hit count and cycle; the site suite asserts the guide no longer presents the workaround as the only route | `done` |
 
 ---
 

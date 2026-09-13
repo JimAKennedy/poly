@@ -28,7 +28,7 @@ Counterpoint in this system is **vertical, not phased**: all voices share the sa
 
 6. **No swing.** The asymmetry is *metric*, not micro-timing. Swing applied to an aksak cycle fights the cell structure ([Chapter 7](/07-balkan/) says this; here is the rule's reason: swing displaces alternate quick pulses, but the quick pulses are the units from which cells are counted — displacing them un-counts the meter).
 
-7. **Tight ensemble, minimal humanize.** Wedding-band aksak at 200+ BPM is played with near-mechanical unison; timing looseness reads as failure, not feel ([Rice 1994](/appendix-references/#fr-rice-1994)). Humanize ≤ 0.15.
+7. **Tight ensemble, minimal humanize.** Wedding-band aksak at 200+ BPM is played with near-mechanical unison; timing looseness reads as failure, not feel ([Rice 1994](/appendix-references/#fr-rice-1994)). Humanize ≤ 7.5 ms.
 
 8. **The long beat is slightly *less* than 3:2 in practice.** Measured performances show three-cells compressed a shade below their notated proportion — a systematic, style-defining tendency, not sloppiness ([Goldberg 2015](/appendix-references/#fr-goldberg-2015); cf. [London 2012](/appendix-references/#fr-london-2012) on NI-meter tolerance ranges). Until Poly exposes a long-beat ratio control, this is unreproducible on the grid — know that the grid version is the *notated* aksak, slightly stiffer than the played one.
 
@@ -44,12 +44,12 @@ Counterpoint in this system is **vertical, not phased**: all voices share the sa
 
 <PolyPatch title="Rule-Checked Kopanitsa (2+2+3+2+2)">
 
-| Lane | Role | Steps | Hits | Rotation | Subdivision | Velocity | Ghost | Mutation | Swing |
-|------|------|-------|------|----------|-------------|----------|-------|----------|-------|
-| 1 | Tupan low (cell heads) | 11 | 5 | 7 | 1/8 | 115 | 0 | 0% | 0 |
-| 2 | Tupan stick (fill) | 11 | 7 | 1 | 1/8 | 70 | 45 | 8% | 0 |
-| 3 | Quick pulse | 11 | 11 | 0 | 1/8 | 50 | 20 | 0% | 0 |
-| 4 | Melodic accents | 11 | 4 | 2 | 1/8 | 85 | 25 | 8% | 0 |
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Velocity | Ghost | Mutation | Swing | Humanize |
+|------|------|-------|------|----------|-------------|----------|-------|----------|-------|----------|
+| 1 | Tupan low (cell heads) | 11 | 5 | 7 | 1/8 | 115 | 0 | 0% | 0 | 0ms |
+| 2 | Tupan stick (fill) | 11 | 7 | 1 | 1/8 | 70 | 45 | 8% | 0 | 3ms |
+| 3 | Quick pulse | 11 | 11 | 0 | 1/8 | 50 | 20 | 0% | 0 | 0ms |
+| 4 | Melodic accents | 11 | 4 | 2 | 1/8 | 85 | 25 | 8% | 0 | 4ms |
 
 </PolyPatch>
 
