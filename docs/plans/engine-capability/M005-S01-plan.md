@@ -12,7 +12,7 @@ retargeted; no mechanism is introduced.
 ## Task status
 
 - [x] 1. Make the generator always build its emitter
-- [ ] 2. Derive the schema test's preset count from the engine header, and close
+- [x] 2. Derive the schema test's preset count from the engine header, and close
       the slice
 
 ## Definition of Done

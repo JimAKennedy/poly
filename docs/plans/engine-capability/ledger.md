@@ -454,22 +454,22 @@ constraint on it.
 **Plan:** M005-S01-plan.md
 **Validation:** format, site-unit
 **Evidence:** evidence/M005-S01.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Editing `engine/src/presets.cpp` and running the generator produces JSON
+- [x] Editing `engine/src/presets.cpp` and running the generator produces JSON
       that reflects the edit, with no explicit build step
-- [ ] A stale `presets.json` fails the site suite mechanically, rather than
+- [x] A stale `presets.json` fails the site suite mechanically, rather than
       depending on someone noticing the count is wrong
-- [ ] The generator still succeeds from a clean tree, where the build directory
+- [x] The generator still succeeds from a clean tree, where the build directory
       does not yet exist
-- [ ] The hardcoded preset count in `presets-json-schema.test.mjs` is gone,
+- [x] The hardcoded preset count in `presets-json-schema.test.mjs` is gone,
       derived from `kFactoryPresetCount` instead
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| PIPE01 | `ensureEmitter()` in `site/scripts/generate-presets-json.mjs` returns as soon as the emitter binary exists and rebuilds it only when missing, so a change to `presets.cpp` silently emits stale JSON. The file's own header calls a stale `presets.json` "a silent correctness bug we already paid for", and M001/S02 paid it again: the generator wrote 43 presets after the engine had 44, and reported success | `tooling` | `site/scripts/generate-presets-json.mjs`, `site/tests/presets-json-schema.test.mjs` | The early return is removed so the build target always runs — cmake is incremental, so an unchanged tree costs a no-op. Proved by reproducing the M001 failure: edit a preset, run the generator with no explicit build, and watch the new value appear where it previously did not. The schema test derives its expected count from `kFactoryPresetCount` in `engine/include/poly/presets.h`, so a stale file fails the suite; proved by regenerating against a deliberately stale binary | `open` |
+| PIPE01 | `ensureEmitter()` in `site/scripts/generate-presets-json.mjs` returns as soon as the emitter binary exists and rebuilds it only when missing, so a change to `presets.cpp` silently emits stale JSON. The file's own header calls a stale `presets.json` "a silent correctness bug we already paid for", and M001/S02 paid it again: the generator wrote 43 presets after the engine had 44, and reported success | `tooling` | `site/scripts/generate-presets-json.mjs`, `site/tests/presets-json-schema.test.mjs` | The early return is removed so the build target always runs — cmake is incremental, so an unchanged tree costs a no-op. Proved by reproducing the M001 failure: edit a preset, run the generator with no explicit build, and watch the new value appear where it previously did not. The schema test derives its expected count from `kFactoryPresetCount` in `engine/include/poly/presets.h`, so a stale file fails the suite; proved by regenerating against a deliberately stale binary | `done` |
 
 ### Slice M005/S02 — `presets.json` carries the pattern
 
