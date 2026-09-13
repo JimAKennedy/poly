@@ -24,11 +24,15 @@ already holds every value the five missing columns would report, and `#156`'s
 mechanism already ships with four hand-authored exact timelines behind it.
 
 **Row series.** `EC01`–`EC11`, one per item in the source document, and that
-range is closed. `DAW01`–`DAW07` are M004's, and they have a different origin:
-that milestone was requested directly rather than drawn from `deferrals.md`, so
-it is the one part of this ledger the coverage claim above does not cover. It is
-marked as such on the milestone itself rather than left for a reader to notice
-that seven rows trace to no source document. The `D` prefix the source document
+range is closed. Two later series have other origins.
+`DAW01`–`DAW07` are M004's, requested directly rather than drawn from
+`deferrals.md`. `PIPE01`–`PIPE02` are M005's, and are defects this programme
+found in its own tooling while executing M001 — the role the theory-audit
+ledger's `B` series played for defects that programme found rather than
+inherited. Neither series is covered by the coverage claim above, which says
+every item in `deferrals.md` has a row, not that every row traces back to it.
+Both are marked on their own milestones rather than left for a reader to notice
+that nine rows trace to no source document. The `D` prefix the source document
 uses for its own section numbering is deliberately not reused here:
 `engine/src/presets.cpp` already carries row IDs `D017` and `D020` from the
 programme that landed in PR #171, and a second `D` numbering in the same tree
@@ -415,6 +419,79 @@ lengthen one serialised run, and that runner already has an open failure issue
 |---|---|---|---|---|---|
 | DAW07 | VST3 parameter automation from the host is untested. Poly exposes its parameters for automation and the plugin layer feeds them to the engine each block, but nothing drives one from a host's automation lane and checks the output moved when and where it should | `coverage` | `tests/cubase/e2e/`, `plugin/source/` | A spec writes an automation lane, plays it, and asserts the output changes at the automated positions and not before; proved by flattening the lane. Evidence names the nightly run | `open` |
 
+---
+
+## Milestone M005 — Preset pipeline integrity
+
+**Source note.** Like M004, this milestone is not drawn from `deferrals.md`. Its
+two rows are defects M001 found in the pipeline it had to use: both were worked
+around to finish that milestone, both are recorded in
+`evidence/M001-S02.md` and `M001-report.md`, and neither has an issue on the
+tracker. They are written here so the workaround does not become the permanent
+state.
+
+**Vision:** The path from `engine/src/presets.cpp` to
+`site/src/generated/presets.json` tells the truth — it rebuilds when the engine
+changes, and it carries enough of a lane that a consumer can tell an authored
+pattern from a generated one.
+
+**Branch:** milestone/M005-preset-pipeline
+**Status:** planned
+**Demo:** Edit a preset, run `npm --prefix site run generate-presets` with no
+explicit build step, and see the change in the JSON; then ask the JSON alone
+whether `Cuban Son Montuno`'s clave is the son clave or `E(5,16)`, and get an
+answer.
+
+**Why it has leverage early.** M002 and M003 both edit `presets.cpp`, so both
+meet PIPE01 the moment they regenerate, and M002 must bump the emitter's
+`schemaVersion` for EC06 regardless — the same change PIPE02 makes. Neither is a
+dependency, and none is declared: M002 can be finished by building the emitter
+by hand, exactly as M001 was. This is a recommendation about ordering, not a
+constraint on it.
+
+### Slice M005/S01 — The generator rebuilds its emitter
+
+**Validation:** format, site-unit
+**Evidence:** evidence/M005-S01.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] Editing `engine/src/presets.cpp` and running the generator produces JSON
+      that reflects the edit, with no explicit build step
+- [ ] A stale `presets.json` fails the site suite mechanically, rather than
+      depending on someone noticing the count is wrong
+- [ ] The generator still succeeds from a clean tree, where the build directory
+      does not yet exist
+- [ ] The hardcoded preset count in `presets-json-schema.test.mjs` is gone,
+      derived from `kFactoryPresetCount` instead
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| PIPE01 | `ensureEmitter()` in `site/scripts/generate-presets-json.mjs` returns as soon as the emitter binary exists and rebuilds it only when missing, so a change to `presets.cpp` silently emits stale JSON. The file's own header calls a stale `presets.json` "a silent correctness bug we already paid for", and M001/S02 paid it again: the generator wrote 43 presets after the engine had 44, and reported success | `tooling` | `site/scripts/generate-presets-json.mjs`, `site/tests/presets-json-schema.test.mjs` | The early return is removed so the build target always runs — cmake is incremental, so an unchanged tree costs a no-op. Proved by reproducing the M001 failure: edit a preset, run the generator with no explicit build, and watch the new value appear where it previously did not. The schema test derives its expected count from `kFactoryPresetCount` in `engine/include/poly/presets.h`, so a stale file fails the suite; proved by regenerating against a deliberately stale binary | `open` |
+
+### Slice M005/S02 — `presets.json` carries the pattern
+
+**Validation:** format, unit, engine-isolation, site-unit, doc-conformance
+**Evidence:** evidence/M005-S02.md
+**Status:** open
+**Depends:** M005/S01
+
+**Definition of Done**
+
+- [ ] A lane running in timeline mode carries its step pattern in
+      `site/src/generated/presets.json`
+- [ ] `schemaVersion` is bumped, and the generator rejects a JSON written at the
+      previous version rather than reading it as if the field were absent
+- [ ] A site test answers, from `presets.json` alone, whether `Cuban Son
+      Montuno`'s clave is the son clave or `E(5,16)` — the question M001 could
+      not ask of that file
+- [ ] Every existing consumer of the file still passes
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| PIPE02 | `engine/tools/emit_presets.cpp` (schemaVersion 3) writes `timeline` and `fixedPatternLength` but never `fixedPattern`, so an exact clave and a Euclidean bake of the same hit count and cycle serialise identically. M001/S02 made four presets carry hand-authored patterns and could not express the difference in the file the site reads: the plugin plays the right thing and nothing rendered from `presets.json` can show it | `tooling` | `engine/tools/emit_presets.cpp`, `site/src/generated/presets.json`, `site/tests/` | The emitter serialises the pattern for timeline lanes and bumps `schemaVersion`; the generator's version guard is updated to match. Proved by a site case that derives the onsets from the JSON and asserts they differ from `bjorklund` for the same hit count and cycle — the case fails against the pre-change file, which cannot answer it | `open` |
+
 ## Sequencing
 
 The graph is deliberately flat. No milestone depends on another: M001 needs no
@@ -443,6 +520,12 @@ slices are independent of each other. If the Cubase runner's reliability becomes
 the pressing problem it can be pulled forward whole, or slice by slice, without
 disturbing M002 or M003. Recorded explicitly so a later reader does not infer a
 dependency from the numbering.
+
+**M005 declares no dependency either, and that is deliberate.** Both M002 and
+M003 would benefit from it landing first, and the milestone says so in prose —
+but a slice-level `Depends` would be a fiction: each can be completed by
+building the emitter by hand, which is how M001 finished. The recommendation is
+recorded where a reader will see it; the graph stays honest.
 
 ## Related issues
 
