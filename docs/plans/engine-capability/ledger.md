@@ -436,7 +436,7 @@ changes, and it carries enough of a lane that a consumer can tell an authored
 pattern from a generated one.
 
 **Branch:** milestone/M005-preset-pipeline
-**Status:** planned
+**Status:** in-progress
 **Demo:** Edit a preset, run `npm --prefix site run generate-presets` with no
 explicit build step, and see the change in the JSON; then ask the JSON alone
 whether `Cuban Son Montuno`'s clave is the son clave or `E(5,16)`, and get an
@@ -451,9 +451,10 @@ constraint on it.
 
 ### Slice M005/S01 — The generator rebuilds its emitter
 
+**Plan:** M005-S01-plan.md
 **Validation:** format, site-unit
 **Evidence:** evidence/M005-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
@@ -472,9 +473,10 @@ constraint on it.
 
 ### Slice M005/S02 — `presets.json` carries the pattern
 
+**Plan:** M005-S02-plan.md
 **Validation:** format, unit, engine-isolation, site-unit, doc-conformance
 **Evidence:** evidence/M005-S02.md
-**Status:** open
+**Status:** in-progress
 **Depends:** M005/S01
 
 **Definition of Done**
