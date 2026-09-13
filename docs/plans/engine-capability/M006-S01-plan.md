@@ -11,7 +11,7 @@ class: gated
 ## Task status
 
 - [x] 1. Write the wrapper and repoint the `doc-discipline` token
-- [ ] 2. Prove all three behaviours, document the command, close the slice
+- [x] 2. Prove all three behaviours, document the command, close the slice
 
 ## Definition of Done
 

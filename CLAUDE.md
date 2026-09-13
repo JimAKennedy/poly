@@ -96,6 +96,15 @@ The pre-push hook (`scripts/pre-push-check.sh`) enforces quality checks automati
 Install via: `pre-commit install -t pre-push`
 Bypass for emergencies: `git push --no-verify`
 
+**The hook does not run the doc checks, and that is by design** — it covers the
+five items above and nothing else. For the doc gate, run
+`bash scripts/check-doc-discipline.sh` rather than `jk-standards all` directly:
+the bare command skips `doc-drift` whenever no base ref is available, printing a
+`skipped` line and exiting 0. In a wall of green that reads like a pass, and it
+is how M005 shipped a doc-drift violation through a validation set that was
+green on every other count. The wrapper supplies the base CI supplies, so the
+check actually runs.
+
 Note: GitHub branch protection requires Pro for private repos. The pre-push hook is the local enforcement mechanism until then.
 
 ### Compiler Warnings
