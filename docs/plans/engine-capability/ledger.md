@@ -510,7 +510,7 @@ tree runs somewhere in CI — so a green local gate means something, and a test
 file cannot be proven only on the machine that wrote it.
 
 **Branch:** milestone/M006-gate-parity
-**Status:** planned
+**Status:** in-progress
 **Demo:** Add a doc-drift violation and a new site test on a branch; the local
 gate catches the first and CI runs the second, without anyone knowing a special
 incantation.
@@ -523,9 +523,10 @@ no CI form at all.
 
 ### Slice M006/S01 — `doc-drift` is runnable locally
 
+**Plan:** M006-S01-plan.md
 **Validation:** format, doc-discipline
 **Evidence:** evidence/M006-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
@@ -544,9 +545,10 @@ no CI form at all.
 
 ### Slice M006/S02 — Every site test runs in CI
 
+**Plan:** M006-S02-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M006-S02.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
