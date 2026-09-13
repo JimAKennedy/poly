@@ -436,7 +436,7 @@ changes, and it carries enough of a lane that a consumer can tell an authored
 pattern from a generated one.
 
 **Branch:** milestone/M005-preset-pipeline
-**Status:** in-progress
+**Status:** done
 **Demo:** Edit a preset, run `npm --prefix site run generate-presets` with no
 explicit build step, and see the change in the JSON; then ask the JSON alone
 whether `Cuban Son Montuno`'s clave is the son clave or `E(5,16)`, and get an
