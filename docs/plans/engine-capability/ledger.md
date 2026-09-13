@@ -510,7 +510,7 @@ tree runs somewhere in CI — so a green local gate means something, and a test
 file cannot be proven only on the machine that wrote it.
 
 **Branch:** milestone/M006-gate-parity
-**Status:** in-progress
+**Status:** done
 **Demo:** Add a doc-drift violation and a new site test on a branch; the local
 gate catches the first and CI runs the second, without anyone knowing a special
 incantation.
