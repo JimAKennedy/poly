@@ -23,8 +23,13 @@ rescoped the work and are recorded in the rows that carry them: the engine
 already holds every value the five missing columns would report, and `#156`'s
 mechanism already ships with four hand-authored exact timelines behind it.
 
-**Row series.** `EC01`–`EC11`, one per source item. The `D` prefix the source
-document uses for its own section numbering is deliberately not reused here:
+**Row series.** `EC01`–`EC11`, one per item in the source document, and that
+range is closed. `DAW01`–`DAW07` are M004's, and they have a different origin:
+that milestone was requested directly rather than drawn from `deferrals.md`, so
+it is the one part of this ledger the coverage claim above does not cover. It is
+marked as such on the milestone itself rather than left for a reader to notice
+that seven rows trace to no source document. The `D` prefix the source document
+uses for its own section numbering is deliberately not reused here:
 `engine/src/presets.cpp` already carries row IDs `D017` and `D020` from the
 programme that landed in PR #171, and a second `D` numbering in the same tree
 would be ambiguous to grep.
@@ -243,6 +248,173 @@ subdivision.
 
 ---
 
+---
+
+## Milestone M004 — Nightly DAW regression coverage
+
+**Source note.** Unlike M001–M003, this milestone is not drawn from
+`docs/plans/engine-capability/deferrals.md`. It was requested directly, and no
+open issue asks for it. It is recorded here so the request has a plan of record;
+the coverage claim this ledger makes about the deferrals document is unaffected,
+because that claim is that every item in that document has a row, not that every
+row traces to it.
+
+**Vision:** The nightly Cubase run exercises the behaviours only a host can
+break — session recall, preset recall, transport motion, editor lifecycle,
+multiple instances, offline rendering and host automation — so a regression that
+appears only inside a DAW fails the night it lands rather than in someone's
+project.
+**Branch:** milestone/M004-daw-regression
+**Status:** planned
+**Demo:** A nightly run whose summary lists a spec per area above, each green,
+against a Cubase session the runner launched unattended.
+
+**What exists today.** Three specs: `toggle-step` (toggle one kick step, play
+the transport), `assert-probe` (the probe JSONL reflects that toggle), and
+`export-midi` (the export chip and per-lane export write SMF an independent
+`mido` parser validates). The harness under them is reusable and is what makes
+this milestone tractable: Playwright attaching to the plugin's WebView over CDP,
+`tests/cubase/driver/play_scenario.py` driving MIDI, and
+`tests/cubase/compare_probe_golden.py` comparing probe output to a golden.
+
+**The gate each slice actually owes.** `cubase-harness` type-checks the specs
+and runs the helper-lib and validator unit tests, but it does not run Cubase.
+The only thing that proves a nightly spec works is the nightly, so every slice
+below requires a **named nightly run** in its evidence — the workflow run URL,
+showing that spec green. A slice that cannot name one is not done, however green
+its local gate is.
+
+**One cost, stated once.** `jk-standards.yaml` declares `cubase-nightly` a
+repo-wide global lock, because Cubase, loopMIDI and the interactive desktop
+session exist once on a single self-hosted Windows runner. These seven slices
+lengthen one serialised run, and that runner already has an open failure issue
+([#267](https://github.com/JimAKennedy/poly/issues/267)).
+
+### Slice M004/S01 — Session recall
+
+**Validation:** format, cubase-harness
+**Evidence:** evidence/M004-S01.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] A Cubase project saved with a non-default Poly patch reopens carrying that
+      patch — edited steps, selected preset, and per-step micro-timing
+- [ ] The spec has been shown to fail when the saved state is perturbed before
+      reopening, so it is a round-trip check rather than a "did it load" check
+- [ ] A nightly run is named in the evidence with this spec green
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| DAW01 | Nothing exercises Poly's state round-trip inside a host. `kStateVersion` is at 16 and `CLAUDE.md` calls serialising without a version "a preset compatibility time bomb", but no test saves a Cubase project and reopens it | `coverage` | `tests/cubase/e2e/`, `.github/workflows/cubase-nightly.yml` | A spec saves the project, reopens it, and asserts the patch matches what was saved; proved by perturbing the saved state and watching the spec fail. Evidence names the nightly run | `open` |
+
+### Slice M004/S02 — Preset recall across all 45
+
+**Validation:** format, cubase-harness
+**Evidence:** evidence/M004-S02.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] Every one of the 45 factory presets is selected in a running Cubase
+      instance, and each loads without crashing the host
+- [ ] For each preset the spec asserts the lane count and note numbers against
+      `site/src/generated/presets.json`, so a preset that loads wrongly fails
+      rather than merely not crashing
+- [ ] A nightly run is named in the evidence with this spec green
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| DAW02 | 31 of the 45 factory presets have never been selected inside a DAW. `kWebPresetLaneNames` is initialised sparsely at 14 rows against a `kFactoryPresetCount`-sized extent, and a null entry there once crashed Cubase on preset change; the null guard at the `applyPreset` call site is the only thing between that table and the same crash | `coverage` | `tests/cubase/e2e/`, `plugin/source/webui/web_ui_view.cpp` | A spec iterates every preset index, asserting the host survives and the loaded lanes match `presets.json`; proved by pointing one index at a deliberately malformed entry and watching it fail. Evidence names the nightly run | `open` |
+
+### Slice M004/S03 — Transport motion
+
+**Validation:** format, cubase-harness
+**Evidence:** evidence/M004-S03.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] The spec locates the transport backwards and forwards mid-playback, loops
+      a range, and changes tempo, and asserts the emitted notes at those
+      positions match the same positions played linearly
+- [ ] The spec has been shown to fail against a lane whose phase is accumulated
+      rather than derived from absolute PPQ
+- [ ] A nightly run is named in the evidence with this spec green
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| DAW03 | The timing convention is that envelope and cycle phase derive from absolute PPQ and are never accumulated. Golden tests enforce determinism for linear playback only; nothing proves the property under a host's locate, loop or tempo change, which is the one situation where an accumulator and a derivation diverge | `coverage` | `tests/cubase/e2e/`, `tests/cubase/driver/play_scenario.py` | A spec drives locate, loop and tempo change and compares captured output against the linear capture at the same PPQ positions; proved against a deliberately accumulating lane. Evidence names the nightly run | `open` |
+
+### Slice M004/S04 — Editor lifecycle
+
+**Validation:** format, cubase-harness
+**Evidence:** evidence/M004-S04.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] The spec opens and closes the plugin editor repeatedly within one session
+      and asserts the plugin still responds and still emits notes afterwards
+- [ ] The spec has been shown to fail when the WebView does not re-attach
+- [ ] A nightly run is named in the evidence with this spec green
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| DAW04 | `CLAUDE.md` records that some hosts call `setActive()` from the audio thread, so no allocation is permitted there, and that `allocateMessage()`/`sendMessage()` in `process()` is not guaranteed lock-free. Both conventions are documented and neither is exercised by opening and closing Poly's editor in a host | `coverage` | `tests/cubase/e2e/`, `plugin/source/webui/` | A spec cycles the editor open and closed, then asserts continued MIDI output and a responsive bridge; proved by forcing a failed re-attach. Evidence names the nightly run | `open` |
+
+### Slice M004/S05 — Multiple instances
+
+**Validation:** format, cubase-harness
+**Evidence:** evidence/M004-S05.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] Two Poly instances in one project each hold their own patch and emit their
+      own MIDI, with no state or probe output crossing between them
+- [ ] The spec has been shown to fail if the two instances share state
+- [ ] A nightly run is named in the evidence with this spec green
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| DAW05 | Nothing exercises two Poly instances in one project. Per-instance isolation of state, probe output and the WebUI bridge is assumed rather than demonstrated, and the probe writes to a path the second instance would also want | `coverage` | `tests/cubase/e2e/`, `plugin/source/` | A spec loads two instances with different patches and asserts each emits its own; proved by pointing both at one state blob and watching the spec fail. Evidence names the nightly run | `open` |
+
+### Slice M004/S06 — Offline bounce equivalence
+
+**Validation:** format, cubase-harness
+**Evidence:** evidence/M004-S06.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] A bounced or offline-rendered passage matches the realtime capture of the
+      same passage, note for note and position for position
+- [ ] The spec has been shown to fail when the two diverge
+- [ ] A nightly run is named in the evidence with this spec green
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| DAW06 | Determinism is asserted for the engine's own render, not across Cubase's offline and realtime paths. Offline rendering drives `process()` with different block sizes and a different clock, which is exactly where a block-size dependency would show | `coverage` | `tests/cubase/e2e/`, `tests/cubase/validate_smf_export.py` | A spec renders a fixed passage both ways and compares the captures; proved by perturbing one capture. Evidence names the nightly run | `open` |
+
+### Slice M004/S07 — Host parameter automation
+
+**Validation:** format, cubase-harness
+**Evidence:** evidence/M004-S07.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] A host automation lane driving a Poly parameter changes the emitted MIDI
+      at the automated positions
+- [ ] The spec has been shown to fail when automation is ignored, and when it is
+      applied at the wrong position
+- [ ] A nightly run is named in the evidence with this spec green
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| DAW07 | VST3 parameter automation from the host is untested. Poly exposes its parameters for automation and the plugin layer feeds them to the engine each block, but nothing drives one from a host's automation lane and checks the output moved when and where it should | `coverage` | `tests/cubase/e2e/`, `plugin/source/` | A spec writes an automation lane, plays it, and asserts the output changes at the automated positions and not before; proved by flattening the lane. Evidence names the nightly run | `open` |
+
 ## Sequencing
 
 The graph is deliberately flat. No milestone depends on another: M001 needs no
@@ -263,6 +435,14 @@ Three slice-level dependencies are real:
   there is nothing to put in it until profiles exist.
 
 M003/S02 depends on nothing and may land before or after M003/S01.
+
+**M004 carries no technical dependency at all.** It is sequenced last because
+that is where it was asked for, not because anything blocks it: DAW regression
+coverage needs neither kotekan modes nor subdivision profiles, and its seven
+slices are independent of each other. If the Cubase runner's reliability becomes
+the pressing problem it can be pulled forward whole, or slice by slice, without
+disturbing M002 or M003. Recorded explicitly so a later reader does not infer a
+dependency from the numbering.
 
 ## Related issues
 

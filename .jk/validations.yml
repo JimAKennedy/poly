@@ -53,6 +53,13 @@ webui-e2e: npm --prefix webui test
 # to be. Owed by any slice touching engine/ or the wasm bindings.
 wasm-freshness: bash scripts/check-wasm-freshness.sh
 
+# The Cubase e2e harness's own checks: the specs type-check, the helper-lib unit
+# tests pass, and the independent SMF/probe validators pass. Runs anywhere and
+# does NOT run Cubase -- a slice adding a nightly spec owes this plus a named
+# nightly run in its evidence, because the only gate that proves a spec works
+# against a real DAW is the nightly itself.
+cubase-harness: npm --prefix tests/cubase/e2e run typecheck && npm --prefix tests/cubase/e2e run test:unit && python3 -m unittest discover -s tests/cubase -p 'test_*.py'
+
 # The whole pre-push gate: format, RT safety, snippet regions, build, tests,
 # and pluginval. The token a slice owes before /jk:ship, not during /jk:next.
 gate: bash scripts/pre-push-check.sh
