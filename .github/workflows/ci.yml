@@ -563,6 +563,14 @@ jobs:
         run: bash scripts/check-sample-manifest.sh --strict
       - name: Validate sample manifest (GM coverage)
         run: bash scripts/check-sample-manifest.sh --coverage
+      # M006 S02 (GAP02). Until this step existed, the only site/tests files CI
+      # ran were the ones named in check-doc-conformance.sh, so six ran nowhere
+      # -- including presets-json-schema.test.mjs, which carries M005/S01's
+      # stale-presets.json guard. The site test script is a directory glob, so
+      # this covers every file and picks up new ones with no wiring. Placed last
+      # so the more specific doc failures report first.
+      - name: Site unit tests (all of site/tests)
+        run: npm --prefix site test
 
   # region:site-e2e-job
   site-e2e:
