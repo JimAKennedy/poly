@@ -34,7 +34,13 @@ doc-conformance: bash scripts/check-doc-conformance.sh
 
 # The jk-standards doc-discipline checks: taxonomy, drift, status prose,
 # file:line refs, snippet regions, and ledger conformance.
-doc-discipline: jk-standards all
+#
+# The wrapper supplies the base ref CI supplies, and refuses to report success
+# if doc-drift did not actually run. `jk-standards all` alone skips doc-drift
+# and still exits 0, which is how M005 shipped a doc-drift violation through a
+# green local validation set -- and passing `--base` alone does not fix it,
+# because an unresolvable base makes the check print nothing and still exit 0.
+doc-discipline: bash scripts/check-doc-discipline.sh
 
 # Region markers referenced by docs resolve to real markers in the tree.
 snippet-regions: bash scripts/check-snippet-regions.sh
