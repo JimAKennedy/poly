@@ -510,7 +510,7 @@ tree runs somewhere in CI — so a green local gate means something, and a test
 file cannot be proven only on the machine that wrote it.
 
 **Branch:** milestone/M006-gate-parity
-**Status:** planned
+**Status:** done
 **Demo:** Add a doc-drift violation and a new site test on a branch; the local
 gate catches the first and CI runs the second, without anyone knowing a special
 incantation.
@@ -523,42 +523,44 @@ no CI form at all.
 
 ### Slice M006/S01 — `doc-drift` is runnable locally
 
+**Plan:** M006-S01-plan.md
 **Validation:** format, doc-discipline
 **Evidence:** evidence/M006-S01.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] A developer can run the `doc-drift` check against the default branch with
+- [x] A developer can run the `doc-drift` check against the default branch with
       a documented command, without knowing to set an environment variable by
       hand
-- [ ] The `doc-discipline` token no longer reports success while silently
+- [x] The `doc-discipline` token no longer reports success while silently
       skipping a check CI enforces — either it runs `doc-drift`, or a separate
       declared token does and slices that owe it name it
-- [ ] A run genuinely unable to determine a base still explains why rather than
+- [x] A run genuinely unable to determine a base still explains why rather than
       failing, so a detached or shallow checkout is not made unusable
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| GAP01 | `doc-drift` is enforced in CI and cannot be run locally by any documented command. `jk-standards all` reports `doc-drift: no --base or GITHUB_BASE_REF — skipped` and exits 0, so the `doc-discipline` token passes while the check never executes. M005 ran its whole validation set green and CI still failed on a doc-drift violation, found only by setting `GITHUB_BASE_REF` by hand afterwards; M001 satisfied the same rule incidentally, having changed `docs/preset-taxonomy.md` only because adding presets forced the count updates. A check that passes locally for the wrong reason is worse than one that is absent | `tooling` | `.jk/validations.yml`, `scripts/`, `CLAUDE.md` | Introduce a doc-drift violation on a branch and watch the local command fail; remove it and watch it pass. The skip path is proved separately by running where no base can be determined and reading the explanation | `open` |
+| GAP01 | `doc-drift` is enforced in CI and cannot be run locally by any documented command. `jk-standards all` reports `doc-drift: no --base or GITHUB_BASE_REF — skipped` and exits 0, so the `doc-discipline` token passes while the check never executes. M005 ran its whole validation set green and CI still failed on a doc-drift violation, found only by setting `GITHUB_BASE_REF` by hand afterwards; M001 satisfied the same rule incidentally, having changed `docs/preset-taxonomy.md` only because adding presets forced the count updates. A check that passes locally for the wrong reason is worse than one that is absent | `tooling` | `.jk/validations.yml`, `scripts/`, `CLAUDE.md` | Introduce a doc-drift violation on a branch and watch the local command fail; remove it and watch it pass. The skip path is proved separately by running where no base can be determined and reading the explanation | `done` |
 
 ### Slice M006/S02 — Every site test runs in CI
 
+**Plan:** M006-S02-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M006-S02.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Every `site/tests/*.test.mjs` file runs in at least one CI job
-- [ ] A test file added to that directory cannot silently go unrun — something
+- [x] Every `site/tests/*.test.mjs` file runs in at least one CI job
+- [x] A test file added to that directory cannot silently go unrun — something
       fails if it is covered by nothing
-- [ ] #272's counts are corrected to what the tree holds, or the issue is closed
+- [x] #272's counts are corrected to what the tree holds, or the issue is closed
       by this work
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| GAP02 | No CI job runs `npm --prefix site test`. The only `site/tests/**` files CI executes are those named in `scripts/check-doc-conformance.sh`, so 6 of 23 run nowhere: `bjorklund`, `dump-mode`, `preset-patterns`, `presets-json-schema`, `sample-loader`, `smf-writer`. Issue [#272](https://github.com/JimAKennedy/poly/issues/272) raised this as 7 of 21 and the numbers have drifted since. It is not hypothetical: `presets-json-schema.test.mjs` carries M005/S01's staleness guard, so the guard that catches a stale `presets.json` is itself unproven in CI | `tooling` | `.github/workflows/ci.yml`, `scripts/check-doc-conformance.sh` | A CI job runs the files, proved by pushing a branch with a deliberately failing case in one of the six and watching CI go red. The no-orphan guard is proved by adding a file covered by nothing and watching the check fail | `open` |
+| GAP02 | No CI job runs `npm --prefix site test`. The only `site/tests/**` files CI executes are those named in `scripts/check-doc-conformance.sh`, so 7 of 23 run nowhere: `bjorklund`, `doc-conformance-wiring`, `dump-mode`, `preset-patterns`, `presets-json-schema`, `sample-loader`, `smf-writer`. Issue [#272](https://github.com/JimAKennedy/poly/issues/272) raised this as 7 of 21 — the count was right and only the total has drifted. It is not hypothetical: `presets-json-schema.test.mjs` carries M005/S01's staleness guard, so the guard that catches a stale `presets.json` is itself unproven in CI | `tooling` | `.github/workflows/ci.yml`, `scripts/check-doc-conformance.sh` | A CI job runs the files, proved by pushing a branch with a deliberately failing case in one of the six and watching CI go red. The no-orphan guard is proved by adding a file covered by nothing and watching the check fail | `done` |
 
 ## Sequencing
 
