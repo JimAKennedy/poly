@@ -25,7 +25,11 @@ param(
     # shadow and must be empty of Poly bundles.
     [string] $Vst3InstallDir = "",
     # Name of the runner's logon scheduled task, checked for elevation.
-    [string] $TaskName = "GitHubActionsRunner"
+    [string] $TaskName = "GitHubActionsRunner",
+    # Name of the loopMIDI virtual port pair the S08 driver opens. Matched as a
+    # case-insensitive substring against both input and output device names,
+    # mirroring find_port() in tests/cubase/driver/play_scenario.py.
+    [string] $MidiPortName = "poly-test"
 )
 
 . "$PSScriptRoot/_common.ps1"
@@ -186,6 +190,87 @@ if ($sessionId -eq 0) {
         -Remedy "Run the runner as a logon task on the console session — docs/windows-test-runner-setup.md Part 7 and Part 9."
 } else {
     Write-Check -Level ok -Message "Running in interactive session $sessionId."
+}
+
+# --- 7. loopMIDI 'poly-test' virtual MIDI port present --------------------------
+# The S08 mido driver (tests/cubase/driver/play_scenario.py) opens the
+# 'poly-test' loopMIDI port pair by case-insensitive substring match. loopMIDI
+# is a per-session tray app provisioned by hand (docs/windows-test-runner-setup.md
+# Part 4): a reboot that does not bring it back leaves the box with ZERO virtual
+# MIDI devices, and nightly runs #85-#87 each burned a full build + Cubase launch
+# before the driver failed with "port 'poly-test' not found. inputs=[]".
+# Enumerate via winmm.dll — the same Windows MIDI API rtmidi wraps — so the
+# check sees exactly the device list the driver will.
+if (-not ("PolyPosture.WinMm" -as [type])) {
+    Add-Type -TypeDefinition @"
+using System;
+using System.Runtime.InteropServices;
+namespace PolyPosture {
+    public static class WinMm {
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        struct MidiInCaps {
+            public ushort wMid; public ushort wPid; public uint vDriverVersion;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public string szPname;
+            public uint dwSupport;
+        }
+        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+        struct MidiOutCaps {
+            public ushort wMid; public ushort wPid; public uint vDriverVersion;
+            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public string szPname;
+            public ushort wTechnology; public ushort wVoices; public ushort wNotes;
+            public ushort wChannelMask; public uint dwSupport;
+        }
+        [DllImport("winmm.dll", CharSet = CharSet.Unicode)]
+        static extern uint midiInGetNumDevs();
+        [DllImport("winmm.dll", CharSet = CharSet.Unicode)]
+        static extern uint midiInGetDevCaps(uint id, ref MidiInCaps caps, uint size);
+        [DllImport("winmm.dll", CharSet = CharSet.Unicode)]
+        static extern uint midiOutGetNumDevs();
+        [DllImport("winmm.dll", CharSet = CharSet.Unicode)]
+        static extern uint midiOutGetDevCaps(uint id, ref MidiOutCaps caps, uint size);
+        public static string[] InputNames() {
+            uint n = midiInGetNumDevs();
+            var names = new string[n];
+            for (uint i = 0; i < n; i++) {
+                var caps = new MidiInCaps();
+                midiInGetDevCaps(i, ref caps, (uint)Marshal.SizeOf(typeof(MidiInCaps)));
+                names[i] = caps.szPname ?? "";
+            }
+            return names;
+        }
+        public static string[] OutputNames() {
+            uint n = midiOutGetNumDevs();
+            var names = new string[n];
+            for (uint i = 0; i < n; i++) {
+                var caps = new MidiOutCaps();
+                midiOutGetDevCaps(i, ref caps, (uint)Marshal.SizeOf(typeof(MidiOutCaps)));
+                names[i] = caps.szPname ?? "";
+            }
+            return names;
+        }
+    }
+}
+"@
+}
+$midiInputs = [PolyPosture.WinMm]::InputNames()
+$midiOutputs = [PolyPosture.WinMm]::OutputNames()
+$needle = $MidiPortName.ToLowerInvariant()
+$midiInHits = @($midiInputs | Where-Object { $_.ToLowerInvariant().Contains($needle) })
+$midiOutHits = @($midiOutputs | Where-Object { $_.ToLowerInvariant().Contains($needle) })
+if ($midiInHits.Count -gt 0 -and $midiOutHits.Count -gt 0) {
+    Write-Check -Level ok -Message "loopMIDI '$MidiPortName' port pair present (in: $($midiInHits -join ', '); out: $($midiOutHits -join ', '))."
+} else {
+    $inList = if ($midiInputs.Count) { $midiInputs -join ', ' } else { "<none>" }
+    $outList = if ($midiOutputs.Count) { $midiOutputs -join ', ' } else { "<none>" }
+    Write-Check -Level fail -Message "No MIDI device matching '$MidiPortName' (inputs: $inList; outputs: $outList). The S08 driver cannot reach Cubase's MIDI Remote and the L4 tiers will fail after the full build + launch." -Remedy @"
+loopMIDI is not running in this session, or its '$MidiPortName' port was removed
+(a reboot does this if loopMIDI is not set to autostart). On the runner box:
+  1. Start loopMIDI (Tobias Erichsen) in THIS logon session.
+  2. Ensure one port named '$MidiPortName' exists (create it via the + button).
+  3. Enable its autostart option so the next reboot restores it.
+Verify: python -c "import mido; print(mido.get_input_names())" lists it.
+See docs/windows-test-runner-setup.md Part 4.
+"@
 }
 
 Write-Host ""
