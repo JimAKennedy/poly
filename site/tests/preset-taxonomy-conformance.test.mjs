@@ -3,7 +3,7 @@
 // The taxonomy doc carries two hand-authored tables that must agree with the
 // generated presets.json exactly: the per-preset category mapping and the
 // per-category counts. presets.json is emitted from kInfos[]/kFactoryPresetCategories
-// in engine/src/presets.cpp (schemaVersion 3), so this test is the doc-time guard
+// in engine/src/presets.cpp (schemaVersion 4), so this test is the doc-time guard
 // that a preset's documented category can no longer drift from the engine.
 //
 // Failure visibility: each assertion names the preset (by index+name) or the

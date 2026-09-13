@@ -6,13 +6,14 @@
 // source of truth for factory preset lane data so the card runtime, the WASM
 // host, the alias map, and the chapter documentation cannot drift.
 //
-// Schema (schemaVersion 3 — M071 S04 added the D026 parameter-table fields:
+// Schema (schemaVersion 4 — M005 S02 added per-lane "onsets" for timeline lanes;
+// schemaVersion 3 — M071 S04 added the D026 parameter-table fields:
 // per-preset `macros`, and per-lane ghostFloor/swingAmount/mutationRate/
 // driftRate/humanizeMs/timingOffsetMs/hasMicroTiming/timeline/
 // fixedPatternLength/kotekanSourceLane/phrase{Length,Gap,Offset}/cellCount/
 // cellSizes, so the appendix-presets tables render from engine truth):
 // {
-//   "schemaVersion": 3,
+//   "schemaVersion": 4,
 //   "presetCount": 43,
 //   "categories": ["Foundational", "Minimalist / Compositional", ...],  // ordered
 //   "presets": [
@@ -190,8 +191,28 @@ void writeLane(std::ostringstream& out, int laneIndex, const poly::LaneConfig& l
     writeFloat(out, lane.timingOffsetMs);
     out << ",\"hasMicroTiming\":" << (hasMicroTiming ? "true" : "false")
         << ",\"timeline\":" << (lane.timeline ? "true" : "false")
-        << ",\"fixedPatternLength\":" << lane.fixedPatternLength << ",\"kotekanSourceLane\":" << lane.kotekanSourceLane
-        << ",\"phraseLength\":";
+        << ",\"fixedPatternLength\":" << lane.fixedPatternLength;
+    // schemaVersion 4 (M005 S02): a timeline lane carries the onsets of its
+    // authored pattern. Without them an exact clave and the Euclidean bake of
+    // the same hit count and cycle serialise identically, so nothing rendered
+    // from this file can tell them apart -- which is what M001 S02 ran into
+    // after hand-authoring four patterns. A lane that is not in timeline mode
+    // emits no "onsets" at all: the field's absence is what says the pattern is
+    // derived rather than written down.
+    if (lane.timeline) {
+        out << ",\"onsets\":[";
+        bool firstOnset = true;
+        for (int step = 0; step < lane.fixedPatternLength; ++step) {
+            if (!lane.fixedPattern[static_cast<size_t>(step)])
+                continue;
+            if (!firstOnset)
+                out << ',';
+            out << step;
+            firstOnset = false;
+        }
+        out << ']';
+    }
+    out << ",\"kotekanSourceLane\":" << lane.kotekanSourceLane << ",\"phraseLength\":";
     writeFloat(out, lane.phraseLength);
     out << ",\"phraseGap\":";
     writeFloat(out, lane.phraseGap);
@@ -257,7 +278,7 @@ void writePreset(std::ostringstream& out, int index) {
 int main() {
     std::ostringstream out;
     out << "{\n"
-        << "  \"schemaVersion\":3,\n"
+        << "  \"schemaVersion\":4,\n"
         << "  \"presetCount\":" << poly::kFactoryPresetCount << ",\n"
         << "  \"categories\":[";
     for (int i = 0; i < poly::kFactoryPresetCategoryCount; ++i) {

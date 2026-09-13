@@ -59,8 +59,8 @@ test('presets.json — schema shape', async () => {
   );
   assert.equal(
     parsed.schemaVersion,
-    3,
-    `schemaVersion=${parsed.schemaVersion}, expected 3 (M071 S04 D026 fields)`,
+    4,
+    `schemaVersion=${parsed.schemaVersion}, expected 4 (M005/S02 timeline onsets)`,
   );
 
   assert.ok(
@@ -156,6 +156,35 @@ test('presets.json — schema shape', async () => {
           `${where}.${k}=${lane[k]} is not a number`,
         );
       });
+
+      // schemaVersion 4 (M005/S02): a timeline lane carries the onsets of its
+      // authored pattern, so a consumer can tell an authored pattern from a
+      // Euclidean one of the same hit count and cycle. A lane that is not in
+      // timeline mode carries no `onsets` at all -- the field's absence is what
+      // says the pattern is derived rather than written down.
+      if (lane.timeline) {
+        assert.ok(
+          Array.isArray(lane.onsets),
+          `${where} runs in timeline mode but carries no onsets array`,
+        );
+        assert.equal(
+          lane.onsets.length,
+          lane.hits,
+          `${where}.onsets has ${lane.onsets.length} entries against hits=${lane.hits}`,
+        );
+        lane.onsets.forEach((step) => {
+          assert.ok(
+            Number.isInteger(step) && step >= 0 && step < lane.fixedPatternLength,
+            `${where}.onsets contains ${step}, outside [0, ${lane.fixedPatternLength})`,
+          );
+        });
+      } else {
+        assert.equal(
+          lane.onsets,
+          undefined,
+          `${where} is not a timeline lane but carries an onsets array`,
+        );
+      }
       assert.equal(
         typeof lane.hasMicroTiming,
         'boolean',

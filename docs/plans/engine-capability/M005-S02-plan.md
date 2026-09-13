@@ -12,7 +12,7 @@ serialises fifteen per-lane fields, and a version it already guards is bumped.
 
 ## Task status
 
-- [ ] 1. Emit onset positions for timeline lanes, and bump `schemaVersion` to 4
+- [x] 1. Emit onset positions for timeline lanes, and bump `schemaVersion` to 4
 - [ ] 2. Answer the son-clave question from the JSON alone, and close the slice
 
 ## Definition of Done
