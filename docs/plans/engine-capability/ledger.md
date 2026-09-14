@@ -123,16 +123,17 @@ than a description in the guide, so the two rules currently weakened or
 unverifiable because the engine can only derive the strict complement become
 checkable as written.
 **Branch:** milestone/M002-kotekan-modes
-**Status:** planned
+**Status:** in-progress
 **Demo:** A gamelan patch names norot, telu or empat; `theory-gamelan` Rule 4 is
 checked as written rather than as construction step 4 specifies, and Rule 1's
 predicate can be made to fail.
 
 ### Slice M002/S01 — The mode is something a patch can express
 
+**Plan:** M002-S01-plan.md
 **Validation:** format, unit, engine-isolation, rt-safety, webui-e2e
 **Evidence:** evidence/M002-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
@@ -150,9 +151,10 @@ predicate can be made to fail.
 
 ### Slice M002/S02 — The guide catches up
 
+**Plan:** M002-S02-plan.md
 **Validation:** format, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M002-S02.md
-**Status:** open
+**Status:** in-progress
 **Depends:** M002/S01
 
 **Definition of Done**
@@ -163,6 +165,10 @@ predicate can be made to fail.
 - [ ] Rule 1 reads `checkable`, with a predicate that has been shown to fail
 - [ ] This ledger records that the theory-audit ledger's F41 weakening no longer
       describes the shipped behaviour
+- [ ] The page states that Poly models only the rhythmic dimension of *telu* and
+      *empat* — the cell length the interlock repeats on, not their pitch
+      content — and directs the reader to Tenzer (2000) and Vitale (1990) for
+      that dimension; *norot* is named as not expressible, and why
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
