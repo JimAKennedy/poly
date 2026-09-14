@@ -31,6 +31,11 @@
       phraseOffset: opts.phraseOffset ?? 0,
       tempoMultiplier: opts.tempoMultiplier ?? 1.0,
       kotekanSource: opts.kotekanSource ?? -1,
+      // M002 S01: interlock style (0=nyogcag, 1=telu, 2=empat) and how many
+      // structural points the pair strikes together. Defaults reproduce the
+      // strict complement the engine derived before M002.
+      kotekanMode: opts.kotekanMode ?? 0,
+      kotekanOverlap: opts.kotekanOverlap ?? 0,
       fillEveryN: opts.fillEveryN ?? 0,
       // M034 S03: per-lane seed lock. The mock has no RNG engine, so it only
       // tracks the boolean for UI reflection/round-trip; the byte-identical
@@ -1296,6 +1301,8 @@
           driftRate:    v => { lane.driftRate = v * 8 - 4; },
           timingOffset: v => { lane.timingOffset = v * 40 - 20; },
           kotekanSource:v => { lane.kotekanSource = Math.round(v * 8) - 1; },
+          kotekanMode:v => { lane.kotekanMode = Math.round(v * 2); },
+          kotekanOverlap:v => { lane.kotekanOverlap = Math.round(v * 64); },
           note:         v => { lane.note = Math.round(v * 127); },
           channel:      v => { lane.ch = Math.round(v * 16) - 1; },
           steps:        v => {

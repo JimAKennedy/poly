@@ -137,13 +137,15 @@ std::string laneToJson(const LaneConfig& cfg, const std::string& name, int laneI
                   ",\"mutationRate\":%.4f,\"driftRate\":%.4f"
                   ",\"phraseLength\":%.4f,\"phraseGap\":%.4f,\"phraseOffset\":%.4f"
                   ",\"tempoMultiplier\":%.4f,\"kotekanSource\":%d"
+                  ",\"kotekanMode\":%d,\"kotekanOverlap\":%d"
                   ",\"cellCount\":%d",
                   static_cast<double>(cfg.humanizeMs), static_cast<double>(cfg.swingAmount),
                   static_cast<double>(cfg.noteDuration), static_cast<double>(cfg.emphasisProb),
                   static_cast<double>(cfg.timingOffsetMs), static_cast<double>(cfg.mutationRate),
                   static_cast<double>(cfg.driftRate), static_cast<double>(cfg.phraseLength),
                   static_cast<double>(cfg.phraseGap), static_cast<double>(cfg.phraseOffset),
-                  static_cast<double>(cfg.tempoMultiplier), cfg.kotekanSourceLane, cfg.cellCount);
+                  static_cast<double>(cfg.tempoMultiplier), cfg.kotekanSourceLane, static_cast<int>(cfg.kotekanMode),
+                  cfg.kotekanOverlap, cfg.cellCount);
     js += buf;
 
     // pattern (computed from Euclidean or fixed)

@@ -105,9 +105,17 @@ TEST(ParamsDefTest, CoreRegistryRoundtripsForEveryEntry) {
 
 TEST(ParamsDefTest, RegistryCountsMatchPlugids) {
     // Guard against silent drift: plugids.h declares kParamsPerLane=16 and
-    // kCoreParamsPerLane=12. The registries must match.
+    // kCoreParamsPerLane=14. The registries must match.
+    //
+    // The counts are literals rather than a comparison against plugids.h
+    // because that header pulls in Steinberg types, and this suite also builds
+    // under POLY_ENGINE_ONLY where no VST3 SDK is present. Changing either side
+    // therefore means changing this line too -- which is the drift this test
+    // exists to make loud.
+    //
+    // M002 S01: core family 12 -> 14 (kCoreKotekanMode, kCoreKotekanOverlap).
     EXPECT_EQ(kLaneExprParamRegistry.size(), 16u);
-    EXPECT_EQ(kLaneCoreParamRegistry.size(), 12u);
+    EXPECT_EQ(kLaneCoreParamRegistry.size(), 14u);
 }
 
 TEST(ParamsDefTest, OffsetsAreSequentialAndUnique) {

@@ -54,6 +54,8 @@ inline constexpr FieldMapping kLaneCoreFields[] = {
     {"channel", ParamIDs::kCoreMidiChannel},
     {"fillEveryN", ParamIDs::kCoreFillEveryN},
     {"seedLock", ParamIDs::kCoreSeedLock},
+    {"kotekanMode", ParamIDs::kCoreKotekanMode},
+    {"kotekanOverlap", ParamIDs::kCoreKotekanOverlap},
 };
 
 } // namespace detail
