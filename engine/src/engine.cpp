@@ -107,9 +107,20 @@ static void buildLanePattern(const LaneConfig& cfg, const GrooveState& state, in
             const auto& src = state.lanes[cfg.kotekanSourceLane];
             std::array<bool, kMaxSteps> srcPattern{};
             euclidean(src.hitCount, src.cycle.steps, src.rotation, srcPattern);
+            // M002 S01 (EC06). The mode picks which index of the source is
+            // complemented. NyogCag reads the source step for step -- the
+            // pre-M002 behaviour, byte-identical. Telu and Empat read it modulo
+            // a cell length, so the interlock repeats on a three- or four-pulse
+            // cell instead of tracking the source across the whole cycle.
+            int cell = 0;
+            if (cfg.kotekanMode == KotekanMode::Telu)
+                cell = 3;
+            else if (cfg.kotekanMode == KotekanMode::Empat)
+                cell = 4;
             int complementHits = 0;
             for (int s = 0; s < cfg.cycle.steps && s < src.cycle.steps; ++s) {
-                pattern[s] = !srcPattern[s];
+                const int srcStep = cell > 0 ? (s % cell) : s;
+                pattern[s] = !srcPattern[srcStep];
                 if (pattern[s])
                     ++complementHits;
             }
@@ -128,6 +139,22 @@ static void buildLanePattern(const LaneConfig& cfg, const GrooveState& state, in
             // stays byte-identical (determinism golden tests unaffected).
             if (complementHits == 0)
                 euclidean(cfg.hitCount, cfg.cycle.steps, cfg.rotation, pattern);
+            // M002 S01 (EC06). Structural overlap: the points at which both
+            // parts strike, which Rule 4 says mark cadences, phrase joins and
+            // angsel figures. Forced on rather than toggled -- the point is a
+            // shared strike, so the step must sound in both parts whatever the
+            // complement said. Overlap 0 leaves the strict complement
+            // untouched, which is why every pre-M002 preset is byte-identical.
+            if (cfg.kotekanOverlap > 0 && cfg.cycle.steps > 0) {
+                const int mid = cfg.cycle.steps / 2;
+                const int phrase = cfg.phraseLength > 0.0f ? 1 : mid;
+                const int points[3] = {0, phrase, mid};
+                for (int i = 0; i < 3 && i < cfg.kotekanOverlap; ++i) {
+                    const int step = points[i];
+                    if (step >= 0 && step < cfg.cycle.steps)
+                        pattern[step] = srcPattern[cell > 0 ? (step % cell) : step] ? true : pattern[step];
+                }
+            }
             // endregion:kotekan
         } else {
             euclidean(cfg.hitCount, cfg.cycle.steps, cfg.rotation, pattern);

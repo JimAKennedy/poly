@@ -71,3 +71,19 @@ milestone's review can see what shaped it without reconstructing it from diffs.
   complement", which is Rule 4's own substance. The alternative — dropping the
   names for `Cell3`/`Cell4` — was rejected because it would cut the reader off
   from the literature the guide is built on.
+
+## 2026-09-13 — executing M002/S01 task 1 (judgment call)
+
+- **Decision:** Overlap forces a step on **only where the source also strikes**,
+  rather than unconditionally as the design's wording implied. — **Why:** The
+  purpose is a *shared* strike. Forcing a step where the source is silent
+  produces no intersection at all — it just makes the complement denser, which
+  is not what Rule 4 describes. The design said "force `pattern[s] = true` at
+  the first N structural points"; the implementation reads the source at that
+  step first. Obviously right and too small to halt for, but it is a narrowing
+  of the design's text, so it is recorded rather than left in the diff.
+- **Decision:** `GrooveStateCopyBenchmark.ReportsFactSizes`'s pinned size was
+  updated from 13712 to 13776 with a comment naming this milestone. — **Why:**
+  That test exists to make struct growth deliberate and documented, and its
+  comments already record each previous growth the same way. Updating it is the
+  intended workflow, not a test being bent to fit.

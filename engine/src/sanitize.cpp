@@ -83,6 +83,13 @@ void sanitizeLane(LaneConfig& lane, int laneIndex) {
     lane.tempoMultiplier = clampf(lane.tempoMultiplier, 0.25f, 4.0f, 1.0f);
 
     lane.kotekanSourceLane = clampi(lane.kotekanSourceLane, -1, kMaxLanes - 1);
+    // M002 S01 (EC06). The mode is an enum stored as a byte, so a corrupt or
+    // hand-edited state can carry a value outside it; clamp to the last valid
+    // member rather than trusting the cast. Overlap is bounded by the cycle:
+    // more structural points than steps is meaningless.
+    if (static_cast<uint8_t>(lane.kotekanMode) > static_cast<uint8_t>(KotekanMode::Empat))
+        lane.kotekanMode = KotekanMode::NyogCag;
+    lane.kotekanOverlap = clampi(lane.kotekanOverlap, 0, lane.cycle.steps > 0 ? lane.cycle.steps : 0);
     if (lane.kotekanSourceLane == laneIndex)
         lane.kotekanSourceLane = -1;
 

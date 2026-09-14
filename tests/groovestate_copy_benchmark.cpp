@@ -67,7 +67,11 @@ TEST(GrooveStateCopyBenchmark, ReportsFactSizes) {
     // transient GrooveState.fillManualTrigger bool fit in existing tail padding.
     // M034 S03: +96 bytes from LaneConfig.laneSeed (uint64_t) + seedLocked (bool),
     // which with 8-byte alignment costs 12 bytes/lane × 8 lanes.
-    EXPECT_EQ(sizeof(poly::GrooveState), 13712u) << "GrooveState size changed — update DECISIONS.md perf entry";
+    // M002 S01: +64 bytes from LaneConfig.kotekanMode (uint8_t) +
+    // kotekanOverlap (int), which with 4-byte alignment costs 8 bytes/lane
+    // × 8 lanes. Both are state-only fields; see M002-S01-design.md for why
+    // they are not VST3 parameters.
+    EXPECT_EQ(sizeof(poly::GrooveState), 13776u) << "GrooveState size changed — update DECISIONS.md perf entry";
 }
 
 TEST(GrooveStateCopyBenchmark, ThreeCopyPipelineFitsBlockBudget) {
