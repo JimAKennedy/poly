@@ -114,3 +114,30 @@ milestone's review can see what shaped it without reconstructing it from diffs.
   `kotekan_mode_tests.cpp` is a per-file addition to the existing `poly_tests`
   binary; no new binary, Playwright surface or JS entry-point. The trailer
   quotes that exemption so a reader can check the claim.
+
+## 2026-09-14 — executing M002/S01 task 4 (halt, correction, and decision)
+
+- **Correction:** The design's claim that the new fields could be **state-only**
+  rested on a bad measurement. It compared `LaneConfig` field names against the
+  lane-**expression** family in `plugids.h` and concluded 16 of 35 fields have no
+  parameter. A second per-lane family exists, `kLaneCoreFields[]`, and
+  `hitCount`, `cycle.steps`, `rotation`, `timeline` and `fillEveryNBars` all
+  have parameters there. Very few lane fields are genuinely parameterless.
+- **Why it blocked the task:** the WebUI edit path is parameter-ID based —
+  `host.edit('lane.3.timeline', …)` resolves through `resolveParamId` — so a
+  field with no parameter ID cannot be edited from the interface. The design
+  asserted both "state-only" and "WebUI-editable", which this architecture does
+  not permit together. Task 4 was therefore not implementable as planned, and
+  the run halted rather than improvising.
+- **Q:** Both per-lane parameter families are full, and the WebUI can only edit
+  fields that have a parameter ID. How should M002/S01 proceed? — **A:** Raise
+  the core family to 14.
+- **Decision:** `kCoreParamsPerLane` goes 12 → 14, adding `kCoreKotekanMode` and
+  `kCoreKotekanOverlap`. — **Why:** It restores the design's consistency and
+  makes the control work through the path every other lane core field already
+  uses. The blast radius was measured before choosing, not after:
+  `getState`/`setState` serialize the `SceneState` blob, so presets and saved
+  projects are parameter-ID independent and nothing about loading breaks; only
+  host automation lanes targeting per-lane core params on lanes 1–7 shift, and
+  Poly has never been released — the only tag is `v0.1.0-doccov-baseline`, with
+  no GitHub releases.

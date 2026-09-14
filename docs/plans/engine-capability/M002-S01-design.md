@@ -53,17 +53,35 @@ something that is not that style — the class of overclaim the theory-audit
 programme spent seven milestones removing. **Three modes ship; norot is
 documented as inexpressible and why.**
 
-**2. The per-lane VST3 parameter family is full.** `kParamsPerLane = 16` and
-`laneParam(lane, offset) = lane * 16 + offset`, with `kKotekanSource = 15` in the
-last slot. Raising the stride would shift every lane's parameter IDs and break
-automation in every existing project.
+**2. Both per-lane VST3 parameter families are full.**
 
-**This is not a blocker, because state-only lane fields are the norm here**: 16
-of `LaneConfig`'s 35 fields have no VST3 parameter, including `hitCount`,
-`cycle`, `cellSizes`, `fixedPatternLength`, `fillEveryNBars` and
-`microTimingMs`. The new fields join them — serialized in state, editable
-through the WebUI bridge, not host-automatable. Nothing about a *style choice*
-wants an automation lane anyway.
+> **Corrected 2026-09-14, during task 4.** This section originally claimed the
+> new fields could be state-only because "16 of `LaneConfig`'s 35 fields have no
+> VST3 parameter, including `hitCount`, `cycle` and `microTimingMs`". That
+> measurement was wrong: it grepped field names against the **lane-expression**
+> family in `plugids.h` only. A second per-lane family exists —
+> `kLaneCoreFields[]` — and `hitCount`, `cycle.steps`, `rotation`, `timeline`
+> and `fillEveryNBars` all have parameters there. Very few lane fields are
+> genuinely parameterless.
+>
+> The error mattered because **the WebUI edit path is parameter-ID based**:
+> `host.edit('lane.3.timeline', …)` resolves through `resolveParamId`, so a
+> field with no parameter ID cannot be edited from the interface at all. The
+> design asserted both "state-only" and "WebUI-editable", which this
+> architecture does not allow together.
+
+`kParamsPerLane = 16` with all sixteen slots used, and `kCoreParamsPerLane = 12`
+with all twelve used — M034 consumed the last two for `fillEveryN` and
+`seedLock`. Adding a parameter therefore requires raising a stride, and
+`laneCoreParam(lane, offset) = kLaneCoreBase + lane * 12 + offset` shifts every
+lane above 0.
+
+**The core family is raised to 14**, and the blast radius was measured before
+choosing it: `getState`/`setState` serialize the `SceneState` blob, so presets
+and saved projects are parameter-ID independent and nothing about loading
+breaks. Only host *automation lanes* targeting per-lane core params on lanes 1–7
+shift — and Poly has never been released, the only tag being
+`v0.1.0-doccov-baseline` with no GitHub releases.
 
 **3. Existing output must not move except where intended.** The default must
 reproduce today's behaviour exactly, so the determinism goldens and three of the

@@ -42,10 +42,13 @@ class: gated
 Read `M002-S01-design.md` first; it carries the measured constraints. The three
 that bind hardest:
 
-- **Both new fields are state-only.** `kParamsPerLane = 16` and
-  `kKotekanSource` is slot 15, so the per-lane VST3 family is full and raising
-  the stride would shift every lane's parameter IDs. Do not add a parameter.
-  16 of `LaneConfig`'s 35 fields already work this way.
+- **Both new fields become lane *core* parameters.** The design originally said
+  state-only; that was corrected during task 4 — see the marked correction in
+  `M002-S01-design.md`. The WebUI edit path resolves through `resolveParamId`,
+  so a field with no parameter ID cannot be edited from the interface. Both
+  per-lane families are full, so `kCoreParamsPerLane` goes 12 → 14. Presets and
+  saved state are unaffected (the state is a blob); only host automation on
+  per-lane core params for lanes 1–7 shifts, and Poly has never been released.
 - **The default must reproduce today's output exactly.** `NyogCag` with overlap
   0 is the current strict complement. If any determinism golden moves before
   task 5, something is wrong — stop rather than regenerate it.
