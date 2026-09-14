@@ -59,8 +59,8 @@ test('presets.json — schema shape', async () => {
   );
   assert.equal(
     parsed.schemaVersion,
-    4,
-    `schemaVersion=${parsed.schemaVersion}, expected 4 (M005/S02 timeline onsets)`,
+    5,
+    `schemaVersion=${parsed.schemaVersion}, expected 5 (M002/S01 kotekan mode)`,
   );
 
   assert.ok(
@@ -183,6 +183,29 @@ test('presets.json — schema shape', async () => {
           lane.onsets,
           undefined,
           `${where} is not a timeline lane but carries an onsets array`,
+        );
+      }
+
+      // schemaVersion 5 (M002/S01): a lane deriving a kotekan complement
+      // carries the interlock style it uses and how many structural points the
+      // pair strikes together. Emitted as the mode's name rather than its
+      // integer so the file reads without a lookup table. A lane that derives
+      // nothing carries neither, so the fields' absence says the lane is
+      // independent.
+      if (lane.kotekanSourceLane >= 0) {
+        assert.ok(
+          ['nyogcag', 'telu', 'empat'].includes(lane.kotekanMode),
+          `${where}.kotekanMode=${JSON.stringify(lane.kotekanMode)} is not a known interlock style`,
+        );
+        assert.ok(
+          Number.isInteger(lane.kotekanOverlap) && lane.kotekanOverlap >= 0,
+          `${where}.kotekanOverlap=${lane.kotekanOverlap} is not a non-negative integer`,
+        );
+      } else {
+        assert.equal(
+          lane.kotekanMode,
+          undefined,
+          `${where} derives no kotekan complement but carries a kotekanMode`,
         );
       }
       assert.equal(

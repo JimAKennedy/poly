@@ -6,6 +6,7 @@
 //
 // Contract with the emitter (engine/tools/emit_presets.cpp):
 //   { schemaVersion, presetCount, categories: [...], presets: [{ index, name, category, notesInBar, macros: {...}, lanes: [...] }] }
+// schemaVersion 5 (M002 S01) added per-lane `kotekanMode`/`kotekanOverlap`.
 // schemaVersion 4 (M005 S02) added per-lane `onsets` for timeline lanes.
 // schemaVersion 3 (M071 S04) added per-preset `macros` and the D026 per-lane
 // parameter-table fields; the guard below rejects any other version loudly.
@@ -75,7 +76,7 @@ function validate(parsed) {
   if (typeof parsed.schemaVersion !== 'number') {
     fail('missing schemaVersion');
   }
-  if (parsed.schemaVersion !== 4) {
+  if (parsed.schemaVersion !== 5) {
     fail(`unexpected schemaVersion ${parsed.schemaVersion} — regenerate/update consumers`);
   }
   if (!Array.isArray(parsed.categories) || parsed.categories.length === 0) {

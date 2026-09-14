@@ -6,14 +6,16 @@
 // source of truth for factory preset lane data so the card runtime, the WASM
 // host, the alias map, and the chapter documentation cannot drift.
 //
-// Schema (schemaVersion 4 — M005 S02 added per-lane "onsets" for timeline lanes;
+// Schema (schemaVersion 5 — M002 S01 added per-lane "kotekanMode"/"kotekanOverlap"
+// for lanes deriving a complement;
+// schemaVersion 4 — M005 S02 added per-lane "onsets" for timeline lanes;
 // schemaVersion 3 — M071 S04 added the D026 parameter-table fields:
 // per-preset `macros`, and per-lane ghostFloor/swingAmount/mutationRate/
 // driftRate/humanizeMs/timingOffsetMs/hasMicroTiming/timeline/
 // fixedPatternLength/kotekanSourceLane/phrase{Length,Gap,Offset}/cellCount/
 // cellSizes, so the appendix-presets tables render from engine truth):
 // {
-//   "schemaVersion": 4,
+//   "schemaVersion": 5,
 //   "presetCount": 43,
 //   "categories": ["Foundational", "Minimalist / Compositional", ...],  // ordered
 //   "presets": [
@@ -212,7 +214,21 @@ void writeLane(std::ostringstream& out, int laneIndex, const poly::LaneConfig& l
         }
         out << ']';
     }
-    out << ",\"kotekanSourceLane\":" << lane.kotekanSourceLane << ",\"phraseLength\":";
+    out << ",\"kotekanSourceLane\":" << lane.kotekanSourceLane;
+    // schemaVersion 5 (M002 S01): a lane deriving a kotekan complement carries
+    // the interlock style and how many structural points the pair strikes
+    // together. The mode is emitted by name, not as its integer, so the file
+    // reads without a lookup table. A lane that derives nothing emits neither,
+    // so the fields' absence says the lane is independent.
+    if (lane.kotekanSourceLane >= 0) {
+        const char* modeName = "nyogcag";
+        if (lane.kotekanMode == poly::KotekanMode::Telu)
+            modeName = "telu";
+        else if (lane.kotekanMode == poly::KotekanMode::Empat)
+            modeName = "empat";
+        out << ",\"kotekanMode\":\"" << modeName << "\",\"kotekanOverlap\":" << lane.kotekanOverlap;
+    }
+    out << ",\"phraseLength\":";
     writeFloat(out, lane.phraseLength);
     out << ",\"phraseGap\":";
     writeFloat(out, lane.phraseGap);
@@ -278,7 +294,7 @@ void writePreset(std::ostringstream& out, int index) {
 int main() {
     std::ostringstream out;
     out << "{\n"
-        << "  \"schemaVersion\":4,\n"
+        << "  \"schemaVersion\":5,\n"
         << "  \"presetCount\":" << poly::kFactoryPresetCount << ",\n"
         << "  \"categories\":[";
     for (int i = 0; i < poly::kFactoryPresetCategoryCount; ++i) {

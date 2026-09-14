@@ -114,7 +114,7 @@ Three assignments merited a real decision rather than an obvious placement:
 
 ## JSON schema version
 
-`presets.json` is emitted at **schemaVersion 4**. The version is written by
+`presets.json` is emitted at **schemaVersion 5**. The version is written by
 `engine/tools/emit_presets.cpp`, and `site/scripts/generate-presets-json.mjs`
 rejects any other value rather than reading an older shape as if the newer
 fields were merely absent — so a bump means the emitter, that guard, and
@@ -122,6 +122,7 @@ fields were merely absent — so a bump means the emitter, that guard, and
 
 | Version | Added |
 |---|---|
+| 5 | Per-lane `kotekanMode` and `kotekanOverlap` for lanes deriving a kotekan complement — the interlock style and how many structural points the pair strikes together. Only the rhythmic dimension of *telu* and *empat* is modelled; `theory-gamelan.mdx` discloses that and sources the pitch dimension (M002 S01). |
 | 4 | Per-lane `onsets` for timeline lanes — the positions of a hand-authored pattern. A lane not in timeline mode carries no `onsets` at all, so the field's absence is what says a pattern is derived rather than written down (M005 S02). |
 | 3 | Per-preset `macros`, and the per-lane parameter-table fields the appendix renders (M071 S04). |
 
