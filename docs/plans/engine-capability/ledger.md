@@ -133,21 +133,21 @@ predicate can be made to fail.
 **Plan:** M002-S01-plan.md
 **Validation:** format, unit, engine-isolation, rt-safety, webui-e2e, doc-discipline
 **Evidence:** evidence/M002-S01.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] A gamelan patch can name its interlock style, rather than only a source lane
-- [ ] Polos–sangsih overlap is controllable, so the composite is no longer
+- [x] A gamelan patch can name its interlock style, rather than only a source lane
+- [x] Polos–sangsih overlap is controllable, so the composite is no longer
       complete by construction
-- [ ] The mode a preset uses reaches `site/src/generated/presets.json`, so a patch
+- [x] The mode a preset uses reaches `site/src/generated/presets.json`, so a patch
       table can report it
-- [ ] `renderRange()` gains no allocation, lock or blocking call
-- [ ] The engine builds and passes its tests with no VST3 SDK present
+- [x] `renderRange()` gains no allocation, lock or blocking call
+- [x] The engine builds and passes its tests with no VST3 SDK present
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| EC06 | `theory-gamelan` Rule 4 ends "add deliberate doublings via a third lane or accent masks until kotekan modes ship" — issue #153. Poly's kotekan is a source-lane parameter (`KotekanSrc`, −1..7) with no modes, so Rule 5's four named interlock styles are a choice the guide describes and the tool cannot express | `prose` | `engine/`, `plugin/source/`, `webui/`, `engine/src/presets.cpp` | Engine tests cover each mode's composite against the mode's definition, including a case that the overlap control changes the composite; the exporter round-trip proves the mode reaches `presets.json` | `open` |
+| EC06 | `theory-gamelan` Rule 4 ends "add deliberate doublings via a third lane or accent masks until kotekan modes ship" — issue #153. Poly's kotekan is a source-lane parameter (`KotekanSrc`, −1..7) with no modes, so Rule 5's four named interlock styles are a choice the guide describes and the tool cannot express | `prose` | `engine/`, `plugin/source/`, `webui/`, `engine/src/presets.cpp` | Engine tests cover each mode's composite against the mode's definition, including a case that the overlap control changes the composite; the exporter round-trip proves the mode reaches `presets.json` | `done` |
 
 ### Slice M002/S02 — The guide catches up
 

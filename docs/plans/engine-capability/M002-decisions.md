@@ -141,3 +141,25 @@ milestone's review can see what shaped it without reconstructing it from diffs.
   host automation lanes targeting per-lane core params on lanes 1–7 shift, and
   Poly has never been released — the only tag is `v0.1.0-doccov-baseline`, with
   no GitHub releases.
+
+## 2026-09-14 — executing M002/S01 task 5 (halt and decision)
+
+- **Finding:** `Balinese Kotekan`'s polos is E(5,8), and at that cycle `Telu`
+  computes *exactly* the strict complement — sangsih 1, 4, 7 either way. The
+  design and the earlier decision both named `Telu` for this preset, chosen
+  before that was known. Shipping it would have had `presets.json` and the
+  guide's patch table report a named style for a lane playing what `nyogcag`
+  plays, and M002/S02 would then rest Rule 5's "the style is a named choice" on
+  a preset where the choice changes nothing.
+- **Q:** Which mode should the preset ship? — **A:** Empat.
+- **Decision:** The guiro lane takes `Empat` with overlap 1, superseding the
+  earlier `Telu` decision. — **Why:** It is the only mode that differs at this
+  cycle — sangsih 1, 5 against 1, 4, 7 — and it shares step 5 with the polos on
+  its own, so Rule 4's structural overlap appears naturally as well as by
+  forcing. The preset demonstrates both fields honestly rather than nominally.
+  The alternative of changing the polos cycle to make `Telu` live was rejected:
+  it would alter the groove of a preset a user already knows, for a reason
+  internal to this milestone.
+- **Halt:** the run stopped to ask rather than substituting a mode on its own,
+  because which of *telu* or *empat* a kotekan pair uses is a musical question,
+  not a mechanical one.

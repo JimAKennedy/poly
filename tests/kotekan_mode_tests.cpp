@@ -8,6 +8,7 @@
 // complete by construction, so no mutation of a static patch could make either
 // predicate fail.
 #include <algorithm>
+#include <cstring>
 #include <iterator>
 #include <set>
 #include <vector>
@@ -15,6 +16,7 @@
 #include <gtest/gtest.h>
 
 #include "poly/engine.h"
+#include "poly/presets.h"
 #include "poly/sanitize.h"
 #include "poly/types.h"
 
@@ -126,4 +128,27 @@ TEST(KotekanMode, SanitizeClampsOverlapToTheCycle) {
     state.lanes[0].kotekanOverlap = -5;
     poly::sanitizeGrooveState(state);
     EXPECT_GE(state.lanes[0].kotekanOverlap, 0);
+}
+
+// M002/S01 task 5. Balinese Kotekan is the one shipped preset named for the
+// practice, so it carries the capability rather than leaving it demonstrated
+// only by a test fixture. Empat rather than telu: this preset's polos is
+// E(5,8), and at that cycle telu computes exactly the strict complement, so a
+// patch table naming it would report a choice that changes nothing.
+TEST(KotekanMode, BalineseKotekanShipsALiveInterlockStyle) {
+    int index = -1;
+    for (int i = 0; i < poly::kFactoryPresetCount; ++i)
+        if (std::strcmp(poly::getFactoryPresetInfo(i).name, "Balinese Kotekan") == 0)
+            index = i;
+    ASSERT_GE(index, 0) << "no factory preset named Balinese Kotekan";
+
+    const poly::GrooveState state = poly::makeFactoryPreset(index);
+    const poly::LaneConfig& sangsih = state.lanes[1];
+    ASSERT_EQ(sangsih.kotekanSourceLane, 0) << "the sangsih lane must derive from the polos";
+    EXPECT_EQ(sangsih.kotekanMode, poly::KotekanMode::Empat);
+    EXPECT_EQ(sangsih.kotekanOverlap, 1);
+
+    // The property Rule 4 is about: the pair strike together somewhere.
+    const auto shared = sharedSteps(state);
+    EXPECT_FALSE(shared.empty()) << "polos and sangsih must share at least one structural strike";
 }
