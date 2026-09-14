@@ -107,6 +107,9 @@ struct NoteEventBuffer {
 //   NyogCag  pattern[s] = !src[s]        -- the strict complement
 //   Telu     pattern[s] = !src[s % 3]    -- repeats on a three-pulse cell
 //   Empat    pattern[s] = !src[s % 4]    -- repeats on a four-pulse cell
+// The cell modes are then filled wherever neither part would strike, because
+// theory-gamelan Rule 1 makes gaps in the composite errors and a periodic
+// complement of an unrelated source does not preserve continuity on its own.
 // Only the rhythmic dimension of telu and empat is modelled; the terms also
 // carry pitch meaning, which theory-gamelan.mdx discloses and sources.
 enum class KotekanMode : uint8_t {

@@ -128,6 +128,23 @@ static void buildLanePattern(const LaneConfig& cfg, const GrooveState& state, in
                 pattern[s] = true;
                 ++complementHits;
             }
+            // M002 S01 task 6. theory-gamelan Rule 1: "the composite must be
+            // continuous … gaps in the composite are errors". A cell mode reads
+            // the source modulo the cell length, so it can leave a pulse that
+            // neither part strikes — Empat did, at pulses 4 and 7 of the
+            // Balinese Kotekan patch. Real kotekan figures are composed as a
+            // pair and are continuous by construction; a periodic complement of
+            // an unrelated Euclidean source is not. Fill those pulses so the
+            // composite is continuous whatever the mode. NyogCag is already the
+            // exact complement and has no gaps to fill.
+            if (cell > 0) {
+                for (int s = 0; s < cfg.cycle.steps && s < src.cycle.steps; ++s) {
+                    if (!srcPattern[s] && !pattern[s]) {
+                        pattern[s] = true;
+                        ++complementHits;
+                    }
+                }
+            }
             // MEM095 / M070 "Kotekan Interlock": a macro-saturated source
             // (hitCount == cycle.steps, reachable dynamically via the complexity/
             // density macros) makes srcPattern all-true, so !srcPattern is

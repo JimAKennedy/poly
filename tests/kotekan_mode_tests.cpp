@@ -93,11 +93,38 @@ TEST(KotekanMode, NyogCagIsTheStrictComplement) {
 }
 
 TEST(KotekanMode, TeluRepeatsOnAThreePulseCell) {
-    EXPECT_EQ(onsetsOfLane(makePair(poly::KotekanMode::Telu, 0), 1), (std::vector<int>{1, 2, 4, 5, 7, 8, 10, 11}));
+    // Task 6: the cell complement is filled wherever it would leave a pulse
+    // unstruck by either part, so the composite stays continuous as Rule 1
+    // requires. For this source that makes telu coincide with the strict
+    // complement — the cell adds a strike only where the source sounds but the
+    // cell index says it does not, which E(2,12) never does.
+    EXPECT_EQ(onsetsOfLane(makePair(poly::KotekanMode::Telu, 0), 1),
+              (std::vector<int>{1, 2, 3, 4, 5, 7, 8, 9, 10, 11}));
 }
 
 TEST(KotekanMode, EmpatRepeatsOnAFourPulseCell) {
-    EXPECT_EQ(onsetsOfLane(makePair(poly::KotekanMode::Empat, 0), 1), (std::vector<int>{1, 2, 3, 5, 6, 7, 9, 10, 11}));
+    // Task 6: continuity-filled. Empat still differs from the strict complement
+    // — it strikes 6, which the source also strikes, so the pair double there.
+    EXPECT_EQ(onsetsOfLane(makePair(poly::KotekanMode::Empat, 0), 1),
+              (std::vector<int>{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}));
+}
+
+// Task 6. Rule 1 on theory-gamelan: "the composite must be continuous … gaps in
+// the composite are errors". Before the continuity fill, Empat left pulses
+// unstruck by either part. This asserts the property directly for every mode,
+// so a later derivation change cannot reintroduce a gap silently.
+TEST(KotekanMode, EveryModeLeavesTheCompositeContinuous) {
+    for (const auto mode : {poly::KotekanMode::NyogCag, poly::KotekanMode::Telu, poly::KotekanMode::Empat}) {
+        const auto state = makePair(mode, 0);
+        const auto polos = onsetsOfLane(state, 0);
+        const auto sangsih = onsetsOfLane(state, 1);
+        for (int step = 0; step < 12; ++step) {
+            const bool struck = std::find(polos.begin(), polos.end(), step) != polos.end() ||
+                                std::find(sangsih.begin(), sangsih.end(), step) != sangsih.end();
+            EXPECT_TRUE(struck) << "mode " << static_cast<int>(mode) << " leaves pulse " << step
+                                << " unstruck by either part";
+        }
+    }
 }
 
 TEST(KotekanMode, StrictComplementLeavesAnEmptyIntersection) {

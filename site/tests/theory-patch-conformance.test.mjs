@@ -117,6 +117,13 @@ function kotekanPairOverlap(rows) {
   const srcAt = (step) => src[cellLen > 0 ? step % cellLen : step];
   const derived = Array.from({ length: steps }, (_, step) => !srcAt(step));
 
+  // M002/S01 task 6: a cell mode is filled wherever neither part would strike,
+  // because Rule 1 makes gaps in the composite errors. Mirrors the engine; a
+  // model that drifts from it certifies the wrong pattern.
+  if (cellLen > 0)
+    for (let step = 0; step < steps; step++)
+      if (!src[step] && !derived[step]) derived[step] = true;
+
   const overlap = Number(sangsih.cell.Overlap ?? 0);
   const points = [0, Math.floor(steps / 2)];
   for (let n = 0; n < points.length && n < overlap; n++)

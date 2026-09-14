@@ -16,6 +16,7 @@ class: gated
 - [x] 3. Emit both into `presets.json` at schemaVersion 5
 - [x] 4. Surface both in the WebUI
 - [x] 5. `Balinese Kotekan` adopts `Telu` with overlap 1, and close the slice
+- [x] 6. Constrain the cell modes so the composite stays continuous
 
 ## Definition of Done
 
@@ -166,3 +167,34 @@ The modes, stated mechanically — copy these, do not re-derive them:
 5. Run the full validation set. Append evidence, tick task 5, set row EC06 to
    `done`, tick all five definition-of-done boxes, set slice M002/S01 to `done`,
    run `jk-standards ledger`, commit with trailers.
+
+
+## Task 6 — Constrain the cell modes so the composite stays continuous
+
+Added after M002/S02 task 2 read Rule 1 against the shipped patch. Rule 1 —
+"the composite must be continuous … gaps in the composite are errors" — is the
+most basic rule on that page, and the cell derivation broke it: with `Empat`,
+pulses 4 and 7 went unstruck.
+
+The cause is task 1's mechanical definition, not the preset choice. Real kotekan
+figures are composed as a pair so the composite is continuous by construction;
+a periodic complement of an unrelated Euclidean source carries no such
+guarantee.
+
+**Files:** `engine/src/engine.cpp`, `tests/kotekan_mode_tests.cpp`,
+`engine/include/poly/types.h`, `docs/engine-spec.md`,
+`site/src/generated/presets.json`, `webui/poly_engine.{js,wasm}`
+
+1. Update the mode tests first, to the onsets a continuity-preserving
+   derivation produces, and watch them fail.
+2. In `region:kotekan`, after the cell complement and before the overlap pass,
+   fill any step that neither the source nor the derived part strikes. Applies
+   only to the cell modes: `NyogCag` is already the exact complement and has no
+   gaps to fill.
+3. Assert the property directly: a new test that the composite of source and
+   derived part covers every step, for all three modes.
+4. Correct the derivation tables in `types.h`'s comment and in
+   `docs/engine-spec.md`, both of which state the pre-task-6 rule.
+5. Rebuild the WASM, since `engine.cpp` is compiled into it, and regenerate
+   `presets.json`.
+6. Run the full validation set, re-close row EC06 and the slice.
