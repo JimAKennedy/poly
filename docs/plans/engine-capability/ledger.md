@@ -131,7 +131,7 @@ predicate can be made to fail.
 ### Slice M002/S01 — The mode is something a patch can express
 
 **Plan:** M002-S01-plan.md
-**Validation:** format, unit, engine-isolation, rt-safety, webui-e2e
+**Validation:** format, unit, engine-isolation, rt-safety, webui-e2e, doc-discipline
 **Evidence:** evidence/M002-S01.md
 **Status:** in-progress
 

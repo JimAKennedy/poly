@@ -87,3 +87,30 @@ milestone's review can see what shaped it without reconstructing it from diffs.
   That test exists to make struct growth deliberate and documented, and its
   comments already record each previous growth the same way. Updating it is the
   intended workflow, not a test being bent to fit.
+
+## 2026-09-13 — executing M002/S01 task 3 (finding and correction)
+
+- **Finding:** M002/S01's declared validation set omitted `doc-discipline`,
+  while the slice changes `engine/include/poly/types.h`, `engine/src/engine.cpp`
+  and `engine/tools/emit_presets.cpp` — all mapped sources in
+  `.github/docs-drift-map.yml`. Tasks 1 and 2 therefore passed their full
+  declared set while leaving two doc-drift violations behind them. Found only
+  because task 3 ran `doc-discipline` opportunistically after committing.
+- **Decision:** `doc-discipline` added to the slice's validation line.
+  — **Why:** It corrects an under-declaration rather than widening the slice:
+  the work is unchanged, the gate is now honest about what this slice can break.
+  A slice that edits mapped sources and does not owe the check that guards them
+  is the same defect class M006 closed one level up.
+- **Decision:** The `docs/engine-spec.md` violation was fixed by writing the
+  derivation, not by regenerating. — **Why:** That doc's `LaneConfig` table is
+  generated but curated — 17 of 35 fields — and correctly omits the two new
+  ones, so `generate-param-docs.mjs` produced no diff. What had actually gone
+  stale was the prose describing how a lane's pattern is derived, which is
+  exactly what this slice changed.
+- **Decision:** The `docs/testing-strategy.md` violation was discharged with a
+  `Docs-Not-Affected:` trailer rather than a doc edit. — **Why:** That rule's
+  own stated reason exempts this case: "Per-file additions to existing binaries
+  or suites do not — they exercise the taxonomy, they don't change it."
+  `kotekan_mode_tests.cpp` is a per-file addition to the existing `poly_tests`
+  binary; no new binary, Playwright surface or JS entry-point. The trailer
+  quotes that exemption so a reader can check the claim.
