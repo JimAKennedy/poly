@@ -161,6 +161,13 @@ template <typename WriteFn>
         if (!write(&seedLocked, sizeof(seedLocked)))
             return false;
     }
+    if (bodyVersion >= kKotekanModeStateVersion) {
+        uint8_t kotekanMode = static_cast<uint8_t>(lane.kotekanMode);
+        if (!write(&kotekanMode, sizeof(kotekanMode)))
+            return false;
+        if (!write(&lane.kotekanOverlap, sizeof(lane.kotekanOverlap)))
+            return false;
+    }
 
     return true;
 }

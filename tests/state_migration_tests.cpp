@@ -420,3 +420,67 @@ TEST(StateMigration, LaneSeedLockFlagIsIndependentOfSeedValue) {
     EXPECT_EQ(loaded.sceneA.lanes[1].laneSeed, 0x9999ULL) << "lane 1 laneSeed round-trips";
     EXPECT_FALSE(loaded.sceneA.lanes[1].seedLocked) << "lane 1 must remain unlocked even with a non-zero laneSeed";
 }
+
+// M002 S01 (EC06). kotekanMode and kotekanOverlap are state-only fields added
+// at version 19, guarded exactly as fillEveryNBars (v17) and laneSeed (v18)
+// are. Distinct per-lane values prove each slot serializes its own pair rather
+// than one being written eight times.
+TEST(StateMigration, KotekanModeRoundTripsAtCurrentVersion) {
+    SceneState authored{};
+    authored.select = SceneSelect::A;
+    authored.sceneA.activeLaneCount = kMaxLanes;
+    authored.sceneB.activeLaneCount = kMaxLanes;
+    const KotekanMode cycleModes[3] = {KotekanMode::NyogCag, KotekanMode::Telu, KotekanMode::Empat};
+    for (int i = 0; i < kMaxLanes; ++i) {
+        auto& a = authored.sceneA.lanes[static_cast<size_t>(i)];
+        auto& b = authored.sceneB.lanes[static_cast<size_t>(i)];
+        a.id = i;
+        a.cycle = {.steps = 16, .subdivision = 16};
+        a.kotekanMode = cycleModes[i % 3];
+        a.kotekanOverlap = i % 4;
+        b.id = i;
+        b.cycle = {.steps = 16, .subdivision = 16};
+        b.kotekanMode = cycleModes[(i + 1) % 3];
+        b.kotekanOverlap = (i + 2) % 4;
+    }
+
+    const auto blob = serializeSceneAsVersion(authored, kKotekanModeStateVersion);
+    const SceneState loaded = deserializeScene(blob);
+
+    for (int i = 0; i < kMaxLanes; ++i) {
+        EXPECT_EQ(loaded.sceneA.lanes[static_cast<size_t>(i)].kotekanMode, cycleModes[i % 3])
+            << "sceneA lane " << i << " kotekanMode must round-trip";
+        EXPECT_EQ(loaded.sceneA.lanes[static_cast<size_t>(i)].kotekanOverlap, i % 4)
+            << "sceneA lane " << i << " kotekanOverlap must round-trip";
+        EXPECT_EQ(loaded.sceneB.lanes[static_cast<size_t>(i)].kotekanMode, cycleModes[(i + 1) % 3])
+            << "sceneB lane " << i << " kotekanMode must round-trip";
+        EXPECT_EQ(loaded.sceneB.lanes[static_cast<size_t>(i)].kotekanOverlap, (i + 2) % 4)
+            << "sceneB lane " << i << " kotekanOverlap must round-trip";
+    }
+}
+
+// A v18 state carries no kotekan-mode bytes. It must load as the strict
+// complement with no overlap -- which is exactly what it played before this
+// slice -- so the migration is lossless by construction rather than by
+// conversion.
+TEST(StateMigration, PreV19StateDefaultsKotekanModeToStrictComplement) {
+    SceneState authored{};
+    authored.select = SceneSelect::A;
+    authored.sceneA.activeLaneCount = kMaxLanes;
+    authored.sceneB.activeLaneCount = kMaxLanes;
+    for (int i = 0; i < kMaxLanes; ++i) {
+        authored.sceneA.lanes[static_cast<size_t>(i)].id = i;
+        authored.sceneA.lanes[static_cast<size_t>(i)].kotekanMode = KotekanMode::Empat;
+        authored.sceneA.lanes[static_cast<size_t>(i)].kotekanOverlap = 3;
+    }
+
+    const auto v18Blob = serializeSceneAsVersion(authored, kKotekanModeStateVersion - 1);
+    const SceneState loaded = deserializeScene(v18Blob);
+
+    for (int i = 0; i < kMaxLanes; ++i) {
+        EXPECT_EQ(loaded.sceneA.lanes[static_cast<size_t>(i)].kotekanMode, KotekanMode::NyogCag)
+            << "a pre-v19 state must load as the strict complement, lane " << i;
+        EXPECT_EQ(loaded.sceneA.lanes[static_cast<size_t>(i)].kotekanOverlap, 0)
+            << "a pre-v19 state must load with no structural overlap, lane " << i;
+    }
+}

@@ -10,7 +10,7 @@
 namespace poly {
 
 // region:state-version
-static constexpr int32_t kCurrentStateVersion = 18;
+static constexpr int32_t kCurrentStateVersion = 19;
 // M068 S03: v16 switched the pattern generator from the retired Bresenham
 // distribution (`(i*k) mod n < k`) to Bjorklund. Lanes saved before v16 carry a
 // rotation authored against the old generator; readLaneConfig migrates each
@@ -27,6 +27,12 @@ static constexpr int32_t kFillEveryNBarsStateVersion = 17;
 // laneSeed=0 / seedLocked=false — laneEffectiveSeed then returns the global seed
 // and playback stays byte-identical to a pre-lock preset.
 static constexpr int32_t kLaneSeedLockStateVersion = 18;
+
+// M002 S01 (EC06): kotekanMode and kotekanOverlap. A pre-v19 state carries
+// neither byte, and the struct defaults -- NyogCag with no overlap -- are
+// exactly the strict complement it played before, so the migration is lossless
+// by construction rather than by conversion.
+static constexpr int32_t kKotekanModeStateVersion = 19;
 // endregion:state-version
 
 // --- Envelope serialization helpers ---

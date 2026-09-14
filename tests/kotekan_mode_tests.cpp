@@ -79,8 +79,7 @@ std::vector<int> sharedSteps(const poly::GrooveState& state) {
     const auto polos = onsetsOfLane(state, 0);
     const auto sangsih = onsetsOfLane(state, 1);
     std::vector<int> shared;
-    std::set_intersection(polos.begin(), polos.end(), sangsih.begin(), sangsih.end(),
-                          std::back_inserter(shared));
+    std::set_intersection(polos.begin(), polos.end(), sangsih.begin(), sangsih.end(), std::back_inserter(shared));
     return shared;
 }
 
@@ -92,13 +91,11 @@ TEST(KotekanMode, NyogCagIsTheStrictComplement) {
 }
 
 TEST(KotekanMode, TeluRepeatsOnAThreePulseCell) {
-    EXPECT_EQ(onsetsOfLane(makePair(poly::KotekanMode::Telu, 0), 1),
-              (std::vector<int>{1, 2, 4, 5, 7, 8, 10, 11}));
+    EXPECT_EQ(onsetsOfLane(makePair(poly::KotekanMode::Telu, 0), 1), (std::vector<int>{1, 2, 4, 5, 7, 8, 10, 11}));
 }
 
 TEST(KotekanMode, EmpatRepeatsOnAFourPulseCell) {
-    EXPECT_EQ(onsetsOfLane(makePair(poly::KotekanMode::Empat, 0), 1),
-              (std::vector<int>{1, 2, 3, 5, 6, 7, 9, 10, 11}));
+    EXPECT_EQ(onsetsOfLane(makePair(poly::KotekanMode::Empat, 0), 1), (std::vector<int>{1, 2, 3, 5, 6, 7, 9, 10, 11}));
 }
 
 TEST(KotekanMode, StrictComplementLeavesAnEmptyIntersection) {

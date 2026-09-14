@@ -168,6 +168,17 @@ template <typename ReadFn> [[nodiscard]] bool readLaneConfig(ReadFn&& read, Lane
             return false;
         lane.seedLocked = (seedLocked != 0);
     }
+    if (version >= kKotekanModeStateVersion) {
+        uint8_t kotekanMode = 0;
+        if (!read(&kotekanMode, sizeof(kotekanMode)))
+            return false;
+        lane.kotekanMode = static_cast<KotekanMode>(kotekanMode);
+        if (!read(&lane.kotekanOverlap, sizeof(lane.kotekanOverlap)))
+            return false;
+    }
+    // Pre-v19 states carry no kotekan-mode bytes; the struct defaults
+    // (NyogCag, overlap 0) stand, which is the strict complement such a state
+    // played before M002. sanitizeGrooveState clamps a corrupt mode byte.
     // Pre-v18 states carry no laneSeed/seedLocked bytes; the struct defaults
     // (laneSeed=0, seedLocked=false) stand, so laneEffectiveSeed returns the
     // global seed and playback stays byte-identical to a pre-lock preset.

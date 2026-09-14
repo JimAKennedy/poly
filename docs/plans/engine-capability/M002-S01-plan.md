@@ -12,7 +12,7 @@ class: gated
 ## Task status
 
 - [x] 1. `KotekanMode`, the overlap field, and the derivation
-- [ ] 2. Serialize both fields at state version 19
+- [x] 2. Serialize both fields at state version 19
 - [ ] 3. Emit both into `presets.json` at schemaVersion 5
 - [ ] 4. Surface both in the WebUI
 - [ ] 5. `Balinese Kotekan` adopts `Telu` with overlap 1, and close the slice
