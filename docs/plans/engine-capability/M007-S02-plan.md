@@ -12,7 +12,7 @@ class: gated
 ## Task status
 
 - [x] 1. The reachability check, and the `local-unrunnable` marker
-- [ ] 2. Prove it bites, confirm it runs in CI, close the slice
+- [x] 2. Prove it bites, confirm it runs in CI, close the slice
 
 ## Definition of Done
 

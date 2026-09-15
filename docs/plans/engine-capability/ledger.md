@@ -629,22 +629,22 @@ which is what `GAP04` is for.
 **Plan:** M007-S02-plan.md
 **Validation:** format, site-unit, doc-conformance, guards
 **Evidence:** evidence/M007-S02.md
-**Status:** in-progress
+**Status:** done
 **Depends:** M007/S01
 
 **Definition of Done**
 
-- [ ] A check fails if any `scripts/check-*` guard is reachable from no declared
+- [x] A check fails if any `scripts/check-*` guard is reachable from no declared
       token, the pre-push gate, `pre-commit`, or the doc-conformance runner
-- [ ] The check has been shown to fail by adding a guard reachable from nothing
-- [ ] A guard that genuinely cannot run locally — one needing Cubase, a
+- [x] The check has been shown to fail by adding a guard reachable from nothing
+- [x] A guard that genuinely cannot run locally — one needing Cubase, a
       self-hosted runner, or a deployed URL — is declarable as such in-band,
       with a reason, rather than needing the check disabled
-- [ ] The check itself runs in CI
+- [x] The check itself runs in CI
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| GAP04 | Nothing enforces that a guard is runnable locally, so each gap in this family has been found by CI going red after a green local run — three times in three ships. Fixing the eleven in `GAP03` leaves the twelfth to be discovered the same way. `check-wasm-freshness.sh` shows the exception is real rather than theoretical: it compares deployed artifacts against a URL and cannot run from a clean checkout, so the check needs an in-band, reasoned escape hatch in the style this repo already uses | `tooling` | `site/tests/`, `.jk/validations.yml` | A guard reachable from nothing is added and the check watched to fail naming it; the escape hatch is exercised on a guard that genuinely cannot run locally, and the check confirmed to run in CI rather than only locally — the circularity M006/S02 had to correct | `open` |
+| GAP04 | Nothing enforces that a guard is runnable locally, so each gap in this family has been found by CI going red after a green local run — three times in three ships. Fixing the eleven in `GAP03` leaves the twelfth to be discovered the same way. `check-wasm-freshness.sh` shows the exception is real rather than theoretical: it compares deployed artifacts against a URL and cannot run from a clean checkout, so the check needs an in-band, reasoned escape hatch in the style this repo already uses | `tooling` | `site/tests/`, `.jk/validations.yml` | A guard reachable from nothing is added and the check watched to fail naming it; the escape hatch is exercised on a guard that genuinely cannot run locally, and the check confirmed to run in CI rather than only locally — the circularity M006/S02 had to correct | `done` |
 
 ## Sequencing
 
