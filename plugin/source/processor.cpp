@@ -909,6 +909,16 @@ static bool applyCoreParam(Steinberg::Vst::ParamID id, double normalized, Groove
     case kCoreFillEveryN:
         cfg.fillEveryNBars = static_cast<int>(eng);
         break;
+    // M002 S01: interlock style and structural overlap. The engine value is
+    // already 0..2 for the mode (Kind::KotekanMd) and a step count for the
+    // overlap; sanitizeGrooveState clamps both, so a host sending a wild value
+    // cannot put the lane outside the enum or past its cycle.
+    case kCoreKotekanMode:
+        cfg.kotekanMode = static_cast<poly::KotekanMode>(static_cast<uint8_t>(eng));
+        break;
+    case kCoreKotekanOverlap:
+        cfg.kotekanOverlap = static_cast<int>(eng);
+        break;
     case kCoreSeedLock: {
         // M034 S03: on the false->true edge, capture the current global seed so
         // this lane keeps deriving every deterministicRand roll from it — a

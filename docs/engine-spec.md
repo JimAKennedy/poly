@@ -131,6 +131,27 @@ Distributes `k` pulses (hits) across `n` steps as evenly as possible using a Bre
 
 The pattern is recomputed from `LaneConfig` each call — no cached state. Timeline-mode lanes (`timeline=true`) substitute `fixedPattern` for the Euclidean grid, and kotekan-paired lanes substitute the complement of a source lane's pattern.
 
+A lane with `kotekanSourceLane >= 0` derives its pattern from that source lane
+instead, and `kotekanMode` selects how:
+
+| Mode | Derivation | Effect |
+|------|------------|--------|
+| `NyogCag` | `pattern[s] = !src[s]` | the strict complement — the pair never strike together |
+| `Telu` | `pattern[s] = !src[s % 3]` | the interlock repeats on a three-pulse cell |
+| `Empat` | `pattern[s] = !src[s % 4]` | the interlock repeats on a four-pulse cell |
+
+The cell modes are then **filled** at any step neither part would strike:
+`theory-gamelan` Rule 1 makes gaps in the composite errors, and a periodic
+complement of an unrelated Euclidean source does not preserve continuity by
+itself. `NyogCag` is already the exact complement and has no gaps to fill.
+
+`kotekanOverlap` then forces the first N structural points — cycle boundary,
+phrase join, midpoint — to sound in both parts where the source also strikes, so
+the pair's intersection can be non-empty. Both default to the strict complement
+with no overlap, which is the pre-M002 behaviour. Only the rhythmic dimension of
+*telu* and *empat* is modelled; `theory-gamelan.mdx` discloses that and sources
+the pitch dimension.
+
 ### 2. Step Iteration
 
 For each absolute step index in the block's PPQ range:

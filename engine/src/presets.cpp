@@ -1373,6 +1373,14 @@ GrooveState makeBaliKotekan() {
     sangsih.noteDuration = 0.12f;
     sangsih.ghostFloor = 40;
     sangsih.kotekanSourceLane = 0;
+    // M002 S01 (EC06). Empat rather than telu: this preset's polos is E(5,8),
+    // and at that cycle telu computes exactly the strict complement, so naming
+    // it in a patch table would report a choice that changes nothing. Empat
+    // gives sangsih 1,5 against the strict 1,4,7 and shares step 5 with the
+    // polos on its own — Rule 4's structural overlap arriving from the style
+    // rather than only from the overlap count.
+    sangsih.kotekanMode = KotekanMode::Empat;
+    sangsih.kotekanOverlap = 1;
 
     auto& jegogan = s.lanes[2];
     jegogan.id = 2;

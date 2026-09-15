@@ -123,50 +123,56 @@ than a description in the guide, so the two rules currently weakened or
 unverifiable because the engine can only derive the strict complement become
 checkable as written.
 **Branch:** milestone/M002-kotekan-modes
-**Status:** planned
+**Status:** done
 **Demo:** A gamelan patch names norot, telu or empat; `theory-gamelan` Rule 4 is
 checked as written rather than as construction step 4 specifies, and Rule 1's
 predicate can be made to fail.
 
 ### Slice M002/S01 — The mode is something a patch can express
 
-**Validation:** format, unit, engine-isolation, rt-safety, webui-e2e
+**Plan:** M002-S01-plan.md
+**Validation:** format, unit, engine-isolation, rt-safety, webui-e2e, doc-discipline
 **Evidence:** evidence/M002-S01.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] A gamelan patch can name its interlock style, rather than only a source lane
-- [ ] Polos–sangsih overlap is controllable, so the composite is no longer
+- [x] A gamelan patch can name its interlock style, rather than only a source lane
+- [x] Polos–sangsih overlap is controllable, so the composite is no longer
       complete by construction
-- [ ] The mode a preset uses reaches `site/src/generated/presets.json`, so a patch
+- [x] The mode a preset uses reaches `site/src/generated/presets.json`, so a patch
       table can report it
-- [ ] `renderRange()` gains no allocation, lock or blocking call
-- [ ] The engine builds and passes its tests with no VST3 SDK present
+- [x] `renderRange()` gains no allocation, lock or blocking call
+- [x] The engine builds and passes its tests with no VST3 SDK present
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| EC06 | `theory-gamelan` Rule 4 ends "add deliberate doublings via a third lane or accent masks until kotekan modes ship" — issue #153. Poly's kotekan is a source-lane parameter (`KotekanSrc`, −1..7) with no modes, so Rule 5's four named interlock styles are a choice the guide describes and the tool cannot express | `prose` | `engine/`, `plugin/source/`, `webui/`, `engine/src/presets.cpp` | Engine tests cover each mode's composite against the mode's definition, including a case that the overlap control changes the composite; the exporter round-trip proves the mode reaches `presets.json` | `open` |
+| EC06 | `theory-gamelan` Rule 4 ends "add deliberate doublings via a third lane or accent masks until kotekan modes ship" — issue #153. Poly's kotekan is a source-lane parameter (`KotekanSrc`, −1..7) with no modes, so Rule 5's four named interlock styles are a choice the guide describes and the tool cannot express | `prose` | `engine/`, `plugin/source/`, `webui/`, `engine/src/presets.cpp` | Engine tests cover each mode's composite against the mode's definition, including a case that the overlap control changes the composite; the exporter round-trip proves the mode reaches `presets.json` | `done` |
 
 ### Slice M002/S02 — The guide catches up
 
+**Plan:** M002-S02-plan.md
 **Validation:** format, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M002-S02.md
-**Status:** open
+**Status:** done
 **Depends:** M002/S01
 
 **Definition of Done**
 
-- [ ] Rule 4 no longer carries the "until kotekan modes ship" parenthetical
-- [ ] Rule 4 is checked as written — pair-overlap — rather than as construction
+- [x] Rule 4 no longer carries the "until kotekan modes ship" parenthetical
+- [x] Rule 4 is checked as written — pair-overlap — rather than as construction
       step 4 specifies
-- [ ] Rule 1 reads `checkable`, with a predicate that has been shown to fail
-- [ ] This ledger records that the theory-audit ledger's F41 weakening no longer
+- [x] Rule 1 reads `checkable`, with a predicate that has been shown to fail
+- [x] This ledger records that the theory-audit ledger's F41 weakening no longer
       describes the shipped behaviour
+- [x] The page states that Poly models only the rhythmic dimension of *telu* and
+      *empat* — the cell length the interlock repeats on, not their pitch
+      content — and directs the reader to Tenzer (2000) and Vitale (1990) for
+      that dimension; *norot* is named as not expressible, and why
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| EC07 | Theory-audit row F41 records M004/S03 checking Rule 4 as construction step 4 specifies, because Rule 4 as written demands pair-overlap that Kotekan L-mode cannot produce. M007 then found the strict predicate could not be made to fail at all, and marked Rule 1 not checkable for the same cause. Two rules on one page, weakened by one engine limitation | `rule` | `theory-gamelan.mdx`, `site/tests/theory-patch-conformance.test.mjs` | Both predicates are mutation-proved against a patch using a mode with deliberate overlap — the mutation that could not fail under L-mode now fails | `open` |
+| EC07 | Theory-audit row F41 records M004/S03 checking Rule 4 as construction step 4 specifies, because Rule 4 as written demands pair-overlap that Kotekan L-mode cannot produce. M007 then found the strict predicate could not be made to fail at all, and marked Rule 1 not checkable for the same cause. Two rules on one page, weakened by one engine limitation | `rule` | `theory-gamelan.mdx`, `site/tests/theory-patch-conformance.test.mjs` | Both predicates are mutation-proved against a patch using a mode with deliberate overlap — the mutation that could not fail under L-mode now fails | `done` |
 
 ---
 

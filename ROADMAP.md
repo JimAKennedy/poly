@@ -56,7 +56,6 @@ contributors who want to dig into the engine.
 | [#157](https://github.com/JimAKennedy/poly/issues/157) | Cell-aware swing and long-beat feel for additive (aksak) meters | `enhancement` |
 | [#155](https://github.com/JimAKennedy/poly/issues/155) | Coupled call-and-response phrase gating (`responseSourceLane`) | `enhancement` |
 | [#154](https://github.com/JimAKennedy/poly/issues/154) | Phrase-position-aware fills and a tihai generator | `enhancement` |
-| [#153](https://github.com/JimAKennedy/poly/issues/153) | Kotekan modes: norot/telu/empat variants and controlled polos-sangsih overlap | `enhancement` |
 | [#152](https://github.com/JimAKennedy/poly/issues/152) | Timeline-aware constraint: clave/bell attraction-avoidance mask for mutation and fills | `enhancement` |
 | [#151](https://github.com/JimAKennedy/poly/issues/151) | Correlated (1/f) humanize instead of white-noise timing jitter | `enhancement` |
 | [#150](https://github.com/JimAKennedy/poly/issues/150) | Non-isochronous subdivision profiles (samba/jembe feel templates) | `enhancement` |

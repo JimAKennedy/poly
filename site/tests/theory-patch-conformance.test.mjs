@@ -92,6 +92,52 @@ async function loadPatch(slug) {
 // --- Derivation ------------------------------------------------------------
 
 // Onset step indices for a lane (null for timeline lanes with "—" rotation).
+
+// M002/S02 (EC07). Rule 4 as written: the interlocking pair strike together at
+// structural tones. Shared by the chapter's worked example and the theory
+// page's own rule-checked patch, so both tables are held to the rule rather
+// than one being illustrative only.
+//
+// Derives the pair from the table's own columns the way the engine does: the
+// interlock mode picks which index of the source is complemented, and the
+// overlap count forces a shared strike only where the source also strikes --
+// forcing a step the source leaves silent yields no intersection, just a
+// denser complement.
+function kotekanPairOverlap(rows) {
+  const polos = findLane(rows, /polos/i);
+  const sangsih = findLane(rows, /sangsih/i);
+  if (!polos || !sangsih) return 'need both a polos and a sangsih lane to check Rule 4';
+  if (!/^l\d+$/i.test(String(sangsih.cell.Kotekan ?? '').trim()))
+    return 'the sangsih lane derives from no source, so Rule 4 has no interlocking pair to check';
+
+  const src = rotate(bjorklund(polos.steps, polos.hits), polos.rotation ?? 0);
+  const mode = String(sangsih.cell.Interlock ?? '').trim().toLowerCase();
+  const cellLen = mode === 'telu' ? 3 : mode === 'empat' ? 4 : 0;
+  const steps = sangsih.steps;
+  const srcAt = (step) => src[cellLen > 0 ? step % cellLen : step];
+  const derived = Array.from({ length: steps }, (_, step) => !srcAt(step));
+
+  // M002/S01 task 6: a cell mode is filled wherever neither part would strike,
+  // because Rule 1 makes gaps in the composite errors. Mirrors the engine; a
+  // model that drifts from it certifies the wrong pattern.
+  if (cellLen > 0)
+    for (let step = 0; step < steps; step++)
+      if (!src[step] && !derived[step]) derived[step] = true;
+
+  const overlap = Number(sangsih.cell.Overlap ?? 0);
+  const points = [0, Math.floor(steps / 2)];
+  for (let n = 0; n < points.length && n < overlap; n++)
+    if (srcAt(points[n])) derived[points[n]] = true;
+
+  const polosOnsets = src.flatMap((on, k) => (on ? [k] : []));
+  const sangsihOnsets = derived.flatMap((on, k) => (on ? [k] : []));
+  const shared = sangsihOnsets.filter((k) => polosOnsets.includes(k));
+  return shared.length > 0
+    ? null
+    : `polos ${JSON.stringify(polosOnsets)} and sangsih ${JSON.stringify(sangsihOnsets)} never ` +
+        'strike together; Rule 4 says a pair with empty intersection everywhere sounds mechanical';
+}
+
 function laneOnsets(row) {
   if (row.rotation === null) return null;
   const p = rotate(bjorklund(row.steps, row.hits), row.rotation);
@@ -612,35 +658,18 @@ const CHECKLIST = [
       },
       {
         id: 'gam-structural-overlap',
-        description: 'Rule 4: a deliberate doubling marks the cycle boundary',
-        // Construction step 4, not Rule 4's headline. Rule 4 asks the pair to
-        // overlap at structural tones, but its own parenthetical says Poly's
-        // Kotekan L-mode implements the strict case and that doublings come
-        // "via a third lane or accent masks until kotekan modes ship" — and
-        // theory-gamelan's own reference patch uses L6. A predicate demanding
-        // pair-overlap therefore condemns the worked example the rule is drawn
-        // from, and earns a suppression nobody could ever burn down. So this
-        // checks what step 4 specifies: a lane outside the pair striking the
-        // gong point together with a pair lane.
-        check: ({ rows }) => {
-          const polos = findLane(rows, /polos/i);
-          const sangsih = findLane(rows, /sangsih/i);
-          if (!polos || !sangsih) return 'need both a polos and a sangsih lane to check Rule 4';
-          // Sangsih's own triple is not what sounds when its Kotekan cell is
-          // L<n>: the engine derives its onsets from the source lane. Polos is
-          // the pair member the table actually describes.
-          const pair = new Set([polos.role, sangsih.role]);
-          const atBoundary = (r) => (laneOnsets(r) ?? []).includes(0);
-          if (!atBoundary(polos)) {
-            return `polos sounds on ${JSON.stringify(laneOnsets(polos))} and not on the cycle ` +
-              'boundary, so nothing can double it there; Rule 4 marks structure at the gong point';
-          }
-          const doubling = rows.filter((r) => !pair.has(r.role) && atBoundary(r));
-          return doubling.length > 0
-            ? null
-            : 'no lane outside the kotekan pair sounds on the cycle boundary, so the gong point ' +
-                'carries no deliberate doubling — construction step 4 adds a sparse third lane there';
-        },
+        description: 'Rule 4: the interlocking pair strike together at structural tones',
+        // M002/S02 (EC07). This checked construction step 4 instead of Rule 4's
+        // headline until kotekan modes shipped. The reason is worth keeping: the
+        // engine derived sangsih as the exact complement of its source, so the
+        // pair's intersection was empty by construction, and a predicate
+        // demanding pair-overlap condemned the very patch the rule is drawn
+        // from. M007 recorded the same cause for marking Rule 1 not checkable.
+        //
+        // M002/S01 gave the derivation an interlock mode and a structural
+        // overlap count, so the intersection is a property of the patch rather
+        // than of the engine, and Rule 4 can be checked as written.
+        check: ({ rows }) => kotekanPairOverlap(rows),
       },
     ],
   },
@@ -1284,6 +1313,48 @@ CHECKLIST.push({
   ],
 });
 
+// M002/S02 (EC07). The theory page's own rule-checked patch, held to Rule 4 by
+// the same helper as the chapter's worked example. Without this the Interlock
+// and Overlap columns on that table would be documentation nothing checks --
+// which is how a table drifts from the rule it illustrates.
+CHECKLIST.push({
+  page: 'theory-gamelan.mdx',
+  patch: 'Rule-Checked Kotekan Over Colotomy',
+  rules: [
+    {
+      id: 'gam-pair-overlap-as-written',
+      description: 'Rule 4: the interlocking pair strike together at structural tones',
+      check: ({ rows }) => kotekanPairOverlap(rows),
+    },
+    {
+      id: 'gam-composite-one-rate',
+      description: "Rule 1: the pair interlock at one rate, so their composite is one stream",
+      // M002/S02 (EC07). This checks Rule 1's precondition -- "at the
+      // interlock's subdivision rate" -- and deliberately NOT its continuity
+      // claim. Continuity is guaranteed by the engine's derivation for every
+      // mode: NyogCag is the exact complement by definition, and M002/S01's
+      // fill covers any pulse a cell mode would leave unstruck. No patch can
+      // violate it, so asserting it would be a predicate that cannot fail.
+      // What a patch *can* get wrong is pairing two lanes that do not share a
+      // rate, in which case "the composite" is not one stream at all.
+      check: ({ rows }) => {
+        const polos = findLane(rows, /polos/i);
+        const sangsih = findLane(rows, /sangsih/i);
+        if (!polos || !sangsih) return 'need both a polos and a sangsih lane to check Rule 1';
+        const pSub = String(polos.cell.Subdivision ?? '').trim();
+        const sSub = String(sangsih.cell.Subdivision ?? '').trim();
+        if (pSub !== sSub)
+          return `polos runs at ${pSub} and sangsih at ${sSub}; Rule 1 reads the composite at ` +
+            'the interlock\'s subdivision rate, which needs one rate for the pair';
+        if (polos.steps !== sangsih.steps)
+          return `polos spans ${polos.steps} steps and sangsih ${sangsih.steps}; the pair must share ` +
+            'a cycle for their composite to be a single stream';
+        return null;
+      },
+    },
+  ],
+});
+
 let liveMarkers = 0;
 
 for (const entry of CHECKLIST) {
@@ -1437,10 +1508,10 @@ const RULE_TRIAGE = {
     8: { checkable: false, why: 'states which of Rules 1-6 a neo-soul variant relaxes; it is a meta-rule, not a patch property' },
   },
   'theory-gamelan.mdx': {
-    1: { checkable: false, why: 'the pair\'s composite is complete by construction whenever sangsih runs Kotekan L-mode, which the engine derives as the strict complement, so a predicate over this patch cannot fail. A rule that cannot fail is not a checked rule' },
+    1: { checkable: true, case: 'gam-composite-one-rate', why: 'only the precondition is checked — that the pair interlock at one rate, so their composite is one stream. The continuity claim itself is guaranteed by the derivation for every mode (NyogCag by definition, cell modes by M002/S01\'s fill), so no patch can violate it and asserting it would be a predicate that cannot fail' },
     2: { checkable: false, why: 'asks whether a part is playable and idiomatic for a human player, which no cell in the table reports' },
     3: { checkable: true, why: 'asserted: theory-gamelan polos case' },
-    4: { checkable: true, why: 'asserted: gam-structural-overlap' },
+    4: { checkable: true, case: 'gam-pair-overlap-as-written', why: 'the pair\'s intersection is now a property of the patch — the interlock mode and overlap count are columns, so Rule 4 is checked as written rather than as construction step 4 specifies' },
     5: { checkable: false, why: 'naming an interlock style is a choice about repertoire, not a value any column holds' },
     6: { checkable: true, why: 'asserted: gam-pokok-layer' },
     7: { checkable: true, case: 'gam-strata-halve', why: 'stroke rates halve as instruments deepen — step counts in powers of two' },

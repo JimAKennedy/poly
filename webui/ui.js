@@ -1737,7 +1737,12 @@
         fmt: (v) => { const n = Math.round(v * 64); return n === 0 ? 'Off' : n + ' bars'; } },
     ];
     const ALL_ADV = [...PHRASE, ...MUTATION, ...MORE, ...FILL];
-    const SUBS = [1, 2, 4, 8, 16];
+    // M002 S01: the three interlock styles the engine models. norot is absent
+// deliberately -- it is defined by pitch oscillation and a Poly lane carries
+// one note; theory-gamelan.mdx says so and sources the pitch dimension.
+const KOTEKAN_MODES = ['Nyog cag', 'Telu', 'Empat'];
+
+const SUBS = [1, 2, 4, 8, 16];
     const sliderHtml = (arr) => arr.map((p) =>
       `<div class="param-slider${p.disabled ? ' phrase-disabled' : ''}"><label>${p.label}</label>` +
       `<div class="slider-track" data-field="${p.field}"><i style="width:${(p.norm * 100).toFixed(1)}%"></i></div>` +
@@ -1759,6 +1764,20 @@
           ? `<button class="chip${l.kotekanSource === si ? ' on' : ''}" data-kot="${si}">${sl.name}</button>`
           : '').join('') +
       `</div></div>` +
+      // M002 S01: interlock style and structural overlap. Shown only when the
+      // lane actually derives a complement -- on an independent lane they
+      // control nothing, and a dead control is worse than an absent one.
+      (l.kotekanSource >= 0
+        ? `<div class="prow"><label>Interlock</label><div class="chip-row">` +
+            KOTEKAN_MODES.map((m, mi) =>
+              `<button class="chip${(l.kotekanMode ?? 0) === mi ? ' on' : ''}" data-kotmode="${mi}">${m}</button>`).join('') +
+          `</div></div>` +
+          `<div class="prow"><label>Overlap</label><div class="chip-row">` +
+            [0, 1, 2, 3].map((ov) =>
+              `<button class="chip${(l.kotekanOverlap ?? 0) === ov ? ' on' : ''}" data-kotover="${ov}">${ov}</button>`).join('') +
+          `</div></div>` +
+          `<div class="hint">Interlock style sets how the derived part complements its source. Overlap is how many structural points both parts strike together — 0 is the strict complement.</div>`
+        : '') +
       `<div class="section-label">Fill</div>` + sliderHtml(FILL) +
       `<div class="prow"><label>Manual</label><div class="chip-row">` +
         `<button class="chip" data-manualfill>Fill Now</button></div></div>` +
@@ -1822,6 +1841,20 @@
         host.edit(`lane.${li}.kotekanSource`, (kv + 1) / 8, 'begin');
         host.edit(`lane.${li}.kotekanSource`, (kv + 1) / 8, 'perform');
         host.edit(`lane.${li}.kotekanSource`, (kv + 1) / 8, 'end');
+      }));
+    adv.querySelectorAll('[data-kotmode]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const mv = parseInt(b.dataset.kotmode) / 2;
+        host.edit(`lane.${li}.kotekanMode`, mv, 'begin');
+        host.edit(`lane.${li}.kotekanMode`, mv, 'perform');
+        host.edit(`lane.${li}.kotekanMode`, mv, 'end');
+      }));
+    adv.querySelectorAll('[data-kotover]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const ov = parseInt(b.dataset.kotover) / 64;
+        host.edit(`lane.${li}.kotekanOverlap`, ov, 'begin');
+        host.edit(`lane.${li}.kotekanOverlap`, ov, 'perform');
+        host.edit(`lane.${li}.kotekanOverlap`, ov, 'end');
       }));
   }
 

@@ -19,6 +19,8 @@
     MidiNote: 0, MidiChannel: 1, HitCount: 2, Rotation: 3, BaseVelocity: 4,
     GhostFloor: 5, Active: 6, Subdivision: 7, CycleSteps: 8, KotekanSource: 9,
     Timeline: 10, EnvelopeCount: 11, CellCount: 12,
+    // M002 S01: appended in engine/src/wasm_api.cpp; indices must match.
+    KotekanMode: 13, KotekanOverlap: 14,
   };
 
   const LaneFieldFloat = {
@@ -198,6 +200,8 @@
       phraseOffset: lf(engineCtx, laneIdx, LaneFieldFloat.PhraseOffset),
       tempoMultiplier: lf(engineCtx, laneIdx, LaneFieldFloat.TempoMultiplier),
       kotekanSource: li(engineCtx, laneIdx, LaneFieldInt.KotekanSource),
+      kotekanMode: li(engineCtx, laneIdx, LaneFieldInt.KotekanMode),
+      kotekanOverlap: li(engineCtx, laneIdx, LaneFieldInt.KotekanOverlap),
       accents,
     };
   }
@@ -1287,6 +1291,8 @@
         Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.Subdivision, subs[Math.round(v * 4)] || 4);
       },
       kotekanSource:v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.KotekanSource, Math.round(v * 8) - 1),
+      kotekanMode:v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.KotekanMode, Math.round(v * 2)),
+      kotekanOverlap:v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.KotekanOverlap, Math.round(v * 64)),
       timeline:     v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.Timeline, v >= 0.5 ? 1 : 0),
       cellCount:    v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.CellCount, Math.round(v * 64)),
     };

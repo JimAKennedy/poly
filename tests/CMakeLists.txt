@@ -16,6 +16,7 @@ add_executable(poly_tests
     fill_tests.cpp
     fitter_tests.cpp
     golden_tests.cpp
+    kotekan_mode_tests.cpp
     lane_name_tests.cpp
     dynamic_shaping_tests.cpp
     swing_humanize_tests.cpp

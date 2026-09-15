@@ -42,6 +42,7 @@ enum class Kind : uint8_t {
     TimingOffs,  // engine = norm * 40 - 20
     MidiChannel, // engine = round(norm * 16) - 1  (yields -1..15)
     KotekanSrc,  // engine = round(norm * 8) - 1   (yields -1..7)
+    KotekanMd,   // engine = round(norm * 2)        (yields 0..2, the KotekanMode enum)
 };
 
 struct Entry {
@@ -75,9 +76,9 @@ static constexpr std::array<Entry, 16> kLaneExprParamRegistry = {{
     {15, "Kotekan Source", Kind::KotekanSrc, -1.0, 7.0, -1.0},
 }};
 
-// Lane core params (12), addressed via ParamIDs::laneCoreParam(lane, offset).
-// Order matches plugids.h ParamIDs::kCoreSteps..kCoreSeedLock.
-static constexpr std::array<Entry, 12> kLaneCoreParamRegistry = {{
+// Lane core params (14), addressed via ParamIDs::laneCoreParam(lane, offset).
+// Order matches plugids.h ParamIDs::kCoreSteps..kCoreKotekanOverlap.
+static constexpr std::array<Entry, 14> kLaneCoreParamRegistry = {{
     {0, "Steps", Kind::Ranged1_64, 1.0, 64.0, 4.0},
     {1, "Subdivision", Kind::Subdivision, 1.0, 16.0, 4.0},
     {2, "Hits", Kind::Ranged0_64, 0.0, 64.0, 4.0},
@@ -97,6 +98,12 @@ static constexpr std::array<Entry, 12> kLaneCoreParamRegistry = {{
     // false->true edge so a locked lane's output is invariant under a global
     // reroll (see applyCoreParam kCoreSeedLock).
     {11, "Seed Lock", Kind::Bool, 0.0, 1.0, 0.0},
+    // M002 S01: kotekan interlock style and structural overlap. Both defaults
+    // reproduce the pre-M002 strict complement, so an existing patch loads and
+    // plays identically. The core family grew 12 -> 14 here; see
+    // M002-S01-design.md for why these could not be state-only.
+    {12, "Kotekan Mode", Kind::KotekanMd, 0.0, 2.0, 0.0},
+    {13, "Kotekan Overlap", Kind::Ranged0_64, 0.0, 64.0, 0.0},
 }};
 
 namespace detail {
@@ -144,6 +151,8 @@ inline double dispatchNormToEngine(Kind k, double norm) {
         return std::round(n * 16.0) - 1.0;
     case Kind::KotekanSrc:
         return std::round(n * 8.0) - 1.0;
+    case Kind::KotekanMd:
+        return std::round(n * 2.0);
     }
     return n;
 }
@@ -187,6 +196,8 @@ inline double dispatchEngineToNorm(Kind k, double engine) {
         return clamp01((engine + 1.0) / 16.0);
     case Kind::KotekanSrc:
         return clamp01((engine + 1.0) / 8.0);
+    case Kind::KotekanMd:
+        return clamp01(engine / 2.0);
     }
     return clamp01(engine);
 }

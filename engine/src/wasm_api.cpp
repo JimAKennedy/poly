@@ -101,6 +101,10 @@ enum class LaneFieldInt {
     Timeline,
     EnvelopeCount,
     CellCount,
+    // M002 S01: appended, never inserted -- the JS side addresses these by
+    // numeric index, so inserting would silently re-point every field after it.
+    KotekanMode,
+    KotekanOverlap,
 };
 
 enum class LaneFieldFloat {
@@ -340,6 +344,13 @@ void poly_edit_lane_int(PolyContext ctx, int lane, int field, int value) {
     case LaneFieldInt::KotekanSource:
         cfg.kotekanSourceLane = std::clamp(value, -1, poly::kMaxLanes - 1);
         break;
+    case LaneFieldInt::KotekanMode:
+        cfg.kotekanMode =
+            static_cast<poly::KotekanMode>(std::clamp(value, 0, static_cast<int>(poly::KotekanMode::Empat)));
+        break;
+    case LaneFieldInt::KotekanOverlap:
+        cfg.kotekanOverlap = std::clamp(value, 0, cfg.cycle.steps > 0 ? cfg.cycle.steps : 0);
+        break;
     case LaneFieldInt::Timeline:
         cfg.timeline = (value != 0);
         break;
@@ -434,6 +445,10 @@ int poly_lane_int(PolyContext ctx, int lane, int field) {
         return cfg.cycle.steps;
     case LaneFieldInt::KotekanSource:
         return cfg.kotekanSourceLane;
+    case LaneFieldInt::KotekanMode:
+        return static_cast<int>(cfg.kotekanMode);
+    case LaneFieldInt::KotekanOverlap:
+        return cfg.kotekanOverlap;
     case LaneFieldInt::Timeline:
         return cfg.timeline ? 1 : 0;
     case LaneFieldInt::EnvelopeCount:

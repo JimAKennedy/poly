@@ -73,6 +73,8 @@ static constexpr CoreParamDef kCoreParamDefs[] = {
     {ParamIDs::kCoreMidiChannel, "MIDI Channel", "", 16, 0.0},
     {ParamIDs::kCoreFillEveryN, "Fill Every N", "bars", 64, 0.0},
     {ParamIDs::kCoreSeedLock, "Seed Lock", "", 1, 0.0},
+    {ParamIDs::kCoreKotekanMode, "Kotekan Mode", "", 2, 0.0},
+    {ParamIDs::kCoreKotekanOverlap, "Kotekan Overlap", "steps", 64, 0.0},
 };
 
 } // namespace
@@ -279,6 +281,8 @@ Steinberg::tresult PLUGIN_API PolyControllerBase::setComponentState(Steinberg::I
         core(ParamIDs::kCoreMidiChannel, cfg.midiChannel);
         core(ParamIDs::kCoreFillEveryN, cfg.fillEveryNBars);
         core(ParamIDs::kCoreSeedLock, cfg.seedLocked ? 1.0 : 0.0);
+        core(ParamIDs::kCoreKotekanMode, static_cast<double>(static_cast<uint8_t>(cfg.kotekanMode)));
+        core(ParamIDs::kCoreKotekanOverlap, cfg.kotekanOverlap);
     }
 
     setParamNormalized(ParamIDs::kMacroComplexity, gs.macros.complexity);

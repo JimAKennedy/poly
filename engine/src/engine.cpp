@@ -107,15 +107,43 @@ static void buildLanePattern(const LaneConfig& cfg, const GrooveState& state, in
             const auto& src = state.lanes[cfg.kotekanSourceLane];
             std::array<bool, kMaxSteps> srcPattern{};
             euclidean(src.hitCount, src.cycle.steps, src.rotation, srcPattern);
+            // M002 S01 (EC06). The mode picks which index of the source is
+            // complemented. NyogCag reads the source step for step -- the
+            // pre-M002 behaviour, byte-identical. Telu and Empat read it modulo
+            // a cell length, so the interlock repeats on a three- or four-pulse
+            // cell instead of tracking the source across the whole cycle.
+            int cell = 0;
+            if (cfg.kotekanMode == KotekanMode::Telu)
+                cell = 3;
+            else if (cfg.kotekanMode == KotekanMode::Empat)
+                cell = 4;
             int complementHits = 0;
             for (int s = 0; s < cfg.cycle.steps && s < src.cycle.steps; ++s) {
-                pattern[s] = !srcPattern[s];
+                const int srcStep = cell > 0 ? (s % cell) : s;
+                pattern[s] = !srcPattern[srcStep];
                 if (pattern[s])
                     ++complementHits;
             }
             for (int s = src.cycle.steps; s < cfg.cycle.steps; ++s) {
                 pattern[s] = true;
                 ++complementHits;
+            }
+            // M002 S01 task 6. theory-gamelan Rule 1: "the composite must be
+            // continuous … gaps in the composite are errors". A cell mode reads
+            // the source modulo the cell length, so it can leave a pulse that
+            // neither part strikes — Empat did, at pulses 4 and 7 of the
+            // Balinese Kotekan patch. Real kotekan figures are composed as a
+            // pair and are continuous by construction; a periodic complement of
+            // an unrelated Euclidean source is not. Fill those pulses so the
+            // composite is continuous whatever the mode. NyogCag is already the
+            // exact complement and has no gaps to fill.
+            if (cell > 0) {
+                for (int s = 0; s < cfg.cycle.steps && s < src.cycle.steps; ++s) {
+                    if (!srcPattern[s] && !pattern[s]) {
+                        pattern[s] = true;
+                        ++complementHits;
+                    }
+                }
             }
             // MEM095 / M070 "Kotekan Interlock": a macro-saturated source
             // (hitCount == cycle.steps, reachable dynamically via the complexity/
@@ -128,6 +156,22 @@ static void buildLanePattern(const LaneConfig& cfg, const GrooveState& state, in
             // stays byte-identical (determinism golden tests unaffected).
             if (complementHits == 0)
                 euclidean(cfg.hitCount, cfg.cycle.steps, cfg.rotation, pattern);
+            // M002 S01 (EC06). Structural overlap: the points at which both
+            // parts strike, which Rule 4 says mark cadences, phrase joins and
+            // angsel figures. Forced on rather than toggled -- the point is a
+            // shared strike, so the step must sound in both parts whatever the
+            // complement said. Overlap 0 leaves the strict complement
+            // untouched, which is why every pre-M002 preset is byte-identical.
+            if (cfg.kotekanOverlap > 0 && cfg.cycle.steps > 0) {
+                const int mid = cfg.cycle.steps / 2;
+                const int phrase = cfg.phraseLength > 0.0f ? 1 : mid;
+                const int points[3] = {0, phrase, mid};
+                for (int i = 0; i < 3 && i < cfg.kotekanOverlap; ++i) {
+                    const int step = points[i];
+                    if (step >= 0 && step < cfg.cycle.steps)
+                        pattern[step] = srcPattern[cell > 0 ? (step % cell) : step] ? true : pattern[step];
+                }
+            }
             // endregion:kotekan
         } else {
             euclidean(cfg.hitCount, cfg.cycle.steps, cfg.rotation, pattern);

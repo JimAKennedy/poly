@@ -101,6 +101,23 @@ struct NoteEventBuffer {
 // Add:   emitted, off-pattern position (mutation-added or fill-added)
 // Drop:  NOT emitted, on-pattern (mutation drop or probability/activation cull)
 // Silent (off-pattern non-hit) is not recorded — nothing to display.
+// M002 S01 (EC06). The interlock style a kotekan pair uses. Defined by what the
+// engine computes, not by appeal to the tradition: `src` is the source lane's
+// resolved pattern, and the derived part is
+//   NyogCag  pattern[s] = !src[s]        -- the strict complement
+//   Telu     pattern[s] = !src[s % 3]    -- repeats on a three-pulse cell
+//   Empat    pattern[s] = !src[s % 4]    -- repeats on a four-pulse cell
+// The cell modes are then filled wherever neither part would strike, because
+// theory-gamelan Rule 1 makes gaps in the composite errors and a periodic
+// complement of an unrelated source does not preserve continuity on its own.
+// Only the rhythmic dimension of telu and empat is modelled; the terms also
+// carry pitch meaning, which theory-gamelan.mdx discloses and sources.
+enum class KotekanMode : uint8_t {
+    NyogCag = 0,
+    Telu = 1,
+    Empat = 2,
+};
+
 enum class EmissionKind : uint8_t {
     Base = 0,
     Ghost = 1,
@@ -219,15 +236,22 @@ struct LaneConfig {
     float humanizeMs = 0.0f;
     float swingAmount = 0.0f;
     float noteDuration = 0.0f;
-    float phraseLength = 0.0f;                  // beats; 0 = continuous (no phrase gating)
-    float phraseGap = 0.0f;                     // beats; silence between phrases
-    float phraseOffset = 0.0f;                  // beats; phase offset for this lane's phrase cycle
-    float mutationRate = 0.0f;                  // 0.0-1.0; per-step mutation probability each cycle
-    float driftRate = 0.0f;                     // steps per bar; pattern rotation rate from absolute PPQ
-    float timingOffsetMs = 0.0f;                // ms; positive = late, negative = early; range [-20, +20]
-    float syncopationOffset = 0.0f;             // 0.0-1.0; pushes even (strong-beat) steps late
-    float tempoMultiplier = 1.0f;               // 0.25-4.0; per-lane tempo scaling (Nancarrow-style)
-    int kotekanSourceLane = -1;                 // -1=independent, 0-7=complement of source lane's pattern
+    float phraseLength = 0.0f;      // beats; 0 = continuous (no phrase gating)
+    float phraseGap = 0.0f;         // beats; silence between phrases
+    float phraseOffset = 0.0f;      // beats; phase offset for this lane's phrase cycle
+    float mutationRate = 0.0f;      // 0.0-1.0; per-step mutation probability each cycle
+    float driftRate = 0.0f;         // steps per bar; pattern rotation rate from absolute PPQ
+    float timingOffsetMs = 0.0f;    // ms; positive = late, negative = early; range [-20, +20]
+    float syncopationOffset = 0.0f; // 0.0-1.0; pushes even (strong-beat) steps late
+    float tempoMultiplier = 1.0f;   // 0.25-4.0; per-lane tempo scaling (Nancarrow-style)
+    int kotekanSourceLane = -1;     // -1=independent, 0-7=complement of source lane's pattern
+    // M002 S01 (EC06). The interlock style, and how many structural points the
+    // pair strikes together. Both are state-only: the per-lane VST3 parameter
+    // family is full (kParamsPerLane == 16, kKotekanSource occupies slot 15),
+    // and a style choice does not want an automation lane. Defaults reproduce
+    // the pre-M002 strict complement exactly.
+    KotekanMode kotekanMode = KotekanMode::NyogCag;
+    int kotekanOverlap = 0;                     // structural steps struck by both parts; 0 = strict
     int fillEveryNBars = 0;                     // 0 = no bar-gated fill; N>0 = play off-pattern fill on bars whose
                                                 // absolute bar index is a multiple of N (deterministic, PPQ-derived)
     int cellCount = 0;                          // 0 = equal cells (standard Euclidean); >0 = additive/aksak

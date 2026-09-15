@@ -1,0 +1,315 @@
+---
+class: gated
+---
+
+# M002 — Review report
+
+Status: current (2026-09-14)
+
+Generated from `docs/plans/engine-capability/ledger.md`, git, and
+`M002-decisions.md` for the review that precedes `/jk:ship`.
+
+**Vision:** The interlock style a gamelan patch uses is a setting in Poly rather
+than a description in the guide, so the two rules currently weakened or
+unverifiable because the engine can only derive the strict complement become
+checkable as written.
+
+**Branch:** `milestone/M002-kotekan-modes`, cut from `main` at `9fdeae4`.
+**Design:** `M002-S01-design.md` — approved before any code, and carrying a
+marked correction made during execution.
+
+## Slices
+
+| Slice | Title | Rows | Status |
+|---|---|---|---|
+| M002/S01 | The mode is something a patch can express | EC06 | done |
+| M002/S02 | The guide catches up | EC07 | done |
+
+## Definition of done
+
+**M002/S01**
+
+- [x] A gamelan patch can name its interlock style, rather than only a source lane
+- [x] Polos–sangsih overlap is controllable, so the composite is no longer complete by construction
+- [x] The mode a preset uses reaches `site/src/generated/presets.json`
+- [x] `renderRange()` gains no allocation, lock or blocking call
+- [x] The engine builds and passes its tests with no VST3 SDK present
+
+**M002/S02**
+
+- [x] Rule 4 no longer carries the "until kotekan modes ship" parenthetical
+- [x] Rule 4 is checked as written — pair-overlap
+- [x] Rule 1 reads `checkable`, with a predicate that has been shown to fail
+- [x] This ledger records that F41's weakening no longer describes the shipped behaviour
+- [x] The page states that Poly models only the rhythmic dimension of *telu* and *empat*, directs the reader to Tenzer (2000) and Vitale (1990), and names *norot* as not expressible
+
+## Validation
+
+Run on the current head.
+
+| Token | Command | Result |
+|---|---|---|
+| `format` | `pre-commit run --all-files` | pass |
+| `unit` | `ctest --test-dir build --build-config Release` | pass, 603 tests |
+| `engine-isolation` | `ctest --test-dir build-engine` | pass, 480 tests |
+| `rt-safety` | `bash scripts/check-realtime-safety.sh` | pass |
+| `webui-e2e` | `npm --prefix webui test` | pass, 378 |
+| `site-unit` | `npm --prefix site test` | pass, 283 tests |
+| `doc-conformance` | `bash scripts/check-doc-conformance.sh` | pass, 267 tests |
+| `doc-discipline` | `bash scripts/check-doc-discipline.sh` | pass, doc-drift running |
+
+## Traceability
+
+Every commit carries a `Slice:` trailer. **No untraced commits.**
+
+| Commit | Subject | Slice | Rows |
+|---|---|---|---|
+| `d9847e9` | docs(plans): design and plan M002, kotekan modes | M002/S01, M002/S02 | — |
+| `11235b2` | feat(engine): kotekan interlock modes and controlled polos-sangsih overlap | M002/S01 | — |
+| `bbd7a4a` | feat(state): serialize kotekan mode and overlap at state version 19 | M002/S01 | — |
+| `2ed453f` | feat(presets): emit kotekan mode and overlap in presets.json, schemaVersion 5 | M002/S01 | — |
+| `1f17a4c` | docs(engine-spec): document the kotekan mode derivation | M002/S01 | — |
+| `3abb453` | docs(plans): add doc-discipline to M002/S01's validation set | M002/S01 | — |
+| `d0172c4` | docs(plans): correct M002/S01's state-only claim, and raise the core param family | M002/S01 | — |
+| `d1aadfe` | feat(webui): expose kotekan mode and overlap as lane core parameters | M002/S01 | — |
+| `e3f7954` | feat(presets): Balinese Kotekan adopts a live interlock style, closing M002/S01 | M002/S01 | EC06 |
+| `e0c2d5d` | test(site): check gamelan Rule 4 as written, not as construction step 4 | M002/S02 | — |
+| `e48888e` | fix(engine): keep the kotekan composite continuous under cell modes | M002/S01 | EC06 |
+| `a5abf2e` | test(site): check Rule 1's one-rate precondition, not its continuity claim | M002/S02 | — |
+| `bd5f834` | docs(guide): disclose what Poly models of telu and empat, closing M002/S02 | M002/S02 | EC07 |
+
+Three of these thirteen are corrections to earlier commits on this branch, and
+one reopened a closed slice. They are the milestone's substance, not tidying.
+
+## What a reviewer should look at twice
+
+1. **The design was wrong about parameters, and the correction is marked in it
+   rather than edited away.** It claimed the two new fields could be state-only,
+   from a count of `LaneConfig` fields "without a VST3 parameter". That count
+   grepped only the lane-*expression* family and missed `kLaneCoreFields[]`,
+   where `hitCount`, `rotation` and `timeline` live. It mattered because the
+   WebUI edit path is parameter-ID based: a field with no parameter ID cannot be
+   edited from the interface at all. Both families were full, so
+   `kCoreParamsPerLane` went 12 → 14. **Blast radius measured before choosing:**
+   state is a blob, so presets and projects load unaffected; only host
+   automation on lanes 1–7's core params shifts, and Poly has never been
+   released.
+
+2. **M002/S01 was reopened after being closed.** Reading Rule 1 in S02 found
+   `Empat` leaving pulses 4 and 7 unstruck — and Rule 1 calls gaps errors. The
+   fault was S01's mechanical definition, so the fix belongs there: the slice
+   went back to `in-progress`, gained task 6, and was re-closed. Real kotekan
+   figures are composed as a pair and continuous by construction; a periodic
+   complement of an unrelated Euclidean source is not.
+
+3. **Fixing Rule 1's violation made Rule 1 unfalsifiable.** Continuity is now
+   guaranteed for every mode, so no patch can violate the headline. Rather than
+   flip it to `checkable` with a predicate that cannot fail — the defect M007
+   deleted three predicates for — the run halted and asked. What is checked is
+   Rule 1's precondition, "at the interlock's subdivision rate", which a patch
+   *can* get wrong; the triage entry says in one sentence what is checked and
+   what is not.
+
+4. **The preset's mode changed from `Telu` to `Empat` mid-run.** At E(5,8) —
+   `Balinese Kotekan`'s polos — `Telu` computes exactly the strict complement,
+   so a patch table naming it would report a choice that changes nothing. Found
+   by computing, not by inspection, and halted for rather than substituted.
+
+5. **Three silent failures were caught before being recorded as proofs.** A test
+   edit that did nothing because clang-format had reflowed the target onto one
+   line and `.replace()` returned the string unchanged. A mutation round on the
+   wrong page, because Rule 4's case is registered on `05-gamelan.mdx` and the
+   theory page's triage merely points at it. And a JS predicate that passed
+   after the engine changed, by luck, because both derivations happened to leave
+   a non-empty intersection.
+
+6. **The slice's declared validation set was incomplete.** Tasks 1 and 2 passed
+   their full declared tokens while leaving two doc-drift violations behind,
+   because `doc-discipline` was not on S01's line despite the slice editing
+   three mapped sources. Corrected, and recorded rather than quietly fixed.
+
+7. **`webui/poly_engine.{js,wasm}` are committed deliberately**, which
+   `CLAUDE.md` normally forbids. This slice changes `wasm_api.cpp` and
+   `engine.cpp`, both compiled into the WASM, so it is the documented
+   deliberate-engine-change exception.
+
+## Decisions
+
+Verbatim from `M002-decisions.md`.
+
+## 2026-09-13 — planning M002
+
+- **Decision:** M002/S01 classified **architectural**; a design document was
+  written and approved before any code (`M002-S01-design.md`). M002/S02 is
+  **bounded** — it edits prose and flips triage verdicts, against a capability
+  S01 will already have shipped. — **Why:** S01 adds an enum and two fields to
+  `LaneConfig`, changes how patterns are derived, bumps the state version and
+  the emitter schema, and touches the WebUI bridge. That restructures how parts
+  fit together, which is the architectural test.
+
+- **Q:** Rule 5 names four interlock styles, but Poly gives each lane one MIDI
+  note and *norot* is defined by pitch oscillation. Which modes should ship?
+  — **A:** Three rhythmic modes, norot documented as inexpressible.
+- **Decision:** `KotekanMode { NyogCag, Telu, Empat }`. — **Why:** The three are
+  rhythmic and therefore expressible in a one-note-per-lane model. Giving norot
+  a rhythmic stand-in would attach a traditional style name to something that is
+  not that style, which is the class of overclaim the theory-audit programme
+  spent seven milestones removing.
+
+- **Q:** How should polos–sangsih overlap be controlled? — **A:** A per-lane
+  overlap count, default 0.
+- **Decision:** `kotekanOverlap`, an integer count of structural points where
+  both parts strike — cycle boundary, then phrase join, then midpoint, the order
+  Rule 4 names them. — **Why:** Default 0 reproduces today's strict complement
+  exactly, so the determinism goldens and three of the four kotekan presets stay
+  byte-identical, while a patch that sets it makes Rule 4's strict predicate
+  able to fail for the first time. Reusing accent masks was rejected: that is
+  the workaround Rule 4 tells readers to use *until kotekan modes ship*, so the
+  row could not close.
+
+- **Q:** Four shipped presets derive a kotekan complement. Should any adopt a
+  non-strict mode? — **A:** `Balinese Kotekan` only.
+- **Decision:** Its guiro lane takes `Telu` with overlap 1; the other three keep
+  `NyogCag`. — **Why:** The one preset named for the practice demonstrates the
+  capability, so "the mode reaches `presets.json`" is provable from something a
+  user loads rather than only a test fixture. Applying Balinese style names to
+  `Ewe Polymetric Ensemble` or `Afro-Electronic Fusion` would be the
+  cross-tradition mislabelling the theory audit repeatedly corrected.
+
+- **Decision:** The two new fields are **state-only** — serialized and
+  WebUI-editable, with no VST3 parameter. — **Why:** Measured before designing:
+  `kParamsPerLane = 16` and `kKotekanSource` occupies slot 15, so the per-lane
+  family is full, and raising the stride would shift every lane's parameter IDs
+  and break automation in existing projects. State-only lane fields are the
+  established pattern regardless — 16 of `LaneConfig`'s 35 fields have no
+  parameter, including `hitCount`, `cycle`, `cellSizes` and `microTimingMs` —
+  and a style choice does not want an automation lane.
+
+- **Q (raised by the design's risk section):** `Telu` and `Empat` are modelled
+  rhythmically while the terms also carry pitch meaning. Keep the traditional
+  names? — **A:** Keep them, and state explicitly on the site that only the
+  rhythmic aspect is modelled, directing the reader to the references for the
+  pitch aspects.
+- **Decision:** A required, specified disclosure, promoted from a caution in the
+  design to a definition-of-done item on S02: the page must say Poly models only
+  the rhythmic dimension of *telu* and *empat* — the cell length the interlock
+  repeats on — direct the reader to Tenzer (2000) and Vitale (1990) for the
+  pitch dimension, and name *norot* as not expressible and why. — **Why:** Both
+  sources are already cited on the page at Tier A, and their appendix
+  annotations are exactly on point: Tenzer is "the authoritative analysis of
+  kotekan varieties" and Vitale "shows real kotekan is not a pure set
+  complement", which is Rule 4's own substance. The alternative — dropping the
+  names for `Cell3`/`Cell4` — was rejected because it would cut the reader off
+  from the literature the guide is built on.
+
+## 2026-09-13 — executing M002/S01 task 1 (judgment call)
+
+- **Decision:** Overlap forces a step on **only where the source also strikes**,
+  rather than unconditionally as the design's wording implied. — **Why:** The
+  purpose is a *shared* strike. Forcing a step where the source is silent
+  produces no intersection at all — it just makes the complement denser, which
+  is not what Rule 4 describes. The design said "force `pattern[s] = true` at
+  the first N structural points"; the implementation reads the source at that
+  step first. Obviously right and too small to halt for, but it is a narrowing
+  of the design's text, so it is recorded rather than left in the diff.
+- **Decision:** `GrooveStateCopyBenchmark.ReportsFactSizes`'s pinned size was
+  updated from 13712 to 13776 with a comment naming this milestone. — **Why:**
+  That test exists to make struct growth deliberate and documented, and its
+  comments already record each previous growth the same way. Updating it is the
+  intended workflow, not a test being bent to fit.
+
+## 2026-09-13 — executing M002/S01 task 3 (finding and correction)
+
+- **Finding:** M002/S01's declared validation set omitted `doc-discipline`,
+  while the slice changes `engine/include/poly/types.h`, `engine/src/engine.cpp`
+  and `engine/tools/emit_presets.cpp` — all mapped sources in
+  `.github/docs-drift-map.yml`. Tasks 1 and 2 therefore passed their full
+  declared set while leaving two doc-drift violations behind them. Found only
+  because task 3 ran `doc-discipline` opportunistically after committing.
+- **Decision:** `doc-discipline` added to the slice's validation line.
+  — **Why:** It corrects an under-declaration rather than widening the slice:
+  the work is unchanged, the gate is now honest about what this slice can break.
+  A slice that edits mapped sources and does not owe the check that guards them
+  is the same defect class M006 closed one level up.
+- **Decision:** The `docs/engine-spec.md` violation was fixed by writing the
+  derivation, not by regenerating. — **Why:** That doc's `LaneConfig` table is
+  generated but curated — 17 of 35 fields — and correctly omits the two new
+  ones, so `generate-param-docs.mjs` produced no diff. What had actually gone
+  stale was the prose describing how a lane's pattern is derived, which is
+  exactly what this slice changed.
+- **Decision:** The `docs/testing-strategy.md` violation was discharged with a
+  `Docs-Not-Affected:` trailer rather than a doc edit. — **Why:** That rule's
+  own stated reason exempts this case: "Per-file additions to existing binaries
+  or suites do not — they exercise the taxonomy, they don't change it."
+  `kotekan_mode_tests.cpp` is a per-file addition to the existing `poly_tests`
+  binary; no new binary, Playwright surface or JS entry-point. The trailer
+  quotes that exemption so a reader can check the claim.
+
+## 2026-09-14 — executing M002/S01 task 4 (halt, correction, and decision)
+
+- **Correction:** The design's claim that the new fields could be **state-only**
+  rested on a bad measurement. It compared `LaneConfig` field names against the
+  lane-**expression** family in `plugids.h` and concluded 16 of 35 fields have no
+  parameter. A second per-lane family exists, `kLaneCoreFields[]`, and
+  `hitCount`, `cycle.steps`, `rotation`, `timeline` and `fillEveryNBars` all
+  have parameters there. Very few lane fields are genuinely parameterless.
+- **Why it blocked the task:** the WebUI edit path is parameter-ID based —
+  `host.edit('lane.3.timeline', …)` resolves through `resolveParamId` — so a
+  field with no parameter ID cannot be edited from the interface. The design
+  asserted both "state-only" and "WebUI-editable", which this architecture does
+  not permit together. Task 4 was therefore not implementable as planned, and
+  the run halted rather than improvising.
+- **Q:** Both per-lane parameter families are full, and the WebUI can only edit
+  fields that have a parameter ID. How should M002/S01 proceed? — **A:** Raise
+  the core family to 14.
+- **Decision:** `kCoreParamsPerLane` goes 12 → 14, adding `kCoreKotekanMode` and
+  `kCoreKotekanOverlap`. — **Why:** It restores the design's consistency and
+  makes the control work through the path every other lane core field already
+  uses. The blast radius was measured before choosing, not after:
+  `getState`/`setState` serialize the `SceneState` blob, so presets and saved
+  projects are parameter-ID independent and nothing about loading breaks; only
+  host automation lanes targeting per-lane core params on lanes 1–7 shift, and
+  Poly has never been released — the only tag is `v0.1.0-doccov-baseline`, with
+  no GitHub releases.
+
+## 2026-09-14 — executing M002/S01 task 5 (halt and decision)
+
+- **Finding:** `Balinese Kotekan`'s polos is E(5,8), and at that cycle `Telu`
+  computes *exactly* the strict complement — sangsih 1, 4, 7 either way. The
+  design and the earlier decision both named `Telu` for this preset, chosen
+  before that was known. Shipping it would have had `presets.json` and the
+  guide's patch table report a named style for a lane playing what `nyogcag`
+  plays, and M002/S02 would then rest Rule 5's "the style is a named choice" on
+  a preset where the choice changes nothing.
+- **Q:** Which mode should the preset ship? — **A:** Empat.
+- **Decision:** The guiro lane takes `Empat` with overlap 1, superseding the
+  earlier `Telu` decision. — **Why:** It is the only mode that differs at this
+  cycle — sangsih 1, 5 against 1, 4, 7 — and it shares step 5 with the polos on
+  its own, so Rule 4's structural overlap appears naturally as well as by
+  forcing. The preset demonstrates both fields honestly rather than nominally.
+  The alternative of changing the polos cycle to make `Telu` live was rejected:
+  it would alter the groove of a preset a user already knows, for a reason
+  internal to this milestone.
+- **Halt:** the run stopped to ask rather than substituting a mode on its own,
+  because which of *telu* or *empat* a kotekan pair uses is a musical question,
+  not a mechanical one.
+
+## 2026-09-14 — executing M002/S02 task 2 (halt and decision)
+
+- **Finding:** Rule 1 still could not be made to fail, for a *new* reason. M007
+  marked it not checkable because the composite was complete by construction
+  under `L`-mode's strict complement. M002/S01 task 6's continuity fill replaced
+  that with a stronger guarantee: every mode now yields a continuous composite,
+  so no patch can violate Rule 1's headline at all.
+- **Q:** How should EC07 handle it? — **A:** Check the precondition instead.
+- **Decision:** Rule 1 is `checkable` with `gam-composite-one-rate`, which
+  asserts the pair share a subdivision and a step count — Rule 1's clause "at
+  the interlock's subdivision rate". — **Why:** That is a genuine precondition
+  and a patch can get it wrong, so the case can fail; both arms were proved.
+  The triage `why` states in the same breath that the continuity claim itself is
+  guaranteed by the derivation and would be a predicate that cannot fail, so the
+  entry does not overstate what is checked.
+- **Halt:** the run stopped rather than flipping Rule 1 to `checkable` with a
+  predicate over continuity. That is what M007 deleted three predicates for, and
+  doing it here would have been worse — the milestone would have introduced the
+  very defect it exists to remove.
