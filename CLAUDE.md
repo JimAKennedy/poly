@@ -96,9 +96,18 @@ The pre-push hook (`scripts/pre-push-check.sh`) enforces quality checks automati
 Install via: `pre-commit install -t pre-push`
 Bypass for emergencies: `git push --no-verify`
 
-**The hook does not run the doc checks, and that is by design** — it covers the
-five items above and nothing else. For the doc gate, run
-`bash scripts/check-doc-discipline.sh` rather than `jk-standards all` directly:
+**The hook covers the five items above and nothing else, by design.** Two other
+local commands cover what CI enforces beyond them, and neither runs
+automatically:
+
+- `bash scripts/check-guards.sh` — the guards in CI's `code-quality` and
+  `site-lint` jobs: SPDX headers, personal paths, the site and scripts READMEs
+  and their green/red contract proofs, the sample manifest, site asset
+  references, and bridge schema coverage. Before M007 these ran in CI and
+  nowhere a developer could invoke, which is how three consecutive ships went
+  green locally and red in CI.
+- `bash scripts/check-doc-discipline.sh` — the doc gate. Run it rather than
+  `jk-standards all` directly:
 the bare command skips `doc-drift` whenever no base ref is available, printing a
 `skipped` line and exiting 0. In a wall of green that reads like a pass, and it
 is how M005 shipped a doc-drift violation through a validation set that was

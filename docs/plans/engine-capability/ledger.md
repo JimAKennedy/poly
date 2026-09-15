@@ -610,19 +610,19 @@ which is what `GAP04` is for.
 **Plan:** M007-S01-plan.md
 **Validation:** format, doc-discipline, guards
 **Evidence:** evidence/M007-S01.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Every guard listed in `GAP03` is reachable from a command declared in
+- [x] Every guard listed in `GAP03` is reachable from a command declared in
       `.jk/validations.yml`
-- [ ] Running that command on a tree that breaks one of them fails, shown for at
+- [x] Running that command on a tree that breaks one of them fails, shown for at
       least one guard of each kind — a `check-*.sh` and a `check-*.mjs`
-- [ ] `CLAUDE.md` names the command, as it now names the doc-discipline one
+- [x] `CLAUDE.md` names the command, as it now names the doc-discipline one
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| GAP03 | Eleven checks run in CI and from no documented local command. Six shell guards — `check-personal-paths.sh`, `check-sample-manifest.sh`, `check-scripts-readme.sh`, `check-site-assets.sh`, `check-site-readme.sh`, `check-spdx-headers.sh` — four of them in the `code-quality` job and two in `site-lint`. And five node checks: `check-bridge-schema-coverage.mjs` plus the four green/red contract proofs. None appears in `.jk/validations.yml`, `scripts/pre-push-check.sh`, `.pre-commit-config.yaml` or `scripts/check-doc-conformance.sh`. M006's own ship proved the cost: a complete validation set went green and CI failed on the third of them | `tooling` | `.jk/validations.yml`, `scripts/`, `CLAUDE.md` | The new token is run against a tree that breaks a guard and watched to fail, for one `check-*.sh` and one `check-*.mjs`; a guard whose failure path is never exercised is the defect this programme keeps finding | `open` |
+| GAP03 | Eleven checks run in CI and from no documented local command. Six shell guards — `check-personal-paths.sh`, `check-sample-manifest.sh`, `check-scripts-readme.sh`, `check-site-assets.sh`, `check-site-readme.sh`, `check-spdx-headers.sh` — four of them in the `code-quality` job and two in `site-lint`. And five node checks: `check-bridge-schema-coverage.mjs` plus the four green/red contract proofs. None appears in `.jk/validations.yml`, `scripts/pre-push-check.sh`, `.pre-commit-config.yaml` or `scripts/check-doc-conformance.sh`. M006's own ship proved the cost: a complete validation set went green and CI failed on the third of them | `tooling` | `.jk/validations.yml`, `scripts/`, `CLAUDE.md` | The new token is run against a tree that breaks a guard and watched to fail, for one `check-*.sh` and one `check-*.mjs`; a guard whose failure path is never exercised is the defect this programme keeps finding | `done` |
 
 ### Slice M007/S02 — Reachability is itself checked
 
