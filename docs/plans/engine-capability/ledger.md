@@ -123,7 +123,7 @@ than a description in the guide, so the two rules currently weakened or
 unverifiable because the engine can only derive the strict complement become
 checkable as written.
 **Branch:** milestone/M002-kotekan-modes
-**Status:** in-progress
+**Status:** done
 **Demo:** A gamelan patch names norot, telu or empat; `theory-gamelan` Rule 4 is
 checked as written rather than as construction step 4 specifies, and Rule 1's
 predicate can be made to fail.
