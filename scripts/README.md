@@ -47,6 +47,10 @@ actually fails on regressions.
 - `check-doc-conformance.sh` — the doc-conformance guardrail suite for site
   prose: euclidean claims, preset tables, audit ledgers (the `doc-conformance`
   validation token).
+- `check-guards.sh` — the repo guards CI enforces that no other local command
+  reaches: SPDX headers, personal paths, the README guards and their contract
+  proofs, the sample manifest, site assets, and bridge schema coverage (the
+  `guards` validation token).
 - `check-doc-discipline.sh` — the jk-standards doc checks with a base ref, so
   `doc-drift` actually runs (the `doc-discipline` validation token). Bare
   `jk-standards all` skips that check and still exits 0.

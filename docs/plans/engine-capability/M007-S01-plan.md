@@ -10,7 +10,7 @@ class: gated
 
 ## Task status
 
-- [ ] 1. Write `scripts/check-guards.sh` and declare the `guards` token
+- [x] 1. Write `scripts/check-guards.sh` and declare the `guards` token
 - [ ] 2. Prove it bites for both kinds of guard, name it in `CLAUDE.md`, close
       the slice
 

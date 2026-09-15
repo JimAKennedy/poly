@@ -65,6 +65,14 @@ wasm-freshness: bash scripts/check-wasm-freshness.sh
 # against a real DAW is the nightly itself.
 cubase-harness: npm --prefix tests/cubase/e2e run typecheck && npm --prefix tests/cubase/e2e run test:unit && python3 -m unittest discover -s tests/cubase -p 'test_*.py'
 
+# The repo guards CI enforces that no other local command reaches: SPDX headers,
+# personal paths, the site and scripts READMEs and their green/red contract
+# proofs, the sample manifest (both flag sets, as CI runs it), site asset
+# references, and bridge schema coverage. Owed by any slice touching what they
+# guard. Before M007 these ran in CI and nowhere a developer could invoke, which
+# is how three consecutive ships went green locally and red in CI.
+guards: bash scripts/check-guards.sh
+
 # The whole pre-push gate: format, RT safety, snippet regions, build, tests,
 # and pluginval. The token a slice owes before /jk:ship, not during /jk:next.
 gate: bash scripts/pre-push-check.sh

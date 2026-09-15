@@ -608,7 +608,7 @@ which is what `GAP04` is for.
 ### Slice M007/S01 — The orphaned guards get a home
 
 **Plan:** M007-S01-plan.md
-**Validation:** format, doc-discipline
+**Validation:** format, doc-discipline, guards
 **Evidence:** evidence/M007-S01.md
 **Status:** in-progress
 
@@ -627,7 +627,7 @@ which is what `GAP04` is for.
 ### Slice M007/S02 — Reachability is itself checked
 
 **Plan:** M007-S02-plan.md
-**Validation:** format, site-unit, doc-conformance
+**Validation:** format, site-unit, doc-conformance, guards
 **Evidence:** evidence/M007-S02.md
 **Status:** in-progress
 **Depends:** M007/S01
