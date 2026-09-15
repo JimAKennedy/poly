@@ -1326,6 +1326,32 @@ CHECKLIST.push({
       description: 'Rule 4: the interlocking pair strike together at structural tones',
       check: ({ rows }) => kotekanPairOverlap(rows),
     },
+    {
+      id: 'gam-composite-one-rate',
+      description: "Rule 1: the pair interlock at one rate, so their composite is one stream",
+      // M002/S02 (EC07). This checks Rule 1's precondition -- "at the
+      // interlock's subdivision rate" -- and deliberately NOT its continuity
+      // claim. Continuity is guaranteed by the engine's derivation for every
+      // mode: NyogCag is the exact complement by definition, and M002/S01's
+      // fill covers any pulse a cell mode would leave unstruck. No patch can
+      // violate it, so asserting it would be a predicate that cannot fail.
+      // What a patch *can* get wrong is pairing two lanes that do not share a
+      // rate, in which case "the composite" is not one stream at all.
+      check: ({ rows }) => {
+        const polos = findLane(rows, /polos/i);
+        const sangsih = findLane(rows, /sangsih/i);
+        if (!polos || !sangsih) return 'need both a polos and a sangsih lane to check Rule 1';
+        const pSub = String(polos.cell.Subdivision ?? '').trim();
+        const sSub = String(sangsih.cell.Subdivision ?? '').trim();
+        if (pSub !== sSub)
+          return `polos runs at ${pSub} and sangsih at ${sSub}; Rule 1 reads the composite at ` +
+            'the interlock\'s subdivision rate, which needs one rate for the pair';
+        if (polos.steps !== sangsih.steps)
+          return `polos spans ${polos.steps} steps and sangsih ${sangsih.steps}; the pair must share ` +
+            'a cycle for their composite to be a single stream';
+        return null;
+      },
+    },
   ],
 });
 
@@ -1482,7 +1508,7 @@ const RULE_TRIAGE = {
     8: { checkable: false, why: 'states which of Rules 1-6 a neo-soul variant relaxes; it is a meta-rule, not a patch property' },
   },
   'theory-gamelan.mdx': {
-    1: { checkable: false, why: 'the pair\'s composite is complete by construction whenever sangsih runs Kotekan L-mode, which the engine derives as the strict complement, so a predicate over this patch cannot fail. A rule that cannot fail is not a checked rule' },
+    1: { checkable: true, case: 'gam-composite-one-rate', why: 'only the precondition is checked — that the pair interlock at one rate, so their composite is one stream. The continuity claim itself is guaranteed by the derivation for every mode (NyogCag by definition, cell modes by M002/S01\'s fill), so no patch can violate it and asserting it would be a predicate that cannot fail' },
     2: { checkable: false, why: 'asks whether a part is playable and idiomatic for a human player, which no cell in the table reports' },
     3: { checkable: true, why: 'asserted: theory-gamelan polos case' },
     4: { checkable: true, case: 'gam-pair-overlap-as-written', why: 'the pair\'s intersection is now a property of the patch — the interlock mode and overlap count are columns, so Rule 4 is checked as written rather than as construction step 4 specifies' },

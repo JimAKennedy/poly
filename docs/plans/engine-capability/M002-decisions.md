@@ -163,3 +163,23 @@ milestone's review can see what shaped it without reconstructing it from diffs.
 - **Halt:** the run stopped to ask rather than substituting a mode on its own,
   because which of *telu* or *empat* a kotekan pair uses is a musical question,
   not a mechanical one.
+
+## 2026-09-14 — executing M002/S02 task 2 (halt and decision)
+
+- **Finding:** Rule 1 still could not be made to fail, for a *new* reason. M007
+  marked it not checkable because the composite was complete by construction
+  under `L`-mode's strict complement. M002/S01 task 6's continuity fill replaced
+  that with a stronger guarantee: every mode now yields a continuous composite,
+  so no patch can violate Rule 1's headline at all.
+- **Q:** How should EC07 handle it? — **A:** Check the precondition instead.
+- **Decision:** Rule 1 is `checkable` with `gam-composite-one-rate`, which
+  asserts the pair share a subdivision and a step count — Rule 1's clause "at
+  the interlock's subdivision rate". — **Why:** That is a genuine precondition
+  and a patch can get it wrong, so the case can fail; both arms were proved.
+  The triage `why` states in the same breath that the continuity claim itself is
+  guaranteed by the derivation and would be a predicate that cannot fail, so the
+  entry does not overstate what is checked.
+- **Halt:** the run stopped rather than flipping Rule 1 to `checkable` with a
+  predicate over continuity. That is what M007 deleted three predicates for, and
+  doing it here would have been worse — the milestone would have introduced the
+  very defect it exists to remove.
