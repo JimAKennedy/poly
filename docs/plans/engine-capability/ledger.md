@@ -591,7 +591,7 @@ pre-push gate runs every check that can run locally rather than relying on
 someone remembering to.
 
 **Branch:** milestone/M007-runnable-guards
-**Status:** in-progress
+**Status:** done
 **Demo:** Run the declared tokens on a branch that breaks any guard in the repo,
 and see it fail before pushing rather than after.
 
