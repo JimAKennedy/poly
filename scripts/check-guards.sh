@@ -50,9 +50,14 @@ run_guard "sample-manifest (coverage)" bash scripts/check-sample-manifest.sh --c
 run_guard "site-assets"                bash scripts/check-site-assets.sh
 run_guard "bridge-schema-coverage"     node scripts/check-bridge-schema-coverage.mjs
 
+# M007 S02 found this one: check-release-workflow.mjs locks the release
+# workflow's shape in 27 tests, and no workflow runs it — release.yml names it
+# only in comments. It was worse off than the eleven, which at least ran in CI.
+run_guard "release-workflow contract"  node --test scripts/check-release-workflow.mjs
+
 echo
 if [ "${#FAILED[@]}" -eq 0 ]; then
-    echo "=== check-guards.sh: 12 guard invocation(s) passed ==="
+    echo "=== check-guards.sh: 13 guard invocation(s) passed ==="
     exit 0
 fi
 

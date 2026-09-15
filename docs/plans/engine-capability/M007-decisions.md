@@ -47,3 +47,20 @@ milestone's review can see what shaped it without reconstructing it from diffs.
   have caught M002's ship failure automatically, and leaving it out means a
   slice has to name the token. S02's reachability check is what stops a guard
   going unreachable again; it does not stop someone forgetting to run one.
+
+## 2026-09-15 — executing M007/S02 task 1 (judgment call)
+
+- **Finding:** `scripts/check-release-workflow.mjs` — 27 tests locking the
+  release workflow's shape — is run by **nothing**. `release.yml` names it only
+  in comments. It was worse off than the eleven `GAP03` counted, which at least
+  ran in CI. Found by the reachability check on its first run.
+- **Decision:** Added to `check-guards.sh` rather than marked
+  `local-unrunnable`. — **Why:** It is runnable and passes (27 tests), so
+  marking it unrunnable would be false. Obviously right and too small to halt
+  for, but it is a twelfth guard beyond `GAP03`'s eleven, so it is recorded
+  rather than left in the diff. S01's count missed it because that survey was
+  derived from `ci.yml` and this guard belongs to `release.yml`.
+- **Decision:** `scripts/check-guards.sh` is one of the reachability sources.
+  — **Why:** The first run reported all eleven S01 guards unreachable, because
+  `.jk/validations.yml` names the wrapper and not the guards inside it. The
+  wrapper is a declared token, so what it runs is reachable through it.

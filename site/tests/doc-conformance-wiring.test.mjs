@@ -21,7 +21,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -139,4 +139,51 @@ test('CI runs the whole site test suite, not only the named guardrails', () => {
     'no CI step runs `npm --prefix site test`, so any site/tests file not named in ' +
       'check-doc-conformance.sh runs nowhere in CI — the gap M006/S02 closed',
   );
+});
+
+// M007/S02 (GAP04). Every gap in this family was found by CI going red after a
+// green local run: doc-drift on M005's ship, the site suite in M006's planning,
+// check-scripts-readme on M006's ship, generate-params-json on M002's. Each was
+// fixed as an instance. This closes the class: a guard that no local command
+// reaches fails here, so a twelfth cannot appear silently.
+//
+// Reachable means named in one of the four things a developer can actually
+// invoke. A guard that genuinely cannot run from a clean checkout declares
+// itself with an in-band `# local-unrunnable: <reason>` marker — greppable, so
+// `grep -rn local-unrunnable scripts/` enumerates every exemption and that
+// listing is the audit. An empty reason does not count: the hatch is for
+// declaring an exemption, not for silencing the check.
+test('every repo guard is reachable from a command a developer can run', () => {
+  const sources = [
+    join(REPO, '.jk', 'validations.yml'),
+    join(REPO, 'scripts', 'pre-push-check.sh'),
+    join(REPO, '.pre-commit-config.yaml'),
+    RUNNER,
+    // check-guards.sh is itself a declared token, so a guard it runs is
+    // reachable through it.
+    join(REPO, 'scripts', 'check-guards.sh'),
+  ]
+    .map((f) => readFileSync(f, 'utf8'))
+    .join('\n');
+
+  const scriptsDir = join(REPO, 'scripts');
+  const guards = readdirSync(scriptsDir).filter(
+    (f) => f.startsWith('check-') && (f.endsWith('.sh') || f.endsWith('.mjs')),
+  );
+  assert.ok(guards.length > 0, 'found no check-* guards in scripts/, which cannot be right');
+
+  const unreachable = [];
+  for (const guard of guards) {
+    if (sources.includes(guard)) continue;
+    const body = readFileSync(join(scriptsDir, guard), 'utf8');
+    const marker = /^#\s*local-unrunnable:[ \t]*(.*)$/m.exec(body);
+    if (marker && marker[1].trim().length > 0) continue;
+    unreachable.push(
+      marker
+        ? `${guard} carries a local-unrunnable marker with no reason after the colon`
+        : `${guard} is reachable from no declared token, the pre-push gate, pre-commit, or the doc-conformance runner`,
+    );
+  }
+
+  assert.deepEqual(unreachable, [], unreachable.join('\n  '));
 });
