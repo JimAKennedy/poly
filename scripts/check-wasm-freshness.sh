@@ -4,6 +4,11 @@ set -euo pipefail
 # check-wasm-freshness.sh — sha256 the deployed WASM+glue against the locally
 # built artifacts and fail if they diverge.
 #
+# local-unrunnable: needs a deployed site URL to fetch artifacts from, so there
+# is nothing for it to compare against from a clean checkout. It is named by the
+# wasm-freshness token, but running that token without a URL exits 2 rather than
+# checking anything.
+#
 # Usage:
 #   bash scripts/check-wasm-freshness.sh https://poly.jk.digital/
 #   POLY_SITE_URL=https://poly.jk.digital/ bash scripts/check-wasm-freshness.sh

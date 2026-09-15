@@ -21,7 +21,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -139,4 +139,103 @@ test('CI runs the whole site test suite, not only the named guardrails', () => {
     'no CI step runs `npm --prefix site test`, so any site/tests file not named in ' +
       'check-doc-conformance.sh runs nowhere in CI — the gap M006/S02 closed',
   );
+});
+
+// M007/S02 (GAP04). Every gap in this family was found by CI going red after a
+// green local run: doc-drift on M005's ship, the site suite in M006's planning,
+// check-scripts-readme on M006's ship, generate-params-json on M002's. Each was
+// fixed as an instance. This closes the class: a guard that no local command
+// reaches fails here, so a twelfth cannot appear silently.
+//
+// Reachable means named in one of the four things a developer can actually
+// invoke. A guard that genuinely cannot run from a clean checkout declares
+// itself with an in-band `# local-unrunnable: <reason>` marker — greppable, so
+// `grep -rn local-unrunnable scripts/` enumerates every exemption and that
+// listing is the audit. An empty reason does not count: the hatch is for
+// declaring an exemption, not for silencing the check.
+test('every repo guard is reachable from a command a developer can run', () => {
+  const sources = [
+    join(REPO, '.jk', 'validations.yml'),
+    join(REPO, 'scripts', 'pre-push-check.sh'),
+    join(REPO, '.pre-commit-config.yaml'),
+    RUNNER,
+    // check-guards.sh is itself a declared token, so a guard it runs is
+    // reachable through it.
+    join(REPO, 'scripts', 'check-guards.sh'),
+  ]
+    .map((f) => readFileSync(f, 'utf8'))
+    .join('\n');
+
+  const scriptsDir = join(REPO, 'scripts');
+  const guards = readdirSync(scriptsDir).filter(
+    (f) => f.startsWith('check-') && (f.endsWith('.sh') || f.endsWith('.mjs')),
+  );
+  assert.ok(guards.length > 0, 'found no check-* guards in scripts/, which cannot be right');
+
+  const unreachable = [];
+  for (const guard of guards) {
+    if (sources.includes(guard)) continue;
+    const body = readFileSync(join(scriptsDir, guard), 'utf8');
+    const marker = /^#\s*local-unrunnable:[ \t]*(.*)$/m.exec(body);
+    if (marker && marker[1].trim().length > 0) continue;
+    unreachable.push(
+      marker
+        ? `${guard} carries a local-unrunnable marker with no reason after the colon`
+        : `${guard} is reachable from no declared token, the pre-push gate, pre-commit, or the doc-conformance runner`,
+    );
+  }
+
+  assert.deepEqual(unreachable, [], unreachable.join('\n  '));
+});
+
+// M007/S03 (GAP05). GAP04 stops a guard becoming unreachable; it does not stop
+// someone forgetting to run one. This asserts the gate itself: every token in
+// .jk/validations.yml is either run by the pre-push hook or declared exempt
+// with a reason, so the local gate stays CI minus what genuinely cannot run
+// locally rather than drifting back into a subset of it.
+//
+// Neither side is inferred. Matching a token's command string against a shell
+// line is brittle — `unit` is a compound cmake invocation, and `format`'s step
+// deliberately runs a narrower arm than the token does — and a brittle check is
+// one that gets deleted rather than fixed. So both sides declare themselves:
+// `# pre-push-token: <name>` above the gate that runs one, and
+// `# pre-push-exempt: <name> — <reason>` beside the token it exempts. Both are
+// greppable, and an empty reason fails for the same reason GAP04's does.
+test('every validation token is run by the pre-push gate or exempt with a reason', () => {
+  const yaml = readFileSync(join(REPO, '.jk', 'validations.yml'), 'utf8');
+  const hook = readFileSync(join(REPO, 'scripts', 'pre-push-check.sh'), 'utf8');
+
+  const tokens = [...yaml.matchAll(/^([a-z][a-z0-9-]*):[ \t]/gm)].map((m) => m[1]);
+  assert.ok(tokens.length > 0, 'parsed no tokens from .jk/validations.yml, which cannot be right');
+
+  const run = new Set([...hook.matchAll(/^[ \t]*#[ \t]*pre-push-token:[ \t]*(\S+)/gm)].map((m) => m[1]));
+  const exempt = new Map(
+    [...yaml.matchAll(/^#[ \t]*pre-push-exempt:[ \t]*([a-z][a-z0-9-]*)[ \t]*(?:—|--)?[ \t]*(.*)$/gm)].map(
+      (m) => [m[1], m[2].trim()],
+    ),
+  );
+
+  const problems = [];
+  for (const token of tokens) {
+    const isRun = run.has(token);
+    const isExempt = exempt.has(token);
+    if (isRun && isExempt) {
+      problems.push(`${token} is both run by the pre-push gate and declared exempt from it`);
+    } else if (!isRun && !isExempt) {
+      problems.push(
+        `${token} is neither run by the pre-push gate nor declared exempt — add a ` +
+          `'# pre-push-token: ${token}' marker above the gate that runs it, or a ` +
+          `'# pre-push-exempt: ${token} — <reason>' beside it in .jk/validations.yml`,
+      );
+    } else if (isExempt && exempt.get(token).length === 0) {
+      problems.push(`${token} carries a pre-push-exempt marker with no reason after the dash`);
+    }
+  }
+  for (const name of run) {
+    if (!tokens.includes(name)) {
+      problems.push(`the pre-push gate declares '# pre-push-token: ${name}', which is not a declared token`);
+    }
+  }
+
+  assert.deepEqual(problems, [], problems.join('\n  '));
 });

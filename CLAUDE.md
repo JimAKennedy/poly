@@ -86,24 +86,51 @@ copies in `webui/`. Running it always leaves those two files dirty.
 Tracked as [#282](https://github.com/JimAKennedy/poly/issues/282).
 
 ### Pre-Push Quality Gate
-The pre-push hook (`scripts/pre-push-check.sh`) enforces quality checks automatically:
-1. **Blocks direct pushes to main** — use a feature branch and PR instead
-2. **clang-format** on all C++ files
-3. **RT safety** — `scripts/check-realtime-safety.sh`
-4. **CodeSnippet region markers** — `scripts/check-snippet-regions.sh`
-5. **Build + tests** — `cmake --build build && ctest --test-dir build`
+The pre-push hook (`scripts/pre-push-check.sh`) blocks direct pushes to `main`,
+then runs ten gates:
+
+| # | Gate | Token |
+|---|---|---|
+| 0 | Build config — reconfigures `build/` if it would skip host tests | — |
+| 1 | clang-format on staged C++ (falls back to the full tree) | — |
+| 2 | RT safety — `scripts/check-realtime-safety.sh` | `rt-safety` |
+| 3 | CodeSnippet region markers | `snippet-regions` |
+| 4 | Build + ctest | `unit` |
+| 5 | pluginval (strictness 5 locally, 8 in CI) | — |
+| 6 | Doc-conformance guardrail suite | `doc-conformance` |
+| 7 | Site unit tests | `site-unit` |
+| 8 | Doc discipline, including `doc-drift` | `doc-discipline` |
+| 9 | Repo guards — SPDX, personal paths, READMEs, manifests, bridge schema | `guards` |
 
 Install via: `pre-commit install -t pre-push`
 Bypass for emergencies: `git push --no-verify`
 
-**The hook does not run the doc checks, and that is by design** — it covers the
-five items above and nothing else. For the doc gate, run
-`bash scripts/check-doc-discipline.sh` rather than `jk-standards all` directly:
-the bare command skips `doc-drift` whenever no base ref is available, printing a
-`skipped` line and exiting 0. In a wall of green that reads like a pass, and it
-is how M005 shipped a doc-drift violation through a validation set that was
-green on every other count. The wrapper supplies the base CI supplies, so the
-check actually runs.
+**The rule the hook follows: the local gate is everything CI runs, minus what
+genuinely cannot run locally.** The exclusions are `e2e`, `webui-e2e`,
+`wasm-freshness`, `cubase-harness`, and `engine-isolation` — the first four need
+a deployed URL, a browser stack, or a DAW, and the fifth configures a second
+build tree for minutes. Each is declared with its reason beside its token in
+`.jk/validations.yml`, and `site/tests/doc-conformance-wiring.test.mjs` fails if
+a token is neither run by the hook nor declared exempt. The rule is enforced,
+not merely written here — which matters, because the sentence this replaced
+claimed the hook covered five items when the script had seven steps.
+
+Gates 8 and 9 were CI-only until M007. Three consecutive ships went green
+locally and red in CI on checks no local command could run: M005 on `doc-drift`,
+M006 on `check-scripts-readme`, M002 on the params-json emitter. Running them
+costs about six seconds against a hook that already builds the plugin.
+
+Two notes on the commands behind them:
+
+- `bash scripts/check-guards.sh` runs the guards from CI's `code-quality` and
+  `site-lint` jobs, plus `check-release-workflow.mjs` — 27 tests locking the
+  release workflow's shape that, until M007, were executed by nothing at all.
+- `bash scripts/check-doc-discipline.sh` wraps the doc gate. Run it rather than
+  `jk-standards all` directly: the bare command skips `doc-drift` whenever no
+  base ref is available, printing a `skipped` line and exiting 0. In a wall of
+  green that reads like a pass, and it is how M005 shipped a doc-drift violation
+  through a validation set that was green on every other count. The wrapper
+  supplies the base CI supplies, so the check actually runs.
 
 Note: GitHub branch protection requires Pro for private repos. The pre-push hook is the local enforcement mechanism until then.
 

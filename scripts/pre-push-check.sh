@@ -30,7 +30,7 @@ done
 echo "=== Pre-push quality checks ==="
 
 # region:pre-push-gates
-echo "[0/6] Build config check..."
+echo "[0/9] Build config check..."
 CACHE_FILE="build/CMakeCache.txt"
 NEEDS_RECONFIG=0
 RECONFIG_REASONS=()
@@ -58,7 +58,7 @@ if [ "$NEEDS_RECONFIG" -eq 1 ]; then
     fi
 fi
 
-echo "[1/6] clang-format..."
+echo "[1/9] clang-format..."
 # Prefer running on staged files (fast, no full-tree traversal) when we have any;
 # fall back to --all-files if git diff --cached is empty (e.g. hook invoked
 # outside a staged context, or the whole tree just got reformatted).
@@ -75,19 +75,22 @@ else
     fi
 fi
 
-echo "[2/6] RT safety..."
+# pre-push-token: rt-safety
+echo "[2/9] RT safety..."
 if ! scripts/check-realtime-safety.sh; then
     echo "FAIL: RT safety check failed."
     FAILED=1
 fi
 
-echo "[3/6] CodeSnippet region markers..."
+# pre-push-token: snippet-regions
+echo "[3/9] CodeSnippet region markers..."
 if ! scripts/check-snippet-regions.sh; then
     echo "FAIL: CodeSnippet region check failed."
     FAILED=1
 fi
 
-echo "[4/6] Build + test..."
+# pre-push-token: unit
+echo "[4/9] Build + test..."
 if ! cmake --build build --config Release --parallel 2>/dev/null; then
     echo "FAIL: Build failed."
     FAILED=1
@@ -96,7 +99,7 @@ elif ! ctest --test-dir build --build-config Release --output-on-failure 2>/dev/
     FAILED=1
 fi
 
-echo "[5/6] pluginval (strictness=${PLUGINVAL_STRICTNESS})..."
+echo "[5/9] pluginval (strictness=${PLUGINVAL_STRICTNESS})..."
 if ! command -v pluginval >/dev/null 2>&1; then
     echo "  SKIP: pluginval not on PATH. Install with: bash scripts/install-pluginval.sh"
 else
@@ -114,7 +117,8 @@ else
     fi
 fi
 
-echo "[6/6] Doc-conformance + audit-ledger guardrail suite..."
+# pre-push-token: doc-conformance
+echo "[6/9] Doc-conformance + audit-ledger guardrail suite..."
 # Single source of truth with the CI site-lint job: both invoke
 # scripts/check-doc-conformance.sh (asserted by
 # site/tests/doc-conformance-wiring.test.mjs). The runner imports js-yaml from
@@ -127,6 +131,27 @@ else
         echo "FAIL: doc-conformance guardrail suite failed (see the named test file/case above)."
         FAILED=1
     fi
+
+    # pre-push-token: site-unit
+    echo "[7/9] Site unit tests..."
+    if ! npm --prefix site test; then
+        echo "FAIL: site unit tests failed. Reproduce with: npm --prefix site test"
+        FAILED=1
+    fi
+fi
+
+# pre-push-token: doc-discipline
+echo "[8/9] Doc discipline..."
+if ! bash scripts/check-doc-discipline.sh; then
+    echo "FAIL: doc-discipline failed. Reproduce with: bash scripts/check-doc-discipline.sh"
+    FAILED=1
+fi
+
+# pre-push-token: guards
+echo "[9/9] Repo guards..."
+if ! bash scripts/check-guards.sh; then
+    echo "FAIL: one or more repo guards failed. Reproduce with: bash scripts/check-guards.sh"
+    FAILED=1
 fi
 # endregion:pre-push-gates
 

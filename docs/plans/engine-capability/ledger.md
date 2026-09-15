@@ -586,10 +586,12 @@ guard surface, so a third instance was waiting. Saying so here is cheaper than
 letting a later reader mistake M007 for a new idea.
 
 **Vision:** Every guard this repo enforces can be run by a documented local
-command, and a new guard cannot be added that only CI knows how to run.
+command, a new guard cannot be added that only CI knows how to run, and the
+pre-push gate runs every check that can run locally rather than relying on
+someone remembering to.
 
 **Branch:** milestone/M007-runnable-guards
-**Status:** planned
+**Status:** done
 **Demo:** Run the declared tokens on a branch that breaks any guard in the repo,
 and see it fail before pushing rather than after.
 
@@ -607,42 +609,74 @@ which is what `GAP04` is for.
 
 ### Slice M007/S01 — The orphaned guards get a home
 
-**Validation:** format, doc-discipline
+**Plan:** M007-S01-plan.md
+**Validation:** format, doc-discipline, guards
 **Evidence:** evidence/M007-S01.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Every guard listed in `GAP03` is reachable from a command declared in
+- [x] Every guard listed in `GAP03` is reachable from a command declared in
       `.jk/validations.yml`
-- [ ] Running that command on a tree that breaks one of them fails, shown for at
+- [x] Running that command on a tree that breaks one of them fails, shown for at
       least one guard of each kind — a `check-*.sh` and a `check-*.mjs`
-- [ ] `CLAUDE.md` names the command, as it now names the doc-discipline one
+- [x] `CLAUDE.md` names the command, as it now names the doc-discipline one
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| GAP03 | Eleven checks run in CI and from no documented local command. Six shell guards — `check-personal-paths.sh`, `check-sample-manifest.sh`, `check-scripts-readme.sh`, `check-site-assets.sh`, `check-site-readme.sh`, `check-spdx-headers.sh` — four of them in the `code-quality` job and two in `site-lint`. And five node checks: `check-bridge-schema-coverage.mjs` plus the four green/red contract proofs. None appears in `.jk/validations.yml`, `scripts/pre-push-check.sh`, `.pre-commit-config.yaml` or `scripts/check-doc-conformance.sh`. M006's own ship proved the cost: a complete validation set went green and CI failed on the third of them | `tooling` | `.jk/validations.yml`, `scripts/`, `CLAUDE.md` | The new token is run against a tree that breaks a guard and watched to fail, for one `check-*.sh` and one `check-*.mjs`; a guard whose failure path is never exercised is the defect this programme keeps finding | `open` |
+| GAP03 | Eleven checks run in CI and from no documented local command. Six shell guards — `check-personal-paths.sh`, `check-sample-manifest.sh`, `check-scripts-readme.sh`, `check-site-assets.sh`, `check-site-readme.sh`, `check-spdx-headers.sh` — four of them in the `code-quality` job and two in `site-lint`. And five node checks: `check-bridge-schema-coverage.mjs` plus the four green/red contract proofs. None appears in `.jk/validations.yml`, `scripts/pre-push-check.sh`, `.pre-commit-config.yaml` or `scripts/check-doc-conformance.sh`. M006's own ship proved the cost: a complete validation set went green and CI failed on the third of them | `tooling` | `.jk/validations.yml`, `scripts/`, `CLAUDE.md` | The new token is run against a tree that breaks a guard and watched to fail, for one `check-*.sh` and one `check-*.mjs`; a guard whose failure path is never exercised is the defect this programme keeps finding | `done` |
 
 ### Slice M007/S02 — Reachability is itself checked
 
-**Validation:** format, site-unit, doc-conformance
+**Plan:** M007-S02-plan.md
+**Validation:** format, site-unit, doc-conformance, guards
 **Evidence:** evidence/M007-S02.md
-**Status:** open
+**Status:** done
 **Depends:** M007/S01
 
 **Definition of Done**
 
-- [ ] A check fails if any `scripts/check-*` guard is reachable from no declared
+- [x] A check fails if any `scripts/check-*` guard is reachable from no declared
       token, the pre-push gate, `pre-commit`, or the doc-conformance runner
-- [ ] The check has been shown to fail by adding a guard reachable from nothing
-- [ ] A guard that genuinely cannot run locally — one needing Cubase, a
+- [x] The check has been shown to fail by adding a guard reachable from nothing
+- [x] A guard that genuinely cannot run locally — one needing Cubase, a
       self-hosted runner, or a deployed URL — is declarable as such in-band,
       with a reason, rather than needing the check disabled
-- [ ] The check itself runs in CI
+- [x] The check itself runs in CI
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| GAP04 | Nothing enforces that a guard is runnable locally, so each gap in this family has been found by CI going red after a green local run — three times in three ships. Fixing the eleven in `GAP03` leaves the twelfth to be discovered the same way. `check-wasm-freshness.sh` shows the exception is real rather than theoretical: it compares deployed artifacts against a URL and cannot run from a clean checkout, so the check needs an in-band, reasoned escape hatch in the style this repo already uses | `tooling` | `site/tests/`, `.jk/validations.yml` | A guard reachable from nothing is added and the check watched to fail naming it; the escape hatch is exercised on a guard that genuinely cannot run locally, and the check confirmed to run in CI rather than only locally — the circularity M006/S02 had to correct | `open` |
+| GAP04 | Nothing enforces that a guard is runnable locally, so each gap in this family has been found by CI going red after a green local run — three times in three ships. Fixing the eleven in `GAP03` leaves the twelfth to be discovered the same way. `check-wasm-freshness.sh` shows the exception is real rather than theoretical: it compares deployed artifacts against a URL and cannot run from a clean checkout, so the check needs an in-band, reasoned escape hatch in the style this repo already uses | `tooling` | `site/tests/`, `.jk/validations.yml` | A guard reachable from nothing is added and the check watched to fail naming it; the escape hatch is exercised on a guard that genuinely cannot run locally, and the check confirmed to run in CI rather than only locally — the circularity M006/S02 had to correct | `done` |
+
+### Slice M007/S03 — The gate runs what it can
+
+**Plan:** M007-S03-plan.md
+**Validation:** format, site-unit, doc-conformance, doc-discipline, guards
+**Evidence:** evidence/M007-S03.md
+**Status:** done
+**Depends:** M007/S01
+
+**This slice reverses a decision this milestone recorded.** `M007-decisions.md`
+asked whether the pre-push hook should run the new guards and answered
+"runnable, not automatic", reasoning that not every push should pay for all of
+them. Measurement retired that reason: `guards` takes 5s, `doc-discipline` and
+`site-unit` under a second each, against a hook that already compiles the plugin
+and runs pluginval. Six seconds is not a cost worth trading three consecutive
+red ships for. The original answer and this reversal both stand in the decisions
+file, because the reasoning is the part worth keeping.
+
+**Definition of Done**
+
+- [x] The pre-push gate runs `guards`, `doc-discipline`, and `site-unit`
+- [x] A check fails if a token in `.jk/validations.yml` is neither run by the
+      pre-push gate nor declared exempt in-band with a reason
+- [x] That check has been shown to fail, both for an unaccounted-for token and
+      for an exemption with an empty reason
+- [x] `CLAUDE.md` describes what the hook actually runs
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| GAP05 | The guards `GAP03` made runnable are run by nothing automatically, so closing that gap still depends on a developer remembering a command. Every instance in this family reached CI the same way — a complete local set that was a strict subset of CI's. `M005`'s doc-drift and `M006`'s `check-scripts-readme` both sit in the three tokens the hook does not run, and `CLAUDE.md` asserts the hook covers "the five items above and nothing else, by design" while the script has seven steps | `tooling` | `scripts/pre-push-check.sh`, `site/tests/`, `CLAUDE.md` | The three tokens run from the hook; a token added to `.jk/validations.yml` and left unaccounted for is watched to fail the coverage check, as is an exemption whose reason is empty — the same two arms `GAP04` proved, because a hatch that can be left blank is a hatch that silences the check | `done` |
 
 ## Sequencing
 
