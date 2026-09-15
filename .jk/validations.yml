@@ -12,6 +12,9 @@
 # subject-matter tokens its change actually touches, and `gate` before it ships.
 
 # Formatting, whitespace, and the pinned clang-format. Seconds.
+# pre-push-exempt: format — step 1 runs `pre-commit run clang-format` on staged files, which is
+# narrower than this token. Marking it run would certify something untrue; the
+# full sweep is a CI job and a deliberate local command.
 format: pre-commit run --all-files
 
 # Engine + plugin unit and golden tests. The inner loop for C++ work; assumes
@@ -21,6 +24,8 @@ unit: cmake --build build --config Release --parallel && ctest --test-dir build 
 # The engine compiles and passes its tests with no VST3 SDK present — the
 # boundary the architecture depends on. Slower than `unit` because it
 # configures a second build tree; owed by any slice touching engine/.
+# pre-push-exempt: engine-isolation — configures and builds a second CMake tree, minutes rather than
+# seconds. Owed by slices touching engine/, and run by CI on every push.
 engine-isolation: cmake -S . -B build-engine -DCMAKE_BUILD_TYPE=Release -DPOLY_ENGINE_ONLY=ON && cmake --build build-engine --parallel && ctest --test-dir build-engine --output-on-failure
 
 # No allocation, locks, or blocking calls on the audio thread. Owed by any
@@ -49,13 +54,19 @@ site-unit: npm --prefix site test
 
 # The full local site-verify pipeline: Playwright end-to-end gates, sample
 # equivalence, macro-diff, and first-bar parity. Minutes, not seconds.
+# pre-push-exempt: e2e — minutes of Playwright, and it rewrites the committed WASM artifacts
+# in webui/ as a side effect — a push-time gate must not dirty the tree.
 e2e: bash scripts/site-verify-local.sh
 
 # WebUI Playwright specs against the mock and wasm hosts.
+# pre-push-exempt: webui-e2e — needs a Playwright browser stack installed; not present on a clean
+# checkout.
 webui-e2e: npm --prefix webui test
 
 # The checked-in WASM artifacts match a fresh build of the engine they claim
 # to be. Owed by any slice touching engine/ or the wasm bindings.
+# pre-push-exempt: wasm-freshness — compares the committed artifacts against a deployed URL, so it has
+# nothing to check from a clean checkout and needs the network.
 wasm-freshness: bash scripts/check-wasm-freshness.sh
 
 # The Cubase e2e harness's own checks: the specs type-check, the helper-lib unit
@@ -63,6 +74,8 @@ wasm-freshness: bash scripts/check-wasm-freshness.sh
 # does NOT run Cubase -- a slice adding a nightly spec owes this plus a named
 # nightly run in its evidence, because the only gate that proves a spec works
 # against a real DAW is the nightly itself.
+# pre-push-exempt: cubase-harness — needs its own npm install under tests/cubase/e2e plus a Python
+# toolchain; the nightly is what proves a spec against a real DAW.
 cubase-harness: npm --prefix tests/cubase/e2e run typecheck && npm --prefix tests/cubase/e2e run test:unit && python3 -m unittest discover -s tests/cubase -p 'test_*.py'
 
 # The repo guards CI enforces that no other local command reaches: SPDX headers,
@@ -75,4 +88,6 @@ guards: bash scripts/check-guards.sh
 
 # The whole pre-push gate: format, RT safety, snippet regions, build, tests,
 # and pluginval. The token a slice owes before /jk:ship, not during /jk:next.
+# pre-push-exempt: gate — this token *is* the pre-push gate. Running it from inside itself
+# would recurse.
 gate: bash scripts/pre-push-check.sh

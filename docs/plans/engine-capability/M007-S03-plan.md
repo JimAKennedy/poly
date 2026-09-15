@@ -9,18 +9,18 @@ class: gated
 ## Task status
 
 - [x] 1. The hook runs `guards`, `doc-discipline`, and `site-unit`
-- [ ] 2. Lock the coverage rule, prove it bites, and close the slice
+- [x] 2. Lock the coverage rule, prove it bites, and close the slice
 
 ## Definition of Done
 
 Copied verbatim from the slice.
 
-- [ ] The pre-push gate runs `guards`, `doc-discipline`, and `site-unit`
-- [ ] A check fails if a token in `.jk/validations.yml` is neither run by the
+- [x] The pre-push gate runs `guards`, `doc-discipline`, and `site-unit`
+- [x] A check fails if a token in `.jk/validations.yml` is neither run by the
       pre-push gate nor declared exempt in-band with a reason
-- [ ] That check has been shown to fail, both for an unaccounted-for token and
+- [x] That check has been shown to fail, both for an unaccounted-for token and
       for an exemption with an empty reason
-- [ ] `CLAUDE.md` describes what the hook actually runs
+- [x] `CLAUDE.md` describes what the hook actually runs
 
 ## Validation
 

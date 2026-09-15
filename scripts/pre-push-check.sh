@@ -75,18 +75,21 @@ else
     fi
 fi
 
+# pre-push-token: rt-safety
 echo "[2/9] RT safety..."
 if ! scripts/check-realtime-safety.sh; then
     echo "FAIL: RT safety check failed."
     FAILED=1
 fi
 
+# pre-push-token: snippet-regions
 echo "[3/9] CodeSnippet region markers..."
 if ! scripts/check-snippet-regions.sh; then
     echo "FAIL: CodeSnippet region check failed."
     FAILED=1
 fi
 
+# pre-push-token: unit
 echo "[4/9] Build + test..."
 if ! cmake --build build --config Release --parallel 2>/dev/null; then
     echo "FAIL: Build failed."
@@ -114,6 +117,7 @@ else
     fi
 fi
 
+# pre-push-token: doc-conformance
 echo "[6/9] Doc-conformance + audit-ledger guardrail suite..."
 # Single source of truth with the CI site-lint job: both invoke
 # scripts/check-doc-conformance.sh (asserted by
@@ -128,6 +132,7 @@ else
         FAILED=1
     fi
 
+    # pre-push-token: site-unit
     echo "[7/9] Site unit tests..."
     if ! npm --prefix site test; then
         echo "FAIL: site unit tests failed. Reproduce with: npm --prefix site test"
@@ -135,12 +140,14 @@ else
     fi
 fi
 
+# pre-push-token: doc-discipline
 echo "[8/9] Doc discipline..."
 if ! bash scripts/check-doc-discipline.sh; then
     echo "FAIL: doc-discipline failed. Reproduce with: bash scripts/check-doc-discipline.sh"
     FAILED=1
 fi
 
+# pre-push-token: guards
 echo "[9/9] Repo guards..."
 if ! bash scripts/check-guards.sh; then
     echo "FAIL: one or more repo guards failed. Reproduce with: bash scripts/check-guards.sh"

@@ -653,7 +653,7 @@ which is what `GAP04` is for.
 **Plan:** M007-S03-plan.md
 **Validation:** format, site-unit, doc-conformance, doc-discipline, guards
 **Evidence:** evidence/M007-S03.md
-**Status:** in-progress
+**Status:** done
 **Depends:** M007/S01
 
 **This slice reverses a decision this milestone recorded.** `M007-decisions.md`
@@ -667,16 +667,16 @@ file, because the reasoning is the part worth keeping.
 
 **Definition of Done**
 
-- [ ] The pre-push gate runs `guards`, `doc-discipline`, and `site-unit`
-- [ ] A check fails if a token in `.jk/validations.yml` is neither run by the
+- [x] The pre-push gate runs `guards`, `doc-discipline`, and `site-unit`
+- [x] A check fails if a token in `.jk/validations.yml` is neither run by the
       pre-push gate nor declared exempt in-band with a reason
-- [ ] That check has been shown to fail, both for an unaccounted-for token and
+- [x] That check has been shown to fail, both for an unaccounted-for token and
       for an exemption with an empty reason
-- [ ] `CLAUDE.md` describes what the hook actually runs
+- [x] `CLAUDE.md` describes what the hook actually runs
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| GAP05 | The guards `GAP03` made runnable are run by nothing automatically, so closing that gap still depends on a developer remembering a command. Every instance in this family reached CI the same way — a complete local set that was a strict subset of CI's. `M005`'s doc-drift and `M006`'s `check-scripts-readme` both sit in the three tokens the hook does not run, and `CLAUDE.md` asserts the hook covers "the five items above and nothing else, by design" while the script has seven steps | `tooling` | `scripts/pre-push-check.sh`, `site/tests/`, `CLAUDE.md` | The three tokens run from the hook; a token added to `.jk/validations.yml` and left unaccounted for is watched to fail the coverage check, as is an exemption whose reason is empty — the same two arms `GAP04` proved, because a hatch that can be left blank is a hatch that silences the check | `open` |
+| GAP05 | The guards `GAP03` made runnable are run by nothing automatically, so closing that gap still depends on a developer remembering a command. Every instance in this family reached CI the same way — a complete local set that was a strict subset of CI's. `M005`'s doc-drift and `M006`'s `check-scripts-readme` both sit in the three tokens the hook does not run, and `CLAUDE.md` asserts the hook covers "the five items above and nothing else, by design" while the script has seven steps | `tooling` | `scripts/pre-push-check.sh`, `site/tests/`, `CLAUDE.md` | The three tokens run from the hook; a token added to `.jk/validations.yml` and left unaccounted for is watched to fail the coverage check, as is an exemption whose reason is empty — the same two arms `GAP04` proved, because a hatch that can be left blank is a hatch that silences the check | `done` |
 
 ## Sequencing
 
