@@ -183,3 +183,18 @@ milestone's review can see what shaped it without reconstructing it from diffs.
   predicate over continuity. That is what M007 deleted three predicates for, and
   doing it here would have been worse — the milestone would have introduced the
   very defect it exists to remove.
+
+## 2026-09-15 — shipping M002 (CI failure)
+
+- **Q:** `site-lint` and `site-e2e` both fail on `generate-params-json.mjs`
+  expecting 12 core params. How should this land? — **A:** Fix the count and the
+  stale-emitter bug.
+- **Decision:** The count guard goes to 14, and the `if (existsSync(EMITTER))
+  return;` early return is removed. — **Why:** That early return is the same
+  defect PIPE01 fixed in `generate-presets-json.mjs`, and it is exactly why a
+  complete local validation run went green against a stale binary while CI
+  failed. Fixing only the count would leave the next parameter change to
+  discover it the same way. M005/S01 fixed one generator and left its sibling.
+- **Finding:** `e2e` is in neither slice's declared validation set, and it is
+  the third consecutive ship where a gate outside the declared tokens caught
+  something. M007's `GAP03` covers the class; this is another instance for it.

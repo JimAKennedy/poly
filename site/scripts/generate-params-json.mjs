@@ -29,7 +29,16 @@ function fail(msg) {
 }
 
 function ensureEmitter() {
-  if (existsSync(EMITTER)) return;
+  // The build is unconditional on purpose. This used to return as soon as the
+  // binary existed, which made a stale emitter indistinguishable from a current
+  // one -- a change to the parameter registry left the old binary in place and
+  // we emitted the previous engine's parameters while reporting success.
+  //
+  // M005/S01 removed the same early return from generate-presets-json.mjs and
+  // left this sibling untouched, and M002 paid for it: a full local validation
+  // run went green against a poly_params_emit built before the core family grew
+  // to 14, while CI built fresh and failed. cmake is incremental, so building
+  // every time costs a no-op on an unchanged tree.
   if (!existsSync(resolve(BUILD_DIR, 'CMakeCache.txt'))) {
     log('configuring cmake build-presets/ (first run, engine-only)');
     execSync(`cmake -S "${REPO_ROOT}" -B "${BUILD_DIR}" -DPOLY_ENGINE_ONLY=ON`, {
@@ -56,8 +65,8 @@ function validate(parsed) {
   if (!Array.isArray(parsed.expressionParams) || parsed.expressionParams.length !== 16) {
     fail(`expressionParams: expected 16 entries, got ${parsed.expressionParams?.length}`);
   }
-  if (!Array.isArray(parsed.coreParams) || parsed.coreParams.length !== 12) {
-    fail(`coreParams: expected 12 entries, got ${parsed.coreParams?.length}`);
+  if (!Array.isArray(parsed.coreParams) || parsed.coreParams.length !== 14) {
+    fail(`coreParams: expected 14 entries, got ${parsed.coreParams?.length}`);
   }
   const all = [...parsed.expressionParams, ...parsed.coreParams];
   for (const p of all) {

@@ -85,6 +85,8 @@ std::string engineRange(const poly::params::Entry& e) {
         return "-1 to 15";
     case K::KotekanSrc:
         return "-1 to 7";
+    case K::KotekanMd:
+        return "nyog cag / telu / empat";
     case K::LinearFloat:
         std::snprintf(buf, sizeof(buf), "%g - %g", e.minEngine, e.maxEngine);
         return buf;

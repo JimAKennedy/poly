@@ -282,6 +282,26 @@
       "defaultEngine": 0,
       "engineRange": "Off / On",
       "defaultDisplay": "Off"
+    },
+    {
+      "offset": 12,
+      "name": "Kotekan Mode",
+      "kind": "Unknown",
+      "minEngine": 0,
+      "maxEngine": 2,
+      "defaultEngine": 0,
+      "engineRange": "nyog cag / telu / empat",
+      "defaultDisplay": ""
+    },
+    {
+      "offset": 13,
+      "name": "Kotekan Overlap",
+      "kind": "Ranged0_64",
+      "minEngine": 0,
+      "maxEngine": 64,
+      "defaultEngine": 0,
+      "engineRange": "0 - 64",
+      "defaultDisplay": "0"
     }
   ]
 }
