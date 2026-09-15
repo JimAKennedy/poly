@@ -589,7 +589,7 @@ letting a later reader mistake M007 for a new idea.
 command, and a new guard cannot be added that only CI knows how to run.
 
 **Branch:** milestone/M007-runnable-guards
-**Status:** planned
+**Status:** in-progress
 **Demo:** Run the declared tokens on a branch that breaks any guard in the repo,
 and see it fail before pushing rather than after.
 
@@ -607,9 +607,10 @@ which is what `GAP04` is for.
 
 ### Slice M007/S01 — The orphaned guards get a home
 
+**Plan:** M007-S01-plan.md
 **Validation:** format, doc-discipline
 **Evidence:** evidence/M007-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
@@ -625,9 +626,10 @@ which is what `GAP04` is for.
 
 ### Slice M007/S02 — Reachability is itself checked
 
+**Plan:** M007-S02-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M007-S02.md
-**Status:** open
+**Status:** in-progress
 **Depends:** M007/S01
 
 **Definition of Done**
