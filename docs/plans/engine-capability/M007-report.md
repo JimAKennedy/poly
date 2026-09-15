@@ -9,9 +9,10 @@ Status: current (2026-09-15)
 Generated from `docs/plans/engine-capability/ledger.md`, git, and
 `M007-decisions.md` for the review that precedes `/jk:ship`.
 
-**Vision:** A developer can run every check CI will run, and every test in the
-tree runs somewhere in CI — so a green local gate means something, and a test
-file cannot be proven only on the machine that wrote it.
+**Vision:** Every guard this repo enforces can be run by a documented local
+command, a new guard cannot be added that only CI knows how to run, and the
+pre-push gate runs every check that can run locally rather than relying on
+someone remembering to.
 
 **Branch:** `milestone/M007-runnable-guards`, cut from `main` at `214795d`.
 
@@ -21,6 +22,7 @@ file cannot be proven only on the machine that wrote it.
 |---|---|---|---|
 | M007/S01 | The orphaned guards get a home | GAP03 | done |
 | M007/S02 | Reachability is itself checked | GAP04 | done |
+| M007/S03 | The gate runs what it can | GAP05 | done |
 
 ## Definition of done
 
@@ -37,6 +39,13 @@ file cannot be proven only on the machine that wrote it.
 - [x] A guard that genuinely cannot run locally is declarable in-band, with a reason
 - [x] The check itself runs in CI
 
+**M007/S03**
+
+- [x] The pre-push gate runs `guards`, `doc-discipline`, and `site-unit`
+- [x] A check fails if a token in `.jk/validations.yml` is neither run by the pre-push gate nor declared exempt in-band with a reason
+- [x] That check has been shown to fail, both for an unaccounted-for token and for an exemption with an empty reason
+- [x] `CLAUDE.md` describes what the hook actually runs
+
 ## Validation
 
 Run on the current head.
@@ -45,8 +54,9 @@ Run on the current head.
 |---|---|---|
 | `format` | `pre-commit run --all-files` | pass |
 | `guards` | `bash scripts/check-guards.sh` | pass, 13 invocations |
-| `site-unit` | `npm --prefix site test` | pass, 284 tests |
-| `doc-conformance` | `bash scripts/check-doc-conformance.sh` | pass, 268 tests |
+| `site-unit` | `npm --prefix site test` | pass, 285 tests |
+| `doc-conformance` | `bash scripts/check-doc-conformance.sh` | pass, 269 tests |
+| `gate` | `bash scripts/pre-push-check.sh` | pass, 10 gates, 18s |
 | `doc-discipline` | `bash scripts/check-doc-discipline.sh` | pass |
 
 ## Traceability
@@ -60,9 +70,12 @@ Every commit carries a `Slice:` trailer. **No untraced commits.**
 | `4033d5a` | docs: name the guards command in CLAUDE.md, and close M007/S01 | M007/S01 | GAP03 |
 | `135e1ba` | test(site): fail when a repo guard is reachable from no local command | M007/S02 | — |
 | `b8855c9` | docs(plans): close M007/S02 with the reachability check proved | M007/S02 | GAP04 |
+| `5ace58a` | docs(plans): write M007's review report | M007/S01, M007/S02 | — |
+| `bda2f36` | docs(plans): plan M007/S03 -- the pre-push gate runs what it can | M007/S03 | — |
+| `df19164` | feat(scripts): run the guards, doc discipline, and site tests before every push | M007/S03 | — |
+| `4291c35` | test(site): fail when a validation token is run by neither the gate nor a reason | M007/S03 | GAP05 |
 
-Five commits, no corrections to earlier ones — the first milestone this session
-that needed none.
+9 commits, none untraced. No commit corrects an earlier one.
 
 ## What a reviewer should look at twice
 
@@ -96,11 +109,24 @@ that needed none.
    asserted: three simultaneous breaks produced three named failures. With `-e`
    a developer would fix one guard per invocation.
 
-6. **What this milestone does not do.** The guards are runnable, not automatic —
-   `scripts/pre-push-check.sh` is unchanged at five checks. Wiring them in would
-   have caught M002's ship failure without anyone remembering; the decision and
-   its cost are both recorded. The reachability check stops a guard becoming
-   unreachable; it does not stop someone forgetting to run one.
+6. **S03 reverses a decision S01 recorded, and both entries stand.** The
+   original answer to "should the hook run the guards" was "runnable, not
+   automatic", reasoning that not every push should pay for all of them.
+   Measured, the three missing tokens cost 5s, <1s and <1s, and the whole hook —
+   plugin build and pluginval included — runs in 18 seconds. The premise was
+   wrong rather than the reasoning, so the decisions file keeps both, in order.
+
+7. **`format` is exempt from the new coverage check rather than marked as run,**
+   and that is the honest entry. Step 1 runs `pre-commit run clang-format` on
+   staged files; the token is `--all-files`. Marking it would have made the
+   check certify something untrue to get a tidier table.
+
+8. **A proof damaged the thing it was proving.** The both-run-and-exempt arm
+   restored its probe with `git checkout --` on two files, discarding fourteen
+   uncommitted markers. The next validation run went red for the real reason and
+   they were re-applied; the evidence file records it. The check caught it, but
+   the lesson is cheaper than that: commit before a proof that restores by
+   checkout.
 
 ## Decisions
 
