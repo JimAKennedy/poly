@@ -209,6 +209,7 @@ subdivision.
 **Validation:** format, unit, engine-isolation, rt-safety
 **Evidence:** evidence/M003-S02.md
 **Status:** open
+**Depends:** M003/S01
 
 **Definition of Done**
 
@@ -697,7 +698,13 @@ Three slice-level dependencies are real:
 - **M003/S04 depends on M003/S01.** The `Timing` column reports a profile, so
   there is nothing to put in it until profiles exist.
 
-M003/S02 depends on nothing and may land before or after M003/S01.
+**M003/S02 depends on M003/S01**, which this ledger originally denied. An
+additive lane has one step per cell — `prepareLaneContext` sets `stepsInCycle`
+to the cell count — so a `{2,2,3}` davul has three steps and nothing inside a
+cell to divide. Fixing swing's `(cycleStep % 2)` predicate satisfies the slice's
+first definition-of-done clause and leaves the second ("the long cell's internal
+division differs from the short cells'") unsatisfiable. The correction is
+recorded in `M003-decisions.md` rather than applied silently.
 
 **M004 carries no technical dependency at all.** It is sequenced last because
 that is where it was asked for, not because anything blocks it: DAW regression
@@ -740,6 +747,13 @@ recorded where a reader will see it; the graph stays honest.
 Recorded so a later pass does not rediscover them as omissions. The source
 document excluded each, and its reasoning is adopted here.
 
+- **Per-step subdivision profile editing in the WebUI** —
+  [#305](https://github.com/JimAKennedy/poly/issues/305). M003/S01 ships the
+  profile as state-only, set from presets: 64 values per lane is not a parameter
+  family, and the WebUI's edit path is parameter-ID based, so the editing
+  surface needs a bridge-schema route of its own plus the `webui-e2e` work that
+  follows. A milestone rather than a slice, and not needed for M003's
+  deliverable.
 - **CI and tooling debt** — [#282](https://github.com/JimAKennedy/poly/issues/282),
   [#272](https://github.com/JimAKennedy/poly/issues/272),
   [#274](https://github.com/JimAKennedy/poly/issues/274),
