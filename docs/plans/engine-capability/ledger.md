@@ -586,7 +586,9 @@ guard surface, so a third instance was waiting. Saying so here is cheaper than
 letting a later reader mistake M007 for a new idea.
 
 **Vision:** Every guard this repo enforces can be run by a documented local
-command, and a new guard cannot be added that only CI knows how to run.
+command, a new guard cannot be added that only CI knows how to run, and the
+pre-push gate runs every check that can run locally rather than relying on
+someone remembering to.
 
 **Branch:** milestone/M007-runnable-guards
 **Status:** in-progress
@@ -645,6 +647,36 @@ which is what `GAP04` is for.
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
 | GAP04 | Nothing enforces that a guard is runnable locally, so each gap in this family has been found by CI going red after a green local run — three times in three ships. Fixing the eleven in `GAP03` leaves the twelfth to be discovered the same way. `check-wasm-freshness.sh` shows the exception is real rather than theoretical: it compares deployed artifacts against a URL and cannot run from a clean checkout, so the check needs an in-band, reasoned escape hatch in the style this repo already uses | `tooling` | `site/tests/`, `.jk/validations.yml` | A guard reachable from nothing is added and the check watched to fail naming it; the escape hatch is exercised on a guard that genuinely cannot run locally, and the check confirmed to run in CI rather than only locally — the circularity M006/S02 had to correct | `done` |
+
+### Slice M007/S03 — The gate runs what it can
+
+**Plan:** M007-S03-plan.md
+**Validation:** format, site-unit, doc-conformance, doc-discipline, guards
+**Evidence:** evidence/M007-S03.md
+**Status:** in-progress
+**Depends:** M007/S01
+
+**This slice reverses a decision this milestone recorded.** `M007-decisions.md`
+asked whether the pre-push hook should run the new guards and answered
+"runnable, not automatic", reasoning that not every push should pay for all of
+them. Measurement retired that reason: `guards` takes 5s, `doc-discipline` and
+`site-unit` under a second each, against a hook that already compiles the plugin
+and runs pluginval. Six seconds is not a cost worth trading three consecutive
+red ships for. The original answer and this reversal both stand in the decisions
+file, because the reasoning is the part worth keeping.
+
+**Definition of Done**
+
+- [ ] The pre-push gate runs `guards`, `doc-discipline`, and `site-unit`
+- [ ] A check fails if a token in `.jk/validations.yml` is neither run by the
+      pre-push gate nor declared exempt in-band with a reason
+- [ ] That check has been shown to fail, both for an unaccounted-for token and
+      for an exemption with an empty reason
+- [ ] `CLAUDE.md` describes what the hook actually runs
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| GAP05 | The guards `GAP03` made runnable are run by nothing automatically, so closing that gap still depends on a developer remembering a command. Every instance in this family reached CI the same way — a complete local set that was a strict subset of CI's. `M005`'s doc-drift and `M006`'s `check-scripts-readme` both sit in the three tokens the hook does not run, and `CLAUDE.md` asserts the hook covers "the five items above and nothing else, by design" while the script has seven steps | `tooling` | `scripts/pre-push-check.sh`, `site/tests/`, `CLAUDE.md` | The three tokens run from the hook; a token added to `.jk/validations.yml` and left unaccounted for is watched to fail the coverage check, as is an exemption whose reason is empty — the same two arms `GAP04` proved, because a hatch that can be left blank is a hatch that silences the check | `open` |
 
 ## Sequencing
 

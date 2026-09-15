@@ -64,3 +64,28 @@ milestone's review can see what shaped it without reconstructing it from diffs.
   — **Why:** The first run reported all eleven S01 guards unreachable, because
   `.jk/validations.yml` names the wrapper and not the guards inside it. The
   wrapper is a declared token, so what it runs is reachable through it.
+
+## 2026-09-15 — planning M007/S03 (a recorded decision reversed)
+
+- **Q:** Should the pre-push hook run the new guards? — **A (2026-09-15,
+  earlier today):** Runnable, not automatic. **A (now):** Yes — and `site-unit`
+  and `doc-discipline` with them.
+- **Decision:** Reverse it. — **Why:** The original reason was that "not every
+  push pays for all of them". Measured, the three tokens cost 5s, <1s and <1s,
+  against a hook that already compiles the plugin and runs pluginval for
+  minutes. The premise was wrong, not the reasoning applied to it, so the
+  earlier entry stays above this one rather than being edited away.
+- **Decision:** Extend the milestone's Vision with a third clause rather than
+  file S03 under a vision that does not cover it. — **Why:** A slice whose
+  deliverable its milestone's vision does not describe is how a milestone turns
+  into a bag of related work. The clause is an outcome, not a task.
+- **Decision:** Lock the coverage rule with a check, not with prose. — **Why:**
+  This programme has now found four instances of a rule that lived only in a
+  document and was not followed. `CLAUDE.md` currently asserts the hook runs
+  "the five items above and nothing else, by design"; the script has seven
+  steps, which is that failure in miniature.
+- **Judgment call:** The hatch is `# pre-push-exempt: <token> — <reason>` in
+  `.jk/validations.yml`, beside the token it exempts. In-band, greppable,
+  reasoned, per the repo's escape-hatch skill — and deliberately the same shape
+  as `GAP04`'s `# local-unrunnable:`, so there is one idiom to learn rather than
+  two.
