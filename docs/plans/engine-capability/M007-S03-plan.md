@@ -8,7 +8,7 @@ class: gated
 
 ## Task status
 
-- [ ] 1. The hook runs `guards`, `doc-discipline`, and `site-unit`
+- [x] 1. The hook runs `guards`, `doc-discipline`, and `site-unit`
 - [ ] 2. Lock the coverage rule, prove it bites, and close the slice
 
 ## Definition of Done
