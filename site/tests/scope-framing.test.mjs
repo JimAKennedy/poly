@@ -207,6 +207,34 @@ const CLAIMS = [
     presentRegex: [/third part[\s\S]{0,300}pokok/],
     forbidden: ['kotekan polos'],
   },
+  {
+    id: 'M002-S02-rhythm-only',
+    file: 'theory-gamelan.mdx',
+    rule:
+      'M002 gave Poly three interlock modes, but models only the rhythmic dimension of ' +
+      'telu and empat — the cell length the interlock repeats on — while the terms also ' +
+      'carry pitch meaning. Keeping the traditional names is only defensible if the page ' +
+      'says which half is modelled.',
+    present: ['only the rhythmic dimension', 'cell length'],
+  },
+  {
+    id: 'M002-S02-pitch-sources',
+    file: 'theory-gamelan.mdx',
+    rule:
+      'The reader is sent to the literature for the pitch dimension Poly does not model. ' +
+      'Tenzer is the appendix\'s authoritative analysis of kotekan varieties and Vitale ' +
+      'shows real kotekan is not a pure set complement — Rule 4\'s own substance.',
+    presentRegex: [/only the rhythmic[\s\S]{0,600}fr-tenzer-2000/, /only the rhythmic[\s\S]{0,600}fr-vitale-1990/],
+  },
+  {
+    id: 'M002-S02-norot-inexpressible',
+    file: 'theory-gamelan.mdx',
+    rule:
+      'Rule 5 names four styles and Poly ships three. Norot is defined by pitch ' +
+      'oscillation around neighbouring tones and a Poly lane carries one note, so it is ' +
+      'named as out of reach rather than silently omitted.',
+    present: ['norot is not expressible', 'one note'],
+  },
 ];
 
 registerClaimTests({ test, assert, claims: CLAIMS, loadSource });

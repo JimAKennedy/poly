@@ -154,25 +154,25 @@ predicate can be made to fail.
 **Plan:** M002-S02-plan.md
 **Validation:** format, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M002-S02.md
-**Status:** in-progress
+**Status:** done
 **Depends:** M002/S01
 
 **Definition of Done**
 
-- [ ] Rule 4 no longer carries the "until kotekan modes ship" parenthetical
-- [ ] Rule 4 is checked as written — pair-overlap — rather than as construction
+- [x] Rule 4 no longer carries the "until kotekan modes ship" parenthetical
+- [x] Rule 4 is checked as written — pair-overlap — rather than as construction
       step 4 specifies
-- [ ] Rule 1 reads `checkable`, with a predicate that has been shown to fail
-- [ ] This ledger records that the theory-audit ledger's F41 weakening no longer
+- [x] Rule 1 reads `checkable`, with a predicate that has been shown to fail
+- [x] This ledger records that the theory-audit ledger's F41 weakening no longer
       describes the shipped behaviour
-- [ ] The page states that Poly models only the rhythmic dimension of *telu* and
+- [x] The page states that Poly models only the rhythmic dimension of *telu* and
       *empat* — the cell length the interlock repeats on, not their pitch
       content — and directs the reader to Tenzer (2000) and Vitale (1990) for
       that dimension; *norot* is named as not expressible, and why
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| EC07 | Theory-audit row F41 records M004/S03 checking Rule 4 as construction step 4 specifies, because Rule 4 as written demands pair-overlap that Kotekan L-mode cannot produce. M007 then found the strict predicate could not be made to fail at all, and marked Rule 1 not checkable for the same cause. Two rules on one page, weakened by one engine limitation | `rule` | `theory-gamelan.mdx`, `site/tests/theory-patch-conformance.test.mjs` | Both predicates are mutation-proved against a patch using a mode with deliberate overlap — the mutation that could not fail under L-mode now fails | `open` |
+| EC07 | Theory-audit row F41 records M004/S03 checking Rule 4 as construction step 4 specifies, because Rule 4 as written demands pair-overlap that Kotekan L-mode cannot produce. M007 then found the strict predicate could not be made to fail at all, and marked Rule 1 not checkable for the same cause. Two rules on one page, weakened by one engine limitation | `rule` | `theory-gamelan.mdx`, `site/tests/theory-patch-conformance.test.mjs` | Both predicates are mutation-proved against a patch using a mode with deliberate overlap — the mutation that could not fail under L-mode now fails | `done` |
 
 ---
 

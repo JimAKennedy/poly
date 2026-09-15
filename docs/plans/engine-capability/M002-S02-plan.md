@@ -14,7 +14,7 @@ S01 has already shipped.
 
 - [x] 1. Rule 4: drop the parenthetical and check it as written
 - [x] 2. Rule 1: flip to checkable with a predicate that can fail
-- [ ] 3. Rule 5 and the disclosures, and close the slice
+- [x] 3. Rule 5 and the disclosures, and close the slice
 
 ## Definition of Done
 
