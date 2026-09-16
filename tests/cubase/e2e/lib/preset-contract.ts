@@ -115,6 +115,24 @@ export function comparePresets(
 }
 
 /**
+ * Is a named perturbation active?
+ *
+ * POLY_E2E_MUTATE is a LIST -- comma or space separated -- not a single value.
+ * M004-decisions.md says one extra dispatch exercises every red path at once,
+ * and a single-valued knob could only ever turn one spec red, leaving the
+ * others green in a run whose whole purpose is to be red. Every M004 spec reads
+ * the knob through this function so they cannot drift on how it parses.
+ */
+export function mutationActive(name: string, raw: string | undefined): boolean {
+  if (!raw) return false;
+  return raw
+    .split(/[,\s]+/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0)
+    .includes(name);
+}
+
+/**
  * The red path, per M004-decisions.md: POLY_E2E_MUTATE=s02-malformed-preset
  * makes the contract claim a wrong lane count for one index, so the comparison
  * must fail naming it.
@@ -127,7 +145,7 @@ export function applyMutation(
   expected: PresetExpectation[],
   mutate: string | undefined,
 ): PresetExpectation[] {
-  if (mutate !== 's02-malformed-preset') return expected;
+  if (!mutationActive('s02-malformed-preset', mutate)) return expected;
   if (expected.length === 0) return expected;
   const target = Math.min(7, expected.length - 1);
   return expected.map((p) =>

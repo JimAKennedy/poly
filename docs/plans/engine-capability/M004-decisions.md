@@ -101,3 +101,18 @@ failures stopped on 2026-09-13.
   ordering constraint found here applies to them, and the group-2 plans should
   place them relative to this sweep rather than discovering the same failure
   three more times.
+
+## 2026-09-16 — executing M004/S02 (the knob could not do what was promised)
+
+- **Finding:** `M004-decisions.md` stated that one extra dispatch with
+  `POLY_E2E_MUTATE` set "exercises every red path at once". It could not:
+  `applyMutation` compared the variable for equality against a single name, and
+  the workflow input took one value, so a red dispatch could only ever turn one
+  spec red and would leave the other six green — in a run whose entire purpose
+  is to be red.
+- **Decision:** The knob is a **list**, comma or space separated, read through a
+  shared `mutationActive()` so the seven specs cannot drift on how it parses. —
+  **Why:** Caught before three more specs were written against the broken
+  convention, which would have made it four places to fix instead of one. Four
+  unit cases pin the parsing, including that a substring is not a match — `s02`
+  must not activate `s02-malformed-preset`.

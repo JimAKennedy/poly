@@ -33,7 +33,9 @@ on:
       e2e_mutate:
         description: >-
           Red-path knob for the M004 in-DAW specs. Leave EMPTY for a normal run.
-          Set to one perturbation name -- s01-perturb-state, s02-malformed-preset,
+          Set to one or more perturbation names, comma or space separated, so a
+          single red dispatch can turn every M004 spec red at once --
+          s01-perturb-state, s02-malformed-preset,
           s03-accumulated-phase, s04-skip-reattach, s05-shared-state,
           s06-perturb-capture, s07-flatten-lane -- and the spec that reads it
           must FAIL. Each spec perturbs what it asserts against, never the

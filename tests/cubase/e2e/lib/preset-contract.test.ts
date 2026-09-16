@@ -3,6 +3,7 @@ import { test, expect } from '@playwright/test';
 import {
   PresetContractError,
   applyMutation,
+  mutationActive,
   comparePresets,
   loadPresetExpectations,
   type PresetExpectation,
@@ -78,5 +79,31 @@ test.describe('applyMutation', () => {
     const problems = comparePresets(mutated, EXPECTED.map((p) => ({ ...p })));
     expect(problems.length).toBe(1);
     expect(problems[0]).toContain('lanes in the host');
+  });
+});
+
+test.describe('mutationActive', () => {
+  test('an unset knob activates nothing', () => {
+    expect(mutationActive('s02-malformed-preset', undefined)).toBe(false);
+    expect(mutationActive('s02-malformed-preset', '')).toBe(false);
+  });
+
+  test('a single value activates only itself', () => {
+    expect(mutationActive('s02-malformed-preset', 's02-malformed-preset')).toBe(true);
+    expect(mutationActive('s04-skip-reattach', 's02-malformed-preset')).toBe(false);
+  });
+
+  // The whole point of the list: one red dispatch must be able to turn every
+  // M004 spec red at once. A single-valued knob would leave the others green.
+  test('a list activates every name in it, comma or space separated', () => {
+    const list = 's02-malformed-preset,s03-accumulated-phase s04-skip-reattach';
+    expect(mutationActive('s02-malformed-preset', list)).toBe(true);
+    expect(mutationActive('s03-accumulated-phase', list)).toBe(true);
+    expect(mutationActive('s04-skip-reattach', list)).toBe(true);
+    expect(mutationActive('s07-flatten-lane', list)).toBe(false);
+  });
+
+  test('a substring is not a match', () => {
+    expect(mutationActive('s02', 's02-malformed-preset')).toBe(false);
   });
 });
