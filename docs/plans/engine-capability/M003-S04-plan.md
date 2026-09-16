@@ -9,8 +9,8 @@ class: gated
 
 ## Task status
 
-- [ ] 1. The patch table carries a `Timing` column
-- [ ] 2. Rule 6 becomes checkable, mutation-proved, and close-out
+- [x] 1. The patch table carries a `Timing` column
+- [x] 2. Rule 6 becomes checkable, mutation-proved, and close-out
 
 ## Definition of Done
 

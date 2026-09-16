@@ -251,20 +251,20 @@ subdivision.
 **Plan:** M003-S04-plan.md
 **Validation:** format, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M003-S04.md
-**Status:** open
+**Status:** done
 **Depends:** M003/S01
 
 **Definition of Done**
 
-- [ ] `theory-brazilian`'s patch table carries a `Timing` column expressing the
+- [x] `theory-brazilian`'s patch table carries a `Timing` column expressing the
       per-beat profile
-- [ ] Rule 6 reads `checkable`, with a predicate that has been shown to fail when
+- [x] Rule 6 reads `checkable`, with a predicate that has been shown to fail when
       the profile is flattened
-- [ ] The "until subdivision profiles ship" sentence is gone from the page
+- [x] The "until subdivision profiles ship" sentence is gone from the page
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| EC11 | `theory-brazilian` Rule 6 (the long-short-short-long feel) is the one `absentColumn` verdict that is not a docs-only fix: the table has no `Timing` column, and a per-beat profile is not a single timing offset, so the column cannot be filled until EC08 ships | `column` | `theory-brazilian.mdx`, `site/tests/theory-patch-conformance.test.mjs` | The rule's triage entry flips to `checkable`; the predicate is mutation-proved by flattening the profile to an even grid and watching the named case fail | `open` |
+| EC11 | `theory-brazilian` Rule 6 (the long-short-short-long feel) is the one `absentColumn` verdict that is not a docs-only fix: the table has no `Timing` column, and a per-beat profile is not a single timing offset, so the column cannot be filled until EC08 ships | `column` | `theory-brazilian.mdx`, `site/tests/theory-patch-conformance.test.mjs` | The rule's triage entry flips to `checkable`; the predicate is mutation-proved by flattening the profile to an even grid and watching the named case fail | `done` |
 
 ---
 
