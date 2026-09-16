@@ -251,11 +251,19 @@ struct LaneConfig {
     // and a style choice does not want an automation lane. Defaults reproduce
     // the pre-M002 strict complement exactly.
     KotekanMode kotekanMode = KotekanMode::NyogCag;
-    int kotekanOverlap = 0;                     // structural steps struck by both parts; 0 = strict
-    int fillEveryNBars = 0;                     // 0 = no bar-gated fill; N>0 = play off-pattern fill on bars whose
-                                                // absolute bar index is a multiple of N (deterministic, PPQ-derived)
-    int cellCount = 0;                          // 0 = equal cells (standard Euclidean); >0 = additive/aksak
-    std::array<int, kMaxSteps> cellSizes{};     // subdivision units per cell; sum = total cycle length
+    int kotekanOverlap = 0;                 // structural steps struck by both parts; 0 = strict
+    int fillEveryNBars = 0;                 // 0 = no bar-gated fill; N>0 = play off-pattern fill on bars whose
+                                            // absolute bar index is a multiple of N (deterministic, PPQ-derived)
+    int cellCount = 0;                      // 0 = equal cells (standard Euclidean); >0 = additive/aksak
+    std::array<int, kMaxSteps> cellSizes{}; // subdivision units per cell; sum = total cycle length
+    // M003 S01 (EC08). Non-isochronous subdivision: each entry is a step's
+    // duration as a multiple of the base step. profileCount == 0 takes the
+    // existing branch untouched, so every pre-M003 patch is byte-identical.
+    // The profile is normalised so the cycle keeps the length it would have had
+    // evenly -- it states distribution, never length -- and takes precedence
+    // over cellSizes, which are structure rather than feel.
+    std::array<float, kMaxSteps> subdivisionProfile{};
+    int profileCount = 0;
     bool timeline = false;                      // timeline mode: use fixedPattern, immune to macros
     std::array<bool, kMaxSteps> fixedPattern{}; // per-step on/off for timeline mode
     // timeline mode pattern length: 0 = use cycle.steps; >0 = explicit length that governs both editable slot count
@@ -298,10 +306,35 @@ struct AdditiveCellInfo {
 
 inline AdditiveCellInfo computeAdditiveCells(const LaneConfig& cfg) {
     AdditiveCellInfo info{};
+    double basePpq = 4.0 / cfg.cycle.subdivision;
+
+    // M003 S01 (EC08). A subdivision profile wins over integer cells: both
+    // reaching here needs a stated winner, and combining two non-isochronies
+    // silently is what nobody can reason about later.
+    if (cfg.profileCount > 0) {
+        int count = cfg.profileCount < kMaxSteps ? cfg.profileCount : kMaxSteps;
+        double sum = 0.0;
+        for (int i = 0; i < count; ++i)
+            sum += static_cast<double>(cfg.subdivisionProfile[i]);
+        // A profile summing to nothing is not a feel, and dividing by it would
+        // put infinities into the timing path.
+        if (sum <= 0.0)
+            return info;
+        // Normalise so the cycle occupies the length it would have evenly.
+        double scale = sum / static_cast<double>(count);
+        info.count = count;
+        double accum = 0.0;
+        for (int i = 0; i < count; ++i) {
+            info.cumPpq[i] = accum;
+            accum += (static_cast<double>(cfg.subdivisionProfile[i]) / scale) * basePpq;
+        }
+        info.totalPpq = accum;
+        return info;
+    }
+
     if (cfg.cellCount <= 0)
         return info;
     info.count = cfg.cellCount;
-    double basePpq = 4.0 / cfg.cycle.subdivision;
     double accum = 0.0;
     for (int i = 0; i < cfg.cellCount && i < kMaxSteps; ++i) {
         info.cumPpq[i] = accum;

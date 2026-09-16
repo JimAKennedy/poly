@@ -69,3 +69,30 @@ have to reconstruct it from the diff.
 - **Note:** `fr-polak-2010` is already in the bibliography at tier A, described
   as "measured microtiming showing jembe subdivision is systematically uneven",
   so `EC10`'s citation requirement needs no new entry — only the citation.
+
+## 2026-09-15 — executing M003/S01 task 1 (judgment call)
+
+- **Finding:** `GrooveStateCopyBenchmark.ReportsFactSizes` failed on the field
+  addition. `GrooveState` grows 13776 → 15888 bytes, +2112 — 264 bytes per lane
+  across 8 lanes, from a 256-byte `std::array<float, kMaxSteps>` plus an `int`.
+  This is the largest single growth the struct has taken; the three previous
+  entries in that test's comment are +32, +96 and +64.
+- **Decision:** Accept the growth, and record the measurement rather than
+  bumping the number. — **Why:** The guard exists to force a conscious decision,
+  so satisfying it with a new constant and nothing else would defeat it. The
+  three-copy pipeline was measured on the grown struct: **0.45 µs/block, 0.02%
+  of a 128-sample block period**, and `ThreeCopyPipelineFitsBlockBudget` passes.
+  The copy budget is not the constraint at this size.
+- **Decision:** The array is `kMaxSteps` wide rather than something smaller. —
+  **Why:** The profile is per-step and `kMaxSteps` is the step bound, which is
+  exactly why `cellSizes` beside it is already `std::array<int, kMaxSteps>`.
+  Sizing it to a typical profile instead would make the one case it could not
+  hold a silent truncation.
+
+- **Finding:** The first run of `SubdivisionProfile.PlacesStepsInTheStatedProportions`
+  failed at a tolerance of `1e-9`: `1.1f / 0.9f` differs from the double ratio
+  by about 6e-8.
+- **Decision:** Loosen the tolerance to `1e-6` and say why in the test. — **Why:**
+  The engine was right and the test was wrong. The profile is stored as `float`
+  by design — matching every other `LaneConfig` float — so a tolerance tighter
+  than float precision tests the storage type rather than the arithmetic.

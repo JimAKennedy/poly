@@ -19,6 +19,7 @@ add_executable(poly_tests
     kotekan_mode_tests.cpp
     lane_name_tests.cpp
     dynamic_shaping_tests.cpp
+    subdivision_profile_tests.cpp
     swing_humanize_tests.cpp
     macro_tests.cpp
     midi_capture_tests.cpp

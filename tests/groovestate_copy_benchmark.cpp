@@ -71,7 +71,16 @@ TEST(GrooveStateCopyBenchmark, ReportsFactSizes) {
     // kotekanOverlap (int), which with 4-byte alignment costs 8 bytes/lane
     // × 8 lanes. Both are state-only fields; see M002-S01-design.md for why
     // they are not VST3 parameters.
-    EXPECT_EQ(sizeof(poly::GrooveState), 13776u) << "GrooveState size changed — update DECISIONS.md perf entry";
+    // M003 S01: +2112 bytes from LaneConfig.subdivisionProfile
+    // (std::array<float, kMaxSteps> = 256 bytes) + profileCount (int), which
+    // with alignment costs 264 bytes/lane × 8 lanes. This is the largest single
+    // growth the struct has taken, and it was measured rather than waved
+    // through: the three-copy pipeline runs at 0.45 us/block, 0.02% of a
+    // 128-sample block period, so the copy budget is not the constraint. The
+    // array is kMaxSteps-wide because the profile is per-step, matching
+    // cellSizes beside it. See M003-decisions.md.
+    EXPECT_EQ(sizeof(poly::GrooveState), 15888u)
+        << "GrooveState size changed — record it in the milestone's decisions file";
 }
 
 TEST(GrooveStateCopyBenchmark, ThreeCopyPipelineFitsBlockBudget) {
