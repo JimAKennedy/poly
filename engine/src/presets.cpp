@@ -1912,6 +1912,36 @@ GrooveState makeDeepHouse() {
     return s;
 }
 
+// --- Subdivision profile catalogue (M003 S01, EC08) ---
+//
+// Each entry is a step's duration as a multiple of the base step. The engine
+// normalises, so only the proportions matter.
+//
+// These are shapes stated by the theory pages, not transcriptions of published
+// tables: the depth is ours, exactly as theory-brazilian's own attribution line
+// says of all its patch values. A later refinement against a source in hand is
+// a data change, not a code change.
+namespace profiles {
+
+// theory-brazilian Rule 6: within each beat's four sixteenths, the first is
+// slightly long, the middle two compressed, the fourth slightly long again.
+// Swing cannot express this -- it displaces only alternate notes, which is why
+// the guide calls the swing workaround an approximation in its own voice.
+// Restates the measurements of Gerischer 2006 and Naveda et al. 2011, which
+// the page cites for Rule 6.
+constexpr std::array<float, 4> kSambaLongShortShortLong = {1.08f, 0.94f, 0.94f, 1.04f};
+
+// Repeat a per-beat profile across a lane whose cycle spans several beats.
+inline void applyProfile(LaneConfig& lane, const std::array<float, 4>& beat, int steps) {
+    if (steps <= 0 || steps > kMaxSteps)
+        return;
+    lane.profileCount = steps;
+    for (int i = 0; i < steps; ++i)
+        lane.subdivisionProfile[static_cast<size_t>(i)] = beat[static_cast<size_t>(i % beat.size())];
+}
+
+} // namespace profiles
+
 GrooveState makeSambaBatucada() {
     GrooveState s{};
     s.activeLaneCount = 5;
@@ -1939,7 +1969,8 @@ GrooveState makeSambaBatucada() {
     tamborim.baseVelocity = 90;
     tamborim.probability = 0.95f;
     tamborim.ghostFloor = 50;
-    tamborim.swingAmount = 0.25f;
+    // M003 S01 (EC08): the profile replaces the swing approximation Rule 6 admits to.
+    profiles::applyProfile(tamborim, profiles::kSambaLongShortShortLong, 16);
 
     auto& agogo = s.lanes[2];
     agogo.id = 2;
@@ -1950,7 +1981,8 @@ GrooveState makeSambaBatucada() {
     agogo.baseVelocity = 85;
     agogo.probability = 0.9f;
     agogo.ghostFloor = 40;
-    agogo.swingAmount = 0.20f;
+    // M003 S01 (EC08): the profile replaces the swing approximation Rule 6 admits to.
+    profiles::applyProfile(agogo, profiles::kSambaLongShortShortLong, 16);
 
     auto& repinique = s.lanes[3];
     repinique.id = 3;
@@ -1973,6 +2005,8 @@ GrooveState makeSambaBatucada() {
     caixa.baseVelocity = 70;
     caixa.probability = 0.9f;
     caixa.ghostFloor = 55;
+    // M003 S01 (EC08): the profile replaces the swing approximation Rule 6 admits to.
+    profiles::applyProfile(caixa, profiles::kSambaLongShortShortLong, 16);
     caixa.swingAmount = 0.25f;
 
     s.macros.swing = 0.2f;

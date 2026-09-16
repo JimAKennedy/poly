@@ -12,7 +12,7 @@ class: gated
 - [x] 1. The profile fields and `computeAdditiveCells`
 - [x] 2. Wire the profile through `prepareLaneContext`
 - [x] 3. State version 19 → 20
-- [ ] 4. The samba profile ships, and reaches `presets.json`
+- [x] 4. The samba profile ships, and reaches `presets.json`
 - [ ] 5. Evidence and close-out
 
 ## Definition of Done
