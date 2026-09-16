@@ -231,20 +231,20 @@ subdivision.
 **Plan:** M003-S03-plan.md
 **Validation:** format, unit, site-unit, doc-conformance
 **Evidence:** evidence/M003-S03.md
-**Status:** in-progress
+**Status:** done
 **Depends:** M003/S01
 
 **Definition of Done**
 
-- [ ] A measured jembe profile ships as data, with its source cited in the guide's
+- [x] A measured jembe profile ships as data, with its source cited in the guide's
       bibliography at a tier the citation check accepts
-- [ ] `theory-sub-saharan-africa` construction step 5 no longer says Poly ships no
+- [x] `theory-sub-saharan-africa` construction step 5 no longer says Poly ships no
       measured profile
-- [ ] The profile's values are reachable from a preset
+- [x] The profile's values are reachable from a preset
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| EC10 | `theory-sub-saharan-africa` construction step 5 says "what Poly does not ship is a measured jembe profile to put in them". Row B10 established the distinction that scopes this: the mechanism exists (`microTimingMs`, exposed through the WebUI's micro-timing bars, clamped to ±20 ms) and the data does not — content to author, not code to write | `prose` | `engine/src/presets.cpp`, `theory-sub-saharan-africa.mdx`, `appendix-references.mdx` | A site case asserts the construction step no longer disclaims the profile and that its cited source resolves to a bibliography entry at an accepted tier | `open` |
+| EC10 | `theory-sub-saharan-africa` construction step 5 says "what Poly does not ship is a measured jembe profile to put in them". Row B10 established the distinction that scopes this: the mechanism exists (`microTimingMs`, exposed through the WebUI's micro-timing bars, clamped to ±20 ms) and the data does not — content to author, not code to write | `prose` | `engine/src/presets.cpp`, `theory-sub-saharan-africa.mdx`, `appendix-references.mdx` | A site case asserts the construction step no longer disclaims the profile and that its cited source resolves to a bibliography entry at an accepted tier | `done` |
 
 ### Slice M003/S04 — The guide catches up
 

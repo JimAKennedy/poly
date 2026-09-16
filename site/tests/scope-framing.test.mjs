@@ -160,6 +160,21 @@ const CLAIMS = [
     present: ['micro-timing'],
   },
   {
+    id: 'M003-S03-jembe-profile',
+    file: 'theory-sub-saharan-africa.mdx',
+    rule:
+      'ledger EC10. Construction step 5 said "what Poly does not ship is a ' +
+      'measured jembe profile to put in them", and pointed at per-step ' +
+      'micro-timing as the place a profile goes. M003/S03 ships the profile, ' +
+      'and micro-timing was the wrong mechanism for it anyway: it is absolute ' +
+      'milliseconds clamped to 20, so a ratio encoded there holds only at the ' +
+      'tempo it was measured at, while the same paragraph calls the profile ' +
+      '"particular ratios, stable across tempi"',
+    forbidden: ['what Poly does not ship is a measured jembe profile'],
+    present: ['subdivision profile'],
+    presentRegex: [/#fr-polak-2010/],
+  },
+  {
     id: 'S04-F32',
     file: 'theory-balkan.mdx',
     rule:
