@@ -285,7 +285,7 @@ multiple instances, offline rendering and host automation — so a regression th
 appears only inside a DAW fails the night it lands rather than in someone's
 project.
 **Branch:** milestone/M004-daw-regression
-**Status:** planned
+**Status:** in-progress
 **Demo:** A nightly run whose summary lists a spec per area above, each green,
 against a Cubase session the runner launched unattended.
 
@@ -312,6 +312,7 @@ lengthen one serialised run, and that runner already has an open failure issue
 
 ### Slice M004/S01 — Session recall
 
+**Plan:** M004-S01-plan.md
 **Validation:** format, cubase-harness
 **Evidence:** evidence/M004-S01.md
 **Status:** open
@@ -330,9 +331,10 @@ lengthen one serialised run, and that runner already has an open failure issue
 
 ### Slice M004/S02 — Preset recall across all 45
 
+**Plan:** M004-S02-plan.md
 **Validation:** format, cubase-harness
 **Evidence:** evidence/M004-S02.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
@@ -349,6 +351,7 @@ lengthen one serialised run, and that runner already has an open failure issue
 
 ### Slice M004/S03 — Transport motion
 
+**Plan:** M004-S03-plan.md
 **Validation:** format, cubase-harness
 **Evidence:** evidence/M004-S03.md
 **Status:** open
@@ -368,6 +371,7 @@ lengthen one serialised run, and that runner already has an open failure issue
 
 ### Slice M004/S04 — Editor lifecycle
 
+**Plan:** M004-S04-plan.md
 **Validation:** format, cubase-harness
 **Evidence:** evidence/M004-S04.md
 **Status:** open
@@ -385,6 +389,7 @@ lengthen one serialised run, and that runner already has an open failure issue
 
 ### Slice M004/S05 — Multiple instances
 
+**Plan:** M004-S05-plan.md
 **Validation:** format, cubase-harness
 **Evidence:** evidence/M004-S05.md
 **Status:** open
@@ -402,6 +407,7 @@ lengthen one serialised run, and that runner already has an open failure issue
 
 ### Slice M004/S06 — Offline bounce equivalence
 
+**Plan:** M004-S06-plan.md
 **Validation:** format, cubase-harness
 **Evidence:** evidence/M004-S06.md
 **Status:** open
@@ -419,6 +425,7 @@ lengthen one serialised run, and that runner already has an open failure issue
 
 ### Slice M004/S07 — Host parameter automation
 
+**Plan:** M004-S07-plan.md
 **Validation:** format, cubase-harness
 **Evidence:** evidence/M004-S07.md
 **Status:** open
