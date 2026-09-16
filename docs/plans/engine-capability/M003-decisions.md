@@ -116,3 +116,17 @@ have to reconstruct it from the diff.
   with a one-cycle margin that swamps a 0.0008 PPQ shortfall. The bound is still
   wrong as written and worth fixing; calling the test a proof of the fix would
   be a claim the run did not earn.
+
+## 2026-09-15 — executing M003/S01 task 3 (a hazard worth recording)
+
+- **Finding:** After restoring a mutation probe in
+  `engine/include/poly/state_io_read_lane.h`, `ctest` reported a failure against
+  sources that `git diff` showed were correct. The header edit had not been
+  recompiled; `touch` on the headers plus a rebuild turned it green.
+- **Decision:** Treat a `ctest` result following a header-only edit as
+  untrustworthy unless the build actually recompiled, and rebuild explicitly
+  before reading any mutation result. — **Why:** The direction that bit here was
+  a false red, which is noisy but self-correcting. The dangerous direction is
+  the opposite: a probe that should have failed reading as passed, which would
+  certify a vacuous test as proved. Given this milestone has already found two
+  vacuous predicates by mutation, a stale build would have hidden them.

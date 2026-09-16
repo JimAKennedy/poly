@@ -168,6 +168,19 @@ template <typename WriteFn>
         if (!write(&lane.kotekanOverlap, sizeof(lane.kotekanOverlap)))
             return false;
     }
+    if (bodyVersion >= kSubdivisionProfileStateVersion) {
+        int32_t profileCount = static_cast<int32_t>(lane.profileCount);
+        if (profileCount < 0)
+            profileCount = 0;
+        if (profileCount > kMaxSteps)
+            profileCount = kMaxSteps;
+        if (!write(&profileCount, sizeof(profileCount)))
+            return false;
+        for (int32_t i = 0; i < profileCount; ++i) {
+            if (!write(&lane.subdivisionProfile[static_cast<size_t>(i)], sizeof(float)))
+                return false;
+        }
+    }
 
     return true;
 }

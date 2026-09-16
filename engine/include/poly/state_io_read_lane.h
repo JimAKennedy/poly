@@ -176,6 +176,19 @@ template <typename ReadFn> [[nodiscard]] bool readLaneConfig(ReadFn&& read, Lane
         if (!read(&lane.kotekanOverlap, sizeof(lane.kotekanOverlap)))
             return false;
     }
+    if (version >= kSubdivisionProfileStateVersion) {
+        int32_t profileCount = 0;
+        if (!read(&profileCount, sizeof(profileCount)))
+            return false;
+        // A forged or corrupt count must not walk the reader off the end.
+        if (profileCount < 0 || profileCount > kMaxSteps)
+            return false;
+        lane.profileCount = static_cast<int>(profileCount);
+        for (int32_t i = 0; i < profileCount; ++i) {
+            if (!read(&lane.subdivisionProfile[static_cast<size_t>(i)], sizeof(float)))
+                return false;
+        }
+    }
     // Pre-v19 states carry no kotekan-mode bytes; the struct defaults
     // (NyogCag, overlap 0) stand, which is the strict complement such a state
     // played before M002. sanitizeGrooveState clamps a corrupt mode byte.
