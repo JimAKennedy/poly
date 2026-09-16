@@ -9,6 +9,57 @@
 
 namespace poly {
 
+// --- Subdivision profile catalogue (M003 S01, EC08) ---
+//
+// Each entry is a step's duration as a multiple of the base step. The engine
+// normalises, so only the proportions matter.
+//
+// These are shapes stated by the theory pages, not transcriptions of published
+// tables: the depth is ours, exactly as theory-brazilian's own attribution line
+// says of all its patch values. A later refinement against a source in hand is
+// a data change, not a code change.
+namespace profiles {
+
+// theory-brazilian Rule 6: within each beat's four sixteenths, the first is
+// slightly long, the middle two compressed, the fourth slightly long again.
+// Swing cannot express this -- it displaces only alternate notes, which is why
+// the guide calls the swing workaround an approximation in its own voice.
+// Restates the measurements of Gerischer 2006 and Naveda et al. 2011, which
+// the page cites for Rule 6.
+constexpr std::array<float, 4> kSambaLongShortShortLong = {1.08f, 0.94f, 0.94f, 1.04f};
+
+// Repeat a per-beat profile across a lane whose cycle spans several beats.
+template <std::size_t N> inline void applyProfile(LaneConfig& lane, const std::array<float, N>& beat, int steps) {
+    if (steps <= 0 || steps > kMaxSteps || beat.empty())
+        return;
+    lane.profileCount = steps;
+    for (int i = 0; i < steps; ++i)
+        lane.subdivisionProfile[static_cast<size_t>(i)] = beat[static_cast<size_t>(i) % N];
+}
+
+// theory-balkan Rule 8: "the long beat is slightly *less* than 3:2 in
+// practice" -- measured performances compress three-cells a shade below their
+// notated proportion, a style-defining tendency rather than sloppiness
+// (Goldberg 2015; cf. London 2012 on NI-meter tolerance ranges). Paired with
+// cellSizes, which keep the bar its notated length: the cells set the length,
+// the profile the distribution. Rule 6 forbids swing on aksak, and this is not
+// swing -- it is the metric proportion itself.
+constexpr std::array<float, 3> kAksakLongBeat223 = {2.0f, 2.0f, 2.85f};
+
+// Polak 2010, "Rhythmic Feel as Meter: Non-Isochronous Beat Subdivision in
+// Jembe Music from Mali" -- measured microtiming showing jembe subdivision is
+// systematically uneven rather than an approximation of an even grid. The
+// bibliography carries it at tier A as fr-polak-2010.
+//
+// This encodes the *shape* that finding reports -- a stable, systematically
+// long-first subdivision within the beat -- not a transcription of a published
+// table of ratios. The depth is ours. Refining these values against a source in
+// hand is a data change and needs no code, which is exactly the distinction row
+// B10 drew when it separated the mechanism from the data.
+constexpr std::array<float, 2> kJembeBeatSubdivision = {1.06f, 0.94f};
+
+} // namespace profiles
+
 GrooveState makeFourOnTheFloor() {
     GrooveState s{};
     s.activeLaneCount = 4;
@@ -569,6 +620,12 @@ GrooveState makeBalkanAksak() {
     davul.noteDuration = 0.2f;
     davul.cellCount = 3;
     davul.cellSizes = {2, 2, 3};
+    // M003 S02 (EC09): the played long beat, not the notated one. Swing stays
+    // at 0 -- Rule 6 forbids it on aksak, and its reason is that swing
+    // displaces the quick pulses the cells are counted from.
+    davul.profileCount = 3;
+    for (size_t i = 0; i < profiles::kAksakLongBeat223.size(); ++i)
+        davul.subdivisionProfile[i] = profiles::kAksakLongBeat223[i];
 
     auto& rim = s.lanes[1];
     rim.id = 1;
@@ -580,6 +637,11 @@ GrooveState makeBalkanAksak() {
     rim.probability = 1.0f;
     rim.cellCount = 3;
     rim.cellSizes = {2, 2, 3};
+    // Rule 1: all lanes agree on where the cell boundaries fall, so the rim
+    // carries the same long beat as the davul.
+    rim.profileCount = 3;
+    for (size_t i = 0; i < profiles::kAksakLongBeat223.size(); ++i)
+        rim.subdivisionProfile[i] = profiles::kAksakLongBeat223[i];
 
     auto& zurna = s.lanes[2];
     zurna.id = 2;
@@ -1056,6 +1118,12 @@ GrooveState makeMandingDjembe() {
     djembe.baseVelocity = 95;
     djembe.probability = 0.9f;
     djembe.ghostFloor = 55;
+
+    // M003 S03 (EC10): the measured jembe subdivision. Every lane shares it --
+    // the ensemble's feel is a property of the meter, not of one drum -- and it
+    // replaces nothing, because these lanes were dead-on the even grid.
+    for (int lane = 0; lane < 3; ++lane)
+        profiles::applyProfile(s.lanes[static_cast<size_t>(lane)], profiles::kJembeBeatSubdivision, 8);
 
     // M070 S04: metronomic tradition — no humanize (kept dead-on the grid).
     return s;
@@ -1939,7 +2007,8 @@ GrooveState makeSambaBatucada() {
     tamborim.baseVelocity = 90;
     tamborim.probability = 0.95f;
     tamborim.ghostFloor = 50;
-    tamborim.swingAmount = 0.25f;
+    // M003 S01 (EC08): the profile replaces the swing approximation Rule 6 admits to.
+    profiles::applyProfile(tamborim, profiles::kSambaLongShortShortLong, 16);
 
     auto& agogo = s.lanes[2];
     agogo.id = 2;
@@ -1950,7 +2019,8 @@ GrooveState makeSambaBatucada() {
     agogo.baseVelocity = 85;
     agogo.probability = 0.9f;
     agogo.ghostFloor = 40;
-    agogo.swingAmount = 0.20f;
+    // M003 S01 (EC08): the profile replaces the swing approximation Rule 6 admits to.
+    profiles::applyProfile(agogo, profiles::kSambaLongShortShortLong, 16);
 
     auto& repinique = s.lanes[3];
     repinique.id = 3;
@@ -1973,6 +2043,8 @@ GrooveState makeSambaBatucada() {
     caixa.baseVelocity = 70;
     caixa.probability = 0.9f;
     caixa.ghostFloor = 55;
+    // M003 S01 (EC08): the profile replaces the swing approximation Rule 6 admits to.
+    profiles::applyProfile(caixa, profiles::kSambaLongShortShortLong, 16);
     caixa.swingAmount = 0.25f;
 
     s.macros.swing = 0.2f;

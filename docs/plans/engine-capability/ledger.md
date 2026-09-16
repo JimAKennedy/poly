@@ -182,82 +182,89 @@ predicate can be made to fail.
 jembe feel, and the long beats of additive meters — instead of approximating them
 with swing, and the guide stops admitting the approximation.
 **Branch:** milestone/M003-non-isochronous-timing
-**Status:** planned
+**Status:** done
 **Demo:** A samba patch plays its long-short-short-long feel from a profile
 rather than from swing plus offsets; a Balkan patch's long beat carries its own
 subdivision.
 
 ### Slice M003/S01 — Subdivision profiles
 
+**Plan:** M003-S01-plan.md
 **Validation:** format, unit, engine-isolation, rt-safety
 **Evidence:** evidence/M003-S01.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] A lane can play a non-isochronous subdivision profile rather than an even grid
-- [ ] A profile is expressible in a preset and reaches `site/src/generated/presets.json`
-- [ ] `renderRange()` gains no allocation, lock or blocking call
-- [ ] The engine builds and passes its tests with no VST3 SDK present
+- [x] A lane can play a non-isochronous subdivision profile rather than an even grid
+- [x] A profile is expressible in a preset and reaches `site/src/generated/presets.json`
+- [x] `renderRange()` gains no allocation, lock or blocking call
+- [x] The engine builds and passes its tests with no VST3 SDK present
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| EC08 | `theory-brazilian` Rule 6 ends "until subdivision profiles ship, use light swing (0.15–0.25) plus small per-lane offsets as an admitted approximation" — issue #150. Swing displaces only alternate notes, which is why the guide calls the workaround an approximation in its own voice | `prose` | `engine/`, `engine/src/presets.cpp` | Engine tests assert a profiled lane's onset times differ from both the isochronous grid and the swung grid, and are stable under the determinism golden | `open` |
+| EC08 | `theory-brazilian` Rule 6 ends "until subdivision profiles ship, use light swing (0.15–0.25) plus small per-lane offsets as an admitted approximation" — issue #150. Swing displaces only alternate notes, which is why the guide calls the workaround an approximation in its own voice | `prose` | `engine/`, `engine/src/presets.cpp` | Engine tests assert a profiled lane's onset times differ from both the isochronous grid and the swung grid, and are stable under the determinism golden | `done` |
 
 ### Slice M003/S02 — Cell-aware aksak swing
 
-**Validation:** format, unit, engine-isolation, rt-safety
+**Plan:** M003-S02-plan.md
+**Validation:** format, unit, engine-isolation, rt-safety, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M003-S02.md
-**Status:** open
+**Status:** done
+**Depends:** M003/S01
 
 **Definition of Done**
 
-- [ ] Swing on an additive meter applies per cell rather than to alternate notes
+- [x] Swing on an additive meter applies per cell rather than to alternate notes
       across the bar
-- [ ] A Balkan preset's long beat carries the feel the guide describes
-- [ ] `renderRange()` gains no allocation, lock or blocking call
+- [x] A Balkan preset's long beat carries the feel the guide describes
+- [x] `renderRange()` gains no allocation, lock or blocking call
+- [x] `theory-balkan` Rule 8 no longer says the long beat is unreproducible on
+      the grid
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| EC09 | Issue #157, which the theory-audit ledger names as deferred: cell-aware swing and long-beat feel for additive (aksak) meters. F32 locked the Balkan long-beat honesty note; the engine change stayed on the tracker | `tracker` | `engine/`, `engine/src/presets.cpp` | Engine tests assert swing applied to a 2+2+3 cell structure displaces within cells rather than across the bar, and that the long cell's internal division differs from the short cells' | `open` |
+| EC09 | Issue #157, which the theory-audit ledger names as deferred: cell-aware swing and long-beat feel for additive (aksak) meters. F32 locked the Balkan long-beat honesty note; the engine change stayed on the tracker | `tracker` | `engine/`, `engine/src/presets.cpp` | Engine tests assert swing applied to a 2+2+3 cell structure displaces within cells rather than across the bar, and that the long cell's internal division differs from the short cells' | `done` |
 
 ### Slice M003/S03 — The measured jembe profile
 
+**Plan:** M003-S03-plan.md
 **Validation:** format, unit, site-unit, doc-conformance
 **Evidence:** evidence/M003-S03.md
-**Status:** open
+**Status:** done
 **Depends:** M003/S01
 
 **Definition of Done**
 
-- [ ] A measured jembe profile ships as data, with its source cited in the guide's
+- [x] A measured jembe profile ships as data, with its source cited in the guide's
       bibliography at a tier the citation check accepts
-- [ ] `theory-sub-saharan-africa` construction step 5 no longer says Poly ships no
+- [x] `theory-sub-saharan-africa` construction step 5 no longer says Poly ships no
       measured profile
-- [ ] The profile's values are reachable from a preset
+- [x] The profile's values are reachable from a preset
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| EC10 | `theory-sub-saharan-africa` construction step 5 says "what Poly does not ship is a measured jembe profile to put in them". Row B10 established the distinction that scopes this: the mechanism exists (`microTimingMs`, exposed through the WebUI's micro-timing bars, clamped to ±20 ms) and the data does not — content to author, not code to write | `prose` | `engine/src/presets.cpp`, `theory-sub-saharan-africa.mdx`, `appendix-references.mdx` | A site case asserts the construction step no longer disclaims the profile and that its cited source resolves to a bibliography entry at an accepted tier | `open` |
+| EC10 | `theory-sub-saharan-africa` construction step 5 says "what Poly does not ship is a measured jembe profile to put in them". Row B10 established the distinction that scopes this: the mechanism exists (`microTimingMs`, exposed through the WebUI's micro-timing bars, clamped to ±20 ms) and the data does not — content to author, not code to write | `prose` | `engine/src/presets.cpp`, `theory-sub-saharan-africa.mdx`, `appendix-references.mdx` | A site case asserts the construction step no longer disclaims the profile and that its cited source resolves to a bibliography entry at an accepted tier | `done` |
 
 ### Slice M003/S04 — The guide catches up
 
+**Plan:** M003-S04-plan.md
 **Validation:** format, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M003-S04.md
-**Status:** open
+**Status:** done
 **Depends:** M003/S01
 
 **Definition of Done**
 
-- [ ] `theory-brazilian`'s patch table carries a `Timing` column expressing the
+- [x] `theory-brazilian`'s patch table carries a `Timing` column expressing the
       per-beat profile
-- [ ] Rule 6 reads `checkable`, with a predicate that has been shown to fail when
+- [x] Rule 6 reads `checkable`, with a predicate that has been shown to fail when
       the profile is flattened
-- [ ] The "until subdivision profiles ship" sentence is gone from the page
+- [x] The "until subdivision profiles ship" sentence is gone from the page
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| EC11 | `theory-brazilian` Rule 6 (the long-short-short-long feel) is the one `absentColumn` verdict that is not a docs-only fix: the table has no `Timing` column, and a per-beat profile is not a single timing offset, so the column cannot be filled until EC08 ships | `column` | `theory-brazilian.mdx`, `site/tests/theory-patch-conformance.test.mjs` | The rule's triage entry flips to `checkable`; the predicate is mutation-proved by flattening the profile to an even grid and watching the named case fail | `open` |
+| EC11 | `theory-brazilian` Rule 6 (the long-short-short-long feel) is the one `absentColumn` verdict that is not a docs-only fix: the table has no `Timing` column, and a per-beat profile is not a single timing offset, so the column cannot be filled until EC08 ships | `column` | `theory-brazilian.mdx`, `site/tests/theory-patch-conformance.test.mjs` | The rule's triage entry flips to `checkable`; the predicate is mutation-proved by flattening the profile to an even grid and watching the named case fail | `done` |
 
 ---
 
@@ -697,7 +704,13 @@ Three slice-level dependencies are real:
 - **M003/S04 depends on M003/S01.** The `Timing` column reports a profile, so
   there is nothing to put in it until profiles exist.
 
-M003/S02 depends on nothing and may land before or after M003/S01.
+**M003/S02 depends on M003/S01**, which this ledger originally denied. An
+additive lane has one step per cell — `prepareLaneContext` sets `stepsInCycle`
+to the cell count — so a `{2,2,3}` davul has three steps and nothing inside a
+cell to divide. Fixing swing's `(cycleStep % 2)` predicate satisfies the slice's
+first definition-of-done clause and leaves the second ("the long cell's internal
+division differs from the short cells'") unsatisfiable. The correction is
+recorded in `M003-decisions.md` rather than applied silently.
 
 **M004 carries no technical dependency at all.** It is sequenced last because
 that is where it was asked for, not because anything blocks it: DAW regression
@@ -740,6 +753,13 @@ recorded where a reader will see it; the graph stays honest.
 Recorded so a later pass does not rediscover them as omissions. The source
 document excluded each, and its reasoning is adopted here.
 
+- **Per-step subdivision profile editing in the WebUI** —
+  [#305](https://github.com/JimAKennedy/poly/issues/305). M003/S01 ships the
+  profile as state-only, set from presets: 64 values per lane is not a parameter
+  family, and the WebUI's edit path is parameter-ID based, so the editing
+  surface needs a bridge-schema route of its own plus the `webui-e2e` work that
+  follows. A milestone rather than a slice, and not needed for M003's
+  deliverable.
 - **CI and tooling debt** — [#282](https://github.com/JimAKennedy/poly/issues/282),
   [#272](https://github.com/JimAKennedy/poly/issues/272),
   [#274](https://github.com/JimAKennedy/poly/issues/274),

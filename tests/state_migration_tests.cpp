@@ -484,3 +484,47 @@ TEST(StateMigration, PreV19StateDefaultsKotekanModeToStrictComplement) {
             << "a pre-v19 state must load with no structural overlap, lane " << i;
     }
 }
+
+// M003/S01 (EC08). A profile must survive a round trip, and a pre-v20 state
+// must load as the even grid it played -- profileCount == 0 -- rather than as
+// whatever the uninitialised array happens to hold.
+TEST(StateMigration, SubdivisionProfileRoundTrips) {
+    SceneState authored{};
+    for (int i = 0; i < kMaxLanes; ++i) {
+        auto& a = authored.sceneA.lanes[static_cast<size_t>(i)];
+        a.profileCount = 4;
+        a.subdivisionProfile[0] = 1.1f + static_cast<float>(i) * 0.01f;
+        a.subdivisionProfile[1] = 0.9f;
+        a.subdivisionProfile[2] = 0.95f;
+        a.subdivisionProfile[3] = 1.05f;
+    }
+
+    const auto blob = serializeSceneAsVersion(authored, kSubdivisionProfileStateVersion);
+    const SceneState loaded = deserializeScene(blob);
+
+    for (int i = 0; i < kMaxLanes; ++i) {
+        const auto& l = loaded.sceneA.lanes[static_cast<size_t>(i)];
+        EXPECT_EQ(l.profileCount, 4) << "lane " << i << " profileCount must round-trip";
+        EXPECT_FLOAT_EQ(l.subdivisionProfile[0], 1.1f + static_cast<float>(i) * 0.01f)
+            << "lane " << i << " profile entry 0 must round-trip";
+        EXPECT_FLOAT_EQ(l.subdivisionProfile[3], 1.05f) << "lane " << i << " profile entry 3 must round-trip";
+    }
+}
+
+TEST(StateMigration, PreV20StateDefaultsToTheEvenGrid) {
+    SceneState authored{};
+    for (int i = 0; i < kMaxLanes; ++i) {
+        auto& a = authored.sceneA.lanes[static_cast<size_t>(i)];
+        a.profileCount = 4;
+        a.subdivisionProfile[0] = 1.1f;
+        a.subdivisionProfile[1] = 0.9f;
+    }
+
+    const auto v19Blob = serializeSceneAsVersion(authored, kSubdivisionProfileStateVersion - 1);
+    const SceneState loaded = deserializeScene(v19Blob);
+
+    for (int i = 0; i < kMaxLanes; ++i) {
+        EXPECT_EQ(loaded.sceneA.lanes[static_cast<size_t>(i)].profileCount, 0)
+            << "lane " << i << ": a pre-v20 state must load as the even grid";
+    }
+}

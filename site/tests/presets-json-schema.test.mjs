@@ -59,8 +59,8 @@ test('presets.json — schema shape', async () => {
   );
   assert.equal(
     parsed.schemaVersion,
-    5,
-    `schemaVersion=${parsed.schemaVersion}, expected 5 (M002/S01 kotekan mode)`,
+    6,
+    `schemaVersion=${parsed.schemaVersion}, expected 6 (M003/S01 subdivision profile)`,
   );
 
   assert.ok(

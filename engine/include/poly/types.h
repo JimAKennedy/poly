@@ -251,11 +251,26 @@ struct LaneConfig {
     // and a style choice does not want an automation lane. Defaults reproduce
     // the pre-M002 strict complement exactly.
     KotekanMode kotekanMode = KotekanMode::NyogCag;
-    int kotekanOverlap = 0;                     // structural steps struck by both parts; 0 = strict
-    int fillEveryNBars = 0;                     // 0 = no bar-gated fill; N>0 = play off-pattern fill on bars whose
-                                                // absolute bar index is a multiple of N (deterministic, PPQ-derived)
-    int cellCount = 0;                          // 0 = equal cells (standard Euclidean); >0 = additive/aksak
-    std::array<int, kMaxSteps> cellSizes{};     // subdivision units per cell; sum = total cycle length
+    int kotekanOverlap = 0;                 // structural steps struck by both parts; 0 = strict
+    int fillEveryNBars = 0;                 // 0 = no bar-gated fill; N>0 = play off-pattern fill on bars whose
+                                            // absolute bar index is a multiple of N (deterministic, PPQ-derived)
+    int cellCount = 0;                      // 0 = equal cells (standard Euclidean); >0 = additive/aksak
+    std::array<int, kMaxSteps> cellSizes{}; // subdivision units per cell; sum = total cycle length
+    // M003 S01 (EC08). Non-isochronous subdivision: each entry is a step's
+    // duration as a multiple of the base step. profileCount == 0 takes the
+    // existing branch untouched, so every pre-M003 patch is byte-identical.
+    // The profile is normalised so the cycle keeps the length it would have had
+    // evenly -- it states distribution, never length -- and takes precedence
+    // over cellSizes, which are structure rather than feel.
+    std::array<float, kMaxSteps> subdivisionProfile{};
+    int profileCount = 0;
+    // M003 S02 (EC09). A grouping over the lane's existing steps, for feel.
+    // Distinct from cellCount/cellSizes, which replace the steps with one per
+    // cell: a lane with swingCellSizes {2,2,3} still has seven steps, and swing
+    // displaces within each cell rather than across the bar. 0 = no grouping,
+    // which leaves every swung lane keying off (cycleStep % 2) as before.
+    int swingCellCount = 0;
+    std::array<int, kMaxSteps> swingCellSizes{};
     bool timeline = false;                      // timeline mode: use fixedPattern, immune to macros
     std::array<bool, kMaxSteps> fixedPattern{}; // per-step on/off for timeline mode
     // timeline mode pattern length: 0 = use cycle.steps; >0 = explicit length that governs both editable slot count
@@ -298,16 +313,111 @@ struct AdditiveCellInfo {
 
 inline AdditiveCellInfo computeAdditiveCells(const LaneConfig& cfg) {
     AdditiveCellInfo info{};
+    double basePpq = 4.0 / cfg.cycle.subdivision;
+
+    // M003 S01 (EC08). A subdivision profile wins over integer cells: both
+    // reaching here needs a stated winner, and combining two non-isochronies
+    // silently is what nobody can reason about later.
+    if (cfg.profileCount > 0) {
+        int count = cfg.profileCount < kMaxSteps ? cfg.profileCount : kMaxSteps;
+        double sum = 0.0;
+        for (int i = 0; i < count; ++i)
+            sum += static_cast<double>(cfg.subdivisionProfile[i]);
+        // A profile summing to nothing is not a feel, and dividing by it would
+        // put infinities into the timing path.
+        if (sum <= 0.0)
+            return info;
+        // M003 S02: cells set length, the profile sets distribution. A lane
+        // declaring the same number of cells as profile entries keeps the cycle
+        // length its cells imply, and the profile supplies the proportions
+        // within it -- which is how an aksak long beat is compressed below 3:2
+        // without shortening the bar. When the counts disagree the profile
+        // cannot be describing those cells, so it governs alone and the cycle
+        // is profileCount steps long, as for any non-additive lane.
+        double targetUnits = static_cast<double>(count);
+        if (cfg.cellCount == count) {
+            int cellTotal = 0;
+            bool cellsUsable = true;
+            for (int i = 0; i < count; ++i) {
+                if (cfg.cellSizes[static_cast<size_t>(i)] <= 0) {
+                    cellsUsable = false;
+                    break;
+                }
+                cellTotal += cfg.cellSizes[static_cast<size_t>(i)];
+            }
+            if (cellsUsable && cellTotal > 0)
+                targetUnits = static_cast<double>(cellTotal);
+        }
+        double scale = sum / targetUnits;
+        info.count = count;
+        double accum = 0.0;
+        for (int i = 0; i < count; ++i) {
+            info.cumPpq[i] = accum;
+            accum += (static_cast<double>(cfg.subdivisionProfile[i]) / scale) * basePpq;
+        }
+        info.totalPpq = accum;
+        return info;
+    }
+
     if (cfg.cellCount <= 0)
         return info;
     info.count = cfg.cellCount;
-    double basePpq = 4.0 / cfg.cycle.subdivision;
     double accum = 0.0;
     for (int i = 0; i < cfg.cellCount && i < kMaxSteps; ++i) {
         info.cumPpq[i] = accum;
         accum += static_cast<double>(cfg.cellSizes[i]) * basePpq;
     }
     info.totalPpq = accum;
+    return info;
+}
+
+// --- Swing cell grouping (M003 S02, EC09) ---
+
+struct SwingCellInfo {
+    bool valid = false;
+    int cell = 0;
+    int positionInCell = 0;
+    int cellSize = 0;
+    // Issue #157 specifies the displaced pulse as "the final subdivision of
+    // each 2- or 3-group", not the odd-parity one. On 2+2+3 the two readings
+    // coincide -- both give steps 1, 3, 5 -- so an implementation of the wrong
+    // one looks correct against the rachenitsa and diverges on 2+3+2.
+    [[nodiscard]] bool isCellTail() const { return valid && positionInCell == cellSize - 1; }
+};
+
+// Map a step to the cell it falls in and its position within that cell.
+// Returns an invalid result -- never a guess -- when the lane declares no
+// grouping, when the sizes do not account for exactly stepsInCycle steps, or
+// when the step is out of range. A grouping that does not add up is a
+// configuration error, not a licence to read past the end of the array.
+inline SwingCellInfo swingCellFor(const LaneConfig& cfg, int step, int stepsInCycle) {
+    SwingCellInfo info{};
+    if (cfg.swingCellCount <= 0 || cfg.swingCellCount > kMaxSteps)
+        return info;
+    if (step < 0 || stepsInCycle <= 0 || step >= stepsInCycle)
+        return info;
+
+    int total = 0;
+    for (int c = 0; c < cfg.swingCellCount; ++c) {
+        if (cfg.swingCellSizes[static_cast<size_t>(c)] <= 0)
+            return info;
+        total += cfg.swingCellSizes[static_cast<size_t>(c)];
+    }
+    if (total != stepsInCycle)
+        return info;
+
+    int remaining = step;
+    for (int c = 0; c < cfg.swingCellCount; ++c) {
+        const int size = cfg.swingCellSizes[static_cast<size_t>(c)];
+        if (remaining < size) {
+            info.valid = true;
+            info.cell = c;
+            info.positionInCell = remaining;
+            info.cellSize = size;
+            return info;
+        }
+        remaining -= size;
+    }
     return info;
 }
 

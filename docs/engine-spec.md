@@ -129,6 +129,41 @@ Distributes `k` pulses (hits) across `n` steps as evenly as possible using a Bre
 - `euclidean(3, 8, 0, out)` → Cuban tresillo `[x . . x . . x .]`
 - `euclidean(5, 8, 0, out)` → `[x . x x . x x .]` cinquillo
 
+### Non-isochronous subdivision (M003)
+
+A lane's steps are evenly spaced unless it says otherwise. Two fields change
+that, and they answer different questions:
+
+| Field | Question | Type |
+|---|---|---|
+| `cellCount` / `cellSizes` | how long is each cell? | `int` units |
+| `profileCount` / `subdivisionProfile` | how are the units distributed? | `float` ratios |
+
+`computeAdditiveCells()` turns whichever is present into cumulative PPQ
+positions, so `prepareLaneContext` has one path for both.
+
+- **Profile only.** The cycle is `profileCount` steps long and the profile is
+  normalised to that length: a profile states distribution, never length, so
+  scaling every entry changes nothing. Samba's long-short-short-long feel is
+  this case — `theory-brazilian` Rule 6, which swing cannot express because
+  swing displaces only alternate notes.
+- **Cells only.** Today's aksak: integer units per cell, `{2,2,3}` for a
+  rachenitsa.
+- **Both, same count.** The cells set the length and the profile the
+  distribution within it. This is how `theory-balkan` Rule 8's long beat runs
+  slightly under 3:2 without shortening the bar.
+- **Both, different counts.** The profile cannot be describing those cells, so
+  it governs alone.
+
+`swingCellCount` / `swingCellSizes` are a third thing again: a grouping over a
+lane's *existing* steps, so swing displaces the final subdivision of each cell
+rather than alternate steps across the bar. Unlike `cellCount` they do not
+change how many steps the lane has.
+
+All four are state-only, serialised from version 20, and defaulted so that a
+lane setting none of them behaves exactly as it did before M003. Per-step
+editing in the WebUI is [#305](https://github.com/JimAKennedy/poly/issues/305).
+
 The pattern is recomputed from `LaneConfig` each call — no cached state. Timeline-mode lanes (`timeline=true`) substitute `fixedPattern` for the Euclidean grid, and kotekan-paired lanes substitute the complement of a source lane's pattern.
 
 A lane with `kotekanSourceLane >= 0` derives its pattern from that source lane
@@ -322,7 +357,7 @@ Under `SceneSelect::Morph`, the render path materializes an interpolated `Groove
 | envelopeCount | int | 0 | Active envelope count |
 <!-- END GENERATED: laneconfig -->
 
-The table above is generated from `engine/include/poly/types.h` by `scripts/generate-param-docs.mjs` (M048 S05). Do not hand-edit — CI's `jk-standards` generated-freshness check rejects any divergence. Additional `LaneConfig` fields not yet exposed via the generator: `midiChannel`, `swingAmount`, `noteDuration`, `phraseLength`/`phraseGap`/`phraseOffset`, `mutationRate`, `driftRate`, `timingOffsetMs`, `syncopationOffset`, `tempoMultiplier`, `kotekanSourceLane`, `cellCount`/`cellSizes`, `timeline`/`fixedPattern`/`fixedPatternLength`, `microTimingMs`, `constraints`.
+The table above is generated from `engine/include/poly/types.h` by `scripts/generate-param-docs.mjs` (M048 S05). Do not hand-edit — CI's `jk-standards` generated-freshness check rejects any divergence. Additional `LaneConfig` fields not yet exposed via the generator: `midiChannel`, `swingAmount`, `noteDuration`, `phraseLength`/`phraseGap`/`phraseOffset`, `mutationRate`, `driftRate`, `timingOffsetMs`, `syncopationOffset`, `tempoMultiplier`, `kotekanSourceLane`, `cellCount`/`cellSizes`, `profileCount`/`subdivisionProfile`, `swingCellCount`/`swingCellSizes`, `timeline`/`fixedPattern`/`fixedPatternLength`, `microTimingMs`, `constraints`.
 
 ### MacroValues (Six Musical-Intent Controls)
 

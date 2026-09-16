@@ -6,7 +6,9 @@
 // source of truth for factory preset lane data so the card runtime, the WASM
 // host, the alias map, and the chapter documentation cannot drift.
 //
-// Schema (schemaVersion 5 — M002 S01 added per-lane "kotekanMode"/"kotekanOverlap"
+// Schema (schemaVersion 6 — M003 S01 added per-lane "profileCount"/"subdivisionProfile"
+// for lanes playing a non-isochronous subdivision;
+// schemaVersion 5 — M002 S01 added per-lane "kotekanMode"/"kotekanOverlap"
 // for lanes deriving a complement;
 // schemaVersion 4 — M005 S02 added per-lane "onsets" for timeline lanes;
 // schemaVersion 3 — M071 S04 added the D026 parameter-table fields:
@@ -15,7 +17,7 @@
 // fixedPatternLength/kotekanSourceLane/phrase{Length,Gap,Offset}/cellCount/
 // cellSizes, so the appendix-presets tables render from engine truth):
 // {
-//   "schemaVersion": 5,
+//   "schemaVersion": 6,
 //   "presetCount": 43,
 //   "categories": ["Foundational", "Minimalist / Compositional", ...],  // ordered
 //   "presets": [
@@ -228,6 +230,19 @@ void writeLane(std::ostringstream& out, int laneIndex, const poly::LaneConfig& l
             modeName = "empat";
         out << ",\"kotekanMode\":\"" << modeName << "\",\"kotekanOverlap\":" << lane.kotekanOverlap;
     }
+    // schemaVersion 6 (M003 S01): a lane playing a non-isochronous subdivision
+    // carries its profile. A lane on the even grid emits neither field, so the
+    // absence is what says the lane is isochronous -- the same convention
+    // "onsets" uses for timeline lanes.
+    if (lane.profileCount > 0) {
+        out << ",\"profileCount\":" << lane.profileCount << ",\"subdivisionProfile\":[";
+        for (int i = 0; i < lane.profileCount && i < poly::kMaxSteps; ++i) {
+            if (i > 0)
+                out << ",";
+            writeFloat(out, lane.subdivisionProfile[static_cast<size_t>(i)]);
+        }
+        out << "]";
+    }
     out << ",\"phraseLength\":";
     writeFloat(out, lane.phraseLength);
     out << ",\"phraseGap\":";
@@ -294,7 +309,7 @@ void writePreset(std::ostringstream& out, int index) {
 int main() {
     std::ostringstream out;
     out << "{\n"
-        << "  \"schemaVersion\":5,\n"
+        << "  \"schemaVersion\":6,\n"
         << "  \"presetCount\":" << poly::kFactoryPresetCount << ",\n"
         << "  \"categories\":[";
     for (int i = 0; i < poly::kFactoryPresetCategoryCount; ++i) {

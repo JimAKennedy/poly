@@ -53,12 +53,10 @@ contributors who want to dig into the engine.
 | Issue | Title | Labels |
 |-------|-------|--------|
 | [#158](https://github.com/JimAKennedy/poly/issues/158) | Metric-position-aware ghost note placement (funk grammar) | `enhancement` |
-| [#157](https://github.com/JimAKennedy/poly/issues/157) | Cell-aware swing and long-beat feel for additive (aksak) meters | `enhancement` |
 | [#155](https://github.com/JimAKennedy/poly/issues/155) | Coupled call-and-response phrase gating (`responseSourceLane`) | `enhancement` |
 | [#154](https://github.com/JimAKennedy/poly/issues/154) | Phrase-position-aware fills and a tihai generator | `enhancement` |
 | [#152](https://github.com/JimAKennedy/poly/issues/152) | Timeline-aware constraint: clave/bell attraction-avoidance mask for mutation and fills | `enhancement` |
 | [#151](https://github.com/JimAKennedy/poly/issues/151) | Correlated (1/f) humanize instead of white-noise timing jitter | `enhancement` |
-| [#150](https://github.com/JimAKennedy/poly/issues/150) | Non-isochronous subdivision profiles (samba/jembe feel templates) | `enhancement` |
 | [#149](https://github.com/JimAKennedy/poly/issues/149) | Tempo-dependent, wider-range swing (jazz ratios beyond 2:1) | `enhancement` |
 
 ## Finding something to work on

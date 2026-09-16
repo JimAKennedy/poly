@@ -26,7 +26,7 @@ The feel layer is unusually well measured: Brazilian sixteenths follow a systema
 
 5. **Syncopation is around the beat, not against the meter.** Brazilian syncope displaces emphasis to the sixteenth *before or after* the beat (the characteristic tied-note figures), while the surdo floor keeps the beat itself unambiguous. Free polymeter over the samba grid is not idiomatic; all voices share the 16-pulse frame (same-grid layering, as in the Balkan and Manding models).
 
-6. **The feel is long-short-short-long.** Within each beat's four sixteenths: first slightly long, middle two compressed, fourth slightly long again, with the profile's depth varying by instrument ([Gerischer 2006](/appendix-references/#fr-gerischer-2006); [Naveda et al. 2011](/appendix-references/#fr-naveda-2011)). It is a *timing* signature, mild enough that naive listeners call it "straight but alive." Swing parameters approximate it poorly (they displace only alternate notes); until subdivision profiles ship, use light swing (0.15–0.25) plus small per-lane offsets as an admitted approximation.
+6. **The feel is long-short-short-long.** Within each beat's four sixteenths: first slightly long, middle two compressed, fourth slightly long again, with the profile's depth varying by instrument ([Gerischer 2006](/appendix-references/#fr-gerischer-2006); [Naveda et al. 2011](/appendix-references/#fr-naveda-2011)). It is a *timing* signature, mild enough that naive listeners call it "straight but alive." Swing parameters approximate it poorly — they displace only alternate notes, where the profile is a distribution across all four. Poly expresses it as a per-lane **subdivision profile**: the ratios themselves, normalised so the bar keeps its length, which is why they survive a tempo change where a fixed millisecond offset would not.
 
 7. **Bossa is the system distilled, not simplified.** One displaced cell (the E(5,16) bass figure, or the guitar's thumb-and-fingers reduction of surdo + telecoteco) against an even pulse, at whisper dynamics. The rules survive the reduction: beat-2 weight in the thumb, contratempo lean in the upper voice, continuity in the ride/brush stratum. What disappears is mass, not structure.
 
@@ -37,17 +37,17 @@ The feel layer is unusually well measured: Brazilian sixteenths follow a systema
 3. **Caixa carpet.** 16 steps, 13–16 hits, low velocity, ghost 50+, accent mask carrying the internal figure (Rule 3).
 4. **Colour voices.** Agogô (E(5,16) rotated), chocalho (dense, quiet), each on the shared 16-grid (Rule 5).
 5. **The commander.** Repinique lane with the mutation/fill budget and phrase gating for calls (Rule 4).
-6. **Feel.** Swing 0.2 ± per-lane offsets as the Rule 6 approximation; Humanize ≤ 0.2.
+6. **Feel.** A subdivision profile of 1.08 0.94 0.94 1.04 on the 1/16 lanes — the Rule 6 shape itself, repeated across each beat's four sixteenths — with Swing at 0 on those lanes, because the profile does what the swing was approximating. The 1/8 surdo and the repinique keep a light swing; Rule 6 is a statement about the sixteenths within a beat. Humanize ≤ 0.2.
 
 <PolyPatch title="Rule-Checked Batucada">
 
-| Lane | Role | Steps | Hits | Rotation | Subdivision | Velocity | Ghost | Mutation | Swing |
-|------|------|-------|------|----------|-------------|----------|-------|----------|-------|
-| 1 | Surdo pair (2 heavy) | 8 | 2 | 0 | 1/8 | 115 | 0 | 0% | 0.15 |
-| 2 | Tamborim telecoteco | 16 | 7 | 2 | 1/16 | 90 | 0 | 0% | 0.20 |
-| 3 | Caixa carpet | 16 | 14 | 0 | 1/16 | 65 | 55 | 5% | 0.25 |
-| 4 | Agogô | 16 | 5 | 0 | 1/16 | 80 | 30 | 5% | 0.20 |
-| 5 | Repinique (commander) | 16 | 6 | 3 | 1/16 | 95 | 40 | 25% | 0.20 |
+| Lane | Role | Steps | Hits | Rotation | Subdivision | Velocity | Ghost | Mutation | Swing | Timing |
+|------|------|-------|------|----------|-------------|----------|-------|----------|-------|--------|
+| 1 | Surdo pair (2 heavy) | 8 | 2 | 0 | 1/8 | 115 | 0 | 0% | 0.15 | — |
+| 2 | Tamborim telecoteco | 16 | 7 | 2 | 1/16 | 90 | 0 | 0% | 0 | 1.08 0.94 0.94 1.04 |
+| 3 | Caixa carpet | 16 | 14 | 0 | 1/16 | 65 | 55 | 5% | 0 | 1.08 0.94 0.94 1.04 |
+| 4 | Agogô | 16 | 5 | 0 | 1/16 | 80 | 30 | 5% | 0 | 1.08 0.94 0.94 1.04 |
+| 5 | Repinique (commander) | 16 | 6 | 3 | 1/16 | 95 | 40 | 25% | 0.20 | — |
 
 </PolyPatch>
 

@@ -160,6 +160,21 @@ const CLAIMS = [
     present: ['micro-timing'],
   },
   {
+    id: 'M003-S03-jembe-profile',
+    file: 'theory-sub-saharan-africa.mdx',
+    rule:
+      'ledger EC10. Construction step 5 said "what Poly does not ship is a ' +
+      'measured jembe profile to put in them", and pointed at per-step ' +
+      'micro-timing as the place a profile goes. M003/S03 ships the profile, ' +
+      'and micro-timing was the wrong mechanism for it anyway: it is absolute ' +
+      'milliseconds clamped to 20, so a ratio encoded there holds only at the ' +
+      'tempo it was measured at, while the same paragraph calls the profile ' +
+      '"particular ratios, stable across tempi"',
+    forbidden: ['what Poly does not ship is a measured jembe profile'],
+    present: ['subdivision profile'],
+    presentRegex: [/#fr-polak-2010/],
+  },
+  {
     id: 'S04-F32',
     file: 'theory-balkan.mdx',
     rule:
@@ -171,7 +186,16 @@ const CLAIMS = [
       'the phrase was deleted and the case watched to fail',
     // 'systematic, style-defining tendency' rather than bare 'systematic': the
     // word alone is too weak to prove Rule 8 in particular survived.
-    present: ['systematic, style-defining tendency', 'the grid version is the'],
+    //
+    // M003/S02 replaced the second phrase. It used to be 'the grid version is
+    // the', which locked the tail of a disclaimer -- "until Poly exposes a
+    // long-beat ratio control, this is unreproducible on the grid". Poly now
+    // exposes it and the shipped Balkan preset uses it, so that sentence was
+    // false and went. The honesty F32 actually locks -- the long beat is
+    // measurably under 3:2, a tendency rather than sloppiness, cited to
+    // Goldberg -- is unchanged, and the replacement phrase is the concrete
+    // form of it: the ratio the preset plays.
+    present: ['systematic, style-defining tendency', '2.85:2 rather than 3:2'],
     presentRegex: [/#fr-goldberg-2015/],
   },
   {

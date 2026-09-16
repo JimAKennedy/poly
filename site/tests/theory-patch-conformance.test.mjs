@@ -1355,6 +1355,46 @@ CHECKLIST.push({
   ],
 });
 
+CHECKLIST.push({
+  page: 'theory-brazilian.mdx',
+  patch: 'Rule-Checked Batucada',
+  rules: [
+    {
+      id: 'bra-lssl-profile',
+      description: 'Rule 6: within each beat, long-short-short-long across the four sixteenths',
+      check: ({ rows }) => {
+        const sixteenths = rows.filter((r) => String(r.cell.Subdivision ?? '').trim() === '1/16');
+        if (!sixteenths.length) return 'no 1/16 lane carries the beat-level feel Rule 6 describes';
+
+        const profiled = sixteenths.filter((r) => String(r.cell.Timing ?? '').trim() !== '—');
+        if (!profiled.length)
+          return 'no 1/16 lane carries a Timing profile; Rule 6 is a distribution across the four sixteenths';
+
+        for (const row of profiled) {
+          const parts = String(row.cell.Timing).trim().split(/\s+/).map(Number);
+          if (parts.length !== 4 || parts.some((n) => !Number.isFinite(n)))
+            return `${row.role}: Timing must be four numbers, the beat's four sixteenths`;
+          const [first, second, third, fourth] = parts;
+          // The shape the rule states, and nothing weaker: swing would give a
+          // two-value alternation, which this ordering rejects.
+          if (!(first > second)) return `${row.role}: the first sixteenth must be long (${first} vs ${second})`;
+          if (!(fourth > third)) return `${row.role}: the fourth sixteenth must be long (${fourth} vs ${third})`;
+          if (!(first > third)) return `${row.role}: the middle two are the compressed pair`;
+          if (Math.abs(first - second - (third - fourth)) < 1e-9)
+            return `${row.role}: an even long-short alternation is swing, not the Rule 6 profile`;
+        }
+
+        // Rule 6 is about the sixteenths, so a lane carrying the profile should
+        // not also carry the swing it replaces.
+        const doubled = profiled.filter((r) => cellNum(r, 'Swing') !== 0);
+        if (doubled.length)
+          return `${doubled.map((r) => r.role).join(', ')} carr${doubled.length === 1 ? 'ies' : 'y'} both a profile and swing; the profile replaces the approximation`;
+        return null;
+      },
+    },
+  ],
+});
+
 let liveMarkers = 0;
 
 for (const entry of CHECKLIST) {
@@ -1483,7 +1523,7 @@ const RULE_TRIAGE = {
     3: { checkable: true, case: 'bra-caixa-continuous', why: 'the caixa never stops — continuous sixteenths' },
     4: { checkable: false, why: 'the call role is a performance function; no cell says which lane cues a break' },
     5: { checkable: false, why: '"around the beat, not against the meter" needs an interpretation of displacement the table does not supply' },
-    6: { checkable: false, absentColumn: 'Timing', why: 'a micro-timing profile within each beat, which the lane table does not carry' },
+    6: { checkable: true, case: 'bra-lssl-profile', why: 'M003/S04 added the Timing column, so the beat-level profile is readable per lane' },
     7: { checkable: false, why: 'states a relation between bossa and the wider system rather than a requirement on a patch' },
   },
   'theory-electronic-breakbeat.mdx': {
