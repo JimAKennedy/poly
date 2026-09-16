@@ -9,6 +9,7 @@ FetchContent_MakeAvailable(googletest)
 enable_testing()
 
 add_executable(poly_tests
+    aksak_swing_tests.cpp
     constraint_tests.cpp
     emission_tests.cpp
     euclidean_tests.cpp

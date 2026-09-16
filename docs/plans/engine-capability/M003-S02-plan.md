@@ -10,7 +10,7 @@ added after the ledger denied it.
 
 ## Task status
 
-- [ ] 1. A lane's steps can be grouped into cells
+- [x] 1. A lane's steps can be grouped into cells
 - [ ] 2. Swing displaces within a cell, not across the bar
 - [ ] 3. The Balkan preset's long beat carries the feel, and close-out
 

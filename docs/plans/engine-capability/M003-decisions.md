@@ -130,3 +130,22 @@ have to reconstruct it from the diff.
   the opposite: a probe that should have failed reading as passed, which would
   certify a vacuous test as proved. Given this milestone has already found two
   vacuous predicates by mutation, a stale build would have hidden them.
+
+## 2026-09-15 — executing M003/S02 task 1 (judgment call)
+
+- **Finding:** The size guard fired again. `GrooveState` grows 15888 → 17936,
+  +2048, from `swingCellSizes` (256 bytes) plus `swingCellCount` per lane.
+  Across M003 the struct is up about 30% and the three-copy pipeline from 0.45
+  to 0.68 µs/block.
+- **Decision:** Accept it, with the measurement in the guard's comment. — **Why:**
+  0.68 µs is 0.02% of a 128-sample block period, unchanged in percentage terms
+  from before the milestone. The budget is not the constraint. The trend is
+  recorded because two slices adding 30% is the sort of thing that is obvious in
+  aggregate and invisible one commit at a time.
+- **Decision:** `swingCellSizes` is a new array rather than a reuse of
+  `cellSizes` when `cellCount == 0`. — **Why:** Reuse would save 2 KB and give
+  one field two meanings depending on the value of another — precisely what this
+  slice's sibling decision rejected when it gave the profile explicit precedence
+  over `cellSizes` rather than combining them. A reader who has to consult a
+  second field to know what the first one means is the cost, and it is paid on
+  every future read of the timing path.

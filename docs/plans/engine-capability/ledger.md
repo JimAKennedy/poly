@@ -210,7 +210,7 @@ subdivision.
 **Plan:** M003-S02-plan.md
 **Validation:** format, unit, engine-isolation, rt-safety
 **Evidence:** evidence/M003-S02.md
-**Status:** open
+**Status:** in-progress
 **Depends:** M003/S01
 
 **Definition of Done**

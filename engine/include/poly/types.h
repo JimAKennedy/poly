@@ -264,6 +264,13 @@ struct LaneConfig {
     // over cellSizes, which are structure rather than feel.
     std::array<float, kMaxSteps> subdivisionProfile{};
     int profileCount = 0;
+    // M003 S02 (EC09). A grouping over the lane's existing steps, for feel.
+    // Distinct from cellCount/cellSizes, which replace the steps with one per
+    // cell: a lane with swingCellSizes {2,2,3} still has seven steps, and swing
+    // displaces within each cell rather than across the bar. 0 = no grouping,
+    // which leaves every swung lane keying off (cycleStep % 2) as before.
+    int swingCellCount = 0;
+    std::array<int, kMaxSteps> swingCellSizes{};
     bool timeline = false;                      // timeline mode: use fixedPattern, immune to macros
     std::array<bool, kMaxSteps> fixedPattern{}; // per-step on/off for timeline mode
     // timeline mode pattern length: 0 = use cycle.steps; >0 = explicit length that governs both editable slot count
@@ -341,6 +348,49 @@ inline AdditiveCellInfo computeAdditiveCells(const LaneConfig& cfg) {
         accum += static_cast<double>(cfg.cellSizes[i]) * basePpq;
     }
     info.totalPpq = accum;
+    return info;
+}
+
+// --- Swing cell grouping (M003 S02, EC09) ---
+
+struct SwingCellInfo {
+    bool valid = false;
+    int cell = 0;
+    int positionInCell = 0;
+};
+
+// Map a step to the cell it falls in and its position within that cell.
+// Returns an invalid result -- never a guess -- when the lane declares no
+// grouping, when the sizes do not account for exactly stepsInCycle steps, or
+// when the step is out of range. A grouping that does not add up is a
+// configuration error, not a licence to read past the end of the array.
+inline SwingCellInfo swingCellFor(const LaneConfig& cfg, int step, int stepsInCycle) {
+    SwingCellInfo info{};
+    if (cfg.swingCellCount <= 0 || cfg.swingCellCount > kMaxSteps)
+        return info;
+    if (step < 0 || stepsInCycle <= 0 || step >= stepsInCycle)
+        return info;
+
+    int total = 0;
+    for (int c = 0; c < cfg.swingCellCount; ++c) {
+        if (cfg.swingCellSizes[static_cast<size_t>(c)] <= 0)
+            return info;
+        total += cfg.swingCellSizes[static_cast<size_t>(c)];
+    }
+    if (total != stepsInCycle)
+        return info;
+
+    int remaining = step;
+    for (int c = 0; c < cfg.swingCellCount; ++c) {
+        const int size = cfg.swingCellSizes[static_cast<size_t>(c)];
+        if (remaining < size) {
+            info.valid = true;
+            info.cell = c;
+            info.positionInCell = remaining;
+            return info;
+        }
+        remaining -= size;
+    }
     return info;
 }
 
