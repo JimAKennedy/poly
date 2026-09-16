@@ -75,3 +75,29 @@ failures stopped on 2026-09-13.
   four, and each correction still costs a dispatch. Proving the route once is
   cheaper than proving it four times. This refines the batching decision rather
   than reversing it: the group is still cited from one *closing* run.
+
+## 2026-09-16 — executing M004/S02 (a finding from the first dispatch)
+
+- **Finding:** Run
+  [35045855242](https://github.com/JimAKennedy/poly/actions/runs/35045855242).
+  The preset sweep itself **passed** — all 45 presets selected in a live Cubase,
+  no crash, every one matching `presets.json` — and it turned the *export* spec
+  red: `track 1 name 'Clap' is not in the expected lane names ['Hi-Hat', 'Kick',
+  'Snare', 'Tom']`. The sweep leaves the plugin on the last preset, not the
+  fixture's patch.
+- **Decision:** The sweep runs last while Cubase is up — after `Play scenario`,
+  before `Quit Cubase` — and the workflow says why in both directions. — **Why:**
+  It is destructive to host state, so anything downstream that depends on the
+  fixture's patch must precede it. It cannot move past the quit either, because
+  it attaches over CDP to a live editor, and it cannot precede `Play scenario`
+  because that step's output is compared against a golden. There is exactly one
+  correct position and the comment now records the two constraints that fix it.
+- **Judgment call rather than a halt:** the deferred question was whether a
+  failing *spec* is fixed and re-dispatched. This spec passed; a neighbour broke
+  on ordering, and leaving the nightly red was never an option. Reordering a
+  step I added this session to restore a green board is obviously right.
+- **A rule this establishes for S01, S05 and S06.** Each of those also mutates
+  host state — reopening a project, loading a second instance, bouncing. The
+  ordering constraint found here applies to them, and the group-2 plans should
+  place them relative to this sweep rather than discovering the same failure
+  three more times.
