@@ -401,8 +401,14 @@ static LaneRenderContext prepareLaneContext(const LaneConfig& cfg, const GrooveS
 
     double maxStepDur = ctx.sPpq;
     if (ctx.isAdditive) {
-        for (int c = 0; c < ctx.additive.count; ++c)
-            maxStepDur = std::max(maxStepDur, cfg.cellSizes[c] * ctx.sPpq);
+        // M003 S01 (EC08): on the profile path cellSizes is not the step
+        // length -- it is unset, so reading it here leaves the bound at the
+        // base step while a profiled step can be longer. Derive the longest
+        // step from the cumulative positions, which are correct on both paths.
+        for (int c = 0; c < ctx.additive.count; ++c) {
+            double next = (c + 1 < ctx.additive.count) ? ctx.additive.cumPpq[c + 1] : ctx.additive.totalPpq;
+            maxStepDur = std::max(maxStepDur, next - ctx.additive.cumPpq[c]);
+        }
     }
     ctx.maxTimingShift = 0.0;
     ctx.maxTimingShift += static_cast<double>(std::max(0.0f, cfg.swingAmount)) * maxStepDur / kSwingSyncopationDivisor;

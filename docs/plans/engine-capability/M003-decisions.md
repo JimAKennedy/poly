@@ -96,3 +96,23 @@ have to reconstruct it from the diff.
   The engine was right and the test was wrong. The profile is stored as `float`
   by design — matching every other `LaneConfig` float — so a tolerance tighter
   than float precision tests the storage type rather than the arithmetic.
+
+## 2026-09-15 — executing M003/S01 task 2 (judgment call)
+
+- **Finding:** Two of task 2's three render-level cases passed under a probe
+  that discarded the profile entirely — they were vacuous. An even grid holds
+  its ratios across tempi and does not lengthen the cycle, so neither case
+  discriminated.
+- **Decision:** Strengthen both to assert unevenness before asserting the
+  property, and re-run the probe until all three fail. — **Why:** This is M007's
+  finding recurring in new code. The cost of not catching it is a suite that
+  reports a capability it never exercises.
+- **Finding:** `maxStepDur` reads `cfg.cellSizes[c]` on a path where
+  `cellSizes` is unset, leaving the lookahead bound at the base step while a
+  profiled step can be longer.
+- **Decision:** Derive the bound from `cumPpq`, and record that the test written
+  for it does not catch it. — **Why:** `SplitRenderingMatchesWholeRendering`
+  passes before and after, because the additive path enumerates whole cycles
+  with a one-cycle margin that swamps a 0.0008 PPQ shortfall. The bound is still
+  wrong as written and worth fixing; calling the test a proof of the fix would
+  be a claim the run did not earn.

@@ -10,7 +10,7 @@ class: gated
 ## Task status
 
 - [x] 1. The profile fields and `computeAdditiveCells`
-- [ ] 2. Wire the profile through `prepareLaneContext`
+- [x] 2. Wire the profile through `prepareLaneContext`
 - [ ] 3. State version 19 → 20
 - [ ] 4. The samba profile ships, and reaches `presets.json`
 - [ ] 5. Evidence and close-out
