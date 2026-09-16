@@ -182,16 +182,17 @@ predicate can be made to fail.
 jembe feel, and the long beats of additive meters — instead of approximating them
 with swing, and the guide stops admitting the approximation.
 **Branch:** milestone/M003-non-isochronous-timing
-**Status:** planned
+**Status:** in-progress
 **Demo:** A samba patch plays its long-short-short-long feel from a profile
 rather than from swing plus offsets; a Balkan patch's long beat carries its own
 subdivision.
 
 ### Slice M003/S01 — Subdivision profiles
 
+**Plan:** M003-S01-plan.md
 **Validation:** format, unit, engine-isolation, rt-safety
 **Evidence:** evidence/M003-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
@@ -206,6 +207,7 @@ subdivision.
 
 ### Slice M003/S02 — Cell-aware aksak swing
 
+**Plan:** M003-S02-plan.md
 **Validation:** format, unit, engine-isolation, rt-safety
 **Evidence:** evidence/M003-S02.md
 **Status:** open
@@ -224,6 +226,7 @@ subdivision.
 
 ### Slice M003/S03 — The measured jembe profile
 
+**Plan:** M003-S03-plan.md
 **Validation:** format, unit, site-unit, doc-conformance
 **Evidence:** evidence/M003-S03.md
 **Status:** open
@@ -243,6 +246,7 @@ subdivision.
 
 ### Slice M003/S04 — The guide catches up
 
+**Plan:** M003-S04-plan.md
 **Validation:** format, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M003-S04.md
 **Status:** open
