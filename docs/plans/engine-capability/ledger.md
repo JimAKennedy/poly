@@ -182,7 +182,7 @@ predicate can be made to fail.
 jembe feel, and the long beats of additive meters — instead of approximating them
 with swing, and the guide stops admitting the approximation.
 **Branch:** milestone/M003-non-isochronous-timing
-**Status:** in-progress
+**Status:** done
 **Demo:** A samba patch plays its long-short-short-long feel from a profile
 rather than from swing plus offsets; a Balkan patch's long beat carries its own
 subdivision.
