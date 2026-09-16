@@ -116,3 +116,47 @@ failures stopped on 2026-09-13.
   convention, which would have made it four places to fix instead of one. Four
   unit cases pin the parsing, including that a substring is not a match — `s02`
   must not activate `s02-malformed-preset`.
+
+## 2026-09-16 — a halt, and what it changed
+
+- **Finding:** Section 2 asked about batching, red paths and scope, and assumed
+  the binding constraint was DAW *time*. It is not. For five of the seven slices
+  the constraint is that the harness cannot express the slice at all:
+
+  | Slice | Missing affordance |
+  |---|---|
+  | S01 | nothing makes Cubase **save** a project |
+  | S04 | nothing **closes and reopens** the plugin window — only enumeration exists (`diagnose-editor-window.ps1`) |
+  | S06 | nothing drives **Export Audio Mixdown** |
+  | S07 | an **automation lane** must be in a fixture, and fixtures are authored by hand |
+  | S05 | needs a **two-instance `.cpr`**, and `poly-4bar.cpr` was "authored on the runner in Cubase, PR #186 — a `.cpr` is Cubase-version-specific" |
+
+  Each of S01, S04 and S06 would mean writing Cubase UI automation blind, with
+  an eight-minute dispatch as the feedback loop, on a machine whose desktop the
+  run takes over.
+
+- **Q:** S05 needs a two-instance `.cpr` that this session cannot create. Author
+  one, or mark the slice `accepted` with the reason? — **A:** Author a
+  two-instance `.cpr` on the runner.
+- **Decision:** S05 stays `open`, blocked on that fixture, rather than being
+  closed with a reason. — **Why:** The slice is wanted; only its input is
+  missing. Recording it as blocked keeps the row honest and keeps the work
+  visible, where `accepted` would retire it.
+
+- **Q:** Should the UI-automation slices be built blind at eight minutes a
+  cycle? — **A:** No — build them at the runner machine.
+- **Decision:** S01, S04, S06 and S07 stay `open` with their plans intact, and
+  the affordance each needs is named above so the next run starts from "build
+  this" rather than rediscovering the wall. — **Why:** Writing `SendKeys`-style
+  menu automation without being able to see the screen is where this milestone
+  stops being good value. Someone at the machine closes that loop in minutes.
+
+- **Q:** Spend one dispatch to close S02 properly? — **A:** Yes.
+- **Decision:** Done — green run 35046414001, red run 35048220827. S02 is the
+  one slice this session can honestly finish, and it is finished.
+
+- **What S03 is, in this light.** Transport motion needs new MIDI Remote CC
+  bindings for cycle and tempo; `CC_LOCATE` already binds to `To Left Locator`.
+  That is code, not UI automation, so it is buildable from here — but its
+  feedback loop is still a dispatch, and it is left `open` with the rest rather
+  than started and abandoned mid-slice.
