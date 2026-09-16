@@ -13,7 +13,7 @@ class: gated
 - [x] 2. Wire the profile through `prepareLaneContext`
 - [x] 3. State version 19 → 20
 - [x] 4. The samba profile ships, and reaches `presets.json`
-- [ ] 5. Evidence and close-out
+- [x] 5. Evidence and close-out
 
 ## Definition of Done
 

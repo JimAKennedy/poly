@@ -192,18 +192,18 @@ subdivision.
 **Plan:** M003-S01-plan.md
 **Validation:** format, unit, engine-isolation, rt-safety
 **Evidence:** evidence/M003-S01.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] A lane can play a non-isochronous subdivision profile rather than an even grid
-- [ ] A profile is expressible in a preset and reaches `site/src/generated/presets.json`
-- [ ] `renderRange()` gains no allocation, lock or blocking call
-- [ ] The engine builds and passes its tests with no VST3 SDK present
+- [x] A lane can play a non-isochronous subdivision profile rather than an even grid
+- [x] A profile is expressible in a preset and reaches `site/src/generated/presets.json`
+- [x] `renderRange()` gains no allocation, lock or blocking call
+- [x] The engine builds and passes its tests with no VST3 SDK present
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| EC08 | `theory-brazilian` Rule 6 ends "until subdivision profiles ship, use light swing (0.15–0.25) plus small per-lane offsets as an admitted approximation" — issue #150. Swing displaces only alternate notes, which is why the guide calls the workaround an approximation in its own voice | `prose` | `engine/`, `engine/src/presets.cpp` | Engine tests assert a profiled lane's onset times differ from both the isochronous grid and the swung grid, and are stable under the determinism golden | `open` |
+| EC08 | `theory-brazilian` Rule 6 ends "until subdivision profiles ship, use light swing (0.15–0.25) plus small per-lane offsets as an admitted approximation" — issue #150. Swing displaces only alternate notes, which is why the guide calls the workaround an approximation in its own voice | `prose` | `engine/`, `engine/src/presets.cpp` | Engine tests assert a profiled lane's onset times differ from both the isochronous grid and the swung grid, and are stable under the determinism golden | `done` |
 
 ### Slice M003/S02 — Cell-aware aksak swing
 
