@@ -15,6 +15,7 @@
 #include <gtest/gtest.h>
 
 #include "poly/engine.h"
+#include "poly/presets.h"
 #include "poly/types.h"
 
 using namespace poly;
@@ -309,4 +310,42 @@ TEST(SubdivisionProfile, MismatchedCountsLeaveTheProfileGoverningAlone) {
     const auto info = computeAdditiveCells(cfg);
     EXPECT_EQ(info.count, 4);
     EXPECT_NEAR(info.totalPpq, 4 * (4.0 / 16.0), 1e-9) << "profileCount governs when the counts disagree";
+}
+
+// M003/S03 (EC10). The Manding Djembe preset ships the measured jembe
+// subdivision -- Polak 2010 -- rather than the even grid it played before.
+TEST(SubdivisionProfile, TheMandingDjembePresetCarriesTheJembeProfile) {
+    const GrooveState state = makeMandingDjembe();
+
+    ASSERT_EQ(state.activeLaneCount, 3);
+    for (int lane = 0; lane < state.activeLaneCount; ++lane) {
+        const auto& cfg = state.lanes[static_cast<size_t>(lane)];
+        EXPECT_EQ(cfg.profileCount, 8) << "lane " << lane << " must carry the profile";
+        // Rule: every lane shares the meter's feel, so no lane is left even.
+        EXPECT_GT(cfg.subdivisionProfile[0], cfg.subdivisionProfile[1])
+            << "lane " << lane << ": the subdivision is long-first";
+    }
+
+    // The feel reaches the rendered output, not just the config.
+    Engine engine;
+    NoteEventBuffer notes;
+    TransportContext tc{};
+    tc.ppqStart = 0.0;
+    tc.ppqEnd = 4.0;
+    tc.tempo = 120.0;
+    tc.playing = true;
+    engine.renderRange(tc, state, notes, nullptr);
+
+    std::vector<double> lead;
+    for (size_t i = 0; i < notes.count; ++i)
+        if (notes.events[i].laneIndex == 2)
+            lead.push_back(notes.events[i].ppqPosition);
+    std::sort(lead.begin(), lead.end());
+    ASSERT_GE(lead.size(), 3u);
+
+    bool uneven = false;
+    for (size_t i = 2; i < lead.size(); ++i)
+        if (std::abs((lead[i] - lead[i - 1]) - (lead[i - 1] - lead[i - 2])) > 1e-6)
+            uneven = true;
+    EXPECT_TRUE(uneven) << "the rendered lead lane must not be evenly subdivided";
 }

@@ -29,12 +29,12 @@ namespace profiles {
 constexpr std::array<float, 4> kSambaLongShortShortLong = {1.08f, 0.94f, 0.94f, 1.04f};
 
 // Repeat a per-beat profile across a lane whose cycle spans several beats.
-inline void applyProfile(LaneConfig& lane, const std::array<float, 4>& beat, int steps) {
-    if (steps <= 0 || steps > kMaxSteps)
+template <std::size_t N> inline void applyProfile(LaneConfig& lane, const std::array<float, N>& beat, int steps) {
+    if (steps <= 0 || steps > kMaxSteps || beat.empty())
         return;
     lane.profileCount = steps;
     for (int i = 0; i < steps; ++i)
-        lane.subdivisionProfile[static_cast<size_t>(i)] = beat[static_cast<size_t>(i % beat.size())];
+        lane.subdivisionProfile[static_cast<size_t>(i)] = beat[static_cast<size_t>(i) % N];
 }
 
 // theory-balkan Rule 8: "the long beat is slightly *less* than 3:2 in
@@ -45,6 +45,18 @@ inline void applyProfile(LaneConfig& lane, const std::array<float, 4>& beat, int
 // the profile the distribution. Rule 6 forbids swing on aksak, and this is not
 // swing -- it is the metric proportion itself.
 constexpr std::array<float, 3> kAksakLongBeat223 = {2.0f, 2.0f, 2.85f};
+
+// Polak 2010, "Rhythmic Feel as Meter: Non-Isochronous Beat Subdivision in
+// Jembe Music from Mali" -- measured microtiming showing jembe subdivision is
+// systematically uneven rather than an approximation of an even grid. The
+// bibliography carries it at tier A as fr-polak-2010.
+//
+// This encodes the *shape* that finding reports -- a stable, systematically
+// long-first subdivision within the beat -- not a transcription of a published
+// table of ratios. The depth is ours. Refining these values against a source in
+// hand is a data change and needs no code, which is exactly the distinction row
+// B10 drew when it separated the mechanism from the data.
+constexpr std::array<float, 2> kJembeBeatSubdivision = {1.06f, 0.94f};
 
 } // namespace profiles
 
@@ -1106,6 +1118,12 @@ GrooveState makeMandingDjembe() {
     djembe.baseVelocity = 95;
     djembe.probability = 0.9f;
     djembe.ghostFloor = 55;
+
+    // M003 S03 (EC10): the measured jembe subdivision. Every lane shares it --
+    // the ensemble's feel is a property of the meter, not of one drum -- and it
+    // replaces nothing, because these lanes were dead-on the even grid.
+    for (int lane = 0; lane < 3; ++lane)
+        profiles::applyProfile(s.lanes[static_cast<size_t>(lane)], profiles::kJembeBeatSubdivision, 8);
 
     // M070 S04: metronomic tradition — no humanize (kept dead-on the grid).
     return s;

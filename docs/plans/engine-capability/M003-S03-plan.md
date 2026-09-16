@@ -9,7 +9,7 @@ class: gated
 
 ## Task status
 
-- [ ] 1. The jembe profile ships as cited data
+- [x] 1. The jembe profile ships as cited data
 - [ ] 2. The page stops disclaiming it, and close-out
 
 ## Definition of Done

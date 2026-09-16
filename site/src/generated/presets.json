@@ -2526,6 +2526,17 @@
             6
           ],
           "kotekanSourceLane": -1,
+          "profileCount": 8,
+          "subdivisionProfile": [
+            1.06,
+            0.94,
+            1.06,
+            0.94,
+            1.06,
+            0.94,
+            1.06,
+            0.94
+          ],
           "phraseLength": 0,
           "phraseGap": 0,
           "phraseOffset": 0,
@@ -2554,6 +2565,17 @@
           "timeline": false,
           "fixedPatternLength": 0,
           "kotekanSourceLane": -1,
+          "profileCount": 8,
+          "subdivisionProfile": [
+            1.06,
+            0.94,
+            1.06,
+            0.94,
+            1.06,
+            0.94,
+            1.06,
+            0.94
+          ],
           "phraseLength": 0,
           "phraseGap": 0,
           "phraseOffset": 0,
@@ -2582,6 +2604,17 @@
           "timeline": false,
           "fixedPatternLength": 0,
           "kotekanSourceLane": -1,
+          "profileCount": 8,
+          "subdivisionProfile": [
+            1.06,
+            0.94,
+            1.06,
+            0.94,
+            1.06,
+            0.94,
+            1.06,
+            0.94
+          ],
           "phraseLength": 0,
           "phraseGap": 0,
           "phraseOffset": 0,

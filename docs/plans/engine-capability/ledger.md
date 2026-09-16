@@ -231,7 +231,7 @@ subdivision.
 **Plan:** M003-S03-plan.md
 **Validation:** format, unit, site-unit, doc-conformance
 **Evidence:** evidence/M003-S03.md
-**Status:** open
+**Status:** in-progress
 **Depends:** M003/S01
 
 **Definition of Done**
