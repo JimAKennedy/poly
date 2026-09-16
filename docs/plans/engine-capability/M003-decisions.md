@@ -149,3 +149,15 @@ have to reconstruct it from the diff.
   over `cellSizes` rather than combining them. A reader who has to consult a
   second field to know what the first one means is the cost, and it is paid on
   every future read of the timing path.
+
+## 2026-09-15 — executing M003/S02 task 2 (a wrong reading, caught by a test)
+
+- **Finding:** "Cell-aware swing" was implemented as odd-parity-within-cell. On
+  2+2+3 that is identical to the bar parity it replaced — steps 1, 3, 5 — so the
+  change was a no-op against the rachenitsa, the very meter the slice is about.
+  Issue #157 says "offset the final subdivision of each 2- or 3-group", which
+  gives 1, 3, 6.
+- **Decision:** Implement the tail rule, and add a case on 2+3+2 where the two
+  readings diverge. — **Why:** Every other case in the file passes under either
+  reading. Without a divergence case, a future revert to parity-within-cell
+  would look correct.

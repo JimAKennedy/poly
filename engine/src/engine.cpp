@@ -325,11 +325,23 @@ static float computeStepVelocity(const LaneConfig& cfg, const GrooveState& state
 }
 
 static double applyTimingShifts(const LaneConfig& cfg, const TransportContext& tc, const GrooveState& state, double ppq,
-                                double stepDurPpq, int64_t absStep, int64_t cycleStep, float humanizeMod) {
-    if (cfg.swingAmount > 0.0f && (cycleStep % 2) == 1) {
+                                double stepDurPpq, int64_t absStep, int64_t cycleStep, float humanizeMod,
+                                int stepsInCycle) {
+    // M003 S02 (EC09). Swing belongs to the cell, not to the bar. Issue #157
+    // states the displaced pulse precisely: "the final subdivision of each 2-
+    // or 3-group". On a 2+2+3 lane (cycleStep % 2) displaces steps 1, 3 and 5,
+    // and so does odd-parity-within-cell -- the two coincide, which is why an
+    // implementation of the wrong rule passes against the rachenitsa. The tail
+    // rule gives 1, 3 and 6, and the three-cell's internal division then
+    // differs from the two-cells'. With no grouping declared the predicate is
+    // the step's own parity, which is the pre-M003 behaviour exactly.
+    const SwingCellInfo swingCell = swingCellFor(cfg, static_cast<int>(cycleStep), stepsInCycle);
+    const bool swingThisStep = swingCell.valid ? swingCell.isCellTail() : ((cycleStep % 2) == 1);
+
+    if (cfg.swingAmount > 0.0f && swingThisStep) {
         ppq += cfg.swingAmount * stepDurPpq * (1.0 / kSwingSyncopationDivisor);
     }
-    if (cfg.syncopationOffset > 0.0f && (cycleStep % 2) == 0) {
+    if (cfg.syncopationOffset > 0.0f && !swingThisStep) {
         ppq += static_cast<double>(cfg.syncopationOffset) * stepDurPpq * (1.0 / kSwingSyncopationDivisor);
     }
 
@@ -552,7 +564,8 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
             bool willFire = (outcome != StepOutcome::Drop && outcome != StepOutcome::Silent);
             double shiftedPpq = ppq;
             if (willFire)
-                shiftedPpq = applyTimingShifts(cfg, tc, state, ppq, stepDurPpq, absStep, cycleStep, mods.humanize);
+                shiftedPpq = applyTimingShifts(cfg, tc, state, ppq, stepDurPpq, absStep, cycleStep, mods.humanize,
+                                               ctx.stepsInCycle);
 
             // Record classification for the display, but only for steps whose
             // pre-timing-shift ppq falls inside the current render window —

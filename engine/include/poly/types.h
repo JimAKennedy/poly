@@ -357,6 +357,12 @@ struct SwingCellInfo {
     bool valid = false;
     int cell = 0;
     int positionInCell = 0;
+    int cellSize = 0;
+    // Issue #157 specifies the displaced pulse as "the final subdivision of
+    // each 2- or 3-group", not the odd-parity one. On 2+2+3 the two readings
+    // coincide -- both give steps 1, 3, 5 -- so an implementation of the wrong
+    // one looks correct against the rachenitsa and diverges on 2+3+2.
+    [[nodiscard]] bool isCellTail() const { return valid && positionInCell == cellSize - 1; }
 };
 
 // Map a step to the cell it falls in and its position within that cell.
@@ -387,6 +393,7 @@ inline SwingCellInfo swingCellFor(const LaneConfig& cfg, int step, int stepsInCy
             info.valid = true;
             info.cell = c;
             info.positionInCell = remaining;
+            info.cellSize = size;
             return info;
         }
         remaining -= size;
