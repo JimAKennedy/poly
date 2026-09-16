@@ -161,3 +161,49 @@ have to reconstruct it from the diff.
   readings diverge. — **Why:** Every other case in the file passes under either
   reading. Without a divergence case, a future revert to parity-within-cell
   would look correct.
+
+## 2026-09-15 — executing M003/S02 task 3 (a wrong plan step, and two questions)
+
+- **Finding:** The plan's task 3 said to give the Balkan zurna "the swing the
+  guide describes". `theory-balkan` Rule 6 is "No swing", and its reason is the
+  mechanism task 2 built. The feel the guide describes is Rule 8's long beat —
+  the second half of issue #157, absent from the plan.
+- **Q:** How should S02 satisfy "a Balkan preset's long beat carries the feel the
+  guide describes"? — **A:** Long-beat ratio via the profile, swing stays 0.
+- **Decision:** The davul and rim carry `{2.0, 2.0, 2.85}` over their `{2,2,3}`
+  cells. — **Why:** Rule 6 stands untouched and the patch stops contradicting
+  its own page, which is the defect class the theory-audit programme spent seven
+  milestones removing. The cell-aware swing task 2 built therefore ships with no
+  factory preset using it; recorded rather than hidden, and issue #157 wanted
+  both halves.
+- **Q:** Rule 8's "until Poly exposes a long-beat ratio control" disclaimer is
+  now false. — **A:** Remove it in this slice.
+- **Decision:** Rule 8 states what the engine does and what the preset plays;
+  the slice gains a fourth definition-of-done item rather than the edit being
+  slipped in under the existing three. — **Why:** A slice that widens should say
+  so in the place the widening is checked.
+
+- **Q:** A profile normalised to `profileCount × base` collapses the davul's bar
+  from 3.5 PPQ to 1.5, and M003/S01 gave the profile precedence over
+  `cellSizes`. — **A:** Cells set length, profile sets distribution.
+- **Decision:** When the counts match, normalise to the cells' total; when they
+  disagree, the profile governs alone. — **Why:** It is what S01's own design
+  says the two fields are — structure and feel — and composing them is more
+  faithful to that than competing. The mismatch branch preserves S01's shipped
+  precedence exactly, so its test passes untouched rather than being edited to
+  fit.
+
+- **Finding:** `site/tests/scope-framing.test.mjs`'s `S04-F32` — a claim locked
+  by the *theory-audit* programme's ledger — requires the phrase "the grid
+  version is the", which is the tail of the disclaimer this slice deletes.
+- **Decision:** Update the lock to the ratio the preset plays rather than
+  loosening it. — **Why:** What F32 protects is that the long beat is measurably
+  under 3:2, style-defining, cited to Goldberg; all of that survives. The phrase
+  that went was protecting a sentence that is no longer true. Editing another
+  programme's locked claim is recorded rather than done quietly.
+- **Finding:** `presets-json-schema.test.mjs` still asserted `schemaVersion === 5`
+  after M003/S01 raised it to 6 — a consumer S01 missed, because that test runs
+  under `site-unit` and S01 owes only engine tokens.
+- **Decision:** Fix it here, and note the gap. — **Why:** A slice's validation
+  set bounds what it can discover. S01's set was right for its scope and still
+  could not see this.

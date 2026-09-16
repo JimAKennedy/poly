@@ -12,7 +12,7 @@ added after the ledger denied it.
 
 - [x] 1. A lane's steps can be grouped into cells
 - [x] 2. Swing displaces within a cell, not across the bar
-- [ ] 3. The Balkan preset's long beat carries the feel, and close-out
+- [x] 3. The Balkan preset's long beat, and Rule 8 catches up
 
 ## Definition of Done
 
@@ -31,6 +31,9 @@ Copied verbatim from the slice.
 | `unit` | `cmake --build build --config Release --parallel && ctest --test-dir build --build-config Release --output-on-failure` |
 | `engine-isolation` | `cmake -S . -B build-engine -DCMAKE_BUILD_TYPE=Release -DPOLY_ENGINE_ONLY=ON && cmake --build build-engine --parallel && ctest --test-dir build-engine --output-on-failure` |
 | `rt-safety` | `bash scripts/check-realtime-safety.sh` |
+| `site-unit` | `npm --prefix site test` |
+| `doc-conformance` | `bash scripts/check-doc-conformance.sh` |
+| `doc-discipline` | `bash scripts/check-doc-discipline.sh` |
 
 ## Task 1 — A lane's steps can be grouped into cells
 
@@ -84,18 +87,37 @@ Modifies `engine/src/engine.cpp` and `tests/aksak_swing_tests.cpp`.
    boundary is still emitted.
 5. Run `unit`, `engine-isolation`, `rt-safety`. Commit.
 
-## Task 3 — The Balkan preset's long beat carries the feel, and close-out
+## Task 3 — The Balkan preset's long beat, and Rule 8 catches up
 
-Modifies `engine/src/presets.cpp`, the evidence file, the ledger, and this plan.
+**Repaired mid-slice.** This task previously said to give the zurna "the swing
+the guide describes". `theory-balkan` Rule 6 is "No swing", and its stated
+reason is the mechanism task 2 built. The feel the guide describes is Rule 8's
+long beat, which is the second half of issue #157. Tasks 1 and 2 are unaffected
+and their boxes stand.
 
-1. Set `swingCellCount`/`swingCellSizes` on the Balkan preset's zurna lane —
-   `cycle = {7, 8}`, the lane that already runs one step per unit — so its
-   9/8 grouping is 2+2+3, and give it the swing the guide describes.
-   Leave the davul and rim lanes alone: they are one-step-per-cell by design and
-   their structure is what defines the meter.
-2. Assert the preset's rendered output: the zurna's onsets within the three-unit
-   cell differ from the two-unit cells', and the davul's onsets are unchanged
-   from before this slice.
-3. Run the whole validation set, append the evidence file, tick the task and
-   definition-of-done boxes, set `EC09` and the slice to `done`, run
-   `jk-standards ledger`, and commit with `Slice: M003/S02` and `Rows: EC09`.
+Modifies `engine/src/presets.cpp`, `engine/include/poly/types.h`,
+`site/src/content/docs/theory-balkan.mdx`, `site/tests/scope-framing.test.mjs`,
+`site/tests/presets-json-schema.test.mjs`, `docs/engine-spec.md`, the evidence
+file, the ledger, and this plan.
+
+1. Compose cells and profile: when a lane declares the same number of cells as
+   profile entries, normalise the profile to the cells' total rather than to
+   `profileCount`, so the bar keeps its notated length. Mismatched counts leave
+   the profile governing alone, which is M003/S01's precedence case unchanged.
+   Two cases pin both branches.
+2. Give the Balkan davul and rim a `{2.0, 2.0, 2.85}` profile over their
+   `{2,2,3}` cells. Leave `swingAmount` at 0 on every Balkan lane: Rule 6.
+3. Replace Rule 8's "until Poly exposes a long-beat ratio control" disclaimer
+   with what the engine now does and what the preset plays, keeping the rule's
+   cited claim intact.
+4. Fix the two guards this trips: `presets-json-schema.test.mjs` still expects
+   `schemaVersion === 5`, and `scope-framing`'s `S04-F32` locks a phrase from
+   the deleted disclaimer. Update the lock to the ratio the preset plays rather
+   than loosening it — the claim F32 protects is unchanged.
+5. Document the new fields in `docs/engine-spec.md`; `doc-drift` requires it for
+   any change to `types.h`. The preset-taxonomy and testing-strategy rules are
+   answered with `Docs-Not-Affected:` trailers, because no preset was added or
+   recategorised and no new test binary was introduced.
+6. Run the whole validation set, append the evidence, tick the boxes, set `EC09`
+   and the slice `done`, run `jk-standards ledger`, commit with
+   `Slice: M003/S02` and `Rows: EC09`.

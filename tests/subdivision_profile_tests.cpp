@@ -266,3 +266,47 @@ TEST(SubdivisionProfile, SplitRenderingMatchesWholeRendering) {
             EXPECT_NEAR(got[i], expected[i], 1e-9) << "split at " << cut << ", onset " << i;
     }
 }
+
+// M003/S02. A lane declaring cells keeps the cycle length its cells imply; the
+// profile supplies only the proportions within it. This is how theory-balkan's
+// Rule 8 long beat -- "slightly less than 3:2 in practice" -- is expressed
+// without shortening the bar.
+TEST(SubdivisionProfile, CellsSetTheLengthAndTheProfileTheDistribution) {
+    LaneConfig cfg{};
+    cfg.cycle = {3, 8};
+    cfg.cellCount = 3;
+    cfg.cellSizes = {2, 2, 3};
+    cfg.profileCount = 3;
+    cfg.subdivisionProfile[0] = 2.0f;
+    cfg.subdivisionProfile[1] = 2.0f;
+    cfg.subdivisionProfile[2] = 2.85f;
+
+    const auto info = computeAdditiveCells(cfg);
+    ASSERT_EQ(info.count, 3);
+    const double base = 4.0 / 8.0;
+    // The bar keeps its seven eighths, not three.
+    EXPECT_NEAR(info.totalPpq, 7 * base, 1e-6) << "the cells' length must survive the profile";
+
+    const double c0 = info.cumPpq[1] - info.cumPpq[0];
+    const double c2 = info.totalPpq - info.cumPpq[2];
+    // The long cell is compressed below 3:2 against the short ones.
+    EXPECT_NEAR(c2 / c0, 2.85 / 2.0, 1e-6);
+    EXPECT_LT(c2 / c0, 1.5) << "Rule 8: the long beat runs slightly less than 3:2";
+    EXPECT_GT(c2 / c0, 1.0) << "it is still the long cell";
+}
+
+// Counts that disagree mean the profile is not describing those cells, so it
+// governs alone -- the precedence case M003/S01 shipped, unchanged.
+TEST(SubdivisionProfile, MismatchedCountsLeaveTheProfileGoverningAlone) {
+    LaneConfig cfg{};
+    cfg.cycle = {4, 16};
+    cfg.cellCount = 3;
+    cfg.cellSizes = {2, 2, 3};
+    cfg.profileCount = 4;
+    for (int i = 0; i < 4; ++i)
+        cfg.subdivisionProfile[static_cast<size_t>(i)] = 1.0f;
+
+    const auto info = computeAdditiveCells(cfg);
+    EXPECT_EQ(info.count, 4);
+    EXPECT_NEAR(info.totalPpq, 4 * (4.0 / 16.0), 1e-9) << "profileCount governs when the counts disagree";
+}

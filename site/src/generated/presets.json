@@ -1420,6 +1420,12 @@
             1
           ],
           "kotekanSourceLane": -1,
+          "profileCount": 3,
+          "subdivisionProfile": [
+            2,
+            2,
+            2.85
+          ],
           "phraseLength": 0,
           "phraseGap": 0,
           "phraseOffset": 0,
@@ -1452,6 +1458,12 @@
           "timeline": false,
           "fixedPatternLength": 0,
           "kotekanSourceLane": -1,
+          "profileCount": 3,
+          "subdivisionProfile": [
+            2,
+            2,
+            2.85
+          ],
           "phraseLength": 0,
           "phraseGap": 0,
           "phraseOffset": 0,

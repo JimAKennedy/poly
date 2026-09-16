@@ -327,8 +327,28 @@ inline AdditiveCellInfo computeAdditiveCells(const LaneConfig& cfg) {
         // put infinities into the timing path.
         if (sum <= 0.0)
             return info;
-        // Normalise so the cycle occupies the length it would have evenly.
-        double scale = sum / static_cast<double>(count);
+        // M003 S02: cells set length, the profile sets distribution. A lane
+        // declaring the same number of cells as profile entries keeps the cycle
+        // length its cells imply, and the profile supplies the proportions
+        // within it -- which is how an aksak long beat is compressed below 3:2
+        // without shortening the bar. When the counts disagree the profile
+        // cannot be describing those cells, so it governs alone and the cycle
+        // is profileCount steps long, as for any non-additive lane.
+        double targetUnits = static_cast<double>(count);
+        if (cfg.cellCount == count) {
+            int cellTotal = 0;
+            bool cellsUsable = true;
+            for (int i = 0; i < count; ++i) {
+                if (cfg.cellSizes[static_cast<size_t>(i)] <= 0) {
+                    cellsUsable = false;
+                    break;
+                }
+                cellTotal += cfg.cellSizes[static_cast<size_t>(i)];
+            }
+            if (cellsUsable && cellTotal > 0)
+                targetUnits = static_cast<double>(cellTotal);
+        }
+        double scale = sum / targetUnits;
         info.count = count;
         double accum = 0.0;
         for (int i = 0; i < count; ++i) {

@@ -208,21 +208,23 @@ subdivision.
 ### Slice M003/S02 — Cell-aware aksak swing
 
 **Plan:** M003-S02-plan.md
-**Validation:** format, unit, engine-isolation, rt-safety
+**Validation:** format, unit, engine-isolation, rt-safety, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M003-S02.md
-**Status:** in-progress
+**Status:** done
 **Depends:** M003/S01
 
 **Definition of Done**
 
-- [ ] Swing on an additive meter applies per cell rather than to alternate notes
+- [x] Swing on an additive meter applies per cell rather than to alternate notes
       across the bar
-- [ ] A Balkan preset's long beat carries the feel the guide describes
-- [ ] `renderRange()` gains no allocation, lock or blocking call
+- [x] A Balkan preset's long beat carries the feel the guide describes
+- [x] `renderRange()` gains no allocation, lock or blocking call
+- [x] `theory-balkan` Rule 8 no longer says the long beat is unreproducible on
+      the grid
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| EC09 | Issue #157, which the theory-audit ledger names as deferred: cell-aware swing and long-beat feel for additive (aksak) meters. F32 locked the Balkan long-beat honesty note; the engine change stayed on the tracker | `tracker` | `engine/`, `engine/src/presets.cpp` | Engine tests assert swing applied to a 2+2+3 cell structure displaces within cells rather than across the bar, and that the long cell's internal division differs from the short cells' | `open` |
+| EC09 | Issue #157, which the theory-audit ledger names as deferred: cell-aware swing and long-beat feel for additive (aksak) meters. F32 locked the Balkan long-beat honesty note; the engine change stayed on the tracker | `tracker` | `engine/`, `engine/src/presets.cpp` | Engine tests assert swing applied to a 2+2+3 cell structure displaces within cells rather than across the bar, and that the long cell's internal division differs from the short cells' | `done` |
 
 ### Slice M003/S03 — The measured jembe profile
 

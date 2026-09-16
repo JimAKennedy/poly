@@ -171,7 +171,16 @@ const CLAIMS = [
       'the phrase was deleted and the case watched to fail',
     // 'systematic, style-defining tendency' rather than bare 'systematic': the
     // word alone is too weak to prove Rule 8 in particular survived.
-    present: ['systematic, style-defining tendency', 'the grid version is the'],
+    //
+    // M003/S02 replaced the second phrase. It used to be 'the grid version is
+    // the', which locked the tail of a disclaimer -- "until Poly exposes a
+    // long-beat ratio control, this is unreproducible on the grid". Poly now
+    // exposes it and the shipped Balkan preset uses it, so that sentence was
+    // false and went. The honesty F32 actually locks -- the long beat is
+    // measurably under 3:2, a tendency rather than sloppiness, cited to
+    // Goldberg -- is unchanged, and the replacement phrase is the concrete
+    // form of it: the ratio the preset plays.
+    present: ['systematic, style-defining tendency', '2.85:2 rather than 3:2'],
     presentRegex: [/#fr-goldberg-2015/],
   },
   {
