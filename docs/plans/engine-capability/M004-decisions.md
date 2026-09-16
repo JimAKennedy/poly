@@ -65,3 +65,13 @@ failures stopped on 2026-09-13.
   the ledger was written, and its point (nothing exercises the round-trip in a
   host) still stands. The spec asserts against the current version rather than
   the number in the prose.
+
+## 2026-09-16 — executing M004/S02 task 1 (judgment call on dispatch order)
+
+- **Decision:** Dispatch a nightly after the *first* group-1 spec rather than
+  after all four. — **Why:** The three remaining group-1 specs reuse this one's
+  CDP attach, its menu route, and its `.strip .stat` read-back. If any of those
+  is wrong on the runner, building three more on top multiplies one error into
+  four, and each correction still costs a dispatch. Proving the route once is
+  cheaper than proving it four times. This refines the batching decision rather
+  than reversing it: the group is still cited from one *closing* run.
