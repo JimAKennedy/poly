@@ -285,7 +285,7 @@ multiple instances, offline rendering and host automation — so a regression th
 appears only inside a DAW fails the night it lands rather than in someone's
 project.
 **Branch:** milestone/M004-daw-regression
-**Status:** planned
+**Status:** in-progress
 **Demo:** A nightly run whose summary lists a spec per area above, each green,
 against a Cubase session the runner launched unattended.
 
@@ -304,6 +304,18 @@ below requires a **named nightly run** in its evidence — the workflow run URL,
 showing that spec green. A slice that cannot name one is not done, however green
 its local gate is.
 
+**What blocks the remaining six, found by executing S02 (2026-09-16).** The
+binding constraint is not runner time, it is missing affordances. `S01` needs
+something that makes Cubase save a project; `S04` needs the plugin window closed
+and reopened, where only enumeration exists today; `S06` needs Export Audio
+Mixdown driven from a menu; `S07` needs an automation lane, which realistically
+means a fixture. `S05` needs a two-instance `.cpr`, and fixtures are authored by
+hand in Cubase — `poly-4bar.cpr` was made that way in PR #186. The decision
+recorded in `M004-decisions.md` is that these are built at the runner rather
+than blind: an eight-minute dispatch is the wrong feedback loop for UI
+automation. `S03` is the exception — it needs MIDI Remote bindings, which is
+code — and is left open with the rest rather than started and abandoned.
+
 **One cost, stated once.** `jk-standards.yaml` declares `cubase-nightly` a
 repo-wide global lock, because Cubase, loopMIDI and the interactive desktop
 session exist once on a single self-hosted Windows runner. These seven slices
@@ -312,6 +324,7 @@ lengthen one serialised run, and that runner already has an open failure issue
 
 ### Slice M004/S01 — Session recall
 
+**Plan:** M004-S01-plan.md
 **Validation:** format, cubase-harness
 **Evidence:** evidence/M004-S01.md
 **Status:** open
@@ -330,25 +343,27 @@ lengthen one serialised run, and that runner already has an open failure issue
 
 ### Slice M004/S02 — Preset recall across all 45
 
+**Plan:** M004-S02-plan.md
 **Validation:** format, cubase-harness
 **Evidence:** evidence/M004-S02.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Every one of the 45 factory presets is selected in a running Cubase
+- [x] Every one of the 45 factory presets is selected in a running Cubase
       instance, and each loads without crashing the host
-- [ ] For each preset the spec asserts the lane count and note numbers against
+- [x] For each preset the spec asserts the lane count and note numbers against
       `site/src/generated/presets.json`, so a preset that loads wrongly fails
       rather than merely not crashing
-- [ ] A nightly run is named in the evidence with this spec green
+- [x] A nightly run is named in the evidence with this spec green
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| DAW02 | 31 of the 45 factory presets have never been selected inside a DAW. `kWebPresetLaneNames` is initialised sparsely at 14 rows against a `kFactoryPresetCount`-sized extent, and a null entry there once crashed Cubase on preset change; the null guard at the `applyPreset` call site is the only thing between that table and the same crash | `coverage` | `tests/cubase/e2e/`, `plugin/source/webui/web_ui_view.cpp` | A spec iterates every preset index, asserting the host survives and the loaded lanes match `presets.json`; proved by pointing one index at a deliberately malformed entry and watching it fail. Evidence names the nightly run | `open` |
+| DAW02 | 31 of the 45 factory presets have never been selected inside a DAW. `kWebPresetLaneNames` is initialised sparsely at 14 rows against a `kFactoryPresetCount`-sized extent, and a null entry there once crashed Cubase on preset change; the null guard at the `applyPreset` call site is the only thing between that table and the same crash | `coverage` | `tests/cubase/e2e/`, `plugin/source/webui/web_ui_view.cpp` | A spec iterates every preset index, asserting the host survives and the loaded lanes match `presets.json`; proved by pointing one index at a deliberately malformed entry and watching it fail. Evidence names the nightly run | `done` |
 
 ### Slice M004/S03 — Transport motion
 
+**Plan:** M004-S03-plan.md
 **Validation:** format, cubase-harness
 **Evidence:** evidence/M004-S03.md
 **Status:** open
@@ -368,6 +383,7 @@ lengthen one serialised run, and that runner already has an open failure issue
 
 ### Slice M004/S04 — Editor lifecycle
 
+**Plan:** M004-S04-plan.md
 **Validation:** format, cubase-harness
 **Evidence:** evidence/M004-S04.md
 **Status:** open
@@ -385,6 +401,7 @@ lengthen one serialised run, and that runner already has an open failure issue
 
 ### Slice M004/S05 — Multiple instances
 
+**Plan:** M004-S05-plan.md
 **Validation:** format, cubase-harness
 **Evidence:** evidence/M004-S05.md
 **Status:** open
@@ -402,6 +419,7 @@ lengthen one serialised run, and that runner already has an open failure issue
 
 ### Slice M004/S06 — Offline bounce equivalence
 
+**Plan:** M004-S06-plan.md
 **Validation:** format, cubase-harness
 **Evidence:** evidence/M004-S06.md
 **Status:** open
@@ -419,6 +437,7 @@ lengthen one serialised run, and that runner already has an open failure issue
 
 ### Slice M004/S07 — Host parameter automation
 
+**Plan:** M004-S07-plan.md
 **Validation:** format, cubase-harness
 **Evidence:** evidence/M004-S07.md
 **Status:** open

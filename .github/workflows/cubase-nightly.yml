@@ -30,6 +30,19 @@ on:
     - cron: "0 2 * * *"
   workflow_dispatch:
     inputs:
+      e2e_mutate:
+        description: >-
+          Red-path knob for the M004 in-DAW specs. Leave EMPTY for a normal run.
+          Set to one or more perturbation names, comma or space separated, so a
+          single red dispatch can turn every M004 spec red at once --
+          s01-perturb-state, s02-malformed-preset,
+          s03-accumulated-phase, s04-skip-reattach, s05-shared-state,
+          s06-perturb-capture, s07-flatten-lane -- and the spec that reads it
+          must FAIL. Each spec perturbs what it asserts against, never the
+          plugin: a knob that changed shipped behaviour under an environment
+          variable would be one that could be set in production.
+        required: false
+        default: ''
       cdp_port:
         description: >-
           CDP remote-debugging port for Cubase's WebView2 editor, driving the
@@ -433,6 +446,37 @@ jobs:
         run: |
           python -m pip install --quiet -r tests/cubase/driver/requirements.txt
           python tests/cubase/driver/play_scenario.py --bars 4 --tempo 120
+
+      # M004 S02 (DAW02): select every factory preset in the running host and
+      # compare each against site/src/generated/presets.json. 31 of the 45 had
+      # never been opened in a DAW, and a sparse kWebPresetLaneNames once
+      # crashed Cubase on preset change. Runs before the export e2e because a
+      # crash here should be attributed to preset selection.
+      #
+      # It runs LAST among the in-session specs because it is DESTRUCTIVE to
+      # host state: it leaves the plugin on the final preset, not the fixture's
+      # patch. Placed before the export e2e it turned that spec red -- "track 1
+      # name 'Clap' is not in the expected lane names" -- on run 35045855242,
+      # where the sweep itself passed. Any later spec that mutates host state
+      # belongs after this one for the same reason.
+      #
+      # It must also stay BEFORE "Quit Cubase": the sweep attaches over CDP to a
+      # live editor. And after "Play scenario", because that step's output is
+      # compared to a golden -- a sweep before it would play the wrong patch.
+      # So this is the last thing that happens while Cubase is up.
+      # POLY_E2E_MUTATE is the red-path knob (M004-decisions.md):
+      # unset in the nightly, set by hand to prove the sweep bites.
+      - name: Run L4-web preset sweep (all 45 presets, in-DAW)
+        if: env.POLY_CDP_PORT != ''
+        shell: pwsh
+        env:
+          POLY_E2E_MUTATE: ${{ inputs.e2e_mutate }}
+        run: |
+          Push-Location tests/cubase/e2e
+          npx playwright test preset-recall.spec.ts
+          $code = $LASTEXITCODE
+          Pop-Location
+          if ($code -ne 0) { exit $code }
 
       - name: Quit Cubase
         # Always attempt a clean quit even if wait-for-ready failed, so a hung
