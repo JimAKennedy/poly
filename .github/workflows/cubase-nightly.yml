@@ -396,11 +396,13 @@ jobs:
         if: env.POLY_CDP_PORT != ''
         shell: pwsh
         env:
-          # M004 S03 (DAW03): locate back to the left locator 4s into the play,
-          # so the session emits the same PPQ range twice and
+          # M004 S03 (DAW03): once the passage has played through, locate back
+          # and play it again, so the session emits the same PPQ range twice and
           # transport-motion.spec.ts can compare the passes post-quit. The
-          # golden compare below is given --first-pass-only to match.
-          POLY_LOCATE_AFTER: '4'
+          # golden compare below is given --first-pass-only to match, and the
+          # replay deliberately starts only AFTER the full pass -- locating
+          # mid-pass truncates the passage the golden describes.
+          POLY_REPLAY_PASS: '1'
         run: |
           # CDP does not require the editor to be visible or foregrounded
           # (runner-confirmed, MEM115), so no focus-holder is needed — attach

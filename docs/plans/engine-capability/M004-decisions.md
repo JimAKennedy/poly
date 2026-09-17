@@ -160,3 +160,18 @@ failures stopped on 2026-09-13.
   That is code, not UI automation, so it is buildable from here — but its
   feedback loop is still a dispatch, and it is left `open` with the rest rather
   than started and abandoned mid-slice.
+
+## 2026-09-17 — executing M004/S03 (a finding from the first dispatch)
+
+- **Finding:** [Run 35258279739](https://github.com/JimAKennedy/poly/actions/runs/35258279739).
+  The locate fired correctly and the golden comparison failed:
+  `probe=45 golden=94`. Locating four seconds into an eight-second passage cut
+  the first pass in half, and `--first-pass-only` then handed the golden half a
+  performance.
+- **Decision:** The replay fires only **after** the pass completes, tail
+  included, and the driver flag is `--replay-pass` rather than
+  `--locate-after SECONDS`. — **Why:** The correct moment is defined by the
+  passage, not by a number, and a number would silently drift from
+  `TAIL_SECONDS`. The transport is still rolling through the tail, so this is
+  still a locate mid-playback — it just no longer truncates the passage the
+  golden describes.

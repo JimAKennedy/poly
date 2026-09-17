@@ -197,28 +197,30 @@ def run(args):
         play_s = scenario_seconds(args.bars, args.tempo, args.beats_per_bar)
         log("scenario-start", f"playing {args.bars} bars (~{play_s:.2f}s)")
 
-        # M004 S03 (DAW03): locate backwards mid-playback.
+        # M004 S03 (DAW03): replay the passage after it completes.
         #
         # Poly derives cycle and envelope phase from ABSOLUTE PPQ and never
         # accumulates, and linear playback is the one case where a derivation
-        # and an accumulator agree. Sending CC_LOCATE while rolling returns the
-        # cursor to the left locator and keeps playing, so the same PPQ range is
-        # emitted twice in one session -- which is what makes the property
-        # observable at all. The probe file is cumulative for the session, so
-        # both passes land in it and the assertion splits them apart.
+        # and an accumulator agree. Sending CC_LOCATE while the transport is
+        # still rolling returns the cursor to the left locator and keeps
+        # playing, so the same PPQ range is emitted twice in one session --
+        # which is what makes the property observable at all.
         #
-        # Zero disables, which is the pre-M004 behaviour exactly.
-        if args.locate_after > 0:
-            first_s = min(args.locate_after, play_s)
-            time.sleep(first_s)
+        # The locate fires only AFTER the full pass, tail included. Firing it
+        # mid-pass truncates the first one, and the probe golden describes a
+        # complete 4-bar play: run 35258279739 located at 4s of an 8s passage
+        # and the comparison saw probe=45 against golden=94. Tying it to the
+        # pass rather than to a number means it cannot drift from TAIL_SECONDS.
+        #
+        # Off by default, which is the pre-M004 behaviour exactly.
+        time.sleep(play_s + TAIL_SECONDS)
+        if args.replay_pass:
             outport.send(
                 mido.Message(
                     "control_change", channel=CHANNEL, control=CC_LOCATE, value=127
                 )
             )
-            log("locate", f"located back to the left locator after {first_s:.2f}s")
-            time.sleep(play_s + TAIL_SECONDS)
-        else:
+            log("replay", "located back to the left locator; replaying the passage")
             time.sleep(play_s + TAIL_SECONDS)
 
         outport.send(
@@ -256,14 +258,12 @@ def parse_args(argv):
         "--tempo", type=float, default=DEFAULT_TEMPO_BPM, help="tempo in BPM"
     )
     parser.add_argument(
-        "--locate-after",
-        type=float,
-        default=0.0,
-        metavar="SECONDS",
+        "--replay-pass",
+        action="store_true",
         help=(
-            "M004/S03: after this many seconds of playback, locate back to the "
-            "left locator and keep playing, so the same PPQ range is emitted "
-            "twice in one session; 0 disables (default)"
+            "M004/S03: once the passage has played through, locate back to the "
+            "left locator and play it again, so the same PPQ range is emitted "
+            "twice in one session and transport-motion can compare the passes"
         ),
     )
     parser.add_argument(
