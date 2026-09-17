@@ -197,7 +197,29 @@ def run(args):
         play_s = scenario_seconds(args.bars, args.tempo, args.beats_per_bar)
         log("scenario-start", f"playing {args.bars} bars (~{play_s:.2f}s)")
 
-        time.sleep(play_s + TAIL_SECONDS)
+        # M004 S03 (DAW03): locate backwards mid-playback.
+        #
+        # Poly derives cycle and envelope phase from ABSOLUTE PPQ and never
+        # accumulates, and linear playback is the one case where a derivation
+        # and an accumulator agree. Sending CC_LOCATE while rolling returns the
+        # cursor to the left locator and keeps playing, so the same PPQ range is
+        # emitted twice in one session -- which is what makes the property
+        # observable at all. The probe file is cumulative for the session, so
+        # both passes land in it and the assertion splits them apart.
+        #
+        # Zero disables, which is the pre-M004 behaviour exactly.
+        if args.locate_after > 0:
+            first_s = min(args.locate_after, play_s)
+            time.sleep(first_s)
+            outport.send(
+                mido.Message(
+                    "control_change", channel=CHANNEL, control=CC_LOCATE, value=127
+                )
+            )
+            log("locate", f"located back to the left locator after {first_s:.2f}s")
+            time.sleep(play_s + TAIL_SECONDS)
+        else:
+            time.sleep(play_s + TAIL_SECONDS)
 
         outport.send(
             mido.Message(
@@ -232,6 +254,17 @@ def parse_args(argv):
     parser.add_argument("--bars", type=int, default=DEFAULT_BARS, help="bars to play")
     parser.add_argument(
         "--tempo", type=float, default=DEFAULT_TEMPO_BPM, help="tempo in BPM"
+    )
+    parser.add_argument(
+        "--locate-after",
+        type=float,
+        default=0.0,
+        metavar="SECONDS",
+        help=(
+            "M004/S03: after this many seconds of playback, locate back to the "
+            "left locator and keep playing, so the same PPQ range is emitted "
+            "twice in one session; 0 disables (default)"
+        ),
     )
     parser.add_argument(
         "--beats-per-bar",

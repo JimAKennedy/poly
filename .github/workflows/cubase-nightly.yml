@@ -395,6 +395,12 @@ jobs:
       - name: Run L4-web e2e (attach over CDP, toggle step, play transport)
         if: env.POLY_CDP_PORT != ''
         shell: pwsh
+        env:
+          # M004 S03 (DAW03): locate back to the left locator 4s into the play,
+          # so the session emits the same PPQ range twice and
+          # transport-motion.spec.ts can compare the passes post-quit. The
+          # golden compare below is given --first-pass-only to match.
+          POLY_LOCATE_AFTER: '4'
         run: |
           # CDP does not require the editor to be visible or foregrounded
           # (runner-confirmed, MEM115), so no focus-holder is needed — attach
@@ -530,6 +536,7 @@ jobs:
         run: |
           python tests/cubase/compare_probe_golden.py `
             --probe "${{ env.POLY_PROBE_OUTPUT }}" `
+            --first-pass-only `
             --golden "${{ env.POLY_GOLDEN }}" `
             --expected-hit "${{ env.POLY_ARTIFACT_DIR }}\e2e-expected-hit.json"
 
@@ -542,6 +549,20 @@ jobs:
         shell: pwsh
         working-directory: tests/cubase/e2e
         run: npx playwright test assert-probe.spec.ts
+
+      # M004 S03 (DAW03): post-quit, like the assertion above -- the probe file
+      # only exists once Cubase has flushed it. Splits the cumulative capture at
+      # the driver's locate-back and compares the passes: what Poly emits at a
+      # PPQ must be a function of that PPQ, not of how the transport arrived.
+      # Fails loudly if the capture has no backward jump, so a run that never
+      # exercised the property cannot report green.
+      - name: Assert transport motion leaves PPQ-derived output unchanged (L4)
+        if: env.POLY_CDP_PORT != ''
+        shell: pwsh
+        working-directory: tests/cubase/e2e
+        env:
+          POLY_E2E_MUTATE: ${{ inputs.e2e_mutate }}
+        run: npx playwright test transport-motion.spec.ts
 
       - name: Archive logs and probe output
         if: always()

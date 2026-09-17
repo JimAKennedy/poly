@@ -366,7 +366,7 @@ lengthen one serialised run, and that runner already has an open failure issue
 **Plan:** M004-S03-plan.md
 **Validation:** format, cubase-harness
 **Evidence:** evidence/M004-S03.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 

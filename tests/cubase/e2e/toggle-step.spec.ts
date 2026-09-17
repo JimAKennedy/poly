@@ -184,7 +184,18 @@ test.describe('L4-web: Playwright over CDP toggles a step inside Cubase', () => 
       // Drive the transport via the S08 mido driver (it waits for the MIDI
       // Remote ready ping, starts, plays, stops). Poly's output is captured by
       // poly_midi_probe and flushed on the subsequent Cubase quit.
-      execFileSync('python', [DRIVER, '--bars', '4', '--tempo', '120'], {
+      // M004 S03 (DAW03): POLY_LOCATE_AFTER makes the driver locate back to the
+      // left locator mid-playback, so the same PPQ range is emitted twice in one
+      // session and transport-motion.spec.ts can compare the passes post-quit.
+      // Unset means no locate, which is the pre-M004 behaviour byte for byte --
+      // this spec's own assertion and the probe golden are unaffected when it is
+      // off, and the golden compare is given --first-pass-only when it is on.
+      const locateAfter = process.env.POLY_LOCATE_AFTER;
+      const driverArgs = [DRIVER, '--bars', '4', '--tempo', '120'];
+      if (locateAfter && Number(locateAfter) > 0) {
+        driverArgs.push('--locate-after', locateAfter);
+      }
+      execFileSync('python', driverArgs, {
         stdio: 'inherit',
         cwd: REPO_ROOT,
       });

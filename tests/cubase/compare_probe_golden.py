@@ -115,6 +115,37 @@ def trim_probe_tail(events, max_ppq):
     return [e for e in events if e.ppq <= max_ppq + EPS_PPQ]
 
 
+def trim_to_first_pass(events, enabled):
+    """Drop everything from the first backward PPQ jump onwards.
+
+    M004/S03 (DAW03). The probe file is CUMULATIVE for a session: writeJsonl
+    truncates and re-writes the whole accumulated event list on every flush, so
+    one JSONL holds every note the session emitted. Once the transport locates
+    backwards mid-run -- which is what the transport-motion check needs -- the
+    same PPQ range appears twice in that file, and this comparison would see the
+    replay as duplicate onsets inside its window and fail.
+
+    This scopes the golden comparison to the linear passage it was always about,
+    in the same spirit as ``trim_probe_tail``: the golden describes one forward
+    play, and the second pass is a different question answered by a different
+    check (``tests/cubase/e2e/transport-motion.spec.ts``).
+
+    A backward jump is a note whose ppq is below the highest seen so far. That is
+    the same rule ``splitPasses`` uses on the TypeScript side; the two must agree
+    or a note could fall into neither half.
+    """
+    if not enabled:
+        return events
+    kept = []
+    high = None
+    for e in events:
+        if high is not None and e.ppq < high - EPS_PPQ:
+            break
+        high = e.ppq if high is None else max(high, e.ppq)
+        kept.append(e)
+    return kept
+
+
 def parse_probe_jsonl(text, source):
     """Parse probe JSONL text into the note-on list (note-offs filtered out)."""
     events = []
@@ -372,6 +403,7 @@ def run(args):
             )
 
     raw_probe_count = len(probe_events)
+    probe_events = trim_to_first_pass(probe_events, args.first_pass_only)
     probe_events = trim_probe_tail(probe_events, args.max_ppq)
     trimmed = raw_probe_count - len(probe_events)
 
@@ -413,6 +445,15 @@ def parse_args(argv):
         help=(
             "drop probe note-ons at or after this ppq (scenario-boundary tail "
             "trim); <=0 disables"
+        ),
+    )
+    parser.add_argument(
+        "--first-pass-only",
+        action="store_true",
+        help=(
+            "drop everything from the first backward PPQ jump onwards, so the "
+            "comparison sees only the linear passage the golden describes "
+            "(M004/S03: the probe file is cumulative per session)"
         ),
     )
     parser.add_argument(
