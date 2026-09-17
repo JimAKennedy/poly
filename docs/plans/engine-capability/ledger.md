@@ -366,20 +366,20 @@ lengthen one serialised run, and that runner already has an open failure issue
 **Plan:** M004-S03-plan.md
 **Validation:** format, cubase-harness
 **Evidence:** evidence/M004-S03.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The spec locates the transport backwards and forwards mid-playback, loops
+- [x] The spec locates the transport backwards and forwards mid-playback, loops
       a range, and changes tempo, and asserts the emitted notes at those
       positions match the same positions played linearly
-- [ ] The spec has been shown to fail against a lane whose phase is accumulated
+- [x] The spec has been shown to fail against a lane whose phase is accumulated
       rather than derived from absolute PPQ
-- [ ] A nightly run is named in the evidence with this spec green
+- [x] A nightly run is named in the evidence with this spec green
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| DAW03 | The timing convention is that envelope and cycle phase derive from absolute PPQ and are never accumulated. Golden tests enforce determinism for linear playback only; nothing proves the property under a host's locate, loop or tempo change, which is the one situation where an accumulator and a derivation diverge | `coverage` | `tests/cubase/e2e/`, `tests/cubase/driver/play_scenario.py` | A spec drives locate, loop and tempo change and compares captured output against the linear capture at the same PPQ positions; proved against a deliberately accumulating lane. Evidence names the nightly run | `open` |
+| DAW03 | The timing convention is that envelope and cycle phase derive from absolute PPQ and are never accumulated. Golden tests enforce determinism for linear playback only; nothing proves the property under a host's locate, loop or tempo change, which is the one situation where an accumulator and a derivation diverge | `coverage` | `tests/cubase/e2e/`, `tests/cubase/driver/play_scenario.py` | A spec drives locate, loop and tempo change and compares captured output against the linear capture at the same PPQ positions; proved against a deliberately accumulating lane. Evidence names the nightly run | `done` |
 
 ### Slice M004/S04 — Editor lifecycle
 

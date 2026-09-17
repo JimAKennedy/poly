@@ -13,7 +13,7 @@ own.
 ## Task status
 
 - [x] 1. The spec, its contract, and the workflow step
-- [ ] 2. Cite the nightly run and close the slice
+- [x] 2. Cite the nightly run and close the slice
 
 ## Definition of Done
 
