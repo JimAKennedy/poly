@@ -146,10 +146,25 @@ it returns on work that does not interlock."*
 
 **Issue:** [#111](https://github.com/JimAKennedy/poly/issues/111)
 
-Ten files carry hand-drawn ASCII architecture diagrams — four in
-`appendix-plugin-architecture.mdx` and six under `docs/`. They look markedly
-worse than the rest of a typography-first site, and they are hand-maintained,
-which is the drift class this repo has spent several milestones killing.
+**Seven files** carry hand-drawn ASCII architecture diagrams, 108 marked-up
+lines between them. An earlier draft of this document said "ten files",
+conflating the four *diagrams* in `appendix-plugin-architecture.mdx` with a file
+count; the measured inventory is below. `ARCHITECTURE.md` is at the repo root
+rather than under `docs/`, which the issue's own list also places wrongly.
+
+| File | ASCII lines |
+|---|---|
+| `docs/euclidean-rhythm-guide.md` | 44 |
+| `site/src/content/docs/appendix-plugin-architecture.mdx` | 28 |
+| `docs/testing-strategy.md` | 21 |
+| `docs/engine-spec.md` | 9 |
+| `ARCHITECTURE.md` | 8 |
+| `docs/ui-guide.md` | 4 |
+| `docs/webui-migration.md` | 2 |
+
+They look markedly worse than the rest of a typography-first site, and they are
+hand-maintained, which is the drift class this repo has spent several milestones
+killing.
 
 This one **does** have a coherent outcome and enough surface to be a milestone:
 a build-time Mermaid pipeline, ten files converted, and the existing
@@ -170,17 +185,22 @@ a check that passes without running, a check nobody runs. A check that is
 chronically red, or red one run in five, is the same disease presenting
 differently: it stops being read.
 
-**An honest caveat.** #142 is a *sanitizer* finding from 2026-07-26, and nobody
-has triaged it in this programme. It may be a real data race in the plugin, in
-which case it is not housekeeping at all and belongs on its own. Sizing it
-before triage would be inventing a number. #89 is better understood — a 2.5 s
-threshold against a 3 s wait, reproducing locally and green in CI — and reads as
-a single fix.
+**Corrected at assessment, 2026-09-18.** An earlier draft called #142 "a
+sanitizer finding from 2026-07-26 [that] nobody has triaged", implying something
+stale. It is not stale — it is **auto-refiled**. The issue carries 22 comments,
+one appended by the nightly per failure, the most recent on **2026-09-16**, and
+that latest occurrence names **ASAN-PLUGIN** where the title says TSAN-PLUGIN.
+The issue has accumulated more than one sanitizer.
 
-**These two may not deserve a milestone between them.** Two unrelated fixes with
-a shared adjective is close to a bag of work, and the ledger standard's own test
-is whether a Vision sentence can be written that is an outcome rather than a
-task list. The sentence above is arguable; assessment should push on it.
+Measured over the last 20 sanitizer nightlies: **1 failure, 19 successes.** So
+it is intermittent at roughly 5%, spanning at least two sanitizers, in plugin
+code. An intermittent ASAN/TSAN finding is a plausible real memory or threading
+bug, and this repo's entire real-time-safety discipline rests on the plugin
+being clean — it is not housekeeping.
+
+#89 is better understood: a 2.5 s threshold against a 3 s Playwright wait,
+verified still present at `site/tests-e2e/reich-play.spec.ts:43`, reproducing
+locally and green in CI. It reads as a single fix and is sized as one.
 
 ## Sequencing
 
@@ -206,3 +226,34 @@ reference-lane mechanism is shared, whichever ships first builds it.
   now 45, so that gap has widened since it was filed.
 - **That every item here is the same size.** GP4 and GP5 are milestones. #89
   is a line. Saying so now is cheaper than discovering it during planning.
+
+## Decisions taken at assessment
+
+Recorded here rather than left in a conversation, so a re-run of `/jk:assess`
+consumes them instead of re-asking.
+
+- **Q:** Given #142 is intermittent across two sanitizers rather than chronically
+  red, how should it be placed? — **A (2026-09-18):** Its own milestone,
+  triage-first.
+- **Decision:** GP6 covers #142 alone, and its first slice is triage —
+  reproduce, classify, and only then size the fix. — **Why:** Pairing a possible
+  real race in plugin code with a flaky test threshold would understate it, and
+  sizing the fix before triage would be inventing a number.
+- **Consequence:** #89 needs a home of its own. It is one line, which is not a
+  milestone; where it lands is an open question for the decomposition.
+
+- **Q:** How far should "the page stops prescribing the workaround" go? —
+  **A (2026-09-18):** Engine and the page's workaround prose, in the same
+  milestone.
+- **Decision:** Each engine milestone deletes the workaround it obsoletes and
+  locks the deletion with a `scope-framing` claim, exactly as M003 did for
+  `theory-brazilian` Rule 6. — **Why:** Shipping capability first and sweeping
+  the guide later leaves a window in which the engine can do things the guide
+  still tells readers to fake — which is the drift this programme exists to
+  close, running in the opposite direction.
+
+- **Open, carried into the decomposition:** whether GP3 (#155) folds into GP2.
+  Both designate a reference lane, but #152 reads that lane's *onsets* — which
+  `kotekanSourceLane` already does at `engine.cpp:99-110` — while #155 reads its
+  *phrase gate state*, computed at `:470-474` from `phraseCyclePpq` and
+  `phraseOffPpq`. The shared part may be only the cycle guard.
