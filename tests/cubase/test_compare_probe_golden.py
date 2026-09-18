@@ -173,6 +173,45 @@ class CompareTests(unittest.TestCase):
         trimmed = c.trim_probe_tail(events, c.DEFAULT_MAX_PPQ)
         self.assertEqual([e.ppq for e in trimmed], [15.5, 16.0])
 
+    # M004/S03 (DAW03). The probe file is cumulative per session, so a
+    # locate-back puts the same PPQ range in it twice. The golden describes one
+    # forward play; this trim scopes the comparison to it.
+    def test_trim_to_first_pass_cuts_at_the_backward_jump(self):
+        events = [
+            c.NoteOn(ppq=0.0, pitch=36, velocity=0.7, channel=0),
+            c.NoteOn(ppq=1.0, pitch=38, velocity=0.7, channel=0),
+            c.NoteOn(ppq=2.0, pitch=42, velocity=0.7, channel=0),
+            c.NoteOn(ppq=0.0, pitch=36, velocity=0.7, channel=0),
+            c.NoteOn(ppq=1.0, pitch=38, velocity=0.7, channel=0),
+        ]
+        kept = c.trim_to_first_pass(events, True)
+        self.assertEqual([e.ppq for e in kept], [0.0, 1.0, 2.0])
+
+    def test_trim_to_first_pass_keeps_a_purely_forward_capture(self):
+        events = [
+            c.NoteOn(ppq=0.0, pitch=36, velocity=0.7, channel=0),
+            c.NoteOn(ppq=1.0, pitch=38, velocity=0.7, channel=0),
+        ]
+        self.assertEqual(len(c.trim_to_first_pass(events, True)), 2)
+
+    # Onsets sharing a PPQ are not a backward jump: several lanes fire on the
+    # same step and the probe writes them in whatever order the block produced.
+    def test_trim_to_first_pass_tolerates_equal_ppq(self):
+        events = [
+            c.NoteOn(ppq=0.0, pitch=36, velocity=0.7, channel=0),
+            c.NoteOn(ppq=0.0, pitch=42, velocity=0.7, channel=0),
+            c.NoteOn(ppq=1.0, pitch=38, velocity=0.7, channel=0),
+        ]
+        self.assertEqual(len(c.trim_to_first_pass(events, True)), 3)
+
+    def test_trim_to_first_pass_disabled_keeps_the_replay(self):
+        events = [
+            c.NoteOn(ppq=0.0, pitch=36, velocity=0.7, channel=0),
+            c.NoteOn(ppq=1.0, pitch=38, velocity=0.7, channel=0),
+            c.NoteOn(ppq=0.0, pitch=36, velocity=0.7, channel=0),
+        ]
+        self.assertEqual(len(c.trim_to_first_pass(events, False)), 3)
+
     def test_trim_disabled_keeps_all(self):
         events = c.parse_probe_jsonl(
             '{"type":"noteOn","ppq":16.5,"pitch":42,"velocity":0.5,"channel":0}\n',
