@@ -175,6 +175,31 @@ const CLAIMS = [
     presentRegex: [/#fr-polak-2010/],
   },
   {
+    id: 'M001-S02-humanize-modes',
+    file: 'appendix-design-decisions.mdx',
+    rule:
+      'guide-parity GP02. The decision record lists "humanize jitter" among the ' +
+      'engine\'s deterministic randomness sources. That was never wrong and is ' +
+      'still true of the default mode -- what changed is that humanize now has ' +
+      'two shapes, white noise and a correlated drift, and a record naming only ' +
+      'the first understates what the engine does. This claim asserts the ' +
+      'correction is PRESENT rather than that a falsehood is absent, because ' +
+      'there was no falsehood',
+    present: ['deterministic seed', 'correlated'],
+  },
+  {
+    id: 'M001-S02-microtiming-contrast',
+    file: '18-editors-and-views.mdx',
+    rule:
+      'guide-parity GP02. The page contrasts micro-timing with "Humanize, which ' +
+      'adds a different random displacement on every cycle". True of the ' +
+      'white-noise default and the contrast it draws is the right one, but with ' +
+      'a correlated mode shipping, "random" no longer names the whole feature. ' +
+      'The contrast survives the change by saying which mode it means rather ' +
+      'than being quietly outgrown by it',
+    present: ['white-noise', 'micro-timing offsets apply identically'],
+  },
+  {
     id: 'M001-S01-adaptive-swing',
     file: '12-jazz.mdx',
     rule:
