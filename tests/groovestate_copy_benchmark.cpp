@@ -87,7 +87,11 @@ TEST(GrooveStateCopyBenchmark, ReportsFactSizes) {
     // Across M003 the struct has grown 13776 -> 17936, about 30%, and the copy
     // 0.45 -> 0.68 us. Both are comfortably inside budget; the trend is worth a
     // reviewer's attention rather than a reader's surprise.
-    EXPECT_EQ(sizeof(poly::GrooveState), 17936u)
+    // M001 S01 (GP01, guide-parity): +64 bytes from LaneConfig.swingMode
+    // (uint8_t), which with alignment costs 8 bytes/lane x 8 lanes. The
+    // smallest growth the guard has recorded; M001/S02 adds humanizeMode
+    // beside it and is expected to fit the same padding.
+    EXPECT_EQ(sizeof(poly::GrooveState), 18000u)
         << "GrooveState size changed — record it in the milestone's decisions file";
 }
 

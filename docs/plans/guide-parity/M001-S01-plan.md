@@ -10,7 +10,7 @@ already applies. Design approved in chat 2026-09-18; see `M001-decisions.md`.
 
 ## Task status
 
-- [ ] 1. The mode field and the tempo curve
+- [x] 1. The mode field and the tempo curve
 - [ ] 2. Swing reads the curve, and the lookahead follows
 - [ ] 3. `12-jazz` stops prescribing a per-tempo value
 - [ ] 4. Evidence and close-out

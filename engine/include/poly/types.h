@@ -216,6 +216,14 @@ struct ConstraintConfig {
     int densityMax = kMaxSteps;
 };
 
+// M001 S01 (GP01). How swing's amount maps to displacement.
+//
+// Fixed is the pre-M001 mapping exactly: swingAmount * stepDurPpq / 3, capped
+// at exact triplet and invariant with tempo. TempoAdaptive derives the ratio
+// from the host tempo, which is what 12-jazz.mdx already teaches swing does and
+// what the engine could not express.
+enum class SwingMode : uint8_t { Fixed = 0, TempoAdaptive = 1 };
+
 // --- Lane Config ---
 
 // region:lane-config
@@ -235,6 +243,11 @@ struct LaneConfig {
     float velocitySpread = 0.05f;
     float humanizeMs = 0.0f;
     float swingAmount = 0.0f;
+    // M001 S01 (GP01). State-only, like kotekanMode: the per-lane expression
+    // parameter family is full at kParamsPerLane == 16 and the core family is
+    // at 14, and a feel-mode is a style choice rather than automation material.
+    // Fixed is the default, so every pre-M001 patch is byte-identical.
+    SwingMode swingMode = SwingMode::Fixed;
     float noteDuration = 0.0f;
     float phraseLength = 0.0f;      // beats; 0 = continuous (no phrase gating)
     float phraseGap = 0.0f;         // beats; silence between phrases
@@ -369,6 +382,53 @@ inline AdditiveCellInfo computeAdditiveCells(const LaneConfig& cfg) {
     }
     info.totalPpq = accum;
     return info;
+}
+
+// --- Swing ratio (M001 S01, GP01) ---
+
+// The long-to-short ratio swing produces at a given tempo and amount.
+// 1.0 is straight, 2.0 is exact triplet.
+//
+// This reproduces the SHAPE Friberg & Sundström (2002) report -- a ratio near
+// 3.5:1 at ballad tempi, narrowing toward straight as tempo approaches 300 BPM
+// -- and the coefficients below are OURS, not transcribed from their tables.
+// Refining them against a source in hand is therefore a data change needing no
+// code. Claiming they were the measured values would be exactly the kind of
+// citation the theory-audit programme existed to remove; the same framing
+// applies to the jembe and samba profiles in presets.cpp.
+//
+// Pure arithmetic, no allocation: this is called from applyTimingShifts on the
+// audio thread.
+inline double swingRatioAt(double tempo, float amount) {
+    const double a = amount < 0.0f ? 0.0 : (amount > 1.0f ? 1.0 : static_cast<double>(amount));
+    if (a <= 0.0)
+        return 1.0;
+
+    // Normalised tempo position: 0 at 60 BPM and below, 1 at 300 and above.
+    constexpr double kSlowBpm = 60.0;
+    constexpr double kFastBpm = 300.0;
+    double t = (tempo - kSlowBpm) / (kFastBpm - kSlowBpm);
+    t = t < 0.0 ? 0.0 : (t > 1.0 ? 1.0 : t);
+
+    // Widest ratio at the slow end, essentially straight at the fast end.
+    constexpr double kWidest = 3.5;
+    constexpr double kNarrowest = 1.1;
+    const double full = kWidest + (kNarrowest - kWidest) * t;
+
+    // The amount scales between straight and the tempo's full ratio, so
+    // amount == 0 is straight at every tempo and the parameter keeps meaning
+    // what it meant.
+    return 1.0 + (full - 1.0) * a;
+}
+
+// The fraction of a step by which swing displaces the off-note, for a given
+// ratio. A ratio of 2:1 puts the off-note two thirds of the way through the
+// pair, which is 1/6 of the pair late -- the same displacement the fixed
+// mapping produces at amount 1.0, so the two agree where they should.
+inline double swingOffsetFraction(double ratio) {
+    if (ratio <= 1.0)
+        return 0.0;
+    return ratio / (ratio + 1.0) - 0.5;
 }
 
 // --- Swing cell grouping (M003 S02, EC09) ---
