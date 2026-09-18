@@ -1,0 +1,440 @@
+---
+class: gated
+---
+
+# Guide parity — delivery ledger
+
+Status: current (2026-09-18)
+
+Assessed from `docs/plans/guide-parity/vision.md` on 2026-09-18. That document
+is research; this file is the plan of record.
+
+**Source:** —  <!-- ledger-ok: no spec system in this repo; the vision document is the input and `openspec/` is absent -->
+
+## The programme
+
+Poly's guide is ahead of Poly's engine, and the guide says so out loud. Six of
+the seven feature issues assessed here are one shape: a page teaches a
+technique, and the engine either cannot express it or makes the reader perform
+it by hand. The pages' own words are the evidence, not an inference drawn from
+the issues.
+
+The precedent is engine-capability M003, which found the same shape in
+`theory-brazilian` Rule 6 — a rule ending "until subdivision profiles ship, use
+light swing plus small per-lane offsets as an admitted approximation" — built
+the capability and deleted the admission. Three such admissions left the guide
+in that one milestone.
+
+**Every engine milestone here carries its own prose.** A milestone that ships
+capability and leaves the page prescribing the workaround creates the drift this
+programme exists to close, running the other way. The deletion is locked by a
+`scope-framing` claim, as M001–M003's corrections are.
+
+**Back-compatibility is a definition-of-done item, not an assumption.** Every
+engine slice must show the 45 factory presets rendering byte-identically with
+its feature off, proved by a golden rather than by inspection. M003/S01 set that
+precedent and it is what made that milestone safe to merge without re-auditing
+45 presets by hand.
+
+## Reconciliation
+
+Ten items assessed against the tree at `e3a2205`. None already satisfied, none
+partly satisfied, all ten outstanding — each confirmed by absence in the code
+rather than by reading the issue:
+
+| Item | Confirmed outstanding by |
+|---|---|
+| #149 | `kSwingSyncopationDivisor = 3.0`, one fixed divisor, no tempo term |
+| #151 | a single `deterministicRand(..., absStep, 3)` per step — white noise |
+| #158 | `kMutationGhostThreshold` applied to a flat roll |
+| #152 | `ConstraintConfig` is lane-local; no `timelineSourceLane` |
+| #154 | fill roll on `absStep`; no phrase-position weighting |
+| #155 | `kotekanSourceLane` exists, `responseSourceLane` does not |
+| #245 | `ev.pitch = cfg.midiNote` — one assignment, no `noteSequence` |
+| #111 | 7 files still ASCII, 108 marked-up lines, no mermaid dependency |
+| #142 | open; 22 auto-filed occurrences; 1 failure in the last 20 nightlies |
+| #89 | `toBeGreaterThan(2.5)` still present |
+
+The vision document carried two wrong claims of its own — a file count for #111
+and a stale framing for #142 — both corrected in it before this assessment, and
+both recorded there rather than silently fixed.
+
+## Milestone M001 — Feel derives from tempo and from time
+
+**Vision:** Poly's swing and humanize behave as the measured literature the
+guide already cites describes, and the pages stop prescribing a fixed amount.
+
+**Branch:** milestone/M001-feel
+**Status:** planned
+**Demo:** A jazz patch at 80 BPM swings wider than the same patch at 220, from
+one setting; a humanized lane drifts rather than jitters, and the drift is
+identical on every replay of the same seed.
+
+**Why these two together.** Both change how a hit is displaced in time, both
+land in `applyTimingShifts`, both need a `kStateVersion` bump with inert
+defaults, and both must keep `maxTimingShift`'s lookahead correct — #149 names
+that last point itself. M003/S01 walked exactly this ground, including the
+lookahead bound, which is also why a mistake there would surface here first.
+
+### Slice M001/S01 — Swing widens and tracks tempo
+
+**Validation:** format, unit, engine-isolation, rt-safety, site-unit, doc-conformance, doc-discipline
+**Evidence:** evidence/M001-S01.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] A lane can swing beyond the exact-triplet ceiling the fixed `/3` divisor imposes
+- [ ] With tempo-adaptive swing on, the effective ratio widens at slow tempi and narrows toward straight at fast ones, asserted at two tempi from one setting
+- [ ] With the feature off, all 45 factory presets render byte-identically, proved by a golden test
+- [ ] `maxTimingShift` covers the widened range, shown by a note near a block boundary still being emitted
+- [ ] `12-jazz` no longer tells the reader to pick a Swing value per tempo, and a `scope-framing` claim fails if that instruction returns
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| GP01 | Swing is a fixed fraction of the step — `swingAmount * stepDurPpq / kSwingSyncopationDivisor` with the divisor at 3.0 — so the ratio is capped at exact triplet and is invariant with tempo. Measured jazz reaches ~3.5:1 at ballad tempi and narrows toward 1:1 near 300 BPM (Friberg & Sundström 2002), and `12-jazz` already teaches that swing "varies continuously with tempo" | `capability` | `engine/`, `12-jazz.mdx`, `site/tests/` | Engine tests assert a ratio beyond triplet is reachable and that one setting yields different ratios at two tempi; the golden asserts presets unmoved with the mode off; a site claim locks the prose deletion | `open` |
+
+### Slice M001/S02 — Humanize drifts rather than jitters
+
+**Validation:** format, unit, engine-isolation, rt-safety, site-unit, doc-conformance, doc-discipline
+**Evidence:** evidence/M001-S02.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] Successive humanize offsets on one lane are correlated rather than independent, asserted as a measurable property of the sequence rather than by eye
+- [ ] The offsets remain a pure function of absolute step index — a locate or loop reproduces them exactly
+- [ ] With the correlated mode off, all 45 factory presets render byte-identically, proved by a golden test
+- [ ] `renderRange()` gains no allocation, lock or blocking call
+- [ ] The pages recommending Humanize no longer describe it as jitter where they now mean drift, and a `scope-framing` claim locks the correction
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| GP02 | `humanizeMs` displaces each hit by an independent seeded value, which is white noise. Human timing fluctuation is long-range correlated (Hennig et al. 2011), and listeners distinguish the two — white-noise jitter is what makes humanized MIDI sound fake. Affects every chapter recommending Humanize, neo-soul at 0.4–0.5 most exposed | `capability` | `engine/`, `site/src/content/docs/`, `site/tests/` | Engine tests assert successive offsets correlate and that the sequence is reproduced exactly after a transport jump; the golden asserts presets unmoved with the mode off | `open` |
+
+## Milestone M002 — Stochastic choices know where they are
+
+**Vision:** Mutation, ghost, drop and fill decisions are weighted by where the
+step sits — in the meter, against the timeline, and within the phrase — and the
+chapters stop prescribing manual workarounds for them.
+
+**Branch:** milestone/M002-position
+**Status:** planned
+**Demo:** A batá or clave patch where added hits land with the timeline rather
+than across it; a funk patch whose ghosts cluster before the backbeat without a
+dedicated ghost lane; a tihai that lands on sam without the reader doing the
+arithmetic.
+
+**Why these four together.** All four bias the *same seeded rolls* — the
+mutation, ghost, drop and fill decisions at `engine.cpp` — by a per-step weight
+that is precomputable per lane. #158 weights by metric position, #152 by
+distance from a reference lane's onsets, #154 by proximity to a phrase
+boundary, and #155 couples one lane's phrase gate to another's. One weighting
+mechanism, several sources of weight. Building them apart would mean several
+ways to bias one roll, which is what M003 rejected when it gave subdivision
+profiles explicit precedence over `cellSizes` rather than letting two mechanisms
+combine silently.
+
+**#155 is here rather than in a milestone of its own,** which the vision document
+left open and said to decide with the code open. Decided: `kotekanSourceLane` at
+`engine.cpp:99-103` already carries "one lane names another, guard against
+mutual reference, read its state", and both #152 and #155 need exactly that.
+They diverge in what they read — onsets versus gate state — so the shared part
+is the reference and its guard, which is real but small. Small enough to build
+once, not twice.
+
+### Slice M002/S01 — A lane can weight by a reference lane's timeline
+
+**Validation:** format, unit, engine-isolation, rt-safety, site-unit, doc-conformance, doc-discipline
+**Evidence:** evidence/M002-S01.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] A lane can name a reference lane, and a mutual reference is refused rather than followed
+- [ ] Mutation-adds are biased toward or away from the reference lane's onsets by a signed per-lane strength, shown by the distribution of added steps changing with the sign
+- [ ] Drops are less likely on high-weight steps than on low-weight ones
+- [ ] With no reference lane named, all 45 factory presets render byte-identically, proved by a golden test
+- [ ] `03-afro-cuban` stops describing clave alignment as something the reader maintains by hand, and a `scope-framing` claim locks it
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| GP03 | Nothing in the engine knows the timeline lane exists. `ConstraintConfig` offers `anchorSteps`, `backbeatProtect` and density bounds, all lane-local, so mutation-adds and fill-adds can place hits that cross the clave and probability culls can drop clave-confirming ones. `03-afro-cuban` teaches that parts ignoring the clave "sound wrong"; the same gap covers the Ewe bell and tala accent structure | `capability` | `engine/src/constraint.cpp`, `engine/`, `03-afro-cuban.mdx` | Engine tests assert the added-step distribution shifts with the weight's sign and that drops avoid high-weight steps; a mutual reference is asserted refused; the golden asserts presets unmoved | `open` |
+
+### Slice M002/S02 — Ghosts cluster where funk puts them
+
+**Validation:** format, unit, engine-isolation, rt-safety, site-unit, doc-conformance, doc-discipline
+**Evidence:** evidence/M002-S02.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] Ghost-add probability is higher on weak subdivisions preceding an accent than on those following one, asserted as a distribution over many seeds rather than a single roll
+- [ ] The weighting scales with the Complexity macro, so low Complexity keeps grooves clean
+- [ ] With the weighting neutral, all 45 factory presets render byte-identically, proved by a golden test
+- [ ] `11-funk`'s dedicated ghost lane is no longer the recipe the page prescribes, and a `scope-framing` claim locks the change
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| GP04 | Ghost notes come from a flat per-step mutation roll: any mutated step has equal chance of becoming a ghost, independent of where it sits in the meter. Funk ghosting is grammatical — ghosts concentrate on the weak subdivisions around the backbeat and fill toward the next accent (Danielsen 2006; Stewart 2000). Chapter 11 works around this with a dedicated high-hit-count ghost lane, which costs a lane and cannot respond to where the accents are | `capability` | `engine/`, `11-funk` chapter and its theory page | Engine tests assert the ghost distribution differs before and after an accent across many seeds, and that Complexity scales it; the golden asserts presets unmoved | `open` |
+
+### Slice M002/S03 — Fills resolve onto the phrase boundary, and a tihai lands
+
+**Validation:** format, unit, engine-isolation, rt-safety, site-unit, doc-conformance, doc-discipline
+**Evidence:** evidence/M002-S03.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] Fill probability rises toward the end of a phrase cycle, with a shape parameter controlling how sharply, asserted as a distribution across the cycle
+- [ ] For an ungated lane the boundary used is the composite convergence point, not silence
+- [ ] A tihai of a given phrase length lands its final onset exactly on the target, asserted arithmetically rather than by ear
+- [ ] With the weighting neutral, all 45 factory presets render byte-identically, proved by a golden test
+- [ ] `06-indian-classical` no longer asks the reader to do the tihai arithmetic by hand, and a `scope-framing` claim locks it
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| GP05 | `FillLikelihood` is an envelope target with no knowledge of phrase position: a fill-add is as likely at beat 2 of bar 1 as at the end of an 8-bar phrase. Idiomatic fills cluster at phrase boundaries and resolve onto the downbeat, most explicitly the tihai — a phrase repeated three times to land on sam (Nelson 2008; Clayton 2000). Chapter 6 asks the reader to solve `3×P + 2×gap` by hand | `capability` | `engine/`, `06-indian-classical.mdx` | Engine tests assert the fill distribution concentrates toward the boundary and that a tihai's final onset equals the target; the golden asserts presets unmoved | `open` |
+
+### Slice M002/S04 — A response lane answers its call
+
+**Validation:** format, unit, engine-isolation, rt-safety, site-unit, doc-conformance, doc-discipline
+**Evidence:** evidence/M002-S04.md
+**Status:** open
+**Depends:** M002/S01
+
+**Definition of Done**
+
+- [ ] A lane's phrase gate can be defined as open exactly when a named source lane's gate is closed, with an optional lead-in or overlap in beats
+- [ ] Changing the source lane's phrase settings keeps the antiphony intact, which is the failure the manual recipe has
+- [ ] A mutual reference between two response lanes is refused rather than followed
+- [ ] With no response lane named, all 45 factory presets render byte-identically, proved by a golden test
+- [ ] `15-compositional-grammar` no longer gives interleaving offsets as the recipe for antiphony, and a `scope-framing` claim locks it
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| GP06 | Call-and-response is achieved by hand-tuning `phraseLength`/`phraseGap`/`phraseOffset` until gates happen to interleave — `15-compositional-grammar` describes the recipe explicitly. It is fragile: change one lane's phrase settings and the antiphony breaks silently, because there is no structural relationship between the lanes. Kotekan couples patterns; this couples phrasing | `capability` | `engine/`, `15-compositional-grammar.mdx` | Engine tests assert the response gate is the complement of the source's, that it survives a change to the source's phrase length, and that a mutual reference is refused; the golden asserts presets unmoved | `open` |
+
+## Milestone M003 — A lane can carry pitch
+
+**Vision:** A lane emits a sequence of pitches with their own durations, so
+Poly's polymetric machinery applies to melodic material and not only to
+percussion.
+
+**Branch:** milestone/M003-pitch
+**Status:** planned
+**Demo:** One lane playing a five-note sequence against a seven-step cycle,
+phasing, with drift and kotekan complement applying to it unchanged.
+
+**The only milestone here not closing a guide gap.** It opens territory the
+guide does not describe. Whether the guide grows to cover it, or the capability
+ships ahead of the guide with that stated, is recorded as an open question
+rather than settled — but the two must not diverge silently, which is this
+programme's whole premise.
+
+### Slice M003/S01 — A lane emits a sequence of pitches
+
+**Validation:** format, unit, engine-isolation, rt-safety
+**Evidence:** evidence/M003-S01.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] A lane can carry an optional sequence of pitches with per-note durations, supplying successive hits' pitch instead of the single `midiNote`
+- [ ] The field's name does not collide with the existing `phrase*` fields, and the chosen name is recorded with its reason
+- [ ] Every existing lane feature — drift, kotekan complement, tempo multiplier, additive cells — applies unchanged with a sequence set, asserted for at least two of them
+- [ ] With no sequence set, all 45 factory presets render byte-identically, proved by a golden test
+- [ ] A pre-bump state loads as the single-pitch behaviour it played
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| GP07 | A lane emits one fixed pitch: `ev.pitch = cfg.midiNote`, a single assignment. Hand-drum traditions are one voice with several strokes — djembe bass/tone/slap, tabla bols, conga open/muted/slap — so each articulation currently needs its own lane, competing for the 8-lane budget and unable to share a pattern. A sequence also makes a lane a pitched voice, so the polymetric machinery applies to melodic material | `capability` | `engine/include/poly/types.h`, `engine/src/engine.cpp`, `engine/include/poly/state_io_*.h` | Engine tests assert successive hits take successive sequence pitches, that a named existing feature still applies, and that a pre-bump state loads as single-pitch; the golden asserts presets unmoved | `open` |
+
+### Slice M003/S02 — The sequence reaches a factory preset
+
+**Validation:** format, unit, engine-isolation, site-unit, doc-conformance, doc-discipline
+**Evidence:** evidence/M003-S02.md
+**Status:** open
+**Depends:** M003/S01
+
+**Definition of Done**
+
+- [ ] A lane's note sequence is expressible in a preset and reaches `site/src/generated/presets.json` under a raised schema version
+- [ ] At least one factory preset uses a sequence, and its lanes' pitches are asserted against the generated data
+- [ ] The preset count and any per-lane field-count guards are updated rather than bypassed
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| GP08 | A capability reachable only from hand-written state is a capability users do not have. M003/S01 established the path: the emitter carries the field, the generator's schema gate rises, and a factory preset demonstrates it | `pipeline` | `engine/src/presets.cpp`, `engine/tools/emit_presets.cpp`, `site/scripts/generate-presets-json.mjs` | The generated `presets.json` carries the sequence at the raised schema version and a site test asserts the preset's pitches against it | `open` |
+
+## Milestone M004 — Diagrams are rendered, not drawn
+
+**Vision:** Every architecture diagram is Mermaid source rendered at build time,
+and none is hand-maintained ASCII art.
+
+**Branch:** milestone/M004-diagrams
+**Status:** planned
+**Demo:** The plugin-architecture appendix renders vector diagrams that match
+the site's typography, and a check fails if ASCII art returns.
+
+**The inventory, measured rather than quoted.** Seven files, 108 marked-up
+lines: `docs/euclidean-rhythm-guide.md` (44), the appendix (28),
+`docs/testing-strategy.md` (21), `docs/engine-spec.md` (9), `ARCHITECTURE.md`
+(8), `docs/ui-guide.md` (4), `docs/webui-migration.md` (2). `ARCHITECTURE.md` is
+at the repo root, which the issue's own list places under `docs/`.
+
+### Slice M004/S01 — One diagram renders from Mermaid at build time
+
+**Validation:** format, site-unit, doc-conformance, doc-discipline, guards
+**Evidence:** evidence/M004-S01.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] A Mermaid source block in a site page renders to vector output at build time, not at page load
+- [ ] The rendering is deterministic: an unchanged source produces byte-identical output across two builds
+- [ ] One existing diagram is converted and renders correctly, with the ASCII original removed
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| GP09 | Establishing the pipeline is a different risk from converting content, and a reviewer could reasonably accept one and reject the other. Build-time rendering also raises the reproducibility question #282 records for the WASM artifacts: output that churns without a source change makes commit hygiene undecidable | `tooling` | `site/`, `site/package.json` | A build produces the vector output; a second build over unchanged source produces it byte-identically | `open` |
+
+### Slice M004/S02 — All seven files convert, and ASCII cannot return
+
+**Validation:** format, site-unit, doc-conformance, doc-discipline, guards
+**Evidence:** evidence/M004-S02.md
+**Status:** open
+**Depends:** M004/S01
+
+**Definition of Done**
+
+- [ ] All 108 ASCII diagram lines across the seven files are gone, replaced by Mermaid source
+- [ ] A check fails when ASCII box-drawing characters appear in a diagram position in any governed doc
+- [ ] That check has been shown to fail by reintroducing one
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| GP10 | Architecture diagrams live as ASCII art in seven files. They render as monospace blocks markedly unlike the rest of a typography-first site, and they are hand-drawn — the drift class M048 was built to kill | `docs` | `ARCHITECTURE.md`, `docs/`, `site/src/content/docs/appendix-plugin-architecture.mdx`, `scripts/` | The seven files carry no box-drawing characters; the guard is mutation-proved by reintroducing one and watching it fail | `open` |
+
+## Milestone M005 — The sanitizer findings are understood
+
+**Vision:** Every sanitizer finding the nightly has filed is reproduced and
+classified, and each is either fixed or recorded as benign with its reason.
+
+**Branch:** milestone/M005-sanitizers
+**Status:** planned
+**Demo:** A local command runs the same five sanitizer variants the nightly
+does, and the programme can say what each filed occurrence was.
+
+**What the assessment found, correcting the input.** #142 is not a stale finding
+nobody triaged. It is auto-refiled: 22 comments, one per nightly failure, the
+most recent naming `ASAN-PLUGIN` where the title says `TSAN-PLUGIN`. Measured
+over the last 20 sanitizer nightlies: 1 failure, 19 successes. An intermittent
+finding at roughly 5%, across two sanitizers, in plugin code — which this repo's
+entire real-time-safety discipline assumes is clean.
+
+**A token was added for this milestone.** `.jk/validations.yml` gained
+`sanitizers`, running all five variants the nightly runs, because nothing ran
+them locally and a 5%-intermittent failure cannot be investigated through
+dispatches alone.
+
+### Slice M005/S01 — Every filed finding is reproduced or its resistance recorded
+
+**Validation:** format, sanitizers
+**Evidence:** evidence/M005-S01.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] The `sanitizers` token runs all five variants locally and its result is recorded
+- [ ] Each of the filed occurrences is classified by sanitizer, stack and date
+- [ ] Either a finding reproduces locally, with the exact invocation and iteration count that produced it recorded — or the attempts are recorded with what was tried and what the filed occurrences' logs show
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| GP11 | Nothing runs the sanitizers outside CI, so an intermittent finding can only be observed through dispatches. Both outcomes of this slice are results: a reproduction gives the fix something to verify against, and a recorded failure to reproduce is what makes the next attempt cheaper rather than identical | `tooling` | `.jk/validations.yml`, `docs/plans/guide-parity/evidence/` | The token runs; the evidence names either the reproducing invocation or the attempts and the log analysis | `open` |
+
+### Slice M005/S02 — Each finding is fixed or recorded benign
+
+**Validation:** format, unit, rt-safety, sanitizers
+**Evidence:** evidence/M005-S02.md
+**Status:** open
+**Depends:** M005/S01
+
+**Definition of Done**
+
+- [ ] Every finding classified in S01 is either fixed, or recorded as benign with the reason and a suppression entry naming it
+- [ ] A fixed finding is shown gone by the means S01 established — the reproducing invocation, or a named nightly run if it never reproduced locally
+- [ ] No suppression is added without a written reason
+
+`GP13` (#89) rides in this slice's row table because the format has no
+milestone-level row, and is `accepted` rather than sliced — see its row.
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| GP12 | #142 has accumulated 22 occurrences across at least two sanitizers without triage, and an intermittent ASan or TSan finding in plugin code is a plausible real memory or threading defect rather than noise. Sizing the fix before S01 classifies it would be inventing a number | `defect` | `plugin/source/`, `.github/tsan.supp` | Each classified finding is fixed and shown gone, or suppressed with its reason recorded | `open` |
+| GP13 | `tests-e2e/reich-play.spec.ts` asserts `lastFireTime > 2.5` against a 3 s Playwright wait, which is too tight and flakes locally while CI stays green. Carried in this slice's table because the ledger format has no home for a milestone-level row, but deliberately **not sliced**: it is a one-line threshold change, and a definition of done would be more ceremony than the change earns. To be landed as an ordinary pull request referencing #89 | `defect` | `site/tests-e2e/reich-play.spec.ts` | Accepted without a slice; the fix is an ordinary PR | `accepted` |
+
+## Sequencing
+
+The graph is almost flat. M001, M002, M003, M004 and M005 are mutually independent:
+they touch different code, and none produces anything another needs.
+
+Three slice-level dependencies are real:
+
+- **M002/S04 depends on M002/S01.** #155 reuses the reference-lane-and-guard
+  mechanism #152 builds. This is the one dependency that came out of reading the
+  code rather than the issues, and it is why the two are in one milestone.
+- **M003/S02 depends on M003/S01.** A preset cannot carry a field that does not
+  exist.
+- **M004/S02 depends on M004/S01.** Converting seven files onto a pipeline that
+  does not render yet would be seven files of unverifiable work.
+
+**M001 is worth taking first, for a reason the graph cannot express.** It
+re-walks `applyTimingShifts` and `maxTimingShift`, which engine-capability M003
+changed most recently — so a defect introduced there surfaces under M001's tests
+rather than later, when it would be harder to attribute.
+
+**M005 blocks nothing and is blocked by nothing,** but it is the only milestone
+investigating a possible live defect. The others add capability; this one asks
+whether something is already wrong.
+
+## Related issues
+
+- [#149](https://github.com/JimAKennedy/poly/issues/149) — closed by GP01.
+- [#151](https://github.com/JimAKennedy/poly/issues/151) — closed by GP02.
+- [#152](https://github.com/JimAKennedy/poly/issues/152) — closed by GP03.
+- [#158](https://github.com/JimAKennedy/poly/issues/158) — closed by GP04.
+- [#154](https://github.com/JimAKennedy/poly/issues/154) — closed by GP05.
+- [#155](https://github.com/JimAKennedy/poly/issues/155) — closed by GP06.
+- [#245](https://github.com/JimAKennedy/poly/issues/245) — closed by GP07, with
+  GP08 the pipeline consequence.
+- [#111](https://github.com/JimAKennedy/poly/issues/111) — closed by GP10, with
+  GP09 the pipeline it needs.
+- [#142](https://github.com/JimAKennedy/poly/issues/142) — closed by GP12, with
+  GP11 the triage it depends on.
+- [#89](https://github.com/JimAKennedy/poly/issues/89) — GP13, accepted without
+  a slice.
+
+## Out of scope
+
+Recorded so a later pass does not rediscover them as omissions.
+
+- **Per-step subdivision profile editing in the WebUI** —
+  [#305](https://github.com/JimAKennedy/poly/issues/305). Deferred by
+  engine-capability M003 with its reason; M003 raises the same question for note
+  sequences and defers to the same issue rather than solving it twice.
+- **CI and tooling debt other than #142** —
+  [#266](https://github.com/JimAKennedy/poly/issues/266),
+  [#267](https://github.com/JimAKennedy/poly/issues/267),
+  [#274](https://github.com/JimAKennedy/poly/issues/274),
+  [#282](https://github.com/JimAKennedy/poly/issues/282). #274 is adjacent —
+  it names `HostTests.HandshakeStress_NoTearNoLoss`, and the TSan plugin job
+  runs that same suite — so M005/S01's triage may touch it. If it does, that is a
+  finding to record, not a row to add here.
+- **`appendix-presets.mdx` coverage** —
+  [#100](https://github.com/JimAKennedy/poly/issues/100). Filed when the engine
+  shipped 43 presets and the appendix documented 14; it now ships 45, so the gap
+  has widened. Unrelated to guide parity as defined here.
+- **Whether the guide grows to describe pitched lanes.** M003's open question,
+  recorded in its milestone rather than resolved at assessment.
