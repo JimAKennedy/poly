@@ -361,8 +361,15 @@ static double applyTimingShifts(const LaneConfig& cfg, const TransportContext& t
     float effectiveHumanize = cfg.humanizeMs + humanizeMod * kHumanizeEnvelopeScale;
     if (effectiveHumanize > 0.0f && tc.tempo > 0.0) {
         double jitterPpq = static_cast<double>(effectiveHumanize) * tc.tempo / kMsPerMinute;
-        float jitterRand = deterministicRand(laneEffectiveSeed(cfg, state.seed), cfg.id, absStep, 3);
-        ppq += jitterPpq * (jitterRand * 2.0f - 1.0f);
+        // M001 S02 (GP02). Same call site, same inputs, different fluctuation
+        // shape: WhiteNoise is the pre-M001 draw byte for byte, Correlated
+        // drifts. correlatedNoise already returns [-1, 1], where the raw draw
+        // needs the *2-1 rescale.
+        const float jitter =
+            (cfg.humanizeMode == HumanizeMode::Correlated)
+                ? correlatedNoise(laneEffectiveSeed(cfg, state.seed), cfg.id, absStep)
+                : deterministicRand(laneEffectiveSeed(cfg, state.seed), cfg.id, absStep, 3) * 2.0f - 1.0f;
+        ppq += jitterPpq * jitter;
     }
 
     if (cfg.timingOffsetMs != 0.0f && tc.tempo > 0.0) {

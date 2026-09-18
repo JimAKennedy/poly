@@ -224,6 +224,14 @@ struct ConstraintConfig {
 // what the engine could not express.
 enum class SwingMode : uint8_t { Fixed = 0, TempoAdaptive = 1 };
 
+// M001 S02 (GP02). Where humanize's displacement comes from.
+//
+// WhiteNoise is the pre-M001 draw exactly: one independent seeded value per
+// step. Correlated sums octaves of value noise over the absolute step index, so
+// a lane drifts rather than jittering -- the fluctuation shape Hennig et al.
+// (2011) measure in human performance.
+enum class HumanizeMode : uint8_t { WhiteNoise = 0, Correlated = 1 };
+
 // --- Lane Config ---
 
 // region:lane-config
@@ -242,6 +250,9 @@ struct LaneConfig {
     uint8_t ghostFloor = 30;
     float velocitySpread = 0.05f;
     float humanizeMs = 0.0f;
+    // M001 S02 (GP02). State-only, and carried in the same kStateVersion bump
+    // as swingMode -- one version for the milestone, not one per slice.
+    HumanizeMode humanizeMode = HumanizeMode::WhiteNoise;
     float swingAmount = 0.0f;
     // M001 S01 (GP01). State-only, like kotekanMode: the per-lane expression
     // parameter family is full at kParamsPerLane == 16 and the core family is

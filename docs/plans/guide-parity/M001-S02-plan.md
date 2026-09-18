@@ -12,7 +12,7 @@ see `M001-decisions.md`.
 ## Task status
 
 - [x] 1. A correlated noise source, proved correlated
-- [ ] 2. Humanize reads it, and a transport jump reproduces it
+- [x] 2. Humanize reads it, and a transport jump reproduces it
 - [ ] 3. Two pages stop calling it random
 - [ ] 4. Evidence and close-out
 
