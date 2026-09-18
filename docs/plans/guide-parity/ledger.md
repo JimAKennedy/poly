@@ -81,19 +81,19 @@ lookahead bound, which is also why a mistake there would surface here first.
 **Plan:** M001-S01-plan.md
 **Validation:** format, unit, engine-isolation, rt-safety, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M001-S01.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] A lane can swing beyond the exact-triplet ceiling the fixed `/3` divisor imposes
-- [ ] With tempo-adaptive swing on, the effective ratio widens at slow tempi and narrows toward straight at fast ones, asserted at two tempi from one setting
-- [ ] With the feature off, all 45 factory presets render byte-identically, proved by a golden test
-- [ ] `maxTimingShift` covers the widened range, shown by a note near a block boundary still being emitted
-- [ ] `12-jazz` no longer tells the reader to pick a Swing value per tempo, and a `scope-framing` claim fails if that instruction returns
+- [x] A lane can swing beyond the exact-triplet ceiling the fixed `/3` divisor imposes
+- [x] With tempo-adaptive swing on, the effective ratio widens at slow tempi and narrows toward straight at fast ones, asserted at two tempi from one setting
+- [x] With the feature off, all 45 factory presets render byte-identically, proved by a golden test
+- [x] `maxTimingShift` covers the widened range, shown by a note near a block boundary still being emitted
+- [x] `12-jazz` no longer tells the reader to pick a Swing value per tempo, and a `scope-framing` claim fails if that instruction returns
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| GP01 | Swing is a fixed fraction of the step — `swingAmount * stepDurPpq / kSwingSyncopationDivisor` with the divisor at 3.0 — so the ratio is capped at exact triplet and is invariant with tempo. Measured jazz reaches ~3.5:1 at ballad tempi and narrows toward 1:1 near 300 BPM (Friberg & Sundström 2002), and `12-jazz` already teaches that swing "varies continuously with tempo" | `capability` | `engine/`, `12-jazz.mdx`, `site/tests/` | Engine tests assert a ratio beyond triplet is reachable and that one setting yields different ratios at two tempi; the golden asserts presets unmoved with the mode off; a site claim locks the prose deletion | `open` |
+| GP01 | Swing is a fixed fraction of the step — `swingAmount * stepDurPpq / kSwingSyncopationDivisor` with the divisor at 3.0 — so the ratio is capped at exact triplet and is invariant with tempo. Measured jazz reaches ~3.5:1 at ballad tempi and narrows toward 1:1 near 300 BPM (Friberg & Sundström 2002), and `12-jazz` already teaches that swing "varies continuously with tempo" | `capability` | `engine/`, `12-jazz.mdx`, `site/tests/` | Engine tests assert a ratio beyond triplet is reachable and that one setting yields different ratios at two tempi; the golden asserts presets unmoved with the mode off; a site claim locks the prose deletion | `done` |
 
 ### Slice M001/S02 — Humanize drifts rather than jitters
 
