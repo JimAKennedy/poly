@@ -65,7 +65,7 @@ both recorded there rather than silently fixed.
 guide already cites describes, and the pages stop prescribing a fixed amount.
 
 **Branch:** milestone/M001-feel
-**Status:** in-progress
+**Status:** done
 **Demo:** A jazz patch at 80 BPM swings wider than the same patch at 220, from
 one setting; a humanized lane drifts rather than jitters, and the drift is
 identical on every replay of the same seed.
