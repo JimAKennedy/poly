@@ -86,6 +86,27 @@ cubase-harness: npm --prefix tests/cubase/e2e run typecheck && npm --prefix test
 # is how three consecutive ships went green locally and red in CI.
 guards: bash scripts/check-guards.sh
 
+# All five sanitizer variants the nightly runs, in the same order and with the
+# same targets and filters -- engine-only ASan/UBSan/TSan, then the two
+# plugin-inclusive jobs that omit POLY_ENGINE_ONLY so the sanitizers see
+# plugin/source/. Added by /jk:assess for the guide-parity programme's GP5:
+# issue #142 is an intermittent finding at roughly 5% of nightlies, and nothing
+# could reproduce it on a laptop because no local command ran these at all.
+#
+# Separate build trees per variant, because the flags are incompatible and a
+# shared tree would silently reuse the previous variant's objects. Five Debug
+# builds: minutes, not seconds.
+# pre-push-exempt: sanitizers — five Debug builds with incompatible sanitizer
+# flags, each in its own tree. Minutes, not seconds, and the nightly already
+# runs them on every scheduled build. A push-time gate that costs five builds is
+# a gate people bypass.
+sanitizers: >
+  cmake -S . -B build-asan -G Ninja -DCMAKE_BUILD_TYPE=Debug -DENABLE_ASAN=ON -DPOLY_ENGINE_ONLY=ON && cmake --build build-asan --parallel && ctest --test-dir build-asan --output-on-failure &&
+  cmake -S . -B build-ubsan -G Ninja -DCMAKE_BUILD_TYPE=Debug -DENABLE_UBSAN=ON -DPOLY_ENGINE_ONLY=ON && cmake --build build-ubsan --parallel && ctest --test-dir build-ubsan --output-on-failure &&
+  cmake -S . -B build-tsan -G Ninja -DCMAKE_BUILD_TYPE=Debug -DENABLE_TSAN=ON -DPOLY_ENGINE_ONLY=ON && cmake --build build-tsan --parallel && ctest --test-dir build-tsan --output-on-failure &&
+  cmake -S . -B build-asan-plugin -G Ninja -DCMAKE_BUILD_TYPE=Debug -DENABLE_ASAN=ON && cmake --build build-asan-plugin --parallel --target poly_host_tests poly_bridge_tests && ctest --test-dir build-asan-plugin --output-on-failure -R "^HostTests\.|^ProbeTestFixture\.|^ProbeChain\.|^GoldenProcessor\." && ctest --test-dir build-asan-plugin --output-on-failure -R "^Bridge" &&
+  cmake -S . -B build-tsan-plugin -G Ninja -DCMAKE_BUILD_TYPE=Debug -DENABLE_TSAN=ON && cmake --build build-tsan-plugin --parallel --target poly_host_tests && TSAN_OPTIONS=suppressions="$PWD/.github/tsan.supp" ctest --test-dir build-tsan-plugin --output-on-failure -R "^HostTests\."
+
 # The whole pre-push gate: format, RT safety, snippet regions, build, tests,
 # and pluginval. The token a slice owes before /jk:ship, not during /jk:next.
 # pre-push-exempt: gate — this token *is* the pre-push gate. Running it from inside itself
