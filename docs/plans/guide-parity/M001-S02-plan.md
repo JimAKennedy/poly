@@ -14,7 +14,7 @@ see `M001-decisions.md`.
 - [x] 1. A correlated noise source, proved correlated
 - [x] 2. Humanize reads it, and a transport jump reproduces it
 - [x] 3. Two pages stop calling it random
-- [ ] 4. Evidence and close-out
+- [x] 4. Evidence and close-out
 
 ## Definition of Done
 

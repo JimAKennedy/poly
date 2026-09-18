@@ -102,19 +102,19 @@ lookahead bound, which is also why a mistake there would surface here first.
 **Plan:** M001-S02-plan.md
 **Validation:** format, unit, engine-isolation, rt-safety, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M001-S02.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Successive humanize offsets on one lane are correlated rather than independent, asserted as a measurable property of the sequence rather than by eye
-- [ ] The offsets remain a pure function of absolute step index — a locate or loop reproduces them exactly
-- [ ] With the correlated mode off, all 45 factory presets render byte-identically, proved by a golden test
-- [ ] `renderRange()` gains no allocation, lock or blocking call
-- [ ] The pages recommending Humanize no longer describe it as jitter where they now mean drift, and a `scope-framing` claim locks the correction
+- [x] Successive humanize offsets on one lane are correlated rather than independent, asserted as a measurable property of the sequence rather than by eye
+- [x] The offsets remain a pure function of absolute step index — a locate or loop reproduces them exactly
+- [x] With the correlated mode off, all 45 factory presets render byte-identically, proved by a golden test
+- [x] `renderRange()` gains no allocation, lock or blocking call
+- [x] The pages recommending Humanize no longer describe it as jitter where they now mean drift, and a `scope-framing` claim locks the correction
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| GP02 | `humanizeMs` displaces each hit by an independent seeded value, which is white noise. Human timing fluctuation is long-range correlated (Hennig et al. 2011), and listeners distinguish the two — white-noise jitter is what makes humanized MIDI sound fake. Affects every chapter recommending Humanize, neo-soul at 0.4–0.5 most exposed | `capability` | `engine/`, `site/src/content/docs/`, `site/tests/` | Engine tests assert successive offsets correlate and that the sequence is reproduced exactly after a transport jump; the golden asserts presets unmoved with the mode off | `open` |
+| GP02 | `humanizeMs` displaces each hit by an independent seeded value, which is white noise. Human timing fluctuation is long-range correlated (Hennig et al. 2011), and listeners distinguish the two — white-noise jitter is what makes humanized MIDI sound fake. Affects every chapter recommending Humanize, neo-soul at 0.4–0.5 most exposed | `capability` | `engine/`, `site/src/content/docs/`, `site/tests/` | Engine tests assert successive offsets correlate and that the sequence is reproduced exactly after a transport jump; the golden asserts presets unmoved with the mode off | `done` |
 
 ## Milestone M002 — Stochastic choices know where they are
 
