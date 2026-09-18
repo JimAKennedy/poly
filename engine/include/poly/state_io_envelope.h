@@ -10,7 +10,7 @@
 namespace poly {
 
 // region:state-version
-static constexpr int32_t kCurrentStateVersion = 20;
+static constexpr int32_t kCurrentStateVersion = 21;
 // M068 S03: v16 switched the pattern generator from the retired Bresenham
 // distribution (`(i*k) mod n < k`) to Bjorklund. Lanes saved before v16 carry a
 // rotation authored against the old generator; readLaneConfig migrates each
@@ -40,6 +40,14 @@ static constexpr int32_t kKotekanModeStateVersion = 19;
 // first profileCount entries are written, preceded by the count, so a lane with
 // no profile costs four bytes rather than 260.
 static constexpr int32_t kSubdivisionProfileStateVersion = 20;
+
+// M001 S01/S02 (GP01, GP02, guide-parity): swingMode and humanizeMode. One
+// version for both, because they ship in the same milestone and no state a
+// reader could hold carries one without the other. A pre-v21 state carries
+// neither byte, and the defaults -- Fixed swing, white-noise humanize -- are
+// exactly the behaviour it played, so the migration is lossless by construction
+// rather than by conversion.
+static constexpr int32_t kFeelModeStateVersion = 21;
 // endregion:state-version
 
 // --- Envelope serialization helpers ---

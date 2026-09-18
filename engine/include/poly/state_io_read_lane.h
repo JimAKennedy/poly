@@ -189,6 +189,16 @@ template <typename ReadFn> [[nodiscard]] bool readLaneConfig(ReadFn&& read, Lane
                 return false;
         }
     }
+    if (version >= kFeelModeStateVersion) {
+        uint8_t swingMode = 0;
+        if (!read(&swingMode, sizeof(swingMode)))
+            return false;
+        lane.swingMode = static_cast<SwingMode>(swingMode);
+        uint8_t humanizeMode = 0;
+        if (!read(&humanizeMode, sizeof(humanizeMode)))
+            return false;
+        lane.humanizeMode = static_cast<HumanizeMode>(humanizeMode);
+    }
     // Pre-v19 states carry no kotekan-mode bytes; the struct defaults
     // (NyogCag, overlap 0) stand, which is the strict complement such a state
     // played before M002. sanitizeGrooveState clamps a corrupt mode byte.

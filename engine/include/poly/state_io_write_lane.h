@@ -181,6 +181,14 @@ template <typename WriteFn>
                 return false;
         }
     }
+    if (bodyVersion >= kFeelModeStateVersion) {
+        uint8_t swingMode = static_cast<uint8_t>(lane.swingMode);
+        if (!write(&swingMode, sizeof(swingMode)))
+            return false;
+        uint8_t humanizeMode = static_cast<uint8_t>(lane.humanizeMode);
+        if (!write(&humanizeMode, sizeof(humanizeMode)))
+            return false;
+    }
 
     return true;
 }

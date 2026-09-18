@@ -11,6 +11,7 @@ enable_testing()
 add_executable(poly_tests
     aksak_swing_tests.cpp
     constraint_tests.cpp
+    correlated_noise_tests.cpp
     emission_tests.cpp
     euclidean_tests.cpp
     envelope_tests.cpp
@@ -21,6 +22,7 @@ add_executable(poly_tests
     lane_name_tests.cpp
     dynamic_shaping_tests.cpp
     subdivision_profile_tests.cpp
+    swing_curve_tests.cpp
     swing_humanize_tests.cpp
     macro_tests.cpp
     midi_capture_tests.cpp

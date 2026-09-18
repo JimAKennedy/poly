@@ -126,7 +126,7 @@ Some DAW hosts call `setActive()` from the audio thread, so even the activation 
 
 ## Seeded Deterministic RNG
 
-**Decision:** All randomness in the engine (probability gates, humanize jitter, velocity spread) derives from a deterministic seed stored in the patch state.
+**Decision:** All randomness in the engine (probability gates, humanize, velocity spread) derives from a deterministic seed stored in the patch state. Humanize has two shapes: the default is white noise, an independent draw per step, and a lane can instead use a **correlated** fluctuation that drifts across several steps — the long-range correlation measured in human performance. Both are seeded and reproducible; the difference is the shape of the variation, not whether it is deterministic.
 
 **Alternatives considered:**
 - True randomness (each playback is different)

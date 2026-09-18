@@ -528,3 +528,46 @@ TEST(StateMigration, PreV20StateDefaultsToTheEvenGrid) {
             << "lane " << i << ": a pre-v20 state must load as the even grid";
     }
 }
+
+// M001/S01 task 5 (GP01, GP02). The feel modes must survive a save and reload.
+// Neither was serialized when the slice first closed: a user setting
+// tempo-adaptive swing, saving and reopening would have found it gone.
+TEST(StateMigration, FeelModesRoundTrip) {
+    SceneState authored{};
+    for (int i = 0; i < kMaxLanes; ++i) {
+        auto& a = authored.sceneA.lanes[static_cast<size_t>(i)];
+        a.swingMode = (i % 2 == 0) ? SwingMode::TempoAdaptive : SwingMode::Fixed;
+        a.humanizeMode = (i % 3 == 0) ? HumanizeMode::Correlated : HumanizeMode::WhiteNoise;
+    }
+
+    const auto blob = serializeSceneAsVersion(authored, kFeelModeStateVersion);
+    const SceneState loaded = deserializeScene(blob);
+
+    for (int i = 0; i < kMaxLanes; ++i) {
+        const auto& want = authored.sceneA.lanes[static_cast<size_t>(i)];
+        const auto& got = loaded.sceneA.lanes[static_cast<size_t>(i)];
+        EXPECT_EQ(got.swingMode, want.swingMode) << "lane " << i << " swingMode must round-trip";
+        EXPECT_EQ(got.humanizeMode, want.humanizeMode) << "lane " << i << " humanizeMode must round-trip";
+    }
+}
+
+// A pre-v21 state carries neither byte. The defaults are the behaviour it
+// played, so the migration is lossless by construction rather than by
+// conversion -- the same shape as the kotekan and subdivision-profile bumps.
+TEST(StateMigration, PreV21StateDefaultsToTheOldFeel) {
+    SceneState authored{};
+    for (int i = 0; i < kMaxLanes; ++i) {
+        authored.sceneA.lanes[static_cast<size_t>(i)].swingMode = SwingMode::TempoAdaptive;
+        authored.sceneA.lanes[static_cast<size_t>(i)].humanizeMode = HumanizeMode::Correlated;
+    }
+
+    const auto blob = serializeSceneAsVersion(authored, kFeelModeStateVersion - 1);
+    const SceneState loaded = deserializeScene(blob);
+
+    for (int i = 0; i < kMaxLanes; ++i) {
+        EXPECT_EQ(loaded.sceneA.lanes[static_cast<size_t>(i)].swingMode, SwingMode::Fixed)
+            << "lane " << i << ": a pre-v21 state must load as the fixed mapping";
+        EXPECT_EQ(loaded.sceneA.lanes[static_cast<size_t>(i)].humanizeMode, HumanizeMode::WhiteNoise)
+            << "lane " << i << ": a pre-v21 state must load as white-noise humanize";
+    }
+}

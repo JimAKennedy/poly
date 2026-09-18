@@ -65,7 +65,7 @@ both recorded there rather than silently fixed.
 guide already cites describes, and the pages stop prescribing a fixed amount.
 
 **Branch:** milestone/M001-feel
-**Status:** planned
+**Status:** done
 **Demo:** A jazz patch at 80 BPM swings wider than the same patch at 220, from
 one setting; a humanized lane drifts rather than jitters, and the drift is
 identical on every replay of the same seed.
@@ -78,39 +78,43 @@ lookahead bound, which is also why a mistake there would surface here first.
 
 ### Slice M001/S01 — Swing widens and tracks tempo
 
+**Plan:** M001-S01-plan.md
 **Validation:** format, unit, engine-isolation, rt-safety, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M001-S01.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] A lane can swing beyond the exact-triplet ceiling the fixed `/3` divisor imposes
-- [ ] With tempo-adaptive swing on, the effective ratio widens at slow tempi and narrows toward straight at fast ones, asserted at two tempi from one setting
-- [ ] With the feature off, all 45 factory presets render byte-identically, proved by a golden test
-- [ ] `maxTimingShift` covers the widened range, shown by a note near a block boundary still being emitted
-- [ ] `12-jazz` no longer tells the reader to pick a Swing value per tempo, and a `scope-framing` claim fails if that instruction returns
+- [x] A lane can swing beyond the exact-triplet ceiling the fixed `/3` divisor imposes
+- [x] With tempo-adaptive swing on, the effective ratio widens at slow tempi and narrows toward straight at fast ones, asserted at two tempi from one setting
+- [x] With the feature off, all 45 factory presets render byte-identically, proved by a golden test
+- [x] `maxTimingShift` covers the widened range, shown by a note near a block boundary still being emitted
+- [x] `12-jazz` no longer tells the reader to pick a Swing value per tempo, and a `scope-framing` claim fails if that instruction returns
+- [x] Both of this milestone's mode fields survive a save and reload, and a
+      pre-bump state loads as the behaviour it played
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| GP01 | Swing is a fixed fraction of the step — `swingAmount * stepDurPpq / kSwingSyncopationDivisor` with the divisor at 3.0 — so the ratio is capped at exact triplet and is invariant with tempo. Measured jazz reaches ~3.5:1 at ballad tempi and narrows toward 1:1 near 300 BPM (Friberg & Sundström 2002), and `12-jazz` already teaches that swing "varies continuously with tempo" | `capability` | `engine/`, `12-jazz.mdx`, `site/tests/` | Engine tests assert a ratio beyond triplet is reachable and that one setting yields different ratios at two tempi; the golden asserts presets unmoved with the mode off; a site claim locks the prose deletion | `open` |
+| GP01 | Swing is a fixed fraction of the step — `swingAmount * stepDurPpq / kSwingSyncopationDivisor` with the divisor at 3.0 — so the ratio is capped at exact triplet and is invariant with tempo. Measured jazz reaches ~3.5:1 at ballad tempi and narrows toward 1:1 near 300 BPM (Friberg & Sundström 2002), and `12-jazz` already teaches that swing "varies continuously with tempo" | `capability` | `engine/`, `12-jazz.mdx`, `site/tests/` | Engine tests assert a ratio beyond triplet is reachable and that one setting yields different ratios at two tempi; the golden asserts presets unmoved with the mode off; a site claim locks the prose deletion | `done` |
 
 ### Slice M001/S02 — Humanize drifts rather than jitters
 
+**Plan:** M001-S02-plan.md
 **Validation:** format, unit, engine-isolation, rt-safety, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M001-S02.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Successive humanize offsets on one lane are correlated rather than independent, asserted as a measurable property of the sequence rather than by eye
-- [ ] The offsets remain a pure function of absolute step index — a locate or loop reproduces them exactly
-- [ ] With the correlated mode off, all 45 factory presets render byte-identically, proved by a golden test
-- [ ] `renderRange()` gains no allocation, lock or blocking call
-- [ ] The pages recommending Humanize no longer describe it as jitter where they now mean drift, and a `scope-framing` claim locks the correction
+- [x] Successive humanize offsets on one lane are correlated rather than independent, asserted as a measurable property of the sequence rather than by eye
+- [x] The offsets remain a pure function of absolute step index — a locate or loop reproduces them exactly
+- [x] With the correlated mode off, all 45 factory presets render byte-identically, proved by a golden test
+- [x] `renderRange()` gains no allocation, lock or blocking call
+- [x] The pages recommending Humanize no longer describe it as jitter where they now mean drift, and a `scope-framing` claim locks the correction
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| GP02 | `humanizeMs` displaces each hit by an independent seeded value, which is white noise. Human timing fluctuation is long-range correlated (Hennig et al. 2011), and listeners distinguish the two — white-noise jitter is what makes humanized MIDI sound fake. Affects every chapter recommending Humanize, neo-soul at 0.4–0.5 most exposed | `capability` | `engine/`, `site/src/content/docs/`, `site/tests/` | Engine tests assert successive offsets correlate and that the sequence is reproduced exactly after a transport jump; the golden asserts presets unmoved with the mode off | `open` |
+| GP02 | `humanizeMs` displaces each hit by an independent seeded value, which is white noise. Human timing fluctuation is long-range correlated (Hennig et al. 2011), and listeners distinguish the two — white-noise jitter is what makes humanized MIDI sound fake. Affects every chapter recommending Humanize, neo-soul at 0.4–0.5 most exposed | `capability` | `engine/`, `site/src/content/docs/`, `site/tests/` | Engine tests assert successive offsets correlate and that the sequence is reproduced exactly after a transport jump; the golden asserts presets unmoved with the mode off | `done` |
 
 ## Milestone M002 — Stochastic choices know where they are
 
