@@ -65,7 +65,7 @@ both recorded there rather than silently fixed.
 guide already cites describes, and the pages stop prescribing a fixed amount.
 
 **Branch:** milestone/M001-feel
-**Status:** planned
+**Status:** in-progress
 **Demo:** A jazz patch at 80 BPM swings wider than the same patch at 220, from
 one setting; a humanized lane drifts rather than jitters, and the drift is
 identical on every replay of the same seed.
@@ -78,9 +78,10 @@ lookahead bound, which is also why a mistake there would surface here first.
 
 ### Slice M001/S01 — Swing widens and tracks tempo
 
+**Plan:** M001-S01-plan.md
 **Validation:** format, unit, engine-isolation, rt-safety, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M001-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
@@ -96,6 +97,7 @@ lookahead bound, which is also why a mistake there would surface here first.
 
 ### Slice M001/S02 — Humanize drifts rather than jitters
 
+**Plan:** M001-S02-plan.md
 **Validation:** format, unit, engine-isolation, rt-safety, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M001-S02.md
 **Status:** open
