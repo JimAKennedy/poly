@@ -96,6 +96,10 @@ guards: bash scripts/check-guards.sh
 # Separate build trees per variant, because the flags are incompatible and a
 # shared tree would silently reuse the previous variant's objects. Five Debug
 # builds: minutes, not seconds.
+# pre-push-exempt: sanitizers — five Debug builds with incompatible sanitizer
+# flags, each in its own tree. Minutes, not seconds, and the nightly already
+# runs them on every scheduled build. A push-time gate that costs five builds is
+# a gate people bypass.
 sanitizers: >
   cmake -S . -B build-asan -G Ninja -DCMAKE_BUILD_TYPE=Debug -DENABLE_ASAN=ON -DPOLY_ENGINE_ONLY=ON && cmake --build build-asan --parallel && ctest --test-dir build-asan --output-on-failure &&
   cmake -S . -B build-ubsan -G Ninja -DCMAKE_BUILD_TYPE=Debug -DENABLE_UBSAN=ON -DPOLY_ENGINE_ONLY=ON && cmake --build build-ubsan --parallel && ctest --test-dir build-ubsan --output-on-failure &&
