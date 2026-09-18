@@ -129,6 +129,33 @@ Distributes `k` pulses (hits) across `n` steps as evenly as possible using a Bre
 - `euclidean(3, 8, 0, out)` → Cuban tresillo `[x . . x . . x .]`
 - `euclidean(5, 8, 0, out)` → `[x . x x . x x .]` cinquillo
 
+### Swing (M001, guide-parity)
+
+Swing displaces the off-note of each pair late. How far is the lane's
+`swingMode`:
+
+| Mode | Displacement | Range |
+|---|---|---|
+| `Fixed` | `swingAmount * stepDurPpq / 3` | up to exact triplet (2:1) |
+| `TempoAdaptive` | derived from `swingRatioAt(tempo, swingAmount)` | up to about 3.5:1 at ballad tempi, narrowing toward straight near 300 BPM |
+
+`Fixed` is the default and is the pre-M001 arithmetic unchanged, so every patch
+that predates the mode plays identically. The two agree at a 2:1 ratio: the
+adaptive path widens the range rather than introducing a different feel.
+
+The `Swing` VST3 parameter keeps its normalised 0–1 range in both modes — what
+changes is what `1.0` means. Widening the mapping unconditionally would have
+moved every preset that sets a swing value.
+
+`swingRatioAt` reproduces the *shape* Friberg & Sundström (2002) report; its
+coefficients are Poly's own and are commented as such, so refining them against
+a source in hand is a data change rather than a code change.
+
+`maxTimingShift` tracks whichever mode is active. A bound left at the fixed
+figure while an adaptive lane displaces further drops the onset at a block
+boundary — `SwingCurve.SplitRenderingMatchesWholeRenderingWhenAdaptive` fails
+when it is.
+
 ### Non-isochronous subdivision (M003)
 
 A lane's steps are evenly spaced unless it says otherwise. Two fields change
@@ -357,7 +384,7 @@ Under `SceneSelect::Morph`, the render path materializes an interpolated `Groove
 | envelopeCount | int | 0 | Active envelope count |
 <!-- END GENERATED: laneconfig -->
 
-The table above is generated from `engine/include/poly/types.h` by `scripts/generate-param-docs.mjs` (M048 S05). Do not hand-edit — CI's `jk-standards` generated-freshness check rejects any divergence. Additional `LaneConfig` fields not yet exposed via the generator: `midiChannel`, `swingAmount`, `noteDuration`, `phraseLength`/`phraseGap`/`phraseOffset`, `mutationRate`, `driftRate`, `timingOffsetMs`, `syncopationOffset`, `tempoMultiplier`, `kotekanSourceLane`, `cellCount`/`cellSizes`, `profileCount`/`subdivisionProfile`, `swingCellCount`/`swingCellSizes`, `timeline`/`fixedPattern`/`fixedPatternLength`, `microTimingMs`, `constraints`.
+The table above is generated from `engine/include/poly/types.h` by `scripts/generate-param-docs.mjs` (M048 S05). Do not hand-edit — CI's `jk-standards` generated-freshness check rejects any divergence. Additional `LaneConfig` fields not yet exposed via the generator: `midiChannel`, `swingAmount`, `noteDuration`, `phraseLength`/`phraseGap`/`phraseOffset`, `mutationRate`, `driftRate`, `timingOffsetMs`, `syncopationOffset`, `tempoMultiplier`, `kotekanSourceLane`, `cellCount`/`cellSizes`, `profileCount`/`subdivisionProfile`, `swingCellCount`/`swingCellSizes`, `swingMode`, `timeline`/`fixedPattern`/`fixedPatternLength`, `microTimingMs`, `constraints`.
 
 ### MacroValues (Six Musical-Intent Controls)
 

@@ -175,6 +175,20 @@ const CLAIMS = [
     presentRegex: [/#fr-polak-2010/],
   },
   {
+    id: 'M001-S01-adaptive-swing',
+    file: '12-jazz.mdx',
+    rule:
+      'guide-parity GP01. The page opens by teaching that jazz swing "varies ' +
+      'continuously with tempo", then tells the reader to set a fixed value per ' +
+      'tempo -- "0.4-0.5 for a medium-tempo feel" -- because the engine could ' +
+      'only do fixed. M001/S01 ships tempo-adaptive swing, so the instruction ' +
+      'is the workaround and goes. Per-lane independence is NOT the workaround ' +
+      'and stays: different voices genuinely swing at different ratios, which ' +
+      'is a separate claim the mode does not address',
+    forbidden: ['for a medium-tempo feel'],
+    present: ['varies continuously with tempo', 'per-lane independence', 'tempo-adaptive'],
+  },
+  {
     id: 'S04-F32',
     file: 'theory-balkan.mdx',
     rule:
