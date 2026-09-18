@@ -100,7 +100,7 @@ lookahead bound, which is also why a mistake there would surface here first.
 **Plan:** M001-S02-plan.md
 **Validation:** format, unit, engine-isolation, rt-safety, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M001-S02.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 

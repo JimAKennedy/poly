@@ -11,6 +11,7 @@ enable_testing()
 add_executable(poly_tests
     aksak_swing_tests.cpp
     constraint_tests.cpp
+    correlated_noise_tests.cpp
     emission_tests.cpp
     euclidean_tests.cpp
     envelope_tests.cpp
