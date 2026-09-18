@@ -62,3 +62,28 @@ presented in chat and approved before any code was written.
 
 - **Nothing deferred.** Both slices are planned in full below; neither has a
   question that only becomes answerable once the other has landed.
+
+## 2026-09-18 — a planning gap found during M001/S02 task 2
+
+- **Finding:** Neither `swingMode` nor `humanizeMode` was serialized. A user
+  setting tempo-adaptive swing, saving and reopening would find it gone.
+  `CLAUDE.md` calls unversioned state "a preset compatibility time bomb"; this is
+  the adjacent failure — state that does not persist at all.
+- **The gap was in the planning, and it was mine.** `M001/S01`'s definition of
+  done never mentioned state and its plan had no serialization task, while
+  `M001/S02`'s plan task 2 says to carry the field "in the same `kStateVersion`
+  bump as `M001/S01`'s `swingMode`" — assuming a bump S01 never made. The two
+  plans disagreed, and the ledger's S01 definition of done was the wrong one.
+  Every prior milestone here bumped the version as a matter of course: M002 for
+  the kotekan fields, M003 for the subdivision profile.
+- **Q:** S01 is already `done` and its DoD never mentioned state. How should
+  this be corrected? — **A:** Reopen S01 and add a shared state task.
+- **Decision:** `M001/S01` returns to `in-progress` with a new definition-of-done
+  item and a task 5 covering **both** fields in one `kStateVersion` bump, 20 →
+  21. — **Why:** One version for the milestone is what S02's plan already
+  assumes, and it is how M002 and M003 handled theirs. A third slice would have
+  made a planning error look like a deliverable; shipping unsaved would have
+  made a feel setting that vanishes on reload, which is close to not shipping it.
+- **`GP01` stays `done`.** The swing capability is delivered; what was missing is
+  persistence, which the new DoD item covers for the milestone rather than for
+  that row.

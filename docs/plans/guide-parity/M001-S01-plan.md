@@ -14,6 +14,7 @@ already applies. Design approved in chat 2026-09-18; see `M001-decisions.md`.
 - [x] 2. Swing reads the curve, and the lookahead follows
 - [x] 3. `12-jazz` stops prescribing a per-tempo value
 - [x] 4. Evidence and close-out
+- [x] 5. Both modes survive a reload
 
 ## Definition of Done
 
@@ -123,3 +124,32 @@ Modifies `site/src/content/docs/12-jazz.mdx` and
    slice `done`.
 3. Run `jk-standards ledger`, then the whole validation set once more on the
    final tree. Commit with `Slice: M001/S01` and `Rows: GP01`.
+
+## Task 5 — Both modes survive a reload
+
+**Added after the slice first closed.** `M001/S02` task 2 found that neither
+`swingMode` nor `humanizeMode` was serialized, and traced it to this plan: it
+had no serialization task while S02's plan assumed the bump happened here. See
+`M001-decisions.md`. Tasks 1–4 are unaffected and their boxes stand.
+
+Modifies `engine/include/poly/state_io_envelope.h`,
+`engine/include/poly/state_io_write_lane.h`,
+`engine/include/poly/state_io_read_lane.h`, and `tests/state_migration_tests.cpp`.
+
+1. Write the failing round-trip tests first: a lane with each mode set is
+   written and read back unchanged, and a pre-bump payload loads with both
+   fields at their defaults rather than at whatever the bytes happen to say.
+2. Follow the `kSubdivisionProfileStateVersion` pattern in the same file — it is
+   the most recent precedent and sits beside where this goes. Add
+   `kFeelModeStateVersion = 21`, bump `kCurrentStateVersion` to 21, and guard
+   both fields' read and write on `version >= kFeelModeStateVersion`.
+3. **One version for both fields**, not one each: they ship in the same
+   milestone and there is no state a reader could hold with one and not the
+   other.
+4. Mutate both guards to prove the cases bite — dropping the write must fail the
+   round-trip case, and lowering the read guard must fail the pre-bump case.
+   Rebuild before reading either result: in M003/S01 a stale build reported a
+   failure against sources that were already correct.
+5. Run `format`, `unit`, `engine-isolation`. Tick this box and the new
+   definition-of-done item, set the slice `done` again, and commit with
+   `Slice: M001/S01`.

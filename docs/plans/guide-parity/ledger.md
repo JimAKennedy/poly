@@ -90,6 +90,8 @@ lookahead bound, which is also why a mistake there would surface here first.
 - [x] With the feature off, all 45 factory presets render byte-identically, proved by a golden test
 - [x] `maxTimingShift` covers the widened range, shown by a note near a block boundary still being emitted
 - [x] `12-jazz` no longer tells the reader to pick a Swing value per tempo, and a `scope-framing` claim fails if that instruction returns
+- [x] Both of this milestone's mode fields survive a save and reload, and a
+      pre-bump state loads as the behaviour it played
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
