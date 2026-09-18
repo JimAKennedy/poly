@@ -339,7 +339,15 @@ static double applyTimingShifts(const LaneConfig& cfg, const TransportContext& t
     const bool swingThisStep = swingCell.valid ? swingCell.isCellTail() : ((cycleStep % 2) == 1);
 
     if (cfg.swingAmount > 0.0f && swingThisStep) {
-        ppq += cfg.swingAmount * stepDurPpq * (1.0 / kSwingSyncopationDivisor);
+        // M001 S01 (GP01). Fixed is the pre-M001 arithmetic byte for byte;
+        // TempoAdaptive derives the displacement from the tempo, which is what
+        // 12-jazz.mdx already teaches swing does. The two agree at a 2:1 ratio,
+        // so the adaptive path is a widening rather than a different feel.
+        if (cfg.swingMode == SwingMode::TempoAdaptive) {
+            ppq += swingOffsetFraction(swingRatioAt(tc.tempo, cfg.swingAmount)) * 2.0 * stepDurPpq;
+        } else {
+            ppq += cfg.swingAmount * stepDurPpq * (1.0 / kSwingSyncopationDivisor);
+        }
     }
     if (cfg.syncopationOffset > 0.0f && !swingThisStep) {
         ppq += static_cast<double>(cfg.syncopationOffset) * stepDurPpq * (1.0 / kSwingSyncopationDivisor);
@@ -423,7 +431,17 @@ static LaneRenderContext prepareLaneContext(const LaneConfig& cfg, const GrooveS
         }
     }
     ctx.maxTimingShift = 0.0;
-    ctx.maxTimingShift += static_cast<double>(std::max(0.0f, cfg.swingAmount)) * maxStepDur / kSwingSyncopationDivisor;
+    // M001 S01 (GP01): the lookahead must track the widened range. Issue #149
+    // names this itself -- an adaptive lane at a slow tempo displaces further
+    // than the fixed /3 ceiling, and a bound left at that figure drops the
+    // displaced onset at a block boundary.
+    if (cfg.swingMode == SwingMode::TempoAdaptive) {
+        ctx.maxTimingShift +=
+            swingOffsetFraction(swingRatioAt(tc.tempo, std::max(0.0f, cfg.swingAmount))) * 2.0 * maxStepDur;
+    } else {
+        ctx.maxTimingShift +=
+            static_cast<double>(std::max(0.0f, cfg.swingAmount)) * maxStepDur / kSwingSyncopationDivisor;
+    }
     ctx.maxTimingShift +=
         static_cast<double>(std::max(0.0f, cfg.syncopationOffset)) * maxStepDur / kSwingSyncopationDivisor;
     if (tc.tempo > 0.0) {
