@@ -21,6 +21,13 @@ Reference for the Poly VST3 plugin interface. Poly is a polymetric drum pattern 
 
 The plugin window is 600 x 870 pixels, laid out top to bottom:
 
+<!-- boxdraw-ok: the block below is a wireframe of the plugin window, drawn
+     mostly in plain +--+ ASCII with a few box-drawing characters for the
+     nested visualization panels. It is a UI mockup, not an architecture
+     diagram; mermaid cannot express a panel layout. Same reasoning as
+     docs/euclidean-rhythm-guide.md -- see
+     docs/plans/guide-parity/M004-decisions.md. -->
+
 ```
 +-----------------------------------------------+
 |  POLY    [ Select Preset...  ▾ ]        1.0.0  |  Header
