@@ -563,6 +563,22 @@ jobs:
         run: bash scripts/check-sample-manifest.sh --strict
       - name: Validate sample manifest (GM coverage)
         run: bash scripts/check-sample-manifest.sh --coverage
+      # M004/S01 (GP09) + S02 (GP11): the site suite renders mermaid fences
+      # through a real Chromium, so running those tests needs a browser even
+      # though this job never builds the site. Same shape and pinned SHA as the
+      # site-e2e job below.
+      - name: Get Playwright version
+        id: pw-version
+        working-directory: site
+        run: echo "version=$(npx playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright browsers
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ steps.pw-version.outputs.version }}
+      - name: Install Playwright browsers
+        working-directory: site
+        run: npx playwright install --with-deps chromium
       # M006 S02 (GAP02). Until this step existed, the only site/tests files CI
       # ran were the ones named in check-doc-conformance.sh, so six ran nowhere
       # -- including presets-json-schema.test.mjs, which carries M005/S01's

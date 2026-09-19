@@ -25,8 +25,7 @@
   },
   "devDependencies": {
     "@astrojs/markdown-remark": "^7.3.1",
-    "@playwright/test": "^1.62.1",
-    "js-yaml": "^4.3.2",
+    "@playwright/test": "^1.63.0",
     "node-web-audio-api": "^2.2.0",
     "playwright": "^1.63.0",
     "rehype-mermaid": "^3.0.0",

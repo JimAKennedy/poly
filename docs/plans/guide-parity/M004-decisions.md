@@ -266,3 +266,69 @@ is the only doc in this milestone's scope that carries one.
 Fixed by refreshing the anchor to 2026-09-19 while saying plainly in the doc
 that nothing in the strategy changed — the anchor moved because the pyramid and
 the fixtures listing were converted, not because the strategy was re-reviewed.
+
+## 2026-09-19 — three CI failures on PR #314, and what each one taught
+
+All three were defects introduced by this branch, not flakes. Local validation
+was green on every one of them.
+
+### 1. `site-lint` — the guard I wrote for this had a blind spot
+
+`mermaid-syntax.test.mjs` (row GP11) launches a browser, and `site-lint` runs
+`npm --prefix site test` while installing **zero** Playwright browsers. All five
+fences failed with `Executable doesn't exist at chromium_headless_shell-1243`.
+
+The instructive part: `mermaid-build-deps.test.mjs` exists *specifically* to stop
+this class of failure, and it could not see this one. It checked jobs that
+**build the site**; `site-lint` does not build, it runs the tests. I had
+mutation-proved that guard — but only on a case it already covered, which
+demonstrates the guard works where it looks, not that it looks in the right
+places.
+
+Fixed by widening the guard **first**, watching it fail naming `ci.yml:site-lint`,
+and only then adding the browser install. The order matters: it is the
+difference between a guard that catches the bug and a guard written to agree
+with a fix already made.
+
+### 2. `site-e2e` — two Playwright versions in one tree
+
+`site/node_modules` held `playwright@1.63.0` (pulled in as rehype-mermaid's
+peer) alongside `@playwright/test@1.62.1`. Both ship a `playwright` binary, so
+`node_modules/.bin/playwright` — which CI's install step invokes — resolves to
+one while `mermaid-isomorphic` imports the other. The job ran
+`npx playwright install --with-deps chromium` and *still* lacked the build the
+renderer demanded.
+
+Invisible locally: an earlier spike had cached chromium builds 1228, 1234 **and**
+1243, so whichever version asked, it was there. The clean machine is the honest
+one.
+
+Fixed by aligning `@playwright/test` to `^1.63.0`, and locked by a new test that
+fails if the two ever diverge again.
+
+### 3. `nfr-review` — one red, caused by declaring a dependency correctly
+
+`dep-freshness` flagged `js-yaml` at 4.3.2 against a latest of 5.4.2 (major
+drift). The pin was deliberate: v5 drops the default export and breaks
+`prose-pattern-claims.test.mjs`. Before this branch js-yaml was transitive and
+invisible to the scanner; declaring it — the right instinct — is what surfaced
+it.
+
+- **Q:** How should the red be handled? — **A:** Record the pin as a deliberate,
+  reasoned exemption rather than taking v5.
+- **Decision, and a deviation from that answer:** the dependency was **removed**
+  instead — **Why:** no suppression mechanism is documented for `dep-freshness`,
+  and a better fix existed. `check-release-workflow.mjs` states the house
+  convention outright: *this repo carries no YAML dependency*, and parses
+  workflows with targeted matches. `mermaid-build-deps.test.mjs` now does the
+  same, js-yaml returns to being transitive exactly as it is on `main`, and the
+  red disappears at its root rather than being suppressed. This serves the
+  stated intent — do not take v5, get the board green — by a cleaner route than
+  the one offered. If an exemption is preferred after all, the dependency can be
+  re-declared and waived.
+- The four amber findings (`rehype-mermaid`, `rehype-parse`, `rehype-stringify`,
+  `unified` — "no release in 23–27 months") are left. `fail-on` is `red`, and
+  the unified ecosystem is stable rather than abandoned.
+
+Both arms of the widened guard were re-proved against the new regex parser,
+because changing the parse invalidates proofs made against the old one.
