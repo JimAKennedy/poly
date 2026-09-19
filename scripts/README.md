@@ -54,6 +54,12 @@ actually fails on regressions.
   hardcoded, plus `ARCHITECTURE.md`, which lives outside every declared root.
   Escape hatch: `<!-- boxdraw-ok: <reason> -->` exempts a file, an empty reason
   fails rather than passes, and exempted files are counted in the summary.
+- `check-ledger-row-ids.mjs` — row IDs are unique within each delivery ledger.
+  jk-standards' `ledger` check validates structure and statuses but not ID
+  uniqueness, which let guide-parity M004 add a `GP11` while M005/S01 already
+  held one. Commit trailers carry `Rows: <id>` and `git log --grep` is the
+  tree-to-plan join, so a duplicate makes that join ambiguous. Scoped per file:
+  two programmes may number from the same sequence.
 - `check-guards.sh` — the repo guards CI enforces that no other local command
   reaches: SPDX headers, personal paths, the README guards and their contract
   proofs, the sample manifest, site assets, and bridge schema coverage (the

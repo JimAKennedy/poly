@@ -394,7 +394,7 @@ dispatches alone.
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| GP11 | Nothing runs the sanitizers outside CI, so an intermittent finding can only be observed through dispatches. Both outcomes of this slice are results: a reproduction gives the fix something to verify against, and a recorded failure to reproduce is what makes the next attempt cheaper rather than identical | `tooling` | `.jk/validations.yml`, `docs/plans/guide-parity/evidence/` | The token runs; the evidence names either the reproducing invocation or the attempts and the log analysis | `open` |
+| GP14 | Nothing runs the sanitizers outside CI, so an intermittent finding can only be observed through dispatches. Both outcomes of this slice are results: a reproduction gives the fix something to verify against, and a recorded failure to reproduce is what makes the next attempt cheaper rather than identical | `tooling` | `.jk/validations.yml`, `docs/plans/guide-parity/evidence/` | The token runs; the evidence names either the reproducing invocation or the attempts and the log analysis | `open` |
 
 ### Slice M005/S02 — Each finding is fixed or recorded benign
 
@@ -454,7 +454,7 @@ whether something is already wrong.
 - [#111](https://github.com/JimAKennedy/poly/issues/111) — closed by GP10, with
   GP09 the pipeline it needs.
 - [#142](https://github.com/JimAKennedy/poly/issues/142) — closed by GP12, with
-  GP11 the triage it depends on.
+  GP14 the triage it depends on.
 - [#89](https://github.com/JimAKennedy/poly/issues/89) — GP13, accepted without
   a slice.
 
