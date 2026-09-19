@@ -123,7 +123,7 @@ step sits — in the meter, against the timeline, and within the phrase — and 
 chapters stop prescribing manual workarounds for them.
 
 **Branch:** milestone/M002-position
-**Status:** planned
+**Status:** in-progress
 **Demo:** A batá or clave patch where added hits land with the timeline rather
 than across it; a funk patch whose ghosts cluster before the backbeat without a
 dedicated ghost lane; a tihai that lands on sam without the reader doing the
@@ -149,9 +149,10 @@ once, not twice.
 
 ### Slice M002/S01 — A lane can weight by a reference lane's timeline
 
+**Plan:** M002-S01-plan.md
 **Validation:** format, unit, engine-isolation, rt-safety, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M002-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
@@ -167,6 +168,7 @@ once, not twice.
 
 ### Slice M002/S02 — Ghosts cluster where funk puts them
 
+**Plan:** M002-S02-plan.md
 **Validation:** format, unit, engine-isolation, rt-safety, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M002-S02.md
 **Status:** open
@@ -184,6 +186,7 @@ once, not twice.
 
 ### Slice M002/S03 — Fills resolve onto the phrase boundary, and a tihai lands
 
+**Plan:** M002-S03-plan.md
 **Validation:** format, unit, engine-isolation, rt-safety, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M002-S03.md
 **Status:** open
@@ -202,6 +205,7 @@ once, not twice.
 
 ### Slice M002/S04 — A response lane answers its call
 
+**Plan:** M002-S04-plan.md
 **Validation:** format, unit, engine-isolation, rt-safety, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M002-S04.md
 **Status:** open
