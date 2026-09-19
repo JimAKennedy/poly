@@ -16,8 +16,9 @@ class: gated
 - [x] 3. Exempt `docs/euclidean-rhythm-guide.md`'s UI wireframe
 - [x] 4. `docs/testing-strategy.md`, `docs/webui-migration.md` convert; `docs/ui-guide.md` is exempted
 - [ ] 5. The guard, wired and green, with the frozen audit record exempted
-- [ ] 6. Mutation-prove the guard on every arm
-- [ ] 7. Evidence and slice close-out
+- [ ] 6. Every Mermaid fence is proved to render
+- [ ] 7. Mutation-prove the guard on every arm
+- [ ] 8. Evidence and slice close-out
 
 **Re-decomposed mid-slice.** The original order wrote the guard first, so it
 could be seen failing against the un-converted tree. That order is impossible
@@ -182,7 +183,38 @@ smaller commit carries a red gate.
 
 ---
 
-## Task 6 — Mutation-prove the guard on every arm
+## Task 6 — Every Mermaid fence is proved to render
+
+**Closes:** row GP11. **Produces:** `site/tests/mermaid-syntax.test.mjs`.
+
+Four of the five fences live in `.md` files that Astro never builds —
+`ARCHITECTURE.md`, `docs/engine-spec.md`, `docs/testing-strategy.md`,
+`docs/webui-migration.md`. GitHub renders those at view time, and nothing in the
+repo checks them. The site-side `.mdx` fence is already covered twice, because
+`astro build` exits 1 on a bad fence and both `site-e2e` and the Pages deploy
+build the site.
+
+**Files:** create `site/tests/mermaid-syntax.test.mjs`.
+
+**Steps:**
+
+1. Write the test: collect every ```mermaid fence across the governed docs plus
+   `ARCHITECTURE.md`, render each through `mermaidRehypeOptions` — the same
+   options the build uses — and fail naming the file and fence index on error.
+2. Assert the collected fence count is greater than zero, so a path change
+   cannot turn this into a green test over an empty set.
+3. **Watch it fail before trusting it:** break one fence in a `.md` file, run the
+   test, confirm it names that file. Restore by an explicit edit and confirm it
+   passes.
+4. Record the honest limit in the test's own comment: this renders against the
+   pinned mermaid, which is a *proxy* for GitHub's renderer, not a guarantee.
+   The versions can diverge.
+
+**Check:** `site-unit` passes and the test is shown to fail on a broken fence.
+
+---
+
+## Task 7 — Mutation-prove the guard on every arm
 
 **Files:** none permanently. This task's product is evidence.
 
@@ -207,7 +239,7 @@ the tree carries uncommitted work and a checkout would discard it.
 
 ---
 
-## Task 7 — Evidence and slice close-out
+## Task 8 — Evidence and slice close-out
 
 **Files:** create `docs/plans/guide-parity/evidence/M004-S02.md`; modify the
 ledger.
@@ -220,8 +252,8 @@ ledger.
    (from the first run, quoted) and after, and the number of exempted files.
 3. Record the build-time delta from task 1.
 4. Record any block left as ASCII under a hatch, and why.
-5. Set row GP10 to `done` and slice M004/S02 to `done`, ticking all three DoD
-   boxes.
+5. Set rows GP10 and GP11 to `done` and slice M004/S02 to `done`, ticking all
+   four DoD boxes.
 6. Run `jk-standards ledger`, then the full validation set.
 
 **Check:** `jk-standards ledger` passes with the slice `done`.

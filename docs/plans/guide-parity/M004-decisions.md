@@ -208,3 +208,38 @@ depicts, and these predate the webui migration. That is a genuine drift problem
 and the exemption does not solve it — it is simply not a problem Mermaid solves
 either. Replacing them with screenshots needs a capture pipeline, alt text and
 `check-site-assets` wiring, which is its own slice.
+
+## 2026-09-19 — M004/S02: a correction, and row GP11
+
+**A claim I made was wrong, and it changed the answer.** Task 2's commit message
+and the chat summary before it both said invalid Mermaid "renders an error
+graphic rather than failing a build". Measured directly by breaking a fence:
+`astro build` **exits 1** and emits no page. The commit message cannot be
+rewritten, so the correction is recorded here.
+
+What that changes: the website was never at risk from a bad fence. `site-e2e`
+builds the site via `site-verify-local.sh`, and the Pages deploy builds it too,
+so a syntax error turns the pull request red before it can reach production.
+
+- **Q:** Four Mermaid fences live in `.md` files that nothing validates,
+  including `ARCHITECTURE.md`. How much work should this get? — **A:** One row in
+  S02, one test.
+- **Decision:** row **GP11** and a fourth definition-of-done item, satisfied by
+  `site/tests/mermaid-syntax.test.mjs` — **Why:** it is the exact gap and about
+  40 lines, reusing the renderer already installed. A slice is the unit a
+  reviewer accepts or rejects independently, and nobody would reject this while
+  accepting the conversions it protects. Making it a row rather than a
+  paragraph in a commit message is what keeps the ledger honest about work found
+  during execution.
+
+**Measured, so the trade is on the record:** 47 pages build in 1.91s with all
+five diagrams, against 1.66–1.79s before. The browser starts once, so five
+diagrams cost about what one did.
+
+**Two limits stated rather than papered over.** Rendering against the pinned
+mermaid 11.17.2 is a proxy for GitHub's renderer, not a guarantee — the versions
+can diverge, and no local check can close that. And the Pages deploy now depends
+on a browser launching, so a Chromium failure in CI blocks a docs deploy rather
+than merely failing a test. Both were accepted deliberately; exact-pinning the
+renderer was offered and not taken, to avoid a lock someone must unpick on every
+upgrade.
