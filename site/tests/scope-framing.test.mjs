@@ -175,6 +175,21 @@ const CLAIMS = [
     presentRegex: [/#fr-polak-2010/],
   },
   {
+    id: 'M003-S02-note-sequences',
+    file: '18-editors-and-views.mdx',
+    rule:
+      'guide-parity GP08. Pitched lanes are the one capability in this ' +
+      'programme that does NOT close a guide gap -- they open territory the ' +
+      'guide does not describe. The milestone left open whether the guide ' +
+      'grows to cover them; the answer taken was to ship ahead and say so, ' +
+      'because an undocumented field is this programme\'s own failure running ' +
+      'the other way. This claim asserts the description is present -- there ' +
+      'is no falsehood to forbid -- and that it says the three things a reader ' +
+      'needs: what a sequence is, that the step grid still governs timing, and ' +
+      'that the traditions chapters do not yet use it',
+    present: ['note sequence', 'still decides when', 'traditions chapters'],
+  },
+  {
     id: 'M002-S04-response-coupling',
     file: '15-compositional-grammar.mdx',
     rule:

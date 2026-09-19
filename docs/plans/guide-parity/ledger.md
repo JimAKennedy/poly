@@ -264,21 +264,21 @@ programme's whole premise.
 **Plan:** M003-S02-plan.md
 **Validation:** format, unit, engine-isolation, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M003-S02.md
-**Status:** in-progress
+**Status:** done
 **Depends:** M003/S01
 
 **Definition of Done**
 
-- [ ] A lane's note sequence is expressible in a preset and reaches `site/src/generated/presets.json` under a raised schema version
-- [ ] At least one factory preset uses a sequence, and its lanes' pitches are asserted against the generated data
-- [ ] The preset count and any per-lane field-count guards are updated rather than bypassed
-- [ ] The guide names the capability and says the traditions chapters do not
+- [x] A lane's note sequence is expressible in a preset and reaches `site/src/generated/presets.json` under a raised schema version
+- [x] At least one factory preset uses a sequence, and its lanes' pitches are asserted against the generated data
+- [x] The preset count and any per-lane field-count guards are updated rather than bypassed
+- [x] The guide names the capability and says the traditions chapters do not
       yet use it, locked by a `scope-framing` claim *(added at planning — see
       `M003-decisions.md`)*
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| GP08 | A capability reachable only from hand-written state is a capability users do not have. M003/S01 established the path: the emitter carries the field, the generator's schema gate rises, and a factory preset demonstrates it | `pipeline` | `engine/src/presets.cpp`, `engine/tools/emit_presets.cpp`, `site/scripts/generate-presets-json.mjs` | The generated `presets.json` carries the sequence at the raised schema version and a site test asserts the preset's pitches against it | `open` |
+| GP08 | A capability reachable only from hand-written state is a capability users do not have. M003/S01 established the path: the emitter carries the field, the generator's schema gate rises, and a factory preset demonstrates it | `pipeline` | `engine/src/presets.cpp`, `engine/tools/emit_presets.cpp`, `site/scripts/generate-presets-json.mjs` | The generated `presets.json` carries the sequence at the raised schema version and a site test asserts the preset's pitches against it | `done` |
 
 ## Milestone M004 — Diagrams are rendered, not drawn
 
