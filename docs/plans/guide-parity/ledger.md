@@ -286,21 +286,31 @@ programme's whole premise.
 and none is hand-maintained ASCII art.
 
 **Branch:** milestone/M004-diagrams
-**Status:** planned
+**Status:** in-progress
 **Demo:** The plugin-architecture appendix renders vector diagrams that match
 the site's typography, and a check fails if ASCII art returns.
 
-**The inventory, measured rather than quoted.** Seven files, 108 marked-up
-lines: `docs/euclidean-rhythm-guide.md` (44), the appendix (28),
-`docs/testing-strategy.md` (21), `docs/engine-spec.md` (9), `ARCHITECTURE.md`
-(8), `docs/ui-guide.md` (4), `docs/webui-migration.md` (2). `ARCHITECTURE.md` is
-at the repo root, which the issue's own list places under `docs/`.
+**The inventory, re-measured 2026-09-19.** Seven files, **117** lines carrying
+a box-drawing character: `docs/euclidean-rhythm-guide.md` (44), the appendix
+(28), `docs/testing-strategy.md` (21), `docs/engine-spec.md` (9),
+`ARCHITECTURE.md` (8), `docs/ui-guide.md` (4), `docs/webui-migration.md` (3).
+`ARCHITECTURE.md` is at the repo root, which the issue's own list places under
+`docs/`.
+
+The figure stated at assess time was 108, which contradicted its own breakdown:
+those per-file numbers summed to 116, and `docs/webui-migration.md` measures 3
+rather than 2. Corrected here rather than left standing, because the sentence
+claims the inventory was measured. No definition-of-done item now carries the
+count — S02 asserts the property instead, so this figure is information and
+cannot go stale into a gate.
 
 ### Slice M004/S01 — One diagram renders from Mermaid at build time
 
+**Plan:** M004-S01-plan.md
+**Design:** M004-S01-design.md
 **Validation:** format, site-unit, doc-conformance, doc-discipline, guards
 **Evidence:** evidence/M004-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
@@ -314,14 +324,15 @@ at the repo root, which the issue's own list places under `docs/`.
 
 ### Slice M004/S02 — All seven files convert, and ASCII cannot return
 
+**Plan:** M004-S02-plan.md
 **Validation:** format, site-unit, doc-conformance, doc-discipline, guards
 **Evidence:** evidence/M004-S02.md
-**Status:** open
+**Status:** in-progress
 **Depends:** M004/S01
 
 **Definition of Done**
 
-- [ ] All 108 ASCII diagram lines across the seven files are gone, replaced by Mermaid source
+- [ ] No box-drawing characters remain in the seven files, replaced by Mermaid source, proved by the guard
 - [ ] A check fails when ASCII box-drawing characters appear in a diagram position in any governed doc
 - [ ] That check has been shown to fail by reintroducing one
 
