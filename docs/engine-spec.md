@@ -195,6 +195,29 @@ and the add band absorbs the difference. Weighting the drop edge down therefore
 widens the add band, which is the intent: an aligned step is protected from
 drops and more available for adds.
 
+### Note sequences (M003, guide-parity)
+
+A lane emits `midiNote` unless it carries a `noteSequence` — up to
+`kMaxNoteSequence` (8) entries of `{pitch, durationBeats}`, with
+`noteSequenceLength == 0` meaning single-pitched and byte-identical to pre-M003.
+
+| Property | Behaviour |
+|---|---|
+| index | `sequence[absStep mod length]` — by **position**, not hit ordinal |
+| duration | **gate length only**; the step grid still places the onset |
+| naming | not `phrase*`, which already means gating rather than content |
+
+Indexing by position is what makes a five-note sequence phase against a
+seven-step cycle, keeps the pitch a pure function of absolute PPQ so a locate
+reproduces it, and stops a mutation-dropped hit re-voicing everything after it.
+
+Gate-length-only is what keeps pitch orthogonal to placement: durations that
+advanced the clock would be a second mechanism for placing onsets beside
+`subdivisionProfile` and `cellSizes`.
+
+Serialised at `kNoteSequenceStateVersion` (22), length first and only that many
+entries, so an unsequenced lane costs four bytes.
+
 ### Swing (M001, guide-parity)
 
 Swing displaces the off-note of each pair late. How far is the lane's
@@ -450,7 +473,7 @@ Under `SceneSelect::Morph`, the render path materializes an interpolated `Groove
 | envelopeCount | int | 0 | Active envelope count |
 <!-- END GENERATED: laneconfig -->
 
-The table above is generated from `engine/include/poly/types.h` by `scripts/generate-param-docs.mjs` (M048 S05). Do not hand-edit — CI's `jk-standards` generated-freshness check rejects any divergence. Additional `LaneConfig` fields not yet exposed via the generator: `midiChannel`, `swingAmount`, `noteDuration`, `phraseLength`/`phraseGap`/`phraseOffset`, `mutationRate`, `driftRate`, `timingOffsetMs`, `syncopationOffset`, `tempoMultiplier`, `kotekanSourceLane`, `cellCount`/`cellSizes`, `profileCount`/`subdivisionProfile`, `swingCellCount`/`swingCellSizes`, `swingMode`, `humanizeMode`, `timelineSourceLane`/`timelineStrength`, `timeline`/`fixedPattern`/`fixedPatternLength`, `microTimingMs`, `constraints`.
+The table above is generated from `engine/include/poly/types.h` by `scripts/generate-param-docs.mjs` (M048 S05). Do not hand-edit — CI's `jk-standards` generated-freshness check rejects any divergence. Additional `LaneConfig` fields not yet exposed via the generator: `midiChannel`, `swingAmount`, `noteDuration`, `phraseLength`/`phraseGap`/`phraseOffset`, `mutationRate`, `driftRate`, `timingOffsetMs`, `syncopationOffset`, `tempoMultiplier`, `kotekanSourceLane`, `cellCount`/`cellSizes`, `profileCount`/`subdivisionProfile`, `swingCellCount`/`swingCellSizes`, `swingMode`, `humanizeMode`, `timelineSourceLane`/`timelineStrength`, `noteSequence`/`noteSequenceLength`, `timeline`/`fixedPattern`/`fixedPatternLength`, `microTimingMs`, `constraints`.
 
 ### MacroValues (Six Musical-Intent Controls)
 

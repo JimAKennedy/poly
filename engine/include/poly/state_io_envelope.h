@@ -10,7 +10,7 @@
 namespace poly {
 
 // region:state-version
-static constexpr int32_t kCurrentStateVersion = 21;
+static constexpr int32_t kCurrentStateVersion = 22;
 // M068 S03: v16 switched the pattern generator from the retired Bresenham
 // distribution (`(i*k) mod n < k`) to Bjorklund. Lanes saved before v16 carry a
 // rotation authored against the old generator; readLaneConfig migrates each
@@ -48,6 +48,13 @@ static constexpr int32_t kSubdivisionProfileStateVersion = 20;
 // exactly the behaviour it played, so the migration is lossless by construction
 // rather than by conversion.
 static constexpr int32_t kFeelModeStateVersion = 21;
+
+// M003 S01 (GP07, guide-parity): noteSequence and noteSequenceLength. A pre-v22
+// state carries neither, and length 0 is the single-pitch behaviour it played,
+// so the migration is lossless by construction rather than by conversion. Only
+// the first noteSequenceLength entries are written, preceded by the count, so a
+// lane without a sequence costs four bytes rather than sixty-four.
+static constexpr int32_t kNoteSequenceStateVersion = 22;
 // endregion:state-version
 
 // --- Envelope serialization helpers ---

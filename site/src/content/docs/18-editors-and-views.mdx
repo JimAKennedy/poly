@@ -67,6 +67,31 @@ The Afrobeat presets apply micro-timing to the bell pattern's second half, where
 
 Any style where timing irregularities are structural rather than random is a candidate for per-step micro-timing. If the displacement is part of the pattern's identity — if removing it makes the groove sound wrong rather than merely different — it belongs in the micro-timing array, not in the Humanize parameter.
 
+## Note Sequences
+
+A lane emits one pitch by default — a kick is a kick. Give it a **note sequence**
+and successive steps take successive pitches from a short list of up to eight,
+each with its own optional gate length. The lane is then a pitched voice, and
+everything else about it still applies: Euclidean generation, drift, kotekan
+complement, additive cells, the timeline weighting.
+
+The sequence is indexed by **position**, not by how many notes have sounded. A
+five-note sequence on a seven-step lane therefore phases against its own cycle,
+and a mutation dropping a hit does not re-voice everything after it. The
+*Reich Phasing* preset uses this directly: both its voices play the same
+five-note cell and one drifts, which is the technique Piano Phase is built on.
+
+**A note's duration is its gate length only.** The step grid still decides when
+notes start — subdivision profiles, additive cells and swing remain the only
+things that move an onset. A sequence changes what sounds and for how long,
+never when.
+
+The guide's traditions chapters do not yet use note sequences. They are
+documented here because the capability exists and you may want it; where a
+tradition would use it — a djembe's bass, tone and slap on one voice rather than
+three lanes, or a bassline under a polymetric frame — is a question the chapters
+have not yet been written to answer.
+
 ## Additive Cell Editor
 
 The Pattern pane's additive-cell editor enables additive rhythm construction by defining unequal cell sizes that replace Euclidean equal distribution. Where Euclidean mode distributes hits as evenly as possible across the available steps, additive mode lets you specify exactly how wide each grouping should be — producing the unequal, asymmetric meters that define traditions from the Balkans to South India.

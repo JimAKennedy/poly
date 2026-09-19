@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 6,
+  "schemaVersion": 7,
   "presetCount": 45,
   "categories": [
     "Foundational",
@@ -872,6 +872,29 @@
             4
           ],
           "kotekanSourceLane": -1,
+          "noteSequenceLength": 5,
+          "noteSequence": [
+            {
+              "pitch": 76,
+              "durationBeats": 0
+            },
+            {
+              "pitch": 78,
+              "durationBeats": 0
+            },
+            {
+              "pitch": 81,
+              "durationBeats": 0
+            },
+            {
+              "pitch": 78,
+              "durationBeats": 0
+            },
+            {
+              "pitch": 76,
+              "durationBeats": 0
+            }
+          ],
           "phraseLength": 0,
           "phraseGap": 0,
           "phraseOffset": 0,
@@ -900,6 +923,29 @@
           "timeline": false,
           "fixedPatternLength": 0,
           "kotekanSourceLane": -1,
+          "noteSequenceLength": 5,
+          "noteSequence": [
+            {
+              "pitch": 76,
+              "durationBeats": 0
+            },
+            {
+              "pitch": 78,
+              "durationBeats": 0
+            },
+            {
+              "pitch": 81,
+              "durationBeats": 0
+            },
+            {
+              "pitch": 78,
+              "durationBeats": 0
+            },
+            {
+              "pitch": 76,
+              "durationBeats": 0
+            }
+          ],
           "phraseLength": 0,
           "phraseGap": 0,
           "phraseOffset": 0,

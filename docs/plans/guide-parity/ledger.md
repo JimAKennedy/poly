@@ -230,7 +230,7 @@ Poly's polymetric machinery applies to melodic material and not only to
 percussion.
 
 **Branch:** milestone/M003-pitch
-**Status:** planned
+**Status:** done
 **Demo:** One lane playing a five-note sequence against a seven-step cycle,
 phasing, with drift and kotekan complement applying to it unchanged.
 
@@ -242,38 +242,43 @@ programme's whole premise.
 
 ### Slice M003/S01 — A lane emits a sequence of pitches
 
+**Plan:** M003-S01-plan.md
 **Validation:** format, unit, engine-isolation, rt-safety
 **Evidence:** evidence/M003-S01.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] A lane can carry an optional sequence of pitches with per-note durations, supplying successive hits' pitch instead of the single `midiNote`
-- [ ] The field's name does not collide with the existing `phrase*` fields, and the chosen name is recorded with its reason
-- [ ] Every existing lane feature — drift, kotekan complement, tempo multiplier, additive cells — applies unchanged with a sequence set, asserted for at least two of them
-- [ ] With no sequence set, all 45 factory presets render byte-identically, proved by a golden test
-- [ ] A pre-bump state loads as the single-pitch behaviour it played
+- [x] A lane can carry an optional sequence of pitches with per-note durations, supplying successive hits' pitch instead of the single `midiNote`
+- [x] The field's name does not collide with the existing `phrase*` fields, and the chosen name is recorded with its reason
+- [x] Every existing lane feature — drift, kotekan complement, tempo multiplier, additive cells — applies unchanged with a sequence set, asserted for at least two of them
+- [x] With no sequence set, all 45 factory presets render byte-identically, proved by a golden test
+- [x] A pre-bump state loads as the single-pitch behaviour it played
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| GP07 | A lane emits one fixed pitch: `ev.pitch = cfg.midiNote`, a single assignment. Hand-drum traditions are one voice with several strokes — djembe bass/tone/slap, tabla bols, conga open/muted/slap — so each articulation currently needs its own lane, competing for the 8-lane budget and unable to share a pattern. A sequence also makes a lane a pitched voice, so the polymetric machinery applies to melodic material | `capability` | `engine/include/poly/types.h`, `engine/src/engine.cpp`, `engine/include/poly/state_io_*.h` | Engine tests assert successive hits take successive sequence pitches, that a named existing feature still applies, and that a pre-bump state loads as single-pitch; the golden asserts presets unmoved | `open` |
+| GP07 | A lane emits one fixed pitch: `ev.pitch = cfg.midiNote`, a single assignment. Hand-drum traditions are one voice with several strokes — djembe bass/tone/slap, tabla bols, conga open/muted/slap — so each articulation currently needs its own lane, competing for the 8-lane budget and unable to share a pattern. A sequence also makes a lane a pitched voice, so the polymetric machinery applies to melodic material | `capability` | `engine/include/poly/types.h`, `engine/src/engine.cpp`, `engine/include/poly/state_io_*.h` | Engine tests assert successive hits take successive sequence pitches, that a named existing feature still applies, and that a pre-bump state loads as single-pitch; the golden asserts presets unmoved | `done` |
 
 ### Slice M003/S02 — The sequence reaches a factory preset
 
+**Plan:** M003-S02-plan.md
 **Validation:** format, unit, engine-isolation, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M003-S02.md
-**Status:** open
+**Status:** done
 **Depends:** M003/S01
 
 **Definition of Done**
 
-- [ ] A lane's note sequence is expressible in a preset and reaches `site/src/generated/presets.json` under a raised schema version
-- [ ] At least one factory preset uses a sequence, and its lanes' pitches are asserted against the generated data
-- [ ] The preset count and any per-lane field-count guards are updated rather than bypassed
+- [x] A lane's note sequence is expressible in a preset and reaches `site/src/generated/presets.json` under a raised schema version
+- [x] At least one factory preset uses a sequence, and its lanes' pitches are asserted against the generated data
+- [x] The preset count and any per-lane field-count guards are updated rather than bypassed
+- [x] The guide names the capability and says the traditions chapters do not
+      yet use it, locked by a `scope-framing` claim *(added at planning — see
+      `M003-decisions.md`)*
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| GP08 | A capability reachable only from hand-written state is a capability users do not have. M003/S01 established the path: the emitter carries the field, the generator's schema gate rises, and a factory preset demonstrates it | `pipeline` | `engine/src/presets.cpp`, `engine/tools/emit_presets.cpp`, `site/scripts/generate-presets-json.mjs` | The generated `presets.json` carries the sequence at the raised schema version and a site test asserts the preset's pitches against it | `open` |
+| GP08 | A capability reachable only from hand-written state is a capability users do not have. M003/S01 established the path: the emitter carries the field, the generator's schema gate rises, and a factory preset demonstrates it | `pipeline` | `engine/src/presets.cpp`, `engine/tools/emit_presets.cpp`, `site/scripts/generate-presets-json.mjs` | The generated `presets.json` carries the sequence at the raised schema version and a site test asserts the preset's pitches against it | `done` |
 
 ## Milestone M004 — Diagrams are rendered, not drawn
 

@@ -406,6 +406,25 @@ GrooveState makeReichPhasing() {
     drifting.noteDuration = 0.15f;
     drifting.driftRate = 0.25f;
 
+    // M003 S01/S02 (GP07, GP08): the melodic cell both voices play.
+    //
+    // Reich's phasing works on a PITCHED figure -- Piano Phase and Violin Phase
+    // are two players on the same short melodic cell, one drifting out of
+    // phase with the other. Before note sequences this preset could only phase
+    // a single repeated pitch, which is the technique's rhythm without its
+    // substance. Both lanes now carry the same five-note cell over their
+    // five-step cycle, and lane 1's driftRate does what the second performer
+    // does.
+    //
+    // The cell is ours, in the spirit of the piece rather than a transcription
+    // of it -- the same framing the samba and jembe profiles carry.
+    constexpr std::array<int16_t, 5> kReichCell = {76, 78, 81, 78, 76};
+    for (auto* lane : {&fixed, &drifting}) {
+        lane->noteSequenceLength = static_cast<int>(kReichCell.size());
+        for (size_t i = 0; i < kReichCell.size(); ++i)
+            lane->noteSequence[i].pitch = kReichCell[i];
+    }
+
     auto& pulse = s.lanes[2];
     pulse.id = 2;
     pulse.role = Role::Shimmer;

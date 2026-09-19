@@ -571,3 +571,53 @@ TEST(StateMigration, PreV21StateDefaultsToTheOldFeel) {
             << "lane " << i << ": a pre-v21 state must load as white-noise humanize";
     }
 }
+
+// M003/S01 task 3 (GP07). A note sequence must survive a save and reload.
+//
+// This task exists because M001/S01 shipped swingMode and humanizeMode
+// unserialised and had to be reopened after it had already closed: its plan had
+// no serialization task while its sibling's assumed one.
+TEST(StateMigration, NoteSequenceRoundTrips) {
+    SceneState authored{};
+    for (int i = 0; i < kMaxLanes; ++i) {
+        auto& a = authored.sceneA.lanes[static_cast<size_t>(i)];
+        a.noteSequenceLength = 3;
+        for (int n = 0; n < 3; ++n) {
+            a.noteSequence[static_cast<size_t>(n)].pitch = static_cast<int16_t>(60 + i * 3 + n);
+            a.noteSequence[static_cast<size_t>(n)].durationBeats = 0.25f * static_cast<float>(n + 1);
+        }
+    }
+
+    const auto blob = serializeSceneAsVersion(authored, kNoteSequenceStateVersion);
+    const SceneState loaded = deserializeScene(blob);
+
+    for (int i = 0; i < kMaxLanes; ++i) {
+        const auto& want = authored.sceneA.lanes[static_cast<size_t>(i)];
+        const auto& got = loaded.sceneA.lanes[static_cast<size_t>(i)];
+        ASSERT_EQ(got.noteSequenceLength, 3) << "lane " << i;
+        for (int n = 0; n < 3; ++n) {
+            EXPECT_EQ(got.noteSequence[static_cast<size_t>(n)].pitch, want.noteSequence[static_cast<size_t>(n)].pitch)
+                << "lane " << i << " entry " << n << " pitch";
+            EXPECT_FLOAT_EQ(got.noteSequence[static_cast<size_t>(n)].durationBeats,
+                            want.noteSequence[static_cast<size_t>(n)].durationBeats)
+                << "lane " << i << " entry " << n << " duration";
+        }
+    }
+}
+
+// A pre-v22 state carries no sequence bytes. Length 0 is the single-pitch
+// behaviour it played, so the migration is lossless by construction.
+TEST(StateMigration, PreV22StateLoadsAsSinglePitch) {
+    SceneState authored{};
+    for (int i = 0; i < kMaxLanes; ++i) {
+        authored.sceneA.lanes[static_cast<size_t>(i)].noteSequenceLength = 4;
+        authored.sceneA.lanes[static_cast<size_t>(i)].noteSequence[0].pitch = 99;
+    }
+
+    const auto blob = serializeSceneAsVersion(authored, kNoteSequenceStateVersion - 1);
+    const SceneState loaded = deserializeScene(blob);
+
+    for (int i = 0; i < kMaxLanes; ++i)
+        EXPECT_EQ(loaded.sceneA.lanes[static_cast<size_t>(i)].noteSequenceLength, 0)
+            << "lane " << i << ": a pre-v22 state must load single-pitched";
+}

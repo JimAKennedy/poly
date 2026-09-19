@@ -189,6 +189,22 @@ template <typename WriteFn>
         if (!write(&humanizeMode, sizeof(humanizeMode)))
             return false;
     }
+    if (bodyVersion >= kNoteSequenceStateVersion) {
+        int32_t count = static_cast<int32_t>(lane.noteSequenceLength);
+        if (count < 0)
+            count = 0;
+        if (count > kMaxNoteSequence)
+            count = kMaxNoteSequence;
+        if (!write(&count, sizeof(count)))
+            return false;
+        for (int32_t i = 0; i < count; ++i) {
+            const auto& entry = lane.noteSequence[static_cast<size_t>(i)];
+            if (!write(&entry.pitch, sizeof(entry.pitch)))
+                return false;
+            if (!write(&entry.durationBeats, sizeof(entry.durationBeats)))
+                return false;
+        }
+    }
 
     return true;
 }

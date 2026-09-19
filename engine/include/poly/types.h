@@ -233,6 +233,27 @@ enum class SwingMode : uint8_t { Fixed = 0, TempoAdaptive = 1 };
 // (2011) measure in human performance.
 enum class HumanizeMode : uint8_t { WhiteNoise = 0, Correlated = 1 };
 
+// M003 S01 (GP07). A lane's optional note sequence.
+//
+// Eight entries, per #245's own proposal: a separate, smaller bound than
+// kMaxSteps keeps the per-lane cost to a few dozen bytes, and spending 64
+// entries a lane on a field most lanes will not use is the trade M002 declined
+// when it kept per-step weights out of LaneConfig.
+//
+// Named `noteSequence` rather than anything with `phrase` in it: phraseLength,
+// phraseGap and phraseOffset already mean GATING, not content, and #245 flags
+// the collision explicitly.
+static constexpr int kMaxNoteSequence = 8;
+
+struct NoteSequenceEntry {
+    int16_t pitch = 60;
+    // Gate length in beats. 0 = use the lane's noteDuration. This never moves
+    // the NEXT note: the step grid decides when notes start, so a sequence does
+    // not become a second mechanism for placing onsets beside
+    // subdivisionProfile and cellSizes. See M003-decisions.md.
+    float durationBeats = 0.0f;
+};
+
 // --- Lane Config ---
 
 // region:lane-config
@@ -240,6 +261,10 @@ struct LaneConfig {
     int id = 0;
     Role role = Role::Custom;
     int16_t midiNote = 36;
+    // M003 S01 (GP07). noteSequenceLength == 0 leaves the lane single-pitched
+    // on midiNote above, byte-identically to pre-M003.
+    std::array<NoteSequenceEntry, kMaxNoteSequence> noteSequence{};
+    int noteSequenceLength = 0;
     int16_t midiChannel = -1; // -1 = auto (lane index); 0-15 = explicit MIDI channel
     Cycle cycle{};
     int hitCount = 4;
@@ -414,6 +439,33 @@ inline AdditiveCellInfo computeAdditiveCells(const LaneConfig& cfg) {
     }
     info.totalPpq = accum;
     return info;
+}
+
+// --- Note sequence (M003 S01, GP07) ---
+
+// The pitch this lane emits at an absolute step position.
+//
+// Indexed by POSITION, not by hit ordinal. A five-note sequence over a
+// seven-step cycle therefore phases -- the device #245 asks for -- while
+// remaining a pure function of absolute step, so a locate reproduces it and a
+// mutation dropping a hit does not re-voice everything after it. Indexing by
+// hit ordinal would make the melody a function of the mutation rolls.
+inline int16_t noteSequencePitch(const LaneConfig& cfg, int64_t absStep) {
+    const int len = cfg.noteSequenceLength;
+    if (len <= 0 || len > kMaxNoteSequence)
+        return cfg.midiNote;
+    const int64_t wrapped = ((absStep % len) + len) % len;
+    return cfg.noteSequence[static_cast<size_t>(wrapped)].pitch;
+}
+
+// The gate length for that position, in beats; 0 means "use the lane's own
+// noteDuration", which is what an entry that sets no duration inherits.
+inline float noteSequenceDuration(const LaneConfig& cfg, int64_t absStep) {
+    const int len = cfg.noteSequenceLength;
+    if (len <= 0 || len > kMaxNoteSequence)
+        return 0.0f;
+    const int64_t wrapped = ((absStep % len) + len) % len;
+    return cfg.noteSequence[static_cast<size_t>(wrapped)].durationBeats;
 }
 
 // --- Phrase gating (M002 S04, GP06) ---
