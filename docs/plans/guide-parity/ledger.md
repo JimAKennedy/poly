@@ -123,7 +123,7 @@ step sits — in the meter, against the timeline, and within the phrase — and 
 chapters stop prescribing manual workarounds for them.
 
 **Branch:** milestone/M002-position
-**Status:** in-progress
+**Status:** done
 **Demo:** A batá or clave patch where added hits land with the timeline rather
 than across it; a funk patch whose ghosts cluster before the backbeat without a
 dedicated ghost lane; a tihai that lands on sam without the reader doing the

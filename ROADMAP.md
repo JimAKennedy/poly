@@ -52,10 +52,6 @@ contributors who want to dig into the engine.
 
 | Issue | Title | Labels |
 |-------|-------|--------|
-| [#158](https://github.com/JimAKennedy/poly/issues/158) | Metric-position-aware ghost note placement (funk grammar) | `enhancement` |
-| [#155](https://github.com/JimAKennedy/poly/issues/155) | Coupled call-and-response phrase gating (`responseSourceLane`) | `enhancement` |
-| [#154](https://github.com/JimAKennedy/poly/issues/154) | Phrase-position-aware fills and a tihai generator | `enhancement` |
-| [#152](https://github.com/JimAKennedy/poly/issues/152) | Timeline-aware constraint: clave/bell attraction-avoidance mask for mutation and fills | `enhancement` |
 
 ## Finding something to work on
 
