@@ -286,7 +286,7 @@ programme's whole premise.
 and none is hand-maintained ASCII art.
 
 **Branch:** milestone/M004-diagrams
-**Status:** in-progress
+**Status:** done
 **Demo:** The plugin-architecture appendix renders vector diagrams that match
 the site's typography, and a check fails if ASCII art returns.
 
