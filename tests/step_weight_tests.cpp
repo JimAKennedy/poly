@@ -124,3 +124,162 @@ TEST(StepWeights, RefusesAStepOutsideTheCycle) {
     for (int step : {-1, 16, 999})
         EXPECT_FLOAT_EQ(computeStepWeights(cfg, pattern, 16, step).add, 1.0f) << "step " << step;
 }
+
+// --- Render-level: the rolls read the weights ---
+
+#include <algorithm>
+#include <cstring>
+#include <vector>
+
+#include "poly/engine.h"
+#include "poly/euclidean.h"
+#include "poly/presets.h"
+
+namespace {
+
+// Lane 0 is the timeline, striking every fourth step. Lane 1 mutates heavily
+// and weights against lane 0, so the distribution of added steps is
+// observable over many seeds.
+GrooveState timelinePair(float strength, float mutationRate = 0.5f) {
+    GrooveState state{};
+    state.activeLaneCount = 2;
+
+    auto& timeline = state.lanes[0];
+    timeline.id = 0;
+    timeline.cycle = {16, 16};
+    timeline.hitCount = 4;
+    timeline.probability = 1.0f;
+    timeline.baseVelocity = 100;
+
+    auto& voice = state.lanes[1];
+    voice.id = 1;
+    voice.cycle = {16, 16};
+    voice.hitCount = 4;
+    voice.rotation = 1;
+    voice.probability = 1.0f;
+    voice.baseVelocity = 90;
+    voice.mutationRate = mutationRate;
+    voice.timelineSourceLane = 0;
+    voice.timelineStrength = strength;
+    return state;
+}
+
+// Which steps of lane 0 carry onsets, for classifying lane 1's output.
+std::array<bool, kMaxSteps> timelineSteps(const GrooveState& state) {
+    std::array<bool, kMaxSteps> p{};
+    const auto& src = state.lanes[0];
+    euclidean(src.hitCount, src.cycle.steps, src.rotation, p);
+    return p;
+}
+
+// Count lane-1 onsets landing on timeline steps versus off them, across many
+// seeds. One roll proves nothing about a probability; a distribution does.
+struct Tally {
+    int aligned = 0;
+    int off = 0;
+};
+
+Tally tallyAcrossSeeds(float strength, float mutationRate = 0.5f) {
+    Tally t{};
+    const auto onTimeline = timelineSteps(timelinePair(strength, mutationRate));
+    for (uint64_t seed = 1; seed <= 400; ++seed) {
+        GrooveState state = timelinePair(strength, mutationRate);
+        state.seed = seed;
+
+        Engine engine;
+        NoteEventBuffer notes;
+        TransportContext tc{};
+        tc.ppqStart = 0.0;
+        tc.ppqEnd = 4.0;
+        tc.tempo = 120.0;
+        tc.playing = true;
+        engine.renderRange(tc, state, notes, nullptr);
+
+        for (size_t i = 0; i < notes.count; ++i) {
+            if (notes.events[i].laneIndex != 1)
+                continue;
+            const int step = static_cast<int>(std::lround(notes.events[i].ppqPosition / 0.25)) % 16;
+            if (onTimeline[static_cast<size_t>(step)])
+                ++t.aligned;
+            else
+                ++t.off;
+        }
+    }
+    return t;
+}
+
+} // namespace
+
+// Attraction: with a positive strength, lane 1's onsets favour the timeline's
+// steps more than they do with no weighting at all.
+TEST(StepWeightsRender, PositiveStrengthShiftsOnsetsTowardTheTimeline) {
+    const Tally neutral = tallyAcrossSeeds(0.0f);
+    const Tally attracted = tallyAcrossSeeds(0.9f);
+
+    const double neutralRatio = static_cast<double>(neutral.aligned) / (neutral.aligned + neutral.off);
+    const double attractedRatio = static_cast<double>(attracted.aligned) / (attracted.aligned + attracted.off);
+
+    EXPECT_GT(attractedRatio, neutralRatio)
+        << "aligned share: neutral " << neutralRatio << ", attracted " << attractedRatio;
+}
+
+// Avoidance: the same comparison must invert with the sign. This is the arm
+// that proves the sign reaches the rolls, not just the helper.
+TEST(StepWeightsRender, NegativeStrengthShiftsOnsetsAwayFromTheTimeline) {
+    const Tally neutral = tallyAcrossSeeds(0.0f);
+    const Tally avoided = tallyAcrossSeeds(-0.9f);
+
+    const double neutralRatio = static_cast<double>(neutral.aligned) / (neutral.aligned + neutral.off);
+    const double avoidedRatio = static_cast<double>(avoided.aligned) / (avoided.aligned + avoided.off);
+
+    EXPECT_LT(avoidedRatio, neutralRatio) << "aligned share: neutral " << neutralRatio << ", avoided " << avoidedRatio;
+}
+
+// A lane naming no timeline must render exactly as it did before M002.
+TEST(StepWeightsRender, AnUnweightedLaneIsUnchanged) {
+    const Tally a = tallyAcrossSeeds(0.0f);
+    GrooveState none = timelinePair(0.9f);
+    none.lanes[1].timelineSourceLane = -1;
+
+    // Same tally, computed with the reference removed rather than the strength
+    // zeroed: both routes must reach the pre-M002 path.
+    Tally b{};
+    const auto onTimeline = timelineSteps(none);
+    for (uint64_t seed = 1; seed <= 400; ++seed) {
+        GrooveState state = none;
+        state.seed = seed;
+        Engine engine;
+        NoteEventBuffer notes;
+        TransportContext tc{};
+        tc.ppqStart = 0.0;
+        tc.ppqEnd = 4.0;
+        tc.tempo = 120.0;
+        tc.playing = true;
+        engine.renderRange(tc, state, notes, nullptr);
+        for (size_t i = 0; i < notes.count; ++i) {
+            if (notes.events[i].laneIndex != 1)
+                continue;
+            const int step = static_cast<int>(std::lround(notes.events[i].ppqPosition / 0.25)) % 16;
+            if (onTimeline[static_cast<size_t>(step)])
+                ++b.aligned;
+            else
+                ++b.off;
+        }
+    }
+    EXPECT_EQ(a.aligned, b.aligned);
+    EXPECT_EQ(a.off, b.off);
+}
+
+// The milestone's back-compatibility rule for this slice's fields.
+TEST(StepWeightsRender, EveryFactoryPresetIsUnmovedWithNoTimelineSet) {
+    for (int i = 0; i < poly::kFactoryPresetCount; ++i) {
+        const poly::GrooveState preset = poly::makeFactoryPreset(i);
+        const char* name = poly::getFactoryPresetInfo(i).name;
+        for (int lane = 0; lane < preset.activeLaneCount; ++lane) {
+            const auto& cfg = preset.lanes[static_cast<size_t>(lane)];
+            ASSERT_EQ(cfg.timelineSourceLane, -1)
+                << "preset " << i << " (" << name << ") lane " << lane << " ships a timeline reference";
+            ASSERT_FLOAT_EQ(cfg.timelineStrength, 0.0f) << "preset " << i << " (" << name << ")";
+        }
+    }
+}
