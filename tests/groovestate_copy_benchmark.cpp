@@ -105,7 +105,13 @@ TEST(GrooveStateCopyBenchmark, ReportsFactSizes) {
     // ghostGrammar opened. Across M002 the struct has grown 18000 -> 18192,
     // about 1%, against roughly 8 KB had the per-step weight arrays been stored
     // per lane as the issues proposed.
-    EXPECT_EQ(sizeof(poly::GrooveState), 18192u)
+    // M003 S01 (GP07, guide-parity): +576 bytes from LaneConfig.noteSequence
+    // (8 x NoteSequenceEntry = 64 bytes) + noteSequenceLength, 72 bytes/lane
+    // across 8 lanes. The largest growth since M003 of the engine-capability
+    // programme, and bounded deliberately at 8 entries rather than kMaxSteps
+    // per #245's own proposal: 64 entries a lane would have been 4 KB for a
+    // field most lanes never set.
+    EXPECT_EQ(sizeof(poly::GrooveState), 18768u)
         << "GrooveState size changed — record it in the milestone's decisions file";
 }
 

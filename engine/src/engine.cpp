@@ -600,13 +600,22 @@ static int64_t computeDriftedCycleStep(const LaneConfig& cfg, const LaneRenderCo
 // endregion:drift-accumulator
 
 static void buildNoteEvent(NoteEventBuffer& out, const LaneConfig& cfg, int lane, double ppq, float vel,
-                           double stepDurPpq, const EnvelopeMods& mods) {
+                           double stepDurPpq, const EnvelopeMods& mods, int64_t absStep) {
     NoteEvent ev{};
     ev.ppqPosition = ppq;
-    ev.pitch = cfg.midiNote;
+    // M003 S01 (GP07). The lane's sequence supplies the pitch when it has one,
+    // indexed by absolute step position rather than hit ordinal -- so it phases
+    // against the cycle, a locate reproduces it, and a mutation dropping a hit
+    // does not re-voice everything after it.
+    ev.pitch = noteSequencePitch(cfg, absStep);
     ev.velocity = vel;
-    double baseDuration =
-        cfg.noteDuration > 0.0f ? static_cast<double>(cfg.noteDuration) : stepDurPpq * kDefaultDurationFraction;
+    // The entry's duration is GATE LENGTH ONLY. The onset above is the step
+    // grid's, so a sequence never becomes a second mechanism for placing notes
+    // beside subdivisionProfile and cellSizes. See M003-decisions.md.
+    const float entryDuration = noteSequenceDuration(cfg, absStep);
+    double baseDuration = entryDuration > 0.0f      ? static_cast<double>(entryDuration)
+                          : cfg.noteDuration > 0.0f ? static_cast<double>(cfg.noteDuration)
+                                                    : stepDurPpq * kDefaultDurationFraction;
     ev.duration = baseDuration * static_cast<double>(std::clamp(mods.duration, 0.01f, 4.0f));
     ev.channel = (cfg.midiChannel >= 0) ? cfg.midiChannel : static_cast<int16_t>(lane);
     ev.laneIndex = static_cast<int16_t>(lane);
@@ -701,7 +710,7 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
             if (ppq < tc.ppqStart || ppq >= tc.ppqEnd)
                 continue;
 
-            buildNoteEvent(out, cfg, lane, ppq, vel, stepDurPpq, mods);
+            buildNoteEvent(out, cfg, lane, ppq, vel, stepDurPpq, mods, absStep);
         }
     }
 }

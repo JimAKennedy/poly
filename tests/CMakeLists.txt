@@ -30,6 +30,7 @@ add_executable(poly_tests
     macro_tests.cpp
     midi_capture_tests.cpp
     midi_reader_tests.cpp
+    note_sequence_tests.cpp
     offline_render_tests.cpp
     params_def_tests.cpp
     plugin_tests.cpp
