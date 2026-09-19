@@ -17,8 +17,8 @@ class: gated
 - [x] 4. `docs/testing-strategy.md`, `docs/webui-migration.md` convert; `docs/ui-guide.md` is exempted
 - [x] 5. The guard, wired and green, with the frozen audit record exempted
 - [x] 6. Every Mermaid fence is proved to render
-- [ ] 7. Mutation-prove the guard on every arm
-- [ ] 8. Evidence and slice close-out
+- [x] 7. Mutation-prove the guard on every arm
+- [x] 8. Evidence and slice close-out
 
 **Re-decomposed mid-slice.** The original order wrote the guard first, so it
 could be seen failing against the un-converted tree. That order is impossible
