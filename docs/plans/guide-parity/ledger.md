@@ -230,7 +230,7 @@ Poly's polymetric machinery applies to melodic material and not only to
 percussion.
 
 **Branch:** milestone/M003-pitch
-**Status:** planned
+**Status:** in-progress
 **Demo:** One lane playing a five-note sequence against a seven-step cycle,
 phasing, with drift and kotekan complement applying to it unchanged.
 
@@ -242,9 +242,10 @@ programme's whole premise.
 
 ### Slice M003/S01 — A lane emits a sequence of pitches
 
+**Plan:** M003-S01-plan.md
 **Validation:** format, unit, engine-isolation, rt-safety
 **Evidence:** evidence/M003-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
@@ -260,6 +261,7 @@ programme's whole premise.
 
 ### Slice M003/S02 — The sequence reaches a factory preset
 
+**Plan:** M003-S02-plan.md
 **Validation:** format, unit, engine-isolation, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M003-S02.md
 **Status:** open
@@ -270,6 +272,9 @@ programme's whole premise.
 - [ ] A lane's note sequence is expressible in a preset and reaches `site/src/generated/presets.json` under a raised schema version
 - [ ] At least one factory preset uses a sequence, and its lanes' pitches are asserted against the generated data
 - [ ] The preset count and any per-lane field-count guards are updated rather than bypassed
+- [ ] The guide names the capability and says the traditions chapters do not
+      yet use it, locked by a `scope-framing` claim *(added at planning — see
+      `M003-decisions.md`)*
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
