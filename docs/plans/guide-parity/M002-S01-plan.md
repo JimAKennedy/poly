@@ -12,8 +12,8 @@ class: gated
 
 - [x] 1. The weight mechanism and the timeline source
 - [x] 2. The rolls read the weights
-- [ ] 3. `03-afro-cuban` stops prescribing manual clave maintenance
-- [ ] 4. Evidence and close-out
+- [x] 3. The page stops prescribing manual clave maintenance
+- [x] 4. Evidence and close-out
 
 ## Definition of Done
 

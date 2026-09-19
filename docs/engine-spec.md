@@ -129,6 +129,41 @@ Distributes `k` pulses (hits) across `n` steps as evenly as possible using a Bre
 - `euclidean(3, 8, 0, out)` → Cuban tresillo `[x . . x . . x .]`
 - `euclidean(5, 8, 0, out)` → `[x . x x . x x .]` cinquillo
 
+### Position-weighted stochastic decisions (M002, guide-parity)
+
+Four decisions are rolls against a probability: whether to mutate a step, which
+kind of mutation, whether to fill, and whether to activate. A **weight** scales
+the probability at the roll site, and `1.0` is a no-op — so a lane with nothing
+configured produces the pre-M002 arithmetic unchanged.
+
+```cpp
+struct StepWeights { float add, drop, ghost, fill; };  // all 1.0 by default
+```
+
+Four named weights rather than one scalar: one number cannot mean attraction
+for adds, protection for drops, grammar for ghosts and shape for fills at once.
+
+**Settings live on the lane; weights live in the render context.** `LaneConfig`
+carries `timelineSourceLane` and `timelineStrength` — 8 bytes per lane. The
+per-step weights are computed into `LaneRenderContext`, which is per-render and
+never serialised; storing them on the lane instead would have added about 8 KB
+to a `GrooveState` copied three times per block.
+
+The reference lane's onsets resolve once per lane per block, using the same
+mutual-reference guard as `kotekanSourceLane`: out of range, self-reference, or
+a source pointing back yields no weighting rather than a guess.
+
+**Weights compose multiplicatively**, with an unset source contributing exactly
+`1.0`. This differs from the precedence rule M003 applied to subdivision
+profiles against `cellSizes`, and deliberately: those were two competing
+definitions of one grid, where these are probabilities.
+
+**The thresholds move, never the roll.** `typeRoll`'s bands are cumulative —
+drop, then ghost, then add — so scaling the drop edge moves where ghost begins
+and the add band absorbs the difference. Weighting the drop edge down therefore
+widens the add band, which is the intent: an aligned step is protected from
+drops and more available for adds.
+
 ### Swing (M001, guide-parity)
 
 Swing displaces the off-note of each pair late. How far is the lane's
@@ -384,7 +419,7 @@ Under `SceneSelect::Morph`, the render path materializes an interpolated `Groove
 | envelopeCount | int | 0 | Active envelope count |
 <!-- END GENERATED: laneconfig -->
 
-The table above is generated from `engine/include/poly/types.h` by `scripts/generate-param-docs.mjs` (M048 S05). Do not hand-edit — CI's `jk-standards` generated-freshness check rejects any divergence. Additional `LaneConfig` fields not yet exposed via the generator: `midiChannel`, `swingAmount`, `noteDuration`, `phraseLength`/`phraseGap`/`phraseOffset`, `mutationRate`, `driftRate`, `timingOffsetMs`, `syncopationOffset`, `tempoMultiplier`, `kotekanSourceLane`, `cellCount`/`cellSizes`, `profileCount`/`subdivisionProfile`, `swingCellCount`/`swingCellSizes`, `swingMode`, `timeline`/`fixedPattern`/`fixedPatternLength`, `microTimingMs`, `constraints`.
+The table above is generated from `engine/include/poly/types.h` by `scripts/generate-param-docs.mjs` (M048 S05). Do not hand-edit — CI's `jk-standards` generated-freshness check rejects any divergence. Additional `LaneConfig` fields not yet exposed via the generator: `midiChannel`, `swingAmount`, `noteDuration`, `phraseLength`/`phraseGap`/`phraseOffset`, `mutationRate`, `driftRate`, `timingOffsetMs`, `syncopationOffset`, `tempoMultiplier`, `kotekanSourceLane`, `cellCount`/`cellSizes`, `profileCount`/`subdivisionProfile`, `swingCellCount`/`swingCellSizes`, `swingMode`, `humanizeMode`, `timelineSourceLane`/`timelineStrength`, `timeline`/`fixedPattern`/`fixedPatternLength`, `microTimingMs`, `constraints`.
 
 ### MacroValues (Six Musical-Intent Controls)
 

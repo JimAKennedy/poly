@@ -175,6 +175,21 @@ const CLAIMS = [
     presentRegex: [/#fr-polak-2010/],
   },
   {
+    id: 'M002-S01-timeline-weighting',
+    file: 'theory-afro-cuban.mdx',
+    rule:
+      'guide-parity GP03. Construction step 5 asked for a free voice "ideally ' +
+      'with fills weighted toward the two-side\'s space" -- an instruction the ' +
+      'reader had no way to carry out, because nothing in the engine knew the ' +
+      'timeline lane existed. ConstraintConfig is lane-local; mutation-adds ' +
+      'could place hits across the clave and drops could remove ' +
+      'clave-confirming ones. M002/S01 ships the weighting, so the wish ' +
+      'becomes a setting. The page must name it rather than leaving "ideally" ' +
+      'as advice with no mechanism behind it',
+    forbidden: ['ideally with fills weighted toward'],
+    present: ['timeline', 'the referent'],
+  },
+  {
     id: 'M001-S02-humanize-modes',
     file: 'appendix-design-decisions.mdx',
     rule:

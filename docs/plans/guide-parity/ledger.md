@@ -152,19 +152,19 @@ once, not twice.
 **Plan:** M002-S01-plan.md
 **Validation:** format, unit, engine-isolation, rt-safety, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M002-S01.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] A lane can name a reference lane, and a mutual reference is refused rather than followed
-- [ ] Mutation-adds are biased toward or away from the reference lane's onsets by a signed per-lane strength, shown by the distribution of added steps changing with the sign
-- [ ] Drops are less likely on high-weight steps than on low-weight ones
-- [ ] With no reference lane named, all 45 factory presets render byte-identically, proved by a golden test
-- [ ] `03-afro-cuban` stops describing clave alignment as something the reader maintains by hand, and a `scope-framing` claim locks it
+- [x] A lane can name a reference lane, and a mutual reference is refused rather than followed
+- [x] Mutation-adds are biased toward or away from the reference lane's onsets by a signed per-lane strength, shown by the distribution of added steps changing with the sign
+- [x] Drops are less likely on high-weight steps than on low-weight ones
+- [x] With no reference lane named, all 45 factory presets render byte-identically, proved by a golden test
+- [x] `03-afro-cuban` stops describing clave alignment as something the reader maintains by hand, and a `scope-framing` claim locks it
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| GP03 | Nothing in the engine knows the timeline lane exists. `ConstraintConfig` offers `anchorSteps`, `backbeatProtect` and density bounds, all lane-local, so mutation-adds and fill-adds can place hits that cross the clave and probability culls can drop clave-confirming ones. `03-afro-cuban` teaches that parts ignoring the clave "sound wrong"; the same gap covers the Ewe bell and tala accent structure | `capability` | `engine/src/constraint.cpp`, `engine/`, `03-afro-cuban.mdx` | Engine tests assert the added-step distribution shifts with the weight's sign and that drops avoid high-weight steps; a mutual reference is asserted refused; the golden asserts presets unmoved | `open` |
+| GP03 | Nothing in the engine knows the timeline lane exists. `ConstraintConfig` offers `anchorSteps`, `backbeatProtect` and density bounds, all lane-local, so mutation-adds and fill-adds can place hits that cross the clave and probability culls can drop clave-confirming ones. `03-afro-cuban` teaches that parts ignoring the clave "sound wrong"; the same gap covers the Ewe bell and tala accent structure | `capability` | `engine/src/constraint.cpp`, `engine/`, `03-afro-cuban.mdx` | Engine tests assert the added-step distribution shifts with the weight's sign and that drops avoid high-weight steps; a mutual reference is asserted refused; the golden asserts presets unmoved | `done` |
 
 ### Slice M002/S02 — Ghosts cluster where funk puts them
 
