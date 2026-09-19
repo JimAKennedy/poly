@@ -13,7 +13,7 @@ that design establishes.
 
 - [x] 1. A phrase-proximity weight for fills
 - [x] 2. A tihai lands on the target
-- [ ] 3. `06-indian-classical` stops asking for hand arithmetic, and close-out
+- [x] 3. The page stops asking for hand arithmetic, and close-out
 
 ## Definition of Done
 

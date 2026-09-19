@@ -90,7 +90,7 @@ Lane 1 marks the four strong beats of tintal's 4+4+4+4 structure. Lane 2 provide
 
 A *tihai* is a rhythmic phrase repeated three times such that it ends precisely on sam. It is both a cadential formula and a demonstration of rhythmic arithmetic — the player calculates phrase length and gap so that three repetitions consume exactly the remaining beats in the cycle.
 
-Poly's phrase gating parameters model this directly. Set a lane's phrase Length to the number of beats in your tihai phrase, and configure the Gap so that three consecutive phrases (Length + Gap, repeated) land the final onset on beat 1. The Offset parameter positions the tihai's entry point within the cycle.
+Poly's phrase gating parameters model this directly, and Poly does the arithmetic. Set a lane's phrase Length to the number of beats in your tihai phrase and the number of beats remaining until sam; the gap follows from **3P + 2g = remaining**, solved for you. A phrase too long to fit three times has no tihai — Poly says so rather than rounding, because a figure that overruns sam is worse than none. The Offset parameter positions the tihai's entry point within the cycle.
 
 <PolyPatch title="Rupak Tal Configuration" preset="Rupak Tal">
 

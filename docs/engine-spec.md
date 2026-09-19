@@ -166,6 +166,17 @@ macro in `macro.cpp` (M002/S02). Accent positions come from the lane's own
 earlier signature took a pattern parameter and the engine passed the lane's
 onsets, which made every step of a fully-lit lane read as accented.
 
+`fillPhraseShape` feeds `fill`, rising through the phrase cycle (M002/S03). It
+**redistributes** rather than adds — from `1 - shape` at the cycle's start to
+`1 + shape` at its end — because a weight that only ever raised the probability
+cannot shift anything once fills saturate. It applies at the fill site rather
+than in `laneStepWeights`, since it depends on PPQ position rather than step
+index.
+
+`solveTihai` in `poly/tihai.h` is separate from the weighting: pure arithmetic
+solving `3P + 2g = remaining`, reporting unsolvable rather than overrunning the
+target.
+
 **The thresholds move, never the roll.** `typeRoll`'s bands are cumulative —
 drop, then ghost, then add — so scaling the drop edge moves where ghost begins
 and the add band absorbs the difference. Weighting the drop edge down therefore

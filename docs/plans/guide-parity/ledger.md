@@ -189,19 +189,19 @@ once, not twice.
 **Plan:** M002-S03-plan.md
 **Validation:** format, unit, engine-isolation, rt-safety, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M002-S03.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Fill probability rises toward the end of a phrase cycle, with a shape parameter controlling how sharply, asserted as a distribution across the cycle
-- [ ] For an ungated lane the boundary used is the composite convergence point, not silence
-- [ ] A tihai of a given phrase length lands its final onset exactly on the target, asserted arithmetically rather than by ear
-- [ ] With the weighting neutral, all 45 factory presets render byte-identically, proved by a golden test
-- [ ] `06-indian-classical` no longer asks the reader to do the tihai arithmetic by hand, and a `scope-framing` claim locks it
+- [x] Fill probability rises toward the end of a phrase cycle, with a shape parameter controlling how sharply, asserted as a distribution across the cycle
+- [x] For an ungated lane the boundary used is the composite convergence point, not silence
+- [x] A tihai of a given phrase length lands its final onset exactly on the target, asserted arithmetically rather than by ear
+- [x] With the weighting neutral, all 45 factory presets render byte-identically, proved by a golden test
+- [x] `06-indian-classical` no longer asks the reader to do the tihai arithmetic by hand, and a `scope-framing` claim locks it
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| GP05 | `FillLikelihood` is an envelope target with no knowledge of phrase position: a fill-add is as likely at beat 2 of bar 1 as at the end of an 8-bar phrase. Idiomatic fills cluster at phrase boundaries and resolve onto the downbeat, most explicitly the tihai — a phrase repeated three times to land on sam (Nelson 2008; Clayton 2000). Chapter 6 asks the reader to solve `3×P + 2×gap` by hand | `capability` | `engine/`, `06-indian-classical.mdx` | Engine tests assert the fill distribution concentrates toward the boundary and that a tihai's final onset equals the target; the golden asserts presets unmoved | `open` |
+| GP05 | `FillLikelihood` is an envelope target with no knowledge of phrase position: a fill-add is as likely at beat 2 of bar 1 as at the end of an 8-bar phrase. Idiomatic fills cluster at phrase boundaries and resolve onto the downbeat, most explicitly the tihai — a phrase repeated three times to land on sam (Nelson 2008; Clayton 2000). Chapter 6 asks the reader to solve `3×P + 2×gap` by hand | `capability` | `engine/`, `06-indian-classical.mdx` | Engine tests assert the fill distribution concentrates toward the boundary and that a tihai's final onset equals the target; the golden asserts presets unmoved | `done` |
 
 ### Slice M002/S04 — A response lane answers its call
 

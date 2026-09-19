@@ -175,6 +175,20 @@ const CLAIMS = [
     presentRegex: [/#fr-polak-2010/],
   },
   {
+    id: 'M002-S03-tihai-arithmetic',
+    file: '06-indian-classical.mdx',
+    rule:
+      'guide-parity GP05. The Tihai section said to "configure the Gap so that ' +
+      'three consecutive phrases (Length + Gap, repeated) land the final onset ' +
+      'on beat 1" -- leaving the reader to solve 3P + 2g = remaining by hand, ' +
+      'which the section itself calls a demonstration of rhythmic arithmetic. ' +
+      'M002/S03 ships solveTihai. The page must give the gap rather than ask ' +
+      'for it, and must say what happens when the phrase is too long to fit -- ' +
+      'a tihai that overruns sam is worse than none',
+    forbidden: ['configure the Gap so that three consecutive phrases'],
+    present: ['3P + 2g', 'sam'],
+  },
+  {
     id: 'M002-S02-ghost-grammar',
     file: 'theory-funk-soul.mdx',
     rule:
