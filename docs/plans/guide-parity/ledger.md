@@ -230,7 +230,7 @@ Poly's polymetric machinery applies to melodic material and not only to
 percussion.
 
 **Branch:** milestone/M003-pitch
-**Status:** in-progress
+**Status:** done
 **Demo:** One lane playing a five-note sequence against a seven-step cycle,
 phasing, with drift and kotekan complement applying to it unchanged.
 
