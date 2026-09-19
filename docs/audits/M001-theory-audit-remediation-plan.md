@@ -2,6 +2,11 @@
 class: archived
 ---
 
+<!-- boxdraw-ok: a dated remediation record, frozen. The same class as
+     docs/reviews/, which jk-standards.yaml exempts structurally; re-drawing a
+     historical record would misrepresent what it said at the time. -->
+
+
 # Music-Theory Audit Remediation Plan (M001–M005)
 
 > **Archived (2026-08-28)** — superseded by
