@@ -73,3 +73,48 @@ made on the user's behalf during execution.
   `site-lint` never builds the site and `site-e2e` already installs Chromium.
   Every PR check would have stayed green and Pages would have failed on merge.
   S01 adds the cached browser-install step to that job.
+
+## 2026-09-19 — executing M004/S01 task 1
+
+- **Q:** The approved design said "add a rehype plugin". The reality is bigger:
+  Astro 7 defaults to the Sätteri processor, and `markdown.rehypePlugins`
+  requires reinstalling `@astrojs/markdown-remark`, which swaps the processor
+  for all 47 pages. Accept? — **A:** Accept the swap, pin the setting.
+- **Decision:** `@astrojs/markdown-remark` is a devDependency and
+  `markdown.smartypants = { dashes: 'oldschool' }` is pinned by a test
+  — **Why:** measured, not assumed: 43 of 49 built pages differed in bytes, but
+  once entity style (`&amp;` vs `&#x26;`), `<path/>` vs `<path></path>` and
+  inter-tag whitespace were normalised, only **4** differed in visible text, and
+  3 of those were `--` widening from an en dash to an em dash. `oldschool` is
+  the SmartyPants convention that keeps `--` an en dash, which is the correct
+  glyph in a range like `0.0--1.0`.
+- **Proved non-vacuous:** removing the `dashes` line fails
+  `the markdown processor keeps \`--\` an en dash`; restoring it by an explicit
+  edit passes. 298 → 299 tests.
+
+- **Q:** `theory-electronic-breakbeat` writes `("&"s)` for the counting
+  syllable. Sätteri rendered `“&“s`, remark renders `”&“s`; both are wrong.
+  — **A:** Fix the source to explicit curly quotes.
+- **Decision:** the source now reads `(“&”s)` — **Why:** it corrects an error
+  that pre-dates this milestone and makes the passage processor-independent.
+  After the fix, exactly one page differs from the pre-change baseline in
+  visible text, and that difference *is* the correction.
+
+### Judgment call — `site/src/generated/counts.json`
+
+The build regenerated `counts.json` from **43 presets to 45**. The committed
+file was stale; the engine has shipped 45 since before this milestone, and
+`presets.json` already carried 45. Nothing cross-checks the two, which is why
+`site-unit` was green with them disagreeing.
+
+Folded into task 1's commit rather than restored, because restoring it re-dirties
+the tree on every `npm run build` — the trap `CLAUDE.md` documents where a
+generated artifact and a formatting gate fight each other. The live site was
+never wrong: `npm run build` regenerates counts before `astro build`, so Pages
+rendered 45 throughout; only the committed artifact and anything reading it were
+stale.
+
+**Not fixed here, and worth its own row:** no guard cross-checks
+`counts.json.presets` against `presets.json`. This staleness survived from
+`50d387e` (M048 S06) undetected, which is the same class as the stale-presets
+bug M005/S01 fixed at source.

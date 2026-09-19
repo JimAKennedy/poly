@@ -10,12 +10,11 @@ class: gated
 
 ## Task status
 
-- [ ] 1. A failing test that renders a Mermaid block twice and demands identical bytes
-- [ ] 2. Wire `rehype-mermaid` into the Astro config so the test passes
-- [ ] 3. Give the diagram the site's typography
-- [ ] 4. Install Chromium in the Pages deploy build job
-- [ ] 5. Convert one appendix diagram and remove its ASCII original
-- [ ] 6. Evidence and slice close-out
+- [x] 1. A test that demands byte-identical renders, and the wiring that makes it pass
+- [ ] 2. Give the diagram the site's typography
+- [ ] 3. Install Chromium in the Pages deploy build job
+- [ ] 4. Convert one appendix diagram and remove its ASCII original
+- [ ] 5. Evidence and slice close-out
 
 ## Definition of Done
 
@@ -37,7 +36,7 @@ Copied verbatim from the slice:
 
 ---
 
-## Task 1 — A failing test that renders a Mermaid block twice and demands identical bytes
+## Task 1 — A test that demands byte-identical renders, and the wiring that makes it pass
 
 **Produces:** `site/tests/mermaid-render.test.mjs`, the test every later task in
 this slice is measured against.
@@ -67,15 +66,13 @@ one to observe.
 **Check:** `site-unit` fails, naming `mermaid-render.test.mjs`, for the missing
 dependency — not for a typo in the test.
 
-**Do not** add the dependency in this task. The commit is the failing test.
+Having watched the three fail, add the dependency and the wiring **in this same
+task**, so the commit lands green. The failure is observed, not committed: the
+`/jk:next` rule that no commit may carry a red gate outranks the tidier
+one-concern-per-commit split this plan originally had. The evidence file records
+the observed failure text, which is where that record belongs.
 
----
-
-## Task 2 — Wire `rehype-mermaid` into the Astro config so the test passes
-
-**Consumes:** task 1's failing test. **Produces:** a green `site-unit`.
-
-**Files:** modify `site/package.json`, `site/package-lock.json`,
+**Files (wiring):** modify `site/package.json`, `site/package-lock.json`,
 `site/astro.config.mjs`; the test file from task 1 gains its import path.
 
 **Steps:**
@@ -109,9 +106,9 @@ state problem, not a defect in the wiring.
 
 ---
 
-## Task 3 — Give the diagram the site's typography
+## Task 2 — Give the diagram the site's typography
 
-**Consumes:** task 2's wiring. **Produces:** diagrams in the guide's sans face.
+**Consumes:** task 1's wiring. **Produces:** diagrams in the guide's sans face.
 
 Default mermaid output sets `font-family:arial,sans-serif`, which is none of the
 site's three faces. The milestone's Demo requires diagrams that match the site's
@@ -139,7 +136,7 @@ determinism test.
 
 ---
 
-## Task 4 — Install Chromium in the Pages deploy build job
+## Task 3 — Install Chromium in the Pages deploy build job
 
 **Consumes:** nothing from earlier tasks. **Produces:** a deploy job that can
 build a site containing a Mermaid diagram.
@@ -171,9 +168,9 @@ only on `main`. Say so in the evidence rather than claiming a green deploy.
 
 ---
 
-## Task 5 — Convert one appendix diagram and remove its ASCII original
+## Task 4 — Convert one appendix diagram and remove its ASCII original
 
-**Consumes:** tasks 2 and 3. **Produces:** the DoD's "one existing diagram is
+**Consumes:** tasks 1 and 2. **Produces:** the DoD's "one existing diagram is
 converted".
 
 **Files:** modify `site/src/content/docs/appendix-plugin-architecture.mdx`;
@@ -205,7 +202,7 @@ converting them here would widen the slice.
 
 ---
 
-## Task 6 — Evidence and slice close-out
+## Task 5 — Evidence and slice close-out
 
 **Files:** create `docs/plans/guide-parity/evidence/M004-S01.md`; modify the
 ledger.
@@ -216,7 +213,7 @@ ledger.
    Name no commit SHA — this file ships inside the commit it would describe.
 2. Record the determinism measurement as a number, not an adjective: the two
    renders' byte lengths and whether they matched.
-3. Record that task 4 is unproven locally and why.
+3. Record that task 3 is unproven locally and why.
 4. Set row GP09 to `done` and slice M004/S01 to `done` in the ledger, and tick
    all three definition-of-done boxes.
 5. Run `jk-standards ledger`, then the full validation set.

@@ -17,7 +17,7 @@ class: gated
 - [ ] 4. Convert `docs/euclidean-rhythm-guide.md`
 - [ ] 5. Convert `docs/testing-strategy.md`, `docs/ui-guide.md` and `docs/webui-migration.md`
 - [ ] 6. Exempt the frozen audit record and prove the hatch is honoured
-- [ ] 7. Mutation-prove the guard by reintroducing one character
+- [ ] 7. Wire the guard in, and mutation-prove it
 - [ ] 8. Evidence and slice close-out
 
 ## Definition of Done
@@ -64,15 +64,18 @@ already-clean tree. A guard first seen passing has never been seen working.
    remedies (convert it, or add the marker with a reason).
 4. Run it. **Watch it fail**, listing the seven files. Record the exact count it
    reports; that number is the inventory this slice is measured against.
-5. Wire it into `scripts/check-guards.sh` alongside the existing guards, and add
-   it to `scripts/README.md` — `check-scripts-readme.mjs` enforces that every
-   script is documented, and M006 shipped red in CI on exactly this.
+5. Add it to `scripts/README.md` — `check-scripts-readme.mjs` enforces that
+   every script is documented, and M006 shipped red in CI on exactly this.
+6. **Do not wire it into `scripts/check-guards.sh` yet.** Task 7 does that, once
+   the tree is clean. Wiring it here would commit a red `guards` token, and
+   `/jk:next` forbids a commit carrying a red gate. The guard being *seen*
+   failing is the evidence that matters, and running it directly gives that
+   without making the branch red.
 
-**Check:** `guards` **fails**, naming the seven files and no others beyond the
-audit record handled in task 6. This is the task's success condition.
-
-**Commit the guard failing.** The next tasks turn it green by doing the work it
-demands, which is the only sequence that proves it was ever load-bearing.
+**Check:** running `node scripts/check-ascii-diagrams.mjs` directly **fails**,
+naming the seven files plus the audit record handled in task 6 — that failure,
+with its file list and count, is what the evidence records. The `guards` token
+itself stays green, because the script is not yet wired in.
 
 ---
 
@@ -181,14 +184,18 @@ alone.
 
 ---
 
-## Task 7 — Mutation-prove the guard by reintroducing one character
+## Task 7 — Wire the guard in, and mutation-prove it
 
-**Files:** none permanently. This task's product is evidence.
+**Files:** modify `scripts/check-guards.sh`. Nothing else permanently — the rest
+of this task's product is evidence.
 
 **Steps:**
 
-1. With the tree clean and `guards` green, insert a single `┌` into one
-   converted file.
+0. With every file converted and the guard passing when run directly, wire it
+   into `scripts/check-guards.sh` alongside the existing guards. `guards` must
+   be green immediately after wiring; if it is not, a conversion was missed and
+   that is the thing to fix, not the wiring.
+1. Insert a single `┌` into one converted file.
 2. Run `bash scripts/check-guards.sh` and confirm it **fails**, naming that file
    and that line.
 3. Remove the character **by an explicit edit**, not `git checkout` — the tree
