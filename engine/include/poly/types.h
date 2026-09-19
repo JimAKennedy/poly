@@ -284,6 +284,12 @@ struct LaneConfig {
     // M002 S03 (GP05). How sharply fills concentrate toward the end of the
     // phrase cycle. 0 = the position-blind roll this repo shipped before M002.
     float fillPhraseShape = 0.0f;
+    // M002 S04 (GP06). The lane this one answers. -1 = independent, which
+    // leaves the gate exactly as it was before M002. Lead-in is in beats:
+    // positive opens the response early (anticipating the call's end),
+    // negative opens it late (dovetailing past it).
+    int responseSourceLane = -1;
+    float responseLeadIn = 0.0f;
     // M002 S01 (EC06). The interlock style, and how many structural points the
     // pair strikes together. Both are state-only: the per-lane VST3 parameter
     // family is full (kParamsPerLane == 16, kKotekanSource occupies slot 15),
@@ -408,6 +414,40 @@ inline AdditiveCellInfo computeAdditiveCells(const LaneConfig& cfg) {
     }
     info.totalPpq = accum;
     return info;
+}
+
+// --- Phrase gating (M002 S04, GP06) ---
+
+// Is this lane's own phrase gate open at `ppq`? The same arithmetic the engine
+// uses, lifted out so a response lane can ask it of its source.
+inline bool phraseGateOpenFor(const LaneConfig& cfg, double ppq) {
+    const double lenPpq = static_cast<double>(cfg.phraseLength);
+    const double cyclePpq = lenPpq + static_cast<double>(cfg.phraseGap);
+    if (lenPpq <= 0.0 || cyclePpq <= 0.0)
+        return true; // no gating
+    double pos = std::fmod(ppq - static_cast<double>(cfg.phraseOffset), cyclePpq);
+    if (pos < 0.0)
+        pos += cyclePpq;
+    return pos < lenPpq;
+}
+
+// M002 S04 (GP06). A response lane is open exactly when its call is closed.
+//
+// The lead-in shifts the response's view of the call's clock: a positive value
+// makes the response see the call as ending sooner, so it opens early. That is
+// the anticipation a responding drummer uses, and it is derived from absolute
+// PPQ like every other gate, so a locate reproduces it.
+//
+// An ungated source has no closed half to answer. Rather than gating the
+// response off a lane that is always open -- which would silence it entirely --
+// the response falls back to its own settings.
+inline bool responseGateOpen(const LaneConfig& cfg, const LaneConfig& source, double ppq) {
+    if (cfg.responseSourceLane < 0)
+        return phraseGateOpenFor(cfg, ppq);
+    const double sourceLen = static_cast<double>(source.phraseLength);
+    if (sourceLen <= 0.0 || sourceLen + static_cast<double>(source.phraseGap) <= 0.0)
+        return phraseGateOpenFor(cfg, ppq);
+    return !phraseGateOpenFor(source, ppq + static_cast<double>(cfg.responseLeadIn));
 }
 
 // --- Position weights (M002 S01, GP03) ---

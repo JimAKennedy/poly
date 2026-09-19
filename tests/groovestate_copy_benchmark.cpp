@@ -99,7 +99,13 @@ TEST(GrooveStateCopyBenchmark, ReportsFactSizes) {
     // M002 S02 (GP04, guide-parity): +64 bytes from LaneConfig.ghostGrammar
     // (float), 8 bytes/lane x 8 lanes with alignment. The per-step ghost
     // weights stay in LaneRenderContext, as S01's timeline weights do.
-    EXPECT_EQ(sizeof(poly::GrooveState), 18128u)
+    // M002 S03/S04 (GP05, GP06, guide-parity): +64 bytes from
+    // LaneConfig.fillPhraseShape, responseSourceLane and responseLeadIn -- three
+    // scalars, 8 bytes/lane after alignment, because the first fit the padding
+    // ghostGrammar opened. Across M002 the struct has grown 18000 -> 18192,
+    // about 1%, against roughly 8 KB had the per-step weight arrays been stored
+    // per lane as the issues proposed.
+    EXPECT_EQ(sizeof(poly::GrooveState), 18192u)
         << "GrooveState size changed — record it in the milestone's decisions file";
 }
 

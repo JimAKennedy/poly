@@ -427,6 +427,10 @@ struct LaneRenderContext {
     // have cost about 8 KB on a struct copied three times per block.
     std::array<bool, kMaxSteps> timelinePattern{};
     bool hasTimeline = false;
+    // M002 S04 (GP06). The lane this one answers, resolved with the SAME guard
+    // M002/S01 built for the timeline reference -- that reuse is why this slice
+    // shares a milestone with the weighting rather than having one of its own.
+    int responseSource = -1;
 };
 
 static LaneRenderContext prepareLaneContext(const LaneConfig& cfg, const GrooveState& state, int lane,
@@ -450,6 +454,13 @@ static LaneRenderContext prepareLaneContext(const LaneConfig& cfg, const GrooveS
             }
             ctx.hasTimeline = true;
         }
+    }
+
+    if (cfg.responseSourceLane >= 0) {
+        const auto& src =
+            state.lanes[static_cast<size_t>(cfg.responseSourceLane < kMaxLanes ? cfg.responseSourceLane : 0)];
+        if (referenceLaneUsable(cfg.responseSourceLane, lane, state.activeLaneCount, src.responseSourceLane))
+            ctx.responseSource = cfg.responseSourceLane;
     }
 
     ctx.additive = computeAdditiveCells(cfg);
@@ -561,7 +572,11 @@ static void computeStepPpqAndDuration(const LaneRenderContext& ctx, const LaneCo
     }
 }
 
-static bool passesPhraseGating(const LaneRenderContext& ctx, double ppq) {
+static bool passesPhraseGating(const LaneConfig& cfg, const GrooveState& state, const LaneRenderContext& ctx,
+                               double ppq) {
+    // M002 S04 (GP06). A response lane's gate is the complement of its call's.
+    if (ctx.responseSource >= 0)
+        return responseGateOpen(cfg, state.lanes[static_cast<size_t>(ctx.responseSource)], ppq);
     if (!ctx.hasPhraseGating || ctx.phraseCyclePpq <= 0.0)
         return true;
     double phrasePos = std::fmod(ppq - ctx.phraseOffPpq, ctx.phraseCyclePpq);
@@ -625,7 +640,7 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
 
             if (ppq < tc.ppqStart - ctx.maxTimingShift || ppq >= tc.ppqEnd + ctx.maxTimingShift)
                 continue;
-            if (!passesPhraseGating(ctx, ppq))
+            if (!passesPhraseGating(cfg, state, ctx, ppq))
                 continue;
 
             int64_t cycleStep = computeDriftedCycleStep(cfg, ctx, absStep, ppq);

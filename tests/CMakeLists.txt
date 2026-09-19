@@ -22,6 +22,7 @@ add_executable(poly_tests
     lane_name_tests.cpp
     dynamic_shaping_tests.cpp
     subdivision_profile_tests.cpp
+    response_gate_tests.cpp
     step_weight_tests.cpp
     swing_curve_tests.cpp
     tihai_tests.cpp
