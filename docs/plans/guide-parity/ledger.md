@@ -408,17 +408,17 @@ dispatches alone.
 **Plan:** M005-S01-plan.md
 **Validation:** format, sanitizers
 **Evidence:** evidence/M005-S01.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The `sanitizers` token runs all five variants locally and its result is recorded
-- [ ] Each of the filed occurrences is classified by sanitizer, stack and date
-- [ ] Either a finding reproduces locally, with the exact invocation and iteration count that produced it recorded — or the attempts are recorded with what was tried and what the filed occurrences' logs show
+- [x] The `sanitizers` token runs all five variants locally and its result is recorded
+- [x] Each of the filed occurrences is classified by sanitizer, stack and date
+- [x] Either a finding reproduces locally, with the exact invocation and iteration count that produced it recorded — or the attempts are recorded with what was tried and what the filed occurrences' logs show
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| GP14 | Nothing runs the sanitizers outside CI, so an intermittent finding can only be observed through dispatches. Both outcomes of this slice are results: a reproduction gives the fix something to verify against, and a recorded failure to reproduce is what makes the next attempt cheaper rather than identical | `tooling` | `.jk/validations.yml`, `docs/plans/guide-parity/evidence/` | The token runs; the evidence names either the reproducing invocation or the attempts and the log analysis | `open` |
+| GP14 | Nothing runs the sanitizers outside CI, so an intermittent finding can only be observed through dispatches. Both outcomes of this slice are results: a reproduction gives the fix something to verify against, and a recorded failure to reproduce is what makes the next attempt cheaper rather than identical | `tooling` | `.jk/validations.yml`, `docs/plans/guide-parity/evidence/` | The token runs; the evidence names either the reproducing invocation or the attempts and the log analysis | `done` |
 
 ### Slice M005/S02 — Each finding is fixed or recorded benign
 
