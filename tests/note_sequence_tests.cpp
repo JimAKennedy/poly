@@ -125,9 +125,8 @@ std::vector<NoteEvent> render(const GrooveState& state, double to = 1.0) {
     tc.playing = true;
     engine.renderRange(tc, state, notes, nullptr);
     std::vector<NoteEvent> out(notes.events.begin(), notes.events.begin() + static_cast<long>(notes.count));
-    std::sort(out.begin(), out.end(), [](const NoteEvent& a, const NoteEvent& b) {
-        return a.ppqPosition < b.ppqPosition;
-    });
+    std::sort(out.begin(), out.end(),
+              [](const NoteEvent& a, const NoteEvent& b) { return a.ppqPosition < b.ppqPosition; });
     return out;
 }
 
@@ -174,4 +173,95 @@ TEST(NoteSequenceRender, EveryFactoryPresetIsUnmovedWithNoSequenceSet) {
             ASSERT_EQ(preset.lanes[static_cast<size_t>(lane)].noteSequenceLength, 0)
                 << "preset " << i << " (" << name << ") lane " << lane << " ships a sequence";
     }
+}
+
+// --- Existing lane features still apply ---
+//
+// The slice's third definition-of-done item asks for at least two. These are
+// chosen because they could plausibly break, not because they are easy: drift
+// changes which step index a position maps to, and kotekan derives the pattern
+// from another lane. Either could have been written so that it overrode the
+// sequence, or so that the sequence overrode it, and only a test distinguishes
+// "they compose" from "one happens to win".
+
+// Drift rotates the step index a position maps to. The pitch is indexed by
+// ABSOLUTE step, so drift must move which STEPS sound without moving which
+// pitch a given position takes -- the two are independent axes and both must
+// still work.
+TEST(NoteSequenceFeatures, DriftAndTheSequenceCompose) {
+    GrooveState still = laneWithSequence({60, 62, 64});
+    still.lanes[0].hitCount = 4;
+
+    GrooveState drifting = still;
+    drifting.lanes[0].driftRate = 2.0f;
+
+    const auto a = render(still, 4.0);
+    const auto b = render(drifting, 4.0);
+    ASSERT_FALSE(a.empty());
+    ASSERT_FALSE(b.empty());
+
+    // Drift changed which steps sound.
+    bool onsetsDiffer = a.size() != b.size();
+    for (size_t i = 0; i < std::min(a.size(), b.size()) && !onsetsDiffer; ++i)
+        if (std::abs(a[i].ppqPosition - b[i].ppqPosition) > 1e-9)
+            onsetsDiffer = true;
+    EXPECT_TRUE(onsetsDiffer) << "drift must move the pattern, or this proves nothing";
+
+    // And every emitted pitch still comes from the sequence, at the position
+    // it sounded -- not from midiNote, and not frozen at one entry.
+    for (const auto& e : b) {
+        const int64_t step = static_cast<int64_t>(std::llround(e.ppqPosition / 0.25));
+        EXPECT_EQ(e.pitch, noteSequencePitch(drifting.lanes[0], step))
+            << "pitch at ppq " << e.ppqPosition << " did not follow the sequence";
+    }
+}
+
+// Kotekan derives a lane's PATTERN from another lane. The pitch source is a
+// different axis, so a sequenced kotekan lane must play the complement's steps
+// with the sequence's pitches. A test checking only one of the two would miss
+// the other silently.
+TEST(NoteSequenceFeatures, KotekanPatternAndTheSequenceAreIndependentAxes) {
+    GrooveState state{};
+    state.activeLaneCount = 2;
+
+    auto& polos = state.lanes[0];
+    polos.id = 0;
+    polos.cycle = {8, 8};
+    polos.hitCount = 5;
+    polos.probability = 1.0f;
+    polos.baseVelocity = 100;
+    polos.midiNote = 70;
+
+    auto& sangsih = state.lanes[1];
+    sangsih.id = 1;
+    sangsih.cycle = {8, 8};
+    sangsih.hitCount = 5;
+    sangsih.probability = 1.0f;
+    sangsih.baseVelocity = 100;
+    sangsih.midiNote = 72;
+    sangsih.kotekanSourceLane = 0;
+    sangsih.noteSequence[0].pitch = 80;
+    sangsih.noteSequence[1].pitch = 82;
+    sangsih.noteSequenceLength = 2;
+
+    const auto events = render(state, 4.0);
+    std::vector<double> polosSteps, sangsihSteps;
+    for (const auto& e : events) {
+        if (e.laneIndex == 0)
+            polosSteps.push_back(e.ppqPosition);
+        else {
+            sangsihSteps.push_back(e.ppqPosition);
+            // Pitch comes from the sequence, never from midiNote.
+            const int64_t step = static_cast<int64_t>(std::llround(e.ppqPosition / 0.5));
+            EXPECT_EQ(e.pitch, noteSequencePitch(sangsih, step)) << "ppq " << e.ppqPosition;
+            EXPECT_NE(e.pitch, sangsih.midiNote) << "the sequence must override the single pitch";
+        }
+    }
+
+    // And the pattern is still the complement: the pair never strike together.
+    ASSERT_FALSE(polosSteps.empty());
+    ASSERT_FALSE(sangsihSteps.empty());
+    for (double p : polosSteps)
+        for (double s : sangsihSteps)
+            ASSERT_GT(std::abs(p - s), 1e-9) << "polos and sangsih both sound at " << p;
 }

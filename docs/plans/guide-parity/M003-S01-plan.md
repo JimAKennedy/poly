@@ -12,7 +12,7 @@ at planning, see `M003-decisions.md`.
 ## Task status
 
 - [x] 1. The sequence field, and the pitch it supplies
-- [ ] 2. Existing lane features still apply
+- [x] 2. Existing lane features still apply
 - [ ] 3. The sequence survives a reload
 - [ ] 4. Evidence and close-out
 
