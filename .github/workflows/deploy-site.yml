@@ -54,6 +54,25 @@ jobs:
       - name: Install dependencies
         working-directory: site
         run: npm ci
+      # M004/S01 (GP09): the guide's architecture diagrams are Mermaid source
+      # rendered to inline SVG by rehype-mermaid, which drives a real Chromium
+      # through Playwright. That makes a browser a build dependency of a docs
+      # site. Without these steps every PR check stays green -- site-lint never
+      # builds the site, and site-e2e installs chromium already -- and this job
+      # is the one that breaks, after merge. Same shape and same pinned SHA as
+      # the site-e2e job in ci.yml.
+      - name: Get Playwright version
+        id: pw-version
+        working-directory: site
+        run: echo "version=$(npx playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright browsers
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ steps.pw-version.outputs.version }}
+      - name: Install Playwright browsers
+        working-directory: site
+        run: npx playwright install --with-deps chromium
       - name: Build
         working-directory: site
         run: |
