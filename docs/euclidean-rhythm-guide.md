@@ -8,6 +8,13 @@ A hands-on guide to every rhythmic feature in Poly, with UI references, paramete
 
 ## UI Overview
 
+<!-- boxdraw-ok: the block below is a 44-line annotated mockup of the plugin
+     window -- nested panels, knob positions, lane tabs, callout letters -- not
+     an architecture diagram. Mermaid has no way to express a panel layout, and
+     forcing one would produce worse documentation than it replaced. See
+     docs/plans/guide-parity/M004-decisions.md. -->
+
+
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
 │  POLY                    [Preset ▾]                        v1.0.0   │  ← A: Header / Preset Selector

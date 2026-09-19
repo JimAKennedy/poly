@@ -1,6 +1,9 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import rehypeMermaid from 'rehype-mermaid';
+
+import { mermaidRehypeOptions } from './src/lib/mermaid-config.mjs';
 
 export default defineConfig({
 	// region:astro-base-config
@@ -9,6 +12,12 @@ export default defineConfig({
 		'/appendix-architecture': '/appendix-plugin-architecture',
 	},
 	// endregion:astro-base-config
+	// M004/S01 (GP09): architecture diagrams are Mermaid source rendered to
+	// inline SVG during the build, not ASCII art and not a browser-side draw.
+	markdown: {
+		rehypePlugins: [[rehypeMermaid, mermaidRehypeOptions]],
+		smartypants: { dashes: 'oldschool' },
+	},
 	integrations: [
 		starlight({
 			title: 'Poly Guide',

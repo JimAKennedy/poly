@@ -286,48 +286,77 @@ programme's whole premise.
 and none is hand-maintained ASCII art.
 
 **Branch:** milestone/M004-diagrams
-**Status:** planned
+**Status:** done
 **Demo:** The plugin-architecture appendix renders vector diagrams that match
 the site's typography, and a check fails if ASCII art returns.
 
-**The inventory, measured rather than quoted.** Seven files, 108 marked-up
-lines: `docs/euclidean-rhythm-guide.md` (44), the appendix (28),
-`docs/testing-strategy.md` (21), `docs/engine-spec.md` (9), `ARCHITECTURE.md`
-(8), `docs/ui-guide.md` (4), `docs/webui-migration.md` (2). `ARCHITECTURE.md` is
-at the repo root, which the issue's own list places under `docs/`.
+**The inventory, re-measured 2026-09-19.** Seven files, **117** lines carrying
+a box-drawing character: `docs/euclidean-rhythm-guide.md` (44), the appendix
+(28), `docs/testing-strategy.md` (21), `docs/engine-spec.md` (9),
+`ARCHITECTURE.md` (8), `docs/ui-guide.md` (4), `docs/webui-migration.md` (3).
+`ARCHITECTURE.md` is at the repo root, which the issue's own list places under
+`docs/`.
+
+The figure stated at assess time was 108, which contradicted its own breakdown:
+those per-file numbers summed to 116, and `docs/webui-migration.md` measures 3
+rather than 2. Corrected here rather than left standing, because the sentence
+claims the inventory was measured. No definition-of-done item now carries the
+count — S02 asserts the property instead, so this figure is information and
+cannot go stale into a gate.
+
+**What the inventory turned out to be, measured at execution.** Only **32** of
+the 106 lines are architecture diagrams. 20 are directory trees, which become
+nested Markdown lists — a file listing is not a flowchart and Mermaid has no
+representation for one. **49 are UI wireframes**, chiefly a 44-line annotated
+mockup of the plugin window in `docs/euclidean-rhythm-guide.md`; those stay,
+under a stated exemption, because no flowchart can express a panel layout and
+forcing one would produce worse documentation than it replaced. The remaining 5
+are the frozen audit record.
+
+That is why the definition of done asks for *no ASCII architecture diagram*
+rather than *no box-drawing character*: the original wording would have been
+satisfiable only by mangling content the milestone was never aimed at.
 
 ### Slice M004/S01 — One diagram renders from Mermaid at build time
 
+**Plan:** M004-S01-plan.md
+**Design:** M004-S01-design.md
 **Validation:** format, site-unit, doc-conformance, doc-discipline, guards
 **Evidence:** evidence/M004-S01.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] A Mermaid source block in a site page renders to vector output at build time, not at page load
-- [ ] The rendering is deterministic: an unchanged source produces byte-identical output across two builds
-- [ ] One existing diagram is converted and renders correctly, with the ASCII original removed
+- [x] A Mermaid source block in a site page renders to vector output at build time, not at page load
+- [x] The rendering is deterministic: an unchanged source produces byte-identical output across two builds
+- [x] One existing diagram is converted and renders correctly, with the ASCII original removed
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| GP09 | Establishing the pipeline is a different risk from converting content, and a reviewer could reasonably accept one and reject the other. Build-time rendering also raises the reproducibility question #282 records for the WASM artifacts: output that churns without a source change makes commit hygiene undecidable | `tooling` | `site/`, `site/package.json` | A build produces the vector output; a second build over unchanged source produces it byte-identically | `open` |
+| GP09 | Establishing the pipeline is a different risk from converting content, and a reviewer could reasonably accept one and reject the other. Build-time rendering also raises the reproducibility question #282 records for the WASM artifacts: output that churns without a source change makes commit hygiene undecidable | `tooling` | `site/`, `site/package.json` | A build produces the vector output; a second build over unchanged source produces it byte-identically | `done` |
 
 ### Slice M004/S02 — All seven files convert, and ASCII cannot return
 
+**Plan:** M004-S02-plan.md
 **Validation:** format, site-unit, doc-conformance, doc-discipline, guards
 **Evidence:** evidence/M004-S02.md
-**Status:** open
+**Status:** done
 **Depends:** M004/S01
 
 **Definition of Done**
 
-- [ ] All 108 ASCII diagram lines across the seven files are gone, replaced by Mermaid source
-- [ ] A check fails when ASCII box-drawing characters appear in a diagram position in any governed doc
-- [ ] That check has been shown to fail by reintroducing one
+- [x] No ASCII architecture diagram remains in the seven files, replaced by
+      Mermaid source; any file still carrying box-drawing characters does so
+      under a stated, greppable exemption — all proved by the guard
+- [x] A check fails when ASCII box-drawing characters appear in a diagram position in any governed doc
+- [x] That check has been shown to fail by reintroducing one
+- [x] Every Mermaid fence in a governed doc is proved to render, including the
+      four in `.md` files that no build touches
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| GP10 | Architecture diagrams live as ASCII art in seven files. They render as monospace blocks markedly unlike the rest of a typography-first site, and they are hand-drawn — the drift class M048 was built to kill | `docs` | `ARCHITECTURE.md`, `docs/`, `site/src/content/docs/appendix-plugin-architecture.mdx`, `scripts/` | The seven files carry no box-drawing characters; the guard is mutation-proved by reintroducing one and watching it fail | `open` |
+| GP10 | Architecture diagrams live as ASCII art in seven files. They render as monospace blocks markedly unlike the rest of a typography-first site, and they are hand-drawn — the drift class M048 was built to kill | `docs` | `ARCHITECTURE.md`, `docs/`, `site/src/content/docs/appendix-plugin-architecture.mdx`, `scripts/` | The seven files carry no box-drawing characters; the guard is mutation-proved by reintroducing one and watching it fail | `done` |
+| GP11 | Four of the five Mermaid fences live in `.md` files — `ARCHITECTURE.md` among them — which Astro never builds and GitHub renders at view time. `astro build` exits 1 on a bad fence, so the site-side one is covered twice over; nothing at all covers the other four. Found while converting them, not in the source issues | `tooling` | `site/tests/` | Every fence in a governed doc renders through the pinned renderer; the test refuses to pass if it finds no fences | `done` |
 
 ## Milestone M005 — The sanitizer findings are understood
 

@@ -4,7 +4,9 @@ class: gated
 
 # Poly Testing Strategy — Plugin, Bridge, and Cubase-in-the-Loop
 
-Status: proposed (2026-07-03), written against `main@63c960b`. Companion to
+Status: proposed (2026-09-19), written against `main@63c960b` on 2026-07-03.
+Nothing in the strategy has changed since; the anchor moved because the test
+pyramid and the fixtures listing were converted out of ASCII art. Companion to
 `docs/webui-migration.md` (this document expands its W5 phase into a full
 strategy and adds the host-integration layers).
 
@@ -21,19 +23,16 @@ be the most expensive suite to run and maintain.
 Therefore: a pyramid. Coverage lives below Cubase; Cubase verifies only
 what *only Cubase* can break.
 
-```
-            ┌──────────────────────────────┐   nightly, self-hosted runner,
-            │ L4  Cubase e2e (5–10 flows)  │   ~minutes, narrow + golden
-            ├──────────────────────────────┤
-            │ L3  Host-integration          │   pluginval + VST3 validator +
-            │     (no Cubase)               │   in-process test host, CI
-            ├──────────────────────────────┤
-            │ L2  Bridge contract           │   Playwright (JS side) +
-            │     (web UI ↔ C++)            │   gtest (C++ side), shared
-            ├──────────────────────────────┤   fixtures, CI, seconds
-            │ L1  Engine + unit             │   exists today: 300+ tests,
-            │                               │   golden determinism, fuzz
-            └──────────────────────────────┘
+```mermaid
+flowchart TB
+  L4["<b>L4 — Cubase e2e</b> (5–10 flows)<br/>nightly, self-hosted runner, ~minutes, narrow + golden"]
+  L3["<b>L3 — Host-integration</b> (no Cubase)<br/>pluginval + VST3 validator + in-process test host, CI"]
+  L2["<b>L2 — Bridge contract</b> (web UI ↔ C++)<br/>Playwright (JS side) + gtest (C++ side), shared fixtures, CI, seconds"]
+  L1["<b>L1 — Engine + unit</b><br/>exists today: 300+ tests, golden determinism, fuzz"]
+
+  %% Invisible links preserve the stack order without inventing flow: the
+  %% original draws these as stacked cells separated by rules, not arrows.
+  L4 ~~~ L3 ~~~ L2 ~~~ L1
 ```
 
 What exists today: L1 is strong (engine tests, golden determinism, state-IO
@@ -53,18 +52,16 @@ side against **shared fixtures**.
 
 ### 1.1 The contract artifacts
 
-```
-webui/tests/fixtures/
-├── schema/bridge.schema.json      # JSON Schema for every message type
-├── js-to-native/                  # recorded UI-emitted messages
-│   ├── edit-macro-density.jsonl   #   begin/perform/end gesture triplet
-│   ├── action-toggle-step.jsonl
-│   └── ...
-└── native-to-js/                  # canned state/frame pushes
-    ├── state-afrobeat.json        # full State snapshot (real preset)
-    ├── state-8-lanes.json
-    └── frame-playing.json
-```
+`webui/tests/fixtures/` holds:
+
+- `schema/bridge.schema.json` — JSON Schema for every message type
+- `js-to-native/` — recorded UI-emitted messages
+  - `edit-macro-density.jsonl` — a begin/perform/end gesture triplet
+  - `action-toggle-step.jsonl`, and others
+- `native-to-js/` — canned state and frame pushes
+  - `state-afrobeat.json` — a full State snapshot from a real preset
+  - `state-8-lanes.json`
+  - `frame-playing.json`
 
 ### 1.2 JS side (Playwright — extends the existing suite)
 

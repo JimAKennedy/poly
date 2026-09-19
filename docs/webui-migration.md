@@ -143,11 +143,13 @@ Only after W1–W3 hold up in Cubase daily use:
 
 ## 3. Sequencing & dependencies
 
-```
-W1 spike ──gate──► W2 bridge ──► W3 parity ──► W6 switchover
-   │                   │
-   └───────────────► W5 CI (webui job can land immediately, pre-W1)
-                       W4 drag-out (after W2, parallel with W3)
+```mermaid
+flowchart LR
+  W1["W1 spike"] -- gate --> W2["W2 bridge"]
+  W2 --> W3["W3 parity"]
+  W3 --> W6["W6 switchover"]
+  W1 --> W5["W5 CI<br/>(webui job can land immediately, pre-W1)"]
+  W2 --> W4["W4 drag-out<br/>(after W2, parallel with W3)"]
 ```
 
 The W5 CI job has no dependencies — it protects `webui/` from day one and

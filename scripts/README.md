@@ -47,6 +47,13 @@ actually fails on regressions.
 - `check-doc-conformance.sh` — the doc-conformance guardrail suite for site
   prose: euclidean claims, preset tables, audit ledgers (the `doc-conformance`
   validation token).
+- `check-ascii-diagrams.mjs` — governed docs carry no ASCII-art architecture
+  diagrams. Diagrams are Mermaid source the build renders; hand-drawn
+  box-drawing blocks drift from the code and render as monospace slabs in a
+  typography-first site. Scope is read from `jk-standards.yaml` rather than
+  hardcoded, plus `ARCHITECTURE.md`, which lives outside every declared root.
+  Escape hatch: `<!-- boxdraw-ok: <reason> -->` exempts a file, an empty reason
+  fails rather than passes, and exempted files are counted in the summary.
 - `check-guards.sh` — the repo guards CI enforces that no other local command
   reaches: SPDX headers, personal paths, the README guards and their contract
   proofs, the sample manifest, site assets, and bridge schema coverage (the
