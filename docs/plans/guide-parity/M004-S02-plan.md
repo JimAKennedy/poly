@@ -16,7 +16,7 @@ class: gated
 - [x] 3. Exempt `docs/euclidean-rhythm-guide.md`'s UI wireframe
 - [x] 4. `docs/testing-strategy.md`, `docs/webui-migration.md` convert; `docs/ui-guide.md` is exempted
 - [x] 5. The guard, wired and green, with the frozen audit record exempted
-- [ ] 6. Every Mermaid fence is proved to render
+- [x] 6. Every Mermaid fence is proved to render
 - [ ] 7. Mutation-prove the guard on every arm
 - [ ] 8. Evidence and slice close-out
 

@@ -350,13 +350,13 @@ satisfiable only by mangling content the milestone was never aimed at.
       under a stated, greppable exemption — all proved by the guard
 - [ ] A check fails when ASCII box-drawing characters appear in a diagram position in any governed doc
 - [ ] That check has been shown to fail by reintroducing one
-- [ ] Every Mermaid fence in a governed doc is proved to render, including the
+- [x] Every Mermaid fence in a governed doc is proved to render, including the
       four in `.md` files that no build touches
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
 | GP10 | Architecture diagrams live as ASCII art in seven files. They render as monospace blocks markedly unlike the rest of a typography-first site, and they are hand-drawn — the drift class M048 was built to kill | `docs` | `ARCHITECTURE.md`, `docs/`, `site/src/content/docs/appendix-plugin-architecture.mdx`, `scripts/` | The seven files carry no box-drawing characters; the guard is mutation-proved by reintroducing one and watching it fail | `open` |
-| GP11 | Four of the five Mermaid fences live in `.md` files — `ARCHITECTURE.md` among them — which Astro never builds and GitHub renders at view time. `astro build` exits 1 on a bad fence, so the site-side one is covered twice over; nothing at all covers the other four. Found while converting them, not in the source issues | `tooling` | `site/tests/` | Every fence in a governed doc renders through the pinned renderer; the test refuses to pass if it finds no fences | `open` |
+| GP11 | Four of the five Mermaid fences live in `.md` files — `ARCHITECTURE.md` among them — which Astro never builds and GitHub renders at view time. `astro build` exits 1 on a bad fence, so the site-side one is covered twice over; nothing at all covers the other four. Found while converting them, not in the source issues | `tooling` | `site/tests/` | Every fence in a governed doc renders through the pinned renderer; the test refuses to pass if it finds no fences | `done` |
 
 ## Milestone M005 — The sanitizer findings are understood
 
