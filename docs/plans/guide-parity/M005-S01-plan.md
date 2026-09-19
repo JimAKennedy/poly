@@ -11,7 +11,7 @@ class: gated
 ## Task status
 
 - [x] 1. The `sanitizers` token runs here, and its result is recorded
-- [ ] 2. Reproduce the race under TSan, or record what resisted
+- [x] 2. Reproduce the race under TSan, or record what resisted
 - [x] 3. Find what stopped TSan reporting on 2026-08-17
 - [ ] 4. Evidence and slice close-out
 
