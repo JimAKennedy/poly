@@ -12,7 +12,7 @@ that design establishes.
 ## Task status
 
 - [x] 1. A lane's gate can answer another's
-- [ ] 2. `15-compositional-grammar` stops giving the manual recipe, and close-out
+- [x] 2. The page stops giving the manual recipe, and close-out
 
 ## Definition of Done
 

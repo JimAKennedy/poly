@@ -175,6 +175,20 @@ const CLAIMS = [
     presentRegex: [/#fr-polak-2010/],
   },
   {
+    id: 'M002-S04-response-coupling',
+    file: '15-compositional-grammar.mdx',
+    rule:
+      'guide-parity GP06. The page gave antiphony as a recipe -- "With ' +
+      'identical Length and Gap values but different Offsets, two lanes will ' +
+      'alternate" -- which is fragile in the way the row names: change one ' +
+      'lane\'s phrase settings and the alternation breaks silently, because ' +
+      'nothing relates the lanes structurally. M002/S04 makes the response ' +
+      'gate the complement of its call\'s, so the page names the coupling ' +
+      'rather than a coincidence of numbers',
+    forbidden: ['identical Length and Gap values but different Offsets'],
+    present: ['response', 'antiphonal'],
+  },
+  {
     id: 'M002-S03-tihai-arithmetic',
     file: '06-indian-classical.mdx',
     rule:

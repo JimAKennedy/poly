@@ -208,20 +208,20 @@ once, not twice.
 **Plan:** M002-S04-plan.md
 **Validation:** format, unit, engine-isolation, rt-safety, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M002-S04.md
-**Status:** in-progress
+**Status:** done
 **Depends:** M002/S01
 
 **Definition of Done**
 
-- [ ] A lane's phrase gate can be defined as open exactly when a named source lane's gate is closed, with an optional lead-in or overlap in beats
-- [ ] Changing the source lane's phrase settings keeps the antiphony intact, which is the failure the manual recipe has
-- [ ] A mutual reference between two response lanes is refused rather than followed
-- [ ] With no response lane named, all 45 factory presets render byte-identically, proved by a golden test
-- [ ] `15-compositional-grammar` no longer gives interleaving offsets as the recipe for antiphony, and a `scope-framing` claim locks it
+- [x] A lane's phrase gate can be defined as open exactly when a named source lane's gate is closed, with an optional lead-in or overlap in beats
+- [x] Changing the source lane's phrase settings keeps the antiphony intact, which is the failure the manual recipe has
+- [x] A mutual reference between two response lanes is refused rather than followed
+- [x] With no response lane named, all 45 factory presets render byte-identically, proved by a golden test
+- [x] `15-compositional-grammar` no longer gives interleaving offsets as the recipe for antiphony, and a `scope-framing` claim locks it
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| GP06 | Call-and-response is achieved by hand-tuning `phraseLength`/`phraseGap`/`phraseOffset` until gates happen to interleave — `15-compositional-grammar` describes the recipe explicitly. It is fragile: change one lane's phrase settings and the antiphony breaks silently, because there is no structural relationship between the lanes. Kotekan couples patterns; this couples phrasing | `capability` | `engine/`, `15-compositional-grammar.mdx` | Engine tests assert the response gate is the complement of the source's, that it survives a change to the source's phrase length, and that a mutual reference is refused; the golden asserts presets unmoved | `open` |
+| GP06 | Call-and-response is achieved by hand-tuning `phraseLength`/`phraseGap`/`phraseOffset` until gates happen to interleave — `15-compositional-grammar` describes the recipe explicitly. It is fragile: change one lane's phrase settings and the antiphony breaks silently, because there is no structural relationship between the lanes. Kotekan couples patterns; this couples phrasing | `capability` | `engine/`, `15-compositional-grammar.mdx` | Engine tests assert the response gate is the complement of the source's, that it survives a change to the source's phrase length, and that a mutual reference is refused; the golden asserts presets unmoved | `done` |
 
 ## Milestone M003 — A lane can carry pitch
 

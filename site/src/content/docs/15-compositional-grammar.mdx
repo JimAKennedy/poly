@@ -51,7 +51,7 @@ Phrase gating is Poly's mechanism for introducing silence. Each lane can have a 
 
 Silence is compositional material. A 4-beat gap in a lead lane creates a call-and-response structure — the ensemble plays, the lead rests, then the lead re-enters with renewed energy. Staggered gaps across multiple lanes create a texture that breathes — different voices dropping out and re-entering at different times, so the ensemble is always full but never static.
 
-The Offset parameter determines when each lane's phrase cycle begins. With identical Length and Gap values but different Offsets, two lanes will alternate — one playing while the other rests, then swapping. This is the rhythmic equivalent of antiphonal singing, where two choirs alternate phrases.
+The Offset parameter determines when each lane's phrase cycle begins. To make two lanes alternate, point one at the other as its **response** lane: its gate becomes the complement of the call's, so it plays exactly when the call rests. A **lead-in** lets the answer anticipate the call's end, or a negative one lets it dovetail past. This is the rhythmic equivalent of antiphonal singing, where two choirs alternate phrases — and unlike matching Length and Gap by hand and offsetting one lane, the relationship survives a change to either lane's phrasing, because it is structural rather than a coincidence of numbers.
 
 ## Layered Composition: Building From the Anchor
 

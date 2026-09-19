@@ -177,6 +177,18 @@ index.
 solving `3P + 2g = remaining`, reporting unsolvable rather than overrunning the
 target.
 
+### Response gating (M002/S04)
+
+`responseSourceLane` makes a lane's phrase gate the **complement** of another
+lane's, with `responseLeadIn` shifting its view of the call's clock — positive
+opens early, negative late. It resolves through the same `referenceLaneUsable`
+guard as the timeline reference.
+
+`responseGateOpen` reads the source's **own** phrase gate, never its response
+gate. That is what makes a mutual reference harmless: the recursion has nowhere
+to go. The guard is belt-and-braces on top of it, and a test pins the property
+rather than the guard, because removing the guard fails nothing.
+
 **The thresholds move, never the roll.** `typeRoll`'s bands are cumulative —
 drop, then ghost, then add — so scaling the drop edge moves where ghost begins
 and the add band absorbs the difference. Weighting the drop edge down therefore
