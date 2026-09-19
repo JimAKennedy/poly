@@ -310,17 +310,17 @@ cannot go stale into a gate.
 **Design:** M004-S01-design.md
 **Validation:** format, site-unit, doc-conformance, doc-discipline, guards
 **Evidence:** evidence/M004-S01.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] A Mermaid source block in a site page renders to vector output at build time, not at page load
-- [ ] The rendering is deterministic: an unchanged source produces byte-identical output across two builds
-- [ ] One existing diagram is converted and renders correctly, with the ASCII original removed
+- [x] A Mermaid source block in a site page renders to vector output at build time, not at page load
+- [x] The rendering is deterministic: an unchanged source produces byte-identical output across two builds
+- [x] One existing diagram is converted and renders correctly, with the ASCII original removed
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| GP09 | Establishing the pipeline is a different risk from converting content, and a reviewer could reasonably accept one and reject the other. Build-time rendering also raises the reproducibility question #282 records for the WASM artifacts: output that churns without a source change makes commit hygiene undecidable | `tooling` | `site/`, `site/package.json` | A build produces the vector output; a second build over unchanged source produces it byte-identically | `open` |
+| GP09 | Establishing the pipeline is a different risk from converting content, and a reviewer could reasonably accept one and reject the other. Build-time rendering also raises the reproducibility question #282 records for the WASM artifacts: output that churns without a source change makes commit hygiene undecidable | `tooling` | `site/`, `site/package.json` | A build produces the vector output; a second build over unchanged source produces it byte-identically | `done` |
 
 ### Slice M004/S02 — All seven files convert, and ASCII cannot return
 

@@ -14,7 +14,7 @@ class: gated
 - [x] 2. Give the diagram the site's typography
 - [x] 3. Install Chromium in the Pages deploy build job
 - [x] 4. Convert one appendix diagram and remove its ASCII original
-- [ ] 5. Evidence and slice close-out
+- [x] 5. Evidence and slice close-out
 
 ## Definition of Done
 
