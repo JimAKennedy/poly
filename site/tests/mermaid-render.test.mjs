@@ -92,3 +92,31 @@ test("the markdown processor keeps `--` an en dash", async () => {
     "markdown.smartypants.dashes must stay 'oldschool' — the default widens every `--` in the guide to an em dash, including numeric ranges",
   );
 });
+
+// M004/S01 task 2. The milestone's demo line requires diagrams that match the
+// site's typography. Mermaid's default is `arial,sans-serif`, which is none of
+// the guide's three faces.
+//
+// The stack is declared once in `src/lib/mermaid-config.mjs` and checked here
+// against `--poly-font-sans` in `custom.css`, so the two cannot drift apart
+// silently. Reading the CSS at build time instead would make the Astro config
+// depend on parsing a stylesheet, which is a worse trade than one asserted
+// literal.
+test("rendered diagrams use the site's sans face", async () => {
+  const out = renderInChildProcess();
+  assert.match(out, /Inter/, 'the rendered SVG does not name the site sans stack');
+  assert.doesNotMatch(out, /arial,\s*sans-serif/i, "mermaid's default Arial survived into the output");
+});
+
+test("the mermaid font stack matches --poly-font-sans", async () => {
+  const css = await readFile(join(HERE, '..', 'src', 'styles', 'custom.css'), 'utf8');
+  const declared = css.match(/--poly-font-sans:\s*([^;]+);/);
+  assert.ok(declared, 'could not find --poly-font-sans in custom.css');
+  const { mermaidRehypeOptions } = await import('../src/lib/mermaid-config.mjs');
+  const normalise = (s) => s.replace(/\s+/g, ' ').trim();
+  assert.equal(
+    normalise(mermaidRehypeOptions.mermaidConfig.fontFamily),
+    normalise(declared[1]),
+    'the mermaid font stack has drifted from the stylesheet',
+  );
+});

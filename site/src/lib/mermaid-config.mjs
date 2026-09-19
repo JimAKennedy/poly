@@ -15,7 +15,17 @@
 // `tests/mermaid-render.test.mjs` asserts that property directly rather than
 // trusting a flag that does nothing.
 
+// Mermaid defaults to `arial,sans-serif`, which is none of the guide's three
+// faces. This literal mirrors `--poly-font-sans` in `src/styles/custom.css`;
+// `tests/mermaid-render.test.mjs` asserts the two agree, so they cannot drift
+// apart silently. The alternative -- parsing the stylesheet from the Astro
+// config at build time -- buys nothing and couples the build to CSS syntax.
+const SITE_SANS = "'Inter Variable', 'Inter', system-ui, sans-serif";
+
 /** @type {import('rehype-mermaid').Options} */
 export const mermaidRehypeOptions = {
   strategy: 'inline-svg',
+  mermaidConfig: {
+    fontFamily: SITE_SANS,
+  },
 };
