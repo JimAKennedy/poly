@@ -118,3 +118,50 @@ stale.
 `counts.json.presets` against `presets.json`. This staleness survived from
 `50d387e` (M048 S06) undetected, which is the same class as the stale-presets
 bug M005/S01 fixed at source.
+
+## 2026-09-19 — re-decomposing M004/S02 mid-slice
+
+- **Found:** the plan's original order — write the guard first, watch it fail
+  against the un-converted tree, convert afterwards — is impossible in this repo,
+  and both escapes from it commit a red gate.
+- **Why:** `doc-conformance` carries M007/S03's own coverage check, *every repo
+  guard is reachable from a command a developer can run*. It fails the instant a
+  guard script exists that no command runs:
+
+  ```
+  check-ascii-diagrams.mjs is reachable from no declared token, the pre-push
+  gate, pre-commit, or the doc-conformance runner
+  ```
+
+  Wiring it in earlier instead makes `guards` red, because the ASCII is still
+  there. `/jk:next` forbids committing with a red gate either way.
+- **Decision:** the conversions run first; the guard, its wiring, its README
+  entry and the audit-file exemption land together in one green commit
+  — **Why:** it is the only commit boundary at which no gate is red. This is the
+  repo's own discipline catching the plan, which is the check working.
+- **What did not change:** the guard was written and run against the full ASCII
+  tree *before* any conversion, and that output is preserved and quoted in the
+  evidence. What moved is where it is committed, not whether it was seen
+  failing. The definition of done asks for a check "shown to fail by
+  reintroducing one", and that mutation proof is the stronger claim anyway.
+
+### Found while writing the guard
+
+- **The first config parse was silently over-broad.** `(?:\s+.*\n)+` for the
+  `doc_roots` block matched past the end of the list, because `\s` spans
+  newlines — it swallowed `file_line_refs.source_roots` and
+  `research_provenance.doc_roots`, scanning 175 files instead of 70 and
+  **double-counting** `site/src/content/docs` so the appendix reported 22 lines
+  where it has 11. Fixed to `[^\S\n]`. The guard now refuses to run at all if the
+  parse yields no roots or no exempt dirs, rather than reporting a pass over an
+  empty set — the failure `CLAUDE.md` records for the jk-standards rules that
+  went green while matching nothing.
+- **Measured inventory, from the guard's first run against the full tree:** 106
+  lines across 8 files — `docs/euclidean-rhythm-guide.md` 44,
+  `docs/testing-strategy.md` 21, `site/src/content/docs/appendix-plugin-architecture.mdx`
+  11 (28 before S01 converted the System Overview), `docs/engine-spec.md` 9,
+  `ARCHITECTURE.md` 8, `docs/ui-guide.md` 5, `docs/webui-migration.md` 3, and
+  `docs/audits/M001-theory-audit-remediation-plan.md` 5.
+- **The guard counts arrowheads** (`▲▼◄►`) alongside the U+2500 block. Checked
+  first: those glyphs appear in exactly three governed files, all inside
+  diagrams, so including them adds no false positives.
