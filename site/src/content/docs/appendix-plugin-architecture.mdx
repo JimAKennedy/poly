@@ -10,25 +10,28 @@ Poly is split into two libraries with a strict isolation boundary: a pure C++ en
 
 ## System Overview
 
-```
-                         ┌──────────────────────────────────────────────┐
-   Host (Cubase/VST3)    │                 poly_engine                   │
-   ┌───────────────┐     │  (pure C++, no VST3, no audio-thread alloc)  │
-   │ ProcessContext│────►│  Transport/Time   →  bar/beat/sub/lane-phase  │
-   │ Tempo / PPQ   │     │  Lane Generator   →  hit candidates per lane │
-   │ Loop / jumps  │     │  Dynamic Shaping  →  velocity/emphasis/env   │
-   └───────────────┘     │  Constraint Layer →  anchors / density caps  │
-   ┌───────────────┐     │  Output Scheduler →  ordered NoteEvent list  │
-   │ Event MIDI out│◄────│                                              │
-   └───────────────┘     └──────────────────────────────────────────────┘
-            ▲                                   ▲
-            │                                   │
-   ┌────────┴────────────┐             ┌────────┴────────┐
-   │ poly_plugin          │            │ poly_tests       │
-   │ AudioEffect/Processor│            │ (off-host unit   │
-   │ + EditController     │            │  + golden tests) │
-   │ + Web UI editor      │            └─────────────────┘
-   └──────────────────────┘
+```mermaid
+flowchart TB
+  subgraph host["Host (Cubase/VST3)"]
+    pc["ProcessContext<br/>Tempo / PPQ<br/>Loop / jumps"]
+    midiout["Event MIDI out"]
+  end
+
+  subgraph engine["poly_engine<br/>(pure C++, no VST3, no audio-thread alloc)"]
+    transport["Transport/Time → bar/beat/sub/lane-phase"]
+    generator["Lane Generator → hit candidates per lane"]
+    shaping["Dynamic Shaping → velocity/emphasis/env"]
+    constraints["Constraint Layer → anchors / density caps"]
+    scheduler["Output Scheduler → ordered NoteEvent list"]
+  end
+
+  plugin["poly_plugin<br/>AudioEffect/Processor<br/>+ EditController<br/>+ Web UI editor"]
+  tests["poly_tests<br/>(off-host unit<br/>+ golden tests)"]
+
+  pc --> engine
+  engine --> midiout
+  plugin --> host
+  tests --> engine
 ```
 
 The plugin layer feeds the engine two things: the current transport state (`TransportContext`) and the resolved patch settings (`GrooveState`). The engine returns a buffer of `NoteEvent` objects. The plugin writes those events to the VST3 output `IEventList`. That is the entire interface.

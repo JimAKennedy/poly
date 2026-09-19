@@ -13,7 +13,7 @@ class: gated
 - [x] 1. A test that demands byte-identical renders, and the wiring that makes it pass
 - [x] 2. Give the diagram the site's typography
 - [x] 3. Install Chromium in the Pages deploy build job
-- [ ] 4. Convert one appendix diagram and remove its ASCII original
+- [x] 4. Convert one appendix diagram and remove its ASCII original
 - [ ] 5. Evidence and slice close-out
 
 ## Definition of Done

@@ -120,3 +120,28 @@ test("the mermaid font stack matches --poly-font-sans", async () => {
     'the mermaid font stack has drifted from the stylesheet',
   );
 });
+
+// M004/S01 task 4. The pipeline is only proved once a real page uses it. This
+// slice converts one diagram -- the appendix's System Overview -- and leaves
+// the rest of the file to M004/S02, so the pipeline is demonstrated without
+// this slice absorbing that slice's content work.
+test('the plugin-architecture appendix has a mermaid System Overview and no ascii art in it', async () => {
+  const page = await readFile(
+    join(HERE, '..', 'src', 'content', 'docs', 'appendix-plugin-architecture.mdx'),
+    'utf8',
+  );
+  assert.match(page, /```mermaid/, 'the appendix carries no mermaid source');
+
+  const start = page.indexOf('## System Overview');
+  assert.ok(start >= 0, 'the System Overview heading has moved or been renamed');
+  const end = page.indexOf('\n## ', start + 1);
+  const section = page.slice(start, end === -1 ? undefined : end);
+
+  assert.match(section, /```mermaid/, 'the System Overview is not a mermaid diagram');
+  const boxDrawing = section.match(/[─-╿▲▼◄►]/g) ?? [];
+  assert.deepEqual(
+    boxDrawing,
+    [],
+    `the System Overview still contains ${boxDrawing.length} box-drawing character(s)`,
+  );
+});
