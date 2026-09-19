@@ -42,20 +42,17 @@ The engine exposes a single entry point — a stateless function from transport 
 
 ## Repository Structure
 
-```
-poly/
-├── engine/               # poly_engine — pure C++ static library
-│   ├── include/     # public headers (types, engine, envelope, scene, etc.)
-│   └── src/              # implementation
-├── plugin/               # poly_plugin — VST3 instrument
-│   ├── source/           # processor, controller, factory, web UI bridge
-│   └── resource/         # AU packaging metadata (au-info.plist)
-├── webui/                # web UI assets served into the plugin webview
-├── tests/                # Google Test suite (runs without VST3 SDK)
-│   ├── golden/           # deterministic reference output files
-│   └── host/             # off-host plugin + bridge integration tests
-└── tools/harness/        # headless CLI engine runner
-```
+- `engine/` — **poly_engine**, a pure C++ static library
+  - `include/` — public headers (types, engine, envelope, scene, and the rest)
+  - `src/` — implementation
+- `plugin/` — **poly_plugin**, the VST3 instrument
+  - `source/` — processor, controller, factory, web UI bridge
+  - `resource/` — AU packaging metadata (`au-info.plist`)
+- `webui/` — web UI assets served into the plugin webview
+- `tests/` — Google Test suite, which runs without the VST3 SDK
+  - `golden/` — deterministic reference output files
+  - `host/` — off-host plugin and bridge integration tests
+- `tools/harness/` — headless CLI engine runner
 
 ## Threading Model
 

@@ -11,7 +11,7 @@ class: gated
 
 ## Task status
 
-- [ ] 1. Convert the site appendix
+- [x] 1. Convert the site appendix
 - [ ] 2. Convert `ARCHITECTURE.md` and `docs/engine-spec.md`
 - [ ] 3. Exempt `docs/euclidean-rhythm-guide.md`'s UI wireframe
 - [ ] 4. `docs/testing-strategy.md`, `docs/webui-migration.md` convert; `docs/ui-guide.md` is exempted
