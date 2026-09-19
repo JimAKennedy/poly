@@ -2,16 +2,23 @@
 
 Poly is split into two layers with a strict isolation boundary:
 
-```
-Host (Cubase/VST3)          poly_engine (pure C++, no VST3 deps)
-┌───────────────┐          ┌──────────────────────────────────┐
-│ ProcessContext ├─────────►│ Transport → Lane Generator →     │
-│ Tempo / PPQ    │          │ Dynamic Shaping → Constraints →  │
-│ Loop / jumps   │          │ Output Scheduler → NoteEvent[]   │
-└───────────────┘          └──────────────┬───────────────────┘
-┌───────────────┐                         │
-│ MIDI Event Out │◄────────────────────────┘
-└───────────────┘
+```mermaid
+flowchart LR
+  subgraph host["Host (Cubase/VST3)"]
+    pc["ProcessContext<br/>Tempo / PPQ<br/>Loop / jumps"]
+    midiout["MIDI Event Out"]
+  end
+
+  subgraph engine["poly_engine (pure C++, no VST3 deps)"]
+    transport["Transport"] --> generator["Lane Generator"]
+    generator --> shaping["Dynamic Shaping"]
+    shaping --> constraints["Constraints"]
+    constraints --> scheduler["Output Scheduler"]
+    scheduler --> events["NoteEvent[]"]
+  end
+
+  pc --> transport
+  events --> midiout
 ```
 
 - **`poly_engine`** -- pure C++ static library. Zero VST3 or audio-thread dependencies. Compiles and passes all tests without the SDK. Contains: Euclidean generator, envelopes, constraints, scenes, macros, phrase gating, mutation, drift, MIDI capture, and SMF writer.

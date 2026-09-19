@@ -8,17 +8,26 @@ class: gated
 
 `poly_engine` is a pure C++ static library with zero VST3 or audio-thread dependencies. The plugin layer (`poly_plugin`) feeds it transport and parameter state, drains its `NoteEvent` output into the host's `IEventList`, and optionally drains an `EmissionEvent` classification stream for the UI desk overlay.
 
-```
-poly_plugin (VST3)          poly_engine (pure C++)
-┌──────────────┐            ┌──────────────────────────┐
-│ ProcessContext│──────────► │ TransportContext          │
-│ Parameters   │            │ GrooveState / SceneState  │
-│              │            │                           │
-│ IEventList   │◄────────── │ NoteEventBuffer           │
-│ (desk UI)    │◄────────── │ EmissionEventBuffer       │
-└──────────────┘            │                           │
-                            │ Engine::renderRange()     │
-                            └──────────────────────────┘
+```mermaid
+flowchart LR
+  subgraph plugin["poly_plugin (VST3)"]
+    pc["ProcessContext"]
+    params["Parameters"]
+    eventlist["IEventList"]
+    deskui["(desk UI)"]
+  end
+
+  subgraph engine["poly_engine (pure C++)"]
+    transport["TransportContext"]
+    groove["GrooveState / SceneState"]
+    notebuf["NoteEventBuffer"]
+    emitbuf["EmissionEventBuffer"]
+    render["Engine::renderRange()"]
+  end
+
+  pc --> transport
+  notebuf --> eventlist
+  emitbuf --> deskui
 ```
 
 The engine must compile and pass its full test suite without the VST3 SDK.
