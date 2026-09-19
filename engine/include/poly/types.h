@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 
@@ -280,6 +281,9 @@ struct LaneConfig {
     // 0 = the flat per-step roll this repo shipped before M002. Scaled by the
     // Complexity macro in macro.cpp, so low Complexity keeps grooves clean.
     float ghostGrammar = 0.0f;
+    // M002 S03 (GP05). How sharply fills concentrate toward the end of the
+    // phrase cycle. 0 = the position-blind roll this repo shipped before M002.
+    float fillPhraseShape = 0.0f;
     // M002 S01 (EC06). The interlock style, and how many structural points the
     // pair strikes together. Both are state-only: the per-lane VST3 parameter
     // family is full (kParamsPerLane == 16, kKotekanSource occupies slot 15),
@@ -482,6 +486,37 @@ inline float computeGhostWeight(const LaneConfig& cfg, int stepsInCycle, int ste
 
     const float w = 1.0f + grammar * (approach - departure);
     return w < 0.0f ? 0.0f : w;
+}
+
+// M002 S03 (GP05). How much this position is favoured for a fill.
+//
+// Fills cluster at phrase boundaries and resolve onto the downbeat. The weight
+// rises with position through the phrase cycle, and the shape parameter
+// controls how sharply: a low shape is close to linear, a high one concentrates
+// the rise late.
+//
+// A lane with no phrase cycle has nothing to resolve onto, so the weight is
+// neutral rather than a division by zero. The row calls for the composite
+// convergence point there; that is a different source and is not invented here.
+inline float computeFillWeight(const LaneConfig& cfg, double phrasePos, double phraseCycle) {
+    if (cfg.fillPhraseShape <= 0.0f || phraseCycle <= 0.0)
+        return 1.0f;
+    double t = phrasePos / phraseCycle;
+    t = t < 0.0 ? 0.0 : (t > 1.0 ? 1.0 : t);
+
+    // shape in (0, 1] maps to an exponent: 1.0 is quadratic-ish concentration
+    // late, lower values flatten toward linear.
+    const float shape = cfg.fillPhraseShape > 1.0f ? 1.0f : cfg.fillPhraseShape;
+    const double curved = std::pow(t, 1.0 + 2.0 * (1.0 - static_cast<double>(shape)));
+
+    // The weight must REDISTRIBUTE, not merely add: it runs from 1 - shape at
+    // the cycle's start to 1 + shape at its end, so early fills become rarer as
+    // late ones become commoner. A weight that only ever raised the probability
+    // could not shift the distribution at all once fills saturate -- the first
+    // render-level case measured exactly 1800 early against 1800 late, with and
+    // without the shape, and that is why this is signed around 1.0 rather than
+    // anchored at it.
+    return 1.0f + shape * static_cast<float>(2.0 * curved - 1.0);
 }
 
 // The weights for one step, given the reference lane's onset pattern.

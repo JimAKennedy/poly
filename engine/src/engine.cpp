@@ -209,7 +209,7 @@ enum class StepOutcome : uint8_t {
 
 static StepOutcome classifyStep(const LaneConfig& cfg, const GrooveState& state, int64_t absStep, int64_t cycleStep,
                                 bool isPatternStep, bool isAnchor, const EnvelopeMods& mods, int stepsInCycle,
-                                bool isFillBar, const StepWeights& weights) {
+                                bool isFillBar, const StepWeights& weights, float phraseFillWeight) {
     // M073 S01: A base velocity of exactly zero mutes the lane entirely. The
     // emission decision below never consults velocity magnitude, and
     // computeStepVelocity's ghost-floor clamp can raise a 0 back up — so
@@ -275,7 +275,11 @@ static StepOutcome classifyStep(const LaneConfig& cfg, const GrooveState& state,
             float fillProb = std::clamp(mods.fill, 0.0f, 1.0f);
             float fillRoll = deterministicRand(laneEffectiveSeed(cfg, state.seed), cfg.id, absStep, 4);
             // M002 S01 (GP03): fills are attracted toward the timeline too.
-            fillProb *= weights.fill;
+            // M002 S03 (GP05): and concentrate toward the phrase boundary. The
+            // phrase weight is applied here rather than in laneStepWeights
+            // because it depends on the step's PPQ position within the phrase
+            // cycle, which the composition helper does not have.
+            fillProb *= weights.fill * phraseFillWeight;
             if (fillRoll >= fillProb)
                 return notEmitted();
         }
@@ -515,6 +519,18 @@ static LaneRenderContext prepareLaneContext(const LaneConfig& cfg, const GrooveS
     return ctx;
 }
 
+// M002 S03 (GP05). The fill weight for a PPQ position, from the lane's phrase
+// cycle. Separate from laneStepWeights because it needs the position, not the
+// step index: the phrase cycle is measured in beats and need not align to steps.
+static float phraseFillWeightAt(const LaneConfig& cfg, const LaneRenderContext& ctx, double ppq) {
+    if (!ctx.hasPhraseGating || ctx.phraseCyclePpq <= 0.0)
+        return 1.0f;
+    double phrasePos = std::fmod(ppq - ctx.phraseOffPpq, ctx.phraseCyclePpq);
+    if (phrasePos < 0.0)
+        phrasePos += ctx.phraseCyclePpq;
+    return computeFillWeight(cfg, phrasePos, ctx.phraseCyclePpq);
+}
+
 // M002 (GP03, GP04). Every weight source this lane has, composed.
 //
 // Sources multiply and an unset source contributes exactly 1.0, so a lane with
@@ -632,7 +648,7 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
             bool isAnchor = cfg.constraints.anchorSteps.steps[static_cast<size_t>(cycleStep)] > 0.0f;
             StepOutcome outcome =
                 classifyStep(cfg, state, absStep, cycleStep, isPatternStep, isAnchor, mods, ctx.stepsInCycle, isFillBar,
-                             laneStepWeights(cfg, ctx, static_cast<int>(cycleStep)));
+                             laneStepWeights(cfg, ctx, static_cast<int>(cycleStep)), phraseFillWeightAt(cfg, ctx, ppq));
 
             // Post-timing-shift onset for the audible note. A Drop never fires,
             // so it has no shifted onset — the display shows it at its grid ppq.

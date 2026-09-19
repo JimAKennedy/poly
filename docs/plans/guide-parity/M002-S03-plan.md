@@ -11,7 +11,7 @@ that design establishes.
 
 ## Task status
 
-- [ ] 1. A phrase-proximity weight for fills
+- [x] 1. A phrase-proximity weight for fills
 - [ ] 2. A tihai lands on the target
 - [ ] 3. `06-indian-classical` stops asking for hand arithmetic, and close-out
 

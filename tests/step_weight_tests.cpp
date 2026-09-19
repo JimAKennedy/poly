@@ -13,6 +13,7 @@
 // byte-identity guarantee falls out of that rather than being asserted
 // separately.
 #include <array>
+#include <cmath>
 
 #include <gtest/gtest.h>
 
@@ -422,4 +423,129 @@ TEST(GhostGrammarRender, GhostsFavourTheApproachToAnAccent) {
     EXPECT_GT(grammarRatio, neutralRatio)
         << "approach share: neutral " << neutralRatio << ", with grammar " << grammarRatio << " (approach "
         << grammared.first << " vs departure " << grammared.second << ")";
+}
+
+// --- M002/S03 (GP05): fills resolve onto the phrase boundary ---
+//
+// FillLikelihood is an envelope target with no knowledge of phrase position: a
+// fill-add is as likely at beat 2 of bar 1 as at the end of an 8-bar phrase.
+// Idiomatic fills cluster at phrase boundaries and resolve onto the downbeat
+// (Nelson 2008; Clayton 2000; Riley 1994).
+
+namespace {
+
+LaneConfig fillLane(float shape, float phraseLength = 4.0f) {
+    LaneConfig cfg{};
+    cfg.id = 1;
+    cfg.cycle = {16, 16};
+    cfg.fillPhraseShape = shape;
+    cfg.phraseLength = phraseLength;
+    cfg.phraseGap = 0.0f;
+    return cfg;
+}
+
+} // namespace
+
+TEST(FillPhraseWeight, IsNeutralWhenUnset) {
+    const LaneConfig cfg = fillLane(0.0f);
+    for (double pos = 0.0; pos < 4.0; pos += 0.5)
+        EXPECT_FLOAT_EQ(computeFillWeight(cfg, pos, 4.0), 1.0f) << "position " << pos;
+}
+
+// Across the cycle, not at two points: a weight that spiked only at the final
+// step would satisfy a two-sample test and be wrong everywhere else.
+TEST(FillPhraseWeight, RisesMonotonicallyTowardTheBoundary) {
+    const LaneConfig cfg = fillLane(1.0f);
+    float previous = computeFillWeight(cfg, 0.0, 4.0);
+    for (double pos = 0.5; pos <= 3.5; pos += 0.5) {
+        const float w = computeFillWeight(cfg, pos, 4.0);
+        EXPECT_GT(w, previous) << "weight must rise at position " << pos;
+        previous = w;
+    }
+}
+
+// The shape parameter controls how sharply, compared mid-cycle where the two
+// shapes differ most.
+TEST(FillPhraseWeight, ShapeControlsHowSharplyFillsConcentrate) {
+    const float gentle = computeFillWeight(fillLane(0.3f), 2.0, 4.0);
+    const float sharp = computeFillWeight(fillLane(1.0f), 2.0, 4.0);
+    EXPECT_LT(gentle, sharp) << "gentle " << gentle << ", sharp " << sharp;
+}
+
+// The row says the boundary for an ungated lane is the composite convergence
+// point, not silence. A lane with no phrase length must still get a meaningful
+// weight rather than a division by zero.
+TEST(FillPhraseWeight, HandlesAnUngatedLaneWithoutDividingByZero) {
+    LaneConfig cfg = fillLane(1.0f, 0.0f);
+    for (double pos : {0.0, 1.0, 3.9}) {
+        const float w = computeFillWeight(cfg, pos, 0.0);
+        EXPECT_TRUE(std::isfinite(w)) << "position " << pos << " produced " << w;
+        EXPECT_FLOAT_EQ(w, 1.0f) << "with no cycle to resolve onto, the weight is neutral";
+    }
+}
+
+// Render-level. S02 taught that unit cases on the helper cannot see the wiring:
+// a weight computed perfectly and discarded leaves them all green. This case
+// measures where fills actually land, across seeds.
+TEST(FillPhraseWeightRender, FillsConcentrateTowardThePhraseBoundary) {
+    auto tallyFills = [](float shape) {
+        int early = 0;
+        int late = 0;
+        for (uint64_t seed = 1; seed <= 300; ++seed) {
+            GrooveState state{};
+            state.activeLaneCount = 1;
+            state.seed = seed;
+            auto& lane = state.lanes[0];
+            lane.id = 0;
+            lane.cycle = {16, 16};
+            lane.hitCount = 4;
+            lane.probability = 1.0f;
+            lane.baseVelocity = 100;
+            lane.phraseLength = 4.0f; // a four-beat phrase, fully open
+            lane.phraseGap = 0.0f;
+            lane.fillPhraseShape = shape;
+            // A FillLikelihood envelope drives the PROBABILISTIC fill path.
+            // fillEveryNBars would not work here: `if (isFillBar) return Add;`
+            // fires before the roll, so every step becomes an unconditional
+            // Add and the weighted probability is never consulted -- the first
+            // version of this test set it and measured exactly 1800 early
+            // against 1800 late, with and without a shape.
+            lane.envelopeCount = 1;
+            lane.envelopes[0].active = true;
+            lane.envelopes[0].envelope.target = EnvTarget::FillLikelihood;
+            lane.envelopes[0].envelope.shape = Shape::Sine;
+            lane.envelopes[0].envelope.periodBars = 1.0f;
+            lane.envelopes[0].envelope.depth = 0.5f;
+
+            Engine engine;
+            NoteEventBuffer notes;
+            EmissionEventBuffer emissions;
+            TransportContext tc{};
+            tc.ppqStart = 0.0;
+            tc.ppqEnd = 4.0;
+            tc.tempo = 120.0;
+            tc.playing = true;
+            engine.renderRange(tc, state, notes, &emissions);
+
+            for (size_t i = 0; i < emissions.count; ++i) {
+                const auto& e = emissions.events[i];
+                if (e.kind != static_cast<uint8_t>(EmissionKind::Add))
+                    continue;
+                if (e.ppqPosition < 2.0)
+                    ++early;
+                else
+                    ++late;
+            }
+        }
+        return std::pair<int, int>{early, late};
+    };
+
+    const auto neutral = tallyFills(0.0f);
+    const auto shaped = tallyFills(1.0f);
+
+    const double neutralLate = static_cast<double>(neutral.second) / std::max(1, neutral.first + neutral.second);
+    const double shapedLate = static_cast<double>(shaped.second) / std::max(1, shaped.first + shaped.second);
+
+    EXPECT_GT(shapedLate, neutralLate) << "late share: neutral " << neutralLate << ", shaped " << shapedLate
+                                       << " (early " << shaped.first << " vs late " << shaped.second << ")";
 }
