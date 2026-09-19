@@ -13,8 +13,8 @@ at planning, see `M003-decisions.md`.
 
 - [x] 1. The sequence field, and the pitch it supplies
 - [x] 2. Existing lane features still apply
-- [ ] 3. The sequence survives a reload
-- [ ] 4. Evidence and close-out
+- [x] 3. The sequence survives a reload
+- [x] 4. Evidence and close-out
 
 ## Definition of Done
 

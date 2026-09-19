@@ -245,19 +245,19 @@ programme's whole premise.
 **Plan:** M003-S01-plan.md
 **Validation:** format, unit, engine-isolation, rt-safety
 **Evidence:** evidence/M003-S01.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] A lane can carry an optional sequence of pitches with per-note durations, supplying successive hits' pitch instead of the single `midiNote`
-- [ ] The field's name does not collide with the existing `phrase*` fields, and the chosen name is recorded with its reason
-- [ ] Every existing lane feature — drift, kotekan complement, tempo multiplier, additive cells — applies unchanged with a sequence set, asserted for at least two of them
-- [ ] With no sequence set, all 45 factory presets render byte-identically, proved by a golden test
-- [ ] A pre-bump state loads as the single-pitch behaviour it played
+- [x] A lane can carry an optional sequence of pitches with per-note durations, supplying successive hits' pitch instead of the single `midiNote`
+- [x] The field's name does not collide with the existing `phrase*` fields, and the chosen name is recorded with its reason
+- [x] Every existing lane feature — drift, kotekan complement, tempo multiplier, additive cells — applies unchanged with a sequence set, asserted for at least two of them
+- [x] With no sequence set, all 45 factory presets render byte-identically, proved by a golden test
+- [x] A pre-bump state loads as the single-pitch behaviour it played
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| GP07 | A lane emits one fixed pitch: `ev.pitch = cfg.midiNote`, a single assignment. Hand-drum traditions are one voice with several strokes — djembe bass/tone/slap, tabla bols, conga open/muted/slap — so each articulation currently needs its own lane, competing for the 8-lane budget and unable to share a pattern. A sequence also makes a lane a pitched voice, so the polymetric machinery applies to melodic material | `capability` | `engine/include/poly/types.h`, `engine/src/engine.cpp`, `engine/include/poly/state_io_*.h` | Engine tests assert successive hits take successive sequence pitches, that a named existing feature still applies, and that a pre-bump state loads as single-pitch; the golden asserts presets unmoved | `open` |
+| GP07 | A lane emits one fixed pitch: `ev.pitch = cfg.midiNote`, a single assignment. Hand-drum traditions are one voice with several strokes — djembe bass/tone/slap, tabla bols, conga open/muted/slap — so each articulation currently needs its own lane, competing for the 8-lane budget and unable to share a pattern. A sequence also makes a lane a pitched voice, so the polymetric machinery applies to melodic material | `capability` | `engine/include/poly/types.h`, `engine/src/engine.cpp`, `engine/include/poly/state_io_*.h` | Engine tests assert successive hits take successive sequence pitches, that a named existing feature still applies, and that a pre-bump state loads as single-pitch; the golden asserts presets unmoved | `done` |
 
 ### Slice M003/S02 — The sequence reaches a factory preset
 

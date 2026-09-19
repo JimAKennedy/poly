@@ -199,6 +199,22 @@ template <typename ReadFn> [[nodiscard]] bool readLaneConfig(ReadFn&& read, Lane
             return false;
         lane.humanizeMode = static_cast<HumanizeMode>(humanizeMode);
     }
+    if (version >= kNoteSequenceStateVersion) {
+        int32_t count = 0;
+        if (!read(&count, sizeof(count)))
+            return false;
+        // A forged count must not walk the reader off the end of the array.
+        if (count < 0 || count > kMaxNoteSequence)
+            return false;
+        lane.noteSequenceLength = static_cast<int>(count);
+        for (int32_t i = 0; i < count; ++i) {
+            auto& entry = lane.noteSequence[static_cast<size_t>(i)];
+            if (!read(&entry.pitch, sizeof(entry.pitch)))
+                return false;
+            if (!read(&entry.durationBeats, sizeof(entry.durationBeats)))
+                return false;
+        }
+    }
     // Pre-v19 states carry no kotekan-mode bytes; the struct defaults
     // (NyogCag, overlap 0) stand, which is the strict complement such a state
     // played before M002. sanitizeGrooveState clamps a corrupt mode byte.
