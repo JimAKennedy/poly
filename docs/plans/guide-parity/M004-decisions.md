@@ -243,3 +243,26 @@ on a browser launching, so a Chromium failure in CI blocks a docs deploy rather
 than merely failing a test. Both were accepted deliberately; exact-pinning the
 renderer was offered and not taken, to avoid a lock someone must unpick on every
 upgrade.
+
+### A red gate reached a commit, and why the check could not have caught it earlier
+
+`c602bbe` was committed while `doc-discipline` was failing. Two causes, and only
+one of them is a process slip:
+
+1. **Mine.** The validation run and the `git commit` were issued in one block, so
+   the exit code was printed but nothing gated on it. Every prior task in this
+   milestone ran validation as its own step and read the result first.
+2. **Structural, and worth knowing.** The violation *could not* have been seen
+   before the commit it came from. `doc-discipline`'s status-anchor arm compares
+   a doc's `Status:` date against **the doc's last commit in range**. Task 4's
+   pre-commit validation was green because the change was still uncommitted —
+   there was no commit to compare against. The failure appeared the moment task
+   4 landed.
+
+So for any doc carrying a `Status:` anchor, "validate, then commit" is blind by
+construction; the check has to be re-run *after* committing. `docs/testing-strategy.md`
+is the only doc in this milestone's scope that carries one.
+
+Fixed by refreshing the anchor to 2026-09-19 while saying plainly in the doc
+that nothing in the strategy changed — the anchor moved because the pyramid and
+the fixtures listing were converted, not because the strategy was re-reviewed.

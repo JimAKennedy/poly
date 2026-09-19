@@ -4,7 +4,9 @@ class: gated
 
 # Poly Testing Strategy — Plugin, Bridge, and Cubase-in-the-Loop
 
-Status: proposed (2026-07-03), written against `main@63c960b`. Companion to
+Status: proposed (2026-09-19), written against `main@63c960b` on 2026-07-03.
+Nothing in the strategy has changed since; the anchor moved because the test
+pyramid and the fixtures listing were converted out of ASCII art. Companion to
 `docs/webui-migration.md` (this document expands its W5 phase into a full
 strategy and adds the host-integration layers).
 
