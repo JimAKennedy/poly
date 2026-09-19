@@ -6,7 +6,9 @@
 // source of truth for factory preset lane data so the card runtime, the WASM
 // host, the alias map, and the chapter documentation cannot drift.
 //
-// Schema (schemaVersion 6 — M003 S01 added per-lane "profileCount"/"subdivisionProfile"
+// Schema (schemaVersion 7 — guide-parity M003 added per-lane "noteSequence"
+// for lanes carrying a melodic cell;
+// schemaVersion 6 — M003 S01 added per-lane "profileCount"/"subdivisionProfile"
 // for lanes playing a non-isochronous subdivision;
 // schemaVersion 5 — M002 S01 added per-lane "kotekanMode"/"kotekanOverlap"
 // for lanes deriving a complement;
@@ -17,7 +19,7 @@
 // fixedPatternLength/kotekanSourceLane/phrase{Length,Gap,Offset}/cellCount/
 // cellSizes, so the appendix-presets tables render from engine truth):
 // {
-//   "schemaVersion": 6,
+//   "schemaVersion": 7,
 //   "presetCount": 43,
 //   "categories": ["Foundational", "Minimalist / Compositional", ...],  // ordered
 //   "presets": [
@@ -230,6 +232,22 @@ void writeLane(std::ostringstream& out, int laneIndex, const poly::LaneConfig& l
             modeName = "empat";
         out << ",\"kotekanMode\":\"" << modeName << "\",\"kotekanOverlap\":" << lane.kotekanOverlap;
     }
+    // schemaVersion 7 (guide-parity M003): a lane with a melodic cell carries
+    // it. A single-pitched lane emits neither field, so the absence says the
+    // lane plays one note -- the convention "onsets" and "subdivisionProfile"
+    // already use.
+    if (lane.noteSequenceLength > 0) {
+        out << ",\"noteSequenceLength\":" << lane.noteSequenceLength << ",\"noteSequence\":[";
+        for (int i = 0; i < lane.noteSequenceLength && i < poly::kMaxNoteSequence; ++i) {
+            if (i > 0)
+                out << ",";
+            out << "{\"pitch\":" << lane.noteSequence[static_cast<size_t>(i)].pitch << ",\"durationBeats\":";
+            writeFloat(out, lane.noteSequence[static_cast<size_t>(i)].durationBeats);
+            out << "}";
+        }
+        out << "]";
+    }
+
     // schemaVersion 6 (M003 S01): a lane playing a non-isochronous subdivision
     // carries its profile. A lane on the even grid emits neither field, so the
     // absence is what says the lane is isochronous -- the same convention
@@ -309,7 +327,7 @@ void writePreset(std::ostringstream& out, int index) {
 int main() {
     std::ostringstream out;
     out << "{\n"
-        << "  \"schemaVersion\":6,\n"
+        << "  \"schemaVersion\":7,\n"
         << "  \"presetCount\":" << poly::kFactoryPresetCount << ",\n"
         << "  \"categories\":[";
     for (int i = 0; i < poly::kFactoryPresetCategoryCount; ++i) {

@@ -264,7 +264,7 @@ programme's whole premise.
 **Plan:** M003-S02-plan.md
 **Validation:** format, unit, engine-isolation, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M003-S02.md
-**Status:** open
+**Status:** in-progress
 **Depends:** M003/S01
 
 **Definition of Done**

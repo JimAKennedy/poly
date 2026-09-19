@@ -11,7 +11,7 @@ engine-capability programme established, walked again for a new field.
 
 ## Task status
 
-- [ ] 1. A preset carries a sequence, and it reaches `presets.json`
+- [x] 1. A preset carries a sequence, and it reaches `presets.json`
 - [ ] 2. The guide names the capability, and close-out
 
 ## Definition of Done

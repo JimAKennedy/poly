@@ -59,8 +59,8 @@ test('presets.json — schema shape', async () => {
   );
   assert.equal(
     parsed.schemaVersion,
-    6,
-    `schemaVersion=${parsed.schemaVersion}, expected 6 (M003/S01 subdivision profile)`,
+    7,
+    `schemaVersion=${parsed.schemaVersion}, expected 7 (guide-parity M003 note sequence)`,
   );
 
   assert.ok(

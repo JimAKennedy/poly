@@ -17,6 +17,7 @@
 // hit ordinal, so a locate reproduces it and a dropped hit does not re-voice
 // everything after it.
 #include <array>
+#include <cstring>
 
 #include <gtest/gtest.h>
 
@@ -165,14 +166,48 @@ TEST(NoteSequenceRender, PerNoteDurationsChangeLengthButNotOnsets) {
 }
 
 // The milestone's back-compatibility rule for this slice's field.
-TEST(NoteSequenceRender, EveryFactoryPresetIsUnmovedWithNoSequenceSet) {
+//
+// Written in M003/S01 as "no preset ships a sequence", which was true then and
+// deliberately made M003/S02 fail when Reich Phasing adopted one -- the
+// intended friction: a preset taking up a new field should not slip past the
+// golden unnoticed.
+//
+// Reconsidered rather than weakened. The claim worth protecting is that a lane
+// WITHOUT a sequence is unmoved, which is still exactly true; a lane with one is
+// supposed to sound different. So the sweep now renders every preset twice --
+// as shipped, and with every sequence cleared -- and asserts they agree except
+// where a sequence is deliberately set.
+TEST(NoteSequenceRender, LanesWithoutASequenceAreUnmoved) {
+    int sequencedLanes = 0;
     for (int i = 0; i < poly::kFactoryPresetCount; ++i) {
         const poly::GrooveState preset = poly::makeFactoryPreset(i);
         const char* name = poly::getFactoryPresetInfo(i).name;
+
+        poly::GrooveState cleared = preset;
+        for (auto& lane : cleared.lanes)
+            lane.noteSequenceLength = 0;
+
+        const auto shipped = render(preset, 4.0);
+        const auto plain = render(cleared, 4.0);
+        ASSERT_EQ(shipped.size(), plain.size()) << "preset " << i << " (" << name << ") changed onset count";
+
+        for (size_t k = 0; k < shipped.size(); ++k) {
+            // Onsets never move: a sequence sets pitch and gate length only.
+            EXPECT_NEAR(shipped[k].ppqPosition, plain[k].ppqPosition, 1e-12)
+                << "preset " << i << " (" << name << ") onset " << k << " moved";
+            const auto& lane = preset.lanes[static_cast<size_t>(shipped[k].laneIndex)];
+            if (lane.noteSequenceLength == 0)
+                EXPECT_EQ(shipped[k].pitch, plain[k].pitch) << "preset " << i << " (" << name << ") note " << k
+                                                            << " is on an unsequenced lane and must be unmoved";
+        }
         for (int lane = 0; lane < preset.activeLaneCount; ++lane)
-            ASSERT_EQ(preset.lanes[static_cast<size_t>(lane)].noteSequenceLength, 0)
-                << "preset " << i << " (" << name << ") lane " << lane << " ships a sequence";
+            if (preset.lanes[static_cast<size_t>(lane)].noteSequenceLength > 0)
+                ++sequencedLanes;
     }
+    // And the sweep is not vacuous: at least one preset does carry a sequence,
+    // so the "unsequenced lanes unmoved" claim is being made against a tree
+    // where sequences exist.
+    EXPECT_GT(sequencedLanes, 0) << "no preset ships a sequence, so this proves nothing about coexistence";
 }
 
 // --- Existing lane features still apply ---
@@ -264,4 +299,35 @@ TEST(NoteSequenceFeatures, KotekanPatternAndTheSequenceAreIndependentAxes) {
     for (double p : polosSteps)
         for (double s : sangsihSteps)
             ASSERT_GT(std::abs(p - s), 1e-9) << "polos and sangsih both sound at " << p;
+}
+
+// M003/S02 (GP08). The capability reaches a factory preset, so it is something
+// users have rather than something only a test exercises.
+TEST(NoteSequencePreset, ReichPhasingCarriesAMelodicCell) {
+    int index = -1;
+    for (int i = 0; i < poly::kFactoryPresetCount; ++i)
+        if (std::strcmp(poly::getFactoryPresetInfo(i).name, "Reich Phasing") == 0)
+            index = i;
+    ASSERT_GE(index, 0) << "no factory preset named Reich Phasing";
+
+    const poly::GrooveState state = poly::makeFactoryPreset(index);
+    const auto& fixed = state.lanes[0];
+    const auto& drifting = state.lanes[1];
+
+    ASSERT_EQ(fixed.noteSequenceLength, 5);
+    ASSERT_EQ(drifting.noteSequenceLength, 5);
+    for (int i = 0; i < 5; ++i)
+        EXPECT_EQ(fixed.noteSequence[static_cast<size_t>(i)].pitch, drifting.noteSequence[static_cast<size_t>(i)].pitch)
+            << "entry " << i << ": both voices must play the same cell, or it is not phasing";
+
+    // The cell is genuinely melodic, not a repeated pitch dressed as one.
+    bool varies = false;
+    for (int i = 1; i < 5; ++i)
+        if (fixed.noteSequence[static_cast<size_t>(i)].pitch != fixed.noteSequence[0].pitch)
+            varies = true;
+    EXPECT_TRUE(varies) << "a cell of one repeated pitch is what this preset already had";
+
+    // And the drift that makes it phase is still there.
+    EXPECT_GT(drifting.driftRate, 0.0f) << "lane 1 must still drift against lane 0";
+    EXPECT_FLOAT_EQ(fixed.driftRate, 0.0f);
 }
