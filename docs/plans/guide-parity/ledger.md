@@ -364,16 +364,39 @@ satisfiable only by mangling content the milestone was never aimed at.
 classified, and each is either fixed or recorded as benign with its reason.
 
 **Branch:** milestone/M005-sanitizers
-**Status:** planned
+**Status:** in-progress
 **Demo:** A local command runs the same five sanitizer variants the nightly
 does, and the programme can say what each filed occurrence was.
 
 **What the assessment found, correcting the input.** #142 is not a stale finding
 nobody triaged. It is auto-refiled: 22 comments, one per nightly failure, the
-most recent naming `ASAN-PLUGIN` where the title says `TSAN-PLUGIN`. Measured
-over the last 20 sanitizer nightlies: 1 failure, 19 successes. An intermittent
-finding at roughly 5%, across two sanitizers, in plugin code — which this repo's
-entire real-time-safety discipline assumes is clean.
+most recent naming `ASAN-PLUGIN` where the title says `TSAN-PLUGIN`.
+
+**Corrected again at execution, 2026-09-19, by reading the run history rather
+than the last 20 results.** The assessment called this "an intermittent finding
+at roughly 5%, across two sanitizers". It is not intermittent and it is not two
+findings:
+
+| Window | Nights | Result |
+|---|---|---|
+| 2026-07-22 → 07-25 | 4 | success |
+| 2026-07-26 → 08-16 | **22** | failure, every night, `TSAN-PLUGIN` |
+| 2026-08-17 → 09-15 | 30 | success |
+| 2026-09-16 | 1 | failure, `ASAN-PLUGIN` |
+
+Every occurrence is the same test, `HostTests.HandshakeStress_NoTearNoLoss`, and
+the same defect. Under TSan it is reported deterministically —
+`WARNING: ThreadSanitizer: data race`, `SUMMARY: … in memcpy`. Without TSan the
+same race only occasionally produces an observable torn read, which is what the
+2026-09-16 run caught through the test's own assertion
+(`torn-read: final noteMap[1]=127 but map[0] implies 126`). AddressSanitizer
+reported no memory error at all; the test found it.
+
+Three consequences. `.github/tsan.supp` contains no suppressions, so nothing was
+silenced. The 2026-09-16 torn read proves the race is **still live** despite 30
+quiet nights. And what stopped TSan reporting on 2026-08-17 is unknown — the
+`HandshakeStress_TSanClean` variant predates the streak — which matters, because
+a race whose window merely narrowed looks exactly like a fixed one.
 
 **A token was added for this milestone.** `.jk/validations.yml` gained
 `sanitizers`, running all five variants the nightly runs, because nothing ran
@@ -382,9 +405,10 @@ dispatches alone.
 
 ### Slice M005/S01 — Every filed finding is reproduced or its resistance recorded
 
+**Plan:** M005-S01-plan.md
 **Validation:** format, sanitizers
 **Evidence:** evidence/M005-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
@@ -398,9 +422,10 @@ dispatches alone.
 
 ### Slice M005/S02 — Each finding is fixed or recorded benign
 
+**Plan:** M005-S02-plan.md
 **Validation:** format, unit, rt-safety, sanitizers
 **Evidence:** evidence/M005-S02.md
-**Status:** open
+**Status:** in-progress
 **Depends:** M005/S01
 
 **Definition of Done**
