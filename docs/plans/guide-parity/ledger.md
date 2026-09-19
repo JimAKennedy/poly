@@ -304,6 +304,19 @@ claims the inventory was measured. No definition-of-done item now carries the
 count — S02 asserts the property instead, so this figure is information and
 cannot go stale into a gate.
 
+**What the inventory turned out to be, measured at execution.** Only **32** of
+the 106 lines are architecture diagrams. 20 are directory trees, which become
+nested Markdown lists — a file listing is not a flowchart and Mermaid has no
+representation for one. **49 are UI wireframes**, chiefly a 44-line annotated
+mockup of the plugin window in `docs/euclidean-rhythm-guide.md`; those stay,
+under a stated exemption, because no flowchart can express a panel layout and
+forcing one would produce worse documentation than it replaced. The remaining 5
+are the frozen audit record.
+
+That is why the definition of done asks for *no ASCII architecture diagram*
+rather than *no box-drawing character*: the original wording would have been
+satisfiable only by mangling content the milestone was never aimed at.
+
 ### Slice M004/S01 — One diagram renders from Mermaid at build time
 
 **Plan:** M004-S01-plan.md
@@ -332,7 +345,9 @@ cannot go stale into a gate.
 
 **Definition of Done**
 
-- [ ] No box-drawing characters remain in the seven files, replaced by Mermaid source, proved by the guard
+- [ ] No ASCII architecture diagram remains in the seven files, replaced by
+      Mermaid source; any file still carrying box-drawing characters does so
+      under a stated, greppable exemption — all proved by the guard
 - [ ] A check fails when ASCII box-drawing characters appear in a diagram position in any governed doc
 - [ ] That check has been shown to fail by reintroducing one
 

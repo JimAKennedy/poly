@@ -13,8 +13,8 @@ class: gated
 
 - [ ] 1. Convert the site appendix
 - [ ] 2. Convert `ARCHITECTURE.md` and `docs/engine-spec.md`
-- [ ] 3. Convert `docs/euclidean-rhythm-guide.md`
-- [ ] 4. Convert `docs/testing-strategy.md`, `docs/ui-guide.md` and `docs/webui-migration.md`
+- [ ] 3. Exempt `docs/euclidean-rhythm-guide.md`'s UI wireframe
+- [ ] 4. `docs/testing-strategy.md`, `docs/webui-migration.md` convert; `docs/ui-guide.md` is exempted
 - [ ] 5. The guard, wired and green, with the frozen audit record exempted
 - [ ] 6. Mutation-prove the guard on every arm
 - [ ] 7. Evidence and slice close-out
@@ -58,8 +58,10 @@ Copied verbatim from the slice:
 
 **Steps:**
 
-1. Convert every remaining ASCII diagram in the file to a ```mermaid fence.
-   M004/S01 already converted the System Overview; leave it as it is.
+1. The only block left is the `poly/` **directory tree**, not a diagram.
+   Convert it to a nested Markdown list: path in code style, trailing comment as
+   prose. Do not force it into a flowchart. M004/S01 already converted the
+   System Overview; leave that as it is.
 2. Preserve every label and arrow direction exactly. This is transcription. If
    an ASCII block is ambiguous about a relationship, express the ambiguity —
    point at a subgraph rather than one of its members — rather than inventing an
@@ -98,40 +100,49 @@ step applies to them.
 
 ---
 
-## Task 3 — Convert `docs/euclidean-rhythm-guide.md`
+## Task 3 — Exempt `docs/euclidean-rhythm-guide.md`'s UI wireframe
 
-**Files:** modify `docs/euclidean-rhythm-guide.md`.
+**Files:** modify `docs/euclidean-rhythm-guide.md` (one added comment line).
 
-The largest single file in the inventory — 44 of the 106 lines. It gets its own
-task because a reviewer should be able to read its diff alone.
+
 
 **Steps:**
 
-1. Read every box-drawing block in the file before converting any of it.
-2. **Some blocks may be rhythm-grid illustration rather than architecture
-   diagrams.** A step grid drawn with `|` separators is not a flowchart, and
-   Mermaid is the wrong tool for it. Where a block is a grid, converting it
-   would be worse than leaving it: exempt the file with a stated reason, or
-   re-draw the grid in a form that is not box-drawing characters. Record which
-   choice was made and why in `M004-decisions.md`.
-3. Convert the blocks that are genuinely diagrams.
-4. Run the parked guard; the file must drop off its list, or its remaining lines
-   must be covered by a hatch whose reason names the grid case.
+This file's single block is a 44-line **annotated wireframe of the plugin
+window** — nested panels, knob positions, lane tabs, `← A:` callouts. It is not
+an architecture diagram and no flowchart can express it.
+
+1. Add the exemption marker at the top of the file, naming the reason:
+   `<!-- boxdraw-ok: annotated UI mockup of the plugin window, not an
+   architecture diagram; mermaid cannot express a panel layout -->`.
+2. **Do not convert the wireframe.** Leave it exactly as it is.
+3. Run the parked guard; the file must appear in the *exempted* list with its
+   reason, not in the findings.
 
 **Check:** the validation set passes.
 
 ---
 
-## Task 4 — Convert the last three files
+## Task 4 — The last three files, each treated on its merits
 
 **Files:** modify `docs/testing-strategy.md`, `docs/ui-guide.md`,
 `docs/webui-migration.md`.
 
 **Steps:**
 
-1. Convert each file's diagrams to ```mermaid fences, applying task 3's
-   grid-versus-diagram judgement to each block.
-2. Run the parked guard; all three must drop off its list.
+These three differ, and each needs its own treatment:
+
+1. `docs/testing-strategy.md` holds **two** blocks: the L1–L4 test pyramid,
+   which is a genuine diagram and becomes a ```mermaid fence; and the
+   `webui/tests/fixtures/` **directory tree**, which becomes a nested Markdown
+   list as in task 1.
+2. `docs/webui-migration.md` holds a **dependency graph** (W1 → W2 → W3 → W6
+   with two branches). Convert to a ```mermaid fence, preserving both branches.
+3. `docs/ui-guide.md` is a **UI wireframe** drawn mostly in plain `+--+` ASCII,
+   with 5 lines using box-drawing for nested visualization panels. Exempt it
+   with the same reason as task 3; do not convert it.
+4. Run the parked guard; `testing-strategy.md` and `webui-migration.md` must
+   drop off the findings, and `ui-guide.md` must appear as exempted.
 
 **Check:** the validation set passes.
 
@@ -161,7 +172,8 @@ smaller commit carries a red gate.
    docs/reviews/, which is exempt structurally -->` to the audit file.
 3. Wire the guard into `scripts/check-guards.sh` alongside the existing guards.
 4. Run `bash scripts/check-guards.sh`. It must be **green**, and the guard's own
-   output must report exactly one exempted file, named with its reason. If it is
+   output must report exactly **three** exempted files — the two UI wireframes
+   and the frozen audit record — each named with its reason. If it is
    red, a conversion was missed — fix the conversion, not the guard.
 5. Run the full validation set, including `doc-conformance`, whose coverage
    check is what forced this ordering.

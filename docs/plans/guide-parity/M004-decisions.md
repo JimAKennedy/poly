@@ -165,3 +165,46 @@ bug M005/S01 fixed at source.
 - **The guard counts arrowheads** (`▲▼◄►`) alongside the U+2500 block. Checked
   first: those glyphs appear in exactly three governed files, all inside
   diagrams, so including them adds no false positives.
+
+## 2026-09-19 — executing M004/S02: what the inventory actually contains
+
+Classifying every remaining block before converting any of them changed the
+shape of the slice. Of 106 lines, only **32** are architecture diagrams:
+
+| Category | Lines | Where |
+|---|---|---|
+| Architecture / flow diagrams | 32 | `ARCHITECTURE.md`, `engine-spec.md`, `webui-migration.md`, `testing-strategy.md` pyramid |
+| Directory trees | 20 | appendix `poly/`, `testing-strategy.md` fixtures |
+| UI wireframes | 49 | `euclidean-rhythm-guide.md` §UI Overview (44), `ui-guide.md` (5) |
+| Frozen audit record | 5 | `M001-theory-audit-remediation-plan.md` |
+
+- **Q:** Two directory trees draw filesystem structure with `├──`. Mermaid has
+  no good representation for a file tree. — **A:** Nested Markdown lists.
+- **Decision:** both trees become nested bullet lists, path in code style and
+  comment as prose — **Why:** not ASCII art at all, so no exemption is needed;
+  renders in GitHub and on the site; stays diffable. The cost is the compact
+  column alignment, which is real but smaller than the cost of a hatch that
+  would also exempt anything added to those files later.
+
+- **Q:** 49 lines are UI wireframes, chiefly a 44-line annotated mockup of the
+  plugin window. No flowchart can represent it. — **A:** Keep, exempt with a
+  stated reason.
+- **Decision:** `euclidean-rhythm-guide.md` and `ui-guide.md` each carry a
+  `boxdraw-ok` marker saying a UI mockup is not an architecture diagram
+  — **Why:** forcing a panel layout into nested subgraphs produces worse
+  documentation than it replaces, and the guard still protects every other
+  governed doc. The exemption is greppable and counted in the guard's summary.
+
+- **Consequence, applied to the ledger:** S02's first definition-of-done item
+  becomes "no ASCII **architecture diagram** remains … any file still carrying
+  box-drawing characters does so under a stated, greppable exemption". The
+  previous wording — no box-drawing character at all — was satisfiable only by
+  mangling content this milestone was never aimed at. This is the **second**
+  correction to that item: it first asserted a count (108) that contradicted its
+  own breakdown.
+
+**Recorded, not fixed here:** a hand-drawn wireframe can disagree with the UI it
+depicts, and these predate the webui migration. That is a genuine drift problem
+and the exemption does not solve it — it is simply not a problem Mermaid solves
+either. Replacing them with screenshots needs a capture pipeline, alt text and
+`check-site-assets` wiring, which is its own slice.
