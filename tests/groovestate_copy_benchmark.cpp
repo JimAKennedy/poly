@@ -91,7 +91,21 @@ TEST(GrooveStateCopyBenchmark, ReportsFactSizes) {
     // (uint8_t), which with alignment costs 8 bytes/lane x 8 lanes. The
     // smallest growth the guard has recorded; M001/S02 adds humanizeMode
     // beside it and is expected to fit the same padding.
-    EXPECT_EQ(sizeof(poly::GrooveState), 18000u)
+    // M002 S01 (GP03, guide-parity): +64 bytes from LaneConfig.timelineSourceLane
+    // (int) + timelineStrength (float), 8 bytes/lane x 8 lanes. The design chose
+    // to keep the per-step WEIGHTS in LaneContext rather than here: four
+    // 64-float arrays per lane would have been about 8 KB on a struct copied
+    // three times per block, to hold values derivable from these two scalars.
+    // M002 S02 (GP04, guide-parity): +64 bytes from LaneConfig.ghostGrammar
+    // (float), 8 bytes/lane x 8 lanes with alignment. The per-step ghost
+    // weights stay in LaneRenderContext, as S01's timeline weights do.
+    // M002 S03/S04 (GP05, GP06, guide-parity): +64 bytes from
+    // LaneConfig.fillPhraseShape, responseSourceLane and responseLeadIn -- three
+    // scalars, 8 bytes/lane after alignment, because the first fit the padding
+    // ghostGrammar opened. Across M002 the struct has grown 18000 -> 18192,
+    // about 1%, against roughly 8 KB had the per-step weight arrays been stored
+    // per lane as the issues proposed.
+    EXPECT_EQ(sizeof(poly::GrooveState), 18192u)
         << "GrooveState size changed — record it in the milestone's decisions file";
 }
 

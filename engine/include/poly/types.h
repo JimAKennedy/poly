@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
 
@@ -269,6 +270,26 @@ struct LaneConfig {
     float syncopationOffset = 0.0f; // 0.0-1.0; pushes even (strong-beat) steps late
     float tempoMultiplier = 1.0f;   // 0.25-4.0; per-lane tempo scaling (Nancarrow-style)
     int kotekanSourceLane = -1;     // -1=independent, 0-7=complement of source lane's pattern
+    // M002 S01 (GP03). The timeline this lane weights its stochastic decisions
+    // against -- typically the clave or bell lane. -1 = none, which leaves every
+    // weight at exactly 1.0 and the arithmetic byte-identical to pre-M002.
+    // Strength is signed: positive attracts adds toward the timeline's onsets
+    // and protects them from drops, negative does the reverse.
+    int timelineSourceLane = -1;
+    float timelineStrength = 0.0f;
+    // M002 S02 (GP04). How strongly ghosts favour the approach to an accent.
+    // 0 = the flat per-step roll this repo shipped before M002. Scaled by the
+    // Complexity macro in macro.cpp, so low Complexity keeps grooves clean.
+    float ghostGrammar = 0.0f;
+    // M002 S03 (GP05). How sharply fills concentrate toward the end of the
+    // phrase cycle. 0 = the position-blind roll this repo shipped before M002.
+    float fillPhraseShape = 0.0f;
+    // M002 S04 (GP06). The lane this one answers. -1 = independent, which
+    // leaves the gate exactly as it was before M002. Lead-in is in beats:
+    // positive opens the response early (anticipating the call's end),
+    // negative opens it late (dovetailing past it).
+    int responseSourceLane = -1;
+    float responseLeadIn = 0.0f;
     // M002 S01 (EC06). The interlock style, and how many structural points the
     // pair strikes together. Both are state-only: the per-lane VST3 parameter
     // family is full (kParamsPerLane == 16, kKotekanSource occupies slot 15),
@@ -393,6 +414,192 @@ inline AdditiveCellInfo computeAdditiveCells(const LaneConfig& cfg) {
     }
     info.totalPpq = accum;
     return info;
+}
+
+// --- Phrase gating (M002 S04, GP06) ---
+
+// Is this lane's own phrase gate open at `ppq`? The same arithmetic the engine
+// uses, lifted out so a response lane can ask it of its source.
+inline bool phraseGateOpenFor(const LaneConfig& cfg, double ppq) {
+    const double lenPpq = static_cast<double>(cfg.phraseLength);
+    const double cyclePpq = lenPpq + static_cast<double>(cfg.phraseGap);
+    if (lenPpq <= 0.0 || cyclePpq <= 0.0)
+        return true; // no gating
+    double pos = std::fmod(ppq - static_cast<double>(cfg.phraseOffset), cyclePpq);
+    if (pos < 0.0)
+        pos += cyclePpq;
+    return pos < lenPpq;
+}
+
+// M002 S04 (GP06). A response lane is open exactly when its call is closed.
+//
+// The lead-in shifts the response's view of the call's clock: a positive value
+// makes the response see the call as ending sooner, so it opens early. That is
+// the anticipation a responding drummer uses, and it is derived from absolute
+// PPQ like every other gate, so a locate reproduces it.
+//
+// An ungated source has no closed half to answer. Rather than gating the
+// response off a lane that is always open -- which would silence it entirely --
+// the response falls back to its own settings.
+inline bool responseGateOpen(const LaneConfig& cfg, const LaneConfig& source, double ppq) {
+    if (cfg.responseSourceLane < 0)
+        return phraseGateOpenFor(cfg, ppq);
+    const double sourceLen = static_cast<double>(source.phraseLength);
+    if (sourceLen <= 0.0 || sourceLen + static_cast<double>(source.phraseGap) <= 0.0)
+        return phraseGateOpenFor(cfg, ppq);
+    return !phraseGateOpenFor(source, ppq + static_cast<double>(cfg.responseLeadIn));
+}
+
+// --- Position weights (M002 S01, GP03) ---
+
+// A weight scales a probability at a roll site; 1.0 is a no-op. Four named
+// weights rather than one scalar: one number cannot mean attraction for adds,
+// protection for drops, grammar for ghosts and shape for fills at once.
+//
+// Sources compose multiplicatively and an unset source contributes exactly
+// 1.0, so a lane with nothing configured produces the pre-M002 arithmetic
+// unchanged. This deliberately differs from M003's ruling that a subdivision
+// profile takes precedence over cellSizes: those were two competing
+// definitions of one grid, and combining them produced a placement nobody
+// could reason about. These are probabilities, and composing is what
+// probabilities do.
+struct StepWeights {
+    float add = 1.0f;   // mutation-add
+    float drop = 1.0f;  // mutation-drop
+    float ghost = 1.0f; // mutation-to-ghost
+    float fill = 1.0f;  // fill-add
+};
+
+// Is a lane's reference to another lane usable? Mirrors the kotekan guard: out
+// of range, self-reference, or a source pointing back is no reference at all.
+// The caller supplies the back-reference because which field points back
+// differs per feature.
+inline bool referenceLaneUsable(int source, int self, int activeLaneCount, int sourcesBackReference) {
+    if (source < 0 || source >= activeLaneCount || source == self)
+        return false;
+    return sourcesBackReference != self;
+}
+
+// M002 S02 (GP04). How much this step is favoured as a ghost.
+//
+// Funk ghosting is a gradient toward the next accent, not a blanket lift on
+// weak steps: the "e" and "a" leading into a backbeat carry the lead-in that
+// makes the accent land, and the step immediately after an accent is quieter.
+// So distance-to-the-next-accent raises the weight and distance-from-the-last
+// lowers it, and a step far from any accent sits nearer neutral than either.
+//
+// Pure arithmetic over a fixed-size array; runs on the audio thread.
+//
+// The accent positions come from the lane's OWN accent mask, read here rather
+// than passed in. An earlier version took a pattern parameter and the engine
+// passed the lane's onsets instead: on a fully-lit lane every step then read as
+// accented and the weight was neutral everywhere. The unit tests could not see
+// it because they passed the right thing; only a render-level case caught it.
+// Removing the parameter removes the way to get it wrong.
+inline float computeGhostWeight(const LaneConfig& cfg, int stepsInCycle, int step) {
+    if (cfg.ghostGrammar <= 0.0f || stepsInCycle <= 0 || step < 0 || step >= stepsInCycle)
+        return 1.0f;
+    const auto accented = [&cfg](int i) { return cfg.accents.steps[static_cast<size_t>(i)] > 0.0f; };
+    if (accented(step))
+        return 1.0f; // an accented step is not a ghost candidate
+
+    // Steps until the next accent, and since the last, wrapping the cycle.
+    int ahead = -1;
+    int behind = -1;
+    for (int d = 1; d <= stepsInCycle; ++d) {
+        const int f = (step + d) % stepsInCycle;
+        if (ahead < 0 && accented(f))
+            ahead = d;
+        const int b = ((step - d) % stepsInCycle + stepsInCycle) % stepsInCycle;
+        if (behind < 0 && accented(b))
+            behind = d;
+    }
+    if (ahead < 0 || behind < 0)
+        return 1.0f; // no accents at all: nothing to lead into
+
+    // Proximity in [0, 1], 1 meaning adjacent. The approach raises the weight,
+    // the departure lowers it, and the two cancel midway between accents.
+    const float half = static_cast<float>(stepsInCycle) * 0.5f;
+    const float approach = 1.0f - static_cast<float>(ahead) / half;
+    const float departure = 1.0f - static_cast<float>(behind) / half;
+    const float grammar = cfg.ghostGrammar > 1.0f ? 1.0f : cfg.ghostGrammar;
+
+    const float w = 1.0f + grammar * (approach - departure);
+    return w < 0.0f ? 0.0f : w;
+}
+
+// M002 S03 (GP05). How much this position is favoured for a fill.
+//
+// Fills cluster at phrase boundaries and resolve onto the downbeat. The weight
+// rises with position through the phrase cycle, and the shape parameter
+// controls how sharply: a low shape is close to linear, a high one concentrates
+// the rise late.
+//
+// A lane with no phrase cycle has nothing to resolve onto, so the weight is
+// neutral rather than a division by zero. The row calls for the composite
+// convergence point there; that is a different source and is not invented here.
+inline float computeFillWeight(const LaneConfig& cfg, double phrasePos, double phraseCycle) {
+    if (cfg.fillPhraseShape <= 0.0f || phraseCycle <= 0.0)
+        return 1.0f;
+    double t = phrasePos / phraseCycle;
+    t = t < 0.0 ? 0.0 : (t > 1.0 ? 1.0 : t);
+
+    // shape in (0, 1] maps to an exponent: 1.0 is quadratic-ish concentration
+    // late, lower values flatten toward linear.
+    const float shape = cfg.fillPhraseShape > 1.0f ? 1.0f : cfg.fillPhraseShape;
+    const double curved = std::pow(t, 1.0 + 2.0 * (1.0 - static_cast<double>(shape)));
+
+    // The weight must REDISTRIBUTE, not merely add: it runs from 1 - shape at
+    // the cycle's start to 1 + shape at its end, so early fills become rarer as
+    // late ones become commoner. A weight that only ever raised the probability
+    // could not shift the distribution at all once fills saturate -- the first
+    // render-level case measured exactly 1800 early against 1800 late, with and
+    // without the shape, and that is why this is signed around 1.0 rather than
+    // anchored at it.
+    return 1.0f + shape * static_cast<float>(2.0 * curved - 1.0);
+}
+
+// The weights for one step, given the reference lane's onset pattern.
+//
+// Pure arithmetic over a fixed-size array: this runs on the audio thread, per
+// step, and allocates nothing. The roll VALUES are never touched -- only the
+// thresholds they are compared against -- so determinism is unaffected and a
+// locate reproduces the output exactly.
+inline StepWeights computeStepWeights(const LaneConfig& cfg, const std::array<bool, kMaxSteps>& sourcePattern,
+                                      int stepsInCycle, int step) {
+    StepWeights w{};
+    if (cfg.timelineSourceLane < 0 || cfg.timelineSourceLane == cfg.id)
+        return w;
+    if (step < 0 || step >= stepsInCycle || stepsInCycle <= 0)
+        return w;
+
+    const float strength =
+        cfg.timelineStrength < -1.0f ? -1.0f : (cfg.timelineStrength > 1.0f ? 1.0f : cfg.timelineStrength);
+    if (strength == 0.0f)
+        return w;
+
+    // The timeline either strikes this step or it does not. A struck step is
+    // favoured by the strength; an unstruck one is disfavoured by it, so the
+    // two move in opposite directions around the neutral 1.0 and an unset
+    // strength leaves both exactly there.
+    const bool aligned = sourcePattern[static_cast<size_t>(step)];
+    const float shift = aligned ? strength : -strength;
+
+    w.add = 1.0f + shift;
+    w.fill = 1.0f + shift;
+    // Protecting what attraction favours: a favoured step is less likely to be
+    // dropped, which is the row's stated behaviour.
+    w.drop = 1.0f - shift;
+
+    // Clamp to non-negative: a probability scaled below zero is not a
+    // probability, and strength is already bounded to [-1, 1].
+    if (w.add < 0.0f)
+        w.add = 0.0f;
+    if (w.fill < 0.0f)
+        w.fill = 0.0f;
+    if (w.drop < 0.0f)
+        w.drop = 0.0f;
+    return w;
 }
 
 // --- Swing ratio (M001 S01, GP01) ---

@@ -51,6 +51,10 @@ GrooveState resolveMacros(const GrooveState& input) {
             lane.rotation = static_cast<int>(std::round(lerp(static_cast<float>(base.rotation), rotRange, t)));
         }
 
+        // M002 S02 (GP04): low Complexity damps the ghost grammar, so a clean
+        // groove stays clean. Same shape as the envelope depth scaling below.
+        lane.ghostGrammar = base.ghostGrammar * lerp(0.25f, 1.5f, m.complexity);
+
         float envDepthScale = lerp(0.5f, 2.0f, m.complexity);
         for (int e = 0; e < lane.envelopeCount; ++e) {
             lane.envelopes[e].envelope.depth = std::clamp(base.envelopes[e].envelope.depth * envDepthScale, 0.0f, 1.0f);

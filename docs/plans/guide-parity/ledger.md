@@ -123,7 +123,7 @@ step sits — in the meter, against the timeline, and within the phrase — and 
 chapters stop prescribing manual workarounds for them.
 
 **Branch:** milestone/M002-position
-**Status:** planned
+**Status:** done
 **Demo:** A batá or clave patch where added hits land with the timeline rather
 than across it; a funk patch whose ghosts cluster before the backbeat without a
 dedicated ghost lane; a tihai that lands on sam without the reader doing the
@@ -149,75 +149,79 @@ once, not twice.
 
 ### Slice M002/S01 — A lane can weight by a reference lane's timeline
 
+**Plan:** M002-S01-plan.md
 **Validation:** format, unit, engine-isolation, rt-safety, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M002-S01.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] A lane can name a reference lane, and a mutual reference is refused rather than followed
-- [ ] Mutation-adds are biased toward or away from the reference lane's onsets by a signed per-lane strength, shown by the distribution of added steps changing with the sign
-- [ ] Drops are less likely on high-weight steps than on low-weight ones
-- [ ] With no reference lane named, all 45 factory presets render byte-identically, proved by a golden test
-- [ ] `03-afro-cuban` stops describing clave alignment as something the reader maintains by hand, and a `scope-framing` claim locks it
+- [x] A lane can name a reference lane, and a mutual reference is refused rather than followed
+- [x] Mutation-adds are biased toward or away from the reference lane's onsets by a signed per-lane strength, shown by the distribution of added steps changing with the sign
+- [x] Drops are less likely on high-weight steps than on low-weight ones
+- [x] With no reference lane named, all 45 factory presets render byte-identically, proved by a golden test
+- [x] `03-afro-cuban` stops describing clave alignment as something the reader maintains by hand, and a `scope-framing` claim locks it
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| GP03 | Nothing in the engine knows the timeline lane exists. `ConstraintConfig` offers `anchorSteps`, `backbeatProtect` and density bounds, all lane-local, so mutation-adds and fill-adds can place hits that cross the clave and probability culls can drop clave-confirming ones. `03-afro-cuban` teaches that parts ignoring the clave "sound wrong"; the same gap covers the Ewe bell and tala accent structure | `capability` | `engine/src/constraint.cpp`, `engine/`, `03-afro-cuban.mdx` | Engine tests assert the added-step distribution shifts with the weight's sign and that drops avoid high-weight steps; a mutual reference is asserted refused; the golden asserts presets unmoved | `open` |
+| GP03 | Nothing in the engine knows the timeline lane exists. `ConstraintConfig` offers `anchorSteps`, `backbeatProtect` and density bounds, all lane-local, so mutation-adds and fill-adds can place hits that cross the clave and probability culls can drop clave-confirming ones. `03-afro-cuban` teaches that parts ignoring the clave "sound wrong"; the same gap covers the Ewe bell and tala accent structure | `capability` | `engine/src/constraint.cpp`, `engine/`, `03-afro-cuban.mdx` | Engine tests assert the added-step distribution shifts with the weight's sign and that drops avoid high-weight steps; a mutual reference is asserted refused; the golden asserts presets unmoved | `done` |
 
 ### Slice M002/S02 — Ghosts cluster where funk puts them
 
+**Plan:** M002-S02-plan.md
 **Validation:** format, unit, engine-isolation, rt-safety, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M002-S02.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Ghost-add probability is higher on weak subdivisions preceding an accent than on those following one, asserted as a distribution over many seeds rather than a single roll
-- [ ] The weighting scales with the Complexity macro, so low Complexity keeps grooves clean
-- [ ] With the weighting neutral, all 45 factory presets render byte-identically, proved by a golden test
-- [ ] `11-funk`'s dedicated ghost lane is no longer the recipe the page prescribes, and a `scope-framing` claim locks the change
+- [x] Ghost-add probability is higher on weak subdivisions preceding an accent than on those following one, asserted as a distribution over many seeds rather than a single roll
+- [x] The weighting scales with the Complexity macro, so low Complexity keeps grooves clean
+- [x] With the weighting neutral, all 45 factory presets render byte-identically, proved by a golden test
+- [x] `11-funk`'s dedicated ghost lane is no longer the recipe the page prescribes, and a `scope-framing` claim locks the change
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| GP04 | Ghost notes come from a flat per-step mutation roll: any mutated step has equal chance of becoming a ghost, independent of where it sits in the meter. Funk ghosting is grammatical — ghosts concentrate on the weak subdivisions around the backbeat and fill toward the next accent (Danielsen 2006; Stewart 2000). Chapter 11 works around this with a dedicated high-hit-count ghost lane, which costs a lane and cannot respond to where the accents are | `capability` | `engine/`, `11-funk` chapter and its theory page | Engine tests assert the ghost distribution differs before and after an accent across many seeds, and that Complexity scales it; the golden asserts presets unmoved | `open` |
+| GP04 | Ghost notes come from a flat per-step mutation roll: any mutated step has equal chance of becoming a ghost, independent of where it sits in the meter. Funk ghosting is grammatical — ghosts concentrate on the weak subdivisions around the backbeat and fill toward the next accent (Danielsen 2006; Stewart 2000). Chapter 11 works around this with a dedicated high-hit-count ghost lane, which costs a lane and cannot respond to where the accents are | `capability` | `engine/`, `11-funk` chapter and its theory page | Engine tests assert the ghost distribution differs before and after an accent across many seeds, and that Complexity scales it; the golden asserts presets unmoved | `done` |
 
 ### Slice M002/S03 — Fills resolve onto the phrase boundary, and a tihai lands
 
+**Plan:** M002-S03-plan.md
 **Validation:** format, unit, engine-isolation, rt-safety, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M002-S03.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Fill probability rises toward the end of a phrase cycle, with a shape parameter controlling how sharply, asserted as a distribution across the cycle
-- [ ] For an ungated lane the boundary used is the composite convergence point, not silence
-- [ ] A tihai of a given phrase length lands its final onset exactly on the target, asserted arithmetically rather than by ear
-- [ ] With the weighting neutral, all 45 factory presets render byte-identically, proved by a golden test
-- [ ] `06-indian-classical` no longer asks the reader to do the tihai arithmetic by hand, and a `scope-framing` claim locks it
+- [x] Fill probability rises toward the end of a phrase cycle, with a shape parameter controlling how sharply, asserted as a distribution across the cycle
+- [x] For an ungated lane the boundary used is the composite convergence point, not silence
+- [x] A tihai of a given phrase length lands its final onset exactly on the target, asserted arithmetically rather than by ear
+- [x] With the weighting neutral, all 45 factory presets render byte-identically, proved by a golden test
+- [x] `06-indian-classical` no longer asks the reader to do the tihai arithmetic by hand, and a `scope-framing` claim locks it
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| GP05 | `FillLikelihood` is an envelope target with no knowledge of phrase position: a fill-add is as likely at beat 2 of bar 1 as at the end of an 8-bar phrase. Idiomatic fills cluster at phrase boundaries and resolve onto the downbeat, most explicitly the tihai — a phrase repeated three times to land on sam (Nelson 2008; Clayton 2000). Chapter 6 asks the reader to solve `3×P + 2×gap` by hand | `capability` | `engine/`, `06-indian-classical.mdx` | Engine tests assert the fill distribution concentrates toward the boundary and that a tihai's final onset equals the target; the golden asserts presets unmoved | `open` |
+| GP05 | `FillLikelihood` is an envelope target with no knowledge of phrase position: a fill-add is as likely at beat 2 of bar 1 as at the end of an 8-bar phrase. Idiomatic fills cluster at phrase boundaries and resolve onto the downbeat, most explicitly the tihai — a phrase repeated three times to land on sam (Nelson 2008; Clayton 2000). Chapter 6 asks the reader to solve `3×P + 2×gap` by hand | `capability` | `engine/`, `06-indian-classical.mdx` | Engine tests assert the fill distribution concentrates toward the boundary and that a tihai's final onset equals the target; the golden asserts presets unmoved | `done` |
 
 ### Slice M002/S04 — A response lane answers its call
 
+**Plan:** M002-S04-plan.md
 **Validation:** format, unit, engine-isolation, rt-safety, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M002-S04.md
-**Status:** open
+**Status:** done
 **Depends:** M002/S01
 
 **Definition of Done**
 
-- [ ] A lane's phrase gate can be defined as open exactly when a named source lane's gate is closed, with an optional lead-in or overlap in beats
-- [ ] Changing the source lane's phrase settings keeps the antiphony intact, which is the failure the manual recipe has
-- [ ] A mutual reference between two response lanes is refused rather than followed
-- [ ] With no response lane named, all 45 factory presets render byte-identically, proved by a golden test
-- [ ] `15-compositional-grammar` no longer gives interleaving offsets as the recipe for antiphony, and a `scope-framing` claim locks it
+- [x] A lane's phrase gate can be defined as open exactly when a named source lane's gate is closed, with an optional lead-in or overlap in beats
+- [x] Changing the source lane's phrase settings keeps the antiphony intact, which is the failure the manual recipe has
+- [x] A mutual reference between two response lanes is refused rather than followed
+- [x] With no response lane named, all 45 factory presets render byte-identically, proved by a golden test
+- [x] `15-compositional-grammar` no longer gives interleaving offsets as the recipe for antiphony, and a `scope-framing` claim locks it
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| GP06 | Call-and-response is achieved by hand-tuning `phraseLength`/`phraseGap`/`phraseOffset` until gates happen to interleave — `15-compositional-grammar` describes the recipe explicitly. It is fragile: change one lane's phrase settings and the antiphony breaks silently, because there is no structural relationship between the lanes. Kotekan couples patterns; this couples phrasing | `capability` | `engine/`, `15-compositional-grammar.mdx` | Engine tests assert the response gate is the complement of the source's, that it survives a change to the source's phrase length, and that a mutual reference is refused; the golden asserts presets unmoved | `open` |
+| GP06 | Call-and-response is achieved by hand-tuning `phraseLength`/`phraseGap`/`phraseOffset` until gates happen to interleave — `15-compositional-grammar` describes the recipe explicitly. It is fragile: change one lane's phrase settings and the antiphony breaks silently, because there is no structural relationship between the lanes. Kotekan couples patterns; this couples phrasing | `capability` | `engine/`, `15-compositional-grammar.mdx` | Engine tests assert the response gate is the complement of the source's, that it survives a change to the source's phrase length, and that a mutual reference is refused; the golden asserts presets unmoved | `done` |
 
 ## Milestone M003 — A lane can carry pitch
 

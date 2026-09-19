@@ -209,7 +209,7 @@ enum class StepOutcome : uint8_t {
 
 static StepOutcome classifyStep(const LaneConfig& cfg, const GrooveState& state, int64_t absStep, int64_t cycleStep,
                                 bool isPatternStep, bool isAnchor, const EnvelopeMods& mods, int stepsInCycle,
-                                bool isFillBar) {
+                                bool isFillBar, const StepWeights& weights, float phraseFillWeight) {
     // M073 S01: A base velocity of exactly zero mutes the lane entirely. The
     // emission decision below never consults velocity magnitude, and
     // computeStepVelocity's ghost-floor clamp can raise a 0 back up — so
@@ -231,10 +231,23 @@ static StepOutcome classifyStep(const LaneConfig& cfg, const GrooveState& state,
         if (mutRoll < cfg.mutationRate) {
             float typeRoll =
                 deterministicRand(laneEffectiveSeed(cfg, state.seed), cfg.id, cycleIndex * kMaxSteps + cycleStep, 9);
-            if (typeRoll < kMutationDropThreshold) {
+            // M002 S01 (GP03). The weights scale the THRESHOLDS, never the roll:
+            // perturbing the random value would break the determinism the
+            // engine's whole contract rests on. With no timeline configured
+            // every weight is exactly 1.0 and this is the pre-M002 arithmetic.
+            //
+            // typeRoll's thresholds are cumulative -- drop, then ghost, then
+            // add -- so scaling the drop edge moves where ghost begins, and the
+            // add band absorbs whatever the two below it leave. Weighting the
+            // drop edge down therefore widens the add band, which is exactly
+            // the intent: a timeline-aligned step is protected from drops and
+            // more available for adds.
+            const float dropEdge = kMutationDropThreshold * weights.drop;
+            const float ghostEdge = dropEdge + (kMutationGhostThreshold - kMutationDropThreshold) * weights.ghost;
+            if (typeRoll < dropEdge) {
                 if (isPatternStep)
                     isPatternStep = false;
-            } else if (typeRoll < kMutationGhostThreshold) {
+            } else if (typeRoll < ghostEdge) {
                 if (isPatternStep)
                     mutatedToGhost = true;
             } else {
@@ -261,6 +274,12 @@ static StepOutcome classifyStep(const LaneConfig& cfg, const GrooveState& state,
                 return notEmitted();
             float fillProb = std::clamp(mods.fill, 0.0f, 1.0f);
             float fillRoll = deterministicRand(laneEffectiveSeed(cfg, state.seed), cfg.id, absStep, 4);
+            // M002 S01 (GP03): fills are attracted toward the timeline too.
+            // M002 S03 (GP05): and concentrate toward the phrase boundary. The
+            // phrase weight is applied here rather than in laneStepWeights
+            // because it depends on the step's PPQ position within the phrase
+            // cycle, which the composition helper does not have.
+            fillProb *= weights.fill * phraseFillWeight;
             if (fillRoll >= fillProb)
                 return notEmitted();
         }
@@ -401,6 +420,17 @@ struct LaneRenderContext {
     // steps with a 6-step silent tail, contradicting every editor that shows
     // only the fixedPatternLength slots as editable.
     int stepsInCycle = 0;
+    // M002 S01 (GP03). The reference timeline's onsets, resolved once per lane
+    // per block exactly as the kotekan source pattern is. Lives here rather
+    // than on LaneConfig deliberately: it is per-render, must never reach
+    // serialised state, and storing per-step weights on the lane instead would
+    // have cost about 8 KB on a struct copied three times per block.
+    std::array<bool, kMaxSteps> timelinePattern{};
+    bool hasTimeline = false;
+    // M002 S04 (GP06). The lane this one answers, resolved with the SAME guard
+    // M002/S01 built for the timeline reference -- that reuse is why this slice
+    // shares a milestone with the weighting rather than having one of its own.
+    int responseSource = -1;
 };
 
 static LaneRenderContext prepareLaneContext(const LaneConfig& cfg, const GrooveState& state, int lane,
@@ -410,6 +440,29 @@ static LaneRenderContext prepareLaneContext(const LaneConfig& cfg, const GrooveS
 
     const double tempoScale = (cfg.tempoMultiplier > 0.0f) ? 1.0 / static_cast<double>(cfg.tempoMultiplier) : 1.0;
     ctx.sPpq = stepPpq(cfg.cycle) * tempoScale;
+    // M002 S01 (GP03). Resolve the reference timeline's onsets, mirroring the
+    // kotekan resolution and its mutual-reference guard: a lane that names a
+    // source which names it back gets no weighting rather than a guess.
+    if (cfg.timelineSourceLane >= 0 && cfg.timelineStrength != 0.0f) {
+        const auto& src =
+            state.lanes[static_cast<size_t>(cfg.timelineSourceLane < kMaxLanes ? cfg.timelineSourceLane : 0)];
+        if (referenceLaneUsable(cfg.timelineSourceLane, lane, state.activeLaneCount, src.timelineSourceLane)) {
+            if (src.timeline && src.fixedPatternLength > 0) {
+                ctx.timelinePattern = src.fixedPattern;
+            } else {
+                euclidean(src.hitCount, src.cycle.steps, src.rotation, ctx.timelinePattern);
+            }
+            ctx.hasTimeline = true;
+        }
+    }
+
+    if (cfg.responseSourceLane >= 0) {
+        const auto& src =
+            state.lanes[static_cast<size_t>(cfg.responseSourceLane < kMaxLanes ? cfg.responseSourceLane : 0)];
+        if (referenceLaneUsable(cfg.responseSourceLane, lane, state.activeLaneCount, src.responseSourceLane))
+            ctx.responseSource = cfg.responseSourceLane;
+    }
+
     ctx.additive = computeAdditiveCells(cfg);
     if (tempoScale != 1.0 && ctx.additive.count > 0) {
         for (int c = 0; c < ctx.additive.count; ++c)
@@ -477,6 +530,34 @@ static LaneRenderContext prepareLaneContext(const LaneConfig& cfg, const GrooveS
     return ctx;
 }
 
+// M002 S03 (GP05). The fill weight for a PPQ position, from the lane's phrase
+// cycle. Separate from laneStepWeights because it needs the position, not the
+// step index: the phrase cycle is measured in beats and need not align to steps.
+static float phraseFillWeightAt(const LaneConfig& cfg, const LaneRenderContext& ctx, double ppq) {
+    if (!ctx.hasPhraseGating || ctx.phraseCyclePpq <= 0.0)
+        return 1.0f;
+    double phrasePos = std::fmod(ppq - ctx.phraseOffPpq, ctx.phraseCyclePpq);
+    if (phrasePos < 0.0)
+        phrasePos += ctx.phraseCyclePpq;
+    return computeFillWeight(cfg, phrasePos, ctx.phraseCyclePpq);
+}
+
+// M002 (GP03, GP04). Every weight source this lane has, composed.
+//
+// Sources multiply and an unset source contributes exactly 1.0, so a lane with
+// nothing configured yields all-neutral weights and therefore the pre-M002
+// arithmetic. This deliberately differs from M003's precedence ruling for
+// subdivision profiles against cellSizes: those were two competing definitions
+// of one grid, where these are probabilities, and composing is what
+// probabilities do.
+static StepWeights laneStepWeights(const LaneConfig& cfg, const LaneRenderContext& ctx, int step) {
+    StepWeights w{};
+    if (ctx.hasTimeline)
+        w = computeStepWeights(cfg, ctx.timelinePattern, ctx.stepsInCycle, step);
+    w.ghost *= computeGhostWeight(cfg, ctx.stepsInCycle, step);
+    return w;
+}
+
 static void computeStepPpqAndDuration(const LaneRenderContext& ctx, const LaneConfig& cfg, int64_t absStep, double& ppq,
                                       double& stepDurPpq) {
     if (ctx.isAdditive) {
@@ -491,7 +572,11 @@ static void computeStepPpqAndDuration(const LaneRenderContext& ctx, const LaneCo
     }
 }
 
-static bool passesPhraseGating(const LaneRenderContext& ctx, double ppq) {
+static bool passesPhraseGating(const LaneConfig& cfg, const GrooveState& state, const LaneRenderContext& ctx,
+                               double ppq) {
+    // M002 S04 (GP06). A response lane's gate is the complement of its call's.
+    if (ctx.responseSource >= 0)
+        return responseGateOpen(cfg, state.lanes[static_cast<size_t>(ctx.responseSource)], ppq);
     if (!ctx.hasPhraseGating || ctx.phraseCyclePpq <= 0.0)
         return true;
     double phrasePos = std::fmod(ppq - ctx.phraseOffPpq, ctx.phraseCyclePpq);
@@ -555,7 +640,7 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
 
             if (ppq < tc.ppqStart - ctx.maxTimingShift || ppq >= tc.ppqEnd + ctx.maxTimingShift)
                 continue;
-            if (!passesPhraseGating(ctx, ppq))
+            if (!passesPhraseGating(cfg, state, ctx, ppq))
                 continue;
 
             int64_t cycleStep = computeDriftedCycleStep(cfg, ctx, absStep, ppq);
@@ -576,8 +661,9 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
 
             bool isPatternStep = ctx.pattern[static_cast<size_t>(cycleStep)];
             bool isAnchor = cfg.constraints.anchorSteps.steps[static_cast<size_t>(cycleStep)] > 0.0f;
-            StepOutcome outcome = classifyStep(cfg, state, absStep, cycleStep, isPatternStep, isAnchor, mods,
-                                               ctx.stepsInCycle, isFillBar);
+            StepOutcome outcome =
+                classifyStep(cfg, state, absStep, cycleStep, isPatternStep, isAnchor, mods, ctx.stepsInCycle, isFillBar,
+                             laneStepWeights(cfg, ctx, static_cast<int>(cycleStep)), phraseFillWeightAt(cfg, ctx, ppq));
 
             // Post-timing-shift onset for the audible note. A Drop never fires,
             // so it has no shifted onset — the display shows it at its grid ppq.
