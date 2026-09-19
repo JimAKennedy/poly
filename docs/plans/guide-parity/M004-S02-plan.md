@@ -13,7 +13,7 @@ class: gated
 
 - [x] 1. Convert the site appendix
 - [x] 2. Convert `ARCHITECTURE.md` and `docs/engine-spec.md`
-- [ ] 3. Exempt `docs/euclidean-rhythm-guide.md`'s UI wireframe
+- [x] 3. Exempt `docs/euclidean-rhythm-guide.md`'s UI wireframe
 - [ ] 4. `docs/testing-strategy.md`, `docs/webui-migration.md` convert; `docs/ui-guide.md` is exempted
 - [ ] 5. The guard, wired and green, with the frozen audit record exempted
 - [ ] 6. Mutation-prove the guard on every arm
