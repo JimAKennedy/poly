@@ -12,7 +12,7 @@ that design establishes.
 ## Task status
 
 - [x] 1. A metric-position weight for ghosts
-- [ ] 2. The funk chapter stops prescribing a ghost lane, and close-out
+- [x] 2. The funk chapter stops prescribing a ghost lane, and close-out
 
 ## Definition of Done
 

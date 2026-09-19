@@ -171,18 +171,18 @@ once, not twice.
 **Plan:** M002-S02-plan.md
 **Validation:** format, unit, engine-isolation, rt-safety, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M002-S02.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Ghost-add probability is higher on weak subdivisions preceding an accent than on those following one, asserted as a distribution over many seeds rather than a single roll
-- [ ] The weighting scales with the Complexity macro, so low Complexity keeps grooves clean
-- [ ] With the weighting neutral, all 45 factory presets render byte-identically, proved by a golden test
-- [ ] `11-funk`'s dedicated ghost lane is no longer the recipe the page prescribes, and a `scope-framing` claim locks the change
+- [x] Ghost-add probability is higher on weak subdivisions preceding an accent than on those following one, asserted as a distribution over many seeds rather than a single roll
+- [x] The weighting scales with the Complexity macro, so low Complexity keeps grooves clean
+- [x] With the weighting neutral, all 45 factory presets render byte-identically, proved by a golden test
+- [x] `11-funk`'s dedicated ghost lane is no longer the recipe the page prescribes, and a `scope-framing` claim locks the change
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| GP04 | Ghost notes come from a flat per-step mutation roll: any mutated step has equal chance of becoming a ghost, independent of where it sits in the meter. Funk ghosting is grammatical — ghosts concentrate on the weak subdivisions around the backbeat and fill toward the next accent (Danielsen 2006; Stewart 2000). Chapter 11 works around this with a dedicated high-hit-count ghost lane, which costs a lane and cannot respond to where the accents are | `capability` | `engine/`, `11-funk` chapter and its theory page | Engine tests assert the ghost distribution differs before and after an accent across many seeds, and that Complexity scales it; the golden asserts presets unmoved | `open` |
+| GP04 | Ghost notes come from a flat per-step mutation roll: any mutated step has equal chance of becoming a ghost, independent of where it sits in the meter. Funk ghosting is grammatical — ghosts concentrate on the weak subdivisions around the backbeat and fill toward the next accent (Danielsen 2006; Stewart 2000). Chapter 11 works around this with a dedicated high-hit-count ghost lane, which costs a lane and cannot respond to where the accents are | `capability` | `engine/`, `11-funk` chapter and its theory page | Engine tests assert the ghost distribution differs before and after an accent across many seeds, and that Complexity scales it; the golden asserts presets unmoved | `done` |
 
 ### Slice M002/S03 — Fills resolve onto the phrase boundary, and a tihai lands
 

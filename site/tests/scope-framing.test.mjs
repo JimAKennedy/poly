@@ -175,6 +175,20 @@ const CLAIMS = [
     presentRegex: [/#fr-polak-2010/],
   },
   {
+    id: 'M002-S02-ghost-grammar',
+    file: 'theory-funk-soul.mdx',
+    rule:
+      'guide-parity GP04. Construction step 3 prescribed a dedicated ghost ' +
+      'lane and ended "until position-aware ghosting ships, choose rotation so ' +
+      'the Euclidean gaps fall just after 2 and 4" -- an explicit admission ' +
+      'that the recipe stood in for a missing capability, in the same shape ' +
+      'M003 removed from theory-brazilian Rule 6. M002/S02 ships it: ghost-add ' +
+      'is weighted toward the approach to an accent, scaled by Complexity. The ' +
+      'dedicated lane is no longer the recipe, and the lane it cost is free',
+    forbidden: ['until position-aware ghosting ships'],
+    present: ['ghost grammar', 'Complexity'],
+  },
+  {
     id: 'M002-S01-timeline-weighting',
     file: 'theory-afro-cuban.mdx',
     rule:

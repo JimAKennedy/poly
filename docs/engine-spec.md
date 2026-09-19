@@ -158,6 +158,14 @@ a source pointing back yields no weighting rather than a guess.
 profiles against `cellSizes`, and deliberately: those were two competing
 definitions of one grid, where these are probabilities.
 
+**Weight sources so far.** `timelineSourceLane`/`timelineStrength` feed `add`,
+`drop` and `fill` (M002/S01). `ghostGrammar` feeds `ghost`, weighted by distance
+to the next accent against distance from the last, and scaled by the Complexity
+macro in `macro.cpp` (M002/S02). Accent positions come from the lane's own
+`accents` mask, read inside `computeGhostWeight` rather than passed in — an
+earlier signature took a pattern parameter and the engine passed the lane's
+onsets, which made every step of a fully-lit lane read as accented.
+
 **The thresholds move, never the roll.** `typeRoll`'s bands are cumulative —
 drop, then ghost, then add — so scaling the drop edge moves where ghost begins
 and the add band absorbs the difference. Weighting the drop edge down therefore

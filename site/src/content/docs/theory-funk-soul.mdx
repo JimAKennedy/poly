@@ -34,7 +34,7 @@ Funk counterpoint is **riff-lock**: every instrument distils to a short rhythmic
 
 1. **Backbeat lane.** 8 steps at 1/8, 2 hits, rotation to land on 2 and 4, velocity 105+, mutation 0, timing offset −2 ms (Rule 2, 6).
 2. **Kick lane.** 16 steps at 1/16, 3–4 hits including step 0, avoiding backbeat slots, mutation 0, offset +3 ms (Rules 1, 3, 6).
-3. **Ghost lane.** Same MIDI note as the snare, 16 steps, 9–11 hits, velocity ≤ 40, spread 60%+, hits concentrated before the backbeat positions — until position-aware ghosting ships, choose rotation so the Euclidean gaps fall just *after* 2 and 4 (Rule 4).
+3. **Ghosts on the snare lane itself.** Set the snare's **ghost grammar** and its mutation budget, and its between-accent strokes cluster toward the accents on their own: the weight rises on the sixteenths leading into a backbeat and falls on the one immediately after, which is Rule 4 stated as a setting rather than as a rotation to be chosen by hand. **Complexity** scales it, so a clean groove stays clean. A separate ghost lane is no longer needed for this, which frees one of the eight for something else — though a dedicated lane is still the way to give ghosts their own MIDI note or their own velocity range.
 4. **Hat lane.** Straight sixteenths or eighths, moderate ghost, *low* mutation — the metronomic voice while the kick syncopates (Rule 5).
 5. **Fill behaviour.** FillLikelihood envelope, period 4 bars, depth pushing fills into the last half-bar (Rule 7).
 6. **Tension macro 0.5–0.7** — the wide accent/ghost spread is the genre's dynamic signature.
