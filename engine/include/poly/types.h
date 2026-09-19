@@ -269,6 +269,13 @@ struct LaneConfig {
     float syncopationOffset = 0.0f; // 0.0-1.0; pushes even (strong-beat) steps late
     float tempoMultiplier = 1.0f;   // 0.25-4.0; per-lane tempo scaling (Nancarrow-style)
     int kotekanSourceLane = -1;     // -1=independent, 0-7=complement of source lane's pattern
+    // M002 S01 (GP03). The timeline this lane weights its stochastic decisions
+    // against -- typically the clave or bell lane. -1 = none, which leaves every
+    // weight at exactly 1.0 and the arithmetic byte-identical to pre-M002.
+    // Strength is signed: positive attracts adds toward the timeline's onsets
+    // and protects them from drops, negative does the reverse.
+    int timelineSourceLane = -1;
+    float timelineStrength = 0.0f;
     // M002 S01 (EC06). The interlock style, and how many structural points the
     // pair strikes together. Both are state-only: the per-lane VST3 parameter
     // family is full (kParamsPerLane == 16, kKotekanSource occupies slot 15),
@@ -393,6 +400,79 @@ inline AdditiveCellInfo computeAdditiveCells(const LaneConfig& cfg) {
     }
     info.totalPpq = accum;
     return info;
+}
+
+// --- Position weights (M002 S01, GP03) ---
+
+// A weight scales a probability at a roll site; 1.0 is a no-op. Four named
+// weights rather than one scalar: one number cannot mean attraction for adds,
+// protection for drops, grammar for ghosts and shape for fills at once.
+//
+// Sources compose multiplicatively and an unset source contributes exactly
+// 1.0, so a lane with nothing configured produces the pre-M002 arithmetic
+// unchanged. This deliberately differs from M003's ruling that a subdivision
+// profile takes precedence over cellSizes: those were two competing
+// definitions of one grid, and combining them produced a placement nobody
+// could reason about. These are probabilities, and composing is what
+// probabilities do.
+struct StepWeights {
+    float add = 1.0f;   // mutation-add
+    float drop = 1.0f;  // mutation-drop
+    float ghost = 1.0f; // mutation-to-ghost
+    float fill = 1.0f;  // fill-add
+};
+
+// Is a lane's reference to another lane usable? Mirrors the kotekan guard: out
+// of range, self-reference, or a source pointing back is no reference at all.
+// The caller supplies the back-reference because which field points back
+// differs per feature.
+inline bool referenceLaneUsable(int source, int self, int activeLaneCount, int sourcesBackReference) {
+    if (source < 0 || source >= activeLaneCount || source == self)
+        return false;
+    return sourcesBackReference != self;
+}
+
+// The weights for one step, given the reference lane's onset pattern.
+//
+// Pure arithmetic over a fixed-size array: this runs on the audio thread, per
+// step, and allocates nothing. The roll VALUES are never touched -- only the
+// thresholds they are compared against -- so determinism is unaffected and a
+// locate reproduces the output exactly.
+inline StepWeights computeStepWeights(const LaneConfig& cfg, const std::array<bool, kMaxSteps>& sourcePattern,
+                                      int stepsInCycle, int step) {
+    StepWeights w{};
+    if (cfg.timelineSourceLane < 0 || cfg.timelineSourceLane == cfg.id)
+        return w;
+    if (step < 0 || step >= stepsInCycle || stepsInCycle <= 0)
+        return w;
+
+    const float strength =
+        cfg.timelineStrength < -1.0f ? -1.0f : (cfg.timelineStrength > 1.0f ? 1.0f : cfg.timelineStrength);
+    if (strength == 0.0f)
+        return w;
+
+    // The timeline either strikes this step or it does not. A struck step is
+    // favoured by the strength; an unstruck one is disfavoured by it, so the
+    // two move in opposite directions around the neutral 1.0 and an unset
+    // strength leaves both exactly there.
+    const bool aligned = sourcePattern[static_cast<size_t>(step)];
+    const float shift = aligned ? strength : -strength;
+
+    w.add = 1.0f + shift;
+    w.fill = 1.0f + shift;
+    // Protecting what attraction favours: a favoured step is less likely to be
+    // dropped, which is the row's stated behaviour.
+    w.drop = 1.0f - shift;
+
+    // Clamp to non-negative: a probability scaled below zero is not a
+    // probability, and strength is already bounded to [-1, 1].
+    if (w.add < 0.0f)
+        w.add = 0.0f;
+    if (w.fill < 0.0f)
+        w.fill = 0.0f;
+    if (w.drop < 0.0f)
+        w.drop = 0.0f;
+    return w;
 }
 
 // --- Swing ratio (M001 S01, GP01) ---

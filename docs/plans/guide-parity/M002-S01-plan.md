@@ -10,7 +10,7 @@ class: gated
 
 ## Task status
 
-- [ ] 1. The weight mechanism and the timeline source
+- [x] 1. The weight mechanism and the timeline source
 - [ ] 2. The rolls read the weights
 - [ ] 3. `03-afro-cuban` stops prescribing manual clave maintenance
 - [ ] 4. Evidence and close-out
