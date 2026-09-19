@@ -276,6 +276,10 @@ struct LaneConfig {
     // and protects them from drops, negative does the reverse.
     int timelineSourceLane = -1;
     float timelineStrength = 0.0f;
+    // M002 S02 (GP04). How strongly ghosts favour the approach to an accent.
+    // 0 = the flat per-step roll this repo shipped before M002. Scaled by the
+    // Complexity macro in macro.cpp, so low Complexity keeps grooves clean.
+    float ghostGrammar = 0.0f;
     // M002 S01 (EC06). The interlock style, and how many structural points the
     // pair strikes together. Both are state-only: the per-lane VST3 parameter
     // family is full (kParamsPerLane == 16, kKotekanSource occupies slot 15),
@@ -430,6 +434,54 @@ inline bool referenceLaneUsable(int source, int self, int activeLaneCount, int s
     if (source < 0 || source >= activeLaneCount || source == self)
         return false;
     return sourcesBackReference != self;
+}
+
+// M002 S02 (GP04). How much this step is favoured as a ghost.
+//
+// Funk ghosting is a gradient toward the next accent, not a blanket lift on
+// weak steps: the "e" and "a" leading into a backbeat carry the lead-in that
+// makes the accent land, and the step immediately after an accent is quieter.
+// So distance-to-the-next-accent raises the weight and distance-from-the-last
+// lowers it, and a step far from any accent sits nearer neutral than either.
+//
+// Pure arithmetic over a fixed-size array; runs on the audio thread.
+//
+// The accent positions come from the lane's OWN accent mask, read here rather
+// than passed in. An earlier version took a pattern parameter and the engine
+// passed the lane's onsets instead: on a fully-lit lane every step then read as
+// accented and the weight was neutral everywhere. The unit tests could not see
+// it because they passed the right thing; only a render-level case caught it.
+// Removing the parameter removes the way to get it wrong.
+inline float computeGhostWeight(const LaneConfig& cfg, int stepsInCycle, int step) {
+    if (cfg.ghostGrammar <= 0.0f || stepsInCycle <= 0 || step < 0 || step >= stepsInCycle)
+        return 1.0f;
+    const auto accented = [&cfg](int i) { return cfg.accents.steps[static_cast<size_t>(i)] > 0.0f; };
+    if (accented(step))
+        return 1.0f; // an accented step is not a ghost candidate
+
+    // Steps until the next accent, and since the last, wrapping the cycle.
+    int ahead = -1;
+    int behind = -1;
+    for (int d = 1; d <= stepsInCycle; ++d) {
+        const int f = (step + d) % stepsInCycle;
+        if (ahead < 0 && accented(f))
+            ahead = d;
+        const int b = ((step - d) % stepsInCycle + stepsInCycle) % stepsInCycle;
+        if (behind < 0 && accented(b))
+            behind = d;
+    }
+    if (ahead < 0 || behind < 0)
+        return 1.0f; // no accents at all: nothing to lead into
+
+    // Proximity in [0, 1], 1 meaning adjacent. The approach raises the weight,
+    // the departure lowers it, and the two cancel midway between accents.
+    const float half = static_cast<float>(stepsInCycle) * 0.5f;
+    const float approach = 1.0f - static_cast<float>(ahead) / half;
+    const float departure = 1.0f - static_cast<float>(behind) / half;
+    const float grammar = cfg.ghostGrammar > 1.0f ? 1.0f : cfg.ghostGrammar;
+
+    const float w = 1.0f + grammar * (approach - departure);
+    return w < 0.0f ? 0.0f : w;
 }
 
 // The weights for one step, given the reference lane's onset pattern.

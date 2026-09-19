@@ -515,6 +515,22 @@ static LaneRenderContext prepareLaneContext(const LaneConfig& cfg, const GrooveS
     return ctx;
 }
 
+// M002 (GP03, GP04). Every weight source this lane has, composed.
+//
+// Sources multiply and an unset source contributes exactly 1.0, so a lane with
+// nothing configured yields all-neutral weights and therefore the pre-M002
+// arithmetic. This deliberately differs from M003's precedence ruling for
+// subdivision profiles against cellSizes: those were two competing definitions
+// of one grid, where these are probabilities, and composing is what
+// probabilities do.
+static StepWeights laneStepWeights(const LaneConfig& cfg, const LaneRenderContext& ctx, int step) {
+    StepWeights w{};
+    if (ctx.hasTimeline)
+        w = computeStepWeights(cfg, ctx.timelinePattern, ctx.stepsInCycle, step);
+    w.ghost *= computeGhostWeight(cfg, ctx.stepsInCycle, step);
+    return w;
+}
+
 static void computeStepPpqAndDuration(const LaneRenderContext& ctx, const LaneConfig& cfg, int64_t absStep, double& ppq,
                                       double& stepDurPpq) {
     if (ctx.isAdditive) {
@@ -616,9 +632,7 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
             bool isAnchor = cfg.constraints.anchorSteps.steps[static_cast<size_t>(cycleStep)] > 0.0f;
             StepOutcome outcome =
                 classifyStep(cfg, state, absStep, cycleStep, isPatternStep, isAnchor, mods, ctx.stepsInCycle, isFillBar,
-                             ctx.hasTimeline ? computeStepWeights(cfg, ctx.timelinePattern, ctx.stepsInCycle,
-                                                                  static_cast<int>(cycleStep))
-                                             : StepWeights{});
+                             laneStepWeights(cfg, ctx, static_cast<int>(cycleStep)));
 
             // Post-timing-shift onset for the audible note. A Drop never fires,
             // so it has no shifted onset — the display shows it at its grid ppq.

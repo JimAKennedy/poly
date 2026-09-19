@@ -133,6 +133,7 @@ TEST(StepWeights, RefusesAStepOutsideTheCycle) {
 
 #include "poly/engine.h"
 #include "poly/euclidean.h"
+#include "poly/macro.h"
 #include "poly/presets.h"
 
 namespace {
@@ -282,4 +283,143 @@ TEST(StepWeightsRender, EveryFactoryPresetIsUnmovedWithNoTimelineSet) {
             ASSERT_FLOAT_EQ(cfg.timelineStrength, 0.0f) << "preset " << i << " (" << name << ")";
         }
     }
+}
+
+// --- M002/S02 (GP04): ghosts cluster where funk puts them ---
+//
+// Ghost notes come from a flat per-step mutation roll: any mutated step has an
+// equal chance of becoming a ghost, independent of where it sits in the meter.
+// Funk ghosting is grammatical -- ghosts concentrate on the weak subdivisions
+// around the backbeat and fill TOWARD the next accent (Danielsen 2006; Stewart
+// 2000). Chapter 11 works around this with a dedicated high-hit-count ghost
+// lane, which costs a lane and cannot respond to where the accents are.
+
+namespace {
+
+// A lane whose pattern accents steps 4 and 12 -- a backbeat -- so the steps
+// before and after an accent are unambiguous.
+LaneConfig ghostLane(float grammar) {
+    LaneConfig cfg{};
+    cfg.id = 1;
+    cfg.cycle = {16, 16};
+    cfg.ghostGrammar = grammar;
+    cfg.accents.steps[4] = 1.0f; // a backbeat, so approach and departure are unambiguous
+    cfg.accents.steps[12] = 1.0f;
+    return cfg;
+}
+
+std::array<bool, kMaxSteps> backbeatPattern() {
+    std::array<bool, kMaxSteps> p{};
+    p[4] = true;
+    p[12] = true;
+    return p;
+}
+
+} // namespace
+
+TEST(GhostGrammar, IsNeutralWhenUnset) {
+    const LaneConfig cfg = ghostLane(0.0f);
+    for (int step = 0; step < 16; ++step)
+        EXPECT_FLOAT_EQ(computeGhostWeight(cfg, 16, step), 1.0f) << "step " << step;
+}
+
+// The gradient, and both halves of it. A weight that merely favoured every weak
+// step would satisfy a one-sided test; "fills toward the accent" means the step
+// BEFORE an accent is favoured over the one after.
+TEST(GhostGrammar, FavoursTheApproachToAnAccentOverTheDeparture) {
+    const LaneConfig cfg = ghostLane(1.0f);
+
+    const float before = computeGhostWeight(cfg, 16, 3); // leads into the accent at 4
+    const float after = computeGhostWeight(cfg, 16, 5);  // follows it
+
+    EXPECT_GT(before, 1.0f) << "the approach must be favoured";
+    EXPECT_LT(after, 1.0f) << "the step after an accent must be quieter";
+    EXPECT_GT(before, after);
+}
+
+// A step far from any accent is closer to neutral than the approach is: the
+// weighting is a gradient toward accents, not a blanket lift on weak steps.
+TEST(GhostGrammar, IsAGradientRatherThanABlanketLift) {
+    const LaneConfig cfg = ghostLane(1.0f);
+
+    const float approach = computeGhostWeight(cfg, 16, 3);
+    const float distant = computeGhostWeight(cfg, 16, 8);
+    EXPECT_GT(approach, distant) << "approach " << approach << " vs distant " << distant;
+}
+
+// The row states this and it is checkable: low Complexity keeps grooves clean.
+TEST(GhostGrammar, ScalesWithTheComplexityMacro) {
+    GrooveState low{};
+    low.activeLaneCount = 1;
+    low.lanes[0] = ghostLane(1.0f);
+    low.macros.complexity = 0.0f;
+
+    GrooveState high = low;
+    high.macros.complexity = 1.0f;
+
+    const GrooveState resolvedLow = resolveMacros(low);
+    const GrooveState resolvedHigh = resolveMacros(high);
+
+    EXPECT_LT(resolvedLow.lanes[0].ghostGrammar, resolvedHigh.lanes[0].ghostGrammar)
+        << "low " << resolvedLow.lanes[0].ghostGrammar << ", high " << resolvedHigh.lanes[0].ghostGrammar;
+    EXPECT_LT(resolvedLow.lanes[0].ghostGrammar, 1.0f) << "low Complexity must damp the grammar";
+}
+
+// Render-level. The four cases above all exercise computeGhostWeight directly,
+// so a probe discarding the weight at the composition site killed none of them:
+// the weight could be computed perfectly and thrown away. This is the case that
+// proves the wiring, measured as a distribution over seeds.
+TEST(GhostGrammarRender, GhostsFavourTheApproachToAnAccent) {
+    auto tallyGhosts = [](float grammar) {
+        int approach = 0;
+        int departure = 0;
+        for (uint64_t seed = 1; seed <= 400; ++seed) {
+            GrooveState state{};
+            state.activeLaneCount = 1;
+            state.seed = seed;
+            auto& lane = state.lanes[0];
+            lane.id = 0;
+            lane.cycle = {16, 16};
+            lane.hitCount = 16; // every step lit, so any step can be ghosted
+            lane.probability = 1.0f;
+            lane.baseVelocity = 100;
+            lane.ghostFloor = 30;
+            lane.mutationRate = 0.6f;
+            lane.ghostGrammar = grammar;
+            lane.accents.steps[4] = 1.0f; // backbeat accents
+            lane.accents.steps[12] = 1.0f;
+
+            Engine engine;
+            NoteEventBuffer notes;
+            EmissionEventBuffer emissions;
+            TransportContext tc{};
+            tc.ppqStart = 0.0;
+            tc.ppqEnd = 4.0;
+            tc.tempo = 120.0;
+            tc.playing = true;
+            engine.renderRange(tc, state, notes, &emissions);
+
+            for (size_t i = 0; i < emissions.count; ++i) {
+                const auto& e = emissions.events[i];
+                if (e.kind != static_cast<uint8_t>(EmissionKind::Ghost))
+                    continue;
+                const int step = static_cast<int>(e.cycleStep);
+                if (step == 3 || step == 11)
+                    ++approach; // leads into an accent
+                else if (step == 5 || step == 13)
+                    ++departure; // follows one
+            }
+        }
+        return std::pair<int, int>{approach, departure};
+    };
+
+    const auto neutral = tallyGhosts(0.0f);
+    const auto grammared = tallyGhosts(1.0f);
+
+    const double neutralRatio = static_cast<double>(neutral.first) / std::max(1, neutral.first + neutral.second);
+    const double grammarRatio = static_cast<double>(grammared.first) / std::max(1, grammared.first + grammared.second);
+
+    EXPECT_GT(grammarRatio, neutralRatio)
+        << "approach share: neutral " << neutralRatio << ", with grammar " << grammarRatio << " (approach "
+        << grammared.first << " vs departure " << grammared.second << ")";
 }

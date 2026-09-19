@@ -96,7 +96,10 @@ TEST(GrooveStateCopyBenchmark, ReportsFactSizes) {
     // to keep the per-step WEIGHTS in LaneContext rather than here: four
     // 64-float arrays per lane would have been about 8 KB on a struct copied
     // three times per block, to hold values derivable from these two scalars.
-    EXPECT_EQ(sizeof(poly::GrooveState), 18064u)
+    // M002 S02 (GP04, guide-parity): +64 bytes from LaneConfig.ghostGrammar
+    // (float), 8 bytes/lane x 8 lanes with alignment. The per-step ghost
+    // weights stay in LaneRenderContext, as S01's timeline weights do.
+    EXPECT_EQ(sizeof(poly::GrooveState), 18128u)
         << "GrooveState size changed — record it in the milestone's decisions file";
 }
 

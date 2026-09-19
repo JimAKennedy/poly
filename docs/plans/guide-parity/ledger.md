@@ -171,7 +171,7 @@ once, not twice.
 **Plan:** M002-S02-plan.md
 **Validation:** format, unit, engine-isolation, rt-safety, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M002-S02.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
