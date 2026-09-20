@@ -364,7 +364,7 @@ satisfiable only by mangling content the milestone was never aimed at.
 classified, and each is either fixed or recorded as benign with its reason.
 
 **Branch:** milestone/M005-sanitizers
-**Status:** in-progress
+**Status:** done
 **Demo:** A local command runs the same five sanitizer variants the nightly
 does, and the programme can say what each filed occurrence was.
 
