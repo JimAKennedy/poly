@@ -49,6 +49,29 @@ const CLAIMS = [
     presentRegex: [/mto\.25\.31\.2\.goldberg\.pdf/],
   },
   {
+    id: 'REF9-OLURANTI',
+    file: 'appendix-references.mdx',
+    rule:
+      'ref [9] was the F17 defect a second time, and worse. It printed the title ' +
+      '"Polyrhythmic Structures in West African Drumming" against a real author ' +
+      'and a real institution, and no such dissertation exists. Verified against ' +
+      'the PDF itself: Oluranti (2012) is "Polyrhythm as an Integral Feature of ' +
+      'African Pianism", a University of Pittsburgh PhD analysing piano works by ' +
+      'Euba, Ligeti and Uzoigwe. The subject is African PIANISM, not drumming, so ' +
+      'the old entry misdescribed what the source is about as well as what it is ' +
+      'called. The URL had also rotted: D-Scholarship migrated platforms and the ' +
+      'old /11866/4/*.pdf path 404s',
+    forbidden: ['Polyrhythmic Structures in West African Drumming'],
+    present: [
+      'Polyrhythm as an Integral Feature of African Pianism',
+      'Oluranti, S. A. (2012)',
+    ],
+    // The dead path must not come back. The live record is on the migrated
+    // platform; d-scholarship 403s every automated fetch, so this asserts the
+    // shape of the citation rather than that the server answers.
+    forbiddenRegex: [/11866\/4\/DISSERTATION_-_FULL_Oluranti\.pdf/],
+  },
+  {
     id: 'S02-F18',
     file: '03-afro-cuban.mdx',
     rule:
