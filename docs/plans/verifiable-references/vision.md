@@ -9,8 +9,13 @@ measured rather than assumed, and the decisions a plan will have to take.
 
 ## The principle
 
-A reference is good when **the text can be obtained and read**. Not when its
-venue sounds academic, and not when its URL returns 200.
+A reference is good when **the text can be obtained and read, and the citation
+describes the work it points at**. Not when its venue sounds academic, and not
+when its URL returns 200.
+
+The second half was added after this document's first draft, because obtainability
+alone would not have caught the defect that prompted it. See *The accuracy
+problem* below.
 
 That reframes what the guide has been optimising. The existing scheme sorts
 sources into Tier A/B/C by the kind of thing they are, and enforces that a
@@ -76,6 +81,37 @@ somebody else's two-page opinion of a work they still cannot read.
 fine in a browser; `ethanhein.com` returns 406. Any liveness checking this
 programme adds has to tolerate that, or it will cry wolf until it is ignored.
 
+## The accuracy problem
+
+**Of the three numbered references anyone has examined against their actual
+source, all three were wrong about what they cite.**
+
+| Ref | Found by | Defect |
+|---|---|---|
+| `ref-2` | theory-audit M002 (F17) | Real author, real journal, real URL — **fabricated title**. The article at that URL is Goldberg's Bulgarian-meter paper. |
+| `ref-6` | this audit | Cites Jones (1959) *Studies in African Music*; the URL is a Cambridge **review of the book**, not the book. |
+| `ref-9` | this audit | **Fabricated title and wrong subject.** Printed as "Polyrhythmic Structures in West African Drumming"; the dissertation is Oluranti (2012), *Polyrhythm as an Integral Feature of African Pianism* — piano works by Euba, Ligeti and Uzoigwe. |
+
+Three of three is not a rate anyone should extrapolate from — it is three. But it
+is three out of three, and the sample was not adversarially chosen: `ref-9` was
+examined because its link was dead, and the title turned out to be invented as
+well.
+
+**Obtainability would have cleared `ref-9`.** The dissertation is freely
+available, archived, and readable. It simply is not the work the guide said it
+was — a different title, and a subject one discipline away from the claim it sat
+under. A programme that only asks *can I get this?* files that entry as
+compliant.
+
+So the audit has to ask a second question of every entry: **does the citation
+describe the thing it points at** — title, author, year, and enough of the
+subject to tell that it supports the chapter citing it.
+
+That is a materially larger job than classifying availability, and this document
+originally under-sized it. Checking a title against a landing page is a minute;
+confirming a source is *about* what a claim needs may mean opening it. The plan
+should size VR1 on that basis rather than on the fetching.
+
 ## Vision
 
 Every source the guide cites can be read. For each one the project knows how:
@@ -86,7 +122,10 @@ their hands on the text it rests on.
 
 ## What success looks like
 
-- Every reference carries an **obtainability status**, not only a tier.
+- Every reference carries an **obtainability status** and a **verified
+  description** — title, author and year confirmed against the source itself,
+  not against the guide's own entry.
+- No citation points at a commentary on the work it names, as `ref-6` does.
 - Everything freely downloadable **is** downloaded, into one archive with a
   stable naming convention — by script where that works, and from a **worklist
   of browser links** where it does not. A source that resists automation is not
@@ -136,20 +175,34 @@ effect on whether the archive can be mechanically checked.
 
 ## Proposed milestones
 
-### VR1 — Every reference has a known obtainability status
+### VR1 — Every reference is obtainable and accurately described
 
-The audit, and the foundation for everything else. For each of the **107**
-entries: free download, purchasable, library-only, or unobtainable — recorded in
-the manifest with the evidence for the verdict.
+The audit, and the foundation for everything else. Two verdicts per entry, not
+one.
 
-The method is validated, not assumed. Two spot checks, one per hard class:
-Anku (2000) is free at *Music Theory Online*; Locke (1998), a White Cliffs Media
-book long out of print, is purchasable used from about $20 under ISBN
-978-0941677905. Both determinable in a minute. 107 of them is real work, and it
-is the work that makes the rest possible.
+**Obtainability** — free download, purchasable, library-only, or unobtainable,
+recorded with the evidence and, where it is purchasable, **the price**.
+"Purchasable" without a number is not a decision anyone can make.
 
-**It must also record what a verdict costs.** "Purchasable" without a price is
-not a decision Jim can make.
+**Accuracy** — title, author and year confirmed **against the source**, plus
+enough of its subject to tell it can support the chapter citing it. Confirmed
+against the source, emphatically not against the guide's own entry: the entry is
+the thing under test, and `ref-9` would have passed any check that trusted it.
+
+The obtainability method is validated rather than assumed. Two spot checks, one
+per hard class: Anku (2000) is free at *Music Theory Online*; Locke (1998), a
+White Cliffs Media book long out of print, is purchasable used from about $20
+under ISBN 978-0941677905. Both determinable in a minute.
+
+**The accuracy half is the expensive one, and it does not parallelise onto a
+script.** A title and year can usually be confirmed from a landing page. Subject
+fitness sometimes cannot — establishing that Oluranti (2012) is about pianism
+rather than drumming took opening the PDF and reading its title page. Expect a
+long tail where the only way to answer is to look at the document.
+
+**Where a description cannot be confirmed, say so** rather than passing the
+entry. "Unverified" is a real verdict and a cheaper one than a wrong "verified";
+it also tells VR3 exactly which entries need a human.
 
 ### VR2 — Everything downloadable is downloaded
 
@@ -221,17 +274,23 @@ in parallel. VR4 depends on VR3, because merging a list you are still editing
 means doing it twice. VR5 is independent of all of them and could land first;
 it is placed last only because it protects an end state that does not exist yet.
 
-**The bottleneck is judgement, not scripting.** VR1 and VR2 are mostly
-mechanical, and where they are not — the browser worklist — they are at least
-*unattended by the plan and attended by a person*, which is a known cost rather
-than a risk. VR3 is 16 editorial decisions plus a policy call on Wikipedia, and
-no amount of tooling makes those faster.
+**The bottleneck is judgement, not scripting**, and VR1 now carries more of it
+than VR3. VR2 is mechanical, and where it is not — the browser worklist — it is
+at least *unattended by the plan and attended by a person*, which is a known
+cost rather than a risk. VR1's accuracy half is 107 judgements of the form
+*is this citation about what it claims to be about*, with a tail that can only
+be settled by opening the source. VR3 is 16 editorial decisions plus a policy
+call on Wikipedia. None of that gets faster with better tooling.
 
 ## Out of scope, recorded so a later pass does not rediscover them
 
 - **Re-reviewing whether each claim is true.** That was the theory-audit
-  programme. This one is about whether the sources behind the claims can be
-  read, not whether they support them.
+  programme. The boundary is finer than it was: this programme checks that a
+  citation names the work it links to and that the work is in the right subject
+  area for the claim. It does not re-check that the work *supports* the claim,
+  which is the theory audit's question. `ref-9` fails this programme's test —
+  wrong title, wrong discipline — without anyone having to re-read the argument
+  it was cited for.
 - **Redistributing the archive.** The PDFs stay local; the repository holds a
   manifest. Hosting them would be a licensing question, not a tooling one.
 - **Citations outside the guide.** `docs/` and code comments cite things too;
