@@ -94,6 +94,30 @@ const CLAIMS = [
     forbiddenRegex: [/id="ref-6"(?:(?!archive\.org)[^\n])*cambridge\.org/],
   },
   {
+    id: 'REF26-AKSAK',
+    file: 'appendix-references.mdx',
+    rule:
+      'VR01. ref [26] was a Fiveable course-marketing study guide and returned ' +
+      '404. Under the obtainability principle that is a replacement, not a ' +
+      'repair: the replacement is Bonini Baraldi, Bigand & Pozzo (2015), ' +
+      '"Measuring Aksak Rhythm and Synchronization in Transylvanian Village ' +
+      'Music by Using Motion Capture", Empirical Musicology Review 10(4), ' +
+      '265-291, the lead article of that journal\'s open-access aksak special ' +
+      'issue. Author list, title, volume, issue, pages and DOI come from ' +
+      'Crossref. It is cited by DOI rather than by a host path so it cannot rot ' +
+      'the way its predecessor did, and it is replaced in place so refs 27-43 ' +
+      'need no renumbering. It must not be the Goldberg paper from the same ' +
+      'issue, which the Balkan chapter already cites as fr-goldberg-2015',
+    // Tree-wide on the bibliography: the dead study-guide host must not return
+    // under any entry number, not merely under 26.
+    forbiddenRegex: [/fiveable\.me/],
+    present: [
+      'Measuring Aksak Rhythm and Synchronization',
+      'Empirical Musicology Review',
+    ],
+    presentRegex: [/10\.18061\/emr\.v10i4\.4891/],
+  },
+  {
     id: 'S02-F18',
     file: '03-afro-cuban.mdx',
     rule:
