@@ -339,3 +339,53 @@ test(`S01-F17-tree: the fabricated ref-2 title appears in no doc`, async () => {
       'of contents, checked 2026-09-01).',
   );
 });
+
+// VR02. ref [22] cites a chapter of the National Institute of Open Schooling's
+// Hindustani Music (242) theory book. NIOS is India's national open-schooling
+// board and the source is legitimate; what is NOT established is that the link
+// is dead. Nothing on nios.ac.in answers from this network — not the PDF, not a
+// sibling chapter a search engine lists as live, not the homepage — while DNS
+// resolves to a single A record. That is the D-Scholarship class the
+// REF9-OLURANTI case describes, not link rot.
+//
+// This is deliberately not an assertion that the URL works; no test run here
+// can settle that. It asserts an implication: if the bibliography still cites
+// the host, the browser worklist must name the entry. "We could not check it"
+// and "we checked it and it was fine" are indistinguishable states once the
+// session ends, and only one of them is true here — so an entry nobody could
+// verify must carry an owner and a place in a queue.
+//
+// It is a standalone case rather than a CLAIMS entry because it reads two
+// files. registerClaimTests loads exactly one source per claim, and a claim
+// pointed at the worklist alone could only assert the obligation
+// unconditionally — going red the day the entry is legitimately resolved.
+test('ref-22 stays queued while its URL is unverified', async () => {
+  const bibliography = await loadSource('appendix-references.mdx');
+  if (!bibliography.includes('nios.ac.in')) return; // condition false, obligation lifts
+
+  const worklistPath = join(
+    HERE,
+    '..',
+    '..',
+    'docs',
+    'plans',
+    'verifiable-references',
+    'browser-worklist.md',
+  );
+  let worklist;
+  try {
+    worklist = await readFile(worklistPath, 'utf8');
+  } catch {
+    assert.fail(
+      `appendix-references.mdx still cites nios.ac.in, but ${worklistPath} ` +
+        'does not exist. An entry no automated fetch can verify must be queued ' +
+        "for a human, or it is silently indistinguishable from one that's fine.",
+    );
+  }
+  assert.ok(
+    worklist.includes('ref-22'),
+    'appendix-references.mdx still cites nios.ac.in, but the browser worklist ' +
+      'does not name ref-22. Either queue the entry or resolve it — leaving it ' +
+      'cited and unqueued records a verification that never happened.',
+  );
+});

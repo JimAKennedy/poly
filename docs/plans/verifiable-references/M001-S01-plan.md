@@ -11,7 +11,7 @@ no new token, no interface change.
 
 - [x] 1. `ref-6` links to Jones itself, locked by `REF6-JONES`
 - [x] 2. `ref-26` becomes an open-access aksak paper, locked by `REF26-AKSAK`
-- [ ] 3. `ref-22` is measured, recorded, and put on the owner's browser worklist
+- [x] 3. `ref-22` is measured, recorded, and put on the owner's browser worklist
 - [ ] 4. The owner's verdict on `ref-22` is applied and the slice closes
 
 ## Definition of Done
