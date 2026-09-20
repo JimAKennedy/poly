@@ -62,9 +62,10 @@ live behind weeks of classification work is over-serialising for tidiness.
 
 ### Slice M001/S01 — The three measured defects are corrected
 
+**Plan:** M001-S01-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M001-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
