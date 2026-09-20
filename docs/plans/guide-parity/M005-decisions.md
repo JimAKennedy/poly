@@ -97,3 +97,45 @@ make the milestone a bag of unrelated work.
   single green run. S02 task 3 requires the iteration count to be recorded and
   the limit of the claim stated — a local pass on Darwin arm64 / Apple clang is
   evidence, not proof, against failures filed on ubuntu / gcc.
+
+## 2026-09-19 — the Group B "torn read" is a test defect, not a race
+
+The deferred question was answered "hunt the reproduction harder first". The
+hunt succeeded, and what it found is not what GP12 assumed.
+
+**Reproduced with no threading at all.** A single-threaded `writeSceneState` →
+`readSceneState` round trip, with one map and no second thread, produces the
+nightly's exact message:
+
+```
+writeId=100000  product=19808  -> "torn-read": map[1]=127 but map[0] implies 126
+```
+
+The filed 2026-09-16 failure (run `35051069155`) reads
+`torn-read: final noteMap[1]=127 but map[0] implies 126 (writeIdTimes31=127)`.
+The same.
+
+**Mechanism.** `readSceneState` (`engine/include/poly/state_io.h:209`) ends with
+`sanitizeSceneState`, which clamps every `noteMap` entry to `[0,127]`
+(`engine/src/sanitize.cpp:149`). The test encodes
+`((writeId * 31) ^ i) & 0x7FFF` — values up to 32767. Clamping destroys the
+relation `map[i] == map[0] ^ i` that assertion 3 checks. Measured: the invariant
+fails for **99,608 of 100,000 writeIds (99.61%)**.
+
+**Why it nearly always passes anyway.** The final persisted map is usually the
+prepared `setState` payload built from `makeNoteMap(1u)` — product 31, every
+entry ≤ 127, so nothing clamps and the relation holds. Only when an injected map
+with a large writeId wins the final race does the clamp bite. That is the
+rarity, and it has nothing to do with the exchange.
+
+**This explains every observation at once**, which the race hypothesis did not:
+ThreadSanitizer silent (there is no race), AddressSanitizer silent (there is no
+memory error), roughly one night in 34 (an inject has to land last), and
+unaffected by `076f545`'s triple buffer (the tear was never in the exchange).
+
+**Consequence for M005/S02.** GP12 describes "a plausible real memory or
+threading defect" in plugin code. For Group B that is now disproved. The defect
+is in `tests/host/host_tests.cpp`'s assertion 3, which asserts an invariant the
+serialization layer does not preserve. The fix belongs in the test, not in
+`plugin/source/`, and S02's plan — written to audit a triple buffer — needs
+repair before it is executed.
