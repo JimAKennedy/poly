@@ -668,6 +668,210 @@ TEST(HostTests, GetStateFromColdProcessor_RoundTrips) {
     hostB.teardown();
 }
 
+// ---------------------------------------------------------------------------
+// Engine statelessness across transport stops.
+//
+// `Engine` has no data members: renderRange() is a pure function of
+// (TransportContext, GrooveState). What Poly emits at a PPQ is therefore a
+// function of that PPQ, not of what the instance played before. That is the
+// property a user relies on when they stop, rewind and play again — and until
+// these tests it was protected only by the shape of the class.
+//
+// Determinism_SameInputSameOutput below does NOT cover it: it compares two
+// FRESH hosts, and two fresh hosts agree whether or not a single instance
+// accumulates state. The e2e transport-motion spec covers a mid-playback
+// locate, which is a different transport path from stop-then-play.
+// ---------------------------------------------------------------------------
+namespace stateless {
+
+constexpr double kTempo = 120.0;
+
+// Plays [fromPpq, toPpq) on `host` and returns only the note-ons that range
+// produced, so a second pass on the same instance can be compared to the first.
+inline std::vector<MidiEvent> playRange(PolyTestHost& host, double fromPpq, double toPpq) {
+    const size_t before = host.noteOnEvents().size();
+    const double blockPpq = host.ppqPerBlock(kTempo);
+    for (double ppq = fromPpq; ppq < toPpq; ppq += blockPpq)
+        host.processBlock(ppq, kTempo, true);
+    auto all = host.noteOnEvents();
+    return std::vector<MidiEvent>(all.begin() + static_cast<long>(before), all.end());
+}
+
+// A DAW keeps calling process() while stopped, with the playhead parked.
+inline void stopTransport(PolyTestHost& host, double parkedPpq, int blocks = 16) {
+    for (int i = 0; i < blocks; ++i)
+        host.processBlock(parkedPpq, kTempo, false);
+}
+
+inline void expectIdentical(const std::vector<MidiEvent>& a, const std::vector<MidiEvent>& b, const char* what) {
+    ASSERT_FALSE(a.empty()) << what << ": reference pass emitted nothing, so the comparison proves nothing";
+    ASSERT_EQ(a.size(), b.size()) << what << ": note COUNT differs — the instance carried state across the stop";
+    for (size_t i = 0; i < a.size(); ++i) {
+        EXPECT_EQ(a[i].pitch, b[i].pitch) << what << ": pitch differs at event " << i;
+        EXPECT_DOUBLE_EQ(a[i].ppqPosition, b[i].ppqPosition) << what << ": position differs at event " << i;
+        EXPECT_FLOAT_EQ(a[i].velocity, b[i].velocity) << what << ": velocity differs at event " << i;
+    }
+}
+
+} // namespace stateless
+
+// Stop, rewind, play again — on ONE instance. An accumulating lane would
+// resume its phase where the previous pass ended and emit a shifted pattern.
+TEST(HostTests, StopThenPlay_OneInstanceRepeatsItsFirstPass) {
+    PolyTestHost host;
+    ASSERT_TRUE(host.setup(44100.0, 512));
+
+    constexpr double kFourBars = 16.0;
+    const auto first = stateless::playRange(host, 0.0, kFourBars);
+    stateless::stopTransport(host, kFourBars);
+    const auto second = stateless::playRange(host, 0.0, kFourBars);
+
+    stateless::expectIdentical(first, second, "stop-then-play");
+    host.teardown();
+}
+
+// The same property against a much longer history: an instance that has been
+// rolling for 32 bars must play bars 0-4 exactly as a freshly loaded one does.
+TEST(HostTests, PriorPlayback_DoesNotChangeALaterPass) {
+    constexpr double kFourBars = 16.0;
+    constexpr double kThirtyTwoBars = 128.0;
+
+    PolyTestHost virginHost;
+    ASSERT_TRUE(virginHost.setup(44100.0, 512));
+    const auto reference = stateless::playRange(virginHost, 0.0, kFourBars);
+    virginHost.teardown();
+
+    PolyTestHost wornHost;
+    ASSERT_TRUE(wornHost.setup(44100.0, 512));
+    (void)stateless::playRange(wornHost, 0.0, kThirtyTwoBars);
+    stateless::stopTransport(wornHost, kThirtyTwoBars);
+    const auto afterWear = stateless::playRange(wornHost, 0.0, kFourBars);
+    wornHost.teardown();
+
+    stateless::expectIdentical(reference, afterWear, "32-bars-then-replay");
+}
+
+namespace stateless {
+
+// Scene A on pitches 40..47, scene B on 60..67, so the live scene is readable
+// straight off the note stream. A chain of two 2-bar entries alternates them.
+inline std::vector<uint8_t> chainedStateBytes() {
+    poly::SceneState scene{};
+    for (int lane = 0; lane < poly::kMaxLanes; ++lane) {
+        scene.sceneA.lanes[static_cast<size_t>(lane)].midiNote = static_cast<int16_t>(40 + lane);
+        scene.sceneB.lanes[static_cast<size_t>(lane)].midiNote = static_cast<int16_t>(60 + lane);
+    }
+    scene.select = poly::SceneSelect::A;
+    scene.chain.enabled = true;
+    scene.chain.entryCount = 2;
+    scene.chain.mode = poly::ChainMode::Loop;
+    scene.chain.entries[0] = {poly::SceneSelect::A, 2};
+    scene.chain.entries[1] = {poly::SceneSelect::B, 2};
+
+    std::vector<uint8_t> bytes;
+    auto write = [&bytes](const void* src, size_t size) {
+        const auto* b = static_cast<const uint8_t*>(src);
+        bytes.insert(bytes.end(), b, b + size);
+        return true;
+    };
+    EXPECT_TRUE(poly::writeSceneState(write, scene));
+    return bytes;
+}
+
+// One character per bar: 'A', 'B', 'M' for a bar carrying both, '.' for silence.
+inline std::string sceneShape(const std::vector<MidiEvent>& notes, int firstBar, int barCount) {
+    std::string shape;
+    for (int bar = firstBar; bar < firstBar + barCount; ++bar) {
+        char seen = '.';
+        for (const auto& note : notes) {
+            if (note.ppqPosition < bar * 4.0 || note.ppqPosition >= (bar + 1) * 4.0)
+                continue;
+            const char which = (note.pitch >= 60 && note.pitch <= 67)   ? 'B'
+                               : (note.pitch >= 40 && note.pitch <= 47) ? 'A'
+                                                                        : '?';
+            seen = (seen == '.') ? which : (seen == which ? seen : 'M');
+        }
+        shape += seen;
+    }
+    return shape;
+}
+
+// A shape that never shows both scenes means the chain never advanced, and any
+// comparison built on it would pass while proving nothing.
+inline void requireChainAdvanced(const std::string& shape) {
+    ASSERT_NE(shape.find('A'), std::string::npos) << "scene A never appeared in " << shape;
+    ASSERT_NE(shape.find('B'), std::string::npos)
+        << "scene B never appeared in " << shape << " — the chain did not advance, so this test proves nothing";
+}
+
+} // namespace stateless
+
+// The scene chain is the one genuinely stateful scheduler — currentIndex,
+// barsInCurrentEntry, direction. Stopping and playing again must restart it,
+// not resume it mid-sequence.
+TEST(HostTests, SceneChain_RestartsOnPlayRatherThanResuming) {
+    const auto stateBytes = stateless::chainedStateBytes();
+    constexpr double kEightBars = 32.0;
+    constexpr double kThirtyBars = 120.0;
+
+    PolyTestHost virginHost;
+    ASSERT_TRUE(virginHost.setup(44100.0, 512));
+    ASSERT_TRUE(virginHost.loadState(stateBytes));
+    const auto reference = stateless::playRange(virginHost, 0.0, kEightBars);
+    const std::string referenceShape = stateless::sceneShape(reference, 0, 8);
+    virginHost.teardown();
+
+    stateless::requireChainAdvanced(referenceShape);
+
+    PolyTestHost wornHost;
+    ASSERT_TRUE(wornHost.setup(44100.0, 512));
+    ASSERT_TRUE(wornHost.loadState(stateBytes));
+    (void)stateless::playRange(wornHost, 0.0, kThirtyBars); // chain cycles many times
+    stateless::stopTransport(wornHost, kThirtyBars);
+    const auto afterWear = stateless::playRange(wornHost, 0.0, kEightBars);
+    const std::string afterWearShape = stateless::sceneShape(afterWear, 0, 8);
+    wornHost.teardown();
+
+    EXPECT_EQ(referenceShape, afterWearShape) << "the chain resumed mid-sequence instead of restarting";
+    stateless::expectIdentical(reference, afterWear, "scene-chain stop-then-play");
+}
+
+// Documented behaviour, pinned deliberately: the chain is relative to where
+// playback STARTED, not to song position. SceneChainState::update latches
+// startBarNumber on its first block and resolves (barNumber - startBarNumber),
+// so locating to bar 28 and playing gives the chain's opening entry — not the
+// entry a linear playthrough would have reached by bar 28.
+//
+// docs/cubase-workflow.md states this ("Chain position resets on transport
+// jump"). It is a deliberate choice rather than an oversight, and it differs
+// from the lanes, which ARE absolute-position-derived. This test exists so that
+// changing it has to be a decision rather than an accident.
+TEST(HostTests, SceneChain_IsRelativeToWherePlaybackStarted) {
+    const auto stateBytes = stateless::chainedStateBytes();
+
+    PolyTestHost playedInto;
+    ASSERT_TRUE(playedInto.setup(44100.0, 512));
+    ASSERT_TRUE(playedInto.loadState(stateBytes));
+    const auto linear = stateless::playRange(playedInto, 0.0, 128.0); // bars 0-32
+    const std::string playedIntoShape = stateless::sceneShape(linear, 28, 4);
+    playedInto.teardown();
+
+    PolyTestHost startedThere;
+    ASSERT_TRUE(startedThere.setup(44100.0, 512));
+    ASSERT_TRUE(startedThere.loadState(stateBytes));
+    const auto located = stateless::playRange(startedThere, 112.0, 128.0); // start AT bar 28
+    const std::string startedThereShape = stateless::sceneShape(located, 28, 4);
+    startedThere.teardown();
+
+    stateless::requireChainAdvanced(playedIntoShape + startedThereShape);
+
+    EXPECT_NE(playedIntoShape, startedThereShape)
+        << "the chain now follows song position (played-into=" << playedIntoShape
+        << ", started-there=" << startedThereShape
+        << "). That may be an improvement, but it changes documented behaviour — update "
+           "docs/cubase-workflow.md and this test together.";
+}
+
 TEST(HostTests, Determinism_SameInputSameOutput) {
     auto runPass = []() -> std::vector<MidiEvent> {
         PolyTestHost host;
