@@ -80,7 +80,7 @@ live behind weeks of classification work is over-serialising for tidiness.
 |---|---|---|---|---|---|
 | VR01 | `ref-26` (`fiveable.me`, Tier B) returns 404. It is a course-marketing study guide, so under the obtainability principle this is a replacement rather than a repair | `defect` | `appendix-references.mdx` | The URL resolves or the entry is gone; a claim test pins the outcome | `open` |
 | VR02 | `ref-22` (`nios.ac.in`, Tier B) does not respond. NIOS is India's National Institute of Open Schooling and legitimate — the PDF moved rather than the source being bad | `defect` | `appendix-references.mdx` | The URL resolves or the entry is gone; a claim test pins the outcome | `open` |
-| VR03 | `ref-6` cites Jones (1959) *Studies in African Music* and links to a Cambridge **review** of the book. A reader reaches someone else's two-page opinion of a work they still cannot read | `defect` | `appendix-references.mdx` | The entry links to the work or names the surrogate explicitly; a claim test pins it | `open` |
+| VR03 | `ref-6` cites Jones (1959) *Studies in African Music* and links to a Cambridge **review** of the book. A reader reaches someone else's two-page opinion of a work they still cannot read | `defect` | `appendix-references.mdx` | The entry links to the work or names the surrogate explicitly; a claim test pins it | `done` |
 
 ## Milestone M002 — Every reference has a verdict
 

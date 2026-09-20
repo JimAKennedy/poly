@@ -72,6 +72,28 @@ const CLAIMS = [
     forbiddenRegex: [/11866\/4\/DISSERTATION_-_FULL_Oluranti\.pdf/],
   },
   {
+    id: 'REF6-JONES',
+    file: 'appendix-references.mdx',
+    rule:
+      'VR03. ref [6] cited Jones (1959) *Studies in African Music* and linked to ' +
+      'a Cambridge review OF that book, so a reader reached two pages of someone ' +
+      "else's opinion of a work they still could not read. The work itself is on " +
+      'archive.org as a borrowable scan (identifier studiesinafrican0000amjo, ' +
+      'A.M. Jones, Oxford University Press, collections inlibrary and ' +
+      'printdisabled — controlled digital lending). The review survives only as ' +
+      'a labelled secondary. The definition of done\'s other arm, citing the ' +
+      'book by ISBN, is unavailable: the archive.org record carries no ISBN and ' +
+      'a 1959 imprint predates the ISBN system',
+    present: ['Studies in African Music', 'Jones, A. M. (1959)'],
+    presentRegex: [/archive\.org\/details\/studiesinafrican0000amjo/],
+    // The present arm only proves the scan URL is somewhere in the file. This
+    // proves it is on ref-6's own line, and ahead of the review: the match
+    // succeeds only when the Cambridge URL is reachable from id="ref-6"
+    // without passing an archive.org link first. Both the old single-link form
+    // and a form that puts the opinion before the work are therefore red.
+    forbiddenRegex: [/id="ref-6"(?:(?!archive\.org)[^\n])*cambridge\.org/],
+  },
+  {
     id: 'S02-F18',
     file: '03-afro-cuban.mdx',
     rule:
