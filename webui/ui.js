@@ -1688,7 +1688,12 @@
         const r = track.getBoundingClientRect();
         return Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
       };
-      const paint = (v) => { fill.style.width = `${(v * 100).toFixed(1)}%`; vSpan.textContent = p.fmt(v); };
+      const paint = (v) => {
+        fill.style.width = `${(v * 100).toFixed(1)}%`;
+        vSpan.textContent = p.fmt(v);
+        track.dataset.norm = String(v); // so click-to-type prefills the live value
+      };
+      track.dataset.norm = String(p.norm);
       track.addEventListener('pointerdown', (e) => {
         e.preventDefault();
         let lastV = calc(e); paint(lastV);
@@ -1714,12 +1719,16 @@
     const PHRASE_MAX_BEATS = 968;
     const phraseNorm = (beats) => Math.sqrt(Math.max(0, beats) / PHRASE_MAX_BEATS);
     const phraseBeats = (v) => Math.round(v * v * PHRASE_MAX_BEATS);
+    // `typeable` gives the value a click-to-edit box. The squared curve keeps the
+    // low end reachable by dragging, but an exact number -- a 7-beat tihai cell,
+    // a 96-beat rest -- is still easier to type than to hunt for, and the range
+    // is wide enough that hunting is the common case.
     const PHRASE = [
-      { field: 'phraseLength', label: 'Length', norm: phraseNorm(l.phraseLength),
+      { field: 'phraseLength', label: 'Length', norm: phraseNorm(l.phraseLength), typeable: true,
         fmt: (v) => { const b = phraseBeats(v); return b === 0 ? 'Off' : b + ' beats'; } },
-      { field: 'phraseGap', label: 'Gap', norm: phraseNorm(l.phraseGap),
+      { field: 'phraseGap', label: 'Gap', norm: phraseNorm(l.phraseGap), typeable: true,
         fmt: (v) => { const b = phraseBeats(v); return b === 0 ? 'Off' : b + ' beats'; } },
-      { field: 'phraseOffset', label: 'Offset', norm: phraseNorm(l.phraseOffset),
+      { field: 'phraseOffset', label: 'Offset', norm: phraseNorm(l.phraseOffset), typeable: true,
         fmt: (v) => phraseBeats(v) + ' beats' },
     ];
     // Gap/Offset are inert while Length is Off (the lane never rests), so
@@ -1754,7 +1763,9 @@ const SUBS = [1, 2, 4, 8, 16];
     const sliderHtml = (arr) => arr.map((p) =>
       `<div class="param-slider${p.disabled ? ' phrase-disabled' : ''}"><label>${p.label}</label>` +
       `<div class="slider-track" data-field="${p.field}"><i style="width:${(p.norm * 100).toFixed(1)}%"></i></div>` +
-      `<span class="v">${p.fmt(p.norm)}</span></div>`
+      `<span class="v${p.typeable ? ' typeable' : ''}"${p.typeable
+        ? ` role="button" tabindex="0" title="Click to type an exact value in beats"`
+        : ''}>${p.fmt(p.norm)}</span></div>`
     ).join('');
 
     adv.innerHTML =
@@ -1835,6 +1846,51 @@ const SUBS = [1, 2, 4, 8, 16];
         window.addEventListener('pointermove', mv);
         window.addEventListener('pointerup', up, { once: true });
       });
+
+      // Click-to-type on the value. Commits on Enter or blur, cancels on Escape.
+      // Accepts a bare number of beats, tolerates a trailing unit, and reads
+      // "off" as 0 so the displayed word can be typed straight back in.
+      if (p.typeable) {
+        vSpan.addEventListener('click', () => {
+          if (track.closest('.param-slider').classList.contains('phrase-disabled')) return;
+          if (vSpan.querySelector('input')) return;
+          const before = vSpan.textContent;
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.className = 'v-edit';
+          input.value = String(phraseBeats(parseFloat(track.dataset.norm || p.norm)));
+          input.setAttribute('aria-label', `${p.label} in beats`);
+          vSpan.textContent = '';
+          vSpan.appendChild(input);
+          input.focus();
+          input.select();
+
+          let settled = false;
+          const cancel = () => { if (settled) return; settled = true; vSpan.textContent = before; };
+          const commit = () => {
+            if (settled) return;
+            settled = true;
+            const raw = input.value.trim();
+            const beats = /^off$/i.test(raw) ? 0 : Number.parseFloat(raw);
+            if (!Number.isFinite(beats)) { vSpan.textContent = before; return; }
+            const clamped = Math.max(0, Math.min(PHRASE_MAX_BEATS, beats));
+            const norm = phraseNorm(clamped);
+            paint(norm);
+            host.edit(paramId, norm, 'begin');
+            host.edit(paramId, norm, 'perform');
+            host.edit(paramId, norm, 'end');
+          };
+          input.addEventListener('keydown', (ev) => {
+            if (ev.key === 'Enter') { ev.preventDefault(); commit(); input.blur(); }
+            else if (ev.key === 'Escape') { ev.preventDefault(); cancel(); input.blur(); }
+            ev.stopPropagation();  // keep chapter/global shortcuts out of the field
+          });
+          input.addEventListener('blur', commit);
+        });
+        vSpan.addEventListener('keydown', (ev) => {
+          if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); vSpan.click(); }
+        });
+      }
     });
     adv.querySelectorAll('[data-sub]').forEach((b) =>
       b.addEventListener('click', () => {
