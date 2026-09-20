@@ -1,5 +1,9 @@
 import { test, expect } from '@playwright/test';
 
+// The scheduler must advance its lookahead past this many seconds. The value is
+// a liveness floor, not a timing measurement — see #89.
+const kMinLastFireTime = 2.5;
+
 test('Reich Phase Process play button drives the AudioContext and fires >= 6 sources', async ({
   page,
 }) => {
@@ -17,8 +21,28 @@ test('Reich Phase Process play button drives the AudioContext and fires >= 6 sou
   // Card should flip to playing.
   await expect(card).toHaveAttribute('data-state', 'playing');
 
-  // Let the pattern run.
-  await page.waitForTimeout(3000);
+  // Let the pattern run. Poll for the scheduler reaching the threshold rather
+  // than sleeping a fixed 3s and asserting afterwards: the old form left only
+  // 0.5s of headroom above the 2.5s threshold, so ordinary startup jitter on a
+  // loaded machine failed it with lastFireTime ~2.47 while the scheduler was
+  // working perfectly (#89). Polling keeps the same claim — the scheduler
+  // advances past kMinLastFireTime — but stops treating "slower than usual" as
+  // "stalled". A genuinely stalled scheduler never reaches it and still fails,
+  // on the timeout.
+  await page
+    .waitForFunction(
+      (threshold) => {
+        const probe = (window as any).__polyAudioProbe;
+        const times: number[] = probe?.scheduledNoteTimes ?? [];
+        return times.length > 0 && times[times.length - 1] > threshold;
+      },
+      kMinLastFireTime,
+      { timeout: 15_000 },
+    )
+    .catch(() => {
+      // Swallow the timeout so the assertions below report *what* the probe
+      // held rather than an opaque Playwright timeout with no numbers in it.
+    });
 
   const probe = await page.evaluate(() => {
     const p = (window as any).__polyAudioProbe;
@@ -39,8 +63,8 @@ test('Reich Phase Process play button drives the AudioContext and fires >= 6 sou
   ).toBe(false);
   expect(
     probe!.lastFireTime,
-    `latest scheduled fireTime = ${probe!.lastFireTime}, expected > 2.5 (scheduler stalled?)`,
-  ).toBeGreaterThan(2.5);
+    `latest scheduled fireTime = ${probe!.lastFireTime}, expected > ${kMinLastFireTime} (scheduler stalled?)`,
+  ).toBeGreaterThan(kMinLastFireTime);
   expect(
     probe!.scheduledNoteCount,
     `scheduledNoteCount = ${probe!.scheduledNoteCount}, expected >= 6`,
