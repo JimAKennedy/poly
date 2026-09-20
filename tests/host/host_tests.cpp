@@ -1225,6 +1225,43 @@ TEST(HostTests, NoteMapEncoding_SurvivesStateRoundTrip) {
     }
 }
 
+// M005/S02 (GP12). Narrowing the torn-read encoding from 15 bits to 7 stops it
+// reporting sanitize's clamp as a tear — but a check that can no longer fail is
+// worse than one that false-positives, so the narrowed invariant must still
+// reject a genuine tear. This asserts that directly, with no threading: a map
+// whose first half comes from one writeId and whose second half comes from
+// another is exactly what a mid-flight publish would leave behind, and the
+// reconstruct must refuse it.
+TEST(HostTests, NoteMapInvariant_StillDetectsATear) {
+    constexpr uint32_t kWriteIdA = 100000u;
+    constexpr uint32_t kWriteIdB = 100001u;
+
+    const auto reconstructHolds = [](const std::array<int16_t, 128>& map) {
+        const uint32_t field0 = static_cast<uint32_t>(map[0]) & 0x7Fu;
+        for (int i = 1; i < 128; ++i) {
+            const uint32_t expected = (field0 ^ static_cast<uint32_t>(i)) & 0x7Fu;
+            const uint32_t actual = static_cast<uint32_t>(map[static_cast<size_t>(i)]) & 0x7Fu;
+            if (expected != actual)
+                return false;
+        }
+        return true;
+    };
+
+    // A whole map from one writeId must be accepted, or the check is broken in
+    // the other direction and would fail every run.
+    EXPECT_TRUE(reconstructHolds(stress::makeNoteMap(kWriteIdA)))
+        << "a clean single-writeId map was rejected; the invariant is unusable";
+
+    // A map torn between two writeIds must be rejected.
+    auto torn = stress::makeNoteMap(kWriteIdA);
+    const auto other = stress::makeNoteMap(kWriteIdB);
+    for (int i = 64; i < 128; ++i)
+        torn[static_cast<size_t>(i)] = other[static_cast<size_t>(i)];
+
+    EXPECT_FALSE(reconstructHolds(torn)) << "a map torn between writeId " << kWriteIdA << " and " << kWriteIdB
+                                         << " was accepted; the 7-bit encoding has made the torn-read check vacuous";
+}
+
 TEST(HostTests, HandshakeStress_NoTearNoLoss) {
     PolyTestHost host;
     ASSERT_TRUE(host.setup(44100.0, 512));

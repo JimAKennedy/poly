@@ -12,7 +12,7 @@ class: gated
 ## Task status
 
 - [x] 1. Re-encode assertion 3 so it survives the round trip
-- [ ] 2. Show it still detects a genuine tear
+- [x] 2. Show it still detects a genuine tear
 - [ ] 3. Evidence and slice close-out
 
 **Re-planned at execution.** This plan was written to audit a lockless triple
