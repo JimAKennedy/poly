@@ -13,7 +13,7 @@ class: gated
 
 - [x] 1. Re-encode assertion 3 so it survives the round trip
 - [x] 2. Show it still detects a genuine tear
-- [ ] 3. Evidence and slice close-out
+- [x] 3. Evidence and slice close-out
 
 **Re-planned at execution.** This plan was written to audit a lockless triple
 buffer for a residual race. M005/S01's hunt for a reproduction found one, and it

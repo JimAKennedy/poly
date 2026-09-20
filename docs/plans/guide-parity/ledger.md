@@ -425,21 +425,21 @@ dispatches alone.
 **Plan:** M005-S02-plan.md
 **Validation:** format, unit, rt-safety, sanitizers
 **Evidence:** evidence/M005-S02.md
-**Status:** in-progress
+**Status:** done
 **Depends:** M005/S01
 
 **Definition of Done**
 
-- [ ] Every finding classified in S01 is either fixed, or recorded as benign with the reason and a suppression entry naming it
-- [ ] A fixed finding is shown gone by the means S01 established — the reproducing invocation, or a named nightly run if it never reproduced locally
-- [ ] No suppression is added without a written reason
+- [x] Every finding classified in S01 is either fixed, or recorded as benign with the reason and a suppression entry naming it
+- [x] A fixed finding is shown gone by the means S01 established — the reproducing invocation, or a named nightly run if it never reproduced locally
+- [x] No suppression is added without a written reason
 
 `GP13` (#89) rides in this slice's row table because the format has no
 milestone-level row, and is `accepted` rather than sliced — see its row.
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| GP12 | #142's 23 nightly failures are two groups, established by M005/S01. **Group A**, 22 occurrences 2026-07-26 → 08-16, was a real TSan data race on the two-slot host→RT exchange, already fixed by `076f545` on 2026-08-16. **Group B**, the single 2026-09-16 occurrence, is a defect in the test: assertion 3 encodes `noteMap` values up to 32767 while `readSceneState` clamps them to `[0,127]`, so the invariant it checks is destroyed by sanitize rather than by tearing — reproduced single-threaded, failing for 99.61% of writeIds. No outstanding product defect | `defect` | `tests/host/host_tests.cpp` | The invariant is re-encoded to survive the round trip, proved to accept clean maps and still detect a genuine two-writeId tear | `open` |
+| GP12 | #142's 23 nightly failures are two groups, established by M005/S01. **Group A**, 22 occurrences 2026-07-26 → 08-16, was a real TSan data race on the two-slot host→RT exchange, already fixed by `076f545` on 2026-08-16. **Group B**, the single 2026-09-16 occurrence, is a defect in the test: assertion 3 encodes `noteMap` values up to 32767 while `readSceneState` clamps them to `[0,127]`, so the invariant it checks is destroyed by sanitize rather than by tearing — reproduced single-threaded, failing for 99.61% of writeIds. No outstanding product defect | `defect` | `tests/host/host_tests.cpp` | The invariant is re-encoded to survive the round trip, proved to accept clean maps and still detect a genuine two-writeId tear | `done` |
 | GP13 | `tests-e2e/reich-play.spec.ts` asserts `lastFireTime > 2.5` against a 3 s Playwright wait, which is too tight and flakes locally while CI stays green. Carried in this slice's table because the ledger format has no home for a milestone-level row, but deliberately **not sliced**: it is a one-line threshold change, and a definition of done would be more ceremony than the change earns. To be landed as an ordinary pull request referencing #89 | `defect` | `site/tests-e2e/reich-play.spec.ts` | Accepted without a slice; the fix is an ordinary PR | `accepted` |
 
 ## Sequencing
