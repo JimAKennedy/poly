@@ -364,16 +364,39 @@ satisfiable only by mangling content the milestone was never aimed at.
 classified, and each is either fixed or recorded as benign with its reason.
 
 **Branch:** milestone/M005-sanitizers
-**Status:** planned
+**Status:** done
 **Demo:** A local command runs the same five sanitizer variants the nightly
 does, and the programme can say what each filed occurrence was.
 
 **What the assessment found, correcting the input.** #142 is not a stale finding
 nobody triaged. It is auto-refiled: 22 comments, one per nightly failure, the
-most recent naming `ASAN-PLUGIN` where the title says `TSAN-PLUGIN`. Measured
-over the last 20 sanitizer nightlies: 1 failure, 19 successes. An intermittent
-finding at roughly 5%, across two sanitizers, in plugin code — which this repo's
-entire real-time-safety discipline assumes is clean.
+most recent naming `ASAN-PLUGIN` where the title says `TSAN-PLUGIN`.
+
+**Corrected again at execution, 2026-09-19, by reading the run history rather
+than the last 20 results.** The assessment called this "an intermittent finding
+at roughly 5%, across two sanitizers". It is not intermittent and it is not two
+findings:
+
+| Window | Nights | Result |
+|---|---|---|
+| 2026-07-22 → 07-25 | 4 | success |
+| 2026-07-26 → 08-16 | **22** | failure, every night, `TSAN-PLUGIN` |
+| 2026-08-17 → 09-15 | 30 | success |
+| 2026-09-16 | 1 | failure, `ASAN-PLUGIN` |
+
+Every occurrence is the same test, `HostTests.HandshakeStress_NoTearNoLoss`, and
+the same defect. Under TSan it is reported deterministically —
+`WARNING: ThreadSanitizer: data race`, `SUMMARY: … in memcpy`. Without TSan the
+same race only occasionally produces an observable torn read, which is what the
+2026-09-16 run caught through the test's own assertion
+(`torn-read: final noteMap[1]=127 but map[0] implies 126`). AddressSanitizer
+reported no memory error at all; the test found it.
+
+Three consequences. `.github/tsan.supp` contains no suppressions, so nothing was
+silenced. The 2026-09-16 torn read proves the race is **still live** despite 30
+quiet nights. And what stopped TSan reporting on 2026-08-17 is unknown — the
+`HandshakeStress_TSanClean` variant predates the streak — which matters, because
+a race whose window merely narrowed looks exactly like a fixed one.
 
 **A token was added for this milestone.** `.jk/validations.yml` gained
 `sanitizers`, running all five variants the nightly runs, because nothing ran
@@ -382,39 +405,41 @@ dispatches alone.
 
 ### Slice M005/S01 — Every filed finding is reproduced or its resistance recorded
 
+**Plan:** M005-S01-plan.md
 **Validation:** format, sanitizers
 **Evidence:** evidence/M005-S01.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The `sanitizers` token runs all five variants locally and its result is recorded
-- [ ] Each of the filed occurrences is classified by sanitizer, stack and date
-- [ ] Either a finding reproduces locally, with the exact invocation and iteration count that produced it recorded — or the attempts are recorded with what was tried and what the filed occurrences' logs show
+- [x] The `sanitizers` token runs all five variants locally and its result is recorded
+- [x] Each of the filed occurrences is classified by sanitizer, stack and date
+- [x] Either a finding reproduces locally, with the exact invocation and iteration count that produced it recorded — or the attempts are recorded with what was tried and what the filed occurrences' logs show
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| GP14 | Nothing runs the sanitizers outside CI, so an intermittent finding can only be observed through dispatches. Both outcomes of this slice are results: a reproduction gives the fix something to verify against, and a recorded failure to reproduce is what makes the next attempt cheaper rather than identical | `tooling` | `.jk/validations.yml`, `docs/plans/guide-parity/evidence/` | The token runs; the evidence names either the reproducing invocation or the attempts and the log analysis | `open` |
+| GP14 | Nothing runs the sanitizers outside CI, so an intermittent finding can only be observed through dispatches. Both outcomes of this slice are results: a reproduction gives the fix something to verify against, and a recorded failure to reproduce is what makes the next attempt cheaper rather than identical | `tooling` | `.jk/validations.yml`, `docs/plans/guide-parity/evidence/` | The token runs; the evidence names either the reproducing invocation or the attempts and the log analysis | `done` |
 
 ### Slice M005/S02 — Each finding is fixed or recorded benign
 
+**Plan:** M005-S02-plan.md
 **Validation:** format, unit, rt-safety, sanitizers
 **Evidence:** evidence/M005-S02.md
-**Status:** open
+**Status:** done
 **Depends:** M005/S01
 
 **Definition of Done**
 
-- [ ] Every finding classified in S01 is either fixed, or recorded as benign with the reason and a suppression entry naming it
-- [ ] A fixed finding is shown gone by the means S01 established — the reproducing invocation, or a named nightly run if it never reproduced locally
-- [ ] No suppression is added without a written reason
+- [x] Every finding classified in S01 is either fixed, or recorded as benign with the reason and a suppression entry naming it
+- [x] A fixed finding is shown gone by the means S01 established — the reproducing invocation, or a named nightly run if it never reproduced locally
+- [x] No suppression is added without a written reason
 
 `GP13` (#89) rides in this slice's row table because the format has no
 milestone-level row, and is `accepted` rather than sliced — see its row.
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| GP12 | #142 has accumulated 22 occurrences across at least two sanitizers without triage, and an intermittent ASan or TSan finding in plugin code is a plausible real memory or threading defect rather than noise. Sizing the fix before S01 classifies it would be inventing a number | `defect` | `plugin/source/`, `.github/tsan.supp` | Each classified finding is fixed and shown gone, or suppressed with its reason recorded | `open` |
+| GP12 | #142's 23 nightly failures are two groups, established by M005/S01. **Group A**, 22 occurrences 2026-07-26 → 08-16, was a real TSan data race on the two-slot host→RT exchange, already fixed by `076f545` on 2026-08-16. **Group B**, the single 2026-09-16 occurrence, is a defect in the test: assertion 3 encodes `noteMap` values up to 32767 while `readSceneState` clamps them to `[0,127]`, so the invariant it checks is destroyed by sanitize rather than by tearing — reproduced single-threaded, failing for 99.61% of writeIds. No outstanding product defect | `defect` | `tests/host/host_tests.cpp` | The invariant is re-encoded to survive the round trip, proved to accept clean maps and still detect a genuine two-writeId tear | `done` |
 | GP13 | `tests-e2e/reich-play.spec.ts` asserts `lastFireTime > 2.5` against a 3 s Playwright wait, which is too tight and flakes locally while CI stays green. Carried in this slice's table because the ledger format has no home for a milestone-level row, but deliberately **not sliced**: it is a one-line threshold change, and a definition of done would be more ceremony than the change earns. To be landed as an ordinary pull request referencing #89 | `defect` | `site/tests-e2e/reich-play.spec.ts` | Accepted without a slice; the fix is an ordinary PR | `accepted` |
 
 ## Sequencing
