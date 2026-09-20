@@ -158,6 +158,21 @@ not be the Goldberg paper.
 **Consumes:** nothing. **Produces:** the worklist task 4 consumes.
 **This task ends in a planned pause.** VR02 stays `open`.
 
+> **Repaired after tasks 1 and 2 had already run.** Two steps were wrong and are
+> corrected below; the task had not started, so nothing committed is revised.
+>
+> - Step 2 named the `CLAIMS` harness for an assertion it cannot express.
+>   `registerClaimTests` reads exactly one file per claim
+>   (`const src = await loadSource(claim.file)`), and this assertion is
+>   conditional across two files: its condition is in the bibliography, its
+>   consequent is in the worklist. Pointing `claim.file` at the worklist via a
+>   relative escape would assert "ref-22 is queued" unconditionally, which goes
+>   red the day the entry is legitimately resolved — backwards. It is now a
+>   standalone `node:test` case that reads both files itself.
+> - Steps 1, 3 and 4 contradicted each other: step 1 created the worklist, step
+>   3 expected it absent, step 4 created it again. Creation now follows the red
+>   run, which is what test-first requires.
+
 `ref-22` cites a chapter of the National Institute of Open Schooling's
 Hindustani Music (242) theory book. NIOS is India's national open-schooling
 board and the source is legitimate. What is not established is that the link is
@@ -168,22 +183,47 @@ This is the same class as the D-Scholarship@Pitt record behind `ref-9`, which
 difficulty. VR10 names that class; the owner's browser is the instrument that
 settles it.
 
-1. Create `docs/plans/verifiable-references/browser-worklist.md` — the file
-   M003/S02 later extends rather than invents. One row per URL: the ref id, the
-   URL, what to check, and what to save. Seed it with `ref-22` alone, plus the
-   measurement that put it there (host-wide timeout, DNS resolving, a sibling
-   chapter indexed as live timing out identically).
-2. Add `REF22-BROWSER-PENDING` to `CLAIMS`, asserting that while `ref-22` still
-   carries the `nios.ac.in` URL, the worklist file names `ref-22`. This is what
-   stops the entry being quietly forgotten in the state "we could not check it":
-   the assertion is not that the URL works, but that an unresolved entry has an
-   owner and a place in the queue.
-3. Run `npm --prefix site test`. Watch it fail before the worklist exists.
-4. Create the worklist, re-run, watch it pass. **Prove it bites**: remove the
-   `ref-22` row from the worklist, confirm the case fails, restore.
-5. Run `format`, `site-unit`, `doc-conformance`. Commit with
+1. Add a standalone case to `site/tests/citation-tier.test.mjs` — a `test(...)`
+   alongside the `registerClaimTests` call, not a `CLAIMS` entry. Name it
+   `ref-22 stays queued while its URL is unverified`. It reads both
+   `site/src/content/docs/appendix-references.mdx` and
+   `docs/plans/verifiable-references/browser-worklist.md` and asserts one
+   implication: **if** the bibliography still cites `nios.ac.in`, **then** the
+   worklist must name `ref-22`. A missing worklist file fails the same way an
+   empty one does.
+
+   The assertion is deliberately not "the URL works". It is that an entry
+   nobody could verify has an owner and a place in a queue — because "we could
+   not check it" and "we checked it and it was fine" are indistinguishable
+   states once the session ends, and only one of them is true here.
+
+2. Run `npm --prefix site test`. Watch it fail: the worklist does not exist yet
+   while the bibliography still cites `nios.ac.in`, so the implication is
+   violated.
+
+3. Create `docs/plans/verifiable-references/browser-worklist.md` — the file
+   M003/S02 later extends rather than invents. Two sections, `## Pending` and
+   `## Resolved`, so an entry leaves the queue by moving rather than by being
+   deleted and losing its record. One row per URL: ref id, URL, what to check,
+   what to save. Seed `## Pending` with `ref-22` alone, plus the measurement
+   that put it there — host-wide timeout, DNS resolving to a single A record,
+   and a sibling chapter a search engine lists as live timing out identically.
+
+4. Re-run `npm --prefix site test`. Watch it pass.
+
+5. **Prove it bites, both directions.** The second is the one that matters,
+   because it is what distinguishes a real implication from an unconditional
+   assertion that happens to be satisfied:
+   - remove the `ref-22` row from the worklist → **red** (cited but unqueued)
+   - restore it, then remove the `nios.ac.in` URL from the bibliography entry
+     → **green** (the condition is false, so the obligation lifts)
+
+   Restore the tree after each.
+
+6. Run `format`, `site-unit`, `doc-conformance`. Commit with
    `Slice: M001/S01`, `Rows: VR02` — the row does **not** close here.
-6. **Stop and ask the owner** to load
+
+7. **Stop and ask the owner** to load
    `https://nios.ac.in/media/documents/Hindustani_Music_242/hindustanimusictheorybook1/HMB1Ch3.pdf`
    in a browser and report one of: it loads (save the PDF to the Dropbox
    archive), it 404s, or the host is down for them too. Do not proceed to
@@ -194,15 +234,24 @@ settles it.
 **Consumes:** the owner's answer from task 3. Both outcomes are specified below;
 neither is a judgement call left to the executor.
 
+> **Repaired alongside task 3.** The old step 2 said to remove the `ref-22` row
+> from the worklist, which under the repaired task 3 would go red: keeping the
+> `nios.ac.in` URL keeps the implication's condition true, so the obligation to
+> name `ref-22` survives. The row now **moves to `## Resolved`**, which both
+> satisfies the test and keeps the record of what was checked and when.
+
 **If the PDF loads for the owner** — `ref-22` is sound and only unreachable from
 automation:
 
-1. Leave the URL as it is. Replace `REF22-BROWSER-PENDING` with `REF22-NIOS`,
-   whose `rule` records that the entry was verified by hand on a stated date,
-   that the host refuses automated fetches, and that the PDF is in the archive.
-2. Remove the `ref-22` row from the worklist, which turns the
-   `REF22-BROWSER-PENDING` assertion off by satisfying it rather than deleting
-   the mechanism.
+1. Leave the URL as it is. Add a `REF22-NIOS` entry to `CLAIMS`, whose `rule`
+   records that the entry was verified by hand on a stated date, that the host
+   refuses automated fetches, and that the PDF is in the archive. This is a
+   single-file claim on `appendix-references.mdx`, which the harness expresses
+   without difficulty.
+2. Move the `ref-22` row from `## Pending` to `## Resolved` in the worklist,
+   with the date and the outcome. The standalone test stays green because the
+   row is still named; the queue test and the claim test then say different
+   things — one that the entry is accounted for, one that it is correct.
 
 **If it 404s for the owner too** — the path really has rotted, and the ledger's
 original framing was right after all:
@@ -211,14 +260,18 @@ original framing was right after all:
    reached, or, if no NIOS path is reachable, replace the entry with a
    DOI-citable source on Hindustani tala and record in the `rule` why the
    NIOS entry was dropped.
-2. Rename the case `REF22-NIOS` and give it a `forbiddenRegex` for the dead
-   path, matching how `REF9-OLURANTI` forbids the rotted D-Scholarship path.
+2. Add `REF22-NIOS` to `CLAIMS` with a `forbiddenRegex` for the dead path,
+   matching how `REF9-OLURANTI` forbids the rotted D-Scholarship path.
+3. Move the `ref-22` row to `## Resolved` with the date and the outcome. If the
+   replacement removed `nios.ac.in` from the bibliography entirely, the queue
+   test's condition is now false and it passes either way — the move is for the
+   record, not for the gate.
 
 Then, in either case:
 
-3. Prove the final case bites, as in tasks 1 and 2.
-4. Append the closing entry to `docs/plans/verifiable-references/evidence/M001-S01.md`.
-5. Set VR01, VR02, VR03 to `done`, tick all three definition-of-done boxes, and
-   set the slice `done` in the ledger.
-6. Run `jk-standards ledger`, then `format`, `site-unit`, `doc-conformance`.
+4. Prove the final case bites, as in tasks 1 and 2.
+5. Append the closing entry to `docs/plans/verifiable-references/evidence/M001-S01.md`.
+6. Set VR02 to `done`, tick all three definition-of-done boxes, and set the
+   slice `done` in the ledger.
+7. Run `jk-standards ledger`, then `format`, `site-unit`, `doc-conformance`.
    Commit with `Slice: M001/S01`, `Rows: VR02`.

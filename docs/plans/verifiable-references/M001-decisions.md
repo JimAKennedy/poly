@@ -56,3 +56,27 @@ measurement that made it answerable.
   confirmed one by hand (the Pitt record behind `ref-9`), and the row was
   amended before the ledger merged to say which part is evidence and which is
   inference.
+
+## 2026-09-20 — repairing M001/S01 task 3
+
+- **Q:** Task 3's step 2 named the `CLAIMS` harness for an assertion it cannot
+  express — a conditional across two files, where `registerClaimTests` reads
+  exactly one. Approve writing it as a standalone `node:test` case instead? —
+  **A:** approved.
+- **Decision:** the queue assertion becomes a standalone test in the same file,
+  under the same `site-unit` token — **Why:** only the mechanism was wrong. The
+  intent, the file, and the gate are unchanged, and the relative-path dodge
+  would have asserted the obligation unconditionally, going red the day the
+  entry is legitimately resolved.
+
+- **Decision:** the worklist gains `## Pending` and `## Resolved` sections, and
+  task 4 moves the row between them rather than deleting it — **Why:** found
+  while re-running the self-review the repair requires. Deleting the row would
+  go red under the repaired test whenever the URL is kept, which is exactly the
+  "PDF loads" branch; moving it keeps the gate green and keeps the record of
+  what was checked and when.
+
+- **Decision:** task 3's steps were reordered so the worklist is created after
+  the red run — **Why:** a second defect found by the same self-review. Step 1
+  created the file, step 3 expected it absent, step 4 created it again. No
+  executor could have followed all three.
