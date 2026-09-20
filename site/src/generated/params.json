@@ -94,31 +94,31 @@
     {
       "offset": 9,
       "name": "Phrase Len",
-      "kind": "LinearFloat",
+      "kind": "SquaredFloat",
       "minEngine": 0,
-      "maxEngine": 64,
+      "maxEngine": 968,
       "defaultEngine": 0,
-      "engineRange": "0 - 64",
+      "engineRange": "0 - 968",
       "defaultDisplay": "0"
     },
     {
       "offset": 10,
       "name": "Phrase Gap",
-      "kind": "LinearFloat",
+      "kind": "SquaredFloat",
       "minEngine": 0,
-      "maxEngine": 64,
+      "maxEngine": 968,
       "defaultEngine": 0,
-      "engineRange": "0 - 64",
+      "engineRange": "0 - 968",
       "defaultDisplay": "0"
     },
     {
       "offset": 11,
       "name": "Phrase Offset",
-      "kind": "LinearFloat",
+      "kind": "SquaredFloat",
       "minEngine": 0,
-      "maxEngine": 64,
+      "maxEngine": 968,
       "defaultEngine": 0,
-      "engineRange": "0 - 64",
+      "engineRange": "0 - 968",
       "defaultDisplay": "0"
     },
     {
@@ -286,12 +286,12 @@
     {
       "offset": 12,
       "name": "Kotekan Mode",
-      "kind": "Unknown",
+      "kind": "KotekanMd",
       "minEngine": 0,
       "maxEngine": 2,
       "defaultEngine": 0,
       "engineRange": "nyog cag / telu / empat",
-      "defaultDisplay": ""
+      "defaultDisplay": "nyog cag"
     },
     {
       "offset": 13,

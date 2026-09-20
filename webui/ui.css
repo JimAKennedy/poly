@@ -269,6 +269,18 @@
   .slider-track { flex: 1; height: 14px; background: var(--surface2); border-radius: 3px; position: relative; cursor: ew-resize; touch-action: none; overflow: hidden; }
   .slider-track i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--c, var(--accent)); opacity: .7; border-radius: 3px; pointer-events: none; }
   .param-slider .v { min-width: 46px; text-align: right; font-size: 11px; font-variant-numeric: tabular-nums; color: #C9C0B2; flex: none; }
+  /* Typeable values (phrase Length/Gap/Offset): the number itself is the control.
+     A dotted underline marks it without adding a button to an already dense row. */
+  .param-slider .v.typeable { cursor: text; border-bottom: 1px dotted var(--dim); }
+  .param-slider .v.typeable:hover { color: var(--text); border-bottom-color: var(--accent); }
+  .param-slider .v.typeable:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px; }
+  .param-slider.phrase-disabled .v.typeable { cursor: not-allowed; border-bottom-color: transparent; }
+  .param-slider .v .v-edit {
+    width: 100%; min-width: 46px; box-sizing: border-box; text-align: right;
+    font: inherit; font-variant-numeric: tabular-nums; color: var(--text);
+    background: var(--surface2); border: 1px solid var(--accent); border-radius: 3px;
+    padding: 0 3px; margin: 0; outline: none;
+  }
   .param-slider.phrase-disabled { opacity: .4; }
   .param-slider.phrase-disabled .slider-track { cursor: not-allowed; }
 

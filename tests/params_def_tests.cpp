@@ -89,6 +89,34 @@ template <typename NormToEng, typename EngToNorm> void checkRoundtrip(const Entr
     }
 }
 
+// M-phrase: the phrase params span 0-968 beats on a squared curve, so a lane can
+// rest for a long-form arrangement span while the low end -- where the guide's
+// 4-8 beat phrases live -- keeps usable resolution. A linear 0-968 slider puts
+// that whole range inside one pixel of travel.
+TEST(ParamsDef, PhraseParamsSpan0To968BeatsOnASquaredCurve) {
+    // Offsets 9/10/11 are Phrase Len/Gap/Offset. The registry's `offset` field IS
+    // the ParamIDs constant, and plugids.h is a plugin header the engine must not
+    // include, so the numbers are written out here as the registry declares them.
+    for (uint32_t off : {9u, 10u, 11u}) {
+        EXPECT_NEAR(normToEngineExprLocal(off, 0.0), 0.0, 1e-9) << "offset " << off;
+        EXPECT_NEAR(normToEngineExprLocal(off, 1.0), 968.0, 1e-6) << "offset " << off;
+        // Squared: half travel is a quarter of the range, not half.
+        EXPECT_NEAR(normToEngineExprLocal(off, 0.5), 242.0, 1e-6) << "offset " << off;
+
+        // The low end keeps resolution: 4 beats sits well clear of zero, where a
+        // linear mapping would put it at norm 0.004 -- under one pixel.
+        const double normFor4 = engineToNormExprLocal(off, 4.0);
+        EXPECT_GT(normFor4, 0.03) << "offset " << off << ": 4 beats is unreachable by dragging";
+        EXPECT_NEAR(normToEngineExprLocal(off, normFor4), 4.0, 1e-6) << "offset " << off;
+
+        // Round trip across the range.
+        for (double beats : {0.0, 1.0, 4.0, 32.0, 242.0, 500.0, 968.0}) {
+            const double n = engineToNormExprLocal(off, beats);
+            EXPECT_NEAR(normToEngineExprLocal(off, n), beats, 1e-6) << "offset " << off << " beats " << beats;
+        }
+    }
+}
+
 } // namespace
 
 TEST(ParamsDefTest, ExprRegistryRoundtripsForEveryEntry) {
