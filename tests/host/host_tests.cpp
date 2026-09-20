@@ -1102,9 +1102,19 @@ TEST(HostTests, SetStateBurst_TearOrLoss) {
 //   3. Torn-read spot check: the final applied noteMap is bit-exactly identical
 //      to some issued writeId's payload (proves no torn slot copy landed).
 //
-// Torn-read encoding: writer sets map[i] = static_cast<int16_t>(((writeId * 31) ^ i) & 0x7FFF).
+// Torn-read encoding: writer sets map[i] = static_cast<int16_t>(((writeId * 31) ^ i) & 0x7F).
 // If any field of the applied map was written by a different writeId (i.e. the
 // reader saw a mid-flight publish), the check on map[0]->reconstruct fails.
+//
+// The mask is 7 bits, not 15, and that is load-bearing. readSceneState ends in
+// sanitizeSceneState, which clamps every noteMap entry to [0,127] as a defence
+// against a host supplying corrupt state. A wider encoding is clamped on the
+// way back, collapsing distinct fields onto 127 and breaking the reconstruct —
+// which this check then reports as a torn read. That is exactly what failed the
+// 2026-09-16 sanitizer nightly, with no race present. Because i < 128, XOR
+// keeps every value inside the same 7-bit block, so the relation holds exactly
+// and a genuine two-writeId tear still breaks it. See
+// HostTests.NoteMapEncoding_SurvivesStateRoundTrip and M005/S02.
 //
 // Runtime target < 5s: N=10000 iterations per handshake × 7 handshakes with 512-sample
 // blocks at 44.1kHz produces ~5MB of payload traffic on the writer side. Empirically
@@ -1119,7 +1129,7 @@ namespace stress {
 constexpr int kStressIterations = 100000;
 
 int16_t encodeNoteMapField(uint32_t writeId, int fieldIdx) {
-    return static_cast<int16_t>(((writeId * 31u) ^ static_cast<uint32_t>(fieldIdx)) & 0x7FFFu);
+    return static_cast<int16_t>(((writeId * 31u) ^ static_cast<uint32_t>(fieldIdx)) & 0x7Fu);
 }
 
 std::array<int16_t, 128> makeNoteMap(uint32_t writeId) {
@@ -1170,6 +1180,50 @@ poly::Envelope makeEnvelope(uint32_t writeId) {
 }
 
 } // namespace stress
+
+// M005/S02 (GP12). The torn-read invariant is only meaningful if the payload
+// survives a saveState/readSceneState round trip unchanged. It did not: the
+// encoding produced values up to 0x7FFF while readSceneState ends in
+// sanitizeSceneState, which clamps every noteMap entry to [0,127]. Clamping
+// collapses distinct fields onto 127 and destroys the map[i] == map[0] ^ i
+// relation, which HandshakeStress_NoTearNoLoss then reports as a torn read.
+//
+// That is what failed the 2026-09-16 sanitizer nightly — with no race present,
+// which is why ThreadSanitizer and AddressSanitizer both reported nothing. It
+// is reproducible with no threading at all, which is what this test does.
+//
+// Measured before the fix: the old encoding broke this invariant for 99,608 of
+// the first 100,000 writeIds. It passed in practice only because the final
+// persisted map was usually the prepared setState payload, whose writeId of 1
+// yields values that all sit under the clamp.
+TEST(HostTests, NoteMapEncoding_SurvivesStateRoundTrip) {
+    // writeId 100000 gives (100000 * 31) & 0x7FFF == 19808, far above the clamp.
+    constexpr uint32_t kWriteId = 100000u;
+
+    poly::SceneState written{};
+    written.noteMap.map = stress::makeNoteMap(kWriteId);
+
+    std::vector<uint8_t> bytes;
+    auto write = [&](const void* src, size_t size) {
+        const auto* b = static_cast<const uint8_t*>(src);
+        bytes.insert(bytes.end(), b, b + size);
+        return true;
+    };
+    ASSERT_TRUE(poly::writeSceneState(write, written));
+
+    const auto readBack = deserializeSceneState(bytes);
+    const auto& map = readBack.noteMap.map;
+
+    const uint32_t field0 = static_cast<uint32_t>(map[0]) & 0x7Fu;
+    for (int i = 1; i < 128; ++i) {
+        const uint32_t expected = (field0 ^ static_cast<uint32_t>(i)) & 0x7Fu;
+        const uint32_t actual = static_cast<uint32_t>(map[static_cast<size_t>(i)]) & 0x7Fu;
+        ASSERT_EQ(expected, actual) << "noteMap[" << i << "] did not survive the state round trip: got " << actual
+                                    << ", expected " << expected
+                                    << ". The encoding must stay inside sanitizeSceneState's [0,127] clamp, or the "
+                                    << "torn-read invariant reports clamping as tearing.";
+    }
+}
 
 TEST(HostTests, HandshakeStress_NoTearNoLoss) {
     PolyTestHost host;
@@ -1295,15 +1349,15 @@ TEST(HostTests, HandshakeStress_NoTearNoLoss) {
     // torn-slot symptom.
     auto finalState = deserializeSceneState(host.saveState());
     const auto& finalMap = finalState.noteMap.map;
-    const uint32_t observedField0 = static_cast<uint32_t>(finalMap[0]) & 0x7FFFu;
-    // Recover writeId candidates from field 0: encodeNoteMapField(writeId, 0) == (writeId * 31) & 0x7FFF.
+    const uint32_t observedField0 = static_cast<uint32_t>(finalMap[0]) & 0x7Fu;
+    // Recover writeId candidates from field 0: encodeNoteMapField(writeId, 0) == (writeId * 31) & 0x7F.
     // For any 32-bit writeId whose (writeId * 31) low 15 bits equal observedField0, we accept it as
     // the candidate. Instead of full recovery, we just check consistency: given map[0] we derive
     // the "shape" (writeId * 31) and verify map[i] XORs consistently.
-    const uint32_t writeIdTimes31 = observedField0; // low 15 bits of writeId * 31
+    const uint32_t writeIdTimes31 = observedField0; // low 7 bits of writeId * 31
     for (int i = 1; i < 128; ++i) {
-        const uint32_t expected = (writeIdTimes31 ^ static_cast<uint32_t>(i)) & 0x7FFFu;
-        const uint32_t actual = static_cast<uint32_t>(finalMap[static_cast<size_t>(i)]) & 0x7FFFu;
+        const uint32_t expected = (writeIdTimes31 ^ static_cast<uint32_t>(i)) & 0x7Fu;
+        const uint32_t actual = static_cast<uint32_t>(finalMap[static_cast<size_t>(i)]) & 0x7Fu;
         ASSERT_EQ(expected, actual) << "torn-read: final noteMap[" << i << "]=" << actual << " but map[0] implies "
                                     << expected << " (writeIdTimes31=" << writeIdTimes31 << ")";
     }

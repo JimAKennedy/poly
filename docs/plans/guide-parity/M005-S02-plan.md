@@ -11,7 +11,7 @@ class: gated
 
 ## Task status
 
-- [ ] 1. Re-encode assertion 3 so it survives the round trip
+- [x] 1. Re-encode assertion 3 so it survives the round trip
 - [ ] 2. Show it still detects a genuine tear
 - [ ] 3. Evidence and slice close-out
 
