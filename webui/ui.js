@@ -1706,13 +1706,21 @@
 
     /* ADVANCED */
     const adv = s.querySelector('[data-pane="adv"]');
+    // Phrase Length/Gap/Offset are BEATS, not bars -- the engine, the generated
+    // parameter docs and the guide all say beats, and the slider said bars.
+    // They span 0-968 beats on a squared curve (params_def.h SquaredFloat): a
+    // linear range that wide puts the guide's 4-8 beat phrases inside one pixel
+    // of travel, so norm is sqrt(beats / max) and beats is max * norm^2.
+    const PHRASE_MAX_BEATS = 968;
+    const phraseNorm = (beats) => Math.sqrt(Math.max(0, beats) / PHRASE_MAX_BEATS);
+    const phraseBeats = (v) => Math.round(v * v * PHRASE_MAX_BEATS);
     const PHRASE = [
-      { field: 'phraseLength', label: 'Length', norm: l.phraseLength / 64,
-        fmt: (v) => { const b = Math.round(v * 64); return b === 0 ? 'Off' : b + ' bars'; } },
-      { field: 'phraseGap', label: 'Gap', norm: l.phraseGap / 64,
-        fmt: (v) => { const b = Math.round(v * 64); return b === 0 ? 'Off' : b + ' bars'; } },
-      { field: 'phraseOffset', label: 'Offset', norm: l.phraseOffset / 64,
-        fmt: (v) => Math.round(v * 64) + ' bars' },
+      { field: 'phraseLength', label: 'Length', norm: phraseNorm(l.phraseLength),
+        fmt: (v) => { const b = phraseBeats(v); return b === 0 ? 'Off' : b + ' beats'; } },
+      { field: 'phraseGap', label: 'Gap', norm: phraseNorm(l.phraseGap),
+        fmt: (v) => { const b = phraseBeats(v); return b === 0 ? 'Off' : b + ' beats'; } },
+      { field: 'phraseOffset', label: 'Offset', norm: phraseNorm(l.phraseOffset),
+        fmt: (v) => phraseBeats(v) + ' beats' },
     ];
     // Gap/Offset are inert while Length is Off (the lane never rests), so
     // disable them to match native phrase_edit_view. Derived purely from
@@ -1751,7 +1759,7 @@ const SUBS = [1, 2, 4, 8, 16];
 
     adv.innerHTML =
       `<div class="section-label">Phrase</div>` + sliderHtml(PHRASE) +
-      `<div class="hint">Lane plays for Length bars, rests for Gap. Offset shifts the start.</div>` +
+      `<div class="hint">Lane plays for Length beats, rests for Gap. Offset shifts the start.</div>` +
       `<div class="section-label">Mutation</div>` + sliderHtml(MUTATION) +
       `<div class="hint">Mutation randomly flips steps; Drift shifts pattern phase over time.</div>` +
       `<div class="section-label">More</div>` +

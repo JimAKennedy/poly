@@ -31,6 +31,10 @@ const char* kindName(poly::params::Kind k) {
         return "Unit01";
     case K::LinearFloat:
         return "LinearFloat";
+    case K::SquaredFloat:
+        return "SquaredFloat";
+    case K::KotekanMd:
+        return "KotekanMd";
     case K::Byte7:
         return "Byte7";
     case K::Ranged1_64:
@@ -88,6 +92,9 @@ std::string engineRange(const poly::params::Entry& e) {
     case K::KotekanMd:
         return "nyog cag / telu / empat";
     case K::LinearFloat:
+    case K::SquaredFloat:
+        // Both carry their range on the entry. The curve shapes the control, not
+        // the range, so the documented bounds are the same either way.
         std::snprintf(buf, sizeof(buf), "%g - %g", e.minEngine, e.maxEngine);
         return buf;
     }
@@ -113,6 +120,7 @@ std::string defaultDisplay(const poly::params::Entry& e) {
     case K::DriftRate:
     case K::TimingOffs:
     case K::LinearFloat:
+    case K::SquaredFloat:
         std::snprintf(buf, sizeof(buf), "%g", e.defaultEngine);
         return buf;
     case K::MidiChannel:
@@ -125,6 +133,15 @@ std::string defaultDisplay(const poly::params::Entry& e) {
             return "Independent";
         std::snprintf(buf, sizeof(buf), "Lane %d", static_cast<int>(e.defaultEngine) + 1);
         return buf;
+    case K::KotekanMd: {
+        // Mirrors engineRange's vocabulary so the docs name a mode rather than
+        // an index. Unhandled until now: -Wswitch flagged it, params.json
+        // carried kind "Unknown" with an empty default, and the generated
+        // parameter table showed a blank Default cell.
+        static constexpr const char* kModes[] = {"nyog cag", "telu", "empat"};
+        const int idx = static_cast<int>(e.defaultEngine);
+        return (idx >= 0 && idx < 3) ? kModes[idx] : "nyog cag";
+    }
     case K::Byte7:
     case K::Ranged1_64:
     case K::Ranged0_63:

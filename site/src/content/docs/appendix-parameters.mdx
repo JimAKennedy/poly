@@ -29,7 +29,7 @@ Each of the 8 lanes exposes the following parameters. Lane-scoped parameter IDs 
 | MIDI Channel | core 9 | -1 to 15 | Auto | -1 = lane index as channel; 0–15 = explicit MIDI channel |
 | Fill Every N | core 10 | 0 - 64 | 0 |  |
 | Seed Lock | core 11 | Off / On | Off |  |
-| Kotekan Mode | core 12 | nyog cag / telu / empat |  |  |
+| Kotekan Mode | core 12 | nyog cag / telu / empat | nyog cag |  |
 | Kotekan Overlap | core 13 | 0 - 64 | 0 |  |
 {/* END GENERATED: lane-core */}
 
@@ -49,9 +49,9 @@ Each of the 8 lanes exposes the following parameters. Lane-scoped parameter IDs 
 | Humanize | 6 | 0 - 50 | 0 | Random timing jitter per note |
 | Duration | 7 | 0 - 4 | 0 | MIDI note-off duration in beats |
 | Active | 8 | Off / On | On | Enable or disable the lane |
-| Phrase Len | 9 | 0 - 64 | 0 | Phrase gating period in beats; 0 = no gating |
-| Phrase Gap | 10 | 0 - 64 | 0 | Silence between phrases in beats |
-| Phrase Offset | 11 | 0 - 64 | 0 | Phase offset for this lane's phrase cycle in beats |
+| Phrase Len | 9 | 0 - 968 | 0 | Phrase gating period in beats; 0 = no gating |
+| Phrase Gap | 10 | 0 - 968 | 0 | Silence between phrases in beats |
+| Phrase Offset | 11 | 0 - 968 | 0 | Phase offset for this lane's phrase cycle in beats |
 | Mutation | 12 | 0.0 - 1.0 | 0% | Per-step random pattern variation each cycle |
 | Drift Rate | 13 | -4.0 to +4.0 steps/bar | 0 | Phase drift speed (Reich phasing) |
 | Timing Offset | 14 | -20 to +20 ms | 0 | Fixed per-lane timing offset (positive = late) |

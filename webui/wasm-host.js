@@ -1307,9 +1307,9 @@
       mutationRate: v => Module._poly_edit_lane_float(engineCtx, laneIdx, LaneFieldFloat.MutationRate, v),
       driftRate:    v => Module._poly_edit_lane_float(engineCtx, laneIdx, LaneFieldFloat.DriftRate, v * 8 - 4),
       timingOffset: v => Module._poly_edit_lane_float(engineCtx, laneIdx, LaneFieldFloat.TimingOffsetMs, v * 40 - 20),
-      phraseLength: v => Module._poly_edit_lane_float(engineCtx, laneIdx, LaneFieldFloat.PhraseLength, v * 64),
-      phraseGap:    v => Module._poly_edit_lane_float(engineCtx, laneIdx, LaneFieldFloat.PhraseGap, v * 64),
-      phraseOffset: v => Module._poly_edit_lane_float(engineCtx, laneIdx, LaneFieldFloat.PhraseOffset, v * 64),
+      phraseLength: v => Module._poly_edit_lane_float(engineCtx, laneIdx, LaneFieldFloat.PhraseLength, v * v * 968),
+      phraseGap:    v => Module._poly_edit_lane_float(engineCtx, laneIdx, LaneFieldFloat.PhraseGap, v * v * 968),
+      phraseOffset: v => Module._poly_edit_lane_float(engineCtx, laneIdx, LaneFieldFloat.PhraseOffset, v * v * 968),
       tempoMult:    v => Module._poly_edit_lane_float(engineCtx, laneIdx, LaneFieldFloat.TempoMultiplier, v),
     };
 

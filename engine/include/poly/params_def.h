@@ -31,6 +31,13 @@ namespace params {
 enum class Kind : uint8_t {
     Unit01,      // engine = norm (identity, min=0, max=1)
     LinearFloat, // engine = min + norm * (max - min)
+    // engine = min + norm^2 * (max - min). For wide ranges where the useful
+    // values cluster at the bottom: phrase Length/Gap/Offset span 0-968 beats
+    // so a lane can rest for a long-form arrangement span, but the guide's
+    // 4-8 beat phrases and chapter 6's tihai arithmetic work in single beats.
+    // Linear over that range puts the whole low end inside one pixel of slider
+    // travel; squaring gives ~0.06 beats/px at the bottom and ~13 at the top.
+    SquaredFloat,
     Byte7,       // engine = round(norm * 127); 8-bit clamped
     Ranged1_64,  // engine = 1 + round(norm * 63) — steps
     Ranged0_63,  // engine = round(norm * 63) — rotation
@@ -67,9 +74,9 @@ static constexpr std::array<Entry, 16> kLaneExprParamRegistry = {{
     {6, "Humanize", Kind::LinearFloat, 0.0, 50.0, 0.0},
     {7, "Duration", Kind::LinearFloat, 0.0, 4.0, 0.0},
     {8, "Active", Kind::Bool, 0.0, 1.0, 1.0},
-    {9, "Phrase Len", Kind::LinearFloat, 0.0, 64.0, 0.0},
-    {10, "Phrase Gap", Kind::LinearFloat, 0.0, 64.0, 0.0},
-    {11, "Phrase Offset", Kind::LinearFloat, 0.0, 64.0, 0.0},
+    {9, "Phrase Len", Kind::SquaredFloat, 0.0, 968.0, 0.0},
+    {10, "Phrase Gap", Kind::SquaredFloat, 0.0, 968.0, 0.0},
+    {11, "Phrase Offset", Kind::SquaredFloat, 0.0, 968.0, 0.0},
     {12, "Mutation", Kind::Unit01, 0.0, 1.0, 0.0},
     {13, "Drift Rate", Kind::DriftRate, -4.0, 4.0, 0.0},
     {14, "Timing Offset", Kind::TimingOffs, -20.0, 20.0, 0.0},
@@ -122,7 +129,8 @@ inline double dispatchNormToEngine(Kind k, double norm) {
     case Kind::Unit01:
         return n;
     case Kind::LinearFloat:
-        return n; // caller multiplies by (max-min); handled below
+    case Kind::SquaredFloat:
+        return n; // caller applies the entry's min/max; handled below
     case Kind::Byte7:
         return std::round(n * 127.0);
     case Kind::Ranged1_64:
@@ -162,7 +170,8 @@ inline double dispatchEngineToNorm(Kind k, double engine) {
     case Kind::Unit01:
         return clamp01(engine);
     case Kind::LinearFloat:
-        return engine; // caller divides by (max-min); handled below
+    case Kind::SquaredFloat:
+        return engine; // caller applies the entry's min/max; handled below
     case Kind::Byte7:
         return clamp01(engine / 127.0);
     case Kind::Ranged1_64:
@@ -202,15 +211,21 @@ inline double dispatchEngineToNorm(Kind k, double engine) {
     return clamp01(engine);
 }
 
-// LinearFloat helpers know the entry's min/max; dispatch dispatches into these
-// via family-specific normToEngineExpr / normToEngineCore for readability.
-inline double normToLinearFloat(const Entry& e, double norm) {
-    return e.minEngine + clamp01(norm) * (e.maxEngine - e.minEngine);
+// These kinds need the entry's min/max, which dispatchNormToEngine does not
+// have. The family-specific normToEngineExpr / normToEngineCore route into them.
+inline bool isEntryScaled(Kind k) {
+    return k == Kind::LinearFloat || k == Kind::SquaredFloat;
 }
-inline double linearFloatToNorm(const Entry& e, double engine) {
+inline double normToEntryScaled(const Entry& e, double norm) {
+    const double n = clamp01(norm);
+    const double shaped = (e.kind == Kind::SquaredFloat) ? n * n : n;
+    return e.minEngine + shaped * (e.maxEngine - e.minEngine);
+}
+inline double entryScaledToNorm(const Entry& e, double engine) {
     if (e.maxEngine == e.minEngine)
         return 0.0;
-    return clamp01((engine - e.minEngine) / (e.maxEngine - e.minEngine));
+    const double frac = clamp01((engine - e.minEngine) / (e.maxEngine - e.minEngine));
+    return (e.kind == Kind::SquaredFloat) ? std::sqrt(frac) : frac;
 }
 
 } // namespace detail
@@ -221,8 +236,8 @@ inline double linearFloatToNorm(const Entry& e, double engine) {
 inline double normToEngineExpr(uint32_t offset, double norm) {
     for (const auto& e : kLaneExprParamRegistry) {
         if (e.offset == offset) {
-            if (e.kind == Kind::LinearFloat)
-                return detail::normToLinearFloat(e, norm);
+            if (detail::isEntryScaled(e.kind))
+                return detail::normToEntryScaled(e, norm);
             return detail::dispatchNormToEngine(e.kind, norm);
         }
     }
@@ -232,8 +247,8 @@ inline double normToEngineExpr(uint32_t offset, double norm) {
 inline double engineToNormExpr(uint32_t offset, double engine) {
     for (const auto& e : kLaneExprParamRegistry) {
         if (e.offset == offset) {
-            if (e.kind == Kind::LinearFloat)
-                return detail::linearFloatToNorm(e, engine);
+            if (detail::isEntryScaled(e.kind))
+                return detail::entryScaledToNorm(e, engine);
             return detail::dispatchEngineToNorm(e.kind, engine);
         }
     }
@@ -243,8 +258,8 @@ inline double engineToNormExpr(uint32_t offset, double engine) {
 inline double normToEngineCore(uint32_t offset, double norm) {
     for (const auto& e : kLaneCoreParamRegistry) {
         if (e.offset == offset) {
-            if (e.kind == Kind::LinearFloat)
-                return detail::normToLinearFloat(e, norm);
+            if (detail::isEntryScaled(e.kind))
+                return detail::normToEntryScaled(e, norm);
             return detail::dispatchNormToEngine(e.kind, norm);
         }
     }
@@ -254,8 +269,8 @@ inline double normToEngineCore(uint32_t offset, double norm) {
 inline double engineToNormCore(uint32_t offset, double engine) {
     for (const auto& e : kLaneCoreParamRegistry) {
         if (e.offset == offset) {
-            if (e.kind == Kind::LinearFloat)
-                return detail::linearFloatToNorm(e, engine);
+            if (detail::isEntryScaled(e.kind))
+                return detail::entryScaledToNorm(e, engine);
             return detail::dispatchEngineToNorm(e.kind, engine);
         }
     }
