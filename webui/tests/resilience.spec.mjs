@@ -54,15 +54,6 @@ test.describe('controls work during rapid state pushes', () => {
     await expect(strip.locator('[data-pane="pattern"]')).toContainText('E(3,3)');
   });
 
-  test('mode switch', async ({ page }) => {
-    await startContinuousPush(page, 16);
-
-    await page.click('#mCloth');
-    await expect(page.locator('#cloth')).toHaveClass(/on/);
-
-    await page.click('#mDesk');
-    await expect(page.locator('#desk')).toHaveClass(/on/);
-  });
 
   test('scene switch', async ({ page }) => {
     await startContinuousPush(page, 16);

@@ -30,11 +30,6 @@ test.describe('screenshot captures', () => {
     await page.screenshot({ path: path.join(SHOTS_DIR, 'desk-expanded-cells.png'), fullPage: true });
   });
 
-  test('cloth view', async ({ page }) => {
-    await page.click('#mCloth');
-    await expect(page.locator('#cloth')).toHaveClass(/on/);
-    await page.screenshot({ path: path.join(SHOTS_DIR, 'cloth-view.png'), fullPage: true });
-  });
 
   test('desk — 3 lanes after state change', async ({ page }) => {
     await page.evaluate(() => {

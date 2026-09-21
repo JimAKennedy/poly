@@ -1,28 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { pageUrl, editLaneParam } from './test-helpers.mjs';
 
-// Count pixels on the loom canvas that are NOT one of the two solid band
-// background fills (drawConvergence paints '#222E52' / '#26335A' behind every
-// lane). Hit bars are drawn in the lane's bright hue over that background, so a
-// muted lane's removed hit bars show up as a drop in this non-background count.
-// (loomFingerprint.painted counts all opaque pixels — useless here because the
-// backgrounds cover the whole canvas regardless of hits.)
-async function loomHitPixels(page) {
-  return page.evaluate(() => {
-    const c = document.getElementById('loom');
-    const g = c.getContext('2d');
-    const d = g.getImageData(0, 0, c.width, c.height).data;
-    // rgb of the two band backgrounds.
-    const bg = [[34, 46, 82], [38, 51, 90]];
-    let n = 0;
-    for (let i = 0; i < d.length; i += 4) {
-      const r = d[i], gg = d[i + 1], b = d[i + 2];
-      const isBg = bg.some(([br, bgc, bb]) => r === br && gg === bgc && b === bb);
-      if (!isBg && d[i + 3] !== 0) n++;
-    }
-    return n;
-  });
-}
 
 // ---------------------------------------------------------------------------
 // Velocity-zero mutes the lane in the WebUI decorative preview (M073 S01 T02).
@@ -68,23 +46,5 @@ test.describe('PolyGrooveMath.hitVelocity velocity-zero mute', () => {
       ] }, HIT],
     );
     expect(shapedMute).toBe(0);
-  });
-});
-
-test.describe('Weave draw loops skip a zero-velocity lane', () => {
-  test('muting one lane to velocity 0 reduces painted hit pixels on the loom', async ({ page }) => {
-    await page.goto(pageUrl);
-    await page.waitForFunction(() => !!document.getElementById('loom'));
-
-    // Baseline: every lane at its default (nonzero) velocity paints hit bars.
-    const before = await loomHitPixels(page);
-    expect(before).toBeGreaterThan(0); // guard: lanes actually draw hits
-
-    // Mute lane 0 (velocity -> 0). The convergence draw loop must now skip
-    // every hit bar for that lane, so fewer non-background pixels are painted.
-    await editLaneParam(page, 0, 'velocity', 0);
-    const after = await loomHitPixels(page);
-
-    expect(after).toBeLessThan(before);
   });
 });

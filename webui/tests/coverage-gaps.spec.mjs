@@ -547,32 +547,8 @@ test.describe('cross-feature regression', () => {
     await expect(page.locator('.strip[data-lane="2"]')).toHaveClass(/expanded/);
   });
 
-  test('cloth mode activates canvas', async ({ page }) => {
-    await page.click('#mCloth');
-    await expect(page.locator('#cloth')).toHaveClass(/on/);
-    await expect(page.locator('#cloth canvas')).toBeVisible();
-  });
 
-  test('desk mode restores strips after cloth', async ({ page }) => {
-    await page.click('#mCloth');
-    await expect(page.locator('#cloth')).toHaveClass(/on/);
-    await page.click('#mDesk');
-    await expect(page.locator('#desk')).toHaveClass(/on/);
-    const stripCount = await page.locator('.strip[data-lane]').count();
-    expect(stripCount).toBeGreaterThanOrEqual(3);
-  });
 
-  test('learn mode toggles body class via button and keyboard', async ({ page }) => {
-    // Learn is gated to Cloth (M053 S10) — reveal the chip before clicking it.
-    // The keyboard shortcut keeps working after switching back to Desk.
-    await page.click('#mCloth');
-    await page.click('#learnBtn');
-    await expect(page.locator('body')).toHaveClass(/learn/);
-    await page.keyboard.press('l');
-    await expect(page.locator('body')).not.toHaveClass(/learn/);
-    await page.keyboard.press('l');
-    await expect(page.locator('body')).toHaveClass(/learn/);
-  });
 
   test('escape collapses expanded strip', async ({ page }) => {
     await expandStrip(page, 1);
@@ -621,21 +597,7 @@ test.describe('cross-feature regression', () => {
 });
 
 test.describe('embedded mode hardening', () => {
-  test('keyboard shortcuts 1 and 2 still switch modes in embedded', async ({ page }) => {
-    await page.addInitScript(() => { window.__POLY_EMBEDDED__ = true; });
-    await setupWithActionLog(page);
-    await page.keyboard.press('1');
-    await expect(page.locator('#cloth')).toHaveClass(/on/);
-    await page.keyboard.press('2');
-    await expect(page.locator('#desk')).toHaveClass(/on/);
-  });
 
-  test('learn mode works in embedded mode', async ({ page }) => {
-    await page.addInitScript(() => { window.__POLY_EMBEDDED__ = true; });
-    await setupWithActionLog(page);
-    await page.keyboard.press('l');
-    await expect(page.locator('body')).toHaveClass(/learn/);
-  });
 
   test('escape still collapses strip in embedded mode', async ({ page }) => {
     await page.addInitScript(() => { window.__POLY_EMBEDDED__ = true; });

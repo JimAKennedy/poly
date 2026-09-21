@@ -1,26 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { pageUrl } from './test-helpers.mjs';
 
-// Count pixels on the loom canvas that are NOT one of the two solid band
-// background fills (drawConvergence paints '#222E52' / '#26335A' behind every
-// lane). Hit bars are drawn in the lane's bright hue over that background, and a
-// louder hit draws a TALLER bar (drawConvergence bh = bandH * (0.3 + vn*0.52)),
-// so boosting a lane's accents raises this non-background pixel count.
-async function loomHitPixels(page) {
-  return page.evaluate(() => {
-    const c = document.getElementById('loom');
-    const g = c.getContext('2d');
-    const d = g.getImageData(0, 0, c.width, c.height).data;
-    const bg = [[34, 46, 82], [38, 51, 90]];
-    let n = 0;
-    for (let i = 0; i < d.length; i += 4) {
-      const r = d[i], gg = d[i + 1], b = d[i + 2];
-      const isBg = bg.some(([br, bgc, bb]) => r === br && gg === bgc && b === bb);
-      if (!isBg && d[i + 3] !== 0) n++;
-    }
-    return n;
-  });
-}
 
 // ---------------------------------------------------------------------------
 // Deterministic explicit accent in the WebUI decorative preview (M073 S02 T02).
@@ -116,30 +96,5 @@ test.describe('PolyGrooveMath.hitVelocity explicit accent boost', () => {
     const base = 80 / 127;
     expect(noArray).toBeCloseTo(base, 6);
     expect(zeros).toBeCloseTo(base, 6);
-  });
-});
-
-test.describe('Toggling an accent changes the drawn hit on the loom', () => {
-  test('accenting every step of a lane increases its painted hit pixels', async ({ page }) => {
-    await page.goto(pageUrl);
-    await page.waitForFunction(() => !!document.getElementById('loom'));
-
-    // Lane 0's default velocity is mid-range, so the proportional-headroom boost
-    // has room to grow the drawn bar height by a clearly measurable amount.
-    const before = await loomHitPixels(page);
-    expect(before).toBeGreaterThan(0); // guard: the lane actually draws hits
-
-    // Toggle every step of lane 0 to a full accent through the real host action
-    // (setAccent -> emitState -> re-render), the same path the UI accent control uses.
-    await page.evaluate(() => {
-      const steps = window.PolyMockHost.getState().lanes[0].accents.length;
-      for (let s = 0; s < steps; s++) {
-        window.PolyMockHost.action('setAccent', { lane: 0, step: s, value: 1 });
-      }
-    });
-    const after = await loomHitPixels(page);
-
-    // Louder accented hits draw taller bars -> more non-background pixels.
-    expect(after).toBeGreaterThan(before);
   });
 });

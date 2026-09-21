@@ -41,7 +41,7 @@ obtain without an institution.
 do is reachable from it.
 
 **Branch:** milestone/M001-desk-only
-**Status:** planned
+**Status:** done
 **Demo:** A shipped build offers no mode chip, and MIDI capture is reachable
 from the toolbar beside Export.
 
@@ -53,42 +53,44 @@ parameters 600 and 601.
 
 ### Slice M001/S01 — Capture reaches the toolbar
 
+**Plan:** M001-S01-plan.md
 **Validation:** format, webui-e2e
 **Evidence:** evidence/M001-S01.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The capture bars control and Arm are visible without entering Cloth
-- [ ] They sit beside Export, which is already toolbar-level and unconditional
-- [ ] A test fails if either control becomes mode-dependent again
+- [x] The capture bars control and Arm are visible without entering Cloth
+- [x] They sit beside Export, which is already toolbar-level and unconditional
+- [x] A test fails if either control becomes mode-dependent again
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| FR01 | The capture controls are gated to Cloth, so hiding Cloth would hide MIDI capture with it — the premise "all functionality is reachable from Desk" does not hold today | `defect` | `webui/ui.js`, `webui/index.html` | `capCtl` carries no mode class; a test asserts the controls are present with the mode set to desk | `open` |
+| FR01 | The capture controls are gated to Cloth, so hiding Cloth would hide MIDI capture with it — the premise "all functionality is reachable from Desk" does not hold today | `defect` | `webui/ui.js`, `webui/index.html` | `capCtl` carries no mode class; a test asserts the controls are present with the mode set to desk | `done` |
 
 ### Slice M001/S02 — Cloth leaves the shipped build
 
 **Depends:** M001/S01
-**Validation:** format, webui-e2e, doc-conformance
+**Plan:** M001-S02-plan.md
+**Validation:** format, webui-e2e, doc-conformance, site-unit
 **Evidence:** evidence/M001-S02.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] A shipped build contains no Cloth chip, no `#cloth` node, no loom canvas
+- [x] A shipped build contains no Cloth chip, no `#cloth` node, no loom canvas
       and no draw loop
-- [ ] Learn is gone, because its annotations only ever described the Cloth
+- [x] Learn is gone, because its annotations only ever described the Cloth
       visualisation
-- [ ] `guide-using-poly.mdx` no longer describes a Cloth/Desk toggle
-- [ ] A test fails if a mode chip returns to the shipped UI
+- [x] `guide-using-poly.mdx` no longer describes a Cloth/Desk toggle
+- [x] A test fails if a mode chip returns to the shipped UI
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| FR02 | Cloth is a second main view that is not finished, and a first release should not have to defend it | `docs` | `webui/index.html`, `webui/ui.js` | No mode chip and no `#cloth` node in the built UI; the source is retained in git history | `open` |
-| FR03 | `learnBtn` reveals three annotations that exist only inside `#cloth`, so it has nothing to say once Cloth is gone | `defect` | `webui/index.html`, `webui/ui.js` | The chip and its handler are gone; no annotation text remains unreferenced | `open` |
-| FR04 | `guide-using-poly.mdx` documents the Cloth/Desk toggle in prose, so the guide would describe a control the user cannot find | `docs` | `site/src/content/docs/guide-using-poly.mdx` | No mention of Cloth or of a mode toggle; the existing Desk screenshot still matches | `open` |
-| FR05 | Nothing prevents a mode chip returning — the removal is reversible by accident as well as on purpose | `tooling` | `webui/`, `site/tests/` or `webui/` specs | A test fails when a mode chip is reintroduced, proved by adding one and watching it go red | `open` |
+| FR02 | Cloth is a second main view that is not finished, and a first release should not have to defend it | `docs` | `webui/index.html`, `webui/ui.js` | No mode chip and no `#cloth` node in the built UI; the source is retained in git history | `done` |
+| FR03 | `learnBtn` reveals three annotations that exist only inside `#cloth`, so it has nothing to say once Cloth is gone | `defect` | `webui/index.html`, `webui/ui.js` | The chip and its handler are gone; no annotation text remains unreferenced | `done` |
+| FR04 | `guide-using-poly.mdx` documents the Cloth/Desk toggle in prose, so the guide would describe a control the user cannot find | `docs` | `site/src/content/docs/guide-using-poly.mdx` | No mention of Cloth or of a mode toggle; the existing Desk screenshot still matches | `done` |
+| FR05 | Nothing prevents a mode chip returning — the removal is reversible by accident as well as on purpose | `tooling` | `webui/`, `site/tests/` or `webui/` specs | A test fails when a mode chip is reintroduced, proved by adding one and watching it go red | `done` |
 
 ## Milestone M002 — The deep dives stop shipping
 
