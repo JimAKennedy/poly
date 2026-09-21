@@ -160,7 +160,7 @@ directory renders nothing.
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| FR10 | 12 `theory-*.mdx` files are published routes inside the Starlight docs collection | `docs` | `site/src/content/theory/` | The build emits no theory route; the files exist at the new path with their imports unchanged | `open` |
+| FR10 | 12 `theory-*.mdx` files are published routes inside the Starlight docs collection | `docs` | `site/src/content/theory/` | The build emits no theory route; the files exist at the new path with their imports unchanged | `done` |
 | FR11 | **12** `.mjs` test files assert deep-dive content by path — `theory-patch-conformance` alone references them 71 times. Deleting the pages would retire guards a whole milestone built | `tooling` | `site/tests/` | Every one of the 12 runs green against the new path; none is deleted or skipped | `done` |
 | FR12 | `scripts/check-doc-conformance.sh` names 3 theory test files by path, so the conformance runner stops finding them after a move. Not named in the vision. **Accepted, not actioned:** the runner names `site/tests/theory-*.test.mjs` — test files, which do not move. Only the pages moved, so the runner never stops finding them | `tooling` | `scripts/check-doc-conformance.sh` | The runner executes the same test set it did before the move | `accepted` |
 | FR13 | `.github/docs-drift-map.yml` maps 12 theory docs by full path, so `doc-drift` breaks on the move. Not named in the vision | `tooling` | `.github/docs-drift-map.yml` | `doc-discipline` passes, including the `doc-drift` arm | `done` |
