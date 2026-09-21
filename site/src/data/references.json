@@ -1026,173 +1026,224 @@
       "archiveFile": null
     },
     "fr-reich-2002": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "purchasable",
+      "evidence": "Open Library confirms \"Writings on Music, 1965–2000\" with a matching author and publisher; no free full text found. Not read.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
-      "price": null,
+      "identifier": {
+        "doi": null,
+        "isbn": "9780195111712"
+      },
+      "price": "ISBN 9780195111712, Oxford University Press — price not established from here; obtain from the publisher or any bookseller",
       "archiveFile": null
     },
     "fr-cohn-1992": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "library-only",
+      "evidence": "Crossref confirms \"Transpositional Combination of Beat-Class Sets in Steve Reich’s Phase-Shifting Music\", Perspectives of New Music 30(2), 1992 — matching the entry. Behind JSTOR; not read.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": "10.2307/3090631",
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-potter-2000": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "borrowable",
+      "evidence": "Open Library confirms \"Four Musical Minimalists\" with a matching author and an Internet Archive copy, so the text is borrowable under controlled digital lending. Not read here.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": "9780521482509"
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-gann-1995": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "borrowable",
+      "evidence": "Open Library confirms \"The Music of Conlon Nancarrow\" with a matching author and an Internet Archive copy, so the text is borrowable under controlled digital lending. Not read here.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": "9780521465342"
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-scherzinger-2010": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "browser-only",
+      "evidence": "No Crossref record; the nearest hit was an unrelated review. This is ICTM proceedings, commonly unindexed. The same work is cited as ref [35], whose URL on martinscherzinger.org did not respond to automation at all — so both lists point at one work that neither route could reach from here.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-harrison-2025": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "library-only",
+      "evidence": "Crossref confirms \"Reflections on the Amen Break\" as a chapter in the 2nd edition of The Routledge Companion to Remix Studies, 2025 — matching the entry, which correctly cites the 2nd edition rather than the 2014 first, whose chapter carries a different DOI. Subscription; not read.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": "10.4324/9781003402459-49",
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-linn-attack-2020": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "open-access",
+      "evidence": "An Attack Magazine interview, freely readable on the web, but the entry records no URL and no identifier exists for a magazine interview. This is VR08 in its purest form: the work is free and findable, and the bibliography gives a reader no route to it. A URL should be added by M005.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-butler-2006": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "borrowable",
+      "evidence": "Open Library confirms \"Unlocking the Groove\" with a matching author and an Internet Archive copy, so the text is borrowable under controlled digital lending. Not read here.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": "9780253346629"
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-danielsen-2010": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "purchasable",
+      "evidence": "Open Library confirms \"Musical Rhythm in the Age of Digital Reproduction\" with a matching author and publisher; no free full text found. Not read.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
-      "price": null,
+      "identifier": {
+        "doi": null,
+        "isbn": "9781317091394"
+      },
+      "price": "ISBN 9781317091394, Ashgate / Routledge — price not established from here; obtain from the publisher or any bookseller",
       "archiveFile": null
     },
     "fr-collins-2001": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "browser-only",
+      "evidence": "No Crossref record for \"Algorithmic Composition Methods for Breakbeat Science\"; the nearest hit was a different 2009 Collins article in Contemporary Music Review, which is not it. Conference proceedings of this kind are frequently unindexed, and the author distributes his papers from his own site, so a browser would settle it.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-reynolds-1998": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "purchasable",
+      "evidence": "Open Library confirms \"Energy Flash\" with a matching author and publisher; no free full text found. Not read.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
-      "price": null,
+      "identifier": {
+        "doi": null,
+        "isbn": "9780330350563"
+      },
+      "price": "ISBN 9780330350563, Picador — price not established from here; obtain from the publisher or any bookseller",
       "archiveFile": null
     },
     "fr-crook-2009": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "purchasable",
+      "evidence": "Open Library confirms \"Focus: Music of Northeast Brazil\" with a matching author and publisher; no free full text found. Not read.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
-      "price": null,
+      "identifier": {
+        "doi": null,
+        "isbn": "9780415960656"
+      },
+      "price": "ISBN 9780415960656, Routledge — price not established from here; obtain from the publisher or any bookseller",
       "archiveFile": null
     },
     "fr-sandroni-2001": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "purchasable",
+      "evidence": "Open Library confirms \"Feitiço Decente\" with a matching author and publisher; no free full text found. Not read.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
-      "price": null,
+      "identifier": {
+        "doi": null,
+        "isbn": "9788571106062"
+      },
+      "price": "ISBN 9788571106062, Jorge Zahar Editor — price not established from here; obtain from the publisher or any bookseller",
       "archiveFile": null
     },
     "fr-gerischer-2006": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "library-only",
+      "evidence": "Crossref confirms \"O Suingue Baiano: Rhythmic Feeling and Microrhythmic Phenomena in Brazilian Percussion\", Ethnomusicology 50(1), 2006 — matching the entry. Behind JSTOR; not read.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": "10.2307/20174425",
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-naveda-2011": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "library-only",
+      "evidence": "Crossref confirms the article in Journal of New Music Research 40(3), 2011 — matching the entry’s four authors and year. Subscription; not read.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": "10.1080/09298215.2011.603833",
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-fryer-2000": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "borrowable",
+      "evidence": "Open Library confirms \"Rhythms of Resistance\" with a matching author and an Internet Archive copy, so the text is borrowable under controlled digital lending. Not read here.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": "9780745303833"
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-born-hesmondhalgh-2000": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "purchasable",
+      "evidence": "Open Library confirms \"Western Music and Its Others\" with a matching author and publisher; no free full text found. Not read.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
-      "price": null,
+      "identifier": {
+        "doi": null,
+        "isbn": "9780520220843"
+      },
+      "price": "ISBN 9780520220843, University of California Press — price not established from here; obtain from the publisher or any bookseller",
       "archiveFile": null
     },
     "fr-danielsen-2006": {

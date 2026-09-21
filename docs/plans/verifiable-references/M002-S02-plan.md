@@ -17,7 +17,7 @@ Bounded does not mean small — this is the milestone's expensive half.
 - [x] 3. Numbered refs, Chapters 8–15 (14 entries)
 - [x] 4. Further Reading — Foundations, Sub-Saharan Africa (15 entries)
 - [x] 5. Further Reading — Afro-Cuban through Balkan (21 entries)
-- [ ] 6. Further Reading — Minimalism through Synthesis (17 entries)
+- [x] 6. Further Reading — Minimalism through Synthesis (17 entries)
 - [ ] 7. Further Reading — Funk/Soul/Jazz, Microtiming (11 entries)
 - [ ] 8. The browser worklist, and the slice closes
 
