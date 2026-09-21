@@ -88,7 +88,7 @@ live behind weeks of classification work is over-serialising for tidiness.
 and a description verified against the source itself.
 
 **Branch:** milestone/M002-verdicts
-**Status:** in-progress
+**Status:** done
 **Demo:** `site/src/data/references.json` holds one record per bibliography
 entry, and a test fails if an entry exists without one.
 
