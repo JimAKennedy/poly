@@ -379,142 +379,184 @@
       "archiveFile": null
     },
     "ref-32": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
-      "description": "unverified",
+      "obtainability": "open-access",
+      "evidence": "en.wikipedia.org returns 200 text/html, 532042 bytes; the page title matches the entry. Tier C; whether Wikipedia may be cited at all is M004/VR11.",
+      "checked": "2026-09-20",
+      "description": "verified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "ref-33": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
-      "description": "unverified",
+      "obtainability": "open-access",
+      "evidence": "allclassical.org returns 200; og:title is \"The Story of Minimalism – Part One: A New Way of Listening\", matching the entry.",
+      "checked": "2026-09-20",
+      "description": "verified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "ref-34": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
-      "description": "unverified",
-      "note": "",
-      "identifier": null,
+      "obtainability": "open-access",
+      "evidence": "ime.unicamp.br returns 200 application/pdf, 5671462 bytes; the PDF was read directly.",
+      "checked": "2026-09-20",
+      "description": "mismatch",
+      "note": "The document is \"Steve Reich: Music as a Gradual Process Part II\" by K. Robert Schwarz, Perspectives of New Music 20(1/2), Autumn 1981 – Summer 1982, pp. 225–286, JSTOR stable URL 942414. The entry attributes it to Reich, S. It is an article ABOUT Reich’s compositional process, not Reich’s own essay — the same failure as ref [6] before M001 corrected it, where a commentary was cited as the work it comments on.",
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "ref-35": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "browser-only",
+      "evidence": "martinscherzinger.org does not respond to automation at all (0 bytes, connection failed). Whether the PDF is still there could not be established from here.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "ref-36": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
-      "description": "unverified",
+      "obtainability": "open-access",
+      "evidence": "brettworks.com returns 200; og:title is \"Roger Linn On Drum Machine Groove And J Dilla’s Off-Beat Sound\", matching the entry.",
+      "checked": "2026-09-20",
+      "description": "verified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "ref-37": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
-      "description": "unverified",
+      "obtainability": "open-access",
+      "evidence": "noisemachines.studio returns 200; og:title is \"In praise of the AKAI MPC: a hip-hop time machine\", matching the entry.",
+      "checked": "2026-09-20",
+      "description": "verified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "ref-38": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
-      "description": "unverified",
+      "obtainability": "open-access",
+      "evidence": "ethanhein.com returns 200; the page h1 is \"Building the Amen break\", matching the entry.",
+      "checked": "2026-09-20",
+      "description": "verified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "ref-39": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "browser-only",
+      "evidence": "cambridge.org returns 403 to automation with a ~6.3 KB block page. Popular Music is subscription-based, so this may be a paywall rather than only a bot block; access level could not be distinguished from here, so no price is claimed.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "ref-40": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
-      "description": "unverified",
+      "obtainability": "open-access",
+      "evidence": "revuemusicaleoicrm.org returns 200 text/html, 179896 bytes; the article heading on the page is \"L’analyse des ensembles microrythmiques dans l’Intelligent Dance Music\", matching the entry.",
+      "checked": "2026-09-20",
+      "description": "verified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "ref-41": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "browser-only",
+      "evidence": "erudit.org returns HTTP 200 for the .pdf URL but serves 7806 bytes of HTML titled \"Making sure you’re not a bot!\" — an Anubis proof-of-work challenge, not the article. This is the second confirmed instance of a 200 response carrying no document, and it is the case M006’s liveness check must not score as healthy.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "ref-42": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
-      "description": "unverified",
-      "note": "",
-      "identifier": null,
+      "obtainability": "open-access",
+      "evidence": "web.uvic.ca returns 200 application/pdf, 318637 bytes; the PDF was read directly.",
+      "checked": "2026-09-20",
+      "description": "mismatch",
+      "note": "The document is \"Ginga: a Brazilian way to groove\" by Jovino Santos Neto. The entry cites it as Schloss, A., \"The Brazilian Groove: Ginga and Rhythmic Feel\" — both the author and the title are wrong. Schloss is the University of Victoria faculty member whose course directory hosts the file; the entry credits the host of the web directory rather than the author of the paper.",
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "ref-43": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
-      "description": "unverified",
+      "obtainability": "open-access",
+      "evidence": "en.wikipedia.org returns 200 text/html, 131321 bytes; the page title matches the entry. Tier C; whether Wikipedia may be cited at all is M004/VR11.",
+      "checked": "2026-09-20",
+      "description": "verified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "ref-44": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
-      "description": "unverified",
+      "obtainability": "open-access",
+      "evidence": "mtosmt.org returns 200 text/html, 48520 bytes; the page h1 is \"Review of Godfried Toussaint, The Geometry of Musical Rhythm: What Makes a “Good” Rhythm Good?\", matching the entry, which correctly presents it as a review.",
+      "checked": "2026-09-20",
+      "description": "verified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "ref-46": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "browser-only",
+      "evidence": "semanticscholar.org answers 202 with 0 bytes — a challenge, not a page. Bjorklund’s paper underpins the engine’s Euclidean generator, so this entry is worth settling in a browser rather than leaving at a landing page.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
