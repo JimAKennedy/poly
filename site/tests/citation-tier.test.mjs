@@ -27,8 +27,13 @@ import { registerClaimTests } from './helpers/prose-claims.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DOCS = join(HERE, '..', 'src', 'content', 'docs');
+const THEORY = join(HERE, '..', 'src', 'content', 'theory');
 
-const loadSource = (file) => readFile(join(DOCS, file), 'utf8');
+// first-release M002/S02: the deep dives are deferred, not retired, so their
+// citation claims still hold -- they just resolve from the new root.
+const docRoot = (file) => (file.startsWith('theory-') ? THEORY : DOCS);
+
+const loadSource = (file) => readFile(join(docRoot(file), file), 'utf8');
 
 // The title the guide printed, which exists in no MTO issue and nowhere a web
 // search reaches. Shared by both cases so they cannot drift apart.

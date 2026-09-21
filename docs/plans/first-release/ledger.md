@@ -98,7 +98,7 @@ parameters 600 and 601.
 that asserts their content still runs.
 
 **Branch:** milestone/M002-unpublish-theory
-**Status:** planned
+**Status:** done
 **Demo:** The site builds with no `theory-*` route and no link to one, and
 `doc-conformance` still runs every guard that asserts a deep dive's content.
 
@@ -119,49 +119,54 @@ directory renders nothing.
 
 ### Slice M002/S01 — The site stops pointing at them
 
+**Plan:** M002-S01-plan.md
 **Validation:** format, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M002-S01.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] No navigation entry offers a theory deep dive
-- [ ] No chapter carries a `:::note[Theory deep dive]` callout
-- [ ] No prose anywhere on the site tells a reader the deep dives exist
-- [ ] The site builds with no broken internal link
+- [x] No navigation entry offers a theory deep dive
+- [x] No chapter carries a `:::note[Theory deep dive]` callout
+- [x] No prose anywhere on the site tells a reader the deep dives exist
+- [x] The site builds with no broken internal link
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| FR06 | `site/astro.config.mjs` presents a `Theory Deep Dives` nav group with 12 entries | `docs` | `site/astro.config.mjs` | The group is absent and the sidebar has no theory entry | `open` |
-| FR07 | **12** chapters carry a `:::note[Theory deep dive]` callout linking to a page that will not exist | `docs` | `site/src/content/docs/0*.mdx`, `1*.mdx` | No callout remains; the count is read from the tree, not from this row | `open` |
-| FR08 | `about-this-guide.mdx` explains the deep dives as part of how the guide works | `docs` | `site/src/content/docs/about-this-guide.mdx` | The passage is gone and what remains describes the guide that ships | `open` |
-| FR09 | `appendix-references.mdx` names the deep dives in its opening sentence | `docs` | `site/src/content/docs/appendix-references.mdx` | The opening describes the shipping bibliography only | `open` |
+| FR06 | `site/astro.config.mjs` presents a `Theory Deep Dives` nav group with 12 entries | `docs` | `site/astro.config.mjs` | The group is absent and the sidebar has no theory entry | `done` |
+| FR07 | **12** chapters carry a `:::note[Theory deep dive]` callout linking to a page that will not exist | `docs` | `site/src/content/docs/0*.mdx`, `1*.mdx` | No callout remains; the count is read from the tree, not from this row | `done` |
+| FR08 | `about-this-guide.mdx` explains the deep dives as part of how the guide works | `docs` | `site/src/content/docs/about-this-guide.mdx` | The passage is gone and what remains describes the guide that ships | `done` |
+| FR09 | `appendix-references.mdx` names the deep dives in its opening sentence | `docs` | `site/src/content/docs/appendix-references.mdx` | The opening describes the shipping bibliography only | `done` |
 
 ### Slice M002/S02 — The pages move, and the guards follow
 
 **Depends:** M002/S01
+**Plan:** M002-S02-plan.md
 **Validation:** format, site-unit, doc-conformance, doc-discipline, guards
 **Evidence:** evidence/M002-S02.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] No `theory-*` page is a published route
-- [ ] Every guard that asserted a deep dive's content still runs, against the
+- [x] No `theory-*` page is a published route
+- [x] Every guard that asserted a deep dive's content still runs, against the
       new path
-- [ ] The moved bundle carries the references only it cites, so republishing
+- [x] The moved bundle carries the references only it cites, so republishing
       needs no citation repair
-- [ ] `jk-standards.yaml` records why a sibling directory falls outside its
+- [x] `jk-standards.yaml` records why a sibling directory falls outside its
       roots, so a later widening is deliberate
+- [x] Each deep dive records which shipping presets knowingly bend its rules, so
+      the relationship M002/S01 removed survives in the deferred bundle
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| FR10 | 12 `theory-*.mdx` files are published routes inside the Starlight docs collection | `docs` | `site/src/content/theory/` | The build emits no theory route; the files exist at the new path with their imports unchanged | `open` |
-| FR11 | **12** `.mjs` test files assert deep-dive content by path — `theory-patch-conformance` alone references them 71 times. Deleting the pages would retire guards a whole milestone built | `tooling` | `site/tests/` | Every one of the 12 runs green against the new path; none is deleted or skipped | `open` |
-| FR12 | `scripts/check-doc-conformance.sh` names 3 theory test files by path, so the conformance runner stops finding them after a move. Not named in the vision | `tooling` | `scripts/check-doc-conformance.sh` | The runner executes the same test set it did before the move | `open` |
-| FR13 | `.github/docs-drift-map.yml` maps 12 theory docs by full path, so `doc-drift` breaks on the move. Not named in the vision | `tooling` | `.github/docs-drift-map.yml` | `doc-discipline` passes, including the `doc-drift` arm | `open` |
-| FR14 | 66 anchors are cited only by the deep dives. If the shipping bibliography shrinks while they still point at it, those citations dangle the day someone republishes — and nothing warns, because the provenance check will no longer scan them | `defect` | `site/src/content/theory/theory-references.mdx` | Every anchor the moved pages cite resolves within the moved bundle, proved by a check that reads both | `open` |
-| FR15 | The scoping that makes the move work — `doc_roots` and `research_provenance.doc_roots` both limited to `site/src/content/docs` — is a consequence of a path list rather than an expressed intent | `tooling` | `jk-standards.yaml` | A comment beside both roots states that theory content is deliberately outside them | `open` |
+| FR10 | 12 `theory-*.mdx` files are published routes inside the Starlight docs collection | `docs` | `site/src/content/theory/` | The build emits no theory route; the files exist at the new path with their imports unchanged | `done` |
+| FR11 | **12** `.mjs` test files assert deep-dive content by path — `theory-patch-conformance` alone references them 71 times. Deleting the pages would retire guards a whole milestone built | `tooling` | `site/tests/` | Every one of the 12 runs green against the new path; none is deleted or skipped | `done` |
+| FR12 | `scripts/check-doc-conformance.sh` names 3 theory test files by path, so the conformance runner stops finding them after a move. Not named in the vision. **Accepted, not actioned:** the runner names `site/tests/theory-*.test.mjs` — test files, which do not move. Only the pages moved, so the runner never stops finding them | `tooling` | `scripts/check-doc-conformance.sh` | The runner executes the same test set it did before the move | `accepted` |
+| FR13 | `.github/docs-drift-map.yml` maps 12 theory docs by full path, so `doc-drift` breaks on the move. Not named in the vision | `tooling` | `.github/docs-drift-map.yml` | `doc-discipline` passes, including the `doc-drift` arm | `done` |
+| FR14 | 66 anchors are cited only by the deep dives. If the shipping bibliography shrinks while they still point at it, those citations dangle the day someone republishes — and nothing warns, because the provenance check will no longer scan them | `defect` | `site/src/content/theory/theory-references.mdx` | Every anchor the moved pages cite resolves within the moved bundle, proved by a check that reads both | `done` |
+| FR15 | The scoping that makes the move work — `doc_roots` and `research_provenance.doc_roots` both limited to `site/src/content/docs` — is a consequence of a path list rather than an expressed intent | `tooling` | `jk-standards.yaml` | A comment beside both roots states that theory content is deliberately outside them | `done` |
+| FR25 | M002/S01 deleted 14 pointers from shipping pages into the deep dives — five of them into `#what-breaks-the-idiom` sections — so the relationship between a preset and the rule it knowingly breaks is no longer recorded anywhere a reader can reach. The content still exists in the deferred bundle; the connection does not | `docs` | `site/src/content/theory/theory-*.mdx` | Each deep dive names the factory presets that bend its rules and which rule each bends; a test fails if a named preset is absent from `presets.json` | `done` |
 
 ## Milestone M003 — A bibliography a reader can finish
 

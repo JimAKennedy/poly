@@ -25,7 +25,16 @@ import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DOCS = join(HERE, '..', 'src', 'content', 'docs');
-const APPENDIX = join(DOCS, 'appendix-references.mdx');
+const THEORY = join(HERE, '..', 'src', 'content', 'theory');
+
+// first-release M002/S02: the theory deep dives moved to site/src/content/theory/
+// when they stopped being published. They are deferred, not retired, so these
+// guards still assert their content -- they just resolve it from the new root.
+// Resolving by filename keeps every call site unchanged, which matters because
+// four of these five files read shipping chapters and deep dives in the same
+// test.
+const docRoot = (file) => (file.startsWith('theory-') ? THEORY : DOCS);
+const APPENDIX = join(docRoot('appendix-references.mdx'), 'appendix-references.mdx');
 
 // Entries M005 adds, with the tier each must declare. Every one was verified
 // bibliographically and by published descriptions of its subject matter; none
@@ -175,7 +184,7 @@ const CITATIONS = [
 
 for (const c of CITATIONS) {
   test(`M005 ${c.row}: ${c.file} cites ${c.anchor} at its claim`, async () => {
-    const src = await readFile(join(DOCS, c.file), 'utf8');
+    const src = await readFile(join(docRoot(c.file), c.file), 'utf8');
     const i = src.indexOf(c.near);
     assert.notEqual(i, -1, `${c.file}: the passage phrase ${JSON.stringify(c.near)} is gone, so this case can no longer bind to it`);
     // 600 characters is roughly a paragraph: wide enough for a citation at the
@@ -214,7 +223,7 @@ test('M005/S04: the unread source says so in its own entry', async () => {
 const MARACATU_PARTS = ['caixa', 'alfaia', 'mineiro', 'agbê', 'gonguê'];
 
 test('M005/S06: the maracatu section names the ensemble it describes', async () => {
-  const src = await readFile(join(DOCS, '10-brazilian.mdx'), 'utf8');
+  const src = await readFile(join(docRoot('10-brazilian.mdx'), '10-brazilian.mdx'), 'utf8');
   const i = src.indexOf('## Maracatu: Weight and Repetition');
   assert.notEqual(i, -1, '10-brazilian.mdx: the Maracatu section heading is gone');
   const section = src.slice(i, src.indexOf('\n## ', i + 5));
@@ -253,7 +262,7 @@ const FILES_CLEARED = [
 test('M006/S01: no suppression remains in the files this slice clears', async () => {
   const live = [];
   for (const f of FILES_CLEARED) {
-    const src = await readFile(join(DOCS, f), 'utf8');
+    const src = await readFile(join(docRoot(f), f), 'utf8');
     const n = [...src.matchAll(/citation-tier-ok:/g)].length;
     if (n) live.push(`${f} (${n})`);
   }
@@ -281,9 +290,17 @@ test('M006/S02: every appendix entry is cited by a page, or says it is unread', 
   const entries = [...app.matchAll(/id="((?:ref|fr)-[A-Za-z0-9-]+)"/g)].map((m) => m[1]);
 
   const cited = new Set();
-  for (const f of (await readdir(DOCS)).filter((f) => f.endsWith('.mdx'))) {
+  // Both roots: the deep dives moved to site/src/content/theory/ in
+  // first-release M002/S02 but still cite the bibliography, so an entry they
+  // cite is cited -- scanning only the published root would report 66 false
+  // orphans.
+  const pages = [
+    ...(await readdir(DOCS)),
+    ...(await readdir(THEORY)),
+  ].filter((f) => f.endsWith('.mdx'));
+  for (const f of pages) {
     if (f === 'appendix-references.mdx') continue;
-    const src = await readFile(join(DOCS, f), 'utf8');
+    const src = await readFile(join(docRoot(f), f), 'utf8');
     for (const m of src.matchAll(/#((?:ref|fr)-[A-Za-z0-9-]+)/g)) cited.add(m[1]);
   }
 

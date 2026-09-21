@@ -12,10 +12,6 @@ import PolyPreviewCard from '../../components/PolyPreviewCard.astro';
 
 Electronic dance music begins where this guide's other traditions end: with the machine. A drum machine does not swing unless you tell it to, does not drift unless you program it to, does not vary unless you give it rules for variation. The grid is absolute. And from that absolute grid, techno and house producers have built some of the most physically compelling rhythmic music ever made — not in spite of the machine's rigidity but because of it.
 
-:::note[Theory deep dive]
-For grid counterpoint stated as explicit rules — the immutable anchor, slot ownership, loop-length polymeter, and the house/techno swing divide — see [Grid Counterpoint: Electronic & Breakbeat](/theory-electronic-breakbeat/).
-:::
-
 ## Four-on-the-Floor: The Simplest Euclidean
 
 The foundational kick pattern of house, techno, and disco is E(4,4) — four hits in four positions. Every step is an onset. It is the only Euclidean pattern where `k = n`, the trivial case, and yet it drives an entire global culture of movement.
@@ -70,7 +66,7 @@ The kick stays unswung — swing on the downbeat destabilises the foundation. Th
 
 Electronic music production is fundamentally about arrangement — building energy over 8, 16, or 32 bars by adding and removing elements. Poly's macros map directly to this workflow.
 
-The **Density** macro scales effective hit counts across the syncopating lanes — the hats, shakers, percussion, and ghost layers. The four-on-the-floor kick is exempt: its E(4,4) anchor takes no density modulation below 1.0, because every other liberty in the style is licensed by the anchor's absolute predictability (theory-electronic-breakbeat Rule 1). At Density = 0.0, those non-anchor lanes play only their most essential onsets while the kick holds firm; at 1.0, every lane fires at maximum hit count. Sweeping Density from 0.2 to 0.9 over a 32-bar buildup replicates the arrangement arc of a techno track without touching individual lane parameters — and without ever thinning the kick.
+The **Density** macro scales effective hit counts across the syncopating lanes — the hats, shakers, percussion, and ghost layers. The four-on-the-floor kick is exempt: its E(4,4) anchor takes no density modulation below 1.0, because every other liberty in the style is licensed by the anchor's absolute predictability. At Density = 0.0, those non-anchor lanes play only their most essential onsets while the kick holds firm; at 1.0, every lane fires at maximum hit count. Sweeping Density from 0.2 to 0.9 over a 32-bar buildup replicates the arrangement arc of a techno track without touching individual lane parameters — and without ever thinning the kick.
 
 The **Tension** macro controls dynamic range. At 0.0, velocity differences between lanes are compressed — every element sits at roughly the same level, producing the flat, hypnotic dynamic of minimal techno. At 1.0, velocity contrasts are exaggerated — kicks hit hard, ghosts are barely audible, and the groove acquires the dynamic shape of classic house.
 

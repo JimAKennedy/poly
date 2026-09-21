@@ -22,8 +22,17 @@ import { registerClaimTests } from './helpers/prose-claims.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DOCS = join(HERE, '..', 'src', 'content', 'docs');
+const THEORY = join(HERE, '..', 'src', 'content', 'theory');
 
-const loadSource = (file) => readFile(join(DOCS, file), 'utf8');
+// first-release M002/S02: the theory deep dives moved to site/src/content/theory/
+// when they stopped being published. They are deferred, not retired, so these
+// guards still assert their content -- they just resolve it from the new root.
+// Resolving by filename keeps every call site unchanged, which matters because
+// four of these five files read shipping chapters and deep dives in the same
+// test.
+const docRoot = (file) => (file.startsWith('theory-') ? THEORY : DOCS);
+
+const loadSource = (file) => readFile(join(docRoot(file), file), 'utf8');
 
 const CLAIMS = [
   {
@@ -392,7 +401,16 @@ test('S01-F24: the About page exists and is reachable from the introduction and 
     'about-this-guide.mdx is missing — F24 requires the page itself, not only links to it',
   );
 
-  const theory = entries.filter((f) => f.startsWith('theory-') && f.endsWith('.mdx')).sort();
+  // The deep dives moved to site/src/content/theory/ in first-release M002/S02.
+  // They are deferred rather than retired, so this guard still requires all
+  // twelve and still requires each to link to the About page.
+  // theory-references.mdx is the bundle's own bibliography, added by
+  // first-release M002/S02 FR14. It is not a deep dive and carries no About
+  // link, so it is excluded from the count this guard pins at twelve.
+  const theory = (await readdir(THEORY))
+    .filter((f) => f.startsWith('theory-') && f.endsWith('.mdx'))
+    .filter((f) => f !== 'theory-references.mdx')
+    .sort();
   assert.equal(
     theory.length,
     12,
@@ -402,7 +420,7 @@ test('S01-F24: the About page exists and is reachable from the introduction and 
 
   const missing = [];
   for (const file of ['introduction.mdx', ...theory]) {
-    const src = await readFile(join(DOCS, file), 'utf8');
+    const src = await readFile(join(docRoot(file), file), 'utf8');
     if (!src.includes(ABOUT_LINK)) missing.push(file);
   }
   assert.deepEqual(

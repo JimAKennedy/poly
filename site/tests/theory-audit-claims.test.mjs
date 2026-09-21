@@ -37,6 +37,15 @@ import {
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DOCS = join(HERE, '..', 'src', 'content', 'docs');
+const THEORY = join(HERE, '..', 'src', 'content', 'theory');
+
+// first-release M002/S02: the theory deep dives moved to site/src/content/theory/
+// when they stopped being published. They are deferred, not retired, so these
+// guards still assert their content -- they just resolve it from the new root.
+// Resolving by filename keeps every call site unchanged, which matters because
+// four of these five files read shipping chapters and deep dives in the same
+// test.
+const docRoot = (file) => (file.startsWith('theory-') ? THEORY : DOCS);
 
 // Every finding this host locks. S03-S06 append to this array.
 //
@@ -419,7 +428,7 @@ const FINDINGS = [
 const srcCache = new Map();
 async function docSource(file) {
   if (!srcCache.has(file)) {
-    srcCache.set(file, await readFile(join(DOCS, file), 'utf8'));
+    srcCache.set(file, await readFile(join(docRoot(file), file), 'utf8'));
   }
   return srcCache.get(file);
 }
