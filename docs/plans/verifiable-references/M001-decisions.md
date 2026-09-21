@@ -80,3 +80,41 @@ measurement that made it answerable.
   the red run — **Why:** a second defect found by the same self-review. Step 1
   created the file, step 3 expected it absent, step 4 created it again. No
   executor could have followed all three.
+
+## 2026-09-20 — resolving M001/S01 task 4
+
+- **Q:** (the deferred browser question, superseded) Does the NIOS PDF load? —
+  **A:** not asked. The owner identified `ref-22` as course material, which
+  settles the entry without the liveness question.
+- **Decision:** `ref-22` is replaced on editorial grounds, not liveness grounds
+  — **Why:** it is the National Institute of Open Schooling's teaching text, the
+  same class as the Fiveable entry removed in task 2. Whether a teaching PDF
+  loads does not make it a citable source, so the browser check was moot and was
+  not spent.
+
+- **Q:** Which open-access tala source replaces it? The owner asked for a
+  peer-reviewed open-access paper to be found before choosing. — **A:** Clayton,
+  M. (2020), "Theory and Practice of Long-form Non-isochronous Meters: The Case
+  of the North Indian *rūpak tāl*", *Music Theory Online* 26(1),
+  DOI `10.30535/mto.26.1.2`.
+- **Decision:** taken — **Why:** peer-reviewed, platinum open access, freely
+  readable without login, DOI-cited, and on North Indian tāl, which is the slot
+  `ref-22` occupied. Clayton is already the chapter's primary authority
+  (`fr-clayton-2000`) and the article engages London 2012, cited as
+  `fr-london-2012`. Verified against the publisher page, the served HTML and
+  Crossref rather than a search summary.
+
+- **Decision:** neither file the owner supplied from Scribd was used — **Why:**
+  "Fundamentals of Indian Music" is Dr. Swatantra Sharma's student textbook, an
+  image-only scan with no text layer behind an account wall — the same class
+  being removed. The "Rowell" file is a seven-page browser printout of the Open
+  Library catalogue page, not the book.
+
+- **Q:** `ref-23` appears to name both the wrong title and the wrong journal.
+  Fix it here or record it? — **A:** record it for M002.
+- **Decision:** seeded as row VR17 in M002/S02, and VR07 updated to note a
+  fourth instance of its class — **Why:** M002 is the pass built for exactly
+  this verdict, and the correct title cannot be read from here: iftawm.org
+  resets every automated connection, so confirming it needs a browser either
+  way. Fixing it in M001 would widen a slice past the three measured defects its
+  milestone vision names.

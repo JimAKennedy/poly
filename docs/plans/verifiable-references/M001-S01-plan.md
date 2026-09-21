@@ -240,6 +240,36 @@ neither is a judgement call left to the executor.
 > name `ref-22` survives. The row now **moves to `## Resolved`**, which both
 > satisfies the test and keeps the record of what was checked and when.
 
+**Third outcome, taken.** The owner identified `ref-22` as course material —
+the National Institute of Open Schooling's teaching text, not scholarship. That
+is the class the Fiveable entry was removed for in task 2, and it settles the
+entry on editorial grounds without the liveness question being asked at all. The
+browser check is moot: whether a teaching PDF loads does not make it a citable
+source. The two branches below are retained because they remain correct for the
+next entry of this shape, and because deleting the branch that was not taken
+would hide that a choice existed.
+
+The replacement is Clayton, M. (2020), "Theory and Practice of Long-form
+Non-isochronous Meters: The Case of the North Indian *rūpak tāl*", *Music Theory
+Online* 26(1), DOI `10.30535/mto.26.1.2`. Verified three ways before being
+proposed: the publisher's article page, the served HTML (190 KB, 112 occurrences
+of *rūpak*), and Crossref, with the DOI resolving to the article. Peer-reviewed,
+platinum open access, freely readable without login. Clayton is already the
+chapter's primary authority (`fr-clayton-2000`), and the article engages London
+2012 on non-isochronous meter, which the guide cites as `fr-london-2012`.
+
+1. Add `REF22-CLAYTON` to `CLAIMS`: `forbiddenRegex` for `nios.ac.in`, tree-wide
+   so the teaching text cannot return under another number; `present` for the
+   title and journal; `presentRegex` for the DOI.
+2. Run `npm --prefix site test`, watch it fail on both arms.
+3. Replace the entry at `data-tier="A"`, re-run, watch it pass.
+4. Move the `ref-22` row from `## Pending` to `## Resolved` in the worklist,
+   recording that it was settled editorially rather than by the browser check,
+   so the queue does not carry a task nobody needs to do.
+5. Prove the queue test still holds: with `nios.ac.in` gone the implication's
+   condition is false, so it passes for the right reason rather than by
+   accident. Confirm by re-adding the string alone and watching it go red.
+
 **If the PDF loads for the owner** — `ref-22` is sound and only unreachable from
 automation:
 
