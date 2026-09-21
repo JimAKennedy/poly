@@ -409,60 +409,60 @@ cannot_drift:
   # each tradition. Same contract as the numbered chapters: musicological
   # claims, audible examples driven by generated preset JSON.
 
-  - doc: "site/src/content/docs/theory-counterpoint-overview.mdx"
+  - doc: "site/src/content/theory/theory-counterpoint-overview.mdx"
     reason: >-
       Frames rhythmic counterpoint as an analytic method across the family. No
       repo source surface.
 
-  - doc: "site/src/content/docs/theory-sub-saharan-africa.mdx"
+  - doc: "site/src/content/theory/theory-sub-saharan-africa.mdx"
     reason: >-
       Timeline-counterpoint analysis of Sub-Saharan traditions. No repo source
       surface.
 
-  - doc: "site/src/content/docs/theory-afro-cuban.mdx"
+  - doc: "site/src/content/theory/theory-afro-cuban.mdx"
     reason: >-
       Clave-matrix counterpoint analysis. No repo source surface.
 
-  - doc: "site/src/content/docs/theory-afrobeat.mdx"
+  - doc: "site/src/content/theory/theory-afrobeat.mdx"
     reason: >-
       Analysis of space and breath in Afrobeat counterpoint. No repo source
       surface.
 
-  - doc: "site/src/content/docs/theory-gamelan.mdx"
+  - doc: "site/src/content/theory/theory-gamelan.mdx"
     reason: >-
       Analysis of interlock and nesting in gamelan counterpoint. No repo source
       surface.
 
-  - doc: "site/src/content/docs/theory-indian-classical.mdx"
+  - doc: "site/src/content/theory/theory-indian-classical.mdx"
     reason: >-
       Analysis of tala architecture as counterpoint. No repo source surface.
 
-  - doc: "site/src/content/docs/theory-balkan.mdx"
+  - doc: "site/src/content/theory/theory-balkan.mdx"
     reason: >-
       Analysis of additive counterpoint in Balkan metre. No repo source
       surface.
 
-  - doc: "site/src/content/docs/theory-minimalism.mdx"
+  - doc: "site/src/content/theory/theory-minimalism.mdx"
     reason: >-
       Analysis of process counterpoint and phase relationships. No repo source
       surface.
 
-  - doc: "site/src/content/docs/theory-electronic-breakbeat.mdx"
+  - doc: "site/src/content/theory/theory-electronic-breakbeat.mdx"
     reason: >-
       Analysis of grid counterpoint in electronic and breakbeat idioms. No repo
       source surface.
 
-  - doc: "site/src/content/docs/theory-brazilian.mdx"
+  - doc: "site/src/content/theory/theory-brazilian.mdx"
     reason: >-
       Analysis of the batucada system as layered counterpoint. No repo source
       surface.
 
-  - doc: "site/src/content/docs/theory-funk-soul.mdx"
+  - doc: "site/src/content/theory/theory-funk-soul.mdx"
     reason: >-
       Analysis of riff-lock counterpoint in funk and soul. No repo source
       surface.
 
-  - doc: "site/src/content/docs/theory-jazz.mdx"
+  - doc: "site/src/content/theory/theory-jazz.mdx"
     reason: >-
       Analysis of conversational counterpoint in jazz. No repo source surface.
 

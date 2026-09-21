@@ -89,3 +89,15 @@ what a row claims.
   *"row FR16 appears on lines 169 and 200"* — and it is renumbered FR25. The
   guard's own message names the lesson: grep the whole ledger before choosing an
   ID, not just the milestone being edited.
+
+## 2026-09-21 — judgment call during M002/S02 task 3
+
+- **Decision:** the plan's mutation for the drift map was replaced with a
+  different one, rather than halting — **Why:** step 3 said to prove the mapping
+  bites by touching a source the drift map pairs with a theory doc, and there
+  are none: all twelve theory entries are `doc:` + `reason:` completeness
+  declarations with no `sources:` key, so nothing can make `doc-drift` fire for
+  them. The step's intent was to show the entries still do something after the
+  move, and that is provable another way — pointing one at a nonexistent file
+  fails `doc-completeness` with exit 1. The intent is met; only the named
+  mechanism was wrong.
