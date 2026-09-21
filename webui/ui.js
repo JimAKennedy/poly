@@ -357,7 +357,16 @@
   function updateCaptureChips() {
     const st = lastFrame.capState | 0;
     if (capBarsBtn) {
-      capBarsBtn.textContent = `${lastFrame.capBars || 8} bars`;
+      const bars = lastFrame.capBars || 8;
+      // While capture is latched the chip carries progress as well as the
+      // count. This is the readout the Cloth capline owned; it moved here in
+      // M001/S01 so that removing Cloth loses no information. Progress comes
+      // from lastFrame and never from a local counter -- host truth is what
+      // the comment above this function exists to protect.
+      capBarsBtn.textContent =
+        st === 2
+          ? `${Math.min(bars, Math.floor(lastFrame.capProg || 0) + 1)}/${bars} bars`
+          : `${bars} bars`;
       capBarsBtn.classList.toggle('locked', st >= 2);
     }
     if (armBtn) {

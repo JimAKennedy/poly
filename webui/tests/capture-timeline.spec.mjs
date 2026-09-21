@@ -145,6 +145,20 @@ test('the Arm chip flips to Reset and drives the machine, Reset returns to idle'
   await expect(arm).toHaveText('Arm');
 });
 
+// FR01. The capline inside #cloth is the only per-bar progress readout today,
+// and it leaves with Cloth in M001/S02. The bars chip already renders the count
+// and locks while capturing, so it carries the progress too rather than the
+// information being lost. Numerator matches what the capline used:
+// Math.min(bars, floor(prog) + 1).
+test('the bars chip reports progress while capturing', async ({ page }) => {
+  const bars = page.locator('#capBars');
+  await expect(bars).toHaveText('8 bars');
+  await setCapture(page, { state: 2, bars: 8, prog: 2.4 });
+  await expect(bars).toHaveText('3/8 bars');
+  await setCapture(page, { state: 3, bars: 8, prog: 8 });
+  await expect(bars).toHaveText('8 bars'); // complete: back to the plain count
+});
+
 test('the bars picker locks once capture latches (state >= 2)', async ({ page }) => {
   await setCapture(page, { state: 2, bars: 8, prog: 1 });
   await expect(page.locator('#capBars')).toHaveClass(/locked/);

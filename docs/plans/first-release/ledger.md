@@ -56,17 +56,17 @@ parameters 600 and 601.
 **Plan:** M001-S01-plan.md
 **Validation:** format, webui-e2e
 **Evidence:** evidence/M001-S01.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The capture bars control and Arm are visible without entering Cloth
-- [ ] They sit beside Export, which is already toolbar-level and unconditional
-- [ ] A test fails if either control becomes mode-dependent again
+- [x] The capture bars control and Arm are visible without entering Cloth
+- [x] They sit beside Export, which is already toolbar-level and unconditional
+- [x] A test fails if either control becomes mode-dependent again
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| FR01 | The capture controls are gated to Cloth, so hiding Cloth would hide MIDI capture with it — the premise "all functionality is reachable from Desk" does not hold today | `defect` | `webui/ui.js`, `webui/index.html` | `capCtl` carries no mode class; a test asserts the controls are present with the mode set to desk | `open` |
+| FR01 | The capture controls are gated to Cloth, so hiding Cloth would hide MIDI capture with it — the premise "all functionality is reachable from Desk" does not hold today | `defect` | `webui/ui.js`, `webui/index.html` | `capCtl` carries no mode class; a test asserts the controls are present with the mode set to desk | `done` |
 
 ### Slice M001/S02 — Cloth leaves the shipped build
 
