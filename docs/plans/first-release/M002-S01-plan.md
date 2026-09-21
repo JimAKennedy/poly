@@ -9,7 +9,7 @@ exist. No new mechanism.
 ## Task status
 
 - [x] 1. The navigation stops offering a theory section
-- [ ] 2. The twelve chapter callouts go
+- [x] 2. The twelve chapter callouts go
 - [ ] 3. The four remaining links into the deep dives go
 
 ## Definition of Done
