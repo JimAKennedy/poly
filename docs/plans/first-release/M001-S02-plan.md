@@ -14,7 +14,7 @@ progress goes, was taken in S01.
 - [x] 1. The specs stop depending on Cloth
 - [x] 2. Cloth leaves the markup, the script and the stylesheet
 - [x] 3. The guide stops describing a toggle that is gone
-- [ ] 4. A guard keeps the single view single, and the slice closes
+- [x] 4. A guard keeps the single view single, and the slice closes
 
 ## Definition of Done
 
