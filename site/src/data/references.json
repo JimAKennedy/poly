@@ -756,112 +756,145 @@
       "archiveFile": null
     },
     "fr-acosta-2003": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "purchasable",
+      "evidence": "Open Library confirms \"Cubano Be, Cubano Bop\" with a matching author and publisher; no free full text found. Not read.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
-      "price": null,
+      "identifier": {
+        "doi": null,
+        "isbn": "9781588341471"
+      },
+      "price": "ISBN 9781588341471, Smithsonian Books — price not established from here; obtain from the publisher or any bookseller",
       "archiveFile": null
     },
     "fr-penalosa-2009": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "purchasable",
+      "evidence": "Open Library confirms \"The Clave Matrix\" with a matching author and publisher; no free full text found. Not read. The entry is the Afro-Cuban chapter’s primary authority, cited as fr-penalosa-2009 for the clave matrix claim M001 of the theory-audit programme corrected.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
-      "price": null,
+      "identifier": {
+        "doi": null,
+        "isbn": "9781886502802"
+      },
+      "price": "ISBN 9781886502802, Bembe Books — price not established from here; obtain from the publisher or any bookseller",
       "archiveFile": null
     },
     "fr-mauleon-1993": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "purchasable",
+      "evidence": "Open Library confirms \"Salsa Guidebook for Piano and Ensemble\" with a matching author and publisher; no free full text found. Not read. This ISBN is the one encoded in ref [13]’s dead sample-pages URL (0961470194-177-178.pdf), so ref [13] cites pages 177–178 of this book. That resolves ref [13]’s apparent title discrepancy: \"Rhythmic Styles and Structures\" is a section within this guidebook, not a separate work.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
-      "price": null,
+      "identifier": {
+        "doi": null,
+        "isbn": "0961470194"
+      },
+      "price": "ISBN 0961470194, Sher Music — price not established from here; obtain from the publisher or any bookseller",
       "archiveFile": null
     },
     "fr-uribe-1996": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "purchasable",
+      "evidence": "Open Library confirms \"The Essence of Afro-Cuban Percussion and Drum Set\" with a matching author and publisher; no free full text found. Not read.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
-      "price": null,
+      "identifier": {
+        "doi": null,
+        "isbn": "9781576236192"
+      },
+      "price": "ISBN 9781576236192, Alfred Publishing — price not established from here; obtain from the publisher or any bookseller",
       "archiveFile": null
     },
     "fr-washburne-1997": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "library-only",
+      "evidence": "Crossref confirms \"The Clave of Jazz: A Caribbean Contribution to the Rhythmic Foundation of an African-American Music\", Black Music Research Journal 17(1), 1997 — matching the entry. Behind JSTOR; not read.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": "10.2307/779360",
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-lomax-1950": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "borrowable",
+      "evidence": "Open Library confirms \"Mister Jelly Roll\" with a matching author and an Internet Archive copy, so the text is borrowable under controlled digital lending. Borrowing needs an account; not read here.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": "9780520024021"
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-allen-veal-2013": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "purchasable",
+      "evidence": "Open Library confirms \"Tony Allen: An Autobiography of the Master Drummer of Afrobeat\" with a matching author and publisher; no free full text found. Not read.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
-      "price": null,
+      "identifier": {
+        "doi": null,
+        "isbn": "9780822355915"
+      },
+      "price": "ISBN 9780822355915, Duke University Press — price not established from here; obtain from the publisher or any bookseller",
       "archiveFile": null
     },
     "fr-veal-2000": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "purchasable",
+      "evidence": "Open Library confirms \"Fela: The Life and Times of an African Musical Icon\" with a matching author and publisher; no free full text found. Not read.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
-      "price": null,
+      "identifier": {
+        "doi": null,
+        "isbn": "9780585366739"
+      },
+      "price": "ISBN 9780585366739, Temple University Press — price not established from here; obtain from the publisher or any bookseller",
       "archiveFile": null
     },
     "fr-tenzer-2000": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "borrowable",
+      "evidence": "Open Library confirms \"Gamelan Gong Kebyar\" with a matching author and an Internet Archive copy, so the text is borrowable under controlled digital lending. Borrowing needs an account; not read here.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": "9780226792811"
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-vitale-1990": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "library-only",
+      "evidence": "No Crossref record: Balungan 4(2), 1990 is not indexed. The nearest hit was an unrelated 2018 Asian Music article. Balungan is a small-press journal; a library or the American Gamelan Institute would settle it.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-sumarsam-1995": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "borrowable",
+      "evidence": "Open Library confirms \"Gamelan: Cultural Interaction and Musical Development in Central Java\" with a matching author and an Internet Archive copy, so the text is borrowable under controlled digital lending. Borrowing needs an account; not read here.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": "9780226780108"
+      },
       "price": null,
       "archiveFile": null
     },
@@ -876,92 +909,119 @@
       "archiveFile": null
     },
     "fr-clayton-2000": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "borrowable",
+      "evidence": "Open Library confirms \"Time in Indian Music\" with a matching author and an Internet Archive copy, so the text is borrowable under controlled digital lending. Borrowing needs an account; not read here.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": "9780198166863"
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-nelson-2008": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "purchasable",
+      "evidence": "Open Library confirms \"Solkattu Manual\" with a matching author and publisher; no free full text found. Not read.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
-      "price": null,
+      "identifier": {
+        "doi": null,
+        "isbn": "9780819568717"
+      },
+      "price": "ISBN 9780819568717, Wesleyan University Press — price not established from here; obtain from the publisher or any bookseller",
       "archiveFile": null
     },
     "fr-kippen-1988": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "borrowable",
+      "evidence": "Open Library confirms \"The Tabla of Lucknow\" with a matching author and an Internet Archive copy, so the text is borrowable under controlled digital lending. Borrowing needs an account; not read here.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": "9780521335294"
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-silverman-2007": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "open-access",
+      "evidence": "Crossref confirms the article in Muzikologija 7, 2007, matching author and year. Muzikologija is open access, so the text is reachable; it was not opened in this pass and the entry is left unverified rather than claimed.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": "10.2298/muz0707069s",
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-peycheva-dimov-2002": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "library-only",
+      "evidence": "No Crossref record for this 2002 work; the nearest hit was a different 2025 Muzikologija article by Peycheva, which is not it. A 2002 Bulgarian monograph is plausible but no identifier was established, so none is recorded.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-brailoiu-1951": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "library-only",
+      "evidence": "Crossref confirms \"Le rythme Aksak\", Revue de musicologie 33(99/100), 1951 — matching the entry exactly, including the volume. Behind JSTOR; not read. This is the origin of the aksak term the Balkan chapter rests on.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": "10.2307/926002",
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-rice-1994": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "purchasable",
+      "evidence": "Open Library confirms \"May It Fill Your Soul\" with a matching author and publisher; no free full text found. Not read.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
-      "price": null,
+      "identifier": {
+        "doi": null,
+        "isbn": "9780226711225"
+      },
+      "price": "ISBN 9780226711225, University of Chicago Press — price not established from here; obtain from the publisher or any bookseller",
       "archiveFile": null
     },
     "fr-goldberg-2015": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "open-access",
+      "evidence": "Crossref confirms \"Timing Variations in Two Balkan Percussion Performances\", Empirical Musicology Review 10(4), pp. 305–328, matching the entry; Crossref stamps the record 2016, the issue is 10(4) 2015, which is an online-date difference rather than a discrepancy. Open access, but emusicology.org serves an Anubis challenge to automation, so the text was not read here.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": "10.18061/emr.v10i4.4884",
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-holzapfel-2015": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
-      "description": "unverified",
-      "note": "",
-      "identifier": null,
+      "obtainability": "open-access",
+      "evidence": "Crossref has no work titled \"Metrical Structure in Turkish Makam Music\" by any author; a title query returns only unrelated Turkish-makam papers. The nearest real Holzapfel work is \"Relation Between Surface Rhythm and Rhythmic Modes in Turkish Makam Music\", Journal of New Music Research 44(1), DOI 10.1080/09298215.2014.939661.",
+      "checked": "2026-09-20",
+      "description": "mismatch",
+      "note": "The cited title corresponds to no published work. This is the same phantom title as ref [28], whose DiVA PDF was read directly and is Srinivasamurthy, Holzapfel & Serra (2014), \"In Search of Automatic Rhythm Analysis Methods for Turkish and Indian Art Music\". The same incorrect citation therefore appears twice in this bibliography, once in each list, which is an argument for M005 merging them: two lists let one error be maintained in parallel.",
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
