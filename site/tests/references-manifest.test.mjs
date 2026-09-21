@@ -186,3 +186,69 @@ test('every manifest record names an anchor that exists', async () => {
       'following: ' + orphans.join(', '),
   );
 });
+
+// M002/S01 task 3 (VR05): the archive root is never written to a tracked file.
+//
+// check-personal-paths rejected the absolute archive path in the vision's own
+// first draft. The fix is structural rather than editorial: the manifest stores
+// a bare filename, and the root arrives from the environment at read time, so
+// there is no form of this data that could carry someone's home directory into
+// git.
+import { archiveRoot, resolveArchiveFile } from '../src/data/references-archive.mjs';
+
+test('archiveRoot honours POLY_REFERENCES_ARCHIVE when set', () => {
+  const prev = process.env.POLY_REFERENCES_ARCHIVE;
+  try {
+    process.env.POLY_REFERENCES_ARCHIVE = '/tmp/poly-refs-test';
+    assert.equal(archiveRoot(), '/tmp/poly-refs-test');
+  } finally {
+    if (prev === undefined) delete process.env.POLY_REFERENCES_ARCHIVE;
+    else process.env.POLY_REFERENCES_ARCHIVE = prev;
+  }
+});
+
+test('archiveRoot falls back to a gitignored .references directory', () => {
+  const prev = process.env.POLY_REFERENCES_ARCHIVE;
+  try {
+    delete process.env.POLY_REFERENCES_ARCHIVE;
+    assert.ok(
+      archiveRoot().endsWith('.references'),
+      `expected a .references fallback, got ${archiveRoot()}`,
+    );
+    process.env.POLY_REFERENCES_ARCHIVE = '   ';
+    assert.ok(
+      archiveRoot().endsWith('.references'),
+      'a whitespace-only variable must fall back, not resolve to an empty root',
+    );
+  } finally {
+    if (prev === undefined) delete process.env.POLY_REFERENCES_ARCHIVE;
+    else process.env.POLY_REFERENCES_ARCHIVE = prev;
+  }
+});
+
+test('every archiveFile in the manifest is a bare filename', async () => {
+  const m = await loadManifest();
+  const offenders = Object.entries(m.entries)
+    .filter(([, r]) => typeof r.archiveFile === 'string')
+    .filter(([, r]) => /[\\/]/.test(r.archiveFile) || r.archiveFile.split(/[\\/]/).includes('..'))
+    .map(([a, r]) => `${a} -> ${r.archiveFile}`);
+  assert.deepEqual(
+    offenders,
+    [],
+    'archiveFile must be a bare filename: a path in a tracked file is how a ' +
+      "machine-specific root gets committed: " + offenders.join(', '),
+  );
+});
+
+test('resolveArchiveFile refuses to escape the archive root', () => {
+  for (const bad of ['../etc/passwd', 'sub/dir.pdf', '..', '', 'a\\b.pdf']) {
+    assert.throws(
+      () => resolveArchiveFile(bad),
+      /bare filename/,
+      `resolveArchiveFile(${JSON.stringify(bad)}) should have thrown`,
+    );
+  }
+  const ok = resolveArchiveFile('ref-9-oluranti-2012.pdf');
+  assert.ok(ok.endsWith('ref-9-oluranti-2012.pdf'));
+  assert.ok(ok.startsWith(archiveRoot()));
+});

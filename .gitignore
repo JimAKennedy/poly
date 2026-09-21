@@ -348,3 +348,7 @@ target/
 vendor/
 tmp/
 gsd-session-*.html
+
+# Local archive of reference PDFs (VR05): contents are never committed.
+# Override the location with POLY_REFERENCES_ARCHIVE.
+.references/

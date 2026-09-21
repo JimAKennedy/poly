@@ -102,21 +102,21 @@ opening the PDF. Expect a long tail where the only way to answer is to look.
 **Plan:** M002-S01-plan.md
 **Validation:** format, site-unit, guards
 **Evidence:** evidence/M002-S01.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] `site/src/data/references.json` has a declared shape carrying, per entry:
+- [x] `site/src/data/references.json` has a declared shape carrying, per entry:
       anchor id, obtainability, description verdict, archive filename, and
       ISBN/DOI where one exists
-- [ ] A test fails when a bibliography anchor has no manifest record, and when a
+- [x] A test fails when a bibliography anchor has no manifest record, and when a
       manifest record names an anchor that does not exist
-- [ ] The test is shown to fail in both directions before being trusted
+- [x] The test is shown to fail in both directions before being trusted
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
 | VR04 | Nothing records obtainability or accuracy anywhere, so a later pass cannot tell a verified entry from an unexamined one. Silence currently implies "checked" | `tooling` | `site/src/data/references.json`, `site/tests/` | Both arms mutation-proved: an unrecorded anchor fails, and an orphan record fails | `done` |
-| VR05 | The archive root differs per machine and is a personal path, which `check-personal-paths` rejects in tracked files — it caught the absolute form in the vision's own first draft | `tooling` | `site/src/data/references.json`, `scripts/` | Filenames are recorded relative to a root supplied by the environment; `guards` stays green | `open` |
+| VR05 | The archive root differs per machine and is a personal path, which `check-personal-paths` rejects in tracked files — it caught the absolute form in the vision's own first draft | `tooling` | `site/src/data/references.json`, `scripts/` | Filenames are recorded relative to a root supplied by the environment; `guards` stays green | `done` |
 
 ### Slice M002/S02 — All 107 carry both verdicts
 

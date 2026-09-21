@@ -18,6 +18,13 @@ Downloaded documents go to the Dropbox research archive at
 `~/Library/CloudStorage/Dropbox/Research/drum generator/References`, or to a
 `.gitignore`d directory in the project root.
 
+Point the repo at whichever you use by exporting **`POLY_REFERENCES_ARCHIVE`**.
+Unset, it falls back to `.references/` in the project root, which is
+`.gitignore`d. The manifest at `site/src/data/references.json` records a bare
+filename and never a path, so no machine-specific root can reach a tracked file
+— `check-personal-paths` rejected the absolute form in the vision's own first
+draft, and this makes that failure unreachable rather than merely reviewed.
+
 ## Pending
 
 _Nothing queued._
