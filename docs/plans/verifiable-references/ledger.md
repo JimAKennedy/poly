@@ -88,7 +88,7 @@ live behind weeks of classification work is over-serialising for tidiness.
 and a description verified against the source itself.
 
 **Branch:** milestone/M002-verdicts
-**Status:** planned
+**Status:** in-progress
 **Demo:** `site/src/data/references.json` holds one record per bibliography
 entry, and a test fails if an entry exists without one.
 
@@ -99,9 +99,10 @@ opening the PDF. Expect a long tail where the only way to answer is to look.
 
 ### Slice M002/S01 — The manifest exists and cannot drift from the bibliography
 
+**Plan:** M002-S01-plan.md
 **Validation:** format, site-unit, guards
 **Evidence:** evidence/M002-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
