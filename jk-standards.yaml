@@ -1,5 +1,12 @@
 version: 1
 
+# site/src/content/theory/ is deliberately absent from these roots. The theory
+# deep dives were unpublished in the first-release programme (milestone M002) and
+# moved there; they are deferred rather than retired, and their guards assert them
+# from the new path directly. Widening either root to cover that directory pulls
+# them back into the taxonomy and prose checks, and — via research_provenance
+# below — makes their citations resolve against the shipping appendix again, which
+# M003 is reducing. Do that on purpose or not at all.
 doc_roots:
   - path: docs
     extensions: [".md"]
@@ -98,6 +105,13 @@ research_provenance:
   # anchor_pattern and phrase are left at their defaults: the default
   # '(ref|fr)-[A-Za-z0-9-]+' already matches this guide's ref-N / fr-author-year
   # convention exactly.
+  #
+  # This root stops at the published docs on purpose. The theory deep dives live
+  # in site/src/content/theory/ and carry their own bibliography,
+  # theory-references.mdx, because the shipping appendix is being reduced to the
+  # references its own chapters cite (M003). Scanning them here would check their
+  # citations against a bibliography that no longer contains 66 of them; the
+  # guard that does hold them is site/tests/theory-bundle-references.test.mjs.
   bib_file: site/src/content/docs/appendix-references.mdx
   doc_roots:
     - path: site/src/content/docs
