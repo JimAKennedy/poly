@@ -108,13 +108,17 @@ test('setCaptureBars accepts any integer 1-32 before latch and rejects out-of-ra
 
 // --- M051 S08 T05: header capture controls (bars picker, Arm/Reset, Export) ---
 
-test('the capture control cluster is Cloth-only', async ({ page }) => {
-  // beforeEach leaves us in Cloth mode.
-  await expect(page.locator('#capCtl')).toHaveClass(/show/);
-  await page.click('#mDesk');
-  await expect(page.locator('#capCtl')).not.toHaveClass(/show/);
-  await page.click('#mCloth');
-  await expect(page.locator('#capCtl')).toHaveClass(/show/);
+// FR01. The cluster used to be Cloth-only, which is the defect: M001/S02
+// removes Cloth, so a capture control reachable only from there would be a
+// capture control reachable from nowhere. The capability was never Cloth-bound
+// -- chapter 16 documents it as VST3 parameters 600 and 601 -- only the chips
+// were. This case is the inverse of the one it replaces, and it is what fails
+// if the gating ever returns.
+test('capture controls are reachable without entering another view', async ({ page }) => {
+  await page.goto(pageUrl); // fresh load: no mode chip clicked, default view
+  await expect(page.locator('#capCtl')).toBeVisible();
+  await expect(page.locator('#capBars')).toBeVisible();
+  await expect(page.locator('#armBtn')).toBeVisible();
 });
 
 test('the bars picker is a 1-32 stepper and reflects host truth', async ({ page }) => {

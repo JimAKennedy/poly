@@ -71,8 +71,9 @@
   .chip { border: 1px solid var(--line); background: transparent; border-radius: 6px; padding: 4px 8px; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--dim); flex-shrink: 0; white-space: nowrap; }
   .chip.on { color: var(--ground); background: var(--text); border-color: var(--text); }
   /* M051 S08 T05: capture header controls. Cluster hidden outside Cloth mode. */
-  #capCtl { display: none; align-items: center; gap: 4px; }
-  #capCtl.show { display: flex; }
+  /* FR01: unconditional. The cluster was Cloth-only until M001/S01; the
+     capability was never Cloth-bound (VST3 params 600/601), only the chips. */
+  #capCtl { display: flex; align-items: center; gap: 4px; }
   #capBars.locked { opacity: .4; pointer-events: none; }        /* window frozen — kCaptureLength no longer editable */
   #armBtn.on { color: var(--ground); background: var(--accent); border-color: var(--accent); }  /* armed/capturing/complete -> Reset */
   #exportBtn { opacity: .45; }                                  /* dim in idle/armed/capturing */

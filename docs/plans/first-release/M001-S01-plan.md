@@ -8,7 +8,7 @@ toolbar since M047. No new mechanism and no interface change.
 
 ## Task status
 
-- [ ] 1. The capture controls are visible without entering Cloth
+- [x] 1. The capture controls are visible without entering Cloth
 - [ ] 2. The bars chip carries per-bar progress while capturing
 
 ## Definition of Done

@@ -63,3 +63,13 @@ the measurement that made it answerable.
   entanglement is deeper than "two chips are gated". The state itself is
   already mirrored onto the toolbar by `updateCaptureChips()`; only the per-bar
   progress readout is unique to the capline.
+
+## 2026-09-21 — judgment calls during M001/S01
+
+- **Decision:** the existing spec `the capture control cluster is Cloth-only`
+  was inverted rather than left in place beside a new case — **Why:** it asserts
+  the behaviour FR01 names as the defect, so keeping it would have turned the
+  suite red the moment the gating was removed, and two cases asserting opposite
+  things is not a choice a later reader should have to arbitrate. The plan's
+  step said "add a spec case"; inverting the contradicting one is what that step
+  meant in a file that already had it.
