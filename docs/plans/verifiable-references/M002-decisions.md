@@ -4,7 +4,7 @@ Append-only. One entry per decision that shaped the milestone, with the reason,
 so a reviewer can see what was chosen on the owner's behalf and what the owner
 chose themselves.
 
-## 2026-09-21 — planning M002/S01 and M002/S02
+## 2026-09-20 — planning M002/S01 and M002/S02
 
 Four questions were put to the owner before either slice was planned, with the
 measurements that made them answerable: 43 numbered entries and 64 Further

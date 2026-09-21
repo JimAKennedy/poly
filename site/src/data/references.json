@@ -1,0 +1,1084 @@
+{
+  "schemaVersion": 1,
+  "entries": {
+    "ref-1": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-2": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-4": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-6": {
+      "obtainability": "borrowable",
+      "evidence": "archive.org studiesinafrican0000amjo — A.M. Jones, Oxford University Press, collections internetarchivebooks/printdisabled/inlibrary, so controlled digital lending. Details page 200.",
+      "checked": "2026-09-20",
+      "description": "verified",
+      "note": "",
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-7": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-8": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-9": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-10": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-11": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-12": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-13": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-14": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-15": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-16": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-17": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-18": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-19": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-20": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-21": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-22": {
+      "obtainability": "open-access",
+      "evidence": "Music Theory Online 26(1), platinum open access, full text readable without login. DOI resolves 200 to the article; Crossref confirms title, author, volume and year.",
+      "checked": "2026-09-20",
+      "description": "verified",
+      "note": "",
+      "identifier": {
+        "doi": "10.30535/mto.26.1.2",
+        "isbn": null
+      },
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-23": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-24": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-25": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-26": {
+      "obtainability": "open-access",
+      "evidence": "Empirical Musicology Review 10(4) 265-291, open access. DOI resolves 200; Crossref pages match the entry. The journal host serves an Anubis challenge to automation, so the PDF itself was not fetched.",
+      "checked": "2026-09-20",
+      "description": "verified",
+      "note": "",
+      "identifier": {
+        "doi": "10.18061/emr.v10i4.4891",
+        "isbn": null
+      },
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-27": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-28": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-29": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-30": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-31": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-32": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-33": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-34": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-35": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-36": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-37": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-38": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-39": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-40": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-41": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-42": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-43": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-44": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "ref-46": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-toussaint-2013": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-london-2012": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-pressing-2002": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-arom-1991": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-locke-1998": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-locke-1982": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-chernoff-1979": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-anku-2000": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-polak-2010": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-polak-london-2014": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-novotney-1998": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-agawu-2006": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-charry-2000": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-kubik-1999": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-agawu-2003": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-acosta-2003": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-penalosa-2009": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-mauleon-1993": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-uribe-1996": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-washburne-1997": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-lomax-1950": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-allen-veal-2013": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-veal-2000": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-tenzer-2000": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-vitale-1990": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-sumarsam-1995": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-powers-1980": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-clayton-2000": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-nelson-2008": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-kippen-1988": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-silverman-2007": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-peycheva-dimov-2002": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-brailoiu-1951": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-rice-1994": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-goldberg-2015": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-holzapfel-2015": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-reich-2002": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-cohn-1992": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-potter-2000": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-gann-1995": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-scherzinger-2010": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-harrison-2025": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-linn-attack-2020": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-butler-2006": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-danielsen-2010": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-collins-2001": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-reynolds-1998": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-crook-2009": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-sandroni-2001": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-gerischer-2006": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-naveda-2011": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-fryer-2000": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-born-hesmondhalgh-2000": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-danielsen-2006": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-stewart-2000": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-berliner-1994": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-monson-1996": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-riley-1994": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-keil-1987": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-friberg-2002": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-benadon-2006": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-progler-1995": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-iyer-2002": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    },
+    "fr-hennig-2011": {
+      "obtainability": "unassessed",
+      "evidence": "",
+      "checked": null,
+      "description": "unverified",
+      "note": "",
+      "identifier": null,
+      "price": null,
+      "archiveFile": null
+    }
+  }
+}
