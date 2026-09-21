@@ -118,6 +118,31 @@ const CLAIMS = [
     presentRegex: [/10\.18061\/emr\.v10i4\.4891/],
   },
   {
+    id: 'REF22-CLAYTON',
+    file: 'appendix-references.mdx',
+    rule:
+      'VR02. ref [22] was the National Institute of Open Schooling\'s Hindustani ' +
+      'Music (242) teaching text -- course material, the same class as the ' +
+      'Fiveable study guide removed from ref [26]. It was replaced on editorial ' +
+      'grounds rather than liveness grounds: whether a teaching PDF loads does ' +
+      'not make it a citable source, so the browser check the worklist had ' +
+      'queued was never needed. The replacement is Clayton (2020), Music Theory ' +
+      'Online 26(1), DOI 10.30535/mto.26.1.2 -- peer-reviewed, platinum open ' +
+      'access, freely readable without login, and on North Indian rupak tal, ' +
+      'which is the slot ref [22] occupied. Verified against the publisher ' +
+      'page, the served HTML and Crossref, with the DOI resolving to the ' +
+      'article. Clayton is already the chapter\'s primary authority as ' +
+      'fr-clayton-2000',
+    // Tree-wide, like the fiveable.me arm: the teaching text must not return
+    // under any entry number.
+    forbiddenRegex: [/nios\.ac\.in/],
+    present: [
+      'Theory and Practice of Long-form Non-isochronous Meters',
+      'Music Theory Online',
+    ],
+    presentRegex: [/10\.30535\/mto\.26\.1\.2/],
+  },
+  {
     id: 'S02-F18',
     file: '03-afro-cuban.mdx',
     rule:

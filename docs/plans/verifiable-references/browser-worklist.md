@@ -20,35 +20,22 @@ Downloaded documents go to the Dropbox research archive at
 
 ## Pending
 
-### `ref-22` — NIOS Hindustani Music (242), theory book 1, chapter 3
-
-| | |
-|---|---|
-| **URL** | `https://nios.ac.in/media/documents/Hindustani_Music_242/hindustanimusictheorybook1/HMB1Ch3.pdf` |
-| **Check** | Does the PDF load in a browser? |
-| **Save** | If it loads, the PDF, named `ref-22-nios-hindustani-music-ch3.pdf` |
-| **Queued** | 2026-09-20 |
-
-**Why it is here rather than being replaced.** The ledger row VR02 says the link
-"does not respond" and that "the PDF moved rather than the source being bad".
-Re-measurement supports neither claim:
-
-- the PDF times out — 60s, no response, not a 404
-- `HMB1Ch1.pdf`, a sibling chapter in the same directory that a search engine
-  lists as live, times out identically
-- `https://nios.ac.in/` — the site root — times out too
-- DNS resolves to a single A record, so this is not a name-resolution failure
-
-Nothing on the host answers from this network. The path may be perfectly good.
-Replacing India's national open-schooling board as a source on evidence that
-only proves one network cannot reach it is the failure this programme exists to
-end, so the question goes to a browser.
-
-**Outcomes and what each means.** The PDF loads → the entry is sound and only
-unreachable from automation; save it and record the hand-verification. It 404s →
-the path really has rotted and VR02's original framing was right. The host is
-unreachable for the owner too → same conclusion, better evidence.
+_Nothing queued._
 
 ## Resolved
 
-_None yet._
+### `ref-22` — NIOS Hindustani Music (242) — **replaced, 2026-09-20**
+
+Settled editorially, not by the browser check this row was raised for. The
+owner identified the entry as course material: the National Institute of Open
+Schooling's teaching text, the same class as the Fiveable study guide removed
+from `ref-26`. Whether a teaching PDF loads does not make it a citable source,
+so the liveness question was never worth asking and the check was not spent.
+
+Replaced by Clayton, M. (2020), "Theory and Practice of Long-form
+Non-isochronous Meters: The Case of the North Indian *rūpak tāl*", *Music
+Theory Online* 26(1), DOI `10.30535/mto.26.1.2` — peer-reviewed, platinum open
+access, readable without login, and on North Indian tāl.
+
+The measurement that raised the row is retained below, because it remains true
+and because the host is likely to recur in this bibliography.
