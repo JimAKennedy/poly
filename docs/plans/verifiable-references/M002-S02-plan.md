@@ -18,7 +18,7 @@ Bounded does not mean small — this is the milestone's expensive half.
 - [x] 4. Further Reading — Foundations, Sub-Saharan Africa (15 entries)
 - [x] 5. Further Reading — Afro-Cuban through Balkan (21 entries)
 - [x] 6. Further Reading — Minimalism through Synthesis (17 entries)
-- [ ] 7. Further Reading — Funk/Soul/Jazz, Microtiming (11 entries)
+- [x] 7. Further Reading — Funk/Soul/Jazz, Microtiming (11 entries)
 - [ ] 8. The browser worklist, and the slice closes
 
 ## Definition of Done

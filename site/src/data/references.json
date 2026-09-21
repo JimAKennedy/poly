@@ -899,12 +899,15 @@
       "archiveFile": null
     },
     "fr-powers-1980": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "library-only",
+      "evidence": "Powers, \"India, subcontinent of\" in The New Grove Dictionary of Music and Musicians, vol. 9 (1980). A reference-work article: no DOI, and the 1980 print set’s ISBN was not established here — an Open Library query for the edition returned nothing, so none is recorded rather than guessed. The text is reachable through Grove Music Online by institutional subscription, or in any reference library holding the print set. Not read.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
@@ -1247,112 +1250,145 @@
       "archiveFile": null
     },
     "fr-danielsen-2006": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "borrowable",
+      "evidence": "Open Library confirms \"Presence and Pleasure: The Funk Grooves of James Brown and Parliament\" with a matching author and an Internet Archive copy, so the text is borrowable under controlled digital lending. Not read here.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": "9780819568779"
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-stewart-2000": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "library-only",
+      "evidence": "Crossref confirms \"‘Funky Drummer’: New Orleans, James Brown and the rhythmic transformation of American popular music\", Popular Music 19(3), 2000 — matching the entry exactly. The DOI recorded is the 2000 original; Crossref also carries a 2017 reprint of the same chapter in the Routledge collection From Soul to Hip Hop under a different DOI, and the original is the one the entry cites. Behind Cambridge subscription; not read.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": "10.1017/s0261143000000180",
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-berliner-1994": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "purchasable",
+      "evidence": "Open Library confirms \"Thinking in Jazz: The Infinite Art of Improvisation\" with a matching author and publisher; no free full text found. Not read.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
-      "price": null,
+      "identifier": {
+        "doi": null,
+        "isbn": "9780226043814"
+      },
+      "price": "ISBN 9780226043814, University of Chicago Press — price not established from here; obtain from the publisher or any bookseller",
       "archiveFile": null
     },
     "fr-monson-1996": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "borrowable",
+      "evidence": "Open Library confirms \"Saying Something: Jazz Improvisation and Interaction\" with a matching author and an Internet Archive copy, so the text is borrowable under controlled digital lending. Not read here.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": "9780226534787"
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-riley-1994": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "purchasable",
+      "evidence": "Open Library confirms \"The Art of Bop Drumming\" with a matching author and publisher; no free full text found. Not read.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
-      "price": null,
+      "identifier": {
+        "doi": null,
+        "isbn": "9780898988901"
+      },
+      "price": "ISBN 9780898988901, Manhattan Music — price not established from here; obtain from the publisher or any bookseller",
       "archiveFile": null
     },
     "fr-keil-1987": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "library-only",
+      "evidence": "Crossref confirms the article in Cultural Anthropology 2(3), 1987 — matching the entry on author, title, venue, volume and year. Subscription or JSTOR; not read.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": "10.1525/can.1987.2.3.02a00010",
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-friberg-2002": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "library-only",
+      "evidence": "Crossref confirms the article in Music Perception 19(3), 2002 — matching the entry on author, title, venue, volume and year. Subscription or JSTOR; not read.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": "10.1525/mp.2002.19.3.333",
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-benadon-2006": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "library-only",
+      "evidence": "Crossref confirms the article in Ethnomusicology 50(1), 2006 — matching the entry on author, title, venue, volume and year. Subscription or JSTOR; not read.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": "10.2307/20174424",
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-progler-1995": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "library-only",
+      "evidence": "Crossref confirms the article in Ethnomusicology 39(1), 1995 — matching the entry on author, title, venue, volume and year. Subscription or JSTOR; not read.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": "10.2307/852199",
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-iyer-2002": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "library-only",
+      "evidence": "Crossref confirms the article in Music Perception 19(3), 2002 — matching the entry on author, title, venue, volume and year. Subscription or JSTOR; not read.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": "10.1525/mp.2002.19.3.387",
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-hennig-2011": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
-      "description": "unverified",
+      "obtainability": "open-access",
+      "evidence": "DOI resolves 200 to the article on PLOS ONE, which is fully open access. The page was opened and its title read: \"The Nature and Perception of Fluctuations in Human Musical Rhythms\" — matching the entry, PLoS ONE 6(10), 2011.",
+      "checked": "2026-09-20",
+      "description": "verified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": "10.1371/journal.pone.0026457",
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     }
