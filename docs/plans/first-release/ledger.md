@@ -155,6 +155,8 @@ directory renders nothing.
       needs no citation repair
 - [ ] `jk-standards.yaml` records why a sibling directory falls outside its
       roots, so a later widening is deliberate
+- [ ] Each deep dive records which shipping presets knowingly bend its rules, so
+      the relationship M002/S01 removed survives in the deferred bundle
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
@@ -164,6 +166,7 @@ directory renders nothing.
 | FR13 | `.github/docs-drift-map.yml` maps 12 theory docs by full path, so `doc-drift` breaks on the move. Not named in the vision | `tooling` | `.github/docs-drift-map.yml` | `doc-discipline` passes, including the `doc-drift` arm | `open` |
 | FR14 | 66 anchors are cited only by the deep dives. If the shipping bibliography shrinks while they still point at it, those citations dangle the day someone republishes — and nothing warns, because the provenance check will no longer scan them | `defect` | `site/src/content/theory/theory-references.mdx` | Every anchor the moved pages cite resolves within the moved bundle, proved by a check that reads both | `open` |
 | FR15 | The scoping that makes the move work — `doc_roots` and `research_provenance.doc_roots` both limited to `site/src/content/docs` — is a consequence of a path list rather than an expressed intent | `tooling` | `jk-standards.yaml` | A comment beside both roots states that theory content is deliberately outside them | `open` |
+| FR25 | M002/S01 deleted 14 pointers from shipping pages into the deep dives — five of them into `#what-breaks-the-idiom` sections — so the relationship between a preset and the rule it knowingly breaks is no longer recorded anywhere a reader can reach. The content still exists in the deferred bundle; the connection does not | `docs` | `site/src/content/theory/theory-*.mdx` | Each deep dive names the factory presets that bend its rules and which rule each bends; a test fails if a named preset is absent from `presets.json` | `open` |
 
 ## Milestone M003 — A bibliography a reader can finish
 

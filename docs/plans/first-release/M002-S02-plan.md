@@ -3,7 +3,8 @@
 **Slice:** M002/S02 in `docs/plans/first-release/ledger.md`
 **Rows:** FR10 (the pages are published routes), FR11 (test files assert them by
 path), FR12 (the conformance runner), FR13 (the drift map), FR14 (the deep
-dives' own bibliography), FR15 (the `jk-standards.yaml` comment)
+dives' own bibliography), FR15 (the `jk-standards.yaml` comment), FR25 (the
+preset back-references)
 **Depends:** M002/S01 — nothing may link to a page that has moved.
 **Classification:** bounded. A directory move plus path updates in files that
 already exist, and one new bibliography assembled from an existing one.
@@ -14,7 +15,8 @@ already exist, and one new bibliography assembled from an existing one.
 - [ ] 2. The ten test files follow them
 - [ ] 3. The drift map follows them
 - [ ] 4. The deep dives carry their own bibliography
-- [ ] 5. `jk-standards.yaml` says why this works, and the slice closes
+- [ ] 5. Each deep dive names the presets that bend its rules
+- [ ] 6. `jk-standards.yaml` says why this works, and the slice closes
 
 ## Definition of Done
 
@@ -27,6 +29,8 @@ Copied verbatim from the slice:
       needs no citation repair
 - [ ] `jk-standards.yaml` records why a sibling directory falls outside its
       roots, so a later widening is deliberate
+- [ ] Each deep dive records which shipping presets knowingly bend its rules, so
+      the relationship M002/S01 removed survives in the deferred bundle
 
 ## Validation
 
@@ -141,7 +145,40 @@ appendix to 34 without touching anything the deep dives depend on.
 4. Run `format`, `site-unit`, `doc-conformance`. Commit with
    `Slice: M002/S02`, `Rows: FR14`.
 
-## Task 5 — `jk-standards.yaml` says why this works, and the slice closes
+## Task 5 — Each deep dive names the presets that bend its rules
+
+**Consumes:** the moved pages. **Produces:** the relationship M002/S01 removed,
+recorded in the direction that survives.
+
+M002/S01 deleted 14 pointers from shipping pages into the deep dives, five of
+them into `#what-breaks-the-idiom` sections. The rules still exist in the moved
+bundle; what no longer exists anywhere is the link between a preset and the rule
+it knowingly breaks. This task records it from the other side, which is the
+better direction for three reasons: the deep dives are the pages that state the
+rules, the presets are shipping and stable so the references cannot rot while
+the bundle is deferred, and the relationship ends up *inside* the bundle, where
+republication needs it.
+
+1. Derive the pairs rather than recalling them. `site/src/generated/presets.json`
+   is the emitter's output and the authority on which presets exist; the five
+   idiom-break asides removed in M002/S01 name the breaks that were already
+   documented, and `git show` over that commit recovers them.
+2. Add a `## Presets that bend these rules` section to each deep dive that has
+   at least one. Name the preset, the rule number it bends, and in one sentence
+   what the break is — the same substance the deleted asides carried, stated
+   from the rule's side. A deep dive with no such preset gets no section rather
+   than an empty one.
+3. Add a test asserting every preset named in a deep dive exists in
+   `presets.json`. This is the guard that stops the section rotting against a
+   renamed or removed preset, and it is what makes FR25 checkable rather than
+   asserted.
+4. Run it, watch it pass, then **prove it bites**: rename one preset reference
+   in a deep dive to a preset that does not exist, confirm the test names it,
+   revert.
+5. Run `format`, `site-unit`, `doc-conformance`. Commit with
+   `Slice: M002/S02`, `Rows: FR25`.
+
+## Task 6 — `jk-standards.yaml` says why this works, and the slice closes
 
 **Consumes:** everything above.
 
@@ -157,5 +194,5 @@ either root would drag the deep dives back into scope silently.
    bibliography rather than the shipping one.
 2. Run `format`, `site-unit`, `doc-conformance`, `doc-discipline`, `guards`.
 3. Append the closing evidence, tick every definition-of-done box, set FR10,
-   FR11, FR13, FR14 and FR15 `done` and FR12 `accepted`, set the slice `done`,
+   FR11, FR13, FR14, FR15 and FR25 `done` and FR12 `accepted`, set the slice `done`,
    run `jk-standards ledger`, and commit with `Slice: M002/S02`, `Rows: FR15`.

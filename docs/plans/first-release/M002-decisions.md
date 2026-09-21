@@ -61,3 +61,31 @@ what a row claims.
   links to each other are left untouched — **Why:** shipping pages are not
   moving, and all twelve deep dives move together, so every one of those links
   resolves again the day the bundle is republished.
+
+## 2026-09-21 — scope addition during M002/S01
+
+- **Q:** Can we record the information M002/S01 removed — for example, have the
+  deep dives refer back to the presets and explain how they were designed to
+  break the idioms? — **A:** yes, as a new row in M002/S02, one section per deep
+  dive.
+- **Decision:** row **FR25** added to M002/S02, with a fifth definition-of-done
+  item and a new task 5 — **Why:** S01 deleted 14 pointers from shipping pages
+  into the deep dives, five of them into `#what-breaks-the-idiom` sections. The
+  rules still exist in the deferred bundle; the link between a preset and the
+  rule it knowingly breaks does not exist anywhere. Recording it from the deep
+  dives' side is better than restoring the old direction: the deep dives are the
+  pages that state the rules, shipping presets are stable so the references
+  cannot rot while the bundle is deferred, and the relationship ends up inside
+  the bundle, which is where republication needs it. M002/S02 already owns the
+  moved bundle, so doing it there avoids reopening twelve files that were just
+  settled.
+- **Also repairs:** S05-F2 and S05-F3 collapsed into identical assertions when
+  the deep-dive links went, because the link was the only thing distinguishing
+  the gamelan break from the Balkan one in the same file. Preset
+  back-references give each break a distinguishing string again.
+
+- **Finding:** the new row was first numbered FR16, which already belongs to
+  `ref-1`'s row in M003. `scripts/check-ledger-row-ids.mjs` caught it —
+  *"row FR16 appears on lines 169 and 200"* — and it is renumbered FR25. The
+  guard's own message names the lesson: grep the whole ledger before choosing an
+  ID, not just the milestone being edited.
