@@ -89,7 +89,7 @@ parameters 600 and 601.
 |---|---|---|---|---|---|
 | FR02 | Cloth is a second main view that is not finished, and a first release should not have to defend it | `docs` | `webui/index.html`, `webui/ui.js` | No mode chip and no `#cloth` node in the built UI; the source is retained in git history | `open` |
 | FR03 | `learnBtn` reveals three annotations that exist only inside `#cloth`, so it has nothing to say once Cloth is gone | `defect` | `webui/index.html`, `webui/ui.js` | The chip and its handler are gone; no annotation text remains unreferenced | `open` |
-| FR04 | `guide-using-poly.mdx` documents the Cloth/Desk toggle in prose, so the guide would describe a control the user cannot find | `docs` | `site/src/content/docs/guide-using-poly.mdx` | No mention of Cloth or of a mode toggle; the existing Desk screenshot still matches | `open` |
+| FR04 | `guide-using-poly.mdx` documents the Cloth/Desk toggle in prose, so the guide would describe a control the user cannot find | `docs` | `site/src/content/docs/guide-using-poly.mdx` | No mention of Cloth or of a mode toggle; the existing Desk screenshot still matches | `done` |
 | FR05 | Nothing prevents a mode chip returning — the removal is reversible by accident as well as on purpose | `tooling` | `webui/`, `site/tests/` or `webui/` specs | A test fails when a mode chip is reintroduced, proved by adding one and watching it go red | `open` |
 
 ## Milestone M002 — The deep dives stop shipping
