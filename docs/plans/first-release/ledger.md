@@ -98,7 +98,7 @@ parameters 600 and 601.
 that asserts their content still runs.
 
 **Branch:** milestone/M002-unpublish-theory
-**Status:** planned
+**Status:** in-progress
 **Demo:** The site builds with no `theory-*` route and no link to one, and
 `doc-conformance` still runs every guard that asserts a deep dive's content.
 
@@ -119,9 +119,10 @@ directory renders nothing.
 
 ### Slice M002/S01 — The site stops pointing at them
 
+**Plan:** M002-S01-plan.md
 **Validation:** format, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M002-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
@@ -140,6 +141,7 @@ directory renders nothing.
 ### Slice M002/S02 — The pages move, and the guards follow
 
 **Depends:** M002/S01
+**Plan:** M002-S02-plan.md
 **Validation:** format, site-unit, doc-conformance, doc-discipline, guards
 **Evidence:** evidence/M002-S02.md
 **Status:** open
