@@ -74,7 +74,10 @@ test.describe('G07 — capture length 1-32 stepper', () => {
 
   test('the stepper is inert once capture latches (state >= 2)', async ({ page }) => {
     await page.evaluate(() => window.PolyMockHost._setCapture({ state: 2, bars: 12 }));
-    await expect(page.locator('#capBars')).toHaveText('12 bars');
+    // M001/S01: while capture is latched the chip carries progress as well as
+    // the count, because the Cloth capline that used to own that readout is
+    // being removed. The subject of this case is inertness, not the label.
+    await expect(page.locator('#capBars')).toHaveText('1/12 bars');
     await clearActions(page);
     await page.locator('#capBars').click({ force: true });
     // No action dispatched, window frozen.
