@@ -122,21 +122,21 @@ directory renders nothing.
 **Plan:** M002-S01-plan.md
 **Validation:** format, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M002-S01.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] No navigation entry offers a theory deep dive
-- [ ] No chapter carries a `:::note[Theory deep dive]` callout
-- [ ] No prose anywhere on the site tells a reader the deep dives exist
-- [ ] The site builds with no broken internal link
+- [x] No navigation entry offers a theory deep dive
+- [x] No chapter carries a `:::note[Theory deep dive]` callout
+- [x] No prose anywhere on the site tells a reader the deep dives exist
+- [x] The site builds with no broken internal link
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| FR06 | `site/astro.config.mjs` presents a `Theory Deep Dives` nav group with 12 entries | `docs` | `site/astro.config.mjs` | The group is absent and the sidebar has no theory entry | `open` |
-| FR07 | **12** chapters carry a `:::note[Theory deep dive]` callout linking to a page that will not exist | `docs` | `site/src/content/docs/0*.mdx`, `1*.mdx` | No callout remains; the count is read from the tree, not from this row | `open` |
-| FR08 | `about-this-guide.mdx` explains the deep dives as part of how the guide works | `docs` | `site/src/content/docs/about-this-guide.mdx` | The passage is gone and what remains describes the guide that ships | `open` |
-| FR09 | `appendix-references.mdx` names the deep dives in its opening sentence | `docs` | `site/src/content/docs/appendix-references.mdx` | The opening describes the shipping bibliography only | `open` |
+| FR06 | `site/astro.config.mjs` presents a `Theory Deep Dives` nav group with 12 entries | `docs` | `site/astro.config.mjs` | The group is absent and the sidebar has no theory entry | `done` |
+| FR07 | **12** chapters carry a `:::note[Theory deep dive]` callout linking to a page that will not exist | `docs` | `site/src/content/docs/0*.mdx`, `1*.mdx` | No callout remains; the count is read from the tree, not from this row | `done` |
+| FR08 | `about-this-guide.mdx` explains the deep dives as part of how the guide works | `docs` | `site/src/content/docs/about-this-guide.mdx` | The passage is gone and what remains describes the guide that ships | `done` |
+| FR09 | `appendix-references.mdx` names the deep dives in its opening sentence | `docs` | `site/src/content/docs/appendix-references.mdx` | The opening describes the shipping bibliography only | `done` |
 
 ### Slice M002/S02 — The pages move, and the guards follow
 

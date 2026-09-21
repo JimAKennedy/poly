@@ -10,7 +10,7 @@ exist. No new mechanism.
 
 - [x] 1. The navigation stops offering a theory section
 - [x] 2. The twelve chapter callouts go
-- [ ] 3. The four remaining links into the deep dives go
+- [x] 3. The four remaining links into the deep dives go
 
 ## Definition of Done
 

@@ -3,17 +3,23 @@
 // S05 swept the remaining idiom-breaking Experiment/ListenFor suggestions in the
 // chapters and appendices so that each knowing break either (a) carries a
 // D6/D027 :::note[Bending the idiom] Starlight aside naming the broken tradition
-// rule and linking to that tradition's theory-*.mdx #what-breaks-the-idiom
-// section (FRAME), or (b) is replaced when the claim is factually wrong rather
+// rule (FRAME), or (b) is replaced when the claim is factually wrong rather
 // than a knowing break (REPLACE).
+//
+// first-release M002/S01 removed the second half of the FRAME requirement. Each
+// FRAME case also asserted a link into that tradition's theory-*.mdx
+// #what-breaks-the-idiom section, and the theory deep dives are no longer
+// published -- so the link could only point at a route that does not exist. The
+// aside is what makes a break visibly framed, and it is still asserted: a
+// reintroduced unframed idiom-break still cannot pass silently, which is the
+// property this guard was built for.
 //
 // That framing is prose, not machine-derivable: a reintroduced unframed
 // idiom-break or a reverted factual correction would silently pass the build.
 // So, mirroring S03's prose-conformance-claims.test.mjs, this guard locks each
 // edit's exact literal signature — for REPLACE, the forbidden phrase is ABSENT
 // and the corrective wording/link is PRESENT; for FRAME, the :::note[Bending the
-// idiom] aside title and the tradition's #what-breaks-the-idiom anchor link are
-// PRESENT. A reintroduced unframed break fails `node --test` with a message that
+// idiom] aside title is PRESENT. A reintroduced unframed break fails `node --test` with a message that
 // names the file, the finding id, and the phrase/link that reappeared or went
 // missing.
 //
@@ -54,21 +60,21 @@ const FINDINGS = [
     kind: 'FRAME',
     file: 'appendix-presets.mdx',
     rule: 'theory-gamelan Rule 7: gamelan colotomy is self-contained and binary, so a West African E(7,12) bell over Balinese kotekan is knowing fusion, not gamelan practice',
-    present: [':::note[Bending the idiom]', '/theory-gamelan/#what-breaks-the-idiom'],
+    present: [':::note[Bending the idiom]'],
   },
   {
     id: 'S05-F3',
     kind: 'FRAME',
     file: 'appendix-presets.mdx',
     rule: 'theory-balkan Rule 5: a foreign cycle length erases the dance, so an E(4,11) kopanitsa lane against the 7/8 aksak is a deliberate polymetric hybrid, not idiomatic aksak',
-    present: [':::note[Bending the idiom]', '/theory-balkan/#what-breaks-the-idiom'],
+    present: [':::note[Bending the idiom]'],
   },
   {
     id: 'S05-F4',
     kind: 'FRAME',
     file: '03-afro-cuban.mdx',
     rule: 'theory-afro-cuban Rule 2: a crossed part contradicts the matrix direction, so timba clave crossings are a knowing break for tension, not the son idiom',
-    present: [':::note[Bending the idiom]', '/theory-afro-cuban/#what-breaks-the-idiom'],
+    present: [':::note[Bending the idiom]'],
   },
   {
     id: 'S05-F5',
@@ -77,9 +83,6 @@ const FINDINGS = [
     rule: "the chapter's fusions knowingly bend the Afro-Cuban, gamelan, and Balkan idioms; one reciprocal aside links back to each tradition's #what-breaks-the-idiom section",
     present: [
       ':::note[Bending the idiom]',
-      '/theory-afro-cuban/#what-breaks-the-idiom',
-      '/theory-gamelan/#what-breaks-the-idiom',
-      '/theory-balkan/#what-breaks-the-idiom',
     ],
   },
 ];
