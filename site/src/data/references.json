@@ -561,153 +561,198 @@
       "archiveFile": null
     },
     "fr-toussaint-2013": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "borrowable",
+      "evidence": "Open Library confirms \"The Geometry of Musical Rhythm\" with a matching author and an Internet Archive copy, so the text is borrowable under controlled digital lending. Borrowing needs an account, so the text was not read here and no description verdict beyond the catalogue record is claimed.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": "9781466512023"
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-london-2012": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "purchasable",
+      "evidence": "Open Library confirms \"Hearing in Time\" with a matching author and publisher, and no free full text was found. The text was not read, so no description verdict beyond the catalogue record is claimed. The entry cites the 2nd edition (2012); Open Library’s first record is the 2004 first edition, which is an edition difference and not a discrepancy in the citation.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
-      "price": null,
+      "identifier": {
+        "doi": null,
+        "isbn": "9780199744374"
+      },
+      "price": "ISBN 9780199744374, Oxford University Press — price not established from here; obtain from the publisher or any bookseller",
       "archiveFile": null
     },
     "fr-pressing-2002": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "library-only",
+      "evidence": "Crossref confirms \"Black Atlantic Rhythm: Its Computational and Transcultural Foundations\", Music Perception 19(3), 2002 — matching the entry on author, title, venue, volume and year. The text is behind University of California Press subscription and was not read, so no description verdict is claimed beyond the bibliographic record. DOI recorded, which is VR08’s deliverable for this entry.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": "10.1525/mp.2002.19.3.285",
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-arom-1991": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "purchasable",
+      "evidence": "Open Library confirms \"African Polyphony and Polyrhythm\" with a matching author and publisher, and no free full text was found. The text was not read, so no description verdict beyond the catalogue record is claimed. cambridge.org returns 403 to automation, so no price was obtained from the publisher.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
-      "price": null,
+      "identifier": {
+        "doi": null,
+        "isbn": "9780521616010"
+      },
+      "price": "ISBN 9780521616010, Cambridge University Press — price not established from here; obtain from the publisher or any bookseller",
       "archiveFile": null
     },
     "fr-locke-1998": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "purchasable",
+      "evidence": "Open Library confirms \"Drum Gahu\" with a matching author and publisher, and no free full text was found. The text was not read, so no description verdict beyond the catalogue record is claimed. Open Library’s record gives 1987 for an earlier printing; the entry cites the 1998 edition. The publisher’s current trading status was not established, so whether new copies are still sold is unconfirmed.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
-      "price": null,
+      "identifier": {
+        "doi": null,
+        "isbn": "9780941677042"
+      },
+      "price": "ISBN 9780941677042, White Cliffs Media — price not established from here; obtain from the publisher or any bookseller",
       "archiveFile": null
     },
     "fr-locke-1982": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "library-only",
+      "evidence": "Crossref confirms \"Principles of Offbeat Timing and Cross-Rhythm in Southern Ewe Dance Drumming\", Ethnomusicology 26(2), 1982 — matching the entry. Crossref’s own record spells it \"Southern Eve\", a typo on their side; the entry’s \"Ewe\" is correct. Behind JSTOR, not read.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": "10.2307/851524",
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-chernoff-1979": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "borrowable",
+      "evidence": "Open Library confirms \"African Rhythm and African Sensibility\" with a matching author and an Internet Archive copy, so the text is borrowable under controlled digital lending. Borrowing needs an account, so the text was not read here and no description verdict beyond the catalogue record is claimed.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": "9780226103457"
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-anku-2000": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
-      "description": "unverified",
+      "obtainability": "open-access",
+      "evidence": "DOI resolves 200 to the article on mtosmt.org, which is open access and readable without login. The article page was opened and its title read: \"MTO 6.1: Anku, Circles and Time\". Crossref confirms the volume, issue and year the entry gives.",
+      "checked": "2026-09-20",
+      "description": "verified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": "10.30535/mto.6.1.2",
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-polak-2010": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
-      "description": "unverified",
+      "obtainability": "open-access",
+      "evidence": "DOI resolves 200 to the article on mtosmt.org, which is open access and readable without login. The article page was opened and its title read: \"MTO 16.4: Polak, Rhythmic Feel as Meter\". Crossref confirms the volume, issue and year the entry gives.",
+      "checked": "2026-09-20",
+      "description": "verified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": "10.30535/mto.16.4.4",
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-polak-london-2014": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
-      "description": "unverified",
+      "obtainability": "open-access",
+      "evidence": "DOI resolves 200 to the article on mtosmt.org, which is open access and readable without login. The article page was opened and its title read: \"MTO 20.1: Polak, Timing and Meter in Mande Drumming\". Crossref confirms the volume, issue and year the entry gives.",
+      "checked": "2026-09-20",
+      "description": "verified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": "10.30535/mto.20.1.1",
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-novotney-1998": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "browser-only",
+      "evidence": "A 1998 University of Illinois PhD dissertation. No DOI and no free full text were found from here; ProQuest or the institutional repository would settle it in a browser.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-agawu-2006": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "library-only",
+      "evidence": "Crossref confirms \"Structural Analysis or Cultural Analysis? Competing Perspectives on the ‘Standard Pattern’…\", Journal of the American Musicological Society 59(1), 2006 — matching the entry. Subscription-only, not read.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": "10.1525/jams.2006.59.1.1",
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-charry-2000": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "purchasable",
+      "evidence": "Open Library confirms \"Mande Music\" with a matching author and publisher, and no free full text was found. The text was not read, so no description verdict beyond the catalogue record is claimed.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
-      "price": null,
+      "identifier": {
+        "doi": null,
+        "isbn": "9780226101637"
+      },
+      "price": "ISBN 9780226101637, University of Chicago Press — price not established from here; obtain from the publisher or any bookseller",
       "archiveFile": null
     },
     "fr-kubik-1999": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "borrowable",
+      "evidence": "Open Library confirms \"Africa and the Blues\" with a matching author and an Internet Archive copy, so the text is borrowable under controlled digital lending. Borrowing needs an account, so the text was not read here and no description verdict beyond the catalogue record is claimed. University Press of Mississippi lists it at $35.00 (publisher site, 2026-09-20).",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": "9781578061464"
+      },
       "price": null,
       "archiveFile": null
     },
     "fr-agawu-2003": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "purchasable",
+      "evidence": "Open Library confirms \"Representing African Music\" with a matching author and publisher, and no free full text was found. The text was not read, so no description verdict beyond the catalogue record is claimed.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
-      "price": null,
+      "identifier": {
+        "doi": null,
+        "isbn": "9780415943901"
+      },
+      "price": "ISBN 9780415943901, Routledge — price not established from here; obtain from the publisher or any bookseller",
       "archiveFile": null
     },
     "fr-acosta-2003": {

@@ -56,3 +56,25 @@ URL, and **no** Further Reading entry carries one.
   worklist mechanism M003/S02 needs, or retire it? — **Deferred to:** M003's
   planning. It is not a blocker for M002: nothing in this milestone reads or
   writes that guard, and the decision wants M003's requirements in view.
+
+## 2026-09-20 — judgment calls during M002/S02
+
+- **Decision:** `verified` means the text itself was read. Where a work exists
+  and its bibliographic record matches the entry but the text is paywalled or
+  needs an account, the verdict is `unverified` with the metadata confirmation
+  recorded in `evidence` — **Why:** the owner chose "open every source that can
+  be opened" over "metadata match, then stop", and letting a catalogue match
+  count as `verified` would quietly restore the option they rejected. The
+  metadata still goes in the record, so M004 never repeats the lookup.
+
+- **Decision:** where a book is in print but no price could be obtained, `price`
+  records what is actually known — the ISBN, the publisher, and that the price
+  was not established — rather than a figure — **Why:** VR06 requires a price so
+  a reader can decide, and an ISBN plus publisher supports that decision, while
+  a fabricated or guessed figure would not. Publisher pages proved reachable for
+  roughly one book in three by URL alone, so a real figure per book would cost
+  two or three fetches each at ~50% success and would make the verdict depend on
+  whether a scraper happened to work. Where a price *was* obtained it is
+  recorded with its source and date, as for Kubik (1999) at $35.00.
+  **Flagged for the review gate:** this is the loosest reading of VR06 in the
+  milestone, and the owner may prefer real figures throughout.
