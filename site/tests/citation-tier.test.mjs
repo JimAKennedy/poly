@@ -72,6 +72,77 @@ const CLAIMS = [
     forbiddenRegex: [/11866\/4\/DISSERTATION_-_FULL_Oluranti\.pdf/],
   },
   {
+    id: 'REF6-JONES',
+    file: 'appendix-references.mdx',
+    rule:
+      'VR03. ref [6] cited Jones (1959) *Studies in African Music* and linked to ' +
+      'a Cambridge review OF that book, so a reader reached two pages of someone ' +
+      "else's opinion of a work they still could not read. The work itself is on " +
+      'archive.org as a borrowable scan (identifier studiesinafrican0000amjo, ' +
+      'A.M. Jones, Oxford University Press, collections inlibrary and ' +
+      'printdisabled — controlled digital lending). The review survives only as ' +
+      'a labelled secondary. The definition of done\'s other arm, citing the ' +
+      'book by ISBN, is unavailable: the archive.org record carries no ISBN and ' +
+      'a 1959 imprint predates the ISBN system',
+    present: ['Studies in African Music', 'Jones, A. M. (1959)'],
+    presentRegex: [/archive\.org\/details\/studiesinafrican0000amjo/],
+    // The present arm only proves the scan URL is somewhere in the file. This
+    // proves it is on ref-6's own line, and ahead of the review: the match
+    // succeeds only when the Cambridge URL is reachable from id="ref-6"
+    // without passing an archive.org link first. Both the old single-link form
+    // and a form that puts the opinion before the work are therefore red.
+    forbiddenRegex: [/id="ref-6"(?:(?!archive\.org)[^\n])*cambridge\.org/],
+  },
+  {
+    id: 'REF26-AKSAK',
+    file: 'appendix-references.mdx',
+    rule:
+      'VR01. ref [26] was a Fiveable course-marketing study guide and returned ' +
+      '404. Under the obtainability principle that is a replacement, not a ' +
+      'repair: the replacement is Bonini Baraldi, Bigand & Pozzo (2015), ' +
+      '"Measuring Aksak Rhythm and Synchronization in Transylvanian Village ' +
+      'Music by Using Motion Capture", Empirical Musicology Review 10(4), ' +
+      '265-291, the lead article of that journal\'s open-access aksak special ' +
+      'issue. Author list, title, volume, issue, pages and DOI come from ' +
+      'Crossref. It is cited by DOI rather than by a host path so it cannot rot ' +
+      'the way its predecessor did, and it is replaced in place so refs 27-43 ' +
+      'need no renumbering. It must not be the Goldberg paper from the same ' +
+      'issue, which the Balkan chapter already cites as fr-goldberg-2015',
+    // Tree-wide on the bibliography: the dead study-guide host must not return
+    // under any entry number, not merely under 26.
+    forbiddenRegex: [/fiveable\.me/],
+    present: [
+      'Measuring Aksak Rhythm and Synchronization',
+      'Empirical Musicology Review',
+    ],
+    presentRegex: [/10\.18061\/emr\.v10i4\.4891/],
+  },
+  {
+    id: 'REF22-CLAYTON',
+    file: 'appendix-references.mdx',
+    rule:
+      'VR02. ref [22] was the National Institute of Open Schooling\'s Hindustani ' +
+      'Music (242) teaching text -- course material, the same class as the ' +
+      'Fiveable study guide removed from ref [26]. It was replaced on editorial ' +
+      'grounds rather than liveness grounds: whether a teaching PDF loads does ' +
+      'not make it a citable source, so the browser check the worklist had ' +
+      'queued was never needed. The replacement is Clayton (2020), Music Theory ' +
+      'Online 26(1), DOI 10.30535/mto.26.1.2 -- peer-reviewed, platinum open ' +
+      'access, freely readable without login, and on North Indian rupak tal, ' +
+      'which is the slot ref [22] occupied. Verified against the publisher ' +
+      'page, the served HTML and Crossref, with the DOI resolving to the ' +
+      'article. Clayton is already the chapter\'s primary authority as ' +
+      'fr-clayton-2000',
+    // Tree-wide, like the fiveable.me arm: the teaching text must not return
+    // under any entry number.
+    forbiddenRegex: [/nios\.ac\.in/],
+    present: [
+      'Theory and Practice of Long-form Non-isochronous Meters',
+      'Music Theory Online',
+    ],
+    presentRegex: [/10\.30535\/mto\.26\.1\.2/],
+  },
+  {
     id: 'S02-F18',
     file: '03-afro-cuban.mdx',
     rule:
@@ -291,5 +362,55 @@ test(`S01-F17-tree: the fabricated ref-2 title appears in no doc`, async () => {
     `fabricated citation title reappeared in: ${offenders.join(', ')}. ` +
       'Authority: MTO 31(2) carries no article of this title (publisher table ' +
       'of contents, checked 2026-09-01).',
+  );
+});
+
+// VR02. ref [22] cites a chapter of the National Institute of Open Schooling's
+// Hindustani Music (242) theory book. NIOS is India's national open-schooling
+// board and the source is legitimate; what is NOT established is that the link
+// is dead. Nothing on nios.ac.in answers from this network — not the PDF, not a
+// sibling chapter a search engine lists as live, not the homepage — while DNS
+// resolves to a single A record. That is the D-Scholarship class the
+// REF9-OLURANTI case describes, not link rot.
+//
+// This is deliberately not an assertion that the URL works; no test run here
+// can settle that. It asserts an implication: if the bibliography still cites
+// the host, the browser worklist must name the entry. "We could not check it"
+// and "we checked it and it was fine" are indistinguishable states once the
+// session ends, and only one of them is true here — so an entry nobody could
+// verify must carry an owner and a place in a queue.
+//
+// It is a standalone case rather than a CLAIMS entry because it reads two
+// files. registerClaimTests loads exactly one source per claim, and a claim
+// pointed at the worklist alone could only assert the obligation
+// unconditionally — going red the day the entry is legitimately resolved.
+test('ref-22 stays queued while its URL is unverified', async () => {
+  const bibliography = await loadSource('appendix-references.mdx');
+  if (!bibliography.includes('nios.ac.in')) return; // condition false, obligation lifts
+
+  const worklistPath = join(
+    HERE,
+    '..',
+    '..',
+    'docs',
+    'plans',
+    'verifiable-references',
+    'browser-worklist.md',
+  );
+  let worklist;
+  try {
+    worklist = await readFile(worklistPath, 'utf8');
+  } catch {
+    assert.fail(
+      `appendix-references.mdx still cites nios.ac.in, but ${worklistPath} ` +
+        'does not exist. An entry no automated fetch can verify must be queued ' +
+        "for a human, or it is silently indistinguishable from one that's fine.",
+    );
+  }
+  assert.ok(
+    worklist.includes('ref-22'),
+    'appendix-references.mdx still cites nios.ac.in, but the browser worklist ' +
+      'does not name ref-22. Either queue the entry or resolve it — leaving it ' +
+      'cited and unqueued records a verification that never happened.',
   );
 });

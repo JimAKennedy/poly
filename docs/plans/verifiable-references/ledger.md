@@ -52,7 +52,7 @@ stays a plan; the manifest is where progress across 107 entries is visible.
 one citing a review instead of the work — are corrected and locked.
 
 **Branch:** milestone/M001-known-defects
-**Status:** planned
+**Status:** done
 **Demo:** Every URL in the numbered bibliography either resolves or is recorded
 as deliberately unresolvable, and no entry links to a commentary on itself.
 
@@ -62,24 +62,25 @@ live behind weeks of classification work is over-serialising for tidiness.
 
 ### Slice M001/S01 — The three measured defects are corrected
 
+**Plan:** M001-S01-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M001-S01.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] `ref-26` and `ref-22` each resolve, or are replaced, or are recorded as
+- [x] `ref-26` and `ref-22` each resolve, or are replaced, or are recorded as
       deliberately removed with the claim they supported rewritten
-- [ ] `ref-6` links to Jones (1959) itself, or names plainly that the link is to
+- [x] `ref-6` links to Jones (1959) itself, or names plainly that the link is to
       a review and cites the book by ISBN
-- [ ] Each correction is locked by a claim test that fails if the old form
+- [x] Each correction is locked by a claim test that fails if the old form
       returns
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| VR01 | `ref-26` (`fiveable.me`, Tier B) returns 404. It is a course-marketing study guide, so under the obtainability principle this is a replacement rather than a repair | `defect` | `appendix-references.mdx` | The URL resolves or the entry is gone; a claim test pins the outcome | `open` |
-| VR02 | `ref-22` (`nios.ac.in`, Tier B) does not respond. NIOS is India's National Institute of Open Schooling and legitimate — the PDF moved rather than the source being bad | `defect` | `appendix-references.mdx` | The URL resolves or the entry is gone; a claim test pins the outcome | `open` |
-| VR03 | `ref-6` cites Jones (1959) *Studies in African Music* and links to a Cambridge **review** of the book. A reader reaches someone else's two-page opinion of a work they still cannot read | `defect` | `appendix-references.mdx` | The entry links to the work or names the surrogate explicitly; a claim test pins it | `open` |
+| VR01 | `ref-26` (`fiveable.me`, Tier B) returns 404. It is a course-marketing study guide, so under the obtainability principle this is a replacement rather than a repair | `defect` | `appendix-references.mdx` | The URL resolves or the entry is gone; a claim test pins the outcome | `done` |
+| VR02 | `ref-22` (`nios.ac.in`, Tier B) does not respond. NIOS is India's National Institute of Open Schooling and legitimate — the PDF moved rather than the source being bad | `defect` | `appendix-references.mdx` | The URL resolves or the entry is gone; a claim test pins the outcome | `done` |
+| VR03 | `ref-6` cites Jones (1959) *Studies in African Music* and links to a Cambridge **review** of the book. A reader reaches someone else's two-page opinion of a work they still cannot read | `defect` | `appendix-references.mdx` | The entry links to the work or names the surrogate explicitly; a claim test pins it | `done` |
 
 ## Milestone M002 — Every reference has a verdict
 
@@ -135,8 +136,9 @@ opening the PDF. Expect a long tail where the only way to answer is to look.
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
 | VR06 | 107 references with no recorded availability. "Purchasable" without a price is not a decision anyone can make, so the verdict carries one | `docs` | `site/src/data/references.json` | The manifest is complete; the completeness test from M002/S01 passes | `open` |
-| VR07 | A citation can name a work that does not exist while every mechanical check passes — a link checker sees 200, a tier check sees the venue, the anchor check sees a defined id, and none sees the pairing. Three of three examined entries failed this | `defect` | `site/src/data/references.json` | Each entry carries a description verdict; "unverified" is recorded rather than assumed | `open` |
+| VR07 | A citation can name a work that does not exist while every mechanical check passes — a link checker sees 200, a tier check sees the venue, the anchor check sees a defined id, and none sees the pairing. Three of three examined entries failed this, and a fourth (`ref-23`) surfaced during M001 without being looked for | `defect` | `site/src/data/references.json` | Each entry carries a description verdict; "unverified" is recorded rather than assumed | `open` |
 | VR08 | The 64 Further Reading entries carry no URL, ISBN or DOI, so a reader who wants one has no route at all | `docs` | `site/src/data/references.json` | Each carries an obtainability verdict and an identifier where one exists | `open` |
+| VR17 | `ref-23` is suspected of naming both the wrong title and the wrong journal: the article at its URL appears to be "Indian Rhythmic Systems as Sources of Inspiration for…" in *Analytical Approaches to World Music* 11(2), while the entry says "…in Comparative Perspective" in the *Journal of the International Folk Art and World Music Society* — a name that looks like a guessed expansion of "iftawm". Seeded from M001 so this pass does not rediscover it | `defect` | `site/src/data/references.json`, `appendix-references.mdx` | The real title and journal are read off the source and recorded; the entry matches them | `open` |
 
 ## Milestone M003 — The archive exists
 
