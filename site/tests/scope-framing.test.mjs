@@ -404,8 +404,12 @@ test('S01-F24: the About page exists and is reachable from the introduction and 
   // The deep dives moved to site/src/content/theory/ in first-release M002/S02.
   // They are deferred rather than retired, so this guard still requires all
   // twelve and still requires each to link to the About page.
+  // theory-references.mdx is the bundle's own bibliography, added by
+  // first-release M002/S02 FR14. It is not a deep dive and carries no About
+  // link, so it is excluded from the count this guard pins at twelve.
   const theory = (await readdir(THEORY))
     .filter((f) => f.startsWith('theory-') && f.endsWith('.mdx'))
+    .filter((f) => f !== 'theory-references.mdx')
     .sort();
   assert.equal(
     theory.length,

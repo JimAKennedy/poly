@@ -14,7 +14,7 @@ already exist, and one new bibliography assembled from an existing one.
 - [x] 1. The pages move, with their imports intact
 - [x] 2. The ten test files follow them
 - [x] 3. The drift map follows them
-- [ ] 4. The deep dives carry their own bibliography
+- [x] 4. The deep dives carry their own bibliography
 - [ ] 5. Each deep dive names the presets that bend its rules
 - [ ] 6. `jk-standards.yaml` says why this works, and the slice closes
 
