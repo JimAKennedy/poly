@@ -41,7 +41,7 @@ obtain without an institution.
 do is reachable from it.
 
 **Branch:** milestone/M001-desk-only
-**Status:** planned
+**Status:** in-progress
 **Demo:** A shipped build offers no mode chip, and MIDI capture is reachable
 from the toolbar beside Export.
 
@@ -53,9 +53,10 @@ parameters 600 and 601.
 
 ### Slice M001/S01 — Capture reaches the toolbar
 
+**Plan:** M001-S01-plan.md
 **Validation:** format, webui-e2e
 **Evidence:** evidence/M001-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
@@ -70,7 +71,8 @@ parameters 600 and 601.
 ### Slice M001/S02 — Cloth leaves the shipped build
 
 **Depends:** M001/S01
-**Validation:** format, webui-e2e, doc-conformance
+**Plan:** M001-S02-plan.md
+**Validation:** format, webui-e2e, doc-conformance, site-unit
 **Evidence:** evidence/M001-S02.md
 **Status:** open
 
