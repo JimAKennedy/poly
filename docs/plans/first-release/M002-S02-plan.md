@@ -15,7 +15,7 @@ already exist, and one new bibliography assembled from an existing one.
 - [x] 2. The ten test files follow them
 - [x] 3. The drift map follows them
 - [x] 4. The deep dives carry their own bibliography
-- [ ] 5. Each deep dive names the presets that bend its rules
+- [x] 5. Each deep dive names the presets that bend its rules
 - [ ] 6. `jk-standards.yaml` says why this works, and the slice closes
 
 ## Definition of Done
