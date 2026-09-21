@@ -13,7 +13,7 @@ Bounded does not mean small — this is the milestone's expensive half.
 ## Task status
 
 - [x] 1. Numbered refs, Chapters 1–3 (11 entries)
-- [ ] 2. Numbered refs, Chapters 4–7 (18 entries)
+- [x] 2. Numbered refs, Chapters 4–7 (18 entries)
 - [ ] 3. Numbered refs, Chapters 8–15 (14 entries)
 - [ ] 4. Further Reading — Foundations, Sub-Saharan Africa (15 entries)
 - [ ] 5. Further Reading — Afro-Cuban through Balkan (21 entries)

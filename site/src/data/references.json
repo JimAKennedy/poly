@@ -145,82 +145,106 @@
       "archiveFile": null
     },
     "ref-14": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "browser-only",
+      "evidence": "youtube.com returned 429 to automation. A video carries no text to review, so no description verdict is reachable by reading; removal is M004/VR12.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "ref-15": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "browser-only",
+      "evidence": "youtube.com returned 429 to automation. A video carries no text to review, so no description verdict is reachable by reading; removal is M004/VR12.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "ref-16": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
-      "description": "unverified",
+      "obtainability": "open-access",
+      "evidence": "samplesoundmusic.com returns 200 text/html, 595797 bytes; the page h1 is \"Afro House Explained: Rhythm, Culture, and Production Techniques\", matching the entry exactly. A commercial sample-library blog, so Tier C is right.",
+      "checked": "2026-09-20",
+      "description": "verified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "ref-17": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "browser-only",
+      "evidence": "lianproductions.com answers 202 with 182 bytes — a challenge or JavaScript-required stub, not the article. Nothing about the content could be established from here.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "ref-18": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "browser-only",
+      "evidence": "academic.oup.com returns 403 to automation with a ~5.7 KB block page. Whether the chapter is readable, purchasable or institution-only could not be established from here, so no obtainability finer than browser-only is claimed and no price is recorded. The entry titles it \"Algorithmic Thinking and the Art of Javanese Gamelan\".",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "ref-19": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "browser-only",
+      "evidence": "academic.oup.com returns 403 to automation with a ~5.7 KB block page. Whether the chapter is readable, purchasable or institution-only could not be established from here, so no obtainability finer than browser-only is claimed and no price is recorded. The entry titles it \"Ladrang Pangkur: Colotomic Structure in Javanese Gamelan\".",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "ref-20": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
-      "description": "unverified",
-      "note": "",
-      "identifier": null,
+      "obtainability": "open-access",
+      "evidence": "gamelan.org.nz returns 200 application/pdf, 69196 bytes; the PDF was read directly.",
+      "checked": "2026-09-20",
+      "description": "mismatch",
+      "note": "The document’s own heading is \"NOTATION FOR GAMELAN BALI - put together by Yudane\". The entry titles it \"Introduction to Balinese Gamelan\", which is not the document’s title. The author attribution is right and the subject is adjacent, but the title as cited does not exist.",
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "ref-21": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
-      "description": "unverified",
+      "obtainability": "open-access",
+      "evidence": "artiumacademy.com returns 200 text/html, 191790 bytes. The page h1 is \"Exploring the Underpinnings of Taal in Music: The Silent Language of Indian Classical Music\" — the same article the entry cites, with the title’s clauses reordered and \"Tala\" substituted for \"Taal\". Recorded as verified rather than mismatch because it is the same work, but the cited title is not the published one and M004 may want to correct the wording. A commercial music-school blog, so Tier B is generous.",
+      "checked": "2026-09-20",
+      "description": "verified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
@@ -238,32 +262,41 @@
       "archiveFile": null
     },
     "ref-23": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "browser-only",
+      "evidence": "journal.iftawm.org resets every automated connection (curl exit 35, 0 bytes) — the whole host, not this path. The PDF could not be read from here, so the suspicion below is recorded as a suspicion and not as a verdict.",
+      "checked": "2026-09-20",
       "description": "unverified",
-      "note": "",
-      "identifier": null,
+      "note": "VR17. Two independent search results and the journal’s own article landing page (journal.iftawm.org/previous/2023-volume-11-no-2/reindl/) indicate the article is \"Indian Rhythmic Systems as Sources of Inspiration for…\" in Analytical Approaches to World Music 11(2), December 2023. The entry says \"…in Comparative Perspective\" in the \"Journal of the International Folk Art and World Music Society\", which reads like a guessed expansion of \"iftawm\" — IFTAWM is the International Foundation for the Theory and Analysis of World Musics. Both the title and the journal name need confirming in a browser before M004 corrects them.",
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "ref-24": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "browser-only",
+      "evidence": "alpaca.pubpub.org returns 403 to automation with a ~5.8 KB block page. PubPub is open access, so this is a bot block rather than a paywall, and a browser should settle it.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "ref-25": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "browser-only",
+      "evidence": "youtube.com returned 429 to automation. A video carries no text to review; removal is M004/VR12.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
@@ -281,52 +314,67 @@
       "archiveFile": null
     },
     "ref-27": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
-      "description": "unverified",
+      "obtainability": "open-access",
+      "evidence": "chromatone.center returns 200 text/html, 34353 bytes; og:title is \"Balkan dances\". The entry calls it \"Balkan Dance Rhythms\" — the same page with a slightly expanded title, so verified rather than mismatch, with the wording noted for M004.",
+      "checked": "2026-09-20",
+      "description": "verified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "ref-28": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
-      "description": "unverified",
-      "note": "",
-      "identifier": null,
+      "obtainability": "open-access",
+      "evidence": "diva-portal.org returns 200 application/pdf, 613261 bytes; the PDF was read directly.",
+      "checked": "2026-09-20",
+      "description": "mismatch",
+      "note": "The document is Srinivasamurthy, A., Holzapfel, A. & Serra, X. (2014), \"In Search of Automatic Rhythm Analysis Methods for Turkish and Indian Art Music\", a postprint of a Journal for New Music Research paper. The entry cites it as Holzapfel, A., \"Metrical Structure in Turkish Makam Music\" — a different title, and Holzapfel is the second of three authors rather than the sole author.",
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "ref-29": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
-      "description": "unverified",
-      "note": "",
-      "identifier": null,
+      "obtainability": "open-access",
+      "evidence": "diva-portal.org returns 200 application/pdf, 537565 bytes; the PDF was read directly.",
+      "checked": "2026-09-20",
+      "description": "mismatch",
+      "note": "The document is Holzapfel, A. & Bozkurt, B. (2012), \"Metrical Strength and Contradiction in Turkish Makam Music\", a postprint from the 2nd CompMusic Workshop. The entry cites it as Holzapfel alone, titled \"Metrical Strength and Syncopation Distribution in Turkish Usul\" — \"Contradiction\" is not \"Syncopation Distribution\" and \"Makam Music\" is not \"Usul\".",
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "ref-30": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "browser-only",
+      "evidence": "academia.edu returns 403 to automation with a ~5.9 KB block page. Academia.edu requires an account, which the owner has, so this is browser-settleable rather than unobtainable.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "ref-31": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
-      "description": "unverified",
-      "note": "",
-      "identifier": null,
+      "obtainability": "open-access",
+      "evidence": "tnp.mtsnys.org returns 200 text/html, 57397 bytes; the page h1 was read directly.",
+      "checked": "2026-09-20",
+      "description": "mismatch",
+      "note": "The article is \"Rhythmic-Temporal Disruptions and the Feeling of Ṭarab\" by Issa Aji. The entry titles it \"Arab Rhythmic Cycles (Iqa’at)\", which is not a rewording of the published title but a different one; the author is right.",
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
