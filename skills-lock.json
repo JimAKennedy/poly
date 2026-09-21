@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "jkStandardsVersion": "0.18.0",
+  "jkStandardsVersion": "0.19.0",
   "skills": {
     "branch-discipline": {
       "source": "JimAKennedy/jk-standards",
