@@ -88,7 +88,7 @@ live behind weeks of classification work is over-serialising for tidiness.
 and a description verified against the source itself.
 
 **Branch:** milestone/M002-verdicts
-**Status:** planned
+**Status:** done
 **Demo:** `site/src/data/references.json` holds one record per bibliography
 entry, and a test fails if an entry exists without one.
 
@@ -99,46 +99,48 @@ opening the PDF. Expect a long tail where the only way to answer is to look.
 
 ### Slice M002/S01 — The manifest exists and cannot drift from the bibliography
 
+**Plan:** M002-S01-plan.md
 **Validation:** format, site-unit, guards
 **Evidence:** evidence/M002-S01.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] `site/src/data/references.json` has a declared shape carrying, per entry:
+- [x] `site/src/data/references.json` has a declared shape carrying, per entry:
       anchor id, obtainability, description verdict, archive filename, and
       ISBN/DOI where one exists
-- [ ] A test fails when a bibliography anchor has no manifest record, and when a
+- [x] A test fails when a bibliography anchor has no manifest record, and when a
       manifest record names an anchor that does not exist
-- [ ] The test is shown to fail in both directions before being trusted
+- [x] The test is shown to fail in both directions before being trusted
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| VR04 | Nothing records obtainability or accuracy anywhere, so a later pass cannot tell a verified entry from an unexamined one. Silence currently implies "checked" | `tooling` | `site/src/data/references.json`, `site/tests/` | Both arms mutation-proved: an unrecorded anchor fails, and an orphan record fails | `open` |
-| VR05 | The archive root differs per machine and is a personal path, which `check-personal-paths` rejects in tracked files — it caught the absolute form in the vision's own first draft | `tooling` | `site/src/data/references.json`, `scripts/` | Filenames are recorded relative to a root supplied by the environment; `guards` stays green | `open` |
+| VR04 | Nothing records obtainability or accuracy anywhere, so a later pass cannot tell a verified entry from an unexamined one. Silence currently implies "checked" | `tooling` | `site/src/data/references.json`, `site/tests/` | Both arms mutation-proved: an unrecorded anchor fails, and an orphan record fails | `done` |
+| VR05 | The archive root differs per machine and is a personal path, which `check-personal-paths` rejects in tracked files — it caught the absolute form in the vision's own first draft | `tooling` | `site/src/data/references.json`, `scripts/` | Filenames are recorded relative to a root supplied by the environment; `guards` stays green | `done` |
 
 ### Slice M002/S02 — All 107 carry both verdicts
 
 **Depends:** M002/S01
+**Plan:** M002-S02-plan.md
 **Validation:** format, site-unit
 **Evidence:** evidence/M002-S02.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Every one of the 107 entries has an obtainability verdict with its
+- [x] Every one of the 107 entries has an obtainability verdict with its
       evidence, and a price where the verdict is "purchasable"
-- [ ] Every entry has a description verdict — verified, mismatch, or
+- [x] Every entry has a description verdict — verified, mismatch, or
       **unverified** — reached against the source, not against the guide's entry
-- [ ] Every mismatch is recorded with what the source actually is, so M004 can
+- [x] Every mismatch is recorded with what the source actually is, so M004 can
       act on it without repeating the work
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| VR06 | 107 references with no recorded availability. "Purchasable" without a price is not a decision anyone can make, so the verdict carries one | `docs` | `site/src/data/references.json` | The manifest is complete; the completeness test from M002/S01 passes | `open` |
-| VR07 | A citation can name a work that does not exist while every mechanical check passes — a link checker sees 200, a tier check sees the venue, the anchor check sees a defined id, and none sees the pairing. Three of three examined entries failed this, and a fourth (`ref-23`) surfaced during M001 without being looked for | `defect` | `site/src/data/references.json` | Each entry carries a description verdict; "unverified" is recorded rather than assumed | `open` |
-| VR08 | The 64 Further Reading entries carry no URL, ISBN or DOI, so a reader who wants one has no route at all | `docs` | `site/src/data/references.json` | Each carries an obtainability verdict and an identifier where one exists | `open` |
-| VR17 | `ref-23` is suspected of naming both the wrong title and the wrong journal: the article at its URL appears to be "Indian Rhythmic Systems as Sources of Inspiration for…" in *Analytical Approaches to World Music* 11(2), while the entry says "…in Comparative Perspective" in the *Journal of the International Folk Art and World Music Society* — a name that looks like a guessed expansion of "iftawm". Seeded from M001 so this pass does not rediscover it | `defect` | `site/src/data/references.json`, `appendix-references.mdx` | The real title and journal are read off the source and recorded; the entry matches them | `open` |
+| VR06 | 107 references with no recorded availability. "Purchasable" without a price is not a decision anyone can make, so the verdict carries one | `docs` | `site/src/data/references.json` | The manifest is complete; the completeness test from M002/S01 passes | `done` |
+| VR07 | A citation can name a work that does not exist while every mechanical check passes — a link checker sees 200, a tier check sees the venue, the anchor check sees a defined id, and none sees the pairing. Three of three examined entries failed this, and a fourth (`ref-23`) surfaced during M001 without being looked for | `defect` | `site/src/data/references.json` | Each entry carries a description verdict; "unverified" is recorded rather than assumed | `done` |
+| VR08 | The 64 Further Reading entries carry no URL, ISBN or DOI, so a reader who wants one has no route at all | `docs` | `site/src/data/references.json` | Each carries an obtainability verdict and an identifier where one exists | `done` |
+| VR17 | `ref-23` is suspected of naming both the wrong title and the wrong journal: the article at its URL appears to be "Indian Rhythmic Systems as Sources of Inspiration for…" in *Analytical Approaches to World Music* 11(2), while the entry says "…in Comparative Perspective" in the *Journal of the International Folk Art and World Music Society* — a name that looks like a guessed expansion of "iftawm". Seeded from M001 so this pass does not rediscover it | `defect` | `site/src/data/references.json`, `appendix-references.mdx` | The real title and journal are read off the source and recorded; the entry matches them | `done` |
 
 ## Milestone M003 — The archive exists
 
