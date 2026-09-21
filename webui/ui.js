@@ -18,7 +18,6 @@
 
   let S = null; // latest state snapshot
   let lastFrame = { t8: 0, playing: false, convLeft: CONV, lanes: [] };
-  let mode = 'desk';
   let expanded = -1;
   let strips = [], rings = [], hands = [], ladders = [], vus = [], playeds = [];
   const tabState = {};
@@ -59,16 +58,8 @@
       e.preventDefault();
       host.action('togglePlay', {});
     }
-    if (e.key === 'l' || e.key === 'L') toggleLearn();
     if (e.key === 'Escape') { closePresetMenu(); expandStrip(-1); }
-    if (e.key === '1') setMode('cloth');
-    if (e.key === '2') setMode('desk');
   });
-  function toggleLearn() {
-    document.body.classList.toggle('learn');
-    document.getElementById('learnBtn').classList.toggle('on');
-  }
-  document.getElementById('learnBtn').addEventListener('click', toggleLearn);
   document.getElementById('scA').addEventListener('click', () => host.action('selectScene', { scene: 'A' }));
   document.getElementById('scB').addEventListener('click', () => host.action('selectScene', { scene: 'B' }));
   document.getElementById('scM').addEventListener('click', () => host.action('selectScene', { scene: 'Morph' }));
@@ -622,306 +613,7 @@
   document.addEventListener('click', (e) => {
     if (!presetMenu.contains(e.target) && e.target !== presetBtn) closePresetMenu();
   });
-  document.getElementById('mCloth').addEventListener('click', () => setMode('cloth'));
-  document.getElementById('mDesk').addEventListener('click', () => setMode('desk'));
 
-  function setMode(m, focus = -1) {
-    mode = m;
-    document.getElementById('cloth').classList.toggle('on', m === 'cloth');
-    document.getElementById('desk').classList.toggle('on', m === 'desk');
-    document.getElementById('mCloth').classList.toggle('on', m === 'cloth');
-    document.getElementById('mDesk').classList.toggle('on', m === 'desk');
-    // Arm/Reset + bars picker are capture-timeline controls — Cloth mode only.
-    // Learn only reveals annotations inside #cloth — gate the chip to Cloth.
-    document.getElementById('learnBtn').classList.toggle('mode-hidden', m !== 'cloth');
-    if (m === 'cloth') sizeLoom();
-    if (m === 'desk' && focus >= 0) expandStrip(focus);
-  }
-
-  /* ================= cloth ================= */
-  const loom = document.getElementById('loom');
-  const tags = document.getElementById('tags');
-  const clothEl = document.getElementById('cloth');
-  const clothAnns = ['annA', 'annB', 'annC'].map((id) => document.getElementById(id));
-  const capline = clothEl ? clothEl.querySelector('.capline') : null;
-  // Eighth-note ticks per bar from the host meter (4/4 -> 8). Feedback frames
-  // carry tsNum/tsDen; fall back to 4/4 on legacy hosts.
-  function eighthsPerBar() {
-    const num = lastFrame.tsNum || 4, den = lastFrame.tsDen || 4;
-    return Math.max(1, Math.round(num * (8 / den)));
-  }
-  loom.addEventListener('click', (e) => {
-    const r = loom.getBoundingClientRect();
-    setMode('desk', Math.min(S.lanes.length - 1, Math.floor(((e.clientY - r.top) / r.height) * S.lanes.length)));
-  });
-  addEventListener('resize', () => { if (mode === 'cloth') sizeLoom(); });
-  function sizeLoom() {
-    const r = loom.parentElement.getBoundingClientRect();
-    loom.width = r.width * devicePixelRatio;
-    loom.height = r.height * devicePixelRatio;
-    drawLoom(lastFrame.t8);
-  }
-  function buildTags() {
-    tags.innerHTML = '';
-    S.lanes.forEach((l, li) => {
-      const t = document.createElement('div');
-      t.className = 'tag';
-      t.style.top = `${((li + 0.5) / S.lanes.length) * 100}%`;
-      t.innerHTML = `${l.name}<small>${cyc8(l)} picks</small>`;
-      tags.appendChild(t);
-    });
-  }
-  // M051 S08: Cloth is a capture timeline whose visual IS the export receipt.
-  // In idle it keeps the decorative convergence weave; once armed it becomes a
-  // bar-anchored timeline (X = bars 1..N, Y = lanes) with an L->R playhead
-  // during capturing and a gold selvage marking bar N at complete.
-  function drawLoom(t8) {
-    const g = loom.getContext('2d');
-    if (!g || !S) return;
-    const W = loom.width, H = loom.height, dp = devicePixelRatio;
-    g.clearRect(0, 0, W, H);
-    const capState = lastFrame.capState | 0;
-    const bars = Math.max(1, lastFrame.capBars || 8);
-    const prog = Math.max(0, Math.min(bars, lastFrame.capProg || 0));
-    updateClothChrome(capState, bars, prog);
-    if (capState >= 1) drawCaptureTimeline(g, W, H, dp, bars, capState, prog);
-    else drawConvergence(g, W, H, dp, t8);
-    // Receipt hook: the capture progression is directly observable (the visual
-    // is the receipt). Consumed by webui/tests/capture-timeline.spec.mjs.
-    window.__polyClothState = {
-      capState, bars,
-      mode: capState >= 1 ? 'timeline' : 'convergence',
-      playhead: capState === 2 ? prog / bars : capState === 3 ? 1 : 0,
-    };
-  }
-
-  // M073 S05: fold the engine's per-lane emission ring (host.getLaneEmissions,
-  // classified base/ghost/add/drop by the engine and drained in wasm-host.js)
-  // into a step->kind map, newest emission per step winning — the same reduction
-  // the desk ladder overlay (updateEmissionOverlay) applies. The cloth timeline
-  // is a second consumer of that single source of truth, so probability culls,
-  // mutation drops, ghosts, and macro-resolved adds render truthfully instead of
-  // the drift-prone laneHitAt re-derivation. Returns null when the host exposes
-  // no emission accessor or the lane's stream is empty (mock default / DAW /
-  // stopped playback): callers then fall back to positional-pattern-only via
-  // laneHitAt and MUST NOT draw a drop/ghost marker — never claim an
-  // unobservable drop. Mirrors the overlay's empty-return degradation contract.
-  function laneStepKind(li) {
-    if (!host.getLaneEmissions) return null;
-    const emissions = host.getLaneEmissions(li) || [];
-    if (!emissions.length) return null;
-    const m = new Map();
-    for (let i = 0; i < emissions.length; i++) {
-      const e = emissions[i];
-      if (e && e.step >= 0) m.set(e.step, e.kind);
-    }
-    return m;
-  }
-  // Tick (window column) where a lane step fires, so an off-grid add emission can
-  // be placed. Pattern lanes fire step s at tick s*stepLen; cells lanes fire onset
-  // index s at its aksak tick. -1 when the step has no position in this window.
-  function tickForStep(l, step) {
-    if (l.cells) { const os = onsets(l); return step >= 0 && step < os.length ? os[step] : -1; }
-    return step * l.stepLen;
-  }
-  // A dropped on-pattern step: the engine expected a hit here but culled it
-  // (probability / mutation). Draw a hollow strike "hole" — never a solid tick —
-  // so a drop reads as visibly distinct from an emitted hit.
-  function drawDropMarker(g, cellX, cellW, y0, bandH, dp, woven) {
-    const mw = Math.max(2 * dp, cellW * 0.6);
-    const mh = bandH * 0.5;
-    const mx = cellX + (cellW - mw) / 2;
-    const my = y0 + (bandH - mh) / 2;
-    g.globalAlpha = woven ? 0.9 : 0.18;
-    g.strokeStyle = 'rgba(240,234,223,.75)';
-    g.lineWidth = 1.5 * dp;
-    g.strokeRect(mx, my, mw, mh);
-    g.beginPath();
-    g.moveTo(mx, my);
-    g.lineTo(mx + mw, my + mh);
-    g.stroke();
-    g.globalAlpha = 1;
-  }
-  // Macro/mutation-resolved add hits fire off the base positional grid. Draw them
-  // at the step's tick where laneHitAt has no onset, capped so they read as extra
-  // off-grid hits rather than base pattern. No-op when stepKind is null (no stream).
-  function drawEmissionAdds(g, l, stepKind, cellW, tickCount, y0, bandH, dp, wovenFn) {
-    if (!stepKind) return;
-    stepKind.forEach((kind, step) => {
-      if (kind !== 'add') return;
-      const e = tickForStep(l, step);
-      if (e < 0 || e >= tickCount) return;
-      if (laneHitAt(l, e)) return; // already drawn on the positional grid
-      const woven = wovenFn(e);
-      const bw = Math.max(2 * dp, cellW * 0.45);
-      const bh = bandH * 0.45;
-      const x = e * cellW + (cellW - bw) / 2;
-      const y = y0 + (bandH - bh) / 2;
-      g.globalAlpha = woven ? 0.85 : 0.18;
-      g.fillStyle = l.hue;
-      g.fillRect(x, y, bw, bh);
-      g.fillStyle = 'rgba(240,234,223,.6)';
-      g.fillRect(x, y - 2 * dp, bw, 1.5 * dp); // off-grid cap tick
-      g.globalAlpha = 1;
-    });
-  }
-
-  // Idle decorative weave: lanes stacked over the convergence window with the
-  // step grid, per-lane cycle markers, gold selvage and a sweeping playhead.
-  // M073 S05: consults the engine emission stream (laneStepKind) so drops render
-  // as holes and ghosts dim even in the idle weave; empty stream => positional only.
-  function drawConvergence(g, W, H, dp, t8) {
-    const bandH = H / S.lanes.length, colW = W / CONV;
-    S.lanes.forEach((l, li) => {
-      const y0 = li * bandH;
-      g.fillStyle = li % 2 ? '#222E52' : '#26335A';
-      g.fillRect(0, y0, W, bandH);
-      g.fillStyle = 'rgba(240,234,223,.05)';
-      for (let x = 0; x < CONV; x += 2) g.fillRect(x * colW, y0, 1 * dp, bandH);
-      const stepKind = laneStepKind(li);
-      for (let e = 0; e < CONV; e++) {
-        const hit = laneHitAt(l, e);
-        if (!hit) continue;
-        const kind = stepKind ? stepKind.get(hit.step) : undefined;
-        // Emission-truthful drop: engine culled this on-pattern step. Draw a
-        // hole, not a tick. Guarded by stepKind (a muted lane records no
-        // emission, so it never reaches here and is never drawn as a drop).
-        if (kind === 'drop') { drawDropMarker(g, e * colW, colW, y0, bandH, dp, true); continue; }
-        const vn = hitVelocity(l, li, e, hit);
-        if (vn <= 0) continue; // baseVelocity 0 mutes the lane: draw no hit (M073 S01)
-        const ghost = kind === 'ghost'; // ghost emissions render dimmed vs base
-        const wUnits = l.cells ? l.cells[hit.step] : l.stepLen;
-        const bw = colW * wUnits * 0.86;
-        const bh = bandH * Math.min(0.92, 0.3 + vn * 0.52);
-        const x = e * colW + colW * wUnits * 0.07;
-        const y = y0 + (bandH - bh) / 2;
-        g.globalAlpha = (hit.step === 0 ? 1 : 0.86) * (ghost ? 0.4 : 1);
-        g.fillStyle = l.hue;
-        g.fillRect(x, y, bw, bh);
-        g.globalAlpha = 0.22 * (ghost ? 0.4 : 1);
-        g.fillStyle = '#0E1526';
-        for (let ty = y + 3 * dp; ty < y + bh; ty += 6 * dp) g.fillRect(x, ty, bw, 1.5 * dp);
-        g.globalAlpha = 1;
-        if (hit.step === 0 && !ghost) {
-          g.fillStyle = 'rgba(240,234,223,.85)';
-          g.fillRect(x, y0 + bandH * 0.08, 2 * dp, bandH * 0.84);
-        }
-      }
-      drawEmissionAdds(g, l, stepKind, colW, CONV, y0, bandH, dp, () => true);
-      g.fillStyle = 'rgba(240,234,223,.16)';
-      for (let e = 0; e < CONV; e += cyc8(l)) g.fillRect(e * colW, y0, 1.5 * dp, bandH);
-      g.fillStyle = 'rgba(14,21,38,.55)';
-      g.fillRect(0, y0 + bandH - 2 * dp, W, 2 * dp);
-    });
-    g.fillStyle = '#D9A441';
-    g.fillRect(W - 4 * dp, 0, 4 * dp, H);
-    if (lastFrame.playing && lastFrame.convLeft <= 4) {
-      g.globalAlpha = 0.5 * (1 - (lastFrame.convLeft - 1) / 4);
-      g.fillStyle = '#E8A33D';
-      g.fillRect(W - 26 * dp, 0, 26 * dp, H);
-      g.globalAlpha = 1;
-    }
-    const sx = ((t8 % CONV) / CONV) * W;
-    g.fillStyle = 'rgba(240,234,223,.9)';
-    g.fillRect(sx, 0, 2 * dp, H);
-    g.beginPath();
-    g.moveTo(sx - 9 * dp, 0);
-    g.lineTo(sx + 11 * dp, 0);
-    g.lineTo(sx + 1 * dp, 14 * dp);
-    g.closePath();
-    g.fill();
-  }
-
-  // Bar-anchored capture timeline. M073 S05: ticks render the engine emission
-  // stream (host.getLaneEmissions via laneStepKind) — a dropped on-pattern step
-  // draws a hole, ghosts dim, macro-resolved adds appear off the positional grid.
-  // Where the stream is absent (mock default / DAW / stopped) it degrades to the
-  // positional pattern via laneHitAt and draws no drop/ghost marker (never claims
-  // an unobservable drop). Captured ticks are solid, not-yet-woven ticks dimmed.
-  function drawCaptureTimeline(g, W, H, dp, bars, capState, prog) {
-    const bandH = H / S.lanes.length;
-    const barW = W / bars;
-    const ticks = bars * eighthsPerBar();
-    const tickW = W / ticks;
-    // A tick is "woven" once the playhead has passed it (or always, at complete).
-    const isWoven = (e) => capState === 3 || e / ticks <= prog / bars;
-    S.lanes.forEach((l, li) => {
-      const y0 = li * bandH;
-      g.fillStyle = li % 2 ? '#222E52' : '#26335A';
-      g.fillRect(0, y0, W, bandH);
-      g.fillStyle = 'rgba(240,234,223,.05)';
-      for (let e = 0; e < ticks; e++) g.fillRect(e * tickW, y0, 1 * dp, bandH);
-      const stepKind = laneStepKind(li);
-      for (let e = 0; e < ticks; e++) {
-        const hit = laneHitAt(l, e);
-        if (!hit) continue;
-        // Ahead-of-playhead ticks are faint to read as pending.
-        const woven = isWoven(e);
-        const kind = stepKind ? stepKind.get(hit.step) : undefined;
-        // Emission-truthful drop: engine culled this on-pattern step. Draw a
-        // hole, not a tick. Guarded by stepKind, so a muted lane (no recorded
-        // emission => empty stream => null stepKind) is never drawn as a drop.
-        if (kind === 'drop') { drawDropMarker(g, e * tickW, tickW, y0, bandH, dp, woven); continue; }
-        const vn = hitVelocity(l, li, e, hit);
-        if (vn <= 0) continue; // baseVelocity 0 mutes the lane: draw no hit (M073 S01)
-        const ghost = kind === 'ghost'; // ghost emissions render dimmed vs base
-        const bw = Math.max(2 * dp, tickW * 0.7);
-        const bh = bandH * Math.min(0.9, 0.32 + vn * 0.5);
-        const x = e * tickW + (tickW - bw) / 2;
-        const y = y0 + (bandH - bh) / 2;
-        g.globalAlpha = (woven ? 1 : 0.18) * (ghost ? 0.4 : 1);
-        g.fillStyle = l.hue;
-        g.fillRect(x, y, bw, bh);
-        g.globalAlpha = 1;
-      }
-      drawEmissionAdds(g, l, stepKind, tickW, ticks, y0, bandH, dp, isWoven);
-      g.fillStyle = 'rgba(14,21,38,.55)';
-      g.fillRect(0, y0 + bandH - 2 * dp, W, 2 * dp);
-    });
-    // Bar dividers + bar-number ruler (X = bars 1..N).
-    g.fillStyle = 'rgba(240,234,223,.20)';
-    for (let b = 1; b < bars; b++) g.fillRect(b * barW, 0, 1 * dp, H);
-    g.fillStyle = 'rgba(240,234,223,.6)';
-    g.font = `${11 * dp}px system-ui, -apple-system, sans-serif`;
-    g.textBaseline = 'top';
-    for (let b = 0; b < bars; b++) g.fillText(String(b + 1), b * barW + 3 * dp, 2 * dp);
-    // Gold selvage marks bar N — brighter/thicker once the window is frozen.
-    const complete = capState === 3;
-    g.fillStyle = complete ? '#F0C24A' : '#D9A441';
-    const selW = (complete ? 6 : 4) * dp;
-    g.fillRect(W - selW, 0, selW, H);
-    // Playhead sweeps L->R while capturing.
-    if (capState === 2) {
-      const px = (prog / bars) * W;
-      g.fillStyle = 'rgba(240,234,223,.92)';
-      g.fillRect(px, 0, 2 * dp, H);
-      g.beginPath();
-      g.moveTo(px - 9 * dp, 0);
-      g.lineTo(px + 11 * dp, 0);
-      g.lineTo(px + 1 * dp, 14 * dp);
-      g.closePath();
-      g.fill();
-    }
-  }
-
-  // Cloth chrome reflects the capture state: annotations are the idle story, so
-  // they hide once the cloth becomes a functional capture timeline. The capline
-  // narrates the arm->capture->complete progression.
-  function updateClothChrome(capState, bars, prog) {
-    if (clothEl) {
-      clothEl.classList.toggle('capArmed', capState === 1);
-      clothEl.classList.toggle('capturing', capState === 2);
-      clothEl.classList.toggle('capComplete', capState === 3);
-    }
-    const timeline = capState >= 1;
-    clothAnns.forEach((a) => { if (a) a.style.display = timeline ? 'none' : ''; });
-    if (capline) {
-      if (capState === 1) capline.innerHTML = `Armed · <b>${bars} bars</b> · waiting for bar 1`;
-      else if (capState === 2) capline.innerHTML = `Capturing · bar <b>${Math.min(bars, Math.floor(prog) + 1)}/${bars}</b>`;
-      else if (capState === 3) capline.innerHTML = `Complete · <b>${bars} bars</b> · drag cloth to DAW`;
-      else capline.innerHTML = `Capture · <b>${bars} bars</b> · arm to weave`;
-    }
-  }
 
   /* ================= desk ================= */
   const desk = document.getElementById('desk');
@@ -1299,9 +991,6 @@
       <div><span>PROB</span><b>${Math.round(l.prob * 100)}%</b></div>
       <div><span>PUSH</span><b>${l.push > 0 ? '+' : ''}${l.push}ms</b></div>
       <div><span>MODE</span><b>${l.timeline ? 'TIMELINE' : l.cells ? 'CELLS ' + l.cells.join('+') : `E(${l.pattern.filter(Boolean).length},${l.steps})`}</b></div>`;
-    const tag = tags.children[li];
-    if (tag) tag.innerHTML = `${l.name}<small>${cyc8(l)} picks</small>`;
-    if (mode === 'cloth') drawLoom(lastFrame.t8);
   }
   function drawRing(li) {
     const l = S.lanes[li], g = rings[li];
@@ -1962,10 +1651,8 @@ const SUBS = [1, 2, 4, 8, 16];
   }
   function refreshAll() {
     renderChrome();
-    buildTags();
     buildDesk();
     if (expanded >= 0) expandStrip(Math.min(expanded, S.lanes.length - 1));
-    drawLoom(lastFrame.t8);
     if (noteMapModal) {
       closeNoteMapModal();
       buildNoteMapModal();
@@ -1976,7 +1663,6 @@ const SUBS = [1, 2, 4, 8, 16];
     _prevStateStr = JSON.stringify(state);
     recordSeed(state.seed);
     refreshAll();
-    sizeLoom();
   }
 
   let _prevStateStr = null;
@@ -2218,54 +1904,52 @@ const SUBS = [1, 2, 4, 8, 16];
       const el = document.getElementById('timeSigVal');
       if (el) el.textContent = `${frame.tsNum}/${frame.tsDen}`;
     }
-    if (mode === 'desk') {
-      S.lanes.forEach((l, li) => {
-        const fl = frame.lanes[li];
-        if (!fl || !hands[li]) return;
-        // Freeze needle + step highlight when the lane is muted so disabled
-        // reads as no motion, not just dimmer motion.
-        const laneOn = !!l.active;
-        hands[li].setAttribute('transform', `rotate(${laneOn ? fl.ph * 360 : 0} 32 32)`);
-        // M053 S12 T03: rotate the ring <g> per frame by the engine's drift offset
-        // so the circular display tracks the audible drifted cycle step
-        // (engine.cpp computeDriftedCycleStep, mirrored by PolyGrooveMath.driftOffset
-        // and carried on fl.driftOffset by both host pumps). Freeze at 0 when muted so
-        // a disabled lane reads as no motion. drawRing() only rewrites innerHTML, so
-        // this transform survives ring rebuilds.
-        //
-        // D008: the ring is geometrically INVARIANT under subdivision (stepLen). Dot
-        // angles are fractions of the cycle (i/steps or onset/cyc8), which a stepLen
-        // change does not alter, so subdivision never rotates or reshapes the ring —
-        // only drift does. Subdivision motion is shown on the convergence timeline /
-        // ladder instead. This divergence is intentional, not a missing cue.
-        const ringSteps = l.cells ? l.cells.length : l.steps;
-        const ringDrift = laneOn && ringSteps ? ((fl.driftOffset || 0) / ringSteps) * 360 : 0;
-        rings[li].setAttribute('transform', `rotate(${ringDrift} 32 32)`);
-        ladders[li].querySelectorAll('button').forEach((b, i) =>
-          b.classList.toggle('now', laneOn && frame.playing && i === fl.step));
-        updateEmissionOverlay(li);
-        updatePlayed(li, frame.t8);
-        const active = laneOn && frame.playing && (l.cells ? true : !!l.pattern[fl.step]) && frame.t8 % 1 < 0.5;
-        vus[li].style.width = active ? `${(l.vel / 127) * 100}%` : '4%';
-        if (expanded === li) {
-          strips[li].querySelectorAll('[data-envph]').forEach((ln, i) => {
-            const e = l.envs[i];
-            if (!e) return;
-            // The box is a fixed PERIOD_MAX-bar window (see envPath), so the
-            // playhead sweeps it once per PERIOD_MAX bars regardless of the
-            // envelope's own period. A longer-period wave then visibly takes
-            // more of the sweep to complete one cycle — the intuitive slower/
-            // wider reading. (PERIOD_MAX=16, mirrored from the curve builder.)
-            const x = (((frame.t8 / 12) / 16) % 1) * 74;
-            ln.setAttribute('x1', x.toFixed(1));
-            ln.setAttribute('x2', x.toFixed(1));
-          });
-        }
-      });
-      const cm = document.querySelector('#cmeter i');
-      if (cm) cm.style.height = `${(1 - frame.convLeft / CONV) * 100}%`;
-    } else {
-      drawLoom(frame.t8);
-    }
+    // M001/S02: this was guarded by `mode === 'desk'`, with the else branch
+    // painting the cloth. With one view there is nothing to guard against.
+    S.lanes.forEach((l, li) => {
+      const fl = frame.lanes[li];
+      if (!fl || !hands[li]) return;
+      // Freeze needle + step highlight when the lane is muted so disabled
+      // reads as no motion, not just dimmer motion.
+      const laneOn = !!l.active;
+      hands[li].setAttribute('transform', `rotate(${laneOn ? fl.ph * 360 : 0} 32 32)`);
+      // M053 S12 T03: rotate the ring <g> per frame by the engine's drift offset
+      // so the circular display tracks the audible drifted cycle step
+      // (engine.cpp computeDriftedCycleStep, mirrored by PolyGrooveMath.driftOffset
+      // and carried on fl.driftOffset by both host pumps). Freeze at 0 when muted so
+      // a disabled lane reads as no motion. drawRing() only rewrites innerHTML, so
+      // this transform survives ring rebuilds.
+      //
+      // D008: the ring is geometrically INVARIANT under subdivision (stepLen). Dot
+      // angles are fractions of the cycle (i/steps or onset/cyc8), which a stepLen
+      // change does not alter, so subdivision never rotates or reshapes the ring —
+      // only drift does. Subdivision motion is shown on the convergence timeline /
+      // ladder instead. This divergence is intentional, not a missing cue.
+      const ringSteps = l.cells ? l.cells.length : l.steps;
+      const ringDrift = laneOn && ringSteps ? ((fl.driftOffset || 0) / ringSteps) * 360 : 0;
+      rings[li].setAttribute('transform', `rotate(${ringDrift} 32 32)`);
+      ladders[li].querySelectorAll('button').forEach((b, i) =>
+        b.classList.toggle('now', laneOn && frame.playing && i === fl.step));
+      updateEmissionOverlay(li);
+      updatePlayed(li, frame.t8);
+      const active = laneOn && frame.playing && (l.cells ? true : !!l.pattern[fl.step]) && frame.t8 % 1 < 0.5;
+      vus[li].style.width = active ? `${(l.vel / 127) * 100}%` : '4%';
+      if (expanded === li) {
+        strips[li].querySelectorAll('[data-envph]').forEach((ln, i) => {
+          const e = l.envs[i];
+          if (!e) return;
+          // The box is a fixed PERIOD_MAX-bar window (see envPath), so the
+          // playhead sweeps it once per PERIOD_MAX bars regardless of the
+          // envelope's own period. A longer-period wave then visibly takes
+          // more of the sweep to complete one cycle — the intuitive slower/
+          // wider reading. (PERIOD_MAX=16, mirrored from the curve builder.)
+          const x = (((frame.t8 / 12) / 16) % 1) * 74;
+          ln.setAttribute('x1', x.toFixed(1));
+          ln.setAttribute('x2', x.toFixed(1));
+        });
+      }
+    });
+    const cm = document.querySelector('#cmeter i');
+    if (cm) cm.style.height = `${(1 - frame.convLeft / CONV) * 100}%`;
   });
 })();

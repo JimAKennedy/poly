@@ -12,7 +12,7 @@ progress goes, was taken in S01.
 ## Task status
 
 - [x] 1. The specs stop depending on Cloth
-- [ ] 2. Cloth leaves the markup, the script and the stylesheet
+- [x] 2. Cloth leaves the markup, the script and the stylesheet
 - [ ] 3. The guide stops describing a toggle that is gone
 - [ ] 4. A guard keeps the single view single, and the slice closes
 
