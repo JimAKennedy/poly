@@ -2,34 +2,43 @@
   "schemaVersion": 1,
   "entries": {
     "ref-1": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
-      "description": "unverified",
-      "note": "",
-      "identifier": null,
+      "obtainability": "open-access",
+      "evidence": "arxiv.org/pdf/0705.4085.pdf returns 200 application/pdf, 483191 bytes. The PDF was read directly; its own margin stamp reads arXiv:0705.4085v1 [cs.CG] 28 May 2007.",
+      "checked": "2026-09-20",
+      "description": "mismatch",
+      "note": "The URL serves \"The Distance Geometry of Music\" (Demaine, Gomez-Martin, Meijer, Rappaport, Taslakian, Toussaint, Winograd and Wood, 2007), not the 2005 BRIDGES paper \"The Euclidean Algorithm Generates Traditional Musical Rhythms\" that the entry names. Toussaint is one of eight authors rather than the sole author. Both works are real and both discuss Euclidean rhythms, so the link is useful, but the citation describes a different work from the one it points at. This is the guide’s foundational Euclidean citation.",
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "01 - Toussaint.pdf"
     },
     "ref-2": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
-      "description": "unverified",
+      "obtainability": "open-access",
+      "evidence": "mtosmt.org PDF returns 200 application/pdf, 1252368 bytes, byte-identical to the archived copy, which was read directly. Crossref confirms Music Theory Online 31(2), 2025.",
+      "checked": "2026-09-20",
+      "description": "verified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": "10.30535/mto.31.2.3",
+        "isbn": null
+      },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "02 - Goldberg.pdf"
     },
     "ref-4": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
-      "description": "unverified",
+      "obtainability": "open-access",
+      "evidence": "en.wikipedia.org returns 200; the archived copy was read and is the article the entry names. Tier C; whether Wikipedia may be cited at all is M004/VR11, not an accuracy question.",
+      "checked": "2026-09-20",
+      "description": "verified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "04 - Rhythm in Sub-Saharan Africa - Wikipedia.pdf"
     },
     "ref-6": {
       "obtainability": "borrowable",
@@ -45,73 +54,94 @@
       "archiveFile": null
     },
     "ref-7": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
-      "description": "unverified",
+      "obtainability": "open-access",
+      "evidence": "scalar.usc.edu returns 200 text/html, 63075 bytes; the page title is \"MUSICAL TRADITIONS OF SUB-SAHARAN AFRICA\", matching the entry.",
+      "checked": "2026-09-20",
+      "description": "verified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "ref-8": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "browser-only",
+      "evidence": "Scribd returns 200 but only 3038 bytes of HTML, a login or bot wall rather than the document. An account is required, and an account-walled upload is not a citable source regardless of what it contains.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "ref-9": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
-      "description": "unverified",
+      "obtainability": "open-access",
+      "evidence": "D-Scholarship@Pitt refuses every automated fetch with 403; the owner retrieved the PDF in a browser. The PDF was read directly and its title page matches the entry exactly, including the author name Stephen Ayodamope Oluranti and the companion composition.",
+      "checked": "2026-09-20",
+      "description": "verified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "09 - 11866_DISSERTATION_-_FULL_Oluranti.pdf"
     },
     "ref-10": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "browser-only",
+      "evidence": "youtube.com returned 429 to automation, so even the video’s existence was not confirmed here. A video carries no text to review, so no description verdict is reachable by reading; removal is M004/VR12 rather than an accuracy question.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "ref-11": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "browser-only",
+      "evidence": "youtube.com returned 429 to automation, so even the video’s existence was not confirmed here. A video carries no text to review, so no description verdict is reachable by reading; removal is M004/VR12 rather than an accuracy question.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "ref-12": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
-      "description": "unverified",
+      "obtainability": "open-access",
+      "evidence": "pianowithjonny.com returns 200 text/html, 197419 bytes; the page title is \"Piano Montunos – The Complete Guide\", matching the entry. A commercial lesson site, so Tier C is right.",
+      "checked": "2026-09-20",
+      "description": "verified",
       "note": "",
-      "identifier": null,
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
       "price": null,
       "archiveFile": null
     },
     "ref-13": {
-      "obtainability": "unassessed",
-      "evidence": "",
-      "checked": null,
+      "obtainability": "purchasable",
+      "evidence": "The cited sample-pages PDF is gone: the URL redirects to the product page for \"Salsa Guidebook for Piano & Ensemble\" and the response carries 404 and error markers. The book is on sale at the recorded prices. The entry titles the work \"Rhythmic Styles and Structures\", which does not match the product title; whether that is a chapter within the book could not be established without the book itself.",
+      "checked": "2026-09-20",
       "description": "unverified",
       "note": "",
-      "identifier": null,
-      "price": null,
+      "identifier": {
+        "doi": null,
+        "isbn": null
+      },
+      "price": "USD 22.00 (PDF) / USD 36.00 (print), shermusic.com",
       "archiveFile": null
     },
     "ref-14": {
