@@ -28,6 +28,15 @@ import { bjorklund, rotate, gapSequence } from '../src/lib/euclidean-claims.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DOCS = join(HERE, '..', 'src', 'content', 'docs');
+const THEORY = join(HERE, '..', 'src', 'content', 'theory');
+
+// first-release M002/S02: the theory deep dives moved to site/src/content/theory/
+// when they stopped being published. They are deferred, not retired, so these
+// guards still assert their content -- they just resolve it from the new root.
+// Resolving by filename keeps every call site unchanged, which matters because
+// four of these five files read shipping chapters and deep dives in the same
+// test.
+const docRoot = (file) => (file.startsWith('theory-') ? THEORY : DOCS);
 const REPO = join(HERE, '..', '..');
 
 // --- Parsing ---------------------------------------------------------------
@@ -84,7 +93,7 @@ function parsePolyPatch(src, title = null) {
 }
 
 async function loadPatch(slug) {
-  const path = join(DOCS, `${slug}.mdx`);
+  const path = join(docRoot(`${slug}.mdx`), `${slug}.mdx`);
   const src = await readFile(path, 'utf8');
   return { patch: parsePolyPatch(src), relPath: relative(REPO, path) };
 }
@@ -357,7 +366,7 @@ test('theory-afrobeat: Spread column present, bell/shekere on separate strata, h
 // Asserted against the file, not against transcribed lane data: the default
 // parse must equal the first title's parse, and the second title's must differ.
 test('S05-parse-by-title: each <PolyPatch> in a file is addressable by title', async () => {
-  const path = join(DOCS, '05-gamelan.mdx');
+  const path = join(docRoot('05-gamelan.mdx'), '05-gamelan.mdx');
   const src = await readFile(path, 'utf8');
 
   const titles = [...src.matchAll(/<PolyPatch title="([^"]+)"/g)].map((m) => m[1]);
@@ -1400,7 +1409,7 @@ let liveMarkers = 0;
 for (const entry of CHECKLIST) {
   for (const rule of entry.rules) {
     test(`${entry.page} [${rule.id}]: ${rule.description}`, async () => {
-      const path = join(DOCS, entry.page);
+      const path = join(docRoot(entry.page), entry.page);
       const src = await readFile(path, 'utf8');
       const rel = relative(REPO, path);
       const patch = parsePolyPatch(src, entry.patch);
@@ -1447,7 +1456,7 @@ for (const entry of CHECKLIST) {
 test('M007/S03: no divergence marker still carries the untriaged placeholder', async () => {
   const stale = [];
   for (const f of (await readdir(DOCS)).filter((f) => f.endsWith('.mdx'))) {
-    const src = await readFile(join(DOCS, f), 'utf8');
+    const src = await readFile(join(docRoot(f), f), 'utf8');
     for (const m of src.matchAll(MARKER_RE)) {
       if (/not yet triaged/i.test(m[2])) stale.push(`${f} (${m[1]})`);
     }
@@ -1627,7 +1636,7 @@ test('M007: a not-checkable verdict naming an absent column is telling the truth
   for (const [page, rules] of Object.entries(RULE_TRIAGE)) {
     const needed = Object.entries(rules).filter(([, v]) => v.absentColumn);
     if (!needed.length) continue;
-    const src = await readFile(join(DOCS, page), 'utf8');
+    const src = await readFile(join(docRoot(page), page), 'utf8');
     const { columns } = parsePolyPatch(src);
     for (const [n, v] of needed) {
       if (columns.includes(v.absentColumn)) {
@@ -1678,7 +1687,7 @@ test('M007/S01: every numbered rule on every theory page carries a verdict', asy
   const missing = [];
   const unreasoned = [];
   for (const f of files) {
-    const src = await readFile(join(DOCS, f), 'utf8');
+    const src = await readFile(join(docRoot(f), f), 'utf8');
     const i = src.indexOf('## The Rules');
     if (i === -1) continue; // a page with no numbered rules needs no verdicts
     const section = src.slice(i, src.indexOf('\n## ', i + 5));
