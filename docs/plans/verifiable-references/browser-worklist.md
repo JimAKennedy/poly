@@ -10,7 +10,84 @@ browser. The D-Scholarship@Pitt record behind `ref-9` is the proven case: it
 without difficulty. Treating "a script cannot fetch it" as "unobtainable" would
 condemn good sources, so those entries come here instead of being replaced.
 
-An entry leaves this queue by **moving to `## Resolved`**, never by being
+An entry leaves this queue by **moving to `
+### Queued by M002/S02 — 19 entries that are browser-only and unverified
+
+Every entry below is obtainable by a person and was not obtained by automation.
+Grouped by host, because hosts fail as a class: one session on a host settles
+every entry on it. The manifest at `site/src/data/references.json` carries the
+measured evidence for each.
+
+#### Academia.edu
+
+| Entry | URL | What to check |
+|---|---|---|
+| `ref-30` | `https://www.academia.edu/12360331/Structures_of_Rhythm_in_Mevlevi_Music_A_Cyclical_Analysis_Model` | You have an account. Confirm the paper’s title and author, and save the PDF. |
+
+#### IFTAWM / AAWM
+
+| Entry | URL | What to check |
+|---|---|---|
+| `ref-23` | `https://journal.iftawm.org/wp-content/uploads/2023/12/Reindl_AAWM_Vol_11_2.pdf` | Read the PDF’s title page and record the exact article title and journal name. This settles VR17. |
+
+#### No URL recorded
+
+| Entry | URL | What to check |
+|---|---|---|
+| `fr-collins-2001` | — none in the entry — | The entry carries no URL. Find the work, then record a route to it. |
+| `fr-novotney-1998` | — none in the entry — | The entry carries no URL. Find the work, then record a route to it. |
+| `ref-39` | `https://www.cambridge.org/core/services/aop-cambridge-core/content/view/BBC410F9849DB982AEBFACEA14D38F32/S0261143023000041a.pdf/shaping_rhythm_timing_and_sound_in_five_groovebased_genres.pdf` | The entry carries no URL. Find the work, then record a route to it. |
+| `ref-8` | `https://www.scribd.com/document/218700737/unit-6-62-mustapha-tettey-addy-ghana-agbekor-dance` | The entry carries no URL. Find the work, then record a route to it. |
+
+#### Oxford Academic
+
+| Entry | URL | What to check |
+|---|---|---|
+| `ref-18` | `https://academic.oup.com/edited-volume/28278/chapter/214416541` | Record whether the chapter is readable, purchasable or institution-only, and the price if one is shown. |
+| `ref-19` | `https://academic.oup.com/book/6495/chapter/150390558` | Record whether the chapter is readable, purchasable or institution-only, and the price if one is shown. |
+
+#### PubPub
+
+| Entry | URL | What to check |
+|---|---|---|
+| `ref-24` | `https://alpaca.pubpub.org/pub/ofzrb3a6/release/12` | Open access behind a bot block. Confirm the title and save the PDF. |
+
+#### Semantic Scholar
+
+| Entry | URL | What to check |
+|---|---|---|
+| `ref-46` | `https://www.semanticscholar.org/paper/The-Theory-of-Rep-Rate-Pattern-Generation-in-the-Bjorklund/c652d0a32895afc5d50b6527447824c31a553659` | Find and save Bjorklund (2003); it underpins the engine’s Euclidean generator. |
+
+#### YouTube
+
+| Entry | URL | What to check |
+|---|---|---|
+| `ref-10` | `https://www.youtube.com/watch?v=T-bXVeAmGiM` | Confirm the video exists and note its actual title and uploader. There is no text to review, so this settles existence only — removal is M004/VR12. |
+| `ref-11` | `https://www.youtube.com/watch?v=OE7X1PgmF54` | Confirm the video exists and note its actual title and uploader. There is no text to review, so this settles existence only — removal is M004/VR12. |
+| `ref-14` | `https://www.youtube.com/watch?v=OoyGKEqfyZw` | Confirm the video exists and note its actual title and uploader. There is no text to review, so this settles existence only — removal is M004/VR12. |
+| `ref-15` | `https://www.youtube.com/watch?v=ryTTHmUYc2o` | Confirm the video exists and note its actual title and uploader. There is no text to review, so this settles existence only — removal is M004/VR12. |
+| `ref-25` | `https://www.youtube.com/watch?v=uephXrkxH1E` | Confirm the video exists and note its actual title and uploader. There is no text to review, so this settles existence only — removal is M004/VR12. |
+
+#### lianproductions.com
+
+| Entry | URL | What to check |
+|---|---|---|
+| `ref-17` | `https://lianproductions.com/afro-house/` | Answers a 202 challenge stub. Confirm the article exists and note its title. |
+
+#### martinscherzinger.org
+
+| Entry | URL | What to check |
+|---|---|---|
+| `fr-scherzinger-2010` | — none in the entry — | The host did not respond at all. Check whether the PDF is still there; if not, find the ICTM proceedings version. |
+| `ref-35` | `http://martinscherzinger.org/wp-content/uploads/Piano-Phase-in-Global-Perspective-.pdf` | The host did not respond at all. Check whether the PDF is still there; if not, find the ICTM proceedings version. |
+
+#### Érudit
+
+| Entry | URL | What to check |
+|---|---|---|
+| `ref-41` | `https://www.erudit.org/en/journals/sqrm/2015-v16-n1-2-sqrm03043/1039619ar.pdf` | Behind an Anubis challenge that returns HTTP 200. Confirm the article title and save the PDF. |
+
+## Resolved`**, never by being
 deleted. The record of what was checked and when is the point of the file, and a
 deleted row is indistinguishable from a row that was never added.
 

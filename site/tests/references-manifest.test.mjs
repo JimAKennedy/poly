@@ -252,3 +252,44 @@ test('resolveArchiveFile refuses to escape the archive root', () => {
   assert.ok(ok.endsWith('ref-9-oluranti-2012.pdf'));
   assert.ok(ok.startsWith(archiveRoot()));
 });
+
+// M002/S02 task 8: an entry nobody could verify must be queued for someone who
+// can. This is the generalised form of the ref-22 guard M001/S01 added: that one
+// hardcoded a single host and a single anchor, and was dominated by
+// REF22-CLAYTON the moment the host was forbidden tree-wide. This case is keyed
+// on the manifest's own verdicts, so it applies to every entry that reaches the
+// same state and keeps applying as entries move in and out of it.
+//
+// The pairing that matters is browser-only AND unverified: obtainable by a
+// human, not obtained by us. An entry that is unverified because it is
+// purchasable or library-only is not something a browser session can settle, so
+// queueing it would fill the worklist with work nobody can do.
+const WORKLIST_PATH = join(
+  HERE, '..', '..', 'docs', 'plans', 'verifiable-references', 'browser-worklist.md',
+);
+
+test('every browser-only unverified entry is named in the browser worklist', async () => {
+  const m = await loadManifest();
+  const queueable = Object.entries(m.entries)
+    .filter(([, r]) => r.obtainability === 'browser-only' && r.description === 'unverified')
+    .map(([a]) => a);
+
+  let worklist;
+  try {
+    worklist = await readFile(WORKLIST_PATH, 'utf8');
+  } catch {
+    assert.fail(
+      `${queueable.length} entries are browser-only and unverified, but ` +
+        `${WORKLIST_PATH} does not exist. An entry a human could settle and ` +
+        'nobody has been asked to settle is indistinguishable from one that is fine.',
+    );
+  }
+
+  const missing = queueable.filter((a) => !worklist.includes(a));
+  assert.deepEqual(
+    missing,
+    [],
+    'browser-only and unverified, but not named in the worklist, so no one has ' +
+      'been asked to look: ' + missing.join(', '),
+  );
+});
