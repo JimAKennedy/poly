@@ -52,7 +52,7 @@ stays a plan; the manifest is where progress across 107 entries is visible.
 one citing a review instead of the work — are corrected and locked.
 
 **Branch:** milestone/M001-known-defects
-**Status:** in-progress
+**Status:** done
 **Demo:** Every URL in the numbered bibliography either resolves or is recorded
 as deliberately unresolvable, and no entry links to a commentary on itself.
 
