@@ -8,7 +8,7 @@ exist. No new mechanism.
 
 ## Task status
 
-- [ ] 1. The navigation stops offering a theory section
+- [x] 1. The navigation stops offering a theory section
 - [ ] 2. The twelve chapter callouts go
 - [ ] 3. The four remaining links into the deep dives go
 
