@@ -12,7 +12,7 @@ truth rather than a literal. No new subsystem, no interface change.
 ## Task status
 
 - [x] 1. The schema and a skeleton record for all 107 anchors
-- [ ] 2. Completeness, proved in both directions
+- [x] 2. Completeness, proved in both directions
 - [ ] 3. The archive root comes from the environment, never from git
 
 ## Definition of Done

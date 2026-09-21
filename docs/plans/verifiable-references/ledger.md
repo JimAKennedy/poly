@@ -115,7 +115,7 @@ opening the PDF. Expect a long tail where the only way to answer is to look.
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| VR04 | Nothing records obtainability or accuracy anywhere, so a later pass cannot tell a verified entry from an unexamined one. Silence currently implies "checked" | `tooling` | `site/src/data/references.json`, `site/tests/` | Both arms mutation-proved: an unrecorded anchor fails, and an orphan record fails | `open` |
+| VR04 | Nothing records obtainability or accuracy anywhere, so a later pass cannot tell a verified entry from an unexamined one. Silence currently implies "checked" | `tooling` | `site/src/data/references.json`, `site/tests/` | Both arms mutation-proved: an unrecorded anchor fails, and an orphan record fails | `done` |
 | VR05 | The archive root differs per machine and is a personal path, which `check-personal-paths` rejects in tracked files — it caught the absolute form in the vision's own first draft | `tooling` | `site/src/data/references.json`, `scripts/` | Filenames are recorded relative to a root supplied by the environment; `guards` stays green | `open` |
 
 ### Slice M002/S02 — All 107 carry both verdicts

@@ -138,3 +138,51 @@ test('an assessed entry carries a check date, an unassessed one does not', async
   }
   assert.deepEqual(bad, [], 'check-date rule violated: ' + bad.join('; '));
 });
+
+// M002/S01 task 2: completeness, both directions.
+//
+// The anchor set is read from the .mdx at test time, never from a literal.
+// A hardcoded 107 would agree with a stale manifest for exactly as long as
+// nobody noticed — the failure presets-json-schema.test.mjs records this repo
+// shipping once before.
+//
+// The regex must fail loudly if the bibliography's anchor convention changes:
+// zero matches is a broken check, not a passing one.
+const BIBLIOGRAPHY_PATH = join(HERE, '..', 'src', 'content', 'docs', 'appendix-references.mdx');
+
+async function bibliographyAnchors() {
+  const mdx = await readFile(BIBLIOGRAPHY_PATH, 'utf8');
+  const found = [...mdx.matchAll(/id="((?:ref|fr)-[A-Za-z0-9-]+)"/g)].map((m) => m[1]);
+  if (found.length === 0) {
+    throw new Error(
+      `no ref-/fr- anchors matched in ${BIBLIOGRAPHY_PATH} — has the anchor ` +
+        'convention changed? An unmatched pattern is a broken check, not a passing one.',
+    );
+  }
+  return found;
+}
+
+test('every bibliography anchor has a manifest record', async () => {
+  const m = await loadManifest();
+  const anchors = await bibliographyAnchors();
+  const missing = anchors.filter((a) => !(a in m.entries));
+  assert.deepEqual(
+    missing,
+    [],
+    'cited in the bibliography but absent from the manifest, so no verdict can ' +
+      'ever be recorded for it: ' + missing.join(', '),
+  );
+});
+
+test('every manifest record names an anchor that exists', async () => {
+  const m = await loadManifest();
+  const anchors = new Set(await bibliographyAnchors());
+  const orphans = Object.keys(m.entries).filter((a) => !anchors.has(a));
+  assert.deepEqual(
+    orphans,
+    [],
+    'recorded in the manifest but not present in the bibliography — a verdict ' +
+      'about nothing, or an anchor that was renamed without the manifest ' +
+      'following: ' + orphans.join(', '),
+  );
+});
