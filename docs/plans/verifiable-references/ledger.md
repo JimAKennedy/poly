@@ -121,9 +121,10 @@ opening the PDF. Expect a long tail where the only way to answer is to look.
 ### Slice M002/S02 — All 107 carry both verdicts
 
 **Depends:** M002/S01
+**Plan:** M002-S02-plan.md
 **Validation:** format, site-unit
 **Evidence:** evidence/M002-S02.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
