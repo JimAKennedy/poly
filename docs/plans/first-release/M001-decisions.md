@@ -73,3 +73,22 @@ the measurement that made it answerable.
   things is not a choice a later reader should have to arbitrate. The plan's
   step said "add a spec case"; inverting the contradicting one is what that step
   meant in a file that already had it.
+
+## 2026-09-21 — judgment calls during M001/S02
+
+- **Decision:** `timeline-emission.spec.mjs` was deleted whole rather than
+  triaged case by case — **Why:** all six of its tests read ink energy off the
+  `#loom` canvas, so there was no capture behaviour in it to retarget.
+
+- **Decision:** `setCapture()` in `capture-timeline.spec.mjs` now waits on the
+  Arm chip's text rather than on `window.__polyClothState` — **Why:** the helper
+  needed an observable proving a frame carrying the new state had been applied,
+  and the render receipt it used is a Cloth artefact. The Arm chip is the
+  toolbar's own evidence of the same thing.
+
+- **Finding:** the plan's count of nine Cloth-dependent spec files was short by
+  four tests. It came from a grep that printed the first eight matches per file,
+  and three cases in `coverage-gaps` plus one in `interaction` sat below that
+  cut. The enumeration was redone by walking every `test(` block. Recorded
+  because the same shortcut produced the wrong count twice in this programme —
+  once in the vision's "eleven test files", once here.

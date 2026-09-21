@@ -15,24 +15,7 @@ test('boots from mock host state', async ({ page }) => {
   await expect(page.locator('#master')).toBeVisible();
 });
 
-test('cloth/desk mode switch', async ({ page }) => {
-  await expect(page.locator('#desk')).toHaveClass(/on/);
-  await page.click('#mCloth');
-  await expect(page.locator('#cloth')).toHaveClass(/on/);
-  await expect(page.locator('#desk')).not.toHaveClass(/on/);
-  await page.click('#mDesk');
-  await expect(page.locator('#desk')).toHaveClass(/on/);
-});
 
-test('cloth band click focuses lane on desk', async ({ page }) => {
-  await page.click('#mCloth');
-  const loom = page.locator('#loom');
-  const box = await loom.boundingBox();
-  // click in the second band (Kick)
-  await loom.click({ position: { x: box.width / 2, y: box.height * 0.3 } });
-  await expect(page.locator('#desk')).toHaveClass(/on/);
-  await expect(page.locator('.strip[data-lane="1"]')).toHaveClass(/expanded/);
-});
 
 test('step toggle round-trips through host state', async ({ page }) => {
   // Bell lane (timeline mode), step 2 (index 1): initially off (fixed[1]=0)

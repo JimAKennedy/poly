@@ -21,8 +21,8 @@ import {
 test.describe('G07 — capture length 1-32 stepper', () => {
   test.beforeEach(async ({ page }) => {
     await setupWithActionLog(page);
-    await page.click('#mCloth');
-    await expect(page.locator('#cloth')).toHaveClass(/on/);
+    // M001/S01 made the capture cluster unconditional, so reaching it no
+    // longer means entering another view.
     await expect(page.locator('#capBars')).toHaveText('8 bars');
   });
 
