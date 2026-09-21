@@ -11,7 +11,7 @@ already exist, and one new bibliography assembled from an existing one.
 
 ## Task status
 
-- [ ] 1. The pages move, with their imports intact
+- [x] 1. The pages move, with their imports intact
 - [ ] 2. The ten test files follow them
 - [ ] 3. The drift map follows them
 - [ ] 4. The deep dives carry their own bibliography
