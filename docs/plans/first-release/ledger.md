@@ -175,7 +175,7 @@ directory renders nothing.
 and can be obtained without an institution.
 
 **Branch:** milestone/M003-bibliography
-**Status:** in-progress
+**Status:** done
 **Demo:** The appendix holds 40 entries, every one cited from a claim in prose,
 and no entry requires an institutional subscription.
 
