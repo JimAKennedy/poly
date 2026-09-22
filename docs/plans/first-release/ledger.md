@@ -232,17 +232,18 @@ the appendix breaks a citation in a page that still scans.
 **Plan:** M003-S03-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M003-S03.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] A test fails if an appendix entry is cited from nowhere
-- [ ] A test fails if an entry is not Tier A, or is `library-only`
-- [ ] Both arms are shown to fail before being trusted
+- [x] A test fails if an appendix entry is cited from nowhere
+- [x] A test fails if an entry is not Tier A, or is `library-only` — B is
+      allowed by the owner's decision (`M003-decisions.md`); C fails
+- [x] Both arms are shown to fail before being trusted
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| FR20 | Nothing prevents an uncited, lower-tier or institution-only entry returning to the appendix; the 34-entry state would hold only until the next edit | `tooling` | `site/tests/`, `site/src/data/references.json` | Both arms mutation-proved: an uncited entry fails, and a `library-only` entry fails | `open` |
+| FR20 | Nothing prevents an uncited, lower-tier or institution-only entry returning to the appendix; the 34-entry state would hold only until the next edit | `tooling` | `site/tests/`, `site/src/data/references.json` | Both arms mutation-proved: an uncited entry fails, and a `library-only` entry fails | `done` |
 | FR23 | The vision asked for 10–20 references. **Declined.** All 40 surviving citations sit in running prose attached to a claim and none appears in a bibliographic list, so the shipping chapters carry no decorative citations. Reaching 10–20 would mean removing claims or leaving claims unsourced; the programme keeps 40 — every load-bearing citation a reader can obtain without an institution; 34 was the count before M003/S02 settled the six | `docs` | — | Recorded so a later pass does not rediscover the target as an omission | `accepted` |
 
 ## Milestone M004 — The docs describe what ships

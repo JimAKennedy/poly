@@ -10,15 +10,17 @@ written earlier in this programme.
 
 ## Task status
 
-- [ ] 1. The guard, and the slice closes
+- [x] 1. The guard, and the slice closes
 
 ## Definition of Done
 
 Copied verbatim from the slice:
 
-- [ ] A test fails if an appendix entry is cited from nowhere
-- [ ] A test fails if an entry is not Tier A, or is `library-only`
-- [ ] Both arms are shown to fail before being trusted
+- [x] A test fails if an appendix entry is cited from nowhere
+- [x] A test fails if an entry is not Tier A, or is `library-only` — the guard
+      allows B by the owner's decision and fails on C; see the amendments below
+- [x] Both arms are shown to fail before being trusted — all three arms, plus
+      the empty-input throw
 
 ## Validation
 
