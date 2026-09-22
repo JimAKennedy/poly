@@ -10,7 +10,23 @@ browser. The D-Scholarship@Pitt record behind `ref-9` is the proven case: it
 without difficulty. Treating "a script cannot fetch it" as "unobtainable" would
 condemn good sources, so those entries come here instead of being replaced.
 
-An entry leaves this queue by **moving to `
+An entry leaves this queue by **moving to `## Resolved`**, never by being
+deleted. The record of what was checked and when is the point of the file, and a
+deleted row is indistinguishable from a row that was never added.
+
+Downloaded documents go to the Dropbox research archive at
+`~/Library/CloudStorage/Dropbox/Research/drum generator/References`, or to a
+`.gitignore`d directory in the project root.
+
+Point the repo at whichever you use by exporting **`POLY_REFERENCES_ARCHIVE`**.
+Unset, it falls back to `.references/` in the project root, which is
+`.gitignore`d. The manifest at `site/src/data/references.json` records a bare
+filename and never a path, so no machine-specific root can reach a tracked file
+— `check-personal-paths` rejected the absolute form in the vision's own first
+draft, and this makes that failure unreachable rather than merely reviewed.
+
+## Pending
+
 ### Queued by M002/S02 — 19 entries that are browser-only and unverified
 
 Every entry below is obtainable by a person and was not obtained by automation.
@@ -88,6 +104,36 @@ measured evidence for each.
 | `ref-41` | `https://www.erudit.org/en/journals/sqrm/2015-v16-n1-2-sqrm03043/1039619ar.pdf` | Behind an Anubis challenge that returns HTTP 200. Confirm the article title and save the PDF. |
 
 
+## Resolved
+
+### The six library-only entries queued by first-release M003/S02 — **all settled, 2026-09-22**
+
+The owner worked the queue, reproduced below as it was written, in one session. Every entry was verified
+against its own title page after download, and each manifest record in
+`site/src/data/references.json` carries the evidence. Two findings came out of
+the check that no listing could have produced:
+
+- The file first saved as Cohn was byte-identical to the Vitale download; the
+  owner re-fetched Cohn and the second file was verified before anything was
+  recorded.
+- The Grove article a subscriber reaches is the **2001** second-edition rewrite
+  by Qureshi, Powers, Katz, Widdess and sixteen others, not Powers's 1980
+  article the entry named. Same title, different edition and authorship. The
+  entry now cites the 2001 article; the anchor `fr-powers-1980` keeps its name
+  because anchors are never reassigned.
+
+| Entry | Outcome | Route | Verdict |
+|---|---|---|---|
+| `fr-cohn-1992` | found | ResearchGate repost of the JSTOR export, account needed; 403 to scripts | browser-only, verified |
+| `fr-locke-1982` | found | JSTOR under the owner's JPASS personal subscription | purchasable, verified |
+| `fr-brailoiu-1951` | found | JSTOR under the owner's JPASS personal subscription | purchasable, verified |
+| `fr-harrison-2025` | not found outside the book | owner's decision: keep the citation, point it at the Routledge book | purchasable, unverified |
+| `fr-vitale-1990` | found | `gamelan.org` back-issue PDF, open to scripts and browsers alike | open-access, verified |
+| `fr-powers-1980` | found, as the 2001 edition | Grove Music Online, subscription login; the "Rhythm and tāla" section is the one chapter 6 leans on | purchasable, mismatch recorded and the entry corrected |
+
+
+<details><summary>The queue as written</summary>
+
 ### Queued by first-release M003/S02 — six library-only entries
 
 These six are cited from shipping chapters and are the last entries in the
@@ -109,26 +155,8 @@ it milestone M003.
 | `fr-vitale-1990` | Vitale, "Kotekan: The Technique of Interlocking Parts in Balinese Music", *Balungan* 4(2) | `gamelan.org` — the American Gamelan Institute publishes *Balungan*; check for a back-issue archive behind the front page | save the PDF, note the URL |
 | `fr-powers-1980` | Powers, "India, subcontinent of", *The New Grove Dictionary of Music and Musicians* vol. 9 | Grove Music Online through any public library card — many give free Grove access | note the access route |
 
-## Resolved`**, never by being
-deleted. The record of what was checked and when is the point of the file, and a
-deleted row is indistinguishable from a row that was never added.
+</details>
 
-Downloaded documents go to the Dropbox research archive at
-`~/Library/CloudStorage/Dropbox/Research/drum generator/References`, or to a
-`.gitignore`d directory in the project root.
-
-Point the repo at whichever you use by exporting **`POLY_REFERENCES_ARCHIVE`**.
-Unset, it falls back to `.references/` in the project root, which is
-`.gitignore`d. The manifest at `site/src/data/references.json` records a bare
-filename and never a path, so no machine-specific root can reach a tracked file
-— `check-personal-paths` rejected the absolute form in the vision's own first
-draft, and this makes that failure unreachable rather than merely reviewed.
-
-## Pending
-
-_Nothing queued._
-
-## Resolved
 
 ### `ref-22` — NIOS Hindustani Music (242) — **replaced, 2026-09-20**
 

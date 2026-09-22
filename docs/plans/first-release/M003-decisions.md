@@ -89,3 +89,39 @@ Measured before planning, on this branch:
   the claim must stop depending on it"*. It now queues instead. The rewording
   path is retained in the plan for the entries the browser does not settle,
   because it remains correct for those.
+
+## 2026-09-22 — the browser session, and what it decided
+
+- **Q:** The owner's JSTOR access is a paid JPASS personal subscription. Does a
+  paid personal subscription count as "obtainable without an institution"? —
+  **A:** yes. It is purchasable by anyone, which is the test; the manifest
+  records it as `purchasable` with JSTOR's own price, exactly as a book carries
+  its publisher's price.
+- **Q:** No copy of Harrison (2025) exists outside its book. Drop the citation
+  and reword chapter 13, or keep it? — **A:** keep it and point it at the
+  Routledge book. A purchasable chapter of a purchasable book passes the
+  programme's test; the description stays `unverified` because the text has not
+  been read. The owner may make another pass for a self-archived copy later.
+- **Q:** The Grove article a reader can reach is the 2001 second-edition
+  rewrite with twenty credited authors, not Powers's 1980 article the entry
+  named. Cite the 2001 article, or keep 1980 and reword chapter 6? —
+  **A:** cite the 2001 article — **Why:** it is the version that exists to be
+  obtained, chapter 6 needs only "Grove's survey", and the entry now says what
+  it supersedes so nobody rediscovers the change as a defect.
+- **Decision:** the anchor stays `fr-powers-1980` — **Why:** anchors are
+  identifiers and are never reassigned (the ledger rule M005/S01 applies to the
+  guide's own citations), and `literature-enrichment.test.mjs` pins the name in
+  two places for theory-audit F48. The entry text carries the truth; the anchor
+  carries continuity.
+- **Decision:** `fr-peycheva-dimov-2002`, the one entry cited by nothing, keeps
+  its place while recorded as `library-only` — **Why:** the FR19 decision above
+  kept it on the strength of its own declaration that its contents are
+  unverified and no claim rests on it. An entry that makes no claim cannot fail
+  the obtainability test any more than the citation test; applying the
+  exemption to one arm and not the other would be two rules where the
+  declaration is one. S03's guard exempts the `contents unverified` phrase in
+  both arms, and only that phrase, so the exemption stays enumerable with
+  `grep -rn "contents unverified" site/`.
+- **Consequence:** the appendix holds **41** — 40 cited plus the exempt one —
+  not the 34 FR19 first named. The count is reported in the evidence, as the
+  plan said it would be, and nothing pins it.

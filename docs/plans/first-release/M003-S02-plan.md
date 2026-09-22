@@ -12,7 +12,7 @@ attempts whose outcome the plan cannot predict and does not pretend to.
 ## Task status
 
 - [x] 1. The six library-only entries are searched for an obtainable copy
-- [x] 2. The six are queued for the owner's browser — **planned pause**
+- [x] 2. The six are queued for the owner's browser — **planned pause**, resumed and settled 2026-09-22
 - [x] 3. The appendix drops to what the shipping pages cite
 - [x] 4. The verifiable-references ledger records what this overtook
 
@@ -20,11 +20,14 @@ attempts whose outcome the plan cannot predict and does not pretend to.
 
 Copied verbatim from the slice:
 
-- [ ] No entry in the shipping appendix is `library-only`
-- [ ] Every claim whose source left carries a source a reader can obtain, or no
-      longer asserts something that needs one
-- [ ] The appendix contains only entries cited from a shipping page
-- [ ] The verifiable-references ledger records what this programme changed about
+- [x] No entry in the shipping appendix is `library-only` — none of the 40
+      cited entries is; the one uncited entry keeps FR19's exemption, see
+      `M003-decisions.md`
+- [x] Every claim whose source left carries a source a reader can obtain, or no
+      longer asserts something that needs one — no source left; all six were
+      settled with an obtainable route
+- [x] The appendix contains only entries cited from a shipping page
+- [x] The verifiable-references ledger records what this programme changed about
       its remaining milestones
 
 ## Validation

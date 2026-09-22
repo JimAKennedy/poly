@@ -166,6 +166,12 @@ Dropbox research folder addressed through an environment variable.
 > retrieve any of them, so the worklist this milestone would work from is
 > already written and longer than VR09/VR10 assumed. Nothing here is closed by
 > that; the scope is simply different.
+>
+> Later the same day the owner worked those six in a browser and all six were
+> settled — five found and archived, one repointed at its book — which is the
+> first evidence in this programme of VR10's claim at scale: every entry that
+> automation had called unobtainable was obtainable by a person. Their rows are
+> in the worklist's Resolved section, and the archive now holds nine files.
 
 ### Slice M003/S01 — Scripted retrieval fills what it can
 
