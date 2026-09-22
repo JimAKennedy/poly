@@ -250,7 +250,7 @@ the appendix breaks a citation in a page that still scans.
 **Vision:** Someone reading the guide finds the product they downloaded.
 
 **Branch:** milestone/M004-docs-match
-**Status:** planned
+**Status:** in-progress
 **Demo:** Every screenshot, control description and chapter in the published
 guide matches a one-view build with no theory section.
 
@@ -261,9 +261,10 @@ guide says and what a downloader gets.
 ### Slice M004/S01 — The guide matches the build
 
 **Depends:** M001/S02, M002/S01
+**Plan:** M004-S01-plan.md
 **Validation:** format, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M004-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
