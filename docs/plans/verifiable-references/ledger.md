@@ -157,6 +157,16 @@ repository is public, and a gitignored directory is one `git add -f` from
 redistributing them. The repository holds the manifest; the files live in a
 Dropbox research folder addressed through an environment variable.
 
+> **Overtaken in part by first-release M002 and M003** (2026-09-22). The
+> bibliography this milestone was scoped against has been split: the shipping
+> appendix holds **41** entries and the deferred theory bundle at
+> `site/src/content/theory/theory-references.mdx` holds **93**. VR10's
+> browser-only class grew rather than shrank — first-release M003/S02 queued
+> **six further entries** in `browser-worklist.md` after automation failed to
+> retrieve any of them, so the worklist this milestone would work from is
+> already written and longer than VR09/VR10 assumed. Nothing here is closed by
+> that; the scope is simply different.
+
 ### Slice M003/S01 — Scripted retrieval fills what it can
 
 **Depends:** M002/S02
@@ -210,6 +220,20 @@ reason.
 editorial decisions plus one policy call, and no amount of scripting makes them
 faster.
 
+> **Largely solved by first-release M002** (2026-09-22), and this was verified
+> against the tree rather than assumed. The shipping appendix now contains
+> **39 Tier A and 2 Tier B entries — zero Tier C, zero Wikipedia links, zero
+> YouTube links**. VR11's three Wikipedia entries, VR12's five YouTube entries
+> and VR13's eleven further Tier-C entries are all cited only by the theory deep
+> dives, which were unpublished in first-release M002 and now carry their own
+> bibliography: that file holds 16 Tier C entries, 3 Wikipedia and 5 YouTube.
+>
+> So the rows have no subjects left **in the shipping guide**, and have all of
+> them in a bundle that ships to nobody. Whether that counts as done is this
+> programme's call, not first-release's — the rows are left open deliberately.
+> If the deep dives are ever republished, this milestone becomes live again
+> exactly as written.
+
 ### Slice M004/S01 — The Wikipedia policy is decided and applied
 
 **Depends:** M002/S02
@@ -261,6 +285,15 @@ scholarship M005 added is as reachable as the numbered entries.
 
 **Deliberately last.** Merging before M004 mixes good sources into a list still
 carrying unreviewable ones; merging before M002 means renumbering twice.
+
+> **Reduced, not solved, by first-release M003** (2026-09-22). VR15 described
+> "two bibliographies in one appendix"; the shipping appendix is still two lists
+> but is now **8 numbered entries and 33 Further Reading entries** rather than
+> 43 and 64. VR14's "64 Further Reading entries with no citation number" is now
+> 33. The merge this milestone proposes is the same piece of work against a
+> quarter of the material, and the argument for it is stronger than when it was
+> written: first-release M002 found one incorrect citation maintained in both
+> lists at once.
 
 ### Slice M005/S01 — Further Reading entries become citable
 
