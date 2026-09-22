@@ -33,7 +33,17 @@ const THEORY = join(HERE, '..', 'src', 'content', 'theory');
 // citation claims still hold -- they just resolve from the new root.
 const docRoot = (file) => (file.startsWith('theory-') ? THEORY : DOCS);
 
-const loadSource = (file) => readFile(join(docRoot(file), file), 'utf8');
+// first-release M003/S02: the shipping appendix now holds only entries a
+// shipping page cites, so ref-2, ref-9, ref-22 and ref-26 -- all corrected by
+// the verifiable-references programme -- live in the theory bundle's own
+// bibliography. Their claims still hold; they resolve from there.
+const BIBS = {
+  'appendix-references.mdx': join(DOCS, 'appendix-references.mdx'),
+  'theory-references.mdx': join(THEORY, 'theory-references.mdx'),
+};
+const loadBib = (file) => readFile(BIBS[file] ?? join(docRoot(file), file), 'utf8');
+
+const loadSource = (file) => loadBib(file);
 
 // The title the guide printed, which exists in no MTO issue and nowhere a web
 // search reaches. Shared by both cases so they cannot drift apart.
@@ -42,7 +52,7 @@ const FABRICATED_TITLE = 'Resultant Patterns in Phase-Shifted Rhythmic Structure
 const CLAIMS = [
   {
     id: 'S01-F17',
-    file: 'appendix-references.mdx',
+    file: 'theory-references.mdx',
     rule:
       'audit §5 on ref [2]. Verified against the publisher 2026-09-01: MTO is ' +
       'current through Vol 32 No 2 (June 2026), so 31(2) is not a forward ' +
@@ -55,7 +65,7 @@ const CLAIMS = [
   },
   {
     id: 'REF9-OLURANTI',
-    file: 'appendix-references.mdx',
+    file: 'theory-references.mdx',
     rule:
       'ref [9] was the F17 defect a second time, and worse. It printed the title ' +
       '"Polyrhythmic Structures in West African Drumming" against a real author ' +
@@ -100,7 +110,7 @@ const CLAIMS = [
   },
   {
     id: 'REF26-AKSAK',
-    file: 'appendix-references.mdx',
+    file: 'theory-references.mdx',
     rule:
       'VR01. ref [26] was a Fiveable course-marketing study guide and returned ' +
       '404. Under the obtainability principle that is a replacement, not a ' +
@@ -124,7 +134,7 @@ const CLAIMS = [
   },
   {
     id: 'REF22-CLAYTON',
-    file: 'appendix-references.mdx',
+    file: 'theory-references.mdx',
     rule:
       'VR02. ref [22] was the National Institute of Open Schooling\'s Hindustani ' +
       'Music (242) teaching text -- course material, the same class as the ' +

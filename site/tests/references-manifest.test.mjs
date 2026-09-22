@@ -148,16 +148,29 @@ test('an assessed entry carries a check date, an unassessed one does not', async
 //
 // The regex must fail loudly if the bibliography's anchor convention changes:
 // zero matches is a broken check, not a passing one.
-const BIBLIOGRAPHY_PATH = join(HERE, '..', 'src', 'content', 'docs', 'appendix-references.mdx');
+// first-release M003/S02: there are now two bibliographies. The shipping
+// appendix holds only what a shipping page cites; the deferred theory bundle
+// carries what the deep dives cite. A verdict is about a work, not about which
+// file lists it, and every verdict M002 recorded is still true -- so the
+// manifest spans both and these arms check the union.
+const BIBLIOGRAPHY_PATHS = [
+  join(HERE, '..', 'src', 'content', 'docs', 'appendix-references.mdx'),
+  join(HERE, '..', 'src', 'content', 'theory', 'theory-references.mdx'),
+];
 
 async function bibliographyAnchors() {
-  const mdx = await readFile(BIBLIOGRAPHY_PATH, 'utf8');
-  const found = [...mdx.matchAll(/id="((?:ref|fr)-[A-Za-z0-9-]+)"/g)].map((m) => m[1]);
-  if (found.length === 0) {
-    throw new Error(
-      `no ref-/fr- anchors matched in ${BIBLIOGRAPHY_PATH} — has the anchor ` +
-        'convention changed? An unmatched pattern is a broken check, not a passing one.',
-    );
+  const found = [];
+  for (const path of BIBLIOGRAPHY_PATHS) {
+    const mdx = await readFile(path, 'utf8');
+    const here = [...mdx.matchAll(/id="((?:ref|fr)-[A-Za-z0-9-]+)"/g)].map((m) => m[1]);
+    if (here.length === 0) {
+      throw new Error(
+        `no ref-/fr- anchors matched in ${path} — has the anchor convention ` +
+          'changed, or has the file moved? An unmatched pattern is a broken ' +
+          'check, not a passing one.',
+      );
+    }
+    found.push(...here);
   }
   return found;
 }

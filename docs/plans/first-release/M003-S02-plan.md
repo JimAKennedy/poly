@@ -13,7 +13,7 @@ attempts whose outcome the plan cannot predict and does not pretend to.
 
 - [x] 1. The six library-only entries are searched for an obtainable copy
 - [x] 2. The six are queued for the owner's browser — **planned pause**
-- [ ] 3. The appendix drops to what the shipping pages cite
+- [x] 3. The appendix drops to what the shipping pages cite
 - [ ] 4. The verifiable-references ledger records what this overtook
 
 ## Definition of Done

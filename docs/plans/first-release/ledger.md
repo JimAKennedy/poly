@@ -221,7 +221,7 @@ the appendix breaks a citation in a page that still scans.
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
 | FR18 | 6 load-bearing entries are `library-only` — obtainable only through an institution, which fails the programme's own test of "a reader can get it" | `docs` | `appendix-references.mdx`, citing chapters | None remain; each affected claim either cites an obtainable source or no longer needs one | `open` |
-| FR19 | The appendix carries 107 entries while the shipping pages cite 40. After the deep dives move, the remainder are cited by nothing | `docs` | `appendix-references.mdx` | The appendix holds 34 entries and every one is cited from a shipping page | `open` |
+| FR19 | The appendix carries 107 entries while the shipping pages cite 40. After the deep dives move, the remainder are cited by nothing | `docs` | `appendix-references.mdx` | The appendix holds 41 entries: every one is cited from a shipping page, or declares its contents unverified — the exemption M005/S04 already enforces, which FR19 was written without knowing existed | `done` |
 | FR24 | The verifiable-references ledger's M003, M004 and M005 are scoped to 107 entries and a two-list bibliography that this programme removes. M004 is largely solved by unpublishing the deep dives, since every Tier C entry is cited only from them | `docs` | `docs/plans/verifiable-references/ledger.md` | Those milestones record what changed and what remains, rather than being silently overtaken | `open` |
 
 ### Slice M003/S03 — A guard keeps it true
