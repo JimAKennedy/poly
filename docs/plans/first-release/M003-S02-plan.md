@@ -12,7 +12,7 @@ attempts whose outcome the plan cannot predict and does not pretend to.
 ## Task status
 
 - [x] 1. The six library-only entries are searched for an obtainable copy
-- [ ] 2. What survives is repointed; what does not is resolved
+- [x] 2. The six are queued for the owner's browser — **planned pause**
 - [ ] 3. The appendix drops to what the shipping pages cite
 - [ ] 4. The verifiable-references ledger records what this overtook
 
@@ -91,25 +91,31 @@ that leaves no trace is one the next pass repeats.
 Write the six verdicts into the evidence file before task 2 begins, so the
 research and the editorial decisions it drives are separable in review.
 
-## Task 2 — What survives is repointed; what does not is resolved
+## Task 2 — The six are queued for the owner's browser
 
-**Consumes:** task 1's six verdicts.
+**Repaired after task 1 ran.** The step below said that an entry task 1 found
+nothing for must have its claim stop depending on it. Task 1 found nothing for
+**all six**, and the owner's decision is that "automation found none" is not
+"none exists" — so they are queued rather than reworded, and **FR18 stays open**
+until the browser settles them.
 
-For each entry task 1 found a copy for: repoint the link in
-`appendix-references.mdx` and keep the citation exactly as it is. The claim does
-not change; only the route to the source does.
+The rewording path is kept below because it remains correct for whichever
+entries the browser does not settle.
 
-For each entry task 1 found nothing for: the claim must stop depending on it.
-Read the sentence first, because the right answer differs per claim — one may
-have a second citation already, one may state something no source is needed for,
-one may need rewording to a weaker statement the chapter can support. **Do not
-delete a claim to make a reference go away.** If a claim genuinely needs a
-source and none is obtainable, that is a finding to report, not something to
-resolve by deletion.
+1. Add a section to `docs/plans/verifiable-references/browser-worklist.md` — the
+   established queue for references a human must settle — naming this milestone
+   and listing all six with the specific search each needs. Group by where the
+   copy is most likely to be, not by chapter.
+2. Record in the evidence that FR18 is paused, not failed, and what unblocks it.
+3. Run `format`, `site-unit`, `doc-conformance`, `doc-discipline`. Commit with
+   `Slice: M003/S02` and **no `Rows:` trailer**, because this task closes no row.
 
-Run `format`, `site-unit`, `doc-conformance`, `doc-discipline`. Commit with
-`Slice: M003/S02`, `Rows: FR18`, closing FR18 in the same edit that ticks this
-task's box.
+**When the owner reports**, for each entry: found → repoint the link in
+`appendix-references.mdx`, keep the citation exactly as it is, and update the
+manifest's `obtainability`; not found → read the citing sentence and make the
+claim stop depending on it, without deleting a claim to make a reference go
+away. If a claim genuinely needs a source and none is obtainable, that is a
+finding to report.
 
 ## Task 3 — The appendix drops to what the shipping pages cite
 

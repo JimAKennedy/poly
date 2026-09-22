@@ -87,6 +87,28 @@ measured evidence for each.
 |---|---|---|
 | `ref-41` | `https://www.erudit.org/en/journals/sqrm/2015-v16-n1-2-sqrm03043/1039619ar.pdf` | Behind an Anubis challenge that returns HTTP 200. Confirm the article title and save the PDF. |
 
+
+### Queued by first-release M003/S02 — six library-only entries
+
+These six are cited from shipping chapters and are the last entries in the
+appendix that need an institution. Automation found no obtainable copy for any
+of them; four are paywalled by publication model rather than by bot-blocking, so
+a browser alone will not change those — but an **Academia.edu or Scribd** copy
+would, and that is where reposted copies of canonical articles tend to sit.
+
+Found → the citation is kept and repointed. Not found → the citing chapter's
+claim is reworded to stop depending on it. Until then FR18 is paused, and with
+it milestone M003.
+
+| Entry | The work | Where to look | If found |
+|---|---|---|---|
+| `fr-cohn-1992` | Cohn, "Transpositional Combination of Beat-Class Sets in Steve Reich's Phase-Shifting Music", *Perspectives of New Music* 30(2) | Academia.edu, ResearchGate — it won SMT's Outstanding Publication Award, so copies circulate | save the PDF, note the URL |
+| `fr-locke-1982` | Locke, "Principles of Offbeat Timing and Cross-Rhythm in Southern Ewe Dance Drumming", *Ethnomusicology* 26(2) | Academia.edu; Tufts course pages under `sites.tufts.edu/davidlocke/` | save the PDF, note the URL |
+| `fr-brailoiu-1951` | Brăiloiu, "Le rythme aksak", *Revue de Musicologie* 33(99/100) | Academia.edu; French musicology scans circulate. **The origin of the term "aksak"** — chapter 7 rests on it | save the PDF, note the URL |
+| `fr-harrison-2025` | Harrison, "Reflections on the Amen Break", *The Routledge Companion to Remix Studies* 2nd ed. | Academia.edu — Nate Harrison self-archives; his 2004 "Can I Get an Amen?" is widely posted | save the PDF, note the URL |
+| `fr-vitale-1990` | Vitale, "Kotekan: The Technique of Interlocking Parts in Balinese Music", *Balungan* 4(2) | `gamelan.org` — the American Gamelan Institute publishes *Balungan*; check for a back-issue archive behind the front page | save the PDF, note the URL |
+| `fr-powers-1980` | Powers, "India, subcontinent of", *The New Grove Dictionary of Music and Musicians* vol. 9 | Grove Music Online through any public library card — many give free Grove access | note the access route |
+
 ## Resolved`**, never by being
 deleted. The record of what was checked and when is the point of the file, and a
 deleted row is indistinguishable from a row that was never added.

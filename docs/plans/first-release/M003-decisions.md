@@ -59,3 +59,33 @@ Measured before planning, on this branch:
 | of the kept set: `library-only` | 6 |
 | of the kept set: mismatches | 2 — `ref-1`, `ref-34` |
 | of the kept set: not Tier A | 1 — `fr-linn-attack-2020` (Tier B) |
+
+## 2026-09-22 — planned pause in M003/S02
+
+- **Q:** Automation found no obtainable copy for any of the six library-only
+  entries. Rewording six claims on that basis assumes none exists, when what was
+  established is that none is reachable from here. How should task 2 proceed? —
+  **A:** queue them for the owner's browser first.
+- **Decision:** the six go to the browser worklist and **FR18 stays open** until
+  the owner reports back — **Why:** four are paywalled by publication model
+  rather than bot-blocking, so a browser alone does not change them, but the
+  owner's Academia.edu and Scribd accounts are exactly where reposted copies of
+  canonical articles like Cohn 1992 and Locke 1982 tend to sit. `ref-9` and
+  `ref-22` were both settled that way after automation had given up. Rewording
+  chapter 7 to introduce "aksak" unsourced, on evidence with a known gap, is not
+  a trade worth making to finish a milestone in one run.
+
+- **Decision:** tasks 3 and 4 proceed anyway — **Why:** neither depends on the
+  six. Task 3 removes the 67 entries **no shipping page cites**, and all six are
+  cited; task 4 annotates another programme's ledger. Stopping the whole slice
+  on FR18 would leave work undone that the pause does not block.
+
+- **Consequence:** M003/S02 cannot close, and **M003/S03 is blocked** — its
+  guard asserts no shipping entry is `library-only`, which cannot hold while the
+  six are there under any outcome except removal. The milestone resumes when the
+  owner reports.
+
+- **Plan repair:** task 2's step said *"for each entry task 1 found nothing for:
+  the claim must stop depending on it"*. It now queues instead. The rewording
+  path is retained in the plan for the entries the browser does not settle,
+  because it remains correct for those.
