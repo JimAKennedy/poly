@@ -58,3 +58,38 @@ mock host's defaults for Afrobeat 12/8, and the mock has a
 - **The vision's "version" in R4 stays out.** The ledger scoped M004 to the
   docs matching the build and assigned tagging to the installers programme;
   this plan does not reopen that.
+
+## 2026-09-22 — judgment call during M004/S01 task 1
+
+- **The plan named a mock-host hook that does not exist.** A comment in
+  `mock-host.js` refers to `window.__polyMockSetTimeSig(num, den)`; nothing
+  defines it. The existing screenshot spec changes state by mutating
+  `PolyMockHost.getState()` and calling `_pushState()`, so the capture does
+  the same. The plan step is corrected as a documentation fix before the task
+  ran — obviously right, since the alternative was a script that throws.
+
+## 2026-09-22 — scope addition during M004/S01 task 1
+
+- **Q:** The capture taken with the mock's `?export=1` seam — so the header
+  shows Export as the plugin does — renders the BELL lane's name as a 7px
+  sliver. Measured: the per-lane export handle narrows the name column from
+  104px to 76px, "Anchor pulse" wraps to two lines, and the fixed 40px head
+  shrinks the name (a flex item) rather than clipping the role. This is what a
+  downloader gets. Capture without the handle and file an issue, add a row and
+  fix the CSS here, or ship the picture as it is? — **A:** add a row and fix
+  it here.
+- **Decision:** FR26 is added to M004/S01 with its own definition-of-done
+  line, the slice gains the `webui-e2e` token, and the fix is explicit line
+  heights plus `flex: none` on the name, with the head at the worst case those
+  make deterministic (42px) — **Why:** a fixed pixel height against the
+  browser's default line heights is platform-dependent, which is how "sized
+  for the worst case" was already one pixel short before the handle made it
+  seven.
+- **Judgment call:** the first draft of the guard checked that the name's box
+  lay inside the head and that the name column did not overflow, and it
+  **passed on the broken CSS** — a shrunken flex item hides its overflow
+  inside itself, so the column looks tidy while the name is a sliver. The
+  guard now also asserts the name element's own `scrollHeight` does not exceed
+  its `clientHeight`, and was seen red on the old CSS naming "Bell: 7px of
+  text hidden" before being trusted. Recorded because a green guard is not
+  evidence a guard works, and this one proved it again.

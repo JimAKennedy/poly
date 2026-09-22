@@ -124,11 +124,16 @@
   /* Reserve a fixed head height so a role/name that wraps to a second line
      never pushes the ring + ladder + feel down — every strip's ring starts at
      the same Y regardless of title length. Sized for the worst case (one name
-     line + two wrapped role lines); overflow clips rather than reflows. */
-  .strip .head { display: flex; align-items: center; gap: 6px; width: 100%; flex: none; height: 40px; }
-  .strip .nm { text-transform: uppercase; letter-spacing: .14em; font-size: 9px; color: #B7AE9D; text-align: center; min-width: 0; flex: 1;
+     line + two wrapped role lines); overflow clips rather than reflows.
+     first-release M004 FR26: the line heights are explicit and the name does
+     not flex-shrink, so the worst case is 16 + 2 + 2×12 = 42px on every
+     platform. With the browser's default line heights and a shrinkable name,
+     the per-lane export handle narrowed the column enough to wrap "Anchor
+     pulse", and the name — not the role — was what got clipped. */
+  .strip .head { display: flex; align-items: center; gap: 6px; width: 100%; flex: none; height: 42px; }
+  .strip .nm { text-transform: uppercase; letter-spacing: .14em; font-size: 9px; line-height: 12px; color: #B7AE9D; text-align: center; min-width: 0; flex: 1;
                height: 100%; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-  .strip .nm b { display: block; width: 100%; font-size: 12px; letter-spacing: .1em; color: var(--text); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .strip .nm b { display: block; flex: none; width: 100%; font-size: 12px; line-height: 16px; letter-spacing: .1em; color: var(--text); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .strip .nm b .nm-edit { width: 100%; box-sizing: border-box; font: inherit; letter-spacing: inherit; text-transform: none; text-align: center; color: var(--text); background: var(--panel, #1a1712); border: 1px solid var(--accent, var(--line)); border-radius: 4px; padding: 1px 2px; }
   .strip .ex { border: 1px solid var(--line); background: transparent; border-radius: 5px; width: 22px; height: 22px; font-size: 11px; color: var(--dim); flex: none; line-height: 1; }
   .strip .ex:hover { color: var(--text); border-color: var(--dim); }
