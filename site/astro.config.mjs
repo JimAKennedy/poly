@@ -79,7 +79,7 @@ export default defineConfig({
 							slug: '17-midi-routing-note-map',
 						},
 						{
-							label: '18. Editors & Advanced Views',
+							label: '18. Editors',
 							slug: '18-editors-and-views',
 						},
 					],

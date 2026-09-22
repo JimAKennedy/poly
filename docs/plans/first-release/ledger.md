@@ -264,20 +264,20 @@ guide says and what a downloader gets.
 **Plan:** M004-S01-plan.md
 **Validation:** format, site-unit, doc-conformance, doc-discipline, webui-e2e
 **Evidence:** evidence/M004-S01.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] No screenshot shows a control the shipped UI does not have
-- [ ] Chapter 18 describes the views that exist
-- [ ] `CHANGELOG.md` records the removals under the right heading
-- [ ] A lane's name stays legible with the per-lane export handle present, and
+- [x] No screenshot shows a control the shipped UI does not have
+- [x] Chapter 18 describes the views that exist
+- [x] `CHANGELOG.md` records the removals under the right heading
+- [x] A lane's name stays legible with the per-lane export handle present, and
       a guard fails if it does not
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
 | FR21 | `guide-using-poly.mdx` carries a screenshot and control walkthrough taken against a two-view UI | `docs` | `site/src/content/docs/guide-using-poly.mdx` | Screenshot and prose match a build with one view | `done` |
-| FR22 | Chapter 18 and the changelog describe the editor surface without accounting for a removed view or a removed documentation section | `docs` | `site/src/content/docs/18-editors-and-views.mdx`, `CHANGELOG.md` | Both describe what ships; `doc-discipline` passes | `open` |
+| FR22 | Chapter 18 and the changelog describe the editor surface without accounting for a removed view or a removed documentation section | `docs` | `site/src/content/docs/18-editors-and-views.mdx`, `CHANGELOG.md` | Both describe what ships; `doc-discipline` passes | `done` |
 | FR26 | Found while regenerating FR21's screenshot: the plugin always shows the per-lane export handle, and that third head button narrows the name column enough that a two-word role wraps — and because the name was a shrinkable flex item, the **name** was what got clipped: BELL rendered as a 7px sliver in the Afrobeat 12/8 preset. Added at the owner's request rather than captured around | `defect` | `webui/ui.css`, `webui/tests/lane-head.spec.mjs` | A Playwright guard asserts every lane name is as tall as its own text with the handle present, seen red on the old CSS | `done` |
 
 ## Sequencing
