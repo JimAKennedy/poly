@@ -176,9 +176,8 @@ and can be obtained without an institution.
 
 **Branch:** milestone/M003-bibliography
 **Status:** in-progress
-**Demo:** The appendix holds 41 entries — 40 cited from a claim in prose and
-one that declares itself unverified and uncited — and no cited entry requires
-an institutional subscription.
+**Demo:** The appendix holds 40 entries, every one cited from a claim in prose,
+and no entry requires an institutional subscription.
 
 **Why this waits for M002/S02.** The deep dives cite 66 anchors that nothing
 else cites. Until they and their bibliography have moved, removing an entry from

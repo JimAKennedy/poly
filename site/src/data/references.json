@@ -963,19 +963,6 @@
       "price": null,
       "archiveFile": null
     },
-    "fr-peycheva-dimov-2002": {
-      "obtainability": "library-only",
-      "evidence": "No Crossref record for this 2002 work; the nearest hit was a different 2025 Muzikologija article by Peycheva, which is not it. A 2002 Bulgarian monograph is plausible but no identifier was established, so none is recorded.",
-      "checked": "2026-09-20",
-      "description": "unverified",
-      "note": "",
-      "identifier": {
-        "doi": null,
-        "isbn": null
-      },
-      "price": null,
-      "archiveFile": null
-    },
     "fr-brailoiu-1951": {
       "obtainability": "purchasable",
       "evidence": "jstor.org/stable/926002 returns 200 to automation but serves a 3 KB shell without the article. The owner downloaded the PDF on 2026-09-22 under a paid JPASS personal subscription, which needs no institution. The PDF was read directly: its cover sheet reads \"Le rythme Aksak, Constantin Brăiloiu, Revue de Musicologie, Dec., 1951, T. 33, No. 99/100, pp. 71-108, Stable URL https://www.jstor.org/stable/926002\", and the article opens under the heading LE RYTHME AKSAK. DOI 10.2307/926002. The archive filename omits the i of Brăiloiu; it is recorded as it is on disk.",

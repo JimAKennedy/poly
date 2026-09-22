@@ -661,6 +661,15 @@ highest-value additions per tradition, each cited at the claim it supports.
 |---|---|---|---|---|---|---|
 | F49 | Ch 7's svatbarska-muzika material has no scholarly citation. Amended during planning: the audit names Peycheva & Dimov, whose verifiable output is *The Zurna Tradition in Southwest Bulgaria: Romani Musicians in Practice* (2002) — a different subject. Silverman, C. (2007), "Bulgarian Wedding Music between Folk and Chalga: Politics, Markets and Current Directions", *Muzikologija*, is squarely on the topic and openly accessible. Both are added: Silverman carries the wedding-music claim, Peycheva & Dimov are cited where the chapter touches Romani musicianship | `P2` | `enrich` | `appendix-references.mdx`, `07-balkan.mdx` | Cases `M005 F49` (Silverman cited at the svatbarska passage) and `M005/S04` (the Peycheva & Dimov entry carries `contents unverified`). **Peycheva & Dimov are listed but cited by nothing**: Chapter 7 has no Romani-musicianship passage and `theory-balkan.mdx` Rule 7 already attributes ensemble tightness to Rice, so there is no claim here their book was confirmed to support, and none was written to host it. A deliberate orphan — M006/S02 row B08 should not read it as rot | `done` |
 
+> **Retired from the shipping appendix by first-release M003/S03** (2026-09-22).
+> The deliberate orphan this row left — Peycheva & Dimov (2002), uncited, in
+> Bulgarian and unread, obtainable only through a library, and on the zurna
+> rather than the wedding music the row was raised for — was dropped by the
+> owner's decision rather than exempted from that milestone's guard. Silverman
+> (2007) still carries the svatbarska-muzika claim. The `M005/S04` test case
+> that pinned the phrase is retired with the entry; the phrase stays the marker
+> for any future unread entry. Nothing here changes status.
+
 ### Slice M005/S05 — Minimalism and electronic sources
 
 **Depends:** M001/S06, M002/S06

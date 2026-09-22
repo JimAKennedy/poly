@@ -12,12 +12,10 @@
 // broken check, not a green one, which this repo has shipped once before
 // (presets-json-schema.test.mjs records it).
 //
-// One exemption, one phrase. An entry that says "contents unverified" declares
-// that no claim rests on it (M005/S04 pins the phrase). Such an entry cannot
-// fail the cited arm or the obtainable arm, because it makes no claim either
-// could hold it to — the owner's FR19 decision, applied to both arms at once so
-// it stays one rule (M003-decisions.md, 2026-09-22). The tier arm is not exempt:
-// an unread source still has a venue.
+// No exemptions. The one candidate — an uncited, unread, library-only entry
+// that declared its contents unverified — was retired in this same slice rather
+// than carved out, so the three properties hold for every entry without a
+// carve-out for any (M003-decisions.md, 2026-09-22).
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -30,10 +28,9 @@ const DOCS = join(HERE, '..', 'src', 'content', 'docs');
 const APPENDIX_NAME = 'appendix-references.mdx';
 const MANIFEST_PATH = join(HERE, '..', 'src', 'data', 'references.json');
 
-const ENTRY = /<span id="((?:ref|fr)-[A-Za-z0-9-]+)"([^>]*)>([\s\S]*?)<\/span>/g;
+const ENTRY = /<span id="((?:ref|fr)-[A-Za-z0-9-]+)"([^>]*)>/g;
 const TIER = /data-tier="([^"]*)"/;
 const CITATION = /appendix-references\/#((?:ref|fr)-[A-Za-z0-9-]+)/g;
-const EXEMPT_PHRASE = 'contents unverified';
 const ALLOWED_TIERS = new Set(['A', 'B']);
 
 async function appendixEntries() {
@@ -41,7 +38,6 @@ async function appendixEntries() {
   const entries = [...src.matchAll(ENTRY)].map((m) => ({
     anchor: m[1],
     tier: (m[2].match(TIER) ?? [])[1] ?? null,
-    exempt: m[3].includes(EXEMPT_PHRASE),
   }));
   if (entries.length === 0) {
     throw new Error(
@@ -83,16 +79,15 @@ async function loadManifest() {
   return m.entries;
 }
 
-test('FR20 cited: every appendix entry is cited from a shipping page, or declares itself unverified', async () => {
+test('FR20 cited: every appendix entry is cited from a shipping page', async () => {
   const entries = await appendixEntries();
   const cited = await citedAnchors();
-  const uncited = entries.filter((e) => !e.exempt && !cited.has(e.anchor)).map((e) => e.anchor);
+  const uncited = entries.filter((e) => !cited.has(e.anchor)).map((e) => e.anchor);
   assert.deepEqual(
     uncited,
     [],
     'defined in the appendix but cited by no shipping page. Either cite it from ' +
-      `a claim, move it to the theory bundle, or have it say "${EXEMPT_PHRASE}" ` +
-      'and that no claim rests on it',
+      'a claim, move it to the theory bundle, or retire it with the reason recorded',
   );
 });
 
@@ -109,7 +104,7 @@ test('FR20 tier: every appendix entry is Tier A or B', async () => {
   );
 });
 
-test('FR20 obtainable: no appendix entry is library-only, unless it declares itself unverified', async () => {
+test('FR20 obtainable: no appendix entry is library-only', async () => {
   const entries = await appendixEntries();
   const manifest = await loadManifest();
   const bad = [];
@@ -122,7 +117,7 @@ test('FR20 obtainable: no appendix entry is library-only, unless it declares its
       bad.push(`${e.anchor} (no manifest record)`);
       continue;
     }
-    if (!e.exempt && rec.obtainability === 'library-only') bad.push(`${e.anchor} (library-only)`);
+    if (rec.obtainability === 'library-only') bad.push(`${e.anchor} (library-only)`);
   }
   assert.deepEqual(
     bad,

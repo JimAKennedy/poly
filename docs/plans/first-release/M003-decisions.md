@@ -125,3 +125,21 @@ Measured before planning, on this branch:
 - **Consequence:** the appendix holds **41** — 40 cited plus the exempt one —
   not the 34 FR19 first named. The count is reported in the evidence, as the
   plan said it would be, and nothing pins it.
+
+## 2026-09-22 — the orphan is dropped, and the guard loses its exemption
+
+- **Q:** Do we still need Peycheva & Dimov (2002)? It is cited by nothing, Tier
+  B, `library-only`, unread, in Bulgarian, absent from the theory bundle, and on
+  the zurna rather than on aksak or wedding music — it exists because
+  theory-audit F49 named its authors for a subject their work does not cover. —
+  **A:** drop it.
+- **Decision:** the entry leaves the shipping appendix and the manifest, the two
+  theory-audit guards that pinned it are retired with it, and S03's guard has no
+  exemption at all — **Why:** the exemption taken earlier today had exactly one
+  subject, and a rule with one subject is a carve-out wearing a rule's clothes.
+  Chapter 7's aksak material rests on Brăiloiu, Goldberg, Rice and Silverman,
+  all Tier A and obtainable; nothing loses a source. This reverses the earlier
+  decision on this page, and that entry stays as the record of what was
+  considered first.
+- **Consequence:** the appendix holds **40**, every one cited, and the guard's
+  three properties hold for every entry without a carve-out for any.
