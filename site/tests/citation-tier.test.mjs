@@ -33,7 +33,17 @@ const THEORY = join(HERE, '..', 'src', 'content', 'theory');
 // citation claims still hold -- they just resolve from the new root.
 const docRoot = (file) => (file.startsWith('theory-') ? THEORY : DOCS);
 
-const loadSource = (file) => readFile(join(docRoot(file), file), 'utf8');
+// first-release M003/S02: the shipping appendix now holds only entries a
+// shipping page cites, so ref-2, ref-9, ref-22 and ref-26 -- all corrected by
+// the verifiable-references programme -- live in the theory bundle's own
+// bibliography. Their claims still hold; they resolve from there.
+const BIBS = {
+  'appendix-references.mdx': join(DOCS, 'appendix-references.mdx'),
+  'theory-references.mdx': join(THEORY, 'theory-references.mdx'),
+};
+const loadBib = (file) => readFile(BIBS[file] ?? join(docRoot(file), file), 'utf8');
+
+const loadSource = (file) => loadBib(file);
 
 // The title the guide printed, which exists in no MTO issue and nowhere a web
 // search reaches. Shared by both cases so they cannot drift apart.
@@ -42,7 +52,7 @@ const FABRICATED_TITLE = 'Resultant Patterns in Phase-Shifted Rhythmic Structure
 const CLAIMS = [
   {
     id: 'S01-F17',
-    file: 'appendix-references.mdx',
+    file: 'theory-references.mdx',
     rule:
       'audit §5 on ref [2]. Verified against the publisher 2026-09-01: MTO is ' +
       'current through Vol 32 No 2 (June 2026), so 31(2) is not a forward ' +
@@ -55,7 +65,7 @@ const CLAIMS = [
   },
   {
     id: 'REF9-OLURANTI',
-    file: 'appendix-references.mdx',
+    file: 'theory-references.mdx',
     rule:
       'ref [9] was the F17 defect a second time, and worse. It printed the title ' +
       '"Polyrhythmic Structures in West African Drumming" against a real author ' +
@@ -100,7 +110,7 @@ const CLAIMS = [
   },
   {
     id: 'REF26-AKSAK',
-    file: 'appendix-references.mdx',
+    file: 'theory-references.mdx',
     rule:
       'VR01. ref [26] was a Fiveable course-marketing study guide and returned ' +
       '404. Under the obtainability principle that is a replacement, not a ' +
@@ -124,7 +134,7 @@ const CLAIMS = [
   },
   {
     id: 'REF22-CLAYTON',
-    file: 'appendix-references.mdx',
+    file: 'theory-references.mdx',
     rule:
       'VR02. ref [22] was the National Institute of Open Schooling\'s Hindustani ' +
       'Music (242) teaching text -- course material, the same class as the ' +
@@ -146,6 +156,58 @@ const CLAIMS = [
       'Music Theory Online',
     ],
     presentRegex: [/10\.30535\/mto\.26\.1\.2/],
+  },
+  {
+    id: 'REF1-TOUSSAINT',
+    file: 'appendix-references.mdx',
+    rule:
+      'first-release FR16. ref [1] named Toussaint (2005), "The Euclidean ' +
+      'Algorithm Generates Traditional Musical Rhythms", Proceedings of BRIDGES, ' +
+      'and linked arxiv.org/pdf/0705.4085.pdf. That URL returns 200 and serves ' +
+      '"The Distance Geometry of Music" by Demaine, Gomez-Martin, Meijer, ' +
+      'Rappaport, Taslakian, Toussaint, Winograd and Wood -- the PDF\'s own ' +
+      'margin stamp reads arXiv:0705.4085v1 [cs.CG] 28 May 2007, and Toussaint ' +
+      'is one of eight authors rather than the sole author. Both works are real ' +
+      'and both discuss Euclidean rhythms, so no link checker could ever have ' +
+      'flagged it: the citation described a different work from the one it ' +
+      'pointed at. This is the guide\'s most-cited reference, at six shipping ' +
+      'chapters, and it underpins the Euclidean claim the generator rests on. ' +
+      'The entry now points at the paper itself in the official BRIDGES archive, ' +
+      'verified by reading its title page: exact title, Toussaint sole author, ' +
+      'School of Computer Science, McGill University',
+    // Tree-wide: the wrong arXiv id must not return under any entry number.
+    forbiddenRegex: [/0705\.4085/],
+    present: [
+      'The Euclidean Algorithm Generates Traditional Musical Rhythms',
+      'Toussaint, G. T. (2005)',
+    ],
+    presentRegex: [/archive\.bridgesmathart\.org\/2005\/bridges2005-47/],
+  },
+  {
+    id: 'REF34-SCHWARZ',
+    file: 'appendix-references.mdx',
+    rule:
+      'first-release FR17. ref [34] attributed to Reich his own essay "Music as ' +
+      'a Gradual Process, Part II". The PDF at its URL is "Steve Reich: Music as ' +
+      'a Gradual Process Part II" by K. Robert Schwarz, Perspectives of New ' +
+      'Music 20(1/2), Autumn 1981 - Summer 1982, pp. 225-286, JSTOR stable URL ' +
+      '942414 -- an article ABOUT Reich\'s process, not Reich\'s essay. Read ' +
+      'directly from the PDF in verifiable-references M002. This is the same ' +
+      'failure as ref [6] before M001 of that programme corrected it: a ' +
+      'commentary cited as the work it comments on. The claim it supports, that ' +
+      'Drumming builds one twelve-beat pattern up and reduces it back, is a ' +
+      'description of the work rather than a report of the composer\'s own ' +
+      'words, so it survives the attribution being corrected',
+    forbidden: ['Reich, S. "Music as a Gradual Process, Part II."'],
+    // Scoped to ref-34's own line. A bare present: ['Perspectives of New Music']
+    // is satisfied by fr-cohn-1992, which is in the same journal -- so the
+    // venue could be deleted from this entry and the arm would still pass. The
+    // REF6-JONES case has the same shape and the same reason.
+    presentRegex: [
+      /id="ref-34"[^\n]*Schwarz, K\. R\./,
+      /id="ref-34"[^\n]*Perspectives of New Music/,
+      /id="ref-34"[^\n]*jstor\.org\/stable\/942414/,
+    ],
   },
   {
     id: 'S02-F18',

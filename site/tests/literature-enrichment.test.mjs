@@ -48,7 +48,6 @@ const ENTRIES = [
   { anchor: 'fr-silverman-2007', tier: 'A', row: 'F49' },
   { anchor: 'fr-born-hesmondhalgh-2000', tier: 'A', row: 'F51' },
   { anchor: 'fr-crook-2009', tier: 'A', row: 'F53' },
-  { anchor: 'fr-peycheva-dimov-2002', tier: 'B', row: 'F49' },
 ];
 
 test('M005/S01: the sub-Saharan sources are in the appendix with declared tiers', async () => {
@@ -198,22 +197,13 @@ for (const c of CITATIONS) {
   });
 }
 
-// Peycheva & Dimov is the one entry whose contents nobody here has been able to
-// read: the work is in Bulgarian. Rather than let a tier-B rating stand in for a
-// caveat nobody wrote, the entry says so in a fixed phrase, so
-// `grep -rn "contents unverified" site/` enumerates every entry in that state.
-test('M005/S04: the unread source says so in its own entry', async () => {
-  const src = await readFile(APPENDIX, 'utf8');
-  const i = src.indexOf('id="fr-peycheva-dimov-2002"');
-  assert.notEqual(i, -1, 'fr-peycheva-dimov-2002 is missing from the appendix');
-  const entry = src.slice(i, src.indexOf('</span>', i));
-  assert.ok(
-    entry.includes('contents unverified'),
-    'the Peycheva & Dimov entry does not carry the phrase "contents unverified". Its bibliographic ' +
-      'details were confirmed but the work is in Bulgarian and has not been read here; the entry has to ' +
-      'say that, because no tier value can.',
-  );
-});
+// M005/S04 once asserted here that the Peycheva & Dimov entry carried the phrase
+// "contents unverified". The entry was retired from the shipping appendix in
+// first-release M003/S03 (2026-09-22): it was cited by nothing, in Bulgarian and
+// unread, obtainable only through a library, and on the zurna rather than the
+// wedding music F49 was raised for. Silverman (2007) carries that claim. The
+// phrase remains the fixed marker for any future unread entry, and the orphan
+// check below still honours it.
 
 // The maracatu ensemble's parts, as F53 scopes them. Named as a set so dropping
 // one fails by name rather than leaving the section quietly thinner than the row

@@ -626,17 +626,17 @@
       "archiveFile": null
     },
     "fr-locke-1982": {
-      "obtainability": "library-only",
-      "evidence": "Crossref confirms \"Principles of Offbeat Timing and Cross-Rhythm in Southern Ewe Dance Drumming\", Ethnomusicology 26(2), 1982 — matching the entry. Crossref’s own record spells it \"Southern Eve\", a typo on their side; the entry’s \"Ewe\" is correct. Behind JSTOR, not read.",
-      "checked": "2026-09-20",
-      "description": "unverified",
+      "obtainability": "purchasable",
+      "evidence": "jstor.org/stable/851524 returns 200 to automation but serves a 3 KB shell without the article. The owner downloaded the PDF on 2026-09-22 under a paid JPASS personal subscription, which needs no institution. The PDF was read directly: its cover sheet reads \"Principles of Offbeat Timing and Cross-Rhythm in Southern Eʋe Dance Drumming, David Locke, Ethnomusicology, Vol. 26, No. 2 (May, 1982), pp. 217-246, Stable URL https://www.jstor.org/stable/851524\", and the article's own title page matches. The source spells the people Eʋe; the entry's Ewe is the usual English spelling of the same name, and Crossref's Eve is a typo. DOI 10.2307/851524.",
+      "checked": "2026-09-22",
+      "description": "verified",
       "note": "",
       "identifier": {
         "doi": "10.2307/851524",
         "isbn": null
       },
-      "price": null,
-      "archiveFile": null
+      "price": "USD 19.50/month or USD 199/year (JPASS, JSTOR personal access; about.jstor.org/jpass read 2026-09-22)",
+      "archiveFile": "Locke-PrinciplesOffbeatTiming-1982.pdf"
     },
     "fr-chernoff-1979": {
       "obtainability": "borrowable",
@@ -873,17 +873,17 @@
       "archiveFile": null
     },
     "fr-vitale-1990": {
-      "obtainability": "library-only",
-      "evidence": "No Crossref record: Balungan 4(2), 1990 is not indexed. The nearest hit was an unrelated 2018 Asian Music article. Balungan is a small-press journal; a library or the American Gamelan Institute would settle it.",
-      "checked": "2026-09-20",
-      "description": "unverified",
+      "obtainability": "open-access",
+      "evidence": "gamelan.org/wp-content/uploads/2025/08/v_4_2_Kotekan_the_technique_of_interlocking_parts_in_Balinese_music_Vitale.pdf returns 200 application/pdf, 6338599 bytes, to automation and to the owner's browser alike. The PDF was read directly: its first page is headed \"TECHNIQUES — Kotekan: the technique of interlocking parts in Balinese music, by Wayne Vitale\", paginated \"2 Balungan\" and \"Fall 1990 3\", so the title, author, journal and year match the entry and the URL's own v_4_2 naming gives volume 4(2). The American Gamelan Institute posted the back issue in August 2025; the M003/S02 attempt on 2026-09-21 found no link from the front page, and the owner located the file behind it on 2026-09-22.",
+      "checked": "2026-09-22",
+      "description": "verified",
       "note": "",
       "identifier": {
         "doi": null,
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "v_4_2_Kotekan_the_technique_of_interlocking_parts_in_Balinese_music_Vitale.pdf"
     },
     "fr-sumarsam-1995": {
       "obtainability": "borrowable",
@@ -899,17 +899,17 @@
       "archiveFile": null
     },
     "fr-powers-1980": {
-      "obtainability": "library-only",
-      "evidence": "Powers, \"India, subcontinent of\" in The New Grove Dictionary of Music and Musicians, vol. 9 (1980). A reference-work article: no DOI, and the 1980 print set’s ISBN was not established here — an Open Library query for the edition returned nothing, so none is recorded rather than guessed. The text is reachable through Grove Music Online by institutional subscription, or in any reference library holding the print set. Not read.",
-      "checked": "2026-09-20",
-      "description": "unverified",
-      "note": "",
+      "obtainability": "purchasable",
+      "evidence": "doi.org/10.1093/gmo/9781561592630.article.43272 redirects into an Oxford University Press login (oup2-idp.sams-sigma.com) and loops there for automation, so the article is behind a subscription wall rather than a bot block. The owner opened it on 2026-09-22 and saved the overview page, whose footer reads \"Subscriber: Mr James Kennedy\", and which lists the article's sections; the one chapter 6 leans on is \"India, theory and practice of classical music: Rhythm and tāla\". The saved pages were read directly: title \"India, subcontinent of\", authors as in the note, DOI as above, \"Published in print: 20 January 2001\".",
+      "checked": "2026-09-22",
+      "description": "mismatch",
+      "note": "The entry cited Powers, H. (1980), \"India, subcontinent of\", The New Grove Dictionary of Music and Musicians vol. 9. The version a reader can reach is the 2001 second-edition rewrite in Grove Music Online, DOI 10.1093/gmo/9781561592630.article.43272, credited to Regula Qureshi, Harold S. Powers, Jonathan Katz, Richard Widdess and sixteen further contributors, print date 20 January 2001. Same title, different edition and authorship. Owner's decision 2026-09-22: the entry now cites the 2001 article; the anchor keeps its name because anchors are never reassigned and a theory-audit guard pins it.",
       "identifier": {
-        "doi": null,
+        "doi": "10.1093/gmo/9781561592630.article.43272",
         "isbn": null
       },
-      "price": null,
-      "archiveFile": null
+      "price": "Grove Music Online, Oxford University Press — individual subscription; price not established from here (oxfordmusiconline.com refuses automation with 403); also licensed by many public libraries",
+      "archiveFile": "Powers first section of India Subcontinent Of.pdf"
     },
     "fr-clayton-2000": {
       "obtainability": "borrowable",
@@ -963,31 +963,18 @@
       "price": null,
       "archiveFile": null
     },
-    "fr-peycheva-dimov-2002": {
-      "obtainability": "library-only",
-      "evidence": "No Crossref record for this 2002 work; the nearest hit was a different 2025 Muzikologija article by Peycheva, which is not it. A 2002 Bulgarian monograph is plausible but no identifier was established, so none is recorded.",
-      "checked": "2026-09-20",
-      "description": "unverified",
-      "note": "",
-      "identifier": {
-        "doi": null,
-        "isbn": null
-      },
-      "price": null,
-      "archiveFile": null
-    },
     "fr-brailoiu-1951": {
-      "obtainability": "library-only",
-      "evidence": "Crossref confirms \"Le rythme Aksak\", Revue de musicologie 33(99/100), 1951 — matching the entry exactly, including the volume. Behind JSTOR; not read. This is the origin of the aksak term the Balkan chapter rests on.",
-      "checked": "2026-09-20",
-      "description": "unverified",
+      "obtainability": "purchasable",
+      "evidence": "jstor.org/stable/926002 returns 200 to automation but serves a 3 KB shell without the article. The owner downloaded the PDF on 2026-09-22 under a paid JPASS personal subscription, which needs no institution. The PDF was read directly: its cover sheet reads \"Le rythme Aksak, Constantin Brăiloiu, Revue de Musicologie, Dec., 1951, T. 33, No. 99/100, pp. 71-108, Stable URL https://www.jstor.org/stable/926002\", and the article opens under the heading LE RYTHME AKSAK. DOI 10.2307/926002. The archive filename omits the i of Brăiloiu; it is recorded as it is on disk.",
+      "checked": "2026-09-22",
+      "description": "verified",
       "note": "",
       "identifier": {
         "doi": "10.2307/926002",
         "isbn": null
       },
-      "price": null,
-      "archiveFile": null
+      "price": "USD 19.50/month or USD 199/year (JPASS, JSTOR personal access; about.jstor.org/jpass read 2026-09-22)",
+      "archiveFile": "Braloiu-LerythmeAksak-1951.pdf"
     },
     "fr-rice-1994": {
       "obtainability": "purchasable",
@@ -1042,17 +1029,17 @@
       "archiveFile": null
     },
     "fr-cohn-1992": {
-      "obtainability": "library-only",
-      "evidence": "Crossref confirms \"Transpositional Combination of Beat-Class Sets in Steve Reich’s Phase-Shifting Music\", Perspectives of New Music 30(2), 1992 — matching the entry. Behind JSTOR; not read.",
-      "checked": "2026-09-20",
-      "description": "unverified",
+      "obtainability": "browser-only",
+      "evidence": "researchgate.net/publication/209436230 returns 403 to automation with a block page; the owner, who holds an account, downloaded the full text there in a browser on 2026-09-22. The PDF was read directly: it is a JSTOR export whose cover sheet reads \"Transpositional Combination of Beat-Class Sets in Steve Reich's Phase-Shifting Music, Richard Cohn, Perspectives of New Music, Vol. 30, No. 2 (Summer, 1992), pp. 146-177, Stable URL https://www.jstor.org/stable/3090631\", and the article's own title page matches. Crossref agrees (DOI 10.2307/3090631). The M003/S02 attempt on 2026-09-21 found only the JSTOR subscription copy; the ResearchGate repost is where a reader without an institution gets it.",
+      "checked": "2026-09-22",
+      "description": "verified",
       "note": "",
       "identifier": {
         "doi": "10.2307/3090631",
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "cohnreich1992.pdf"
     },
     "fr-potter-2000": {
       "obtainability": "borrowable",
@@ -1094,16 +1081,16 @@
       "archiveFile": null
     },
     "fr-harrison-2025": {
-      "obtainability": "library-only",
-      "evidence": "Crossref confirms \"Reflections on the Amen Break\" as a chapter in the 2nd edition of The Routledge Companion to Remix Studies, 2025 — matching the entry, which correctly cites the 2nd edition rather than the 2014 first, whose chapter carries a different DOI. Subscription; not read.",
-      "checked": "2026-09-20",
+      "obtainability": "purchasable",
+      "evidence": "No copy outside the book was found: DOI 10.4324/9781003402459-49 resolves 200 to a paywalled chapter page on taylorfrancis.com, and the owner's browser search on 2026-09-22 found no self-archived or reposted copy. Owner's decision: keep the citation and point it at the book. routledge.com/9781032509105 resolves 200 to \"The Routledge Companion to Remix Studies - 2nd Edition\" (Navas, Gallagher, burrough), whose prices render by script; taylorfrancis.com exposes only a USD 425 library licence price, which is not what a reader pays. The chapter text has not been read, so the description stays unverified; Crossref confirms the chapter title, edition and year.",
+      "checked": "2026-09-22",
       "description": "unverified",
       "note": "",
       "identifier": {
         "doi": "10.4324/9781003402459-49",
         "isbn": null
       },
-      "price": null,
+      "price": "ISBN 9781032509105, Routledge — price not established from here; obtain from the publisher or any bookseller",
       "archiveFile": null
     },
     "fr-linn-attack-2020": {

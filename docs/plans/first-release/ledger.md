@@ -32,8 +32,9 @@ implemented it disproved it: all 40 surviving citations sit in running prose
 attached to a claim, and **zero** appear in bibliographic list lines. The
 shipping chapters carry no decorative citations, so there is no fat to trim —
 reaching 10–20 would mean removing claims or leaving claims unsourced. The
-programme keeps 34 instead: every load-bearing citation that a reader can
-obtain without an institution.
+programme keeps 40 instead: every load-bearing citation that a reader can
+obtain without an institution. (34 was the figure before the six
+`library-only` entries were settled in M003/S02; all six survived.)
 
 ## Milestone M001 — Desk is the only view
 
@@ -174,8 +175,8 @@ directory renders nothing.
 and can be obtained without an institution.
 
 **Branch:** milestone/M003-bibliography
-**Status:** planned
-**Demo:** The appendix holds 34 entries, every one cited from a claim in prose,
+**Status:** done
+**Demo:** The appendix holds 40 entries, every one cited from a claim in prose,
 and no entry requires an institutional subscription.
 
 **Why this waits for M002/S02.** The deep dives cite 66 anchors that nothing
@@ -185,60 +186,64 @@ the appendix breaks a citation in a page that still scans.
 ### Slice M003/S01 — The two mismatches are corrected
 
 **Depends:** M002/S02
+**Plan:** M003-S01-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M003-S01.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] `ref-1` names and links the same work
-- [ ] `ref-34` attributes the article to its author
-- [ ] Each correction is locked by a claim test seen red before the edit
+- [x] `ref-1` names and links the same work
+- [x] `ref-34` attributes the article to its author
+- [x] Each correction is locked by a claim test seen red before the edit
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| FR16 | `ref-1` names Toussaint (2005), "The Euclidean Algorithm Generates Traditional Musical Rhythms", and links arXiv:0705.4085, which is "The Distance Geometry of Music" by eight authors in 2007. It is the guide's most-cited reference at six chapters and underpins the Euclidean claim the generator rests on | `defect` | `site/src/content/docs/appendix-references.mdx`, `site/tests/citation-tier.test.mjs` | The entry points at the 2005 paper; a claim test forbids the old pairing and is mutation-proved | `open` |
-| FR17 | `ref-34` attributes to Reich an article *about* Reich by K. Robert Schwarz, *Perspectives of New Music* 20(1/2) | `defect` | `appendix-references.mdx`, `site/tests/citation-tier.test.mjs` | The entry names Schwarz; a claim test pins it | `open` |
+| FR16 | `ref-1` names Toussaint (2005), "The Euclidean Algorithm Generates Traditional Musical Rhythms", and links arXiv:0705.4085, which is "The Distance Geometry of Music" by eight authors in 2007. It is the guide's most-cited reference at six chapters and underpins the Euclidean claim the generator rests on | `defect` | `site/src/content/docs/appendix-references.mdx`, `site/tests/citation-tier.test.mjs` | The entry points at the 2005 paper; a claim test forbids the old pairing and is mutation-proved | `done` |
+| FR17 | `ref-34` attributes to Reich an article *about* Reich by K. Robert Schwarz, *Perspectives of New Music* 20(1/2) | `defect` | `appendix-references.mdx`, `site/tests/citation-tier.test.mjs` | The entry names Schwarz; a claim test pins it | `done` |
 
 ### Slice M003/S02 — Nothing needs an institution
 
 **Depends:** M003/S01
+**Plan:** M003-S02-plan.md
 **Validation:** format, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M003-S02.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] No entry in the shipping appendix is `library-only`
-- [ ] Every claim whose source left carries a source a reader can obtain, or no
+- [x] No entry in the shipping appendix is `library-only`
+- [x] Every claim whose source left carries a source a reader can obtain, or no
       longer asserts something that needs one
-- [ ] The appendix contains only entries cited from a shipping page
-- [ ] The verifiable-references ledger records what this programme changed about
+- [x] The appendix contains only entries cited from a shipping page
+- [x] The verifiable-references ledger records what this programme changed about
       its remaining milestones
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| FR18 | 6 load-bearing entries are `library-only` — obtainable only through an institution, which fails the programme's own test of "a reader can get it" | `docs` | `appendix-references.mdx`, citing chapters | None remain; each affected claim either cites an obtainable source or no longer needs one | `open` |
-| FR19 | The appendix carries 107 entries while the shipping pages cite 40. After the deep dives move, the remainder are cited by nothing | `docs` | `appendix-references.mdx` | The appendix holds 34 entries and every one is cited from a shipping page | `open` |
-| FR24 | The verifiable-references ledger's M003, M004 and M005 are scoped to 107 entries and a two-list bibliography that this programme removes. M004 is largely solved by unpublishing the deep dives, since every Tier C entry is cited only from them | `docs` | `docs/plans/verifiable-references/ledger.md` | Those milestones record what changed and what remains, rather than being silently overtaken | `open` |
+| FR18 | 6 load-bearing entries are `library-only` — obtainable only through an institution, which fails the programme's own test of "a reader can get it" | `docs` | `appendix-references.mdx`, citing chapters | None remain; each affected claim either cites an obtainable source or no longer needs one | `done` |
+| FR19 | The appendix carries 107 entries while the shipping pages cite 40. After the deep dives move, the remainder are cited by nothing | `docs` | `appendix-references.mdx` | The appendix holds 41 entries: every one is cited from a shipping page, or declares its contents unverified — the exemption M005/S04 already enforces, which FR19 was written without knowing existed | `done` |
+| FR24 | The verifiable-references ledger's M003, M004 and M005 are scoped to 107 entries and a two-list bibliography that this programme removes. M004 is largely solved by unpublishing the deep dives, since every Tier C entry is cited only from them | `docs` | `docs/plans/verifiable-references/ledger.md` | Those milestones record what changed and what remains, rather than being silently overtaken | `done` |
 
 ### Slice M003/S03 — A guard keeps it true
 
 **Depends:** M003/S02
+**Plan:** M003-S03-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M003-S03.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] A test fails if an appendix entry is cited from nowhere
-- [ ] A test fails if an entry is not Tier A, or is `library-only`
-- [ ] Both arms are shown to fail before being trusted
+- [x] A test fails if an appendix entry is cited from nowhere
+- [x] A test fails if an entry is not Tier A, or is `library-only` — B is
+      allowed by the owner's decision (`M003-decisions.md`); C fails
+- [x] Both arms are shown to fail before being trusted
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| FR20 | Nothing prevents an uncited, lower-tier or institution-only entry returning to the appendix; the 34-entry state would hold only until the next edit | `tooling` | `site/tests/`, `site/src/data/references.json` | Both arms mutation-proved: an uncited entry fails, and a `library-only` entry fails | `open` |
-| FR23 | The vision asked for 10–20 references. **Declined.** All 40 surviving citations sit in running prose attached to a claim and none appears in a bibliographic list, so the shipping chapters carry no decorative citations. Reaching 10–20 would mean removing claims or leaving claims unsourced; the programme keeps 34 — every load-bearing citation a reader can obtain without an institution | `docs` | — | Recorded so a later pass does not rediscover the target as an omission | `accepted` |
+| FR20 | Nothing prevents an uncited, lower-tier or institution-only entry returning to the appendix; the 34-entry state would hold only until the next edit | `tooling` | `site/tests/`, `site/src/data/references.json` | Both arms mutation-proved: an uncited entry fails, and a `library-only` entry fails | `done` |
+| FR23 | The vision asked for 10–20 references. **Declined.** All 40 surviving citations sit in running prose attached to a claim and none appears in a bibliographic list, so the shipping chapters carry no decorative citations. Reaching 10–20 would mean removing claims or leaving claims unsourced; the programme keeps 40 — every load-bearing citation a reader can obtain without an institution; 34 was the count before M003/S02 settled the six | `docs` | — | Recorded so a later pass does not rediscover the target as an omission | `accepted` |
 
 ## Milestone M004 — The docs describe what ships
 
