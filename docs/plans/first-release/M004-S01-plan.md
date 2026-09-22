@@ -14,7 +14,7 @@ plan was written, and FR26's when it was found.
 ## Task status
 
 - [x] 1. The lane head keeps its name legible with the export handle, and FR26 closes
-- [ ] 2. The screenshot is regenerated from the one-view UI, and FR21 closes
+- [x] 2. The screenshot is regenerated from the one-view UI, and FR21 closes
 - [ ] 3. Chapter 18 and the changelog describe what ships, and the slice closes
 
 ## Definition of Done

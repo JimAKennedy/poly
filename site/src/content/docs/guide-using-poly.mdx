@@ -93,13 +93,13 @@ The interface has a header bar across the top, lane columns filling the main are
 
 ### Header
 
-Displays the plugin name **POLY**, a play button, BPM and time signature, and a **preset selector dropdown**. To the right: **A/B/Morph/Chain** scene controls, **Note Map**, the capture controls (**bars** and **Arm**), **Export**, and the bars-to-align counter. Click the preset dropdown to access Init (All Lanes) and all factory presets. Selecting any entry immediately loads all parameters.
+Displays the plugin name **POLY**, a play button, BPM and time signature, a **preset selector dropdown**, and the patch **seed** with its history controls (previous, randomise, next). To the right: **A/B/Morph/Chain** scene controls, **Note Map**, the capture controls (**bars** and **Arm**), **Export**, and the bars-to-align counter. Click the preset dropdown to access Init (All Lanes) and all factory presets. Selecting any entry immediately loads all parameters.
 
 **Scene controls** are in the header: **A/B** select which scene is active, **Morph** enables crossfading between them (a slider appears to blend A and B), and **Chain** opens the chain configuration popover (see [Scene Chaining](#scene-chaining)).
 
 ### Lane Columns
 
-Up to eight drum lanes, each representing an independent rhythmic voice. Each lane is a vertical column.
+Up to eight drum lanes, each representing an independent rhythmic voice. Each lane is a vertical column, and the **− Lane / + Lane** bar below the columns removes the last lane or adds one, up to eight.
 
 **Default MIDI note assignments:**
 
@@ -155,10 +155,8 @@ These parameters are not visible in the plugin UI but are exposed for DAW automa
 | Humanize | 0–50 ms | Per-lane random timing offset |
 | Note Duration | 0–4 beats | Length of MIDI notes |
 | Tempo Mult | 0.25x–4.0x | Per-lane tempo scaling (see [Metric Modulation](#metric-modulation)) |
-| Active Lane Count | 1–8 | Number of active lanes (ID 300) |
-| Seed | 0–999999 | Random seed for pattern generation (ID 301) |
 
-See the [Parameter Reference](/appendix-parameters/) for the complete parameter list with IDs and ranges.
+The lane count (ID 300) and the seed (ID 301) are also automatable, but they are not hidden: the lane bar and the header's seed controls are their on-screen forms. See the [Parameter Reference](/appendix-parameters/) for the complete parameter list with IDs and ranges.
 
 ## MIDI Routing
 

@@ -276,7 +276,7 @@ guide says and what a downloader gets.
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| FR21 | `guide-using-poly.mdx` carries a screenshot and control walkthrough taken against a two-view UI | `docs` | `site/src/content/docs/guide-using-poly.mdx` | Screenshot and prose match a build with one view | `open` |
+| FR21 | `guide-using-poly.mdx` carries a screenshot and control walkthrough taken against a two-view UI | `docs` | `site/src/content/docs/guide-using-poly.mdx` | Screenshot and prose match a build with one view | `done` |
 | FR22 | Chapter 18 and the changelog describe the editor surface without accounting for a removed view or a removed documentation section | `docs` | `site/src/content/docs/18-editors-and-views.mdx`, `CHANGELOG.md` | Both describe what ships; `doc-discipline` passes | `open` |
 | FR26 | Found while regenerating FR21's screenshot: the plugin always shows the per-lane export handle, and that third head button narrows the name column enough that a two-word role wraps — and because the name was a shrinkable flex item, the **name** was what got clipped: BELL rendered as a 7px sliver in the Afrobeat 12/8 preset. Added at the owner's request rather than captured around | `defect` | `webui/ui.css`, `webui/tests/lane-head.spec.mjs` | A Playwright guard asserts every lane name is as tall as its own text with the handle present, seen red on the old CSS | `done` |
 
