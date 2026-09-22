@@ -11,7 +11,7 @@ verifiable-references programme.
 ## Task status
 
 - [x] 1. `ref-1` names and links the same work
-- [ ] 2. `ref-34` attributes the article to its author, and the slice closes
+- [x] 2. `ref-34` attributes the article to its author, and the slice closes
 
 ## Definition of Done
 

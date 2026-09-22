@@ -174,6 +174,32 @@ const CLAIMS = [
     presentRegex: [/archive\.bridgesmathart\.org\/2005\/bridges2005-47/],
   },
   {
+    id: 'REF34-SCHWARZ',
+    file: 'appendix-references.mdx',
+    rule:
+      'first-release FR17. ref [34] attributed to Reich his own essay "Music as ' +
+      'a Gradual Process, Part II". The PDF at its URL is "Steve Reich: Music as ' +
+      'a Gradual Process Part II" by K. Robert Schwarz, Perspectives of New ' +
+      'Music 20(1/2), Autumn 1981 - Summer 1982, pp. 225-286, JSTOR stable URL ' +
+      '942414 -- an article ABOUT Reich\'s process, not Reich\'s essay. Read ' +
+      'directly from the PDF in verifiable-references M002. This is the same ' +
+      'failure as ref [6] before M001 of that programme corrected it: a ' +
+      'commentary cited as the work it comments on. The claim it supports, that ' +
+      'Drumming builds one twelve-beat pattern up and reduces it back, is a ' +
+      'description of the work rather than a report of the composer\'s own ' +
+      'words, so it survives the attribution being corrected',
+    forbidden: ['Reich, S. "Music as a Gradual Process, Part II."'],
+    // Scoped to ref-34's own line. A bare present: ['Perspectives of New Music']
+    // is satisfied by fr-cohn-1992, which is in the same journal -- so the
+    // venue could be deleted from this entry and the arm would still pass. The
+    // REF6-JONES case has the same shape and the same reason.
+    presentRegex: [
+      /id="ref-34"[^\n]*Schwarz, K\. R\./,
+      /id="ref-34"[^\n]*Perspectives of New Music/,
+      /id="ref-34"[^\n]*jstor\.org\/stable\/942414/,
+    ],
+  },
+  {
     id: 'S02-F18',
     file: '03-afro-cuban.mdx',
     rule:
