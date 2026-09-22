@@ -174,7 +174,7 @@ directory renders nothing.
 and can be obtained without an institution.
 
 **Branch:** milestone/M003-bibliography
-**Status:** planned
+**Status:** in-progress
 **Demo:** The appendix holds 34 entries, every one cited from a claim in prose,
 and no entry requires an institutional subscription.
 
@@ -185,9 +185,10 @@ the appendix breaks a citation in a page that still scans.
 ### Slice M003/S01 — The two mismatches are corrected
 
 **Depends:** M002/S02
+**Plan:** M003-S01-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M003-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
@@ -203,6 +204,7 @@ the appendix breaks a citation in a page that still scans.
 ### Slice M003/S02 — Nothing needs an institution
 
 **Depends:** M003/S01
+**Plan:** M003-S02-plan.md
 **Validation:** format, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M003-S02.md
 **Status:** open
@@ -225,6 +227,7 @@ the appendix breaks a citation in a page that still scans.
 ### Slice M003/S03 — A guard keeps it true
 
 **Depends:** M003/S02
+**Plan:** M003-S03-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M003-S03.md
 **Status:** open
