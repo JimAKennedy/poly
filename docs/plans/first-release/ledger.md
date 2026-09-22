@@ -250,7 +250,7 @@ the appendix breaks a citation in a page that still scans.
 **Vision:** Someone reading the guide finds the product they downloaded.
 
 **Branch:** milestone/M004-docs-match
-**Status:** in-progress
+**Status:** done
 **Demo:** Every screenshot, control description and chapter in the published
 guide matches a one-view build with no theory section.
 
