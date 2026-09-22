@@ -11,7 +11,7 @@ attempts whose outcome the plan cannot predict and does not pretend to.
 
 ## Task status
 
-- [ ] 1. The six library-only entries are searched for an obtainable copy
+- [x] 1. The six library-only entries are searched for an obtainable copy
 - [ ] 2. What survives is repointed; what does not is resolved
 - [ ] 3. The appendix drops to what the shipping pages cite
 - [ ] 4. The verifiable-references ledger records what this overtook

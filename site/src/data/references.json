@@ -627,8 +627,8 @@
     },
     "fr-locke-1982": {
       "obtainability": "library-only",
-      "evidence": "Crossref confirms \"Principles of Offbeat Timing and Cross-Rhythm in Southern Ewe Dance Drumming\", Ethnomusicology 26(2), 1982 — matching the entry. Crossref’s own record spells it \"Southern Eve\", a typo on their side; the entry’s \"Ewe\" is correct. Behind JSTOR, not read.",
-      "checked": "2026-09-20",
+      "evidence": "Crossref confirms \"Principles of Offbeat Timing and Cross-Rhythm in Southern Ewe Dance Drumming\", Ethnomusicology 26(2), 1982 — matching the entry. Crossref’s own record spells it \"Southern Eve\", a typo on their side; the entry’s \"Ewe\" is correct. Behind JSTOR, not read. M003/S02 retrieval attempt 2026-09-21: DOI 10.2307/851524 resolves 200 to jstor.org/stable/851524, subscription. Locke's Tufts site (sites.tufts.edu/davidlocke/) is live but does not surface the 1982 article; /publications/ 404s. A targeted web search for a reposted PDF found none. No obtainable copy found by automation.",
+      "checked": "2026-09-21",
       "description": "unverified",
       "note": "",
       "identifier": {
@@ -874,8 +874,8 @@
     },
     "fr-vitale-1990": {
       "obtainability": "library-only",
-      "evidence": "No Crossref record: Balungan 4(2), 1990 is not indexed. The nearest hit was an unrelated 2018 Asian Music article. Balungan is a small-press journal; a library or the American Gamelan Institute would settle it.",
-      "checked": "2026-09-20",
+      "evidence": "No Crossref record: Balungan 4(2), 1990 is not indexed. The nearest hit was an unrelated 2018 Asian Music article. Balungan is a small-press journal; a library or the American Gamelan Institute would settle it. M003/S02 retrieval attempt 2026-09-21: no DOI. Balungan 4(2) is published by the American Gamelan Institute, whose site (gamelan.org) is live but carries no Balungan link on its front page and no free back-issue archive was found. No obtainable copy found by automation.",
+      "checked": "2026-09-21",
       "description": "unverified",
       "note": "",
       "identifier": {
@@ -900,8 +900,8 @@
     },
     "fr-powers-1980": {
       "obtainability": "library-only",
-      "evidence": "Powers, \"India, subcontinent of\" in The New Grove Dictionary of Music and Musicians, vol. 9 (1980). A reference-work article: no DOI, and the 1980 print set’s ISBN was not established here — an Open Library query for the edition returned nothing, so none is recorded rather than guessed. The text is reachable through Grove Music Online by institutional subscription, or in any reference library holding the print set. Not read.",
-      "checked": "2026-09-20",
+      "evidence": "Powers, \"India, subcontinent of\" in The New Grove Dictionary of Music and Musicians, vol. 9 (1980). A reference-work article: no DOI, and the 1980 print set’s ISBN was not established here — an Open Library query for the edition returned nothing, so none is recorded rather than guessed. The text is reachable through Grove Music Online by institutional subscription, or in any reference library holding the print set. Not read. M003/S02 retrieval attempt 2026-09-21: The New Grove Dictionary is subscription by design — oxfordmusiconline.com redirects rather than serving content, and no ISBN for the 1980 print set was established. This one is institution-only by publication model, not by bot-blocking.",
+      "checked": "2026-09-21",
       "description": "unverified",
       "note": "",
       "identifier": {
@@ -978,8 +978,8 @@
     },
     "fr-brailoiu-1951": {
       "obtainability": "library-only",
-      "evidence": "Crossref confirms \"Le rythme Aksak\", Revue de musicologie 33(99/100), 1951 — matching the entry exactly, including the volume. Behind JSTOR; not read. This is the origin of the aksak term the Balkan chapter rests on.",
-      "checked": "2026-09-20",
+      "evidence": "Crossref confirms \"Le rythme Aksak\", Revue de musicologie 33(99/100), 1951 — matching the entry exactly, including the volume. Behind JSTOR; not read. This is the origin of the aksak term the Balkan chapter rests on. M003/S02 retrieval attempt 2026-09-21: DOI 10.2307/926002 resolves 200 to jstor.org/stable/926002, subscription. Persee does not carry Revue de Musicologie (404 on its collection path). No obtainable copy found by automation.",
+      "checked": "2026-09-21",
       "description": "unverified",
       "note": "",
       "identifier": {
@@ -1043,8 +1043,8 @@
     },
     "fr-cohn-1992": {
       "obtainability": "library-only",
-      "evidence": "Crossref confirms \"Transpositional Combination of Beat-Class Sets in Steve Reich’s Phase-Shifting Music\", Perspectives of New Music 30(2), 1992 — matching the entry. Behind JSTOR; not read.",
-      "checked": "2026-09-20",
+      "evidence": "Crossref confirms \"Transpositional Combination of Beat-Class Sets in Steve Reich’s Phase-Shifting Music\", Perspectives of New Music 30(2), 1992 — matching the entry. Behind JSTOR; not read. M003/S02 retrieval attempt 2026-09-21: DOI 10.2307/3090631 resolves 200 to jstor.org/stable/3090631, subscription. A targeted web search returned only later Cohn papers and third-party discussion, no copy of the 1992 article. No obtainable copy found by automation.",
+      "checked": "2026-09-21",
       "description": "unverified",
       "note": "",
       "identifier": {
@@ -1095,8 +1095,8 @@
     },
     "fr-harrison-2025": {
       "obtainability": "library-only",
-      "evidence": "Crossref confirms \"Reflections on the Amen Break\" as a chapter in the 2nd edition of The Routledge Companion to Remix Studies, 2025 — matching the entry, which correctly cites the 2nd edition rather than the 2014 first, whose chapter carries a different DOI. Subscription; not read.",
-      "checked": "2026-09-20",
+      "evidence": "Crossref confirms \"Reflections on the Amen Break\" as a chapter in the 2nd edition of The Routledge Companion to Remix Studies, 2025 — matching the entry, which correctly cites the 2nd edition rather than the 2014 first, whose chapter carries a different DOI. Subscription; not read. M003/S02 retrieval attempt 2026-09-21: DOI 10.4324/9781003402459-49 resolves 200 to taylorfrancis.com, paywalled chapter. No obtainable copy found by automation.",
+      "checked": "2026-09-21",
       "description": "unverified",
       "note": "",
       "identifier": {
