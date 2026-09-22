@@ -148,6 +148,32 @@ const CLAIMS = [
     presentRegex: [/10\.30535\/mto\.26\.1\.2/],
   },
   {
+    id: 'REF1-TOUSSAINT',
+    file: 'appendix-references.mdx',
+    rule:
+      'first-release FR16. ref [1] named Toussaint (2005), "The Euclidean ' +
+      'Algorithm Generates Traditional Musical Rhythms", Proceedings of BRIDGES, ' +
+      'and linked arxiv.org/pdf/0705.4085.pdf. That URL returns 200 and serves ' +
+      '"The Distance Geometry of Music" by Demaine, Gomez-Martin, Meijer, ' +
+      'Rappaport, Taslakian, Toussaint, Winograd and Wood -- the PDF\'s own ' +
+      'margin stamp reads arXiv:0705.4085v1 [cs.CG] 28 May 2007, and Toussaint ' +
+      'is one of eight authors rather than the sole author. Both works are real ' +
+      'and both discuss Euclidean rhythms, so no link checker could ever have ' +
+      'flagged it: the citation described a different work from the one it ' +
+      'pointed at. This is the guide\'s most-cited reference, at six shipping ' +
+      'chapters, and it underpins the Euclidean claim the generator rests on. ' +
+      'The entry now points at the paper itself in the official BRIDGES archive, ' +
+      'verified by reading its title page: exact title, Toussaint sole author, ' +
+      'School of Computer Science, McGill University',
+    // Tree-wide: the wrong arXiv id must not return under any entry number.
+    forbiddenRegex: [/0705\.4085/],
+    present: [
+      'The Euclidean Algorithm Generates Traditional Musical Rhythms',
+      'Toussaint, G. T. (2005)',
+    ],
+    presentRegex: [/archive\.bridgesmathart\.org\/2005\/bridges2005-47/],
+  },
+  {
     id: 'S02-F18',
     file: '03-afro-cuban.mdx',
     rule:

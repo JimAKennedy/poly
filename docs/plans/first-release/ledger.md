@@ -198,7 +198,7 @@ the appendix breaks a citation in a page that still scans.
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| FR16 | `ref-1` names Toussaint (2005), "The Euclidean Algorithm Generates Traditional Musical Rhythms", and links arXiv:0705.4085, which is "The Distance Geometry of Music" by eight authors in 2007. It is the guide's most-cited reference at six chapters and underpins the Euclidean claim the generator rests on | `defect` | `site/src/content/docs/appendix-references.mdx`, `site/tests/citation-tier.test.mjs` | The entry points at the 2005 paper; a claim test forbids the old pairing and is mutation-proved | `open` |
+| FR16 | `ref-1` names Toussaint (2005), "The Euclidean Algorithm Generates Traditional Musical Rhythms", and links arXiv:0705.4085, which is "The Distance Geometry of Music" by eight authors in 2007. It is the guide's most-cited reference at six chapters and underpins the Euclidean claim the generator rests on | `defect` | `site/src/content/docs/appendix-references.mdx`, `site/tests/citation-tier.test.mjs` | The entry points at the 2005 paper; a claim test forbids the old pairing and is mutation-proved | `done` |
 | FR17 | `ref-34` attributes to Reich an article *about* Reich by K. Robert Schwarz, *Perspectives of New Music* 20(1/2) | `defect` | `appendix-references.mdx`, `site/tests/citation-tier.test.mjs` | The entry names Schwarz; a claim test pins it | `open` |
 
 ### Slice M003/S02 — Nothing needs an institution
