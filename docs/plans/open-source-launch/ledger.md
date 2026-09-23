@@ -21,8 +21,8 @@ decisions.
 
 | | |
 |---|---|
-| Already satisfied | 0 |
-| Outstanding | 30 |
+| Already satisfied | 1 — OS18: issue creation is open to all users, checked in the repository's settings on 2026-09-23; the review's observation was not reproduced |
+| Outstanding | 29 |
 | Deferred and recorded | 6 — see Out of scope |
 
 **Folded in on 2026-09-23:** the installers vision's 12 actionable items became
@@ -287,7 +287,7 @@ exists to replace.
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| OS18 | GitHub shows a visitor "Issue creation is restricted in this repository", while the README invites good-first-issue contributions and `.github/ISSUE_TEMPLATE/` carries bug and feature templates. The API reports issues *enabled* to the owner; the restriction is a separate visitor-facing setting, so the row is confirmed or closed by a logged-out check, not from here | `defect` | repository settings | Evidence records a non-collaborator opening an issue from `bug_report.md`, with its URL | `open` |
+| OS18 | The review reported that GitHub shows a visitor "Issue creation is restricted in this repository". **Not reproduced.** On 2026-09-23 the owner read the repository's issue-creation setting as "All users"; the API shows issues enabled, no interaction limits, and no human non-collaborator has ever filed one (all 17 non-owner issues are the Actions app's nightly reports), so nothing contradicts the setting. A logged-out browser greys the button on every repository and proves nothing. Closed as already satisfied; if a signed-in non-collaborator ever meets the message, reopen | `defect` | repository settings | The setting reads "All users", recorded here; no further proof available without a second account | `done` |
 | OS19 | The About panel has no description, website or topics, so the repository appears under neither `euclidean-rhythm` nor `vst3` | `docs` | repository settings | The description is OS21's sentence; the website is `poly.jk.digital`; topics include `vst3`, `midi`, `euclidean-rhythm`, `polyrhythm`, `drum-machine`, `audio-plugin` | `open` |
 | OS20 | `ROADMAP.md` lists #172, #142, #89 and #111 — all closed — while the open issues are #320, #305, #282, #266 and #100; its Priority 3 table is empty. Enumerated issue numbers drift by construction | `docs` | `ROADMAP.md` | The roadmap names themes and links label and milestone queries; no `#NNN` issue reference remains, so there is nothing for a closure to invalidate | `open` |
 
