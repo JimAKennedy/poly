@@ -220,6 +220,46 @@ test('ctest runs on both legs after Build and before pluginval and packaging (OS
   assert.doesNotMatch(stepBody, /\n\s+if:/, '"Run tests" must be unconditional — it runs on both legs');
 });
 
+// --- open-source-launch M001/S02 (OS04): a downloader can verify what they
+// got. The release job attaches SHA256SUMS over every zip and an
+// actions/attest-build-provenance attestation per zip, with exactly the
+// permissions the action documents (id-token + attestations) beside the
+// contents: write it already held. ---
+const ATTEST_ACTION = 'actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8'; // v4.2.2
+
+test('release job holds the three grants provenance needs, and no more (OS04)', () => {
+  const rel = wf.slice(wf.indexOf('\n  release:'));
+  const perms = rel.match(/permissions:\s*\n((?:\s+[a-z-]+:\s*\w+\n)+)/);
+  assert.ok(perms, 'release job has no permissions block');
+  const grants = Object.fromEntries(
+    [...perms[1].matchAll(/^\s+([a-z-]+):\s*(\w+)\s*$/gm)].map((m) => [m[1], m[2]]),
+  );
+  assert.deepEqual(
+    grants,
+    { contents: 'write', 'id-token': 'write', attestations: 'write' },
+    'release job grants must be exactly contents/id-token/attestations: write — id-token and attestations are what attest-build-provenance needs; anything else is unexplained privilege',
+  );
+});
+
+test('release publishes SHA256SUMS over every zip (OS04)', () => {
+  const rel = wf.slice(wf.indexOf('\n  release:'));
+  assert.match(rel, /sha256sum[^\n]*\*\.zip[^\n]*>\s*SHA256SUMS/, 'release job must write SHA256SUMS with sha256sum over the zips');
+  assert.match(rel, /files:\s*\|?\s*\n?[^\n]*dist\/\*\.zip/, 'gh-release must still ship the zips');
+  assert.match(rel, /dist\/SHA256SUMS/, 'gh-release files must include dist/SHA256SUMS');
+  const sums = stepIndex(rel, 'Write checksums');
+  const publish = stepIndex(rel, 'Publish GitHub Release');
+  assert.ok(sums >= 0 && publish >= 0 && sums < publish, 'checksums must be written before the Release is published');
+});
+
+test('release attests build provenance for every zip with the pinned action (OS04)', () => {
+  const rel = wf.slice(wf.indexOf('\n  release:'));
+  assert.ok(rel.includes(`uses: ${ATTEST_ACTION}`), `release job must use ${ATTEST_ACTION} (SHA-pinned like every other action)`);
+  assert.match(rel, /subject-path:\s*['"]?dist\/\*\.zip/, 'attestation subject-path must cover dist/*.zip');
+  const attest = stepIndex(rel, 'Attest build provenance');
+  const publish = stepIndex(rel, 'Publish GitHub Release');
+  assert.ok(attest >= 0 && attest < publish, 'attestation must precede publishing');
+});
+
 // --- S03 gate: macOS Developer ID codesign + Apple notarization + stapling.
 // These steps run AFTER pluginval and BEFORE packaging, and each is gated on its
 // signing secrets being non-empty so absent secrets SKIP (never fail) the step
