@@ -5,7 +5,7 @@
 
 Three subtractions and a docs pass. Nothing here needs designing; it needs
 deciding and removing. The companion programme
-[`docs/plans/installers/vision.md`](../installers/vision.md) covers how a
+[`docs/plans/open-source-launch/vision.md`](../open-source-launch/vision.md) covers how a
 release is built and delivered — this one covers what is in it.
 
 ## Reconciliation, before any structure
@@ -255,7 +255,8 @@ the appendix breaks a citation in a page that still scans.
 guide matches a one-view build with no theory section.
 
 **Deliberately narrow.** Tagging, signing, notarisation and installers belong to
-the installers programme. This milestone only closes the gap between what the
+the open-source-launch programme (M006–M009, which absorbed the installers
+vision on 2026-09-23). This milestone only closes the gap between what the
 guide says and what a downloader gets.
 
 ### Slice M004/S01 — The guide matches the build
@@ -304,8 +305,8 @@ belong to.
 
 ## Out of scope
 
-- Installer, signing and notarisation — the installers programme owns these, and
-  together they are the other half of "first release"
+- Installer, signing and notarisation — the open-source-launch programme owns
+  these, and together they are the other half of "first release"
 - Any change to the engine, the preset set, or the parameter surface
 - Rewriting chapter prose beyond what removing a callout or resourcing a claim
   requires

@@ -8,9 +8,10 @@ class: gated
 current state measured rather than assumed, and the decisions a plan will have
 to take. The milestone decomposition below is a proposal to argue with.
 
-Scope note: [`docs/plans/installers/vision.md`](../installers/vision.md) covers
-how a release is *built and delivered* — signing, notarisation, installers, the
-tag-driven pipeline. This document covers **what is in it**: which surfaces ship
+Scope note: [`docs/plans/open-source-launch/vision.md`](../open-source-launch/vision.md)
+covers how a release is *built and delivered* — signing, notarisation,
+installers, the tag-driven pipeline — having absorbed the installers vision on
+2026-09-23. This document covers **what is in it**: which surfaces ship
 and which are held back. The two are independent and can run in either order.
 
 ## The observation

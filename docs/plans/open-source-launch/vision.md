@@ -8,16 +8,16 @@ class: gated
 current state measured rather than assumed, and the decisions a plan will have
 to take. The milestone decomposition below is a proposal to argue with.
 
-Scope note: two programmes already cover parts of "first release".
-[`docs/plans/first-release/vision.md`](../first-release/vision.md) decided
-**what ships** — one view, no deep dives, a bibliography a reader can finish —
-and its ledger is `done`. [`docs/plans/installers/vision.md`](../installers/vision.md)
-covers **how a release is built and delivered** — cutting the first tag,
-signing, notarisation, installers. This document covers the third part: **what
-a stranger meets** when Poly is offered as an open-source project — the release
-pipeline's honesty about itself, the CI a contributor inherits, the hosts a
-musician will actually load it in, the repository and site a visitor lands on,
-and what Poly says it is.
+Scope note: [`docs/plans/first-release/vision.md`](../first-release/vision.md)
+decided **what ships** — one view, no deep dives, a bibliography a reader can
+finish — and its ledger is `done`. This document covers the rest of "first
+release": **what a stranger meets** when Poly is offered as an open-source
+project — the release pipeline's honesty about itself, the CI a contributor
+inherits, the hosts a musician will actually load it in, the repository and
+site a visitor lands on, what Poly says it is — and, in the [Delivery](#delivery--how-the-release-is-built-signed-and-installed)
+section near the end, **how a release is built, signed and installed**. That
+section absorbs the former installers vision, corrected against what was
+measured on 2026-09-23; the installers programme was retired unassessed.
 
 It is written from an external review of `main` at `412020d` (2026-09-23).
 
@@ -106,8 +106,8 @@ exercised.
 - **The AU is an instrument.** `au-info.plist` declares type `aumu`. The
   `build-au-macos` job builds it on every PR; no release contains it. As an
   `aumu`, it could not drive another instrument in Logic even if it shipped.
-  The installers vision already asks whether the AU ships (its IN2 scope
-  question); this is the fact that question needs.
+  The Delivery section asks whether the AU ships; this is the fact that
+  question needs.
 - **Default channel layout.** `types.h:268` defaults `midiChannel` to `-1`,
   auto: one channel per lane. A single-channel drum sampler hears one lane
   until the user finds the Note Map. That may be right; nobody has checked it
@@ -176,11 +176,11 @@ the product is.
 
 1. **What is the first version number?** `0.1.0` is already spent on a June
    section that describes a different product. Options: rename that section and
-   tag `0.1.0`; or tag `0.2.0` and keep June as history. The installers
-   vision's IN1 asks the same question and should get the same answer.
+   tag `0.1.0`; or tag `0.2.0` and keep June as history. L6's first tag is
+   named from this answer.
 2. **Does Poly support Logic?** Build and ship an `aumi` MIDI FX, or declare
-   VST3-only with Logic unsupported and say so. Either answers installers IN2's
-   AU scope question.
+   VST3-only with Logic unsupported and say so. Either answers L7's AU scope
+   question — after checking the SDK's AU wrapper can produce an `aumi` at all.
 3. **Which hosts are "supported"?** The set a first release claims, each tested
    and with routing instructions, versus "reported to work".
 4. **Is auto-per-lane the right default channel?** Decided against the host
@@ -204,15 +204,89 @@ To argue with, not to accept.
 | **L3 — A musician's DAW finds it and it plays** | A measured host matrix, the editor validated on both platforms, Logic decided | — |
 | **L4 — A stranger can find it, file against it, and follow it** | Issues open, positioning decided, README and site written for the downloader | L3 (for the host matrix the README publishes) |
 | **L5 — The release notes are for musicians** | A short release body; the launch listed where musicians look | L1, L4 |
+| **L6 — A release is cut, and says whether it is signed** | The pipeline has run against a real tag; an unsigned build cannot ship quietly | L1 |
+| **L7 — macOS installs without a terminal** | A signed, notarized `.pkg`; no `xattr` | L6, L3 (the Logic decision) |
+| **L8 — Windows installs without a warning** | A signed installer via Azure Artifact Signing | L6 |
+| **L9 — The instructions match the artifacts** | README and guide describe the installers, and the Gatekeeper workaround is deleted | L7, L8, L4 |
 
-**L1 should land before installers IN1 cuts the first pre-release**, so the
-first tag exercises the hardened pipeline rather than the one this document
-measures.
+**L1 lands before L6 cuts the first pre-release**, so the first tag exercises
+the hardened pipeline rather than the one this document measures. L7 and L8
+each split into a half that finishes unsigned and a half that waits on the
+certificate, so the packaging completes while identity validation is pending.
+
+## Delivery — how the release is built, signed and installed
+
+Absorbed from the installers vision on 2026-09-23. Its measurements stand;
+four of its premises about signing were overturned by the vendors' own pages
+that day, and three facts it missed were found while checking it.
+
+### What is there
+
+`release.yml` runs on a `v*.*.*` tag, builds macOS-universal and Windows-x64,
+gates each behind the VST3 validator and pluginval at strictness 8, and
+publishes a GitHub Release whose body is the matching CHANGELOG section.
+`scripts/check-release-workflow.mjs` locks that shape in 27 assertions. What it
+produces is a `.zip` containing a `.vst3` bundle, and `README.md` asks the user
+to unzip it, copy the bundle into a folder they are expected to know about,
+and on macOS run `xattr -dr com.apple.quarantine` first. That instruction is
+the tell: a musician is asked to use the terminal to defeat a security
+mechanism, because the alternative is a plugin their DAW silently refuses.
+
+**No release has ever been cut.** The one tag is a doc-coverage baseline
+pointing at a July commit. The pipeline has never produced an artifact a
+stranger downloaded.
+
+**The macOS signing steps skip silently.** Codesign, notarize and staple each
+gate on `env.MACOS_… != ''`; the repository holds one secret and it is not a
+signing one, so the leg ships an unsigned zip and the workflow's own output
+does not say so. **Windows has no signing at all.** And the workflow sets no
+pre-release flag, so a release-candidate tag would publish as a full release.
+
+### Why an installer without signing is worse than a zip
+
+An unsigned zip is inert: the user copies a folder and clears one Gatekeeper
+prompt. An unsigned **installer** asks for administrator rights from a binary
+the OS cannot attribute to anyone: macOS refuses an unsigned `.pkg` outright
+and SmartScreen presents an unsigned `.exe` as a probable threat. Signing is
+not a polish step after the installers; it is what makes them worth building.
+
+### What changed since the installers vision was written
+
+- **EV certificates no longer bypass SmartScreen.** Microsoft removed the
+  instant-reputation behaviour in 2024; EV and OV now build reputation the
+  same way, so the vision's OV-versus-EV question collapses.
+- **OV keys must sit on a hardware token or HSM** (CA/Browser Forum, June
+  2023), which a GitHub-hosted runner cannot hold. Signing in CI means a cloud
+  signing service.
+- **Azure Artifact Signing** (formerly Trusted Signing) is Microsoft's
+  recommended route for non-Store distribution: about USD 9.99 a month, no
+  token, integrates with GitHub Actions, identity validation in a few business
+  days, individuals eligible in the USA and Canada. **Decided: this is the
+  Windows route.** SignPath Foundation offers free signing to qualifying
+  open-source projects and is recorded as the alternative, not taken.
+- **The Apple Developer Program is USD 99 a year** and covers both macOS
+  certificates. **Decided: enrol.** A signed `.pkg` needs a *Developer ID
+  Installer* certificate as well as the *Developer ID Application* one the
+  README documents — a second certificate and a seventh secret the pipeline
+  knows nothing about today.
+- **First Windows downloads will still warn** until publisher reputation
+  accumulates, whichever route is taken. The release notes say so rather than
+  promising a warning-free first release.
+- **The AU job builds arm64 only** while the release VST3 is universal, so if
+  the AU ships (L3's decision), the release pipeline gains a universal AU
+  build, not a copy step.
+
+### Delivery decisions a plan must take
+
+8. **The installer formats.** macOS is a `.pkg` (`pkgbuild`/`productbuild`),
+   the only format Gatekeeper and notarization treat as first-class. Windows is
+   a genuine choice — WiX/MSI, Inno Setup, NSIS — to be made on which signs
+   and uninstalls cleanly in CI, not on taste.
+9. **Whether an unsigned build may ever ship**, and if so how that is a
+   recorded choice rather than a silent skip.
 
 ## Out of scope
 
-- Signing, notarisation, installers and the silent-skip of unsigned builds —
-  the installers programme owns these.
 - Editor resize or zoom (the view is a fixed 1160×760 at
   `plugin/source/webui/web_ui_view.cpp:70`), undo/redo, MIDI input and MIDI
   learn, JSON presets (factory presets are 2,981 lines of C++ in
@@ -222,3 +296,9 @@ measures.
   set before a baseline exists is a ratchet with nothing to hold.
 - RealtimeSanitizer on the process path — worth adopting after release, when a
   Clang toolchain with it is on the sanitizer runners.
+- **Auto-update.** Download-and-run is the whole delivery scope; in-plugin
+  update checks are a different programme with a privacy surface of their own.
+- **Store or package-manager distribution** — App Store, Homebrew, winget.
+  The Releases page is the channel.
+- **Installing presets or content.** The 45 factory presets are in the binary;
+  there is no separate payload.

@@ -1,14 +1,18 @@
+---
+class: gated
+---
+
 # Open-source launch — delivery ledger
 
 **Source:** docs/plans/open-source-launch/vision.md
 **Slug:** open-source-launch
 
-The third part of "first release". [`first-release`](../first-release/ledger.md)
-decided what ships and is `done`; [`installers`](../installers/vision.md) owns
-how a release is built, signed and delivered. This programme owns what a
-stranger meets: the pipeline's honesty about itself, the CI a contributor
-inherits, the hosts a musician loads Poly in, the repository and site a visitor
-lands on, and what Poly says it is.
+The rest of "first release". [`first-release`](../first-release/ledger.md)
+decided what ships and is `done`. This programme owns what a stranger meets:
+the pipeline's honesty about itself, the CI a contributor inherits, the hosts a
+musician loads Poly in, the repository and site a visitor lands on, what Poly
+says it is — and how a release is built, signed and installed, absorbed from
+the installers vision on 2026-09-23 (M006–M009).
 
 ## Reconciliation, before any structure
 
@@ -18,10 +22,19 @@ decisions.
 | | |
 |---|---|
 | Already satisfied | 0 |
-| Owned by another programme | 4 — cutting the first pre-release (installers IN1), the silent skip of unsigned builds (IN1), macOS notarisation (IN2), Windows signing (IN3). Not repeated here |
-| Answers another programme's open question | 2 — the first version number (installers IN1) and whether the AU ships (installers IN2). OS02 and OS17 take them, and installers inherits the answers |
 | Outstanding | 30 |
 | Deferred and recorded | 6 — see Out of scope |
+
+**Folded in on 2026-09-23:** the installers vision's 12 actionable items became
+M006–M009 (OS31–OS42), so the two questions that ledger once "inherited" — the
+first version number (OS02) and whether the AU ships (OS17) — are now plain
+in-ledger dependencies, and the four items it "owned" are rows here. Its five
+out-of-scope items joined this ledger's. Its signing premises were corrected
+first: EV no longer buys SmartScreen reputation, OV keys need a token or HSM a
+hosted runner cannot hold, and a signed `.pkg` needs a Developer ID Installer
+certificate the pipeline does not know about. The owner decided the routes
+before any row was written: **Azure Artifact Signing for Windows, the Apple
+Developer Program for macOS.**
 
 Every count below was measured on `main` at `412020d`, not carried over from
 the vision.
@@ -46,8 +59,8 @@ the Release publishes are the same thing, and the release tests what it ships.
 universal binary, and publishes zips whose plugin reports the tag's version,
 beside a `SHA256SUMS` file and a provenance attestation.
 
-**Why this lands before installers IN1.** IN1 cuts the first real pre-release
-and records what a stranger experiences. If it runs against today's pipeline it
+**Why this lands before M006.** M006 cuts the first real pre-release and
+records what a stranger experiences. If it runs against today's pipeline it
 will record a plugin reporting `1.0.0` from a `0.1.0` build, with June's release
 notes, and every finding will be one this milestone could have prevented.
 
@@ -72,7 +85,7 @@ notes, and every finding will be one this milestone could have prevented.
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
 | OS01 | Five version strings disagree: CMake `0.1.0`, `plugids.h:15` `kPolyVersionString` **`1.0.0`** (what a DAW displays), `webui/package.json` `0.1.0`, `site/package.json` `0.0.1`, and the AU plist's `0xFFFFFFFF` development sentinel | `defect` | `CMakeLists.txt`, `plugin/CMakeLists.txt`, `plugin/source/plugids.h` | `kPolyVersionString` is generated from `PROJECT_VERSION` via `configure_file`; a built bundle's class info reports the CMake version; the two npm manifests are marked private-and-unversioned or read from the same source. The AU sentinel is OS17's, because it only matters if the AU ships | `open` |
-| OS02 | `CHANGELOG.md:102` holds `## [0.1.0] - 2026-06-27`, headed "Initial open-source release", but nothing was ever tagged from it. `release.yml` extracts the section matching the tag, so tagging `v0.1.0` today publishes that 397-word section and none of the 47 `[Unreleased]` entries | `defect` | `CHANGELOG.md`, `docs/plans/open-source-launch/M001-decisions.md` | The owner's decision on the first version number is recorded; `node scripts/gen-release-notes.mjs <version>` prints a section describing the current tree. Installers IN1 cites the same decision rather than taking its own | `open` |
+| OS02 | `CHANGELOG.md:102` holds `## [0.1.0] - 2026-06-27`, headed "Initial open-source release", but nothing was ever tagged from it. `release.yml` extracts the section matching the tag, so tagging `v0.1.0` today publishes that 397-word section and none of the 47 `[Unreleased]` entries | `defect` | `CHANGELOG.md`, `docs/plans/open-source-launch/M001-decisions.md` | The owner's decision on the first version number is recorded; `node scripts/gen-release-notes.mjs <version>` prints a section describing the current tree. M006/S01 names its tag from this decision rather than taking its own | `open` |
 
 ### Slice M001/S02 — The release proves what it ships
 
@@ -185,7 +198,7 @@ both platforms.
 
 **Why this is measured by hand.** Only Cubase can be driven in CI, through the
 self-hosted nightly. The other hosts are a one-time manual run recorded in
-evidence — the same honesty installers IN1 asks of the first download.
+evidence — the same honesty M006/S01 asks of the first download.
 
 ### Slice M003/S01 — Hosts are measured, not assumed
 
@@ -208,7 +221,7 @@ evidence — the same honesty installers IN1 asks of the first download.
 
 ### Slice M003/S02 — The editor is exercised on both platforms
 
-**Validation:** format, gate
+**Validation:** format, unit, guards
 **Evidence:** evidence/M003-S02.md
 **Status:** open
 
@@ -232,7 +245,7 @@ evidence — the same honesty installers IN1 asks of the first download.
 **Definition of Done**
 
 - [ ] The owner's decision is recorded in this milestone's decisions file and
-      cited by installers IN2
+      cited by M007/S01
 - [ ] If supported: an `aumi` unit passes `auval`, drives an instrument track in
       Logic (evidence), carries the real version, and the release builds and
       ships it
@@ -241,7 +254,7 @@ evidence — the same honesty installers IN1 asks of the first download.
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| OS17 | `plugin/resource/au-info.plist` declares the AU as type `aumu` with version `0xFFFFFFFF`. `build-au-macos` builds it on every PR and no release contains it. Logic has no VST3 and routes generated MIDI only from a MIDI FX (`aumi`) unit, so as built it could not drive another instrument there even if it shipped. This is the fact installers IN2's AU scope question needs | `disclose` | `plugin/resource/au-info.plist`, `plugin/CMakeLists.txt`, `.github/workflows/ci.yml`, `README.md` | Either arm of the DoD, not both; installers IN2 cites the decision rather than re-deciding it | `open` |
+| OS17 | `plugin/resource/au-info.plist` declares the AU as type `aumu` with version `0xFFFFFFFF`. `build-au-macos` builds it on every PR and no release contains it. Logic has no VST3 and routes generated MIDI only from a MIDI FX (`aumi`) unit, so as built it could not drive another instrument there even if it shipped. **Feasibility comes before the decision:** the VST3 SDK's AUv2 wrapper builds instruments and effects, and whether it can produce an `aumi` at all is unverified — if it cannot, "supported" means writing a wrapper, and the honest decision may be forced. M007 (the macOS installer) waits on this row | `disclose` | `plugin/resource/au-info.plist`, `plugin/CMakeLists.txt`, `.github/workflows/ci.yml`, `README.md` | The feasibility check is recorded first; then either arm of the DoD, not both; M007/S01 cites the decision rather than re-deciding it | `open` |
 
 ## Milestone M004 — A stranger can find it, file against it, and follow it
 
@@ -274,7 +287,7 @@ exists to replace.
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| OS18 | GitHub shows a visitor "Issue creation is restricted in this repository", while the README invites good-first-issue contributions and `.github/ISSUE_TEMPLATE/` carries bug and feature templates | `defect` | repository settings | Evidence records a non-collaborator opening an issue from `bug_report.md`, with its URL | `open` |
+| OS18 | GitHub shows a visitor "Issue creation is restricted in this repository", while the README invites good-first-issue contributions and `.github/ISSUE_TEMPLATE/` carries bug and feature templates. The API reports issues *enabled* to the owner; the restriction is a separate visitor-facing setting, so the row is confirmed or closed by a logged-out check, not from here | `defect` | repository settings | Evidence records a non-collaborator opening an issue from `bug_report.md`, with its URL | `open` |
 | OS19 | The About panel has no description, website or topics, so the repository appears under neither `euclidean-rhythm` nor `vst3` | `docs` | repository settings | The description is OS21's sentence; the website is `poly.jk.digital`; topics include `vst3`, `midi`, `euclidean-rhythm`, `polyrhythm`, `drum-machine`, `audio-plugin` | `open` |
 | OS20 | `ROADMAP.md` lists #172, #142, #89 and #111 — all closed — while the open issues are #320, #305, #282, #266 and #100; its Priority 3 table is empty. Enumerated issue numbers drift by construction | `docs` | `ROADMAP.md` | The roadmap names themes and links label and milestone queries; no `#NNN` issue reference remains, so there is nothing for a closure to invalidate | `open` |
 
@@ -333,11 +346,13 @@ exists to replace.
 - [ ] No page carries the construction banner
 - [ ] The home page's hero offers the download and the in-browser engine beside
       the guide
+- [ ] The guide's install section names the bundle a release actually contains
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
 | OS26 | `site/src/components/Banner.astro:4` shows "🚧 Under active construction — content being developed and verified" on every page of a guide whose bibliography, screenshots and chapters first-release M001–M004 just verified | `docs` | `site/src/components/Banner.astro`, `site/astro.config.mjs` | The banner is removed or replaced by a release notice; a site test asserts the construction text is absent | `open` |
 | OS27 | The hero in `site/src/content/docs/index.mdx` offers *Start Reading* and *GitHub*. There is no download, and the in-browser engine — the one thing no competitor has — is not on the front page | `docs` | `site/src/content/docs/index.mdx` | The hero's actions are download (the Releases page), try it, and read the guide; `guards` passes its site-asset checks | `open` |
+| OS41 | `guide-using-poly.mdx`'s install section names the VST3 bundle `Poly.vst3` when the artifact is `poly_plugin.vst3`, and tells the reader to copy `Poly.component` into their Components folder when no release contains an AU. First-release M004 matched the guide to the plugin UI, not to the release artifacts | `defect` | `site/src/content/docs/guide-using-poly.mdx` | The section describes the zip as it ships — the real bundle name, and the AU only if OS17 says it ships; a claim test forbids `Poly.vst3` returning. M009/S01 rewrites the same section for the installers | `open` |
 
 ## Milestone M005 — The release notes are for musicians
 
@@ -373,10 +388,15 @@ non-developer can read, and the engineering history is one link away.
 
 ### Slice M005/S02 — The launch is listed where musicians look
 
-**Depends:** M005/S01
+**Depends:** M005/S01, M006/S01
 **Validation:** format
 **Evidence:** evidence/M005-S02.md
 **Status:** open
+
+**This slice has no gate beyond its evidence.** Its deliverables are listings
+on sites this repository does not control, so no token can check them; the
+evidence file's URLs and dates are the proof, and the reviewer reads them. Said
+here so nobody mistakes `format` for a check of the work.
 
 **Definition of Done**
 
@@ -387,28 +407,237 @@ non-developer can read, and the engineering history is one link away.
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| OS30 | A GitHub release is invisible to the people it is for. Free Euclidean and rhythm plugins reach musicians through KVR Audio listings and outlets such as Rekkerd and Bedroom Producers Blog, which cover exactly this category | `docs` | external listings, `evidence/M005-S02.md` | Evidence records each listing's URL and the date submitted; waits on installers IN1's first published Release | `open` |
+| OS30 | A GitHub release is invisible to the people it is for. Free Euclidean and rhythm plugins reach musicians through KVR Audio listings and outlets such as Rekkerd and Bedroom Producers Blog, which cover exactly this category | `docs` | external listings, `evidence/M005-S02.md` | Evidence records each listing's URL and the date submitted; waits on M006/S01's first published Release | `open` |
+
+## Milestone M006 — A release is cut, and says whether it is signed
+
+**Vision:** The pipeline has run to completion against a real tag, what a
+stranger meets on each platform is recorded verbatim, and an unsigned build
+cannot ship without that being a deliberate, recorded choice.
+
+**Branch:** milestone/M006-first-cut
+**Status:** planned
+**Demo:** A pre-release tag publishes a Release marked pre-release, with both
+zips, checksums and provenance; the Release body says whether the artifacts are
+signed; and the evidence records every dialog a clean machine showed.
+
+**Why this waits for M001.** The cheapest way to learn what the release path
+produces is to cut one, but cutting one today would record a plugin reporting
+`1.0.0` from a `0.1.0` build with June's notes — findings M001 exists to
+prevent. Cut the first tag against the hardened pipeline.
+
+### Slice M006/S01 — The first pre-release exists
+
+**Depends:** M001/S01, M001/S02
+**Validation:** format, guards, doc-discipline
+**Evidence:** evidence/M006-S01.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] A tag with a pre-release suffix publishes a Release marked pre-release,
+      and the contract check asserts the mapping
+- [ ] Both zips were downloaded and installed by hand on a clean machine per
+      platform, and the evidence records the host, OS version and every warning
+      dialog verbatim
+- [ ] Anything the first cut broke is a row here or an issue, not a note
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| OS31 | No release has ever been cut: one tag, `v0.1.0-doccov-baseline`, pointing at a July commit, and an empty Release list. The pipeline has never produced an artifact a stranger downloaded, so any plan that assumes it works because it exists is assuming | `verify` | `.github/workflows/release.yml`, `evidence/M006-S01.md` | A real pre-release tag runs the workflow to completion; the evidence names the run, the assets and their sizes | `open` |
+| OS32 | `release.yml` publishes every `v*.*.*` tag as a full release: `softprops/action-gh-release` is called without `prerelease:`, so a release-candidate tag lands on the Releases page as the latest stable version | `defect` | `.github/workflows/release.yml`, `scripts/check-release-workflow.mjs` | A tag carrying a hyphen suffix (`v0.2.0-rc.1`) publishes with `prerelease: true`; the contract check asserts it and is seen red when the flag is removed | `open` |
+| OS33 | What a stranger experiences on a clean machine — the quarantine prompt, SmartScreen, the folder hunt — has never been observed, only described from the README. The zip path stays the fallback for anyone who declines an installer, so its experience is recorded even after M007 and M008 land | `verify` | `evidence/M006-S01.md` | The evidence records the install by hand on one clean macOS and one clean Windows machine, dialog text verbatim, and whether the DAW found the plugin on the next scan | `open` |
+
+### Slice M006/S02 — An unsigned build cannot ship quietly
+
+**Depends:** M006/S01
+**Validation:** format, guards
+**Evidence:** evidence/M006-S02.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] With no signing secrets, the release job fails, unless a repository
+      variable named for the purpose explicitly allows an unsigned release
+- [ ] The Release body states whether each artifact is signed and notarized
+- [ ] The contract check asserts both, each seen red
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| OS34 | The codesign, notarize and staple steps gate on `env.MACOS_… != ''` and **skip** when the secrets are absent — which they are: the repository's only secret is an API key. The build succeeds and the workflow's output does not distinguish "signed" from "did not sign". Windows has no signing step at all, so nothing there can even skip | `defect` | `.github/workflows/release.yml`, `scripts/check-release-workflow.mjs`, `RELEASING.md` | A step after signing fails the leg when the artifact is unsigned and `ALLOW_UNSIGNED_RELEASE` is not `true`; the generated body carries a "Signed: yes/no" line per platform; the contract check asserts both | `open` |
+
+## Milestone M007 — macOS installs without a terminal
+
+**Vision:** A macOS user downloads one `.pkg`, opens it, answers the
+installer's questions, and their DAW finds Poly on the next scan — no folder
+conventions, no quarantine flag.
+
+**Branch:** milestone/M007-macos-pkg
+**Status:** planned
+**Demo:** A signed, notarized, stapled `.pkg` on the Releases page opens with
+no warning on a clean Mac and installs the VST3 (and the AU, if OS17 says it
+ships) where the DAW looks, with a per-user option.
+
+**The half that needs no purchase lands first.** S01 builds and tests the
+package unsigned; S02 signs it once the Apple Developer Program enrolment and
+the two certificates exist. The split is deliberate: the packaging can finish
+while the paperwork is pending.
+
+### Slice M007/S01 — A package is built and tested unsigned
+
+**Depends:** M006/S02, M003/S03
+**Validation:** format, guards
+**Evidence:** evidence/M007-S01.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] The release workflow builds a `.pkg` that installs the VST3 to
+      `/Library/Audio/Plug-Ins/VST3/`, or per-user on request, and the AU to
+      `Components/` only if OS17 decided it ships
+- [ ] Installing on a clean Mac, then removing, leaves the plug-in folders as
+      they were, and the evidence records both
+- [ ] The contract check asserts the package step's position and inputs
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| OS35 | The macOS artifact is a zip the user must unpack and place by hand. A `.pkg` built with `pkgbuild`/`productbuild` — the one format Gatekeeper and notarization treat as first-class — places the bundle where the DAW looks and offers the per-user choice through the installer's own UI | `pipeline` | `.github/workflows/release.yml`, `scripts/packaging/`, `scripts/check-release-workflow.mjs` | The pkg installs and uninstalls cleanly on a clean machine (evidence); the release publishes it beside the zip; if the AU ships, the release builds it universal, since `build-au-macos` is arm64-only today | `open` |
+
+### Slice M007/S02 — The package is signed, notarized and stapled
+
+**Depends:** M007/S01
+**Validation:** format, guards, doc-discipline
+**Evidence:** evidence/M007-S02.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] The bundle is signed with Developer ID Application and the package with
+      Developer ID Installer, the package is notarized and the ticket stapled
+- [ ] The seven secrets are documented in `RELEASING.md` and provisioned
+- [ ] The package opens on a clean Mac with no warning and no `xattr`, recorded
+      in the evidence with the macOS version
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| OS36 | The Apple Developer Program (USD 99 a year) is not enrolled, so no macOS certificate exists. A signed `.pkg` needs a **Developer ID Installer** certificate as well as the Developer ID Application certificate `README.md` documents — a second certificate and a seventh secret the workflow and the README do not know about | `pipeline` | `.github/workflows/release.yml`, `RELEASING.md`, repository secrets | `productsign` with the Installer identity runs after `pkgbuild`; `notarytool submit --wait` and `stapler` run on the pkg; the contract check asserts the order; the evidence records `spctl --assess` accepting the package on a clean machine | `open` |
+
+## Milestone M008 — Windows installs without a warning
+
+**Vision:** A Windows user downloads one installer, runs it, and SmartScreen
+attributes it to a named publisher rather than warning against it.
+
+**Branch:** milestone/M008-windows-installer
+**Status:** planned
+**Demo:** A signed installer on the Releases page places the VST3 in
+`C:\Program Files\Common Files\VST3\`, uninstalls from Apps & features, and
+carries a publisher name in its SmartScreen dialog.
+
+**Independent of M007:** different platform, different signing service,
+different installer tooling, no shared code.
+
+### Slice M008/S01 — An installer is built and tested unsigned
+
+**Depends:** M006/S02
+**Validation:** format, guards
+**Evidence:** evidence/M008-S01.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] The installer format is chosen on which one signs and uninstalls cleanly
+      in CI, with the alternatives and the reason in this milestone's decisions
+      file
+- [ ] The release workflow builds it; installing on a clean machine places the
+      bundle where the DAW looks, and uninstalling removes it
+- [ ] The contract check asserts the package step's position and inputs
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| OS37 | The Windows artifact is a zip. The installer format — WiX/MSI, Inno Setup, NSIS — is a genuine choice to be made on CI signing and clean uninstall, not on taste; whichever is chosen must produce a single artifact `signtool` can sign in one step | `pipeline` | `.github/workflows/release.yml`, `scripts/packaging/`, `docs/plans/open-source-launch/M008-decisions.md` | The decision is recorded with what was tried; the installer installs and uninstalls cleanly on a clean machine (evidence); the release publishes it beside the zip | `open` |
+
+### Slice M008/S02 — The installer is signed through Azure Artifact Signing
+
+**Depends:** M008/S01
+**Validation:** format, guards, doc-discipline
+**Evidence:** evidence/M008-S02.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] An Azure Artifact Signing account exists, identity validation has passed,
+      and the signing action is SHA-pinned like every other
+- [ ] The installer and the plugin binary inside it carry a valid Authenticode
+      signature naming the publisher, verified with `signtool verify /pa` in
+      the workflow
+- [ ] The release notes say that first downloads may still show SmartScreen
+      until reputation accumulates
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| OS38 | Windows has no signing at all: no `signtool` step, no certificate, no gate. An unsigned installer meets SmartScreen's "Windows protected your PC", whose default is *Don't run*. **Decided 2026-09-23: Azure Artifact Signing** — about USD 9.99 a month, no hardware token, GitHub Actions integration, individuals eligible in the USA and Canada | `pipeline` | `.github/workflows/release.yml`, `RELEASING.md`, repository secrets | The signing action runs after packaging and before publish; `signtool verify /pa` passes in the workflow; the contract check asserts the order and the pin | `open` |
+| OS39 | Whichever route signs, SmartScreen reputation builds per publisher over releases, so early downloads warn anyway. A release that promises a warning-free first download would be wrong | `disclose` | the release-notes source (OS28), `README.md` | The notes and the README's install section carry the sentence; the evidence records what the first signed download actually showed | `open` |
+| OS42 | An EV certificate, which the installers vision weighed for its instant SmartScreen reputation, is **declined**: Microsoft removed that behaviour in 2024 and EV now builds reputation like OV at three times the price with a hardware token a hosted runner cannot hold. OV from a CA is declined for the same token reason. SignPath Foundation's free open-source signing was considered and not taken, since the owner chose a route with a standing account; it stays the fallback if Azure's identity validation fails | `docs` | `docs/plans/open-source-launch/M008-decisions.md` | Recorded so a later pass does not reopen the EV question | `accepted` |
+
+## Milestone M009 — The instructions match the artifacts
+
+**Vision:** Someone who reads the install instructions finds the installers the
+Releases page offers, and nobody is told to use the terminal.
+
+**Branch:** milestone/M009-install-docs
+**Status:** planned
+**Demo:** The README's install section is a few sentences and a link, the
+Gatekeeper workaround is gone, and the guide's install section describes the
+same installers.
+
+**Why it waits for M004/S03.** That slice reorders the README around the
+downloader against the zip that ships today; this milestone replaces its
+install section once the installers exist, so the README is right at every
+point between.
+
+### Slice M009/S01 — The README and guide describe the installers
+
+**Depends:** M007/S02, M008/S02, M004/S03
+**Validation:** format, doc-discipline, doc-conformance, site-unit
+**Evidence:** evidence/M009-S01.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] The README's install section names one artifact per platform and links
+      the Releases page, in a few sentences
+- [ ] The macOS Gatekeeper section is deleted, and a guard fails if `xattr`
+      returns to the README or the guide
+- [ ] The guide's install section and chapter 17 describe the same installers,
+      and the zip as the fallback
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| OS40 | `README.md` lines 67–104 teach the zip, the folder conventions and `xattr -dr com.apple.quarantine`. Once an installer exists, documentation that still describes the zip is worse than none | `docs` | `README.md`, `site/src/content/docs/guide-using-poly.mdx`, `site/tests/` | The section matches the DoD; a claim test forbids `xattr` in both files, seen red before the edit; `doc-discipline` passes | `open` |
 
 ## Sequencing
 
 **M001, M002 and M003 are independent** — the release workflow, the CI
 workflows and the hosts share no file except `release.yml`, where M001/S02
 and M003/S02 touch different steps. Land M001 first if only one runs, because
-installers IN1 is waiting on it.
+M006 is waiting on it.
 
-**Across programmes, M001 precedes installers IN1.** IN1 cuts the first
-pre-release; it should exercise the pipeline M001 hardens. OS02's version
-decision and OS17's AU decision are inputs installers IN1 and IN2 cite rather
-than retake.
+**M006 follows M001** — the first cut should exercise the pipeline M001
+hardens, and OS02's version decision is what the first tag is named from.
+**M007 also waits on M003/S03**, because the package cannot know whether to
+carry the AU until OS17 is decided. **M007 and M008 are independent of each
+other** and each splits into an unsigned half that finishes now and a signed
+half that waits on the Apple enrolment or Azure's identity validation.
+**M009 is last**, after both installers and the README rewrite it replaces a
+section of.
 
 **M004/S03 depends on M003/S01 and M004/S02** — the README publishes the host
 table and the positioning sentence, so it is written after both exist.
 M004/S01 and M004/S02 can start at once.
 
 **M005/S01 depends on M001/S01 and M003/S01** — it needs the version and the
-host list. **M005/S02 also waits on installers IN1**, because there is nothing
-to list until a Release exists. That dependency is outside this ledger, so it
-is stated here rather than in a `Depends` line.
+host list. **M005/S02 also depends on M006/S01**, because there is nothing to
+list until a Release exists.
 
 ## Related issues
 
@@ -419,8 +648,6 @@ is stated here rather than in a `Depends` line.
 
 ## Out of scope
 
-- Signing, notarisation, installers and the silent-skip of unsigned builds —
-  installers IN1–IN4 own these
 - Editor resize or zoom — fixed at 1160×760 (`web_ui_view.cpp:70`, no
   `canResize`). The first post-launch candidate: cramped on a 13-inch laptop
 - Undo/redo in the editor, MIDI input, MIDI learn
@@ -433,3 +660,10 @@ is stated here rather than in a `Depends` line.
   `codecov.yml`; a threshold before a baseline is a ratchet with nothing to hold
 - RealtimeSanitizer on the process path — adopt when the sanitizer runners have
   a Clang with it; the grep-based `check-realtime-safety.sh` stands until then
+- Auto-update — download-and-run is the whole delivery scope; in-plugin update
+  checks are a separate programme with a privacy surface of their own
+- Store or package-manager distribution — App Store, Homebrew, winget; the
+  Releases page is the channel
+- Installing presets or content — the 45 factory presets are in the binary
+- The WASM/site build — deployed by `deploy-site.yml`, unrelated to plugin
+  distribution
