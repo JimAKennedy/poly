@@ -10,7 +10,7 @@
 //   - unwiring the release-publish job (permissions, gh-release, notes body).
 //
 // It ALSO proves scripts/gen-release-notes.mjs emits a non-empty body for the
-// shipping CHANGELOG sections (0.1.0 / Unreleased), because that step runs at
+// shipping CHANGELOG sections (0.1.0 / the version CMakeLists.txt declares), because that step runs at
 // tag time and would otherwise fail the real Release.
 //
 // Node has no built-in YAML parser and this repo carries no YAML dependency, so
@@ -342,9 +342,22 @@ test('gen-release-notes emits a non-empty body for shipping version 0.1.0', () =
   assert.ok(out.trim().length > 0, 'gen-release-notes produced an empty body for 0.1.0');
 });
 
-test('gen-release-notes emits a non-empty body for Unreleased', () => {
-  const out = execFileSync('node', [GEN, 'Unreleased'], { encoding: 'utf8' });
-  assert.ok(out.trim().length > 0, 'gen-release-notes produced an empty body for Unreleased');
+// open-source-launch M001/S01 (OS02): the section the next tag will publish
+// must exist and describe the current tree. The tag is named from
+// project(poly VERSION …), so the test reads that and asks the generator for
+// it — tagging a version with no section fails loud at tag time (test below),
+// but that is one push too late; this catches it on every guards run.
+test('gen-release-notes emits a non-empty body for the version CMakeLists.txt declares', () => {
+  const cmake = readFileSync(resolve(REPO, 'CMakeLists.txt'), 'utf8');
+  const m = cmake.match(/project\s*\(\s*poly[^)]*\bVERSION\s+(\d+\.\d+\.\d+)/s);
+  assert.ok(m, 'CMakeLists.txt has no project(poly … VERSION x.y.z)');
+  const version = m[1];
+  const out = execFileSync('node', [GEN, version], { encoding: 'utf8' });
+  assert.ok(
+    out.trim().length > 0,
+    `gen-release-notes produced an empty body for ${version} — CHANGELOG.md has no "## [${version}]" section, ` +
+      'so a tag of this version would publish nothing or fail',
+  );
 });
 
 test('gen-release-notes fails loud (exit 1) on a missing CHANGELOG section', () => {

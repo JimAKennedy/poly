@@ -69,24 +69,24 @@ notes, and every finding will be one this milestone could have prevented.
 **Plan:** M001-S01-plan.md
 **Validation:** format, unit, guards, doc-discipline
 **Evidence:** evidence/M001-S01.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] `project(poly VERSION …)` is the only hand-edited version in the tree that
+- [x] `project(poly VERSION …)` is the only hand-edited version in the tree that
       reaches a shipped artifact
-- [ ] The plugin's factory class info reports that version, proved by changing
+- [x] The plugin's factory class info reports that version, proved by changing
       it and reading the new value back from a built bundle
-- [ ] A check fails if a hand-typed version string returns to `plugids.h`, seen
+- [x] A check fails if a hand-typed version string returns to `plugids.h`, seen
       red before being trusted
-- [ ] The first version number is decided and recorded in this milestone's
+- [x] The first version number is decided and recorded in this milestone's
       decisions file, and the CHANGELOG section `gen-release-notes.mjs` will
       extract for it describes the current tree
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
 | OS01 | Five version strings disagree: CMake `0.1.0`, `plugids.h:15` `kPolyVersionString` **`1.0.0`** (what a DAW displays), `webui/package.json` `0.1.0`, `site/package.json` `0.0.1`, and the AU plist's `0xFFFFFFFF` development sentinel | `defect` | `CMakeLists.txt`, `plugin/CMakeLists.txt`, `plugin/source/plugids.h` | `kPolyVersionString` is generated from `PROJECT_VERSION` via `configure_file`; a built bundle's class info reports the CMake version; the two npm manifests are marked private-and-unversioned or read from the same source. The AU sentinel is OS17's, because it only matters if the AU ships | `done` |
-| OS02 | `CHANGELOG.md:102` holds `## [0.1.0] - 2026-06-27`, headed "Initial open-source release", but nothing was ever tagged from it. `release.yml` extracts the section matching the tag, so tagging `v0.1.0` today publishes that 397-word section and none of the 47 `[Unreleased]` entries | `defect` | `CHANGELOG.md`, `docs/plans/open-source-launch/M001-decisions.md` | The owner's decision on the first version number is recorded; `node scripts/gen-release-notes.mjs <version>` prints a section describing the current tree. M006/S01 names its tag from this decision rather than taking its own | `open` |
+| OS02 | `CHANGELOG.md:102` holds `## [0.1.0] - 2026-06-27`, headed "Initial open-source release", but nothing was ever tagged from it. `release.yml` extracts the section matching the tag, so tagging `v0.1.0` today publishes that 397-word section and none of the 47 `[Unreleased]` entries | `defect` | `CHANGELOG.md`, `docs/plans/open-source-launch/M001-decisions.md` | The owner's decision on the first version number is recorded; `node scripts/gen-release-notes.mjs <version>` prints a section describing the current tree. M006/S01 names its tag from this decision rather than taking its own | `done` |
 
 ### Slice M001/S02 — The release proves what it ships
 

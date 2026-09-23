@@ -11,19 +11,19 @@ decision was taken in `M001-decisions.md` before this plan was written.
 ## Task status
 
 - [x] 1. The plugin reports the CMake version, and a guard keeps it that way
-- [ ] 2. The changelog has the section the first tag will publish, and the slice closes
+- [x] 2. The changelog has the section the first tag will publish, and the slice closes
 
 ## Definition of Done
 
 Copied verbatim from the slice:
 
-- [ ] `project(poly VERSION …)` is the only hand-edited version in the tree that
+- [x] `project(poly VERSION …)` is the only hand-edited version in the tree that
       reaches a shipped artifact
-- [ ] The plugin's factory class info reports that version, proved by changing
+- [x] The plugin's factory class info reports that version, proved by changing
       it and reading the new value back from a built bundle
-- [ ] A check fails if a hand-typed version string returns to `plugids.h`, seen
+- [x] A check fails if a hand-typed version string returns to `plugids.h`, seen
       red before being trusted
-- [ ] The first version number is decided and recorded in this milestone's
+- [x] The first version number is decided and recorded in this milestone's
       decisions file, and the CHANGELOG section `gen-release-notes.mjs` will
       extract for it describes the current tree
 
