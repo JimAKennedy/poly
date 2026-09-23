@@ -54,7 +54,7 @@ which documents a contributor should read gets the benefit at none of the cost.
 the Release publishes are the same thing, and the release tests what it ships.
 
 **Branch:** milestone/M001-release-honesty
-**Status:** in-progress
+**Status:** done
 **Demo:** A dry-run of `release.yml` on a scratch tag builds, runs `ctest` on the
 universal binary, and publishes zips whose plugin reports the tag's version,
 beside a `SHA256SUMS` file and a provenance attestation.
