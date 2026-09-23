@@ -93,24 +93,24 @@ notes, and every finding will be one this milestone could have prevented.
 **Plan:** M001-S02-plan.md
 **Validation:** format, guards
 **Evidence:** evidence/M001-S02.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The release build runs the unit and golden tests on the exact
+- [x] The release build runs the unit and golden tests on the exact
       configuration it packages, before packaging
-- [ ] Every Release carries a `SHA256SUMS` asset and a build-provenance
+- [x] Every Release carries a `SHA256SUMS` asset and a build-provenance
       attestation for each zip
-- [ ] Every pluginval download in every workflow is verified against a pinned
+- [x] Every pluginval download in every workflow is verified against a pinned
       digest before it runs
-- [ ] `scripts/check-release-workflow.mjs` asserts all three, and each new
+- [x] `scripts/check-release-workflow.mjs` asserts all three, and each new
       assertion is seen red by removing what it guards
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
 | OS03 | `release.yml` runs build → validator → pluginval → sign → package and never `ctest`. The macOS **universal** binary is built nowhere else — `ci.yml` builds arm64 only — so the one configuration that ships is the one whose tests never run | `pipeline` | `.github/workflows/release.yml`, `scripts/check-release-workflow.mjs` | A `ctest` step runs after Build and before packaging on both legs; the contract check fails when it is removed or moved after packaging | `done` |
 | OS04 | A Release publishes zips and nothing a downloader can verify them against — no checksums, no provenance | `pipeline` | `.github/workflows/release.yml`, `scripts/check-release-workflow.mjs` | The publish job attaches `SHA256SUMS`; each zip carries an `actions/attest-build-provenance` attestation that `gh attestation verify` accepts; the contract check asserts both | `done` |
-| OS05 | pluginval is fetched with `curl` and executed unverified in four places: `ci.yml:434`, `:480`, `release.yml:98`, `:118`. Every action in the tree is SHA-pinned; the binary those jobs execute is not | `tooling` | `.github/workflows/ci.yml`, `.github/workflows/release.yml` | Each download is followed by a `sha256sum -c` (or `shasum -a 256 -c`) against a digest pinned beside the version; a tampered digest fails the step | `open` |
+| OS05 | pluginval is fetched with `curl` and executed unverified in four places: `ci.yml:434`, `:480`, `release.yml:98`, `:118`. Every action in the tree is SHA-pinned; the binary those jobs execute is not | `tooling` | `.github/workflows/ci.yml`, `.github/workflows/release.yml` | Each download is followed by a `sha256sum -c` (or `shasum -a 256 -c`) against a digest pinned beside the version; a tampered digest fails the step | `done` |
 
 ## Milestone M002 — CI a stranger can trust
 

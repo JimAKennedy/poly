@@ -260,6 +260,36 @@ test('release attests build provenance for every zip with the pinned action (OS0
   assert.ok(attest >= 0 && attest < publish, 'attestation must precede publishing');
 });
 
+// --- open-source-launch M001/S02 (OS05): pluginval is executed, so the bytes
+// executed are verified. Every `curl … pluginval.zip` in BOTH workflows is
+// followed, before any unzip, by `shasum -a 256 -c` against the digest pinned
+// for that platform. Every action in the tree is SHA-pinned; this closes the
+// one downloaded binary that was not. Digests computed from two fresh
+// downloads of the v1.0.4 release assets on 2026-09-23. ---
+const PLUGINVAL_SHA256 = {
+  pluginval_macOS: '3c4c533bda0c5059eea3ddaea752d757ee2025041f0f47e6bcb0e87f6082b29f',
+  pluginval_Windows: 'c08e61ce3b96db41636f8ec7e76f4c7e2c13ebdac7fa1b5a1f52b4f32ec715ab',
+};
+const CI_PATH = resolve(REPO, '.github', 'workflows', 'ci.yml');
+
+test('every pluginval download in every workflow is verified against the pinned digest before it runs (OS05)', () => {
+  const problems = [];
+  let sites = 0;
+  for (const [label, src] of [['release.yml', wf], ['ci.yml', readFileSync(CI_PATH, 'utf8')]]) {
+    for (const m of src.matchAll(/^(\s*)curl [^\n]*pluginval\.zip https:[^\n]*\/(pluginval_(?:macOS|Windows))\.zip[^\n]*\n([\s\S]*?)^\s*unzip -q pluginval\.zip/gm)) {
+      sites += 1;
+      const asset = m[2];
+      const between = m[3];
+      const want = PLUGINVAL_SHA256[asset];
+      const check = between.match(/echo "([0-9a-f]{64})  pluginval\.zip" \| shasum -a 256 -c/);
+      if (!check) problems.push(`${label}: ${asset} is unzipped with no shasum -a 256 -c between curl and unzip`);
+      else if (check[1] !== want) problems.push(`${label}: ${asset} is checked against ${check[1].slice(0, 12)}…, expected ${want.slice(0, 12)}…`);
+    }
+  }
+  assert.equal(sites, 4, `expected 4 pluginval download sites across release.yml and ci.yml, found ${sites}`);
+  assert.deepEqual(problems, [], 'unverified or mis-pinned pluginval downloads');
+});
+
 // --- S03 gate: macOS Developer ID codesign + Apple notarization + stapling.
 // These steps run AFTER pluginval and BEFORE packaging, and each is gated on its
 // signing secrets being non-empty so absent secrets SKIP (never fail) the step

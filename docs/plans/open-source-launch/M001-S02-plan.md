@@ -14,19 +14,19 @@ assertion is seen red by removing what it guards. Every decision was taken in
 
 - [x] 1. The release runs the tests on what it packages
 - [x] 2. The release publishes checksums and provenance
-- [ ] 3. Every pluginval download is verified, and the slice closes
+- [x] 3. Every pluginval download is verified, and the slice closes
 
 ## Definition of Done
 
 Copied verbatim from the slice:
 
-- [ ] The release build runs the unit and golden tests on the exact
+- [x] The release build runs the unit and golden tests on the exact
       configuration it packages, before packaging
-- [ ] Every Release carries a `SHA256SUMS` asset and a build-provenance
+- [x] Every Release carries a `SHA256SUMS` asset and a build-provenance
       attestation for each zip
-- [ ] Every pluginval download in every workflow is verified against a pinned
+- [x] Every pluginval download in every workflow is verified against a pinned
       digest before it runs
-- [ ] `scripts/check-release-workflow.mjs` asserts all three, and each new
+- [x] `scripts/check-release-workflow.mjs` asserts all three, and each new
       assertion is seen red by removing what it guards
 
 ## Validation
