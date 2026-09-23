@@ -12,7 +12,7 @@ assertion is seen red by removing what it guards. Every decision was taken in
 
 ## Task status
 
-- [ ] 1. The release runs the tests on what it packages
+- [x] 1. The release runs the tests on what it packages
 - [ ] 2. The release publishes checksums and provenance
 - [ ] 3. Every pluginval download is verified, and the slice closes
 

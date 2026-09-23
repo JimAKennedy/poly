@@ -198,6 +198,28 @@ test('pluginval step PRECEDES packaging on both legs (validate before we ship)',
   assert.ok(pvWin < pkgWin, 'Windows pluginval must run BEFORE packaging (else unvalidated zips ship)');
 });
 
+// --- open-source-launch M001/S02 (OS03): the release tests what it ships.
+// The macOS universal binary is built nowhere else — ci.yml builds arm64 only —
+// so the one configuration that ships was the one whose tests never ran.
+// ctest runs on BOTH legs after Build and BEFORE pluginval and packaging, so a
+// failing test aborts the leg before any zip exists. ---
+test('ctest runs on both legs after Build and before pluginval and packaging (OS03)', () => {
+  const build = stepIndex(wf, 'Build');
+  const tests = stepIndex(wf, 'Run tests');
+  assert.ok(tests >= 0, 'missing "Run tests" step — the release must run ctest on the configuration it packages');
+  assert.ok(build >= 0 && build < tests, '"Run tests" must come after Build');
+  const pvMac = stepIndex(wf, 'Run pluginval \\(macOS\\)');
+  const pvWin = stepIndex(wf, 'Run pluginval \\(Windows\\)');
+  assert.ok(tests < pvMac && tests < pvWin, '"Run tests" must run before pluginval on both legs');
+  const stepBody = wf.slice(tests, Math.min(pvMac, pvWin));
+  assert.match(
+    stepBody,
+    /ctest --test-dir build --build-config Release --output-on-failure/,
+    '"Run tests" must invoke ctest on build/ with --build-config Release (the Visual Studio generator needs it)',
+  );
+  assert.doesNotMatch(stepBody, /\n\s+if:/, '"Run tests" must be unconditional — it runs on both legs');
+});
+
 // --- S03 gate: macOS Developer ID codesign + Apple notarization + stapling.
 // These steps run AFTER pluginval and BEFORE packaging, and each is gated on its
 // signing secrets being non-empty so absent secrets SKIP (never fail) the step

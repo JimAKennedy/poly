@@ -80,6 +80,14 @@ jobs:
         run: cmake -S . -B build ${{ matrix.cmake-args }}
       - name: Build
         run: cmake --build build --config Release --parallel
+      # open-source-launch M001/S02 (OS03): run the unit and golden tests on the
+      # exact configuration that ships. The macOS universal binary is built
+      # nowhere else (ci.yml builds arm64 only), so without this step the one
+      # build a stranger downloads is the one whose tests never ran. Runs on
+      # both legs, before pluginval and packaging; the order is locked by
+      # scripts/check-release-workflow.mjs.
+      - name: Run tests
+        run: ctest --test-dir build --build-config Release --output-on-failure
       # Validate the freshly built .vst3 with pluginval (Tracktion, pinned
       # v1.0.4 — the exact pin and flags as ci.yml's pluginval-macos/-windows
       # jobs) AFTER Build and BEFORE packaging, so a validation failure aborts
