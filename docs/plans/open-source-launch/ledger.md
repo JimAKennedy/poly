@@ -54,7 +54,7 @@ which documents a contributor should read gets the benefit at none of the cost.
 the Release publishes are the same thing, and the release tests what it ships.
 
 **Branch:** milestone/M001-release-honesty
-**Status:** planned
+**Status:** in-progress
 **Demo:** A dry-run of `release.yml` on a scratch tag builds, runs `ctest` on the
 universal binary, and publishes zips whose plugin reports the tag's version,
 beside a `SHA256SUMS` file and a provenance attestation.
@@ -66,9 +66,10 @@ notes, and every finding will be one this milestone could have prevented.
 
 ### Slice M001/S01 — One version, from one place
 
+**Plan:** M001-S01-plan.md
 **Validation:** format, unit, guards, doc-discipline
 **Evidence:** evidence/M001-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
@@ -89,6 +90,7 @@ notes, and every finding will be one this milestone could have prevented.
 
 ### Slice M001/S02 — The release proves what it ships
 
+**Plan:** M001-S02-plan.md
 **Validation:** format, guards
 **Evidence:** evidence/M001-S02.md
 **Status:** open
