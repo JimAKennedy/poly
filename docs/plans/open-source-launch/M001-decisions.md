@@ -63,3 +63,17 @@ and `c08e61ce3b96db41636f8ec7e76f4c7e2c13ebdac7fa1b5a1f52b4f32ec715ab`
   command serves both platforms.
 - **The AU plist's `0xFFFFFFFF` is left alone.** OS01 assigns it to OS17; it
   matters only if the AU ships.
+
+## 2026-09-23 — judgment calls during M001/S01 task 1
+
+- **The SDK helper is called from the top-level `CMakeLists.txt`, not the
+  plugin's.** The plan said the plugin's; the first build failed with
+  `projectversion.h` not found, because the helper writes the file into the
+  current binary directory and adds `PROJECT_BINARY_DIR` to the includes —
+  the two match only at the top level. Obviously right: the alternative was a
+  second include line duplicating what the helper already adds.
+- **The three test targets that compile plugin sources gain
+  `${PROJECT_BINARY_DIR}`.** They include `plugin/source` rather than linking
+  `poly_plugin`, so the plugin's include directories never reach them. A
+  one-line addition beside the existing include, with the reason in a comment,
+  rather than restructuring the tests to link the plugin.

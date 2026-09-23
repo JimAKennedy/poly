@@ -17,7 +17,7 @@ endif()
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "")
 
 project(poly
-    VERSION 0.1.0
+    VERSION 0.2.0
     DESCRIPTION "Polymetric drum pattern generator"
     LANGUAGES CXX
 )
@@ -177,6 +177,15 @@ add_subdirectory(engine)
 
 if(NOT POLY_ENGINE_ONLY)
     add_subdirectory(plugin)
+    # open-source-launch M001/S01 (OS01): the version a DAW displays comes from
+    # project(poly VERSION …) and nowhere else. The SDK helper generates
+    # projectversion.h (FULL_VERSION_STR et al.) from the project version and
+    # adds PROJECT_BINARY_DIR to the target's includes — but it writes the file
+    # into the *current* binary dir, so it must be called from this top-level
+    # list, where the two are the same directory. plugids.h reads
+    # FULL_VERSION_STR from it; scripts/check-version-source.mjs fails if a
+    # literal returns.
+    smtg_target_configure_version_file(poly_plugin)
     add_subdirectory(tools/harness)
     add_subdirectory(tools/midi_probe)
 endif()

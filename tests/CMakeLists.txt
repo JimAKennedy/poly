@@ -101,6 +101,7 @@ if(NOT POLY_ENGINE_ONLY)
 
     target_include_directories(poly_bridge_tests PRIVATE
         ${CMAKE_SOURCE_DIR}/plugin/source
+        ${PROJECT_BINARY_DIR} # projectversion.h, generated for poly_plugin (OS01); these targets compile plugin sources directly
         ${CMAKE_SOURCE_DIR}/engine/include
         ${choc_SOURCE_DIR}
     )
@@ -138,6 +139,7 @@ if(NOT POLY_ENGINE_ONLY)
 
     target_include_directories(poly_host_tests PRIVATE
         ${CMAKE_SOURCE_DIR}/plugin/source
+        ${PROJECT_BINARY_DIR} # projectversion.h, generated for poly_plugin (OS01); these targets compile plugin sources directly
         ${CMAKE_SOURCE_DIR}/engine/include
     )
 
@@ -172,6 +174,7 @@ if(NOT POLY_ENGINE_ONLY)
 
     target_include_directories(poly_probe_tests PRIVATE
         ${CMAKE_SOURCE_DIR}/plugin/source
+        ${PROJECT_BINARY_DIR} # projectversion.h, generated for poly_plugin (OS01); these targets compile plugin sources directly
         ${CMAKE_SOURCE_DIR}/engine/include
         ${CMAKE_SOURCE_DIR}/tools/midi_probe/source
     )

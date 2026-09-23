@@ -10,7 +10,7 @@ decision was taken in `M001-decisions.md` before this plan was written.
 
 ## Task status
 
-- [ ] 1. The plugin reports the CMake version, and a guard keeps it that way
+- [x] 1. The plugin reports the CMake version, and a guard keeps it that way
 - [ ] 2. The changelog has the section the first tag will publish, and the slice closes
 
 ## Definition of Done
@@ -71,9 +71,14 @@ Files: modify `CMakeLists.txt`, `plugin/CMakeLists.txt`,
    beside the other node guards, and list it in `scripts/README.md`, which
    `check-scripts-readme` requires. Run it: all three cases must fail on the
    current tree — that is the red step.
-2. `CMakeLists.txt`: `VERSION 0.1.0` → `VERSION 0.2.0`. `plugin/CMakeLists.txt`:
-   call `smtg_target_configure_version_file(poly_plugin)` after
-   `smtg_add_vst3plugin`. `plugids.h`: `#include "projectversion.h"` and
+2. `CMakeLists.txt`: `VERSION 0.1.0` → `VERSION 0.2.0`, and call
+   `smtg_target_configure_version_file(poly_plugin)` **in the top-level list**
+   beside `add_subdirectory(plugin)` — the helper writes the header into the
+   current binary directory and adds `PROJECT_BINARY_DIR` to the includes, so
+   called from `plugin/CMakeLists.txt` the file lands where nothing looks
+   (found when the first build failed; corrected before the task ran on).
+   In `tests/CMakeLists.txt`, add `${PROJECT_BINARY_DIR}` to the three test
+   targets that compile plugin sources directly, for the same reason. `plugids.h`: `#include "projectversion.h"` and
    `static constexpr auto kPolyVersionString = FULL_VERSION_STR;`. Remove
    `"version"` from both npm manifests and add `"private": true` to
    `site/package.json`.
