@@ -61,6 +61,11 @@ run_guard "version-source"            node --test scripts/check-version-source.m
 # only in comments. It was worse off than the eleven, which at least ran in CI.
 run_guard "release-workflow contract"  node --test scripts/check-release-workflow.mjs
 
+# open-source-launch M002/S01 (OS06, OS08): every workflow declares a top-level
+# permissions block and no third-party checkout floats. The three jk-standards
+# workflow checks pass on a tree that violates both, so this is the guard.
+run_guard "workflow-hygiene contract"  node --test scripts/check-workflow-hygiene.mjs
+
 echo
 if [ "${#FAILED[@]}" -eq 0 ]; then
     echo "=== check-guards.sh: ${RAN} guard invocation(s) passed ==="

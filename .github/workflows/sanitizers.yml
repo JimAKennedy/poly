@@ -5,6 +5,13 @@ on:
     - cron: '0 3 * * *'
   workflow_dispatch:
 
+# OS06: the token every job receives unless it says otherwise. The
+# repository default is already read-only; declaring it here makes the
+# grant visible in the tree and lets scripts/check-workflow-hygiene.mjs
+# hold it there.
+permissions:
+  contents: read
+
 jobs:
   asan:
     name: AddressSanitizer

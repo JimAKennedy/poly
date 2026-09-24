@@ -6,6 +6,13 @@ on:
   pull_request:
     branches: [main]
 
+# OS06: the token every job receives unless it says otherwise. The
+# repository default is already read-only; declaring it here makes the
+# grant visible in the tree and lets scripts/check-workflow-hygiene.mjs
+# hold it there.
+permissions:
+  contents: read
+
 jobs:
   code-quality:
     runs-on: ubuntu-latest
@@ -32,6 +39,8 @@ jobs:
         run: bash scripts/check-scripts-readme.sh
       - name: Scripts-readme guard contract + green/red behavior proof
         run: node --test scripts/check-scripts-readme.mjs
+      - name: Workflow hygiene contract (top-level permissions, pinned third-party checkouts, PR concurrency)
+        run: node --test scripts/check-workflow-hygiene.mjs
 
   build:
     strategy:

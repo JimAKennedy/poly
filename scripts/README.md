@@ -59,6 +59,12 @@ actually fails on regressions.
   `projectversion.h`, and the two private npm manifests carry no version at
   all. Five strings disagreed before open-source-launch M001, and the one a DAW
   displayed was the wrong one.
+- `check-workflow-hygiene.mjs` — every workflow declares a top-level
+  `permissions:` block, `ci.yml` cancels superseded pull-request runs and
+  never a push to `main`, and no checkout of a third-party repository floats
+  on a branch or tag. The three jk-standards workflow checks pass on a tree
+  that violates all three (open-source-launch M002/S01), so this is the guard;
+  each rule carries an inline red fixture so "seen red" is part of every run.
 - `check-ledger-row-ids.mjs` — row IDs are unique within each delivery ledger.
   jk-standards' `ledger` check validates structure and statuses but not ID
   uniqueness, which let guide-parity M004 add a `GP11` while M005/S01 already
