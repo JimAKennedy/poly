@@ -14,15 +14,15 @@ recorded there.
 - [x] Task 1 — The guard exists, is red on its fixtures, and every workflow
       declares a top-level `permissions:` block (OS06)
 - [x] Task 2 — A superseded PR push cancels the run it replaces (OS07)
-- [ ] Task 3 — The PR-AF checkout names a commit (OS08), and the slice closes
+- [x] Task 3 — The PR-AF checkout names a commit (OS08), and the slice closes
 
 ## Definition of Done
 
-- [ ] Every workflow declares a top-level `permissions:` block, and jobs elevate
+- [x] Every workflow declares a top-level `permissions:` block, and jobs elevate
       locally only where they write
-- [ ] A superseded push to a PR cancels the run it replaces
-- [ ] No workflow checks out or executes third-party code at a moving ref
-- [ ] A guard fails on a workflow with no top-level `permissions:` and on an
+- [x] A superseded push to a PR cancels the run it replaces
+- [x] No workflow checks out or executes third-party code at a moving ref
+- [x] A guard fails on a workflow with no top-level `permissions:` and on an
       unpinned third-party checkout, each seen red — the three jk-standards
       workflow checks all pass on today's tree, so none of them is that guard
 

@@ -135,6 +135,16 @@ for (const f of files) {
   });
 }
 
+for (const f of files) {
+  test(`${f} pins every third-party checkout to a commit`, () => {
+    assert.deepEqual(
+      unpinnedThirdPartyCheckouts(read(f)),
+      [],
+      `${f} checks out a third-party repository without a 40-character SHA ref — whatever its default branch holds today runs here (OS08)`,
+    );
+  });
+}
+
 test('ci.yml cancels superseded pull-request runs and never a push to main', () => {
   assert.deepEqual(
     concurrencyShape(read('ci.yml')),
