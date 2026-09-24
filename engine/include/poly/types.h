@@ -392,7 +392,7 @@ inline AdditiveCellInfo computeAdditiveCells(const LaneConfig& cfg) {
         int count = cfg.profileCount < kMaxSteps ? cfg.profileCount : kMaxSteps;
         double sum = 0.0;
         for (int i = 0; i < count; ++i)
-            sum += static_cast<double>(cfg.subdivisionProfile[i]);
+            sum += static_cast<double>(cfg.subdivisionProfile[static_cast<size_t>(i)]);
         // A profile summing to nothing is not a feel, and dividing by it would
         // put infinities into the timing path.
         if (sum <= 0.0)
@@ -422,8 +422,8 @@ inline AdditiveCellInfo computeAdditiveCells(const LaneConfig& cfg) {
         info.count = count;
         double accum = 0.0;
         for (int i = 0; i < count; ++i) {
-            info.cumPpq[i] = accum;
-            accum += (static_cast<double>(cfg.subdivisionProfile[i]) / scale) * basePpq;
+            info.cumPpq[static_cast<size_t>(i)] = accum;
+            accum += (static_cast<double>(cfg.subdivisionProfile[static_cast<size_t>(i)]) / scale) * basePpq;
         }
         info.totalPpq = accum;
         return info;
@@ -434,8 +434,8 @@ inline AdditiveCellInfo computeAdditiveCells(const LaneConfig& cfg) {
     info.count = cfg.cellCount;
     double accum = 0.0;
     for (int i = 0; i < cfg.cellCount && i < kMaxSteps; ++i) {
-        info.cumPpq[i] = accum;
-        accum += static_cast<double>(cfg.cellSizes[i]) * basePpq;
+        info.cumPpq[static_cast<size_t>(i)] = accum;
+        accum += static_cast<double>(cfg.cellSizes[static_cast<size_t>(i)]) * basePpq;
     }
     info.totalPpq = accum;
     return info;

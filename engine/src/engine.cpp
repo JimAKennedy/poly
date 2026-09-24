@@ -76,13 +76,13 @@ static void accumulateEnvelope(const Envelope& env, double ppq, double ppqPerBar
 static EnvelopeMods computeEnvelopeMods(const LaneConfig& cfg, const GrooveState& state, double ppq, double ppqPerBar) {
     EnvelopeMods mods{};
     for (int e = 0; e < cfg.envelopeCount; ++e) {
-        const auto& ea = cfg.envelopes[e];
+        const auto& ea = cfg.envelopes[static_cast<size_t>(e)];
         if (!ea.active)
             continue;
         accumulateEnvelope(ea.envelope, ppq, ppqPerBar, mods);
     }
     for (int e = 0; e < state.globalEnvelopeCount; ++e) {
-        accumulateEnvelope(state.globalEnvelopes[e], ppq, ppqPerBar, mods);
+        accumulateEnvelope(state.globalEnvelopes[static_cast<size_t>(e)], ppq, ppqPerBar, mods);
     }
     return mods;
 }
@@ -93,18 +93,18 @@ static void buildLanePattern(const LaneConfig& cfg, const GrooveState& state, in
     if (cfg.timeline) {
         int patLen = cfg.fixedPatternLength > 0 ? cfg.fixedPatternLength : cfg.cycle.steps;
         for (int s = 0; s < patLen && s < kMaxSteps; ++s)
-            pattern[s] = cfg.fixedPattern[s];
+            pattern[static_cast<size_t>(s)] = cfg.fixedPattern[static_cast<size_t>(s)];
     } else {
         // region:kotekan
         bool useKotekan = cfg.kotekanSourceLane >= 0 && cfg.kotekanSourceLane < state.activeLaneCount &&
                           cfg.kotekanSourceLane != lane;
         if (useKotekan) {
-            const auto& src = state.lanes[cfg.kotekanSourceLane];
+            const auto& src = state.lanes[static_cast<size_t>(cfg.kotekanSourceLane)];
             if (src.kotekanSourceLane == lane)
                 useKotekan = false;
         }
         if (useKotekan) {
-            const auto& src = state.lanes[cfg.kotekanSourceLane];
+            const auto& src = state.lanes[static_cast<size_t>(cfg.kotekanSourceLane)];
             std::array<bool, kMaxSteps> srcPattern{};
             euclidean(src.hitCount, src.cycle.steps, src.rotation, srcPattern);
             // M002 S01 (EC06). The mode picks which index of the source is
@@ -120,12 +120,12 @@ static void buildLanePattern(const LaneConfig& cfg, const GrooveState& state, in
             int complementHits = 0;
             for (int s = 0; s < cfg.cycle.steps && s < src.cycle.steps; ++s) {
                 const int srcStep = cell > 0 ? (s % cell) : s;
-                pattern[s] = !srcPattern[srcStep];
-                if (pattern[s])
+                pattern[static_cast<size_t>(s)] = !srcPattern[static_cast<size_t>(srcStep)];
+                if (pattern[static_cast<size_t>(s)])
                     ++complementHits;
             }
             for (int s = src.cycle.steps; s < cfg.cycle.steps; ++s) {
-                pattern[s] = true;
+                pattern[static_cast<size_t>(s)] = true;
                 ++complementHits;
             }
             // M002 S01 task 6. theory-gamelan Rule 1: "the composite must be
@@ -139,8 +139,8 @@ static void buildLanePattern(const LaneConfig& cfg, const GrooveState& state, in
             // exact complement and has no gaps to fill.
             if (cell > 0) {
                 for (int s = 0; s < cfg.cycle.steps && s < src.cycle.steps; ++s) {
-                    if (!srcPattern[s] && !pattern[s]) {
-                        pattern[s] = true;
+                    if (!srcPattern[static_cast<size_t>(s)] && !pattern[static_cast<size_t>(s)]) {
+                        pattern[static_cast<size_t>(s)] = true;
                         ++complementHits;
                     }
                 }
@@ -169,7 +169,10 @@ static void buildLanePattern(const LaneConfig& cfg, const GrooveState& state, in
                 for (int i = 0; i < 3 && i < cfg.kotekanOverlap; ++i) {
                     const int step = points[i];
                     if (step >= 0 && step < cfg.cycle.steps)
-                        pattern[step] = srcPattern[cell > 0 ? (step % cell) : step] ? true : pattern[step];
+                        pattern[static_cast<size_t>(step)] =
+                            srcPattern[static_cast<size_t>(cell > 0 ? (step % cell) : step)]
+                                ? true
+                                : pattern[static_cast<size_t>(step)];
                 }
             }
             // endregion:kotekan
@@ -182,13 +185,13 @@ static void buildLanePattern(const LaneConfig& cfg, const GrooveState& state, in
 static float computeMaxEnvelopeHumanizeMs(const LaneConfig& cfg, const GrooveState& state) {
     float maxMs = 0.0f;
     for (int e = 0; e < cfg.envelopeCount; ++e) {
-        const auto& ea = cfg.envelopes[e];
+        const auto& ea = cfg.envelopes[static_cast<size_t>(e)];
         if (ea.active && ea.envelope.target == EnvTarget::TimingLooseness)
             maxMs += std::abs(ea.envelope.depth) * kHumanizeEnvelopeScale;
     }
     for (int e = 0; e < state.globalEnvelopeCount; ++e) {
-        if (state.globalEnvelopes[e].target == EnvTarget::TimingLooseness)
-            maxMs += std::abs(state.globalEnvelopes[e].depth) * kHumanizeEnvelopeScale;
+        if (state.globalEnvelopes[static_cast<size_t>(e)].target == EnvTarget::TimingLooseness)
+            maxMs += std::abs(state.globalEnvelopes[static_cast<size_t>(e)].depth) * kHumanizeEnvelopeScale;
     }
     return maxMs;
 }
@@ -365,7 +368,7 @@ static double applyTimingShifts(const LaneConfig& cfg, const TransportContext& t
         if (cfg.swingMode == SwingMode::TempoAdaptive) {
             ppq += swingOffsetFraction(swingRatioAt(tc.tempo, cfg.swingAmount)) * 2.0 * stepDurPpq;
         } else {
-            ppq += cfg.swingAmount * stepDurPpq * (1.0 / kSwingSyncopationDivisor);
+            ppq += static_cast<double>(cfg.swingAmount) * stepDurPpq * (1.0 / kSwingSyncopationDivisor);
         }
     }
     if (cfg.syncopationOffset > 0.0f && !swingThisStep) {
@@ -388,7 +391,7 @@ static double applyTimingShifts(const LaneConfig& cfg, const TransportContext& t
             (cfg.humanizeMode == HumanizeMode::Correlated)
                 ? correlatedNoise(laneEffectiveSeed(cfg, state.seed), cfg.id, absStep)
                 : deterministicRand(laneEffectiveSeed(cfg, state.seed), cfg.id, absStep, 3) * 2.0f - 1.0f;
-        ppq += jitterPpq * jitter;
+        ppq += jitterPpq * static_cast<double>(jitter);
     }
 
     if (cfg.timingOffsetMs != 0.0f && tc.tempo > 0.0) {
@@ -466,7 +469,7 @@ static LaneRenderContext prepareLaneContext(const LaneConfig& cfg, const GrooveS
     ctx.additive = computeAdditiveCells(cfg);
     if (tempoScale != 1.0 && ctx.additive.count > 0) {
         for (int c = 0; c < ctx.additive.count; ++c)
-            ctx.additive.cumPpq[c] *= tempoScale;
+            ctx.additive.cumPpq[static_cast<size_t>(c)] *= tempoScale;
         ctx.additive.totalPpq *= tempoScale;
     }
     ctx.isAdditive = ctx.additive.count > 0;
@@ -486,8 +489,9 @@ static LaneRenderContext prepareLaneContext(const LaneConfig& cfg, const GrooveS
         // base step while a profiled step can be longer. Derive the longest
         // step from the cumulative positions, which are correct on both paths.
         for (int c = 0; c < ctx.additive.count; ++c) {
-            double next = (c + 1 < ctx.additive.count) ? ctx.additive.cumPpq[c + 1] : ctx.additive.totalPpq;
-            maxStepDur = std::max(maxStepDur, next - ctx.additive.cumPpq[c]);
+            double next =
+                (c + 1 < ctx.additive.count) ? ctx.additive.cumPpq[static_cast<size_t>(c + 1)] : ctx.additive.totalPpq;
+            maxStepDur = std::max(maxStepDur, next - ctx.additive.cumPpq[static_cast<size_t>(c)]);
         }
     }
     ctx.maxTimingShift = 0.0;
@@ -564,10 +568,10 @@ static void computeStepPpqAndDuration(const LaneRenderContext& ctx, const LaneCo
         int localCell = static_cast<int>(((absStep % ctx.additive.count) + ctx.additive.count) % ctx.additive.count);
         int64_t cycleIdx =
             (absStep >= 0) ? absStep / ctx.additive.count : (absStep - ctx.additive.count + 1) / ctx.additive.count;
-        ppq = cycleIdx * ctx.cyclePpqLen + ctx.additive.cumPpq[localCell];
-        stepDurPpq = cfg.cellSizes[localCell] * ctx.sPpq;
+        ppq = static_cast<double>(cycleIdx) * ctx.cyclePpqLen + ctx.additive.cumPpq[static_cast<size_t>(localCell)];
+        stepDurPpq = cfg.cellSizes[static_cast<size_t>(localCell)] * ctx.sPpq;
     } else {
-        ppq = absStep * ctx.sPpq;
+        ppq = static_cast<double>(absStep) * ctx.sPpq;
         stepDurPpq = ctx.sPpq;
     }
 }
@@ -633,7 +637,7 @@ void Engine::renderRange(const TransportContext& tc, const GrooveState& state, N
 
     const int laneCount = std::clamp(state.activeLaneCount, 0, kMaxLanes);
     for (int lane = 0; lane < laneCount; ++lane) {
-        const auto& cfg = state.lanes[lane];
+        const auto& cfg = state.lanes[static_cast<size_t>(lane)];
         if (!cfg.active || cfg.cycle.steps <= 0 || cfg.cycle.steps > kMaxSteps || cfg.cycle.subdivision <= 0)
             continue;
 

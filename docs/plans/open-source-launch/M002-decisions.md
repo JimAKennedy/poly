@@ -137,3 +137,26 @@ gaps fall in bars 2 and 5 for lane 0 (12-beat phrase) and bar 3 for lane 1
   bug class the row names, and reaches arbitrarily far outside the object.
   Obviously right: the plan's aim was a detectable planted out-of-bounds
   access in the state reader, and the site was a detail.
+
+## 2026-09-24 — the tests phase's starting number, measured during M002/S03 task 3
+
+With `poly_engine` clean and fatal, the full engine-only tree under GCC 15
+(`POLY_WARNINGS_FATAL` still `OFF`) reports **63 unique warning sites** in
+test and tool sources, none in `engine/`: 60 `-Wsign-conversion`, 2
+`-Wdangling-else`, 1 `-Wunused-function`. By file: `golden_tests.cpp` 32,
+`euclidean_tests.cpp` 14, `envelope_tests.cpp` 7, `emit_presets.cpp` 4,
+`dynamic_shaping_tests.cpp` 3, and one each in `subdivision_profile_tests.cpp`,
+`step_weight_tests.cpp`, `emission_tests.cpp`. The three that are not
+conversions were inspected: the two `-Wdangling-else` sites are gtest
+`EXPECT_NEAR` macros inside brace-less `if`s in one kotekan velocity test —
+each `if` is independent and the macro's own `else` binds inside it, so no
+assertion is mis-scoped; the `-Wunused-function` is `backbeatPattern()` in
+`step_weight_tests.cpp`, a helper nothing calls, dead rather than wrong.
+None marks a defect; the two the row found (OS12, OS13) were fixed in tasks 1
+and 2. The tests phase starts at 63.
+
+Two notes for whoever runs that phase. GCC 15 on this Mac cannot compile
+googletest against the macOS 26 SDK (`mach/message.h` parse errors), so the
+count came from the test translation units, which compiled, not from a linked
+`poly_tests`; CI's Linux GCC is unaffected. And Apple Clang reports every
+`-Wsign-conversion` site GCC does, so the number is the same on both.

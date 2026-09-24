@@ -46,14 +46,20 @@ option(BUILD_INTERACTION_TESTS "Build headless UI interaction tests" OFF)
 # with; the nightly in .github/workflows/sanitizers.yml turns it on with Clang.
 option(BUILD_FUZZ_TESTS "Build the libFuzzer targets under tests/fuzz (needs Clang with -fsanitize=fuzzer)" OFF)
 
-# Phase 1 of the jk-standards warning-flags adoption: consume the standard's
-# diagnostic roster now, but do not yet promote it to fatal. Adopting the full
-# set surfaces ~242 pre-existing signedness/float-conversion warnings across the
-# engine and tests; making them fatal today would leave the build red. This
-# option keeps them visible-but-non-fatal until the burndown lands, at which
-# point flipping the default to ON completes conformance. Tracked in the
-# adoption PR / follow-up issue.
-option(POLY_WARNINGS_FATAL "Treat the jk-standards warning set as errors (-Werror/-WX)" OFF)
+# jk-standards warning-flags adoption, in two phases. The roster from
+# cmake/jk_warnings.cmake is applied to every first-party target; whether a
+# warning is fatal depends on the target.
+#
+# poly_engine is at full conformance (open-source-launch M002/S03, OS11): its
+# 65 warning sites were burned down and POLY_ENGINE_WARNINGS_FATAL, ON by
+# default, makes a new engine warning fail the build on the change that
+# introduced it — locally and on every CI compiler (GCC, Clang, MSVC,
+# Emscripten). Tests, tools and the plugin still carry their pre-existing
+# signedness and float-conversion sites and follow POLY_WARNINGS_FATAL, OFF
+# until their own burndown; the count is recorded in
+# docs/plans/open-source-launch/M002-decisions.md.
+option(POLY_WARNINGS_FATAL "Treat the jk-standards warning set as errors (-Werror/-WX) for every first-party target" OFF)
+option(POLY_ENGINE_WARNINGS_FATAL "Treat the jk-standards warning set as errors for poly_engine (the tests, tools and plugin follow POLY_WARNINGS_FATAL)" ON)
 
 if(ENABLE_ASAN)
     add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
@@ -100,15 +106,20 @@ if(NOT _jk_warnings_actual_sha STREQUAL JK_WARNINGS_SHA256)
 endif()
 include(cmake/jk_warnings.cmake)
 
-# Phase-1 wrapper: apply the standard's roster, then demote -Werror/-WX to
-# non-fatal until POLY_WARNINGS_FATAL is turned on. CMake exposes the just-
-# defined jk_target_warnings under the _jk_target_warnings alias when we
-# override the name, so we delegate to the vendored implementation and only add
-# the demotion flags. Flip POLY_WARNINGS_FATAL ON (or make it the default) once
-# the warning burndown is complete to reach full conformance with the standard.
+# Wrapper: apply the standard's roster, then demote -Werror/-WX to non-fatal
+# for the targets whose burndown has not landed. CMake exposes the just-defined
+# jk_target_warnings under the _jk_target_warnings alias when we override the
+# name, so we delegate to the vendored implementation and only add the demotion
+# flags. poly_engine is exempt from the demotion while
+# POLY_ENGINE_WARNINGS_FATAL is ON; everything else is exempt only under
+# POLY_WARNINGS_FATAL.
 function(jk_target_warnings target)
     _jk_target_warnings(${target})
-    if(NOT POLY_WARNINGS_FATAL AND TARGET ${target})
+    set(_jkw_fatal ${POLY_WARNINGS_FATAL})
+    if(target STREQUAL "poly_engine" AND POLY_ENGINE_WARNINGS_FATAL)
+        set(_jkw_fatal ON)
+    endif()
+    if(NOT _jkw_fatal AND TARGET ${target})
         get_target_property(_jkw_type ${target} TYPE)
         if(NOT _jkw_type STREQUAL "INTERFACE_LIBRARY")
             target_compile_options(${target} PRIVATE

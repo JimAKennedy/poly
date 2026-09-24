@@ -17,8 +17,8 @@ GrooveState resolveMacros(const GrooveState& input) {
     const auto& m = input.macros;
 
     for (int i = 0; i < out.activeLaneCount; ++i) {
-        auto& lane = out.lanes[i];
-        const auto& base = input.lanes[i];
+        auto& lane = out.lanes[static_cast<size_t>(i)];
+        const auto& base = input.lanes[static_cast<size_t>(i)];
         if (base.timeline)
             continue;
         int maxSteps = base.cycle.steps;
@@ -57,7 +57,8 @@ GrooveState resolveMacros(const GrooveState& input) {
 
         float envDepthScale = lerp(0.5f, 2.0f, m.complexity);
         for (int e = 0; e < lane.envelopeCount; ++e) {
-            lane.envelopes[e].envelope.depth = std::clamp(base.envelopes[e].envelope.depth * envDepthScale, 0.0f, 1.0f);
+            lane.envelopes[static_cast<size_t>(e)].envelope.depth =
+                std::clamp(base.envelopes[static_cast<size_t>(e)].envelope.depth * envDepthScale, 0.0f, 1.0f);
         }
 
         // --- Density: scales probability and hitCount ---
@@ -112,8 +113,8 @@ GrooveState resolveMacros(const GrooveState& input) {
 
         float tensionEnvScale = lerp(0.5f, 2.0f, m.tension);
         for (int e = 0; e < lane.envelopeCount; ++e) {
-            lane.envelopes[e].envelope.depth =
-                std::clamp(lane.envelopes[e].envelope.depth * tensionEnvScale, 0.0f, 1.0f);
+            lane.envelopes[static_cast<size_t>(e)].envelope.depth =
+                std::clamp(lane.envelopes[static_cast<size_t>(e)].envelope.depth * tensionEnvScale, 0.0f, 1.0f);
         }
 
         // --- Humanize: sets humanizeMs and widens velocity spread ---

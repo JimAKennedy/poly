@@ -51,7 +51,7 @@ inline float correlatedNoise(uint64_t seed, int laneId, int64_t absStep) {
         const float a = deterministicRand(seed, laneId, cell, channel) * 2.0f - 1.0f;
         const float b = deterministicRand(seed, laneId, cell + 1, channel) * 2.0f - 1.0f;
         const double smooth = frac * frac * (3.0 - 2.0 * frac);
-        return static_cast<float>(a + (b - a) * smooth);
+        return static_cast<float>(static_cast<double>(a) + static_cast<double>(b - a) * smooth);
     };
 
     // Halving amplitude over lengthening periods: the 1/f shape. Weights sum to

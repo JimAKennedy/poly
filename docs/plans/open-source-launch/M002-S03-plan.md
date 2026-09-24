@@ -16,15 +16,15 @@ fixed.
 - [x] Task 1 — The golden phrase test asserts what it computes (OS12)
 - [x] Task 2 — A dropped file imports the lane's own note, else everything
       (OS13)
-- [ ] Task 3 — The engine builds warning-free and fatally on every compiler,
+- [x] Task 3 — The engine builds warning-free and fatally on every compiler,
       and CI builds it that way (OS11); the slice closes
 
 ## Definition of Done
 
-- [ ] `poly_engine` builds warning-free on GCC, Clang and MSVC with
+- [x] `poly_engine` builds warning-free on GCC, Clang and MSVC with
       `POLY_WARNINGS_FATAL=ON`, and CI builds it that way
-- [ ] Every test-side warning that marked a real defect is fixed, not silenced
-- [ ] MIDI import's handling of pitch is a decision with a test naming it
+- [x] Every test-side warning that marked a real defect is fixed, not silenced
+- [x] MIDI import's handling of pitch is a decision with a test naming it
 
 ## Validation
 

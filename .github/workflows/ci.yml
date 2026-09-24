@@ -170,8 +170,11 @@ jobs:
           python-version: '3.12'
       - name: Install Ninja
         run: sudo apt-get install -y ninja-build
-      - name: Configure engine-only (no VST3 SDK)
-        run: cmake -S . -B build-engine -G Ninja -DCMAKE_BUILD_TYPE=Release -DPOLY_ENGINE_ONLY=ON
+      # OS11: the engine is warnings-as-errors. The option defaults ON, so every
+      # compiler CI uses builds it that way; it is written here so this job
+      # cannot lose the property if the default ever moves.
+      - name: Configure engine-only (no VST3 SDK, engine warnings fatal)
+        run: cmake -S . -B build-engine -G Ninja -DCMAKE_BUILD_TYPE=Release -DPOLY_ENGINE_ONLY=ON -DPOLY_ENGINE_WARNINGS_FATAL=ON
       - name: Build engine
         run: cmake --build build-engine --parallel
       - name: Run engine tests
