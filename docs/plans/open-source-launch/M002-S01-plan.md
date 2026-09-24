@@ -13,7 +13,7 @@ recorded there.
 
 - [x] Task 1 — The guard exists, is red on its fixtures, and every workflow
       declares a top-level `permissions:` block (OS06)
-- [ ] Task 2 — A superseded PR push cancels the run it replaces (OS07)
+- [x] Task 2 — A superseded PR push cancels the run it replaces (OS07)
 - [ ] Task 3 — The PR-AF checkout names a commit (OS08), and the slice closes
 
 ## Definition of Done

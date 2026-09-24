@@ -135,6 +135,17 @@ for (const f of files) {
   });
 }
 
+test('ci.yml cancels superseded pull-request runs and never a push to main', () => {
+  assert.deepEqual(
+    concurrencyShape(read('ci.yml')),
+    {
+      group: '${{ github.workflow }}-${{ github.ref }}',
+      cancel: "${{ github.event_name == 'pull_request' }}",
+    },
+    'ci.yml must declare a ref-scoped concurrency group that cancels in progress for pull requests only (OS07)',
+  );
+});
+
 test("ci.yml's top-level grant is exactly contents: read, and secrets-scan keeps its own pull-requests: write", () => {
   const ci = read('ci.yml');
   assert.deepEqual(topLevelGrant(ci), ['contents: read'], 'ci.yml must grant contents: read and nothing else at the top level');

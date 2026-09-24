@@ -13,6 +13,15 @@ on:
 permissions:
   contents: read
 
+# OS07: a newer push to the same PR cancels the run it supersedes, so the
+# macOS and Windows matrix stops burning minutes on a commit nobody will
+# merge. Pushes to main are never cancelled — every one is a candidate
+# release build. The group is ref-scoped, which is what
+# jk-standards workflow-concurrency requires of a non-global group.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   code-quality:
     runs-on: ubuntu-latest
