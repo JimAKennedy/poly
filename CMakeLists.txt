@@ -40,6 +40,11 @@ option(ENABLE_TSAN "Enable ThreadSanitizer" OFF)
 option(ENABLE_COVERAGE "Enable code coverage" OFF)
 option(BUILD_VISUAL_TESTS "Build visual regression tests" OFF)
 option(BUILD_INTERACTION_TESTS "Build headless UI interaction tests" OFF)
+# OS09 (open-source-launch M002/S02): tests/CMakeLists.txt gated its libFuzzer
+# targets on this option for months while nothing declared it, so the fuzzer
+# built on no machine. Declared here beside the sanitizer options it is run
+# with; the nightly in .github/workflows/sanitizers.yml turns it on with Clang.
+option(BUILD_FUZZ_TESTS "Build the libFuzzer targets under tests/fuzz (needs Clang with -fsanitize=fuzzer)" OFF)
 
 # Phase 1 of the jk-standards warning-flags adoption: consume the standard's
 # diagnostic roster now, but do not yet promote it to fatal. Adopting the full
@@ -64,6 +69,16 @@ endif()
 if(ENABLE_COVERAGE)
     add_compile_options(--coverage -fprofile-arcs -ftest-coverage)
     add_link_options(--coverage)
+endif()
+
+# The fuzz targets link -fsanitize=fuzzer, which instruments only their own
+# translation unit. Without this every engine .cpp is a black box to
+# libFuzzer's coverage feedback: the first seeded run reached 40 edges in the
+# MIDI reader after 780k executions. fuzzer-no-link adds the instrumentation
+# without the runtime, so poly_engine guides the search and the targets alone
+# carry main.
+if(BUILD_FUZZ_TESTS)
+    add_compile_options(-fsanitize=fuzzer-no-link)
 endif()
 
 # --- Warnings ---

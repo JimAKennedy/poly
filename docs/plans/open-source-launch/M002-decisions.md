@@ -113,3 +113,15 @@ gaps fall in bars 2 and 5 for lane 0 (12-beat phrase) and bar 3 for lane 1
   tests as a later phase; T3 lists the remaining test-side diagnostics by
   flag, inspects any that is not a conversion, and records the count here so
   the phase has a number.
+
+## 2026-09-24 — judgment call during M002/S02 task 1
+
+- **The whole fuzz build is compiled with `-fsanitize=fuzzer-no-link`.**
+  `-fsanitize=fuzzer` on a target instruments only that target's own
+  translation unit, so `poly_engine` was a black box to libFuzzer's coverage
+  feedback: the first seeded run of `fuzz_midi_reader` reached 40 edges after
+  780,780 executions, and `fuzz_state_io`'s 247 came from the header-inlined
+  readers alone. With the option-gated global flag the same 60 seconds reach
+  329 and 639 edges. Obviously right: a guided fuzzer that cannot see the code
+  it is fuzzing is a random-input loop, and the plan's premise — that the
+  targets find planted bugs — depends on the guidance.

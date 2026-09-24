@@ -14,7 +14,7 @@ pushed.
 
 ## Task status
 
-- [ ] Task 1 — Both targets and the seeder build under a declared option, and
+- [x] Task 1 — Both targets and the seeder build under a declared option, and
       each runs clean on its seeds
 - [ ] Task 2 — The nightly builds, seeds and runs them, and a crash files an
       issue
