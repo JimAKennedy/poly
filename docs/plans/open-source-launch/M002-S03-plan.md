@@ -14,7 +14,7 @@ fixed.
 ## Task status
 
 - [x] Task 1 — The golden phrase test asserts what it computes (OS12)
-- [ ] Task 2 — A dropped file imports the lane's own note, else everything
+- [x] Task 2 — A dropped file imports the lane's own note, else everything
       (OS13)
 - [ ] Task 3 — The engine builds warning-free and fatally on every compiler,
       and CI builds it that way (OS11); the slice closes
