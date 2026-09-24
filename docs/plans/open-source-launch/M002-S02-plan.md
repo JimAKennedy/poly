@@ -38,7 +38,7 @@ pushed.
 | `format` | `pre-commit run --all-files` |
 | `engine-isolation` | `cmake -S . -B build-engine -DCMAKE_BUILD_TYPE=Release -DPOLY_ENGINE_ONLY=ON && cmake --build build-engine --parallel && ctest --test-dir build-engine --output-on-failure` |
 | `sanitizers` | the five-variant command in `.jk/validations.yml` |
-| `fuzz` | `cmake -S . -B build-fuzz -G Ninja -DCMAKE_BUILD_TYPE=Debug -DPOLY_ENGINE_ONLY=ON -DENABLE_ASAN=ON -DBUILD_FUZZ_TESTS=ON -DCMAKE_C_COMPILER="${POLY_FUZZ_CC:-clang}" -DCMAKE_CXX_COMPILER="${POLY_FUZZ_CXX:-clang++}" && cmake --build build-fuzz --parallel --target fuzz_state_io fuzz_midi_reader fuzz_seed_corpus && ./build-fuzz/tests/fuzz_seed_corpus build-fuzz/corpus && ./build-fuzz/tests/fuzz_state_io -max_total_time=60 -timeout=10 build-fuzz/corpus/state_io && ./build-fuzz/tests/fuzz_midi_reader -max_total_time=60 -timeout=10 build-fuzz/corpus/midi_reader` |
+| `fuzz` | `cmake -S . -B build-fuzz -G Ninja -DCMAKE_BUILD_TYPE=Debug -DPOLY_ENGINE_ONLY=ON -DENABLE_ASAN=ON -DBUILD_FUZZ_TESTS=ON -DPOLY_ENGINE_WARNINGS_FATAL=OFF -DCMAKE_C_COMPILER="${POLY_FUZZ_CC:-clang}" -DCMAKE_CXX_COMPILER="${POLY_FUZZ_CXX:-clang++}" && cmake --build build-fuzz --parallel --target fuzz_state_io fuzz_midi_reader fuzz_seed_corpus && ./build-fuzz/tests/fuzz_seed_corpus build-fuzz/corpus && ./build-fuzz/tests/fuzz_state_io -max_total_time=60 -timeout=10 build-fuzz/corpus/state_io && ./build-fuzz/tests/fuzz_midi_reader -max_total_time=60 -timeout=10 build-fuzz/corpus/midi_reader` |
 
 On this machine `fuzz` runs with `POLY_FUZZ_CC=/opt/homebrew/opt/llvm/bin/clang
 POLY_FUZZ_CXX=/opt/homebrew/opt/llvm/bin/clang++`; Apple's `clang++` does

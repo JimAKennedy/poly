@@ -109,7 +109,7 @@ from the shape of a real input:
 
 ```bash
 cmake -S . -B build-fuzz -G Ninja -DCMAKE_BUILD_TYPE=Debug -DPOLY_ENGINE_ONLY=ON \
-  -DENABLE_ASAN=ON -DBUILD_FUZZ_TESTS=ON \
+  -DENABLE_ASAN=ON -DBUILD_FUZZ_TESTS=ON -DPOLY_ENGINE_WARNINGS_FATAL=OFF \
   -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++   # macOS: /opt/homebrew/opt/llvm/bin/clang{,++}
 cmake --build build-fuzz --target fuzz_state_io fuzz_midi_reader fuzz_seed_corpus
 ./build-fuzz/tests/fuzz_seed_corpus build-fuzz/corpus
@@ -117,8 +117,10 @@ cmake --build build-fuzz --target fuzz_state_io fuzz_midi_reader fuzz_seed_corpu
 ./build-fuzz/tests/fuzz_midi_reader -max_total_time=60 build-fuzz/corpus/midi_reader
 ```
 
-The nightly sanitizer workflow runs both for five minutes each and files an
-issue on a crash. A finding in either is a security report; see `SECURITY.md`.
+The engine's warnings-as-errors default is off in this build because it exists
+to find crashes, not to gate warnings, and Homebrew LLVM's libc++ warns about
+the macOS deployment target. The nightly sanitizer workflow runs both for five
+minutes each and files an issue on a crash. A finding in either is a security report; see `SECURITY.md`.
 
 ## Pull request requirements
 

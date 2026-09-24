@@ -113,11 +113,15 @@ sanitizers: >
 # open-source-launch M002/S02: a slice that adds fuzzers owes running them.
 # Apple's clang++ does not ship libFuzzer; on macOS point POLY_FUZZ_CC and
 # POLY_FUZZ_CXX at Homebrew's LLVM (/opt/homebrew/opt/llvm/bin/clang{,++}).
+# The engine's warnings-as-errors default is turned off here: this build exists
+# to find crashes, engine-isolation is the warnings gate, and Homebrew LLVM's
+# libc++ emits a #warning about the 10.15 deployment target that -Werror would
+# otherwise promote. The nightly on Ubuntu keeps the default.
 # pre-push-exempt: fuzz — needs an LLVM Clang with -fsanitize=fuzzer, which a
 # clean macOS checkout does not have, and two minutes of fuzzing on top of a
 # Debug ASan build. The nightly runs the same targets on every scheduled build.
 fuzz: >
-  cmake -S . -B build-fuzz -G Ninja -DCMAKE_BUILD_TYPE=Debug -DPOLY_ENGINE_ONLY=ON -DENABLE_ASAN=ON -DBUILD_FUZZ_TESTS=ON -DCMAKE_C_COMPILER="${POLY_FUZZ_CC:-clang}" -DCMAKE_CXX_COMPILER="${POLY_FUZZ_CXX:-clang++}" &&
+  cmake -S . -B build-fuzz -G Ninja -DCMAKE_BUILD_TYPE=Debug -DPOLY_ENGINE_ONLY=ON -DENABLE_ASAN=ON -DBUILD_FUZZ_TESTS=ON -DPOLY_ENGINE_WARNINGS_FATAL=OFF -DCMAKE_C_COMPILER="${POLY_FUZZ_CC:-clang}" -DCMAKE_CXX_COMPILER="${POLY_FUZZ_CXX:-clang++}" &&
   cmake --build build-fuzz --parallel --target fuzz_state_io fuzz_midi_reader fuzz_seed_corpus &&
   ./build-fuzz/tests/fuzz_seed_corpus build-fuzz/corpus &&
   ./build-fuzz/tests/fuzz_state_io -max_total_time=60 -timeout=10 build-fuzz/corpus/state_io &&

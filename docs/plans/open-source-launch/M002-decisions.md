@@ -160,3 +160,17 @@ googletest against the macOS 26 SDK (`mach/message.h` parse errors), so the
 count came from the test translation units, which compiled, not from a linked
 `poly_tests`; CI's Linux GCC is unaffected. And Apple Clang reports every
 `-Wsign-conversion` site GCC does, so the number is the same on both.
+
+## 2026-09-24 — judgment call after M002/S03 closed
+
+- **The local `fuzz` token turns the engine's fatal option off.** Re-running
+  every token on the final head, the fuzz build failed under Homebrew LLVM
+  22: its libc++ emits `#warning "The selected platform is no longer
+  supported by libc++."` for the 10.15 deployment target, and
+  `POLY_ENGINE_WARNINGS_FATAL` now promotes it. It is a system-header notice,
+  not a Poly warning, and appears only with Homebrew's Clang on macOS. The
+  token and the `CONTRIBUTING.md` snippet pass
+  `-DPOLY_ENGINE_WARNINGS_FATAL=OFF` with the reason: that build exists to
+  find crashes, `engine-isolation` is the warnings gate, and the nightly on
+  Ubuntu keeps the default. Obviously right: the alternative was a
+  `-Wno-#warnings` that would hide a real one.
