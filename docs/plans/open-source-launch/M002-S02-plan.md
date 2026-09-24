@@ -16,7 +16,7 @@ pushed.
 
 - [x] Task 1 — Both targets and the seeder build under a declared option, and
       each runs clean on its seeds
-- [ ] Task 2 — The nightly builds, seeds and runs them, and a crash files an
+- [x] Task 2 — The nightly builds, seeds and runs them, and a crash files an
       issue
 - [ ] Task 3 — Each target finds a planted bug, the option is documented, and
       the slice closes (OS09, OS10)
