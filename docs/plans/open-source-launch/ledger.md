@@ -119,7 +119,7 @@ execute no unpinned third-party code, fuzz the inputs strangers control, and fai
 on a warning.
 
 **Branch:** milestone/M002-ci-trust
-**Status:** in-progress
+**Status:** done
 **Demo:** Every workflow declares top-level permissions, a superseded PR push
 cancels its predecessor, the nightly fuzzes both untrusted inputs, and a new
 engine warning fails CI.
