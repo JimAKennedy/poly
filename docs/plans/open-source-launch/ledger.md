@@ -119,16 +119,17 @@ execute no unpinned third-party code, fuzz the inputs strangers control, and fai
 on a warning.
 
 **Branch:** milestone/M002-ci-trust
-**Status:** planned
+**Status:** in-progress
 **Demo:** Every workflow declares top-level permissions, a superseded PR push
 cancels its predecessor, the nightly fuzzes both untrusted inputs, and a new
 engine warning fails CI.
 
 ### Slice M002/S01 — Workflows hold least privilege
 
+**Plan:** M002-S01-plan.md
 **Validation:** format, guards
 **Evidence:** evidence/M002-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
@@ -148,9 +149,10 @@ engine warning fails CI.
 
 ### Slice M002/S02 — The untrusted inputs are fuzzed
 
-**Validation:** format, engine-isolation, sanitizers
+**Plan:** M002-S02-plan.md
+**Validation:** format, engine-isolation, sanitizers, fuzz
 **Evidence:** evidence/M002-S02.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
@@ -169,9 +171,10 @@ engine warning fails CI.
 
 ### Slice M002/S03 — A warning means something
 
+**Plan:** M002-S03-plan.md
 **Validation:** format, engine-isolation, unit
 **Evidence:** evidence/M002-S03.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
