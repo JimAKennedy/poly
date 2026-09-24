@@ -10,7 +10,7 @@
 //   - unwiring the release-publish job (permissions, gh-release, notes body).
 //
 // It ALSO proves scripts/gen-release-notes.mjs emits a non-empty body for the
-// shipping CHANGELOG sections (0.1.0 / Unreleased), because that step runs at
+// shipping CHANGELOG sections (0.1.0 / the version CMakeLists.txt declares), because that step runs at
 // tag time and would otherwise fail the real Release.
 //
 // Node has no built-in YAML parser and this repo carries no YAML dependency, so
@@ -198,6 +198,107 @@ test('pluginval step PRECEDES packaging on both legs (validate before we ship)',
   assert.ok(pvWin < pkgWin, 'Windows pluginval must run BEFORE packaging (else unvalidated zips ship)');
 });
 
+// --- open-source-launch M001/S02 (OS03): the release tests what it ships.
+// The macOS universal binary is built nowhere else — ci.yml builds arm64 only —
+// so the one configuration that ships was the one whose tests never ran.
+// ctest runs on BOTH legs after Build and BEFORE pluginval and packaging, so a
+// failing test aborts the leg before any zip exists. ---
+test('ctest runs on both legs after Build and before pluginval and packaging (OS03)', () => {
+  const build = stepIndex(wf, 'Build');
+  const tests = stepIndex(wf, 'Run tests');
+  assert.ok(tests >= 0, 'missing "Run tests" step — the release must run ctest on the configuration it packages');
+  assert.ok(build >= 0 && build < tests, '"Run tests" must come after Build');
+  const pvMac = stepIndex(wf, 'Run pluginval \\(macOS\\)');
+  const pvWin = stepIndex(wf, 'Run pluginval \\(Windows\\)');
+  assert.ok(tests < pvMac && tests < pvWin, '"Run tests" must run before pluginval on both legs');
+  const stepBody = wf.slice(tests, Math.min(pvMac, pvWin));
+  assert.match(
+    stepBody,
+    /ctest --test-dir build --build-config Release --output-on-failure/,
+    '"Run tests" must invoke ctest on build/ with --build-config Release (the Visual Studio generator needs it)',
+  );
+  assert.doesNotMatch(stepBody, /\n\s+if:/, '"Run tests" must be unconditional — it runs on both legs');
+});
+
+// --- open-source-launch M001/S02 (OS04): a downloader can verify what they
+// got. The release job attaches SHA256SUMS over every zip and an
+// actions/attest-build-provenance attestation per zip, with exactly the
+// permissions the action documents (id-token + attestations) beside the
+// contents: write it already held. ---
+const ATTEST_ACTION = 'actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8'; // v4.2.2
+
+test('release job holds the three grants provenance needs, and no more (OS04)', () => {
+  const rel = wf.slice(wf.indexOf('\n  release:'));
+  const perms = rel.match(/permissions:\s*\n((?:\s+[a-z-]+:\s*\w+\n)+)/);
+  assert.ok(perms, 'release job has no permissions block');
+  const grants = Object.fromEntries(
+    [...perms[1].matchAll(/^\s+([a-z-]+):\s*(\w+)\s*$/gm)].map((m) => [m[1], m[2]]),
+  );
+  assert.deepEqual(
+    grants,
+    { contents: 'write', 'id-token': 'write', attestations: 'write' },
+    'release job grants must be exactly contents/id-token/attestations: write — id-token and attestations are what attest-build-provenance needs; anything else is unexplained privilege',
+  );
+});
+
+test('release publishes SHA256SUMS over every zip (OS04)', () => {
+  const rel = wf.slice(wf.indexOf('\n  release:'));
+  assert.match(rel, /sha256sum[^\n]*\*\.zip[^\n]*>\s*SHA256SUMS/, 'release job must write SHA256SUMS with sha256sum over the zips');
+  assert.match(rel, /files:\s*\|?\s*\n?[^\n]*dist\/\*\.zip/, 'gh-release must still ship the zips');
+  assert.match(rel, /dist\/SHA256SUMS/, 'gh-release files must include dist/SHA256SUMS');
+  const sums = stepIndex(rel, 'Write checksums');
+  const publish = stepIndex(rel, 'Publish GitHub Release');
+  assert.ok(sums >= 0 && publish >= 0 && sums < publish, 'checksums must be written before the Release is published');
+});
+
+test('release attests build provenance for every zip with the pinned action (OS04)', () => {
+  const rel = wf.slice(wf.indexOf('\n  release:'));
+  assert.ok(rel.includes(`uses: ${ATTEST_ACTION}`), `release job must use ${ATTEST_ACTION} (SHA-pinned like every other action)`);
+  assert.match(rel, /subject-path:\s*['"]?dist\/\*\.zip/, 'attestation subject-path must cover dist/*.zip');
+  const attest = stepIndex(rel, 'Attest build provenance');
+  const publish = stepIndex(rel, 'Publish GitHub Release');
+  assert.ok(attest >= 0 && attest < publish, 'attestation must precede publishing');
+});
+
+// --- open-source-launch M001/S02 (OS05): pluginval is executed, so the bytes
+// executed are verified. Every `curl … pluginval.zip` in BOTH workflows is
+// followed, before any unzip, by a SHA-256 check against the digest pinned
+// for that platform. Every action in the tree is SHA-pinned; this closes the
+// one downloaded binary that was not. Digests computed from two fresh
+// downloads of the v1.0.4 release assets on 2026-09-23. ---
+// The tool is per platform, and the first push proved why: macOS has the
+// Perl `shasum` and not coreutils' `sha256sum`; the Windows runner's git-bash
+// has `sha256sum` and not `shasum` (PR #339's pluginval-windows job exited 127
+// on it). Each asset is checked with the tool its runner actually has.
+const PLUGINVAL_SHA256 = {
+  pluginval_macOS: '3c4c533bda0c5059eea3ddaea752d757ee2025041f0f47e6bcb0e87f6082b29f',
+  pluginval_Windows: 'c08e61ce3b96db41636f8ec7e76f4c7e2c13ebdac7fa1b5a1f52b4f32ec715ab',
+};
+const PLUGINVAL_CHECK_TOOL = {
+  pluginval_macOS: 'shasum -a 256 -c',
+  pluginval_Windows: 'sha256sum -c',
+};
+const CI_PATH = resolve(REPO, '.github', 'workflows', 'ci.yml');
+
+test('every pluginval download in every workflow is verified against the pinned digest before it runs (OS05)', () => {
+  const problems = [];
+  let sites = 0;
+  for (const [label, src] of [['release.yml', wf], ['ci.yml', readFileSync(CI_PATH, 'utf8')]]) {
+    for (const m of src.matchAll(/^(\s*)curl [^\n]*pluginval\.zip https:[^\n]*\/(pluginval_(?:macOS|Windows))\.zip[^\n]*\n([\s\S]*?)^\s*unzip -q pluginval\.zip/gm)) {
+      sites += 1;
+      const asset = m[2];
+      const between = m[3];
+      const want = PLUGINVAL_SHA256[asset];
+      const tool = PLUGINVAL_CHECK_TOOL[asset];
+      const check = between.match(new RegExp(`echo "([0-9a-f]{64})  pluginval\\.zip" \\| ${tool}(?=\\s|$)`, 'm'));
+      if (!check) problems.push(`${label}: ${asset} is unzipped with no "${tool}" between curl and unzip (the tool that runner has)`);
+      else if (check[1] !== want) problems.push(`${label}: ${asset} is checked against ${check[1].slice(0, 12)}…, expected ${want.slice(0, 12)}…`);
+    }
+  }
+  assert.equal(sites, 4, `expected 4 pluginval download sites across release.yml and ci.yml, found ${sites}`);
+  assert.deepEqual(problems, [], 'unverified or mis-pinned pluginval downloads');
+});
+
 // --- S03 gate: macOS Developer ID codesign + Apple notarization + stapling.
 // These steps run AFTER pluginval and BEFORE packaging, and each is gated on its
 // signing secrets being non-empty so absent secrets SKIP (never fail) the step
@@ -342,9 +443,22 @@ test('gen-release-notes emits a non-empty body for shipping version 0.1.0', () =
   assert.ok(out.trim().length > 0, 'gen-release-notes produced an empty body for 0.1.0');
 });
 
-test('gen-release-notes emits a non-empty body for Unreleased', () => {
-  const out = execFileSync('node', [GEN, 'Unreleased'], { encoding: 'utf8' });
-  assert.ok(out.trim().length > 0, 'gen-release-notes produced an empty body for Unreleased');
+// open-source-launch M001/S01 (OS02): the section the next tag will publish
+// must exist and describe the current tree. The tag is named from
+// project(poly VERSION …), so the test reads that and asks the generator for
+// it — tagging a version with no section fails loud at tag time (test below),
+// but that is one push too late; this catches it on every guards run.
+test('gen-release-notes emits a non-empty body for the version CMakeLists.txt declares', () => {
+  const cmake = readFileSync(resolve(REPO, 'CMakeLists.txt'), 'utf8');
+  const m = cmake.match(/project\s*\(\s*poly[^)]*\bVERSION\s+(\d+\.\d+\.\d+)/s);
+  assert.ok(m, 'CMakeLists.txt has no project(poly … VERSION x.y.z)');
+  const version = m[1];
+  const out = execFileSync('node', [GEN, version], { encoding: 'utf8' });
+  assert.ok(
+    out.trim().length > 0,
+    `gen-release-notes produced an empty body for ${version} — CHANGELOG.md has no "## [${version}]" section, ` +
+      'so a tag of this version would publish nothing or fail',
+  );
 });
 
 test('gen-release-notes fails loud (exit 1) on a missing CHANGELOG section', () => {

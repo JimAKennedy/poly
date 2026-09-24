@@ -54,6 +54,7 @@ run_guard "site-assets"                bash scripts/check-site-assets.sh
 run_guard "bridge-schema-coverage"     node scripts/check-bridge-schema-coverage.mjs
 run_guard "ascii-diagrams"             node scripts/check-ascii-diagrams.mjs
 run_guard "ledger-row-ids"            node scripts/check-ledger-row-ids.mjs
+run_guard "version-source"            node --test scripts/check-version-source.mjs
 
 # M007 S02 found this one: check-release-workflow.mjs locks the release
 # workflow's shape in 27 tests, and no workflow runs it — release.yml names it

@@ -54,6 +54,11 @@ actually fails on regressions.
   hardcoded, plus `ARCHITECTURE.md`, which lives outside every declared root.
   Escape hatch: `<!-- boxdraw-ok: <reason> -->` exempts a file, an empty reason
   fails rather than passes, and exempted files are counted in the summary.
+- `check-version-source.mjs` — the shipped version is typed once, in
+  `project(poly VERSION …)`: `plugids.h` takes it from the SDK's generated
+  `projectversion.h`, and the two private npm manifests carry no version at
+  all. Five strings disagreed before open-source-launch M001, and the one a DAW
+  displayed was the wrong one.
 - `check-ledger-row-ids.mjs` — row IDs are unique within each delivery ledger.
   jk-standards' `ledger` check validates structure and statuses but not ID
   uniqueness, which let guide-parity M004 add a `GP11` while M005/S01 already

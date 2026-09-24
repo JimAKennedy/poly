@@ -54,7 +54,7 @@ which documents a contributor should read gets the benefit at none of the cost.
 the Release publishes are the same thing, and the release tests what it ships.
 
 **Branch:** milestone/M001-release-honesty
-**Status:** planned
+**Status:** done
 **Demo:** A dry-run of `release.yml` on a scratch tag builds, runs `ctest` on the
 universal binary, and publishes zips whose plugin reports the tag's version,
 beside a `SHA256SUMS` file and a provenance attestation.
@@ -66,49 +66,51 @@ notes, and every finding will be one this milestone could have prevented.
 
 ### Slice M001/S01 — One version, from one place
 
+**Plan:** M001-S01-plan.md
 **Validation:** format, unit, guards, doc-discipline
 **Evidence:** evidence/M001-S01.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] `project(poly VERSION …)` is the only hand-edited version in the tree that
+- [x] `project(poly VERSION …)` is the only hand-edited version in the tree that
       reaches a shipped artifact
-- [ ] The plugin's factory class info reports that version, proved by changing
+- [x] The plugin's factory class info reports that version, proved by changing
       it and reading the new value back from a built bundle
-- [ ] A check fails if a hand-typed version string returns to `plugids.h`, seen
+- [x] A check fails if a hand-typed version string returns to `plugids.h`, seen
       red before being trusted
-- [ ] The first version number is decided and recorded in this milestone's
+- [x] The first version number is decided and recorded in this milestone's
       decisions file, and the CHANGELOG section `gen-release-notes.mjs` will
       extract for it describes the current tree
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| OS01 | Five version strings disagree: CMake `0.1.0`, `plugids.h:15` `kPolyVersionString` **`1.0.0`** (what a DAW displays), `webui/package.json` `0.1.0`, `site/package.json` `0.0.1`, and the AU plist's `0xFFFFFFFF` development sentinel | `defect` | `CMakeLists.txt`, `plugin/CMakeLists.txt`, `plugin/source/plugids.h` | `kPolyVersionString` is generated from `PROJECT_VERSION` via `configure_file`; a built bundle's class info reports the CMake version; the two npm manifests are marked private-and-unversioned or read from the same source. The AU sentinel is OS17's, because it only matters if the AU ships | `open` |
-| OS02 | `CHANGELOG.md:102` holds `## [0.1.0] - 2026-06-27`, headed "Initial open-source release", but nothing was ever tagged from it. `release.yml` extracts the section matching the tag, so tagging `v0.1.0` today publishes that 397-word section and none of the 47 `[Unreleased]` entries | `defect` | `CHANGELOG.md`, `docs/plans/open-source-launch/M001-decisions.md` | The owner's decision on the first version number is recorded; `node scripts/gen-release-notes.mjs <version>` prints a section describing the current tree. M006/S01 names its tag from this decision rather than taking its own | `open` |
+| OS01 | Five version strings disagree: CMake `0.1.0`, `plugids.h:15` `kPolyVersionString` **`1.0.0`** (what a DAW displays), `webui/package.json` `0.1.0`, `site/package.json` `0.0.1`, and the AU plist's `0xFFFFFFFF` development sentinel | `defect` | `CMakeLists.txt`, `plugin/CMakeLists.txt`, `plugin/source/plugids.h` | `kPolyVersionString` is generated from `PROJECT_VERSION` via `configure_file`; a built bundle's class info reports the CMake version; the two npm manifests are marked private-and-unversioned or read from the same source. The AU sentinel is OS17's, because it only matters if the AU ships | `done` |
+| OS02 | `CHANGELOG.md:102` holds `## [0.1.0] - 2026-06-27`, headed "Initial open-source release", but nothing was ever tagged from it. `release.yml` extracts the section matching the tag, so tagging `v0.1.0` today publishes that 397-word section and none of the 47 `[Unreleased]` entries | `defect` | `CHANGELOG.md`, `docs/plans/open-source-launch/M001-decisions.md` | The owner's decision on the first version number is recorded; `node scripts/gen-release-notes.mjs <version>` prints a section describing the current tree. M006/S01 names its tag from this decision rather than taking its own | `done` |
 
 ### Slice M001/S02 — The release proves what it ships
 
+**Plan:** M001-S02-plan.md
 **Validation:** format, guards
 **Evidence:** evidence/M001-S02.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The release build runs the unit and golden tests on the exact
+- [x] The release build runs the unit and golden tests on the exact
       configuration it packages, before packaging
-- [ ] Every Release carries a `SHA256SUMS` asset and a build-provenance
+- [x] Every Release carries a `SHA256SUMS` asset and a build-provenance
       attestation for each zip
-- [ ] Every pluginval download in every workflow is verified against a pinned
+- [x] Every pluginval download in every workflow is verified against a pinned
       digest before it runs
-- [ ] `scripts/check-release-workflow.mjs` asserts all three, and each new
+- [x] `scripts/check-release-workflow.mjs` asserts all three, and each new
       assertion is seen red by removing what it guards
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| OS03 | `release.yml` runs build → validator → pluginval → sign → package and never `ctest`. The macOS **universal** binary is built nowhere else — `ci.yml` builds arm64 only — so the one configuration that ships is the one whose tests never run | `pipeline` | `.github/workflows/release.yml`, `scripts/check-release-workflow.mjs` | A `ctest` step runs after Build and before packaging on both legs; the contract check fails when it is removed or moved after packaging | `open` |
-| OS04 | A Release publishes zips and nothing a downloader can verify them against — no checksums, no provenance | `pipeline` | `.github/workflows/release.yml`, `scripts/check-release-workflow.mjs` | The publish job attaches `SHA256SUMS`; each zip carries an `actions/attest-build-provenance` attestation that `gh attestation verify` accepts; the contract check asserts both | `open` |
-| OS05 | pluginval is fetched with `curl` and executed unverified in four places: `ci.yml:434`, `:480`, `release.yml:98`, `:118`. Every action in the tree is SHA-pinned; the binary those jobs execute is not | `tooling` | `.github/workflows/ci.yml`, `.github/workflows/release.yml` | Each download is followed by a `sha256sum -c` (or `shasum -a 256 -c`) against a digest pinned beside the version; a tampered digest fails the step | `open` |
+| OS03 | `release.yml` runs build → validator → pluginval → sign → package and never `ctest`. The macOS **universal** binary is built nowhere else — `ci.yml` builds arm64 only — so the one configuration that ships is the one whose tests never run | `pipeline` | `.github/workflows/release.yml`, `scripts/check-release-workflow.mjs` | A `ctest` step runs after Build and before packaging on both legs; the contract check fails when it is removed or moved after packaging | `done` |
+| OS04 | A Release publishes zips and nothing a downloader can verify them against — no checksums, no provenance | `pipeline` | `.github/workflows/release.yml`, `scripts/check-release-workflow.mjs` | The publish job attaches `SHA256SUMS`; each zip carries an `actions/attest-build-provenance` attestation that `gh attestation verify` accepts; the contract check asserts both | `done` |
+| OS05 | pluginval is fetched with `curl` and executed unverified in four places: `ci.yml:434`, `:480`, `release.yml:98`, `:118`. Every action in the tree is SHA-pinned; the binary those jobs execute is not | `tooling` | `.github/workflows/ci.yml`, `.github/workflows/release.yml` | Each download is followed by a `sha256sum -c` (or `shasum -a 256 -c`) against a digest pinned beside the version; a tampered digest fails the step | `done` |
 
 ## Milestone M002 — CI a stranger can trust
 

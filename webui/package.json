@@ -1,8 +1,7 @@
 {
   "name": "poly-webui",
   "private": true,
-  "version": "0.1.0",
-  "description": "Poly plugin web UI — host-agnostic bundle + Playwright tests",
+  "description": "Poly plugin web UI \u2014 host-agnostic bundle + Playwright tests",
   "scripts": {
     "test": "playwright test"
   },
