@@ -77,3 +77,13 @@ and `c08e61ce3b96db41636f8ec7e76f4c7e2c13ebdac7fa1b5a1f52b4f32ec715ab`
   `poly_plugin`, so the plugin's include directories never reach them. A
   one-line addition beside the existing include, with the reason in a comment,
   rather than restructuring the tests to link the plugin.
+
+## 2026-09-24 — judgment call after the first push of M001
+
+- **The digest check uses `sha256sum` on Windows and `shasum` on macOS.** The
+  plan assumed one tool for both because every site runs under bash; the
+  Windows runner's git-bash has coreutils' `sha256sum` and not the Perl
+  `shasum`, and PR #339's pluginval-windows job exited 127 on it. Obviously
+  right: each site uses the tool its runner has, and the contract test pins
+  which tool goes with which asset. The owner authorised the re-ship after
+  the failure was reported.

@@ -262,13 +262,21 @@ test('release attests build provenance for every zip with the pinned action (OS0
 
 // --- open-source-launch M001/S02 (OS05): pluginval is executed, so the bytes
 // executed are verified. Every `curl … pluginval.zip` in BOTH workflows is
-// followed, before any unzip, by `shasum -a 256 -c` against the digest pinned
+// followed, before any unzip, by a SHA-256 check against the digest pinned
 // for that platform. Every action in the tree is SHA-pinned; this closes the
 // one downloaded binary that was not. Digests computed from two fresh
 // downloads of the v1.0.4 release assets on 2026-09-23. ---
+// The tool is per platform, and the first push proved why: macOS has the
+// Perl `shasum` and not coreutils' `sha256sum`; the Windows runner's git-bash
+// has `sha256sum` and not `shasum` (PR #339's pluginval-windows job exited 127
+// on it). Each asset is checked with the tool its runner actually has.
 const PLUGINVAL_SHA256 = {
   pluginval_macOS: '3c4c533bda0c5059eea3ddaea752d757ee2025041f0f47e6bcb0e87f6082b29f',
   pluginval_Windows: 'c08e61ce3b96db41636f8ec7e76f4c7e2c13ebdac7fa1b5a1f52b4f32ec715ab',
+};
+const PLUGINVAL_CHECK_TOOL = {
+  pluginval_macOS: 'shasum -a 256 -c',
+  pluginval_Windows: 'sha256sum -c',
 };
 const CI_PATH = resolve(REPO, '.github', 'workflows', 'ci.yml');
 
@@ -281,8 +289,9 @@ test('every pluginval download in every workflow is verified against the pinned 
       const asset = m[2];
       const between = m[3];
       const want = PLUGINVAL_SHA256[asset];
-      const check = between.match(/echo "([0-9a-f]{64})  pluginval\.zip" \| shasum -a 256 -c/);
-      if (!check) problems.push(`${label}: ${asset} is unzipped with no shasum -a 256 -c between curl and unzip`);
+      const tool = PLUGINVAL_CHECK_TOOL[asset];
+      const check = between.match(new RegExp(`echo "([0-9a-f]{64})  pluginval\\.zip" \\| ${tool}(?=\\s|$)`, 'm'));
+      if (!check) problems.push(`${label}: ${asset} is unzipped with no "${tool}" between curl and unzip (the tool that runner has)`);
       else if (check[1] !== want) problems.push(`${label}: ${asset} is checked against ${check[1].slice(0, 12)}…, expected ${want.slice(0, 12)}…`);
     }
   }
