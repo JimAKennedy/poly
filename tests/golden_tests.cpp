@@ -540,8 +540,17 @@ TEST(GoldenPhrase, OffsetPhraseBehavior) {
     lane1.phraseLength = 12.0f;
     lane1.phraseGap = 4.0f;
 
-    // Lane 0: 12-beat cycle (8+4), Lane 1: 16-beat cycle (12+4)
-    // Over 24 PPQ (6 bars), their gaps should not always overlap
+    // Lane 0: 12-beat phrase (8 play + 4 gap), lane 1: 16-beat phrase (12 + 4).
+    // Over 24 PPQ (6 bars of 4), bar by bar:
+    //   bar 0  0-4   both play
+    //   bar 1  4-8   both play
+    //   bar 2  8-12  lane 0 rests, lane 1 plays
+    //   bar 3  12-16 lane 0 plays, lane 1 rests
+    //   bar 4  16-20 both play
+    //   bar 5  20-24 lane 0 rests, lane 1 plays
+    // So the two rests never share a bar, and no bar is silent on both lanes.
+    // The lengths are coprime enough that the gaps only coincide at 48 beats,
+    // outside the window.
     auto events = renderSorted(engine, state, 0.0, 24.0, 0.5);
 
     bool hasLane0 = false, hasLane1 = false;
@@ -575,6 +584,10 @@ TEST(GoldenPhrase, OffsetPhraseBehavior) {
     EXPECT_TRUE(hasLane1) << "Lane 1 should produce notes";
     EXPECT_TRUE(oneSilentOtherPlaying)
         << "Different phrase lengths should create bars where one lane rests while the other plays";
+    // OS12: this flag was computed for months and never asserted. For this patch
+    // the two rests land in different bars (table above), so a bar with both
+    // lanes silent means the phrase phase drifted or the gaps aligned.
+    EXPECT_FALSE(bothSilentSomewhere) << "Offset phrase lengths must never leave a whole bar silent on both lanes";
 }
 
 // --- Test 19: Phrase with transport jump into gap region ---

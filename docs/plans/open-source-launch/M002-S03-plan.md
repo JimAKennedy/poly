@@ -13,7 +13,7 @@ fixed.
 
 ## Task status
 
-- [ ] Task 1 — The golden phrase test asserts what it computes (OS12)
+- [x] Task 1 — The golden phrase test asserts what it computes (OS12)
 - [ ] Task 2 — A dropped file imports the lane's own note, else everything
       (OS13)
 - [ ] Task 3 — The engine builds warning-free and fatally on every compiler,
