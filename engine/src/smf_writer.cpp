@@ -6,6 +6,19 @@
 #include <cmath>
 #include <set>
 
+// GCC 15.2 at -O2 reports -Wfree-nonheap-object from inside libstdc++'s
+// vector reallocation when writeVLQToVec's 4-byte stack temporary is appended
+// to a track (push_back loop and range insert alike): "operator delete called
+// on pointer '<unknown>' with nonzero offset". The pointer freed is the
+// vector's old heap block, never the temporary; Clang and MSVC report nothing.
+// Suppressed for GCC only, file-wide because the diagnostic is attributed to
+// whichever caller the loop is inlined into (open-source-launch M002/S03,
+// OS11). Remove when a GCC that no longer fires it is the floor.
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wfree-nonheap-object"
+#endif
+
 namespace poly {
 
 namespace {
@@ -303,3 +316,7 @@ std::vector<uint8_t> writeMultiTrackSMF(const NoteEvent* events, size_t count, d
 }
 
 } // namespace poly
+
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif

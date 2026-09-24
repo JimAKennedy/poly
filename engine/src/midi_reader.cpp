@@ -96,7 +96,13 @@ MidiParseResult parseSMF(const uint8_t* data, size_t size) {
         return result;
     const double ticksPerQuarter = static_cast<double>(division);
 
-    std::vector<double> onsetTicks;
+    // Every note-on across every track, with its note number; sorted by tick
+    // once all tracks are read.
+    struct Onset {
+        double tick;
+        uint8_t note;
+    };
+    std::vector<Onset> onsets;
     double maxTick = 0.0;
     bool tempoFound = false;
     double tempoBpm = 120.0;
@@ -230,7 +236,7 @@ MidiParseResult parseSMF(const uint8_t* data, size_t size) {
                 // Note-on with non-zero velocity is a real onset. Velocity 0 is a
                 // note-off per convention and carries no onset.
                 if (hi == 0x90 && d2 > 0)
-                    onsetTicks.push_back(static_cast<double>(absTick));
+                    onsets.push_back(Onset{static_cast<double>(absTick), d1});
             }
         }
 
@@ -246,12 +252,15 @@ MidiParseResult parseSMF(const uint8_t* data, size_t size) {
     if (!sawTrack)
         return result;
 
-    std::sort(onsetTicks.begin(), onsetTicks.end());
+    std::stable_sort(onsets.begin(), onsets.end(), [](const Onset& a, const Onset& b) { return a.tick < b.tick; });
 
     result.valid = true;
-    result.onsetsPpq.reserve(onsetTicks.size());
-    for (double t : onsetTicks)
-        result.onsetsPpq.push_back(t / ticksPerQuarter);
+    result.onsetsPpq.reserve(onsets.size());
+    result.onsetNotes.reserve(onsets.size());
+    for (const Onset& o : onsets) {
+        result.onsetsPpq.push_back(o.tick / ticksPerQuarter);
+        result.onsetNotes.push_back(o.note);
+    }
     result.loopLengthPpq = maxTick / ticksPerQuarter;
     result.tempoBpm = tempoBpm;
     return result;
@@ -295,7 +304,20 @@ bool importMidiToLane(const uint8_t* data, size_t size, LaneConfig& lane) {
     const MidiParseResult parsed = parseSMF(data, size);
     if (!parsed.valid)
         return false;
-    const FitResult fit = fitEuclidean(parsed.onsetsPpq, parsed.loopLengthPpq, parsed.tempoBpm);
+
+    // OS13: the lane's own note when the file has any, else everything. A
+    // multi-instrument loop dropped on the kick lane imports the kick; a
+    // single-instrument loop on some other pitch still imports.
+    std::vector<double> chosen;
+    if (lane.midiNote >= 0 && lane.midiNote <= 127) {
+        const auto own = static_cast<uint8_t>(lane.midiNote);
+        for (size_t i = 0; i < parsed.onsetNotes.size(); ++i) {
+            if (parsed.onsetNotes[i] == own)
+                chosen.push_back(parsed.onsetsPpq[i]);
+        }
+    }
+    const std::vector<double>& onsets = chosen.empty() ? parsed.onsetsPpq : chosen;
+    const FitResult fit = fitEuclidean(onsets, parsed.loopLengthPpq, parsed.tempoBpm);
     if (!fit.valid)
         return false;
     applyFitToLane(fit, lane);

@@ -81,7 +81,7 @@ private:
     void resolveAbsolutePosition(const SceneChainConfig& config, int64_t totalBarsElapsed) {
         int totalCycleBars = 0;
         for (int i = 0; i < config.entryCount; ++i)
-            totalCycleBars += std::max(1, config.entries[i].bars);
+            totalCycleBars += std::max(1, config.entries[static_cast<size_t>(i)].bars);
 
         switch (config.mode) {
         case ChainMode::Loop: {
@@ -94,7 +94,7 @@ private:
         case ChainMode::OneShot: {
             if (totalBarsElapsed >= totalCycleBars) {
                 currentIndex = config.entryCount - 1;
-                barsInCurrentEntry = std::max(1, config.entries[currentIndex].bars) - 1;
+                barsInCurrentEntry = std::max(1, config.entries[static_cast<size_t>(currentIndex)].bars) - 1;
             } else {
                 findEntryAtPosition(config, totalBarsElapsed);
             }
@@ -107,7 +107,7 @@ private:
                 break;
             }
             int pingPongPeriod = totalCycleBars * 2 - std::max(1, config.entries[0].bars) -
-                                 std::max(1, config.entries[config.entryCount - 1].bars);
+                                 std::max(1, config.entries[static_cast<size_t>(config.entryCount - 1)].bars);
             if (pingPongPeriod <= 0) {
                 currentIndex = 0;
                 barsInCurrentEntry = 0;
@@ -123,7 +123,7 @@ private:
                 int64_t reversePos = pos - totalCycleBars;
                 int64_t cumulative = 0;
                 for (int i = config.entryCount - 2; i >= 1; --i) {
-                    int entryBars = std::max(1, config.entries[i].bars);
+                    int entryBars = std::max(1, config.entries[static_cast<size_t>(i)].bars);
                     if (cumulative + entryBars > reversePos) {
                         currentIndex = i;
                         barsInCurrentEntry = static_cast<int>(reversePos - cumulative);
@@ -144,7 +144,7 @@ private:
     void findEntryAtPosition(const SceneChainConfig& config, int64_t posInCycle) {
         int64_t cumulative = 0;
         for (int i = 0; i < config.entryCount; ++i) {
-            int entryBars = std::max(1, config.entries[i].bars);
+            int entryBars = std::max(1, config.entries[static_cast<size_t>(i)].bars);
             if (cumulative + entryBars > posInCycle) {
                 currentIndex = i;
                 barsInCurrentEntry = static_cast<int>(posInCycle - cumulative);

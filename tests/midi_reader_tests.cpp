@@ -10,6 +10,7 @@
 #include <array>
 #include <cstdint>
 #include <initializer_list>
+#include <utility>
 #include <vector>
 
 #include <gtest/gtest.h>
@@ -232,6 +233,91 @@ TEST(MidiReader, MergesFormat1Tracks) {
     EXPECT_DOUBLE_EQ(r.onsetsPpq[1], 0.5);
     EXPECT_DOUBLE_EQ(r.onsetsPpq[2], 1.0);
     EXPECT_DOUBLE_EQ(r.onsetsPpq[3], 1.5);
+}
+
+// --- OS13: which note-ons a drop imports (open-source-launch M002/S03) ---
+
+namespace {
+
+// One cycle of E(3,8) at pitch 36 merged with one cycle of E(5,8) at pitch 38,
+// both at subdivision 16 — a kick and a snare in one file, as a drum loop
+// exported from any DAW would be. Each pitch's last note is sustained to the
+// cycle end, as euclideanEvents does, so the file's loop length is one cycle.
+std::vector<poly::NoteEvent> twoInstrumentEvents() {
+    auto events = euclideanEvents(3, 8, 0, 16);
+    auto snare = euclideanEvents(5, 8, 0, 16);
+    for (auto& e : snare) {
+        e.pitch = 38;
+        e.laneIndex = 1;
+    }
+    events.insert(events.end(), snare.begin(), snare.end());
+    return events;
+}
+
+} // namespace
+
+TEST(MidiReader, RecordsNoteNumberPerOnset) {
+    const auto events = twoInstrumentEvents();
+    const auto bytes = poly::writeSMF(events.data(), events.size(), 120.0);
+    const poly::MidiParseResult r = poly::parseSMF(bytes);
+    ASSERT_TRUE(r.valid);
+    ASSERT_EQ(r.onsetNotes.size(), r.onsetsPpq.size());
+    ASSERT_EQ(r.onsetsPpq.size(), events.size());
+
+    // The (ppq, note) multiset of the parse equals that of the events written:
+    // at the shared positions 0, 3 and 6 both pitches sound, so a per-index
+    // comparison would be ambiguous and a multiset one is exact.
+    std::vector<std::pair<double, int>> written;
+    for (const auto& e : events)
+        written.emplace_back(e.ppqPosition, static_cast<int>(e.pitch));
+    std::vector<std::pair<double, int>> parsed;
+    for (size_t i = 0; i < r.onsetsPpq.size(); ++i)
+        parsed.emplace_back(r.onsetsPpq[i], static_cast<int>(r.onsetNotes[i]));
+    std::sort(written.begin(), written.end());
+    std::sort(parsed.begin(), parsed.end());
+    EXPECT_EQ(parsed, written);
+
+    int kicks = 0, snares = 0;
+    for (uint8_t n : r.onsetNotes) {
+        if (n == 36)
+            ++kicks;
+        if (n == 38)
+            ++snares;
+    }
+    EXPECT_EQ(kicks, 3);
+    EXPECT_EQ(snares, 5);
+}
+
+TEST(ImportMidi, KeepsOnlyTheLanesOwnNoteWhenPresent) {
+    const auto events = twoInstrumentEvents();
+    const auto bytes = poly::writeSMF(events.data(), events.size(), 120.0);
+    poly::LaneConfig lane{};
+    lane.midiNote = 36;
+    ASSERT_TRUE(poly::importMidiToLane(bytes, lane));
+    // Only the kick's E(3,8) reached the fitter: a clean Euclidean fit, not the
+    // five-hit union the snare would have added.
+    EXPECT_EQ(lane.hitCount, 3);
+    EXPECT_EQ(lane.cycle.steps, 8);
+    EXPECT_EQ(lane.cycle.subdivision, 16);
+    EXPECT_EQ(lane.rotation, 0);
+    EXPECT_FALSE(lane.timeline);
+}
+
+TEST(ImportMidi, MergesEveryNoteWhenTheLanesNoteIsAbsent) {
+    const auto events = twoInstrumentEvents();
+    const auto bytes = poly::writeSMF(events.data(), events.size(), 120.0);
+    poly::LaneConfig lane{};
+    lane.midiNote = 42; // neither instrument in the file
+    ASSERT_TRUE(poly::importMidiToLane(bytes, lane));
+    // Every onset merges, as before OS13: the union of the two patterns' steps.
+    std::vector<double> merged = euclideanOnsets(3, 8, 0, 16);
+    for (double o : euclideanOnsets(5, 8, 0, 16))
+        merged.push_back(o);
+    std::sort(merged.begin(), merged.end());
+    merged.erase(std::unique(merged.begin(), merged.end()), merged.end());
+    EXPECT_EQ(lane.hitCount, static_cast<int>(merged.size()));
+    EXPECT_EQ(lane.cycle.steps, 8);
+    EXPECT_EQ(lane.cycle.subdivision, 16);
 }
 
 // --- No-throw / valid-flag contract for malformed input ---

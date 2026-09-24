@@ -30,7 +30,7 @@ void euclidean(int k, int n, int rotation, std::array<bool, kMaxSteps>& out) {
         n = kMaxSteps;
     if (k >= n) {
         for (int i = 0; i < n; ++i)
-            out[i] = true;
+            out[static_cast<size_t>(i)] = true;
         return;
     }
 
@@ -52,9 +52,9 @@ void euclidean(int k, int n, int rotation, std::array<bool, kMaxSteps>& out) {
         std::array<bool, kMaxSteps> newP{};
         const int newLenP = lenP + lenR;
         for (int i = 0; i < lenP; ++i)
-            newP[i] = seqP[i];
+            newP[static_cast<size_t>(i)] = seqP[static_cast<size_t>(i)];
         for (int i = 0; i < lenR; ++i)
-            newP[lenP + i] = seqR[i];
+            newP[static_cast<size_t>(lenP + i)] = seqR[static_cast<size_t>(i)];
 
         // Leftover groups (the longer collection beyond minLen) become the next
         // remainder; mirrors `pattern.length > remainder.length ? pattern : remainder`.
@@ -85,14 +85,14 @@ void euclidean(int k, int n, int rotation, std::array<bool, kMaxSteps>& out) {
     int idx = 0;
     for (int c = 0; c < pCount; ++c)
         for (int i = 0; i < lenP; ++i)
-            base[idx++] = seqP[i];
+            base[static_cast<size_t>(idx++)] = seqP[static_cast<size_t>(i)];
     for (int c = 0; c < rCount; ++c)
         for (int i = 0; i < lenR; ++i)
-            base[idx++] = seqR[i];
+            base[static_cast<size_t>(idx++)] = seqR[static_cast<size_t>(i)];
 
     // Right-shift rotation, matching the reference's slice-based rotation.
     for (int i = 0; i < n; ++i)
-        out[i] = base[((i - rotation) % n + n) % n];
+        out[static_cast<size_t>(i)] = base[static_cast<size_t>(((i - rotation) % n + n) % n)];
 }
 // endregion:bjorklund
 
@@ -109,11 +109,11 @@ void legacyBresenham(int k, int n, std::array<bool, kMaxSteps>& out) {
         n = kMaxSteps;
     if (k >= n) {
         for (int i = 0; i < n; ++i)
-            out[i] = true;
+            out[static_cast<size_t>(i)] = true;
         return;
     }
     for (int i = 0; i < n; ++i)
-        out[i] = ((i * k) % n) < k;
+        out[static_cast<size_t>(i)] = ((i * k) % n) < k;
 }
 // endregion:legacy-bresenham
 } // namespace
@@ -135,7 +135,7 @@ int euclideanMigrationDelta(int k, int n) {
         euclidean(k, n, d, shifted);
         bool match = true;
         for (int i = 0; i < n; ++i) {
-            if (shifted[i] != legacy[i]) {
+            if (shifted[static_cast<size_t>(i)] != legacy[static_cast<size_t>(i)]) {
                 match = false;
                 break;
             }

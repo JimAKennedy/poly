@@ -5,6 +5,13 @@ on:
     - cron: '0 3 * * *'
   workflow_dispatch:
 
+# OS06: the token every job receives unless it says otherwise. The
+# repository default is already read-only; declaring it here makes the
+# grant visible in the tree and lets scripts/check-workflow-hygiene.mjs
+# hold it there.
+permissions:
+  contents: read
+
 jobs:
   asan:
     name: AddressSanitizer
@@ -103,9 +110,49 @@ jobs:
         env:
           TSAN_OPTIONS: suppressions=${{ github.workspace }}/.github/tsan.supp
 
+  # open-source-launch M002/S02 (OS09, OS10): the two untrusted inputs
+  # SECURITY.md names — saved state and a dropped MIDI file — under libFuzzer
+  # with ASan, built with Clang because libFuzzer ships with it. fuzz_seed_corpus
+  # writes current-format seeds first, so each target starts from the shape of
+  # a real input. Each target gets 300 seconds, bounded so the nightly finishes;
+  # a crash fails the job, uploads the reproducer, and reaches the notify job
+  # below like any sanitizer failure.
+  fuzz:
+    name: libFuzzer (state_io, midi_reader)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
+      - run: sudo apt-get install -y ninja-build
+      - name: Configure (Clang, ASan, fuzz targets)
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Debug -DPOLY_ENGINE_ONLY=ON -DENABLE_ASAN=ON -DBUILD_FUZZ_TESTS=ON -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++
+      - name: Build fuzz targets and seeder
+        run: cmake --build build --parallel --target fuzz_state_io fuzz_midi_reader fuzz_seed_corpus
+      - name: Seed the corpora
+        run: ./build/tests/fuzz_seed_corpus corpus
+      - name: Fuzz state_io (300 s)
+        run: |
+          mkdir -p artifacts
+          ./build/tests/fuzz_state_io -max_total_time=300 -timeout=10 -rss_limit_mb=2048 -artifact_prefix=artifacts/state_io- corpus/state_io
+        env:
+          LSAN_OPTIONS: suppressions=${{ github.workspace }}/.github/lsan.supp
+      - name: Fuzz midi_reader (300 s)
+        run: |
+          mkdir -p artifacts
+          ./build/tests/fuzz_midi_reader -max_total_time=300 -timeout=10 -rss_limit_mb=2048 -artifact_prefix=artifacts/midi_reader- corpus/midi_reader
+        env:
+          LSAN_OPTIONS: suppressions=${{ github.workspace }}/.github/lsan.supp
+      - name: Upload crash reproducers
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: fuzz-artifacts
+          path: artifacts/
+          if-no-files-found: ignore
+
   notify:
     name: Failure notification
-    needs: [asan, ubsan, tsan, asan-plugin, tsan-plugin]
+    needs: [asan, ubsan, tsan, asan-plugin, tsan-plugin, fuzz]
     if: always()
     runs-on: ubuntu-latest
     permissions:
@@ -120,6 +167,7 @@ jobs:
           [[ "${{ needs.tsan.result }}" == "failure" ]] && FAILED="${FAILED} TSAN"
           [[ "${{ needs.asan-plugin.result }}" == "failure" ]] && FAILED="${FAILED} ASAN-PLUGIN"
           [[ "${{ needs.tsan-plugin.result }}" == "failure" ]] && FAILED="${FAILED} TSAN-PLUGIN"
+          [[ "${{ needs.fuzz.result }}" == "failure" ]] && FAILED="${FAILED} FUZZ"
           if [ -n "$FAILED" ]; then
             echo "failed=${FAILED}" >> "$GITHUB_OUTPUT"
             echo "has_failure=true" >> "$GITHUB_OUTPUT"

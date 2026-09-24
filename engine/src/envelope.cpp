@@ -40,7 +40,7 @@ float evaluateShapeFull(const Envelope& env, float phase) {
     case Shape::StepList: {
         if (env.stepCount <= 0)
             return 0.5f;
-        int idx = static_cast<int>(phase * env.stepCount);
+        int idx = static_cast<int>(phase * static_cast<float>(env.stepCount));
         if (idx >= env.stepCount)
             idx = env.stepCount - 1;
         return env.stepValues[static_cast<size_t>(idx)];

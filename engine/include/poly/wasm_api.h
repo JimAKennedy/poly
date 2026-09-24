@@ -69,6 +69,8 @@ POLY_EXPORT float poly_lane_envelope_depth(PolyContext ctx, int lane, int index)
 // 1 on success, 0 when the bytes are not a usable metrical SMF, the fit is
 // degenerate, or the lane index is out of range (lane left untouched). The
 // single parse+fit+apply path the web preview's fitMidi action routes to.
+// Which notes: the lane's own midiNote when the file carries any, otherwise
+// every note-on merged (OS13, open-source-launch M002/S03).
 POLY_EXPORT int poly_import_midi(PolyContext ctx, int lane, const uint8_t* data, int size);
 
 // M035 S03 T01: revert the most recent successful poly_import_midi on `lane`,

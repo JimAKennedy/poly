@@ -119,72 +119,75 @@ execute no unpinned third-party code, fuzz the inputs strangers control, and fai
 on a warning.
 
 **Branch:** milestone/M002-ci-trust
-**Status:** planned
+**Status:** done
 **Demo:** Every workflow declares top-level permissions, a superseded PR push
 cancels its predecessor, the nightly fuzzes both untrusted inputs, and a new
 engine warning fails CI.
 
 ### Slice M002/S01 — Workflows hold least privilege
 
+**Plan:** M002-S01-plan.md
 **Validation:** format, guards
 **Evidence:** evidence/M002-S01.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Every workflow declares a top-level `permissions:` block, and jobs elevate
+- [x] Every workflow declares a top-level `permissions:` block, and jobs elevate
       locally only where they write
-- [ ] A superseded push to a PR cancels the run it replaces
-- [ ] No workflow checks out or executes third-party code at a moving ref
-- [ ] A guard fails on a workflow with no top-level `permissions:` and on an
+- [x] A superseded push to a PR cancels the run it replaces
+- [x] No workflow checks out or executes third-party code at a moving ref
+- [x] A guard fails on a workflow with no top-level `permissions:` and on an
       unpinned third-party checkout, each seen red — the three jk-standards
       workflow checks all pass on today's tree, so none of them is that guard
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| OS06 | `ci.yml` has no top-level `permissions:` block; only `secrets-scan` declares one. Every other job's `GITHUB_TOKEN` falls back to the repository default, which the tree cannot see. `jk-standards workflow-permissions` passes today because it checks only reusable-workflow calls against the caller's grant | `tooling` | `.github/workflows/ci.yml`, the jk-standards check or `scripts/` | Top-level `contents: read`; `secrets-scan` keeps its local `pull-requests: write`; the guard — preferably the jk-standards check extended upstream, since every portfolio repo has the same gap — fails on a workflow without the block | `open` |
-| OS07 | `ci.yml` declares no `concurrency:` group, so every push to an open PR runs the full macOS and Windows matrix to completion even after a newer push supersedes it. `jk-standards workflow-concurrency` passes because it checks that declared groups are ref-scoped, not that a group exists | `tooling` | `.github/workflows/ci.yml` | A `concurrency` group keyed on workflow and ref with `cancel-in-progress` for pull requests only; pushes to `main` are never cancelled | `open` |
-| OS08 | `pr-af-review.yml` checks out `Agent-Field/pr-af` with no `ref:` and runs `docker compose up` with `OPENROUTER_API_KEY` in its environment — whatever that repository's default branch holds today runs with the key. `jk-standards action-pinning` passes because it inspects `uses:` references, and a checkout's `repository:` input is invisible to it | `defect` | `.github/workflows/pr-af-review.yml` | The checkout names a 40-character SHA with the upstream tag in a comment, matching the pinning convention used for every action; the guard fails on a third-party `repository:` checkout without one | `open` |
+| OS06 | `ci.yml` has no top-level `permissions:` block; only `secrets-scan` declares one. Every other job's `GITHUB_TOKEN` falls back to the repository default, which the tree cannot see. `jk-standards workflow-permissions` passes today because it checks only reusable-workflow calls against the caller's grant | `tooling` | `.github/workflows/ci.yml`, the jk-standards check or `scripts/` | Top-level `contents: read`; `secrets-scan` keeps its local `pull-requests: write`; the guard — preferably the jk-standards check extended upstream, since every portfolio repo has the same gap — fails on a workflow without the block | `done` |
+| OS07 | `ci.yml` declares no `concurrency:` group, so every push to an open PR runs the full macOS and Windows matrix to completion even after a newer push supersedes it. `jk-standards workflow-concurrency` passes because it checks that declared groups are ref-scoped, not that a group exists | `tooling` | `.github/workflows/ci.yml` | A `concurrency` group keyed on workflow and ref with `cancel-in-progress` for pull requests only; pushes to `main` are never cancelled | `done` |
+| OS08 | `pr-af-review.yml` checks out `Agent-Field/pr-af` with no `ref:` and runs `docker compose up` with `OPENROUTER_API_KEY` in its environment — whatever that repository's default branch holds today runs with the key. `jk-standards action-pinning` passes because it inspects `uses:` references, and a checkout's `repository:` input is invisible to it | `defect` | `.github/workflows/pr-af-review.yml` | The checkout names a 40-character SHA with the upstream tag in a comment, matching the pinning convention used for every action; the guard fails on a third-party `repository:` checkout without one | `done` |
 
 ### Slice M002/S02 — The untrusted inputs are fuzzed
 
-**Validation:** format, engine-isolation, sanitizers
+**Plan:** M002-S02-plan.md
+**Validation:** format, engine-isolation, sanitizers, fuzz
 **Evidence:** evidence/M002-S02.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The fuzz option is declared, documented, and built by a workflow
-- [ ] Both untrusted inputs `SECURITY.md` names — saved state and a dropped MIDI
+- [x] The fuzz option is declared, documented, and built by a workflow
+- [x] Both untrusted inputs `SECURITY.md` names — saved state and a dropped MIDI
       file — have a fuzz target with a seed corpus
-- [ ] The nightly runs each for a bounded time and files an issue on a crash,
+- [x] The nightly runs each for a bounded time and files an issue on a crash,
       the same way the sanitizer nightly does
-- [ ] Each target is shown to find a bug planted on a scratch branch before it
+- [x] Each target is shown to find a bug planted on a scratch branch before it
       is trusted
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| OS09 | `tests/CMakeLists.txt:62` builds `fuzz_state_io` under `if(BUILD_FUZZ_TESTS)` — an option declared nowhere and referenced by no workflow or script, so the fuzzer runs on no machine | `coverage` | `CMakeLists.txt`, `tests/CMakeLists.txt`, `.github/workflows/sanitizers.yml` | `option(BUILD_FUZZ_TESTS …)` is declared beside the sanitizer options; the nightly builds it with Clang and runs it for a fixed duration; a planted out-of-bounds read in `state_io` is found | `open` |
-| OS10 | The MIDI reader parses any file a user drops on a lane, and `SECURITY.md` names MIDI parsing as in scope, but it has no fuzz target | `coverage` | `tests/fuzz/`, `tests/CMakeLists.txt`, `.github/workflows/sanitizers.yml` | A `fuzz_midi_reader` target seeded from the repository's own SMF fixtures runs nightly beside OS09's; a planted bounds error in `midi_reader.cpp` is found | `open` |
+| OS09 | `tests/CMakeLists.txt:62` builds `fuzz_state_io` under `if(BUILD_FUZZ_TESTS)` — an option declared nowhere and referenced by no workflow or script, so the fuzzer runs on no machine | `coverage` | `CMakeLists.txt`, `tests/CMakeLists.txt`, `.github/workflows/sanitizers.yml` | `option(BUILD_FUZZ_TESTS …)` is declared beside the sanitizer options; the nightly builds it with Clang and runs it for a fixed duration; a planted out-of-bounds read in `state_io` is found | `done` |
+| OS10 | The MIDI reader parses any file a user drops on a lane, and `SECURITY.md` names MIDI parsing as in scope, but it has no fuzz target | `coverage` | `tests/fuzz/`, `tests/CMakeLists.txt`, `.github/workflows/sanitizers.yml` | A `fuzz_midi_reader` target seeded from the repository's own SMF fixtures runs nightly beside OS09's; a planted bounds error in `midi_reader.cpp` is found | `done` |
 
 ### Slice M002/S03 — A warning means something
 
+**Plan:** M002-S03-plan.md
 **Validation:** format, engine-isolation, unit
 **Evidence:** evidence/M002-S03.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] `poly_engine` builds warning-free on GCC, Clang and MSVC with
+- [x] `poly_engine` builds warning-free on GCC, Clang and MSVC with
       `POLY_WARNINGS_FATAL=ON`, and CI builds it that way
-- [ ] Every test-side warning that marked a real defect is fixed, not silenced
-- [ ] MIDI import's handling of pitch is a decision with a test naming it
+- [x] Every test-side warning that marked a real defect is fixed, not silenced
+- [x] MIDI import's handling of pitch is a decision with a test naming it
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| OS11 | `POLY_WARNINGS_FATAL` defaults `OFF` as a phase-one measure. An engine-only GCC 13 build reports **69 unique warning sites** in engine sources — mostly `-Wsign-conversion` from `types.h` (255 diagnostics as included) and `scene.h` (85) — plus `-Wdouble-promotion` in `rng.h`. The CMake comment's "~242" counts engine and tests together | `tooling` | `engine/`, `CMakeLists.txt`, `.github/workflows/ci.yml` | The `engine-isolation` CI job configures with `-DPOLY_WARNINGS_FATAL=ON`; a deliberately introduced sign conversion fails it. Tests are a later phase, recorded in the decisions file | `open` |
-| OS12 | `tests/golden_tests.cpp:548` computes `bothSilentSomewhere` across six bars and never asserts on it, so half the test's stated intent — "their gaps should not always overlap" — is unchecked. By inspection the flag is never set for this patch, so the missing assertion may be `EXPECT_FALSE`, or the test's premise may be wrong | `defect` | `tests/golden_tests.cpp` | The flag is asserted with the polarity the test's intent requires, seen red by perturbing a phrase gap, or removed with the comment corrected | `open` |
-| OS13 | `engine/src/midi_reader.cpp:203` reads `d1` — the note number — and discards it (`-Wunused-but-set-variable`). Every note-on's onset is kept regardless of pitch, so a multi-instrument drum file dropped on one lane merges every instrument's onsets into it | `defect` | `engine/src/midi_reader.cpp`, `tests/midi_reader_tests.cpp` | The owner decides between filtering by note (the lane's own, or a chosen one) and merging on purpose; either way a test drops a two-instrument file and asserts the chosen outcome, and the warning is gone | `open` |
+| OS11 | `POLY_WARNINGS_FATAL` defaults `OFF` as a phase-one measure. An engine-only GCC 13 build reports **69 unique warning sites** in engine sources — mostly `-Wsign-conversion` from `types.h` (255 diagnostics as included) and `scene.h` (85) — plus `-Wdouble-promotion` in `rng.h`. The CMake comment's "~242" counts engine and tests together | `tooling` | `engine/`, `CMakeLists.txt`, `.github/workflows/ci.yml` | The `engine-isolation` CI job configures with `-DPOLY_WARNINGS_FATAL=ON`; a deliberately introduced sign conversion fails it. Tests are a later phase, recorded in the decisions file | `done` |
+| OS12 | `tests/golden_tests.cpp:548` computes `bothSilentSomewhere` across six bars and never asserts on it, so half the test's stated intent — "their gaps should not always overlap" — is unchecked. By inspection the flag is never set for this patch, so the missing assertion may be `EXPECT_FALSE`, or the test's premise may be wrong | `defect` | `tests/golden_tests.cpp` | The flag is asserted with the polarity the test's intent requires, seen red by perturbing a phrase gap, or removed with the comment corrected | `done` |
+| OS13 | `engine/src/midi_reader.cpp:203` reads `d1` — the note number — and discards it (`-Wunused-but-set-variable`). Every note-on's onset is kept regardless of pitch, so a multi-instrument drum file dropped on one lane merges every instrument's onsets into it | `defect` | `engine/src/midi_reader.cpp`, `tests/midi_reader_tests.cpp` | The owner decides between filtering by note (the lane's own, or a chosen one) and merging on purpose; either way a test drops a two-instrument file and asserts the chosen outcome, and the warning is gone | `done` |
 
 ## Milestone M003 — A musician's DAW finds it and it plays
 

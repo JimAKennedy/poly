@@ -20,8 +20,9 @@ namespace poly {
 //
 // It parses SMF format 0 and 1, decodes VLQ delta times, honours running
 // status, reads the first FF 51 tempo meta, and merges every track's note-on
-// stream into one onset timeline (the import path fits a single lane at a time,
-// and a dropped loop is that lane). Metrical division only (ticks-per-quarter);
+// stream into one onset timeline, recording each onset's note number beside
+// it. Choosing which notes a lane imports is importMidiToLane's job, not the
+// reader's (open-source-launch M002/S03, OS13). Metrical division only (ticks-per-quarter);
 // SMPTE division files are reported invalid rather than silently misread.
 //
 // Like the fitter this module is deliberately NON-RT — it runs on the file-drop
@@ -46,6 +47,11 @@ struct MidiParseResult {
     // onset, matching the SMF running-status convention. May be empty for a
     // well-formed file that carries no notes.
     std::vector<double> onsetsPpq;
+
+    // The MIDI note number of each onset, index-aligned with onsetsPpq. The
+    // reader merges every track and every pitch into one timeline; this is
+    // what lets the import step choose the lane's own note (OS13, below).
+    std::vector<uint8_t> onsetNotes;
 
     // Total length of the parsed content in PPQ: the largest absolute tick
     // reached by any track (typically the final note-off / end-of-track),
@@ -83,7 +89,11 @@ void applyFitToLane(const FitResult& fit, LaneConfig& lane);
 
 // Atomic parse -> fit -> apply for the offline MIDI import path (M035 S02 T02).
 // Parses the dropped SMF bytes, fits Euclidean lane parameters to the recovered
-// onsets, and applies them to `lane`. Returns true iff the bytes were a usable
+// onsets, and applies them to `lane`. Which onsets: when the file carries any
+// note-on on the lane's own midiNote, only those — a full drum loop dropped on
+// the kick lane imports the kick; when it carries none, every onset merges, so
+// a single-instrument loop on any pitch still imports (OS13, decided
+// 2026-09-24 in docs/plans/open-source-launch/M002-decisions.md). Returns true iff the bytes were a usable
 // metrical SMF AND the fit was valid; on false the lane is left untouched. This
 // is the single import operation both UI surfaces call — the poly_import_midi
 // wasm export (web preview) and the plugin's fitMidi bridge action — so they

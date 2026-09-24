@@ -58,14 +58,34 @@ jk_target_warnings(poly_tests)
 include(GoogleTest)
 gtest_discover_tests(poly_tests)
 
-# --- Fuzz Tests (require LLVM clang with libFuzzer) ---
+# --- Fuzz targets (open-source-launch M002/S02; need Clang with libFuzzer) ---
+#
+# Three executables, built only under BUILD_FUZZ_TESTS (declared in the
+# top-level CMakeLists.txt beside the sanitizer options):
+#   fuzz_state_io     — saved state through readGrooveState/readSceneState and
+#                       a render of whatever survived
+#   fuzz_midi_reader  — a dropped .mid through parseSMF, the fitter, and the
+#                       importMidiToLane path both UI surfaces call
+#   fuzz_seed_corpus  — `fuzz_seed_corpus <dir>` writes well-formed seeds into
+#                       <dir>/state_io and <dir>/midi_reader (generated, not
+#                       committed, so they always match the current formats)
+# The nightly in .github/workflows/sanitizers.yml builds all three with Clang
+# and ASan, seeds, and runs each fuzzer for a bounded time; the `fuzz` token in
+# .jk/validations.yml is the local mirror.
 if(BUILD_FUZZ_TESTS)
-    add_executable(fuzz_state_io fuzz/fuzz_state_io.cpp)
-    target_link_libraries(fuzz_state_io PRIVATE poly_engine)
-    target_compile_features(fuzz_state_io PRIVATE cxx_std_20)
-    target_compile_options(fuzz_state_io PRIVATE -fsanitize=fuzzer)
-    target_link_options(fuzz_state_io PRIVATE -fsanitize=fuzzer)
-    jk_target_warnings(fuzz_state_io)
+    foreach(target IN ITEMS fuzz_state_io fuzz_midi_reader)
+        add_executable(${target} fuzz/${target}.cpp)
+        target_link_libraries(${target} PRIVATE poly_engine)
+        target_compile_features(${target} PRIVATE cxx_std_20)
+        target_compile_options(${target} PRIVATE -fsanitize=fuzzer)
+        target_link_options(${target} PRIVATE -fsanitize=fuzzer)
+        jk_target_warnings(${target})
+    endforeach()
+
+    add_executable(fuzz_seed_corpus fuzz/seed_corpus.cpp)
+    target_link_libraries(fuzz_seed_corpus PRIVATE poly_engine)
+    target_compile_features(fuzz_seed_corpus PRIVATE cxx_std_20)
+    jk_target_warnings(fuzz_seed_corpus)
 endif()
 
 # --- Bridge Contract Tests (require VST3 SDK for ParamID types) ---
