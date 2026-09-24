@@ -174,3 +174,14 @@ count came from the test translation units, which compiled, not from a linked
   find crashes, `engine-isolation` is the warnings gate, and the nightly on
   Ubuntu keeps the default. Obviously right: the alternative was a
   `-Wno-#warnings` that would hide a real one.
+
+## 2026-09-24 — judgment call after the first push of M002
+
+- **`deterministicRand`'s hash constants are `uint64_t`-typed, not `ULL`
+  literals.** Ubuntu's GCC 13 rejected `rng.h:14` under the new fatal
+  default — a `uint64_t` (there `unsigned long`) multiplied by an
+  `unsigned long long` literal, reported as a sign conversion — on all six
+  Linux jobs of PR #340, while GCC 15, Apple Clang and Emscripten had built
+  the same line clean. Giving the four constants the `uint64_t` type is the
+  same value and the same arithmetic. The owner authorised landing the fix
+  and re-shipping after the failure was reported.
