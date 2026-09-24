@@ -18,17 +18,17 @@ pushed.
       each runs clean on its seeds
 - [x] Task 2 — The nightly builds, seeds and runs them, and a crash files an
       issue
-- [ ] Task 3 — Each target finds a planted bug, the option is documented, and
+- [x] Task 3 — Each target finds a planted bug, the option is documented, and
       the slice closes (OS09, OS10)
 
 ## Definition of Done
 
-- [ ] The fuzz option is declared, documented, and built by a workflow
-- [ ] Both untrusted inputs `SECURITY.md` names — saved state and a dropped MIDI
+- [x] The fuzz option is declared, documented, and built by a workflow
+- [x] Both untrusted inputs `SECURITY.md` names — saved state and a dropped MIDI
       file — have a fuzz target with a seed corpus
-- [ ] The nightly runs each for a bounded time and files an issue on a crash,
+- [x] The nightly runs each for a bounded time and files an issue on a crash,
       the same way the sanitizer nightly does
-- [ ] Each target is shown to find a bug planted on a scratch branch before it
+- [x] Each target is shown to find a bug planted on a scratch branch before it
       is trusted
 
 ## Validation

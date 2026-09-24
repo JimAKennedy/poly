@@ -152,22 +152,22 @@ engine warning fails CI.
 **Plan:** M002-S02-plan.md
 **Validation:** format, engine-isolation, sanitizers, fuzz
 **Evidence:** evidence/M002-S02.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The fuzz option is declared, documented, and built by a workflow
-- [ ] Both untrusted inputs `SECURITY.md` names — saved state and a dropped MIDI
+- [x] The fuzz option is declared, documented, and built by a workflow
+- [x] Both untrusted inputs `SECURITY.md` names — saved state and a dropped MIDI
       file — have a fuzz target with a seed corpus
-- [ ] The nightly runs each for a bounded time and files an issue on a crash,
+- [x] The nightly runs each for a bounded time and files an issue on a crash,
       the same way the sanitizer nightly does
-- [ ] Each target is shown to find a bug planted on a scratch branch before it
+- [x] Each target is shown to find a bug planted on a scratch branch before it
       is trusted
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| OS09 | `tests/CMakeLists.txt:62` builds `fuzz_state_io` under `if(BUILD_FUZZ_TESTS)` — an option declared nowhere and referenced by no workflow or script, so the fuzzer runs on no machine | `coverage` | `CMakeLists.txt`, `tests/CMakeLists.txt`, `.github/workflows/sanitizers.yml` | `option(BUILD_FUZZ_TESTS …)` is declared beside the sanitizer options; the nightly builds it with Clang and runs it for a fixed duration; a planted out-of-bounds read in `state_io` is found | `open` |
-| OS10 | The MIDI reader parses any file a user drops on a lane, and `SECURITY.md` names MIDI parsing as in scope, but it has no fuzz target | `coverage` | `tests/fuzz/`, `tests/CMakeLists.txt`, `.github/workflows/sanitizers.yml` | A `fuzz_midi_reader` target seeded from the repository's own SMF fixtures runs nightly beside OS09's; a planted bounds error in `midi_reader.cpp` is found | `open` |
+| OS09 | `tests/CMakeLists.txt:62` builds `fuzz_state_io` under `if(BUILD_FUZZ_TESTS)` — an option declared nowhere and referenced by no workflow or script, so the fuzzer runs on no machine | `coverage` | `CMakeLists.txt`, `tests/CMakeLists.txt`, `.github/workflows/sanitizers.yml` | `option(BUILD_FUZZ_TESTS …)` is declared beside the sanitizer options; the nightly builds it with Clang and runs it for a fixed duration; a planted out-of-bounds read in `state_io` is found | `done` |
+| OS10 | The MIDI reader parses any file a user drops on a lane, and `SECURITY.md` names MIDI parsing as in scope, but it has no fuzz target | `coverage` | `tests/fuzz/`, `tests/CMakeLists.txt`, `.github/workflows/sanitizers.yml` | A `fuzz_midi_reader` target seeded from the repository's own SMF fixtures runs nightly beside OS09's; a planted bounds error in `midi_reader.cpp` is found | `done` |
 
 ### Slice M002/S03 — A warning means something
 

@@ -98,6 +98,28 @@ cmake --build build-engine
 ctest --test-dir build-engine --output-on-failure
 ```
 
+### Fuzzing
+
+The two inputs a stranger controls — saved plugin state and a dropped MIDI
+file — have libFuzzer targets under `tests/fuzz/`, built behind
+`BUILD_FUZZ_TESTS`. They need a Clang that ships libFuzzer: on Linux the
+distribution's `clang++`, on macOS Homebrew's LLVM rather than Apple's.
+`fuzz_seed_corpus <dir>` writes well-formed seeds first, so each target starts
+from the shape of a real input:
+
+```bash
+cmake -S . -B build-fuzz -G Ninja -DCMAKE_BUILD_TYPE=Debug -DPOLY_ENGINE_ONLY=ON \
+  -DENABLE_ASAN=ON -DBUILD_FUZZ_TESTS=ON \
+  -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++   # macOS: /opt/homebrew/opt/llvm/bin/clang{,++}
+cmake --build build-fuzz --target fuzz_state_io fuzz_midi_reader fuzz_seed_corpus
+./build-fuzz/tests/fuzz_seed_corpus build-fuzz/corpus
+./build-fuzz/tests/fuzz_state_io    -max_total_time=60 build-fuzz/corpus/state_io
+./build-fuzz/tests/fuzz_midi_reader -max_total_time=60 build-fuzz/corpus/midi_reader
+```
+
+The nightly sanitizer workflow runs both for five minutes each and files an
+issue on a crash. A finding in either is a security report; see `SECURITY.md`.
+
 ## Pull request requirements
 
 - Describe what changed and why

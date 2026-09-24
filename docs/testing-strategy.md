@@ -4,9 +4,10 @@ class: gated
 
 # Poly Testing Strategy — Plugin, Bridge, and Cubase-in-the-Loop
 
-Status: proposed (2026-09-19), written against `main@63c960b` on 2026-07-03.
-Nothing in the strategy has changed since; the anchor moved because the test
-pyramid and the fixtures listing were converted out of ASCII art. Companion to
+Status: proposed (2026-09-24), written against `main@63c960b` on 2026-07-03.
+Nothing in the strategy has changed since; the anchor moved when the test
+pyramid and the fixtures listing were converted out of ASCII art, and again
+when the L1 inventory gained the MIDI-file fuzz target and its seeder. Companion to
 `docs/webui-migration.md` (this document expands its W5 phase into a full
 strategy and adds the host-integration layers).
 
@@ -35,8 +36,10 @@ flowchart TB
   L4 ~~~ L3 ~~~ L2 ~~~ L1
 ```
 
-What exists today: L1 is strong (engine tests, golden determinism, state-IO
-fuzzing, sanitize tests); the webui Playwright suite (`webui/tests/`) now
+What exists today: L1 is strong (engine tests, golden determinism, state I/O
+and MIDI-file fuzzing under `tests/fuzz/` — `fuzz_state_io` and
+`fuzz_midi_reader`, seeded by `fuzz_seed_corpus` and run nightly — sanitize
+tests); the webui Playwright suite (`webui/tests/`) now
 guards the shipping web UI editor — the native VSTGUI visual/interaction
 harness that formerly covered the legacy editor was removed in M053 S05;
 the VST3 validator is available but disabled

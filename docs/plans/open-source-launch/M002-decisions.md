@@ -125,3 +125,15 @@ gaps fall in bars 2 and 5 for lane 0 (12-beat phrase) and bar 3 for lane 1
   329 and 639 edges. Obviously right: a guided fuzzer that cannot see the code
   it is fuzzing is a random-input loop, and the plan's premise — that the
   targets find planted bugs — depends on the guidance.
+
+## 2026-09-24 — judgment call during M002/S02 task 3
+
+- **The planted state-I/O bug is an unvalidated count used as an index, not
+  the plan's one-past array read.** The plan said to lengthen the
+  `microTimingMs` loop by one; `microTimingMs` is followed by `laneSeed`
+  inside `LaneConfig`, so that read stays inside the object and ASan cannot
+  see it — the proof would have been a proof of nothing. The substitute
+  writes `cellSizes[cellCount]` with `cellCount` straight from the file, the
+  bug class the row names, and reaches arbitrarily far outside the object.
+  Obviously right: the plan's aim was a detectable planted out-of-bounds
+  access in the state reader, and the site was a detail.
