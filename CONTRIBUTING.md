@@ -44,6 +44,15 @@ cmake --build build
 ctest --test-dir build --output-on-failure
 ```
 
+Spec-driven changes use [OpenSpec](https://github.com/Fission-AI/OpenSpec);
+`openspec/` is tracked, and the Claude Code commands and skills it drives are
+installed per machine, not committed:
+
+```bash
+npm install -g @fission-ai/openspec@latest
+openspec init --tools claude
+```
+
 ## Code style
 
 Code formatting is enforced by clang-format. The `.clang-format` config is in the

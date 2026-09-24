@@ -28,8 +28,13 @@
 #
 # Only the vendored subdirectory is ignored, not `.claude/commands/` — a
 # poly-local command authored here is tracked like any other source file.
+#
+# `opsx` is OpenSpec's, written by `openspec init --tools claude` alongside
+# the six openspec-* skills the deny-by-default rule above already ignores;
+# the tracked artifact is openspec/ itself (config, specs, changes).
 # -----------------------------------------------------------------------------
 .claude/commands/jk/
+.claude/commands/opsx/
 
 # Generic-agent skills dir (`install-skills` default --dest). Nothing in poly
 # reads it; it exists only when a harness installs skills without --dest.
