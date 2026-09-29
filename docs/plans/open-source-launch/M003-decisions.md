@@ -90,3 +90,14 @@ knows only the MusicDevice type. No release workflow builds the AU.
 - **The milestone runs S01, S02, S03 in ledger order** with no pause: the
   Cubase evidence comes from the nightly and the owner's answers above, so no
   manual step remains inside the run.
+
+## 2026-09-29 — judgment call during M003/S01 task 2
+
+- **The advanced routing steps now number channels from 1.** The Cubase
+  step being folded under the advanced heading said the Groove Agent track
+  "listens on Channel 0, Battery on Channel 1, Kontakt on Channel 2" while the
+  chapter's own paragraph two screens up says Poly shows channels 1-16 as the
+  DAW does, and the patch table above the step assigns Channels 1, 2 and 3.
+  The step now matches the table. Obviously right: the same passage was being
+  rewritten, and leaving a 0-based sentence beside a 1-based table would have
+  shipped a contradiction the restructure had just moved closer together.

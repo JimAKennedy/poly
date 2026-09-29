@@ -13,17 +13,17 @@ the one-instrument case.
 
 - [x] Task 1 — The README and chapter 17 carry one host table, Cubase in it
       and nothing else claimed (OS14)
-- [ ] Task 2 — Chapter 17's routing starts with one drum instrument and
+- [x] Task 2 — Chapter 17's routing starts with one drum instrument and
       keeps per-lane channels as the advanced case (OS15); the slice closes
 
 ## Definition of Done
 
-- [ ] Cubase has been loaded, routed and played on both shipping OSes, with the
+- [x] Cubase has been loaded, routed and played on both shipping OSes, with the
       host version and the exact routing steps recorded — Windows from a named
       nightly run, macOS from the owner's session
-- [ ] The README and guide chapter 17 carry the same host table: Cubase as
+- [x] The README and guide chapter 17 carry the same host table: Cubase as
       supported, every other host as untested, and no "should work" claim
-- [ ] The default channel layout is decided against what Cubase did
+- [x] The default channel layout is decided against what Cubase did
 
 ## Validation
 

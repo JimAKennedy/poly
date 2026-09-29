@@ -220,21 +220,21 @@ records both.
 **Plan:** M003-S01-plan.md
 **Validation:** format, doc-discipline, doc-conformance, site-unit
 **Evidence:** evidence/M003-S01.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Cubase has been loaded, routed and played on both shipping OSes, with the
+- [x] Cubase has been loaded, routed and played on both shipping OSes, with the
       host version and the exact routing steps recorded — Windows from a named
       nightly run, macOS from the owner's session
-- [ ] The README and guide chapter 17 carry the same host table: Cubase as
+- [x] The README and guide chapter 17 carry the same host table: Cubase as
       supported, every other host as untested, and no "should work" claim
-- [ ] The default channel layout is decided against what Cubase did
+- [x] The default channel layout is decided against what Cubase did
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
 | OS14 | `README.md:151` says Poly "should work with any VST3-compatible host". Routing MIDI **out** of a plugin is where hosts differ most, and only Cubase is exercised. **Amended 2026-09-29:** the first release claims Cubase alone; the other candidates moved to OS43 in M010 | `verify` | `README.md`, `site/src/content/docs/17-midi-routing-note-map.mdx`, `evidence/M003-S01.md` | Evidence records Cubase's version, OS, routing steps and outcome on both platforms; the README and chapter 17 name Cubase as supported, say other hosts are untested, and carry no host the evidence lacks | `done` |
-| OS15 | `types.h:268` defaults `midiChannel` to `-1` — auto, one channel per lane — so a single-channel drum sampler hears one lane until the user finds the Note Map | `verify` | `engine/include/poly/types.h`, `engine/src/presets.cpp` | Decided from OS14's Cubase runs and recorded; if the default changes, a state-migration test proves saved projects keep their channels | `open` |
+| OS15 | `types.h:268` defaults `midiChannel` to `-1` — auto, one channel per lane — so a single-channel drum sampler hears one lane until the user finds the Note Map | `verify` | `engine/include/poly/types.h`, `engine/src/presets.cpp` | Decided from OS14's Cubase runs and recorded; if the default changes, a state-migration test proves saved projects keep their channels | `done` |
 
 ### Slice M003/S02 — The editor is exercised on both platforms
 

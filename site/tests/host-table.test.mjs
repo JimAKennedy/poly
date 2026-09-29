@@ -66,3 +66,17 @@ test('neither file claims any VST3 host works', () => {
     assert.doesNotMatch(text, /any VST3-compatible host/i, `${name} claims any VST3-compatible host`);
   }
 });
+
+// M003/S01, OS15: the per-lane channel default already does the right thing
+// with a drum instrument that listens on all channels, so the chapter leads
+// with that and keeps per-lane channel routing as the advanced case.
+test('chapter 17 opens its routing with one instrument on all channels, before any per-lane channel setup', () => {
+  const start = CH17.indexOf('### Start Here: One Drum Instrument');
+  const advanced = CH17.indexOf('### Advanced: One Lane, One Channel');
+  assert.notEqual(start, -1, 'chapter 17 has no "Start Here: One Drum Instrument" section');
+  assert.notEqual(advanced, -1, 'chapter 17 has no "Advanced: One Lane, One Channel" section');
+  assert.ok(start < advanced, 'the one-instrument section must come before the per-lane channel section');
+  const section = CH17.slice(start, advanced);
+  assert.match(section, /all (MIDI )?channels/i, 'the one-instrument section must say the instrument listens on all channels');
+  assert.doesNotMatch(section, /set every lane.*channel 1/i, 'the one-instrument section must not tell the reader to set lanes to Channel 1');
+});
