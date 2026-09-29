@@ -175,11 +175,15 @@ test('pluginval is PINNED to v1.0.4 (no floating releases/latest)', () => {
   );
 });
 
-test('pluginval strictness/flags are locked on BOTH legs (level 8, skip-gui, 120s)', () => {
+test('pluginval strictness/flags are locked on BOTH legs (level 8, GUI tests on, 120s)', () => {
   const strictness = [...wf.matchAll(/--strictness-level\s+8\b/g)];
   assert.equal(strictness.length, 2, `expected --strictness-level 8 on both legs, found ${strictness.length}`);
+  // OS16 (open-source-launch M003/S02): the editor is a WebView, the likeliest
+  // source of a host crash on open, close and reopen, and the release legs are
+  // the configuration that ships. Skipping pluginval's GUI tests there would
+  // hide exactly that, so the flag must be absent on both legs.
   const skipGui = [...wf.matchAll(/--skip-gui-tests\b/g)];
-  assert.equal(skipGui.length, 2, `expected --skip-gui-tests on both legs, found ${skipGui.length}`);
+  assert.equal(skipGui.length, 0, `expected no --skip-gui-tests on either leg (OS16), found ${skipGui.length}`);
   const timeout = [...wf.matchAll(/--timeout-ms\s+120000\b/g)];
   assert.equal(timeout.length, 2, `expected --timeout-ms 120000 on both legs, found ${timeout.length}`);
 });

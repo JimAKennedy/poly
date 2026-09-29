@@ -112,9 +112,14 @@ jobs:
   #   3. Install the .component and validate it end-to-end with
   #      `auval -v aumu Poly JkDl` — exit 0 is a validation PASS; the full auval -v
   #      log is the diagnostic surface for AU load/validation failures.
-  #   4. Upload the .component. There is no separate release workflow in this repo;
-  #      CI artifact upload IS the distribution channel, mirroring `Upload plugin`
-  #      for the VST3.
+  #   4. Upload the .component as a CI artifact, for inspection only.
+  #
+  # OS17 (open-source-launch M003/S03, declined 2026-09-29): this AU exists for
+  # validation only and is shipped by no release. Logic routes generated MIDI
+  # only from a MIDI-FX (aumi) unit, and the SDK wrapper builds instruments and
+  # effects alone, so the aumu could not do Poly's one job there. M007 packages
+  # the VST3 alone; M010/S02 revisits Logic with a wrapper spike. The decision
+  # is in docs/plans/open-source-launch/M003-decisions.md.
   build-au-macos:
     runs-on: macos-14
     steps:
@@ -458,12 +463,15 @@ jobs:
           # scripts/check-release-workflow.mjs holds the same constant.
           echo "3c4c533bda0c5059eea3ddaea752d757ee2025041f0f47e6bcb0e87f6082b29f  pluginval.zip" | shasum -a 256 -c
           unzip -q pluginval.zip
+      # OS16 (open-source-launch M003/S02): GUI tests on. The editor is a
+      # WebView, the likeliest source of a host crash on open, close and
+      # reopen. macOS proved locally at strictness 8 on 2026-09-29; Windows
+      # proved by this job's run on the M003 pull request.
       - name: Run pluginval
         run: |
           chmod +x "pluginval.app/Contents/MacOS/pluginval"
           "pluginval.app/Contents/MacOS/pluginval" \
             --strictness-level 8 \
-            --skip-gui-tests \
             --timeout-ms 120000 \
             --validate "${{ steps.find-vst3.outputs.path }}"
 
@@ -508,11 +516,14 @@ jobs:
           # scripts/check-release-workflow.mjs holds the same constant.
           echo "c08e61ce3b96db41636f8ec7e76f4c7e2c13ebdac7fa1b5a1f52b4f32ec715ab  pluginval.zip" | sha256sum -c
           unzip -q pluginval.zip
+      # OS16 (open-source-launch M003/S02): GUI tests on. The editor is a
+      # WebView, the likeliest source of a host crash on open, close and
+      # reopen. macOS proved locally at strictness 8 on 2026-09-29; Windows
+      # proved by this job's run on the M003 pull request.
       - name: Run pluginval
         run: |
           ./pluginval.exe \
             --strictness-level 8 \
-            --skip-gui-tests \
             --timeout-ms 120000 \
             --validate "${{ steps.find-vst3.outputs.path }}"
 

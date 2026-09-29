@@ -57,10 +57,16 @@ A clean run ends in `* * PASS`. The four-character codes are Poly's AU identity:
 Add an instrument track with Poly as the instrument:
 
 - **Cubase:** Project > Add Track > Instrument > select Poly
-- **Logic Pro:** Track > New Software Instrument Track > select Poly from AU Instruments
+- **Logic Pro:** not supported — see the note below the list
 - **Ableton Live:** Drop Poly onto a MIDI track from the Plug-ins browser
 - **Studio One:** Add Instrument Track > select Poly from the instrument list
 - **FL Studio:** Channel Rack > Add Plugin > select Poly (VST3)
+
+**Logic Pro is not supported.** Logic routes generated MIDI only from a
+MIDI-FX Audio Unit, and Poly's Audio Unit is an instrument built by the VST3
+SDK's wrapper, which cannot produce one; the Audio Unit is built in CI for
+validation and is not part of any release. A future milestone revisits Logic with a MIDI-FX
+wrapper of Poly's own.
 
 Poly generates MIDI only — it produces no audio on its own. You need a drum sound source (Groove Agent, Battery, Kontakt, Drum Rack, or any GM-compatible drum plugin) to hear the output.
 
@@ -187,10 +193,6 @@ With separate instruments on separate channels, you get independent mixing, proc
 1. Set Poly's MIDI output to **All MIDI Channels** in the instrument track's output routing
 2. Create instrument tracks for each target (Groove Agent, Battery, Kontakt, etc.)
 3. Set each target track's MIDI input to **Poly** with channel filtering matching the lanes you want
-
-**Logic Pro:**
-1. Create an External Instrument or Software Instrument for each target
-2. Use the MIDI Environment or MIDI FX to split channels from Poly's output to separate instruments
 
 **Ableton Live:**
 1. Place Poly on a MIDI track

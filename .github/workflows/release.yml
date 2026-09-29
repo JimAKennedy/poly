@@ -112,7 +112,6 @@ jobs:
           chmod +x "pluginval.app/Contents/MacOS/pluginval"
           "pluginval.app/Contents/MacOS/pluginval" \
             --strictness-level 8 \
-            --skip-gui-tests \
             --timeout-ms 120000 \
             --validate "$VST3_PATH"
       - name: Run pluginval (Windows)
@@ -135,7 +134,6 @@ jobs:
           unzip -q pluginval.zip
           ./pluginval.exe \
             --strictness-level 8 \
-            --skip-gui-tests \
             --timeout-ms 120000 \
             --validate "$VST3_PATH"
       # --- macOS Developer ID signing + Apple notarization (M030 S03, D031). ---

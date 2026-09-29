@@ -12,6 +12,22 @@ The preceding chapters have focused on what Poly generates -- Euclidean distribu
 
 This separation is deliberate. The engine generates patterns based on Euclidean mathematics, cycle lengths, and macro modulation. The routing layer shapes the sonic result independently. Change a lane's MIDI channel and the pattern stays identical -- only the destination instrument changes. Remap a note and the rhythm is untouched -- only the timbre shifts. This decoupling means you can experiment with orchestration freely, swapping kit pieces or entire instruments without rebuilding your patch from scratch.
 
+## Hosts
+
+Poly generates MIDI and plays nothing itself, so everything in this chapter
+happens inside a host that routes that MIDI to a drum instrument. This is
+the host table the project publishes, and it lists only what has been
+measured:
+
+| Host | Version | Platform | Status | Routing |
+|---|---|---|---|---|
+| Cubase | Pro 15 | macOS | supported | Instrument track for Poly; a drum instrument whose MIDI input is Poly on all channels, or a MIDI Send from the Poly track |
+| Cubase | 14 | Windows | supported | The same; exercised nightly by the Cubase harness |
+| Other VST3 hosts | — | — | untested | Routing MIDI out of a plugin is where hosts differ most; nothing has been measured |
+
+Poly is built and tested in Cubase. Other hosts may work and have not been
+tried; a measured host table for them is planned.
+
 ## Per-Lane MIDI Channel
 
 Each lane in Poly has a `midiChannel` parameter that determines which MIDI channel its output events are sent on. The parameter accepts two kinds of values:
@@ -28,13 +44,22 @@ the number your DAW shows.
 
 In the engine, the channel resolution is straightforward: if `midiChannel` is non-negative, the lane uses that value directly; otherwise it falls back to the lane index. The result is stamped on every `NoteEvent` the lane produces, and the plugin's processor passes it through to the VST3 output event list unchanged.
 
-### Single-Instrument Setup (Default)
+### Start Here: One Drum Instrument
 
-The simplest configuration is all lanes on the same channel. Set every lane's MIDI channel to 1, or leave them on Auto if only Channel 1 matters to your instrument. All notes flow to a single drum kit -- Groove Agent, Battery, Kontakt, or whatever sits downstream. This is how the factory presets work: the routing is invisible because there is nothing to route. One instrument receives everything, and the kit mapping within that instrument determines what each MIDI note sounds like.
+Leave every lane on Auto and do nothing else. Poly sends each lane on its own channel -- the kick on Channel 1, the snare on Channel 2, and so on -- and a drum instrument that listens on all MIDI channels receives every lane and plays each one on its GM note: kick, snare, hats and the rest land on the sounds a General MIDI kit keeps there. This is how the factory presets are meant to be heard, and it is what a new instrument track does out of the box: Cubase's default MIDI input channel is *Any*, so the routing is invisible because there is nothing to route.
+
+In Cubase:
+
+1. **Add an Instrument track with Poly** as its instrument.
+2. **Add an Instrument track with your drum instrument** -- Groove Agent, Battery, Kontakt, or any GM-compatible kit.
+3. **Set the drum track's MIDI input to Poly** in the Inspector and leave its channel on *Any*.
+4. **Press play.** Every lane arrives; the kit mapping inside the instrument decides what each note sounds like.
+
+A MIDI Send from the Poly track to the drum instrument does the same job and keeps the routing on the Poly track's own Inspector; the [Using Poly guide](/guide-using-poly/) walks through that option step by step.
 
 For most creative work with a single drum kit, this is all you need. The per-lane channel becomes interesting when you want to break out of a single instrument.
 
-### Multi-Instrument Setup
+### Advanced: One Lane, One Channel
 
 Assign lanes to different MIDI channels and you can drive separate instruments from a single Poly instance. A kick and snare go to an acoustic kit on Channel 1. A hi-hat goes to an electronic kit on Channel 2. A percussion lane goes to a world percussion library on Channel 3. Each instrument receives only the lanes assigned to its channel, and each can have its own processing chain, mix level, and spatial positioning.
 
@@ -53,17 +78,15 @@ This configuration produces a hybrid groove where the kick and snare share the w
 
 The practical benefit extends beyond timbre. With separate instruments on separate channels, you get independent mixing. The acoustic kit can sit in a tight, dry room. The electronic hat can have its own sidechain compression. The world percussion can swim in a long reverb. Each timbral layer occupies its own space in the mix because each has its own signal path.
 
-### DAW Routing in Cubase
+Setting this up in Cubase takes a few steps, but the result is a flexible setup you can reuse across projects:
 
-Setting up multi-channel routing in Cubase requires a few steps, but the result is a flexible setup that you can reuse across projects:
+1. **Leave Poly's MIDI output on all channels.** Poly already sends every lane on its own channel; nothing on the Poly track changes.
 
-1. **Set Poly's MIDI output to "All MIDI Channels"** in the instrument track's output routing. This ensures Poly does not filter its output to a single channel.
+2. **Create an instrument track for each target.** A Groove Agent track, a Battery track, a Kontakt track -- one for each destination instrument.
 
-2. **Create instrument tracks for each target.** Add a Groove Agent track, a Battery track, a Kontakt track -- one for each destination instrument in your multi-channel configuration.
+3. **Set each target track's MIDI input to Poly with channel filtering.** In Cubase's Inspector, set the MIDI input to your Poly instance and restrict the channel to match the lanes you want that instrument to receive. In the patch above, the Groove Agent track listens on Channel 1, Battery on Channel 2, Kontakt on Channel 3.
 
-3. **Set each target track's MIDI input to "Poly" with channel filtering.** In Cubase's Inspector, set the MIDI input to your Poly instance and restrict the channel to match the lanes you want that instrument to receive. The Groove Agent track listens on Channel 0, Battery on Channel 1, Kontakt on Channel 2.
-
-4. **Each track receives only its assigned lane's notes.** The channel filtering ensures clean separation -- no cross-talk between instruments. Poly sends everything on every channel simultaneously, and each target picks out only its own.
+4. **Each track receives only its assigned lanes' notes.** The channel filtering ensures clean separation -- no cross-talk between instruments. Poly sends everything on every channel simultaneously, and each target picks out only its own.
 
 This approach scales to as many instruments as you have channels. With 16 MIDI channels available and up to 8 lanes in Poly, you have more than enough headroom for complex multi-timbral setups. You can also double up -- put two lanes on the same channel when you want them to share an instrument, as in the kick-and-snare pairing above.
 
