@@ -16,16 +16,16 @@ that passes.
 
 ## Task status
 
-- [ ] Task 1 — Each leg fails unsigned unless the variable allows it, the
+- [x] Task 1 — Each leg fails unsigned unless the variable allows it, the
       body says whether each artifact is signed, and the contract asserts
       both (OS34); the slice closes
 
 ## Definition of Done
 
-- [ ] With no signing secrets, the release job fails, unless a repository
+- [x] With no signing secrets, the release job fails, unless a repository
       variable named for the purpose explicitly allows an unsigned release
-- [ ] The Release body states whether each artifact is signed and notarized
-- [ ] The contract check asserts both, each seen red
+- [x] The Release body states whether each artifact is signed and notarized
+- [x] The contract check asserts both, each seen red
 
 ## Validation
 

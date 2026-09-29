@@ -14,6 +14,14 @@ headings — What Poly is, Supported hosts, Known issues, Report a problem —
 and 400 words, and a version without the block fails the release rather than
 publishing the engineering narrative beneath it.
 
+An unsigned build cannot ship quietly. Each release leg records whether it
+signed its bundle and refuses to package an unsigned one unless the
+repository variable `ALLOW_UNSIGNED_RELEASE` is exactly `true` — set on
+purpose, by a maintainer, for a release that is unsigned by design, and
+removed once signing is provisioned. The Release body ends with a line of
+the form `Signed: macOS no (notarized no) · Windows no`, written from what
+the legs recorded.
+
 ## Signing and notarization
 
 The macOS release leg (`.github/workflows/release.yml`) auto-signs, notarizes,

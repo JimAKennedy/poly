@@ -492,18 +492,18 @@ Release body is the musician block.
 **Plan:** M006-S02-plan.md
 **Validation:** format, guards
 **Evidence:** evidence/M006-S02.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] With no signing secrets, the release job fails, unless a repository
+- [x] With no signing secrets, the release job fails, unless a repository
       variable named for the purpose explicitly allows an unsigned release
-- [ ] The Release body states whether each artifact is signed and notarized
-- [ ] The contract check asserts both, each seen red
+- [x] The Release body states whether each artifact is signed and notarized
+- [x] The contract check asserts both, each seen red
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| OS34 | The codesign, notarize and staple steps gate on `env.MACOS_… != ''` and **skip** when the secrets are absent — which they are: the repository's only secret is an API key. The build succeeds and the workflow's output does not distinguish "signed" from "did not sign". Windows has no signing step at all, so nothing there can even skip | `defect` | `.github/workflows/release.yml`, `scripts/check-release-workflow.mjs`, `RELEASING.md` | A step after signing fails the leg when the artifact is unsigned and `ALLOW_UNSIGNED_RELEASE` is not `true`; the generated body carries a "Signed: yes/no" line per platform; the contract check asserts both | `open` |
+| OS34 | The codesign, notarize and staple steps gate on `env.MACOS_… != ''` and **skip** when the secrets are absent — which they are: the repository's only secret is an API key. The build succeeds and the workflow's output does not distinguish "signed" from "did not sign". Windows has no signing step at all, so nothing there can even skip | `defect` | `.github/workflows/release.yml`, `scripts/check-release-workflow.mjs`, `RELEASING.md` | A step after signing fails the leg when the artifact is unsigned and `ALLOW_UNSIGNED_RELEASE` is not `true`; the generated body carries a "Signed: yes/no" line per platform; the contract check asserts both | `done` |
 
 ## Milestone M007 — macOS installs without a terminal
 
