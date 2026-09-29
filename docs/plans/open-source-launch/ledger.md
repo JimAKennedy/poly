@@ -384,30 +384,31 @@ what Poly does, which hosts it supports and what is known to be wrong — and th
 launch is listed where musicians look.
 
 **Branch:** milestone/M005-release-notes
-**Status:** planned
+**Status:** in-progress
 **Demo:** The Release body for the first version is a few hundred words a
 non-developer can read, and the engineering history is one link away.
 
 ### Slice M005/S01 — A release body a musician reads
 
 **Depends:** M001/S01, M003/S01
+**Plan:** M005-S01-plan.md
 **Validation:** format, doc-discipline, guards
 **Evidence:** evidence/M005-S01.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The owner has decided where musician-facing notes live
-- [ ] The Release body for the first version names what Poly does, the
+- [x] The owner has decided where musician-facing notes live
+- [x] The Release body for the first version names what Poly does, the
       supported hosts, the known issues, and how to report one
-- [ ] The engineering narrative is kept, reachable from the notes, and not the
+- [x] The engineering narrative is kept, reachable from the notes, and not the
       Release body
-- [ ] `check-release-workflow.mjs` asserts the body's source
+- [x] `check-release-workflow.mjs` asserts the body's source
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| OS28 | `[Unreleased]` is 47 entries and about 13,100 words of engineering narrative — accurate, and written for the next maintainer. `release.yml` publishes the matching section verbatim as the Release body, so the first thing a musician reads would be a paragraph about `lockPresetReferent` | `pipeline` | `CHANGELOG.md` or a notes file, `scripts/gen-release-notes.mjs`, `scripts/check-release-workflow.mjs` | `gen-release-notes.mjs <version>` prints the musician-facing section; a test fails if it exceeds a word ceiling the decision sets; the engineering entries survive unchanged | `open` |
-| OS29 | Nothing in a Release tells a user what is known to be wrong or which hosts are supported — the two things that decide whether a broken setup is their mistake or Poly's | `docs` | the notes source from OS28 | The first Release body carries a Supported hosts list taken from OS14's evidence and a Known issues list linking open issues | `open` |
+| OS28 | `[Unreleased]` is 47 entries and about 13,100 words of engineering narrative — accurate, and written for the next maintainer. `release.yml` publishes the matching section verbatim as the Release body, so the first thing a musician reads would be a paragraph about `lockPresetReferent` | `pipeline` | `CHANGELOG.md` or a notes file, `scripts/gen-release-notes.mjs`, `scripts/check-release-workflow.mjs` | `gen-release-notes.mjs <version>` prints the musician-facing section; a test fails if it exceeds a word ceiling the decision sets; the engineering entries survive unchanged | `done` |
+| OS29 | Nothing in a Release tells a user what is known to be wrong or which hosts are supported — the two things that decide whether a broken setup is their mistake or Poly's | `docs` | the notes source from OS28 | The first Release body carries a Supported hosts list taken from OS14's evidence and a Known issues list linking open issues | `done` |
 
 ### Slice M005/S02 — The launch is listed where musicians look
 

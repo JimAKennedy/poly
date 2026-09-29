@@ -6,7 +6,51 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [0.2.0] - unreleased
 
+### For musicians
+
+#### What Poly is
+
+Poly is a free, open-source polymetric drum sequencer for your DAW: grooves
+grounded in real drumming traditions, a guide that cites where every preset
+comes from, deterministic output, and an engine that runs in your browser.
+Four to eight lanes each run their own cycle and Euclidean pattern, and 45
+presets carry grooves from named traditions — West African bell patterns,
+Afro-Cuban clave, gamelan, Balkan aksak and more. Poly makes no sound of its
+own: it sends MIDI to whatever drum instrument you already have, and the same
+settings always produce the same groove. To install, download the zip for
+your platform and follow the
+[README's Download section](https://github.com/JimAKennedy/poly#download).
+
+#### Supported hosts
+
+Cubase Pro 15 on macOS and Cubase 14 on Windows are where Poly is built and
+tested, and the only hosts anyone has measured. Other VST3 hosts may work and
+have not been tried. Logic Pro is not supported: it routes generated MIDI only
+from a MIDI-FX Audio Unit, which Poly does not ship.
+
+#### Known issues
+
+- Only Cubase has been measured. Other VST3 hosts may work and have not been
+  tried; the README's host table is the record.
+- This build is unsigned. macOS quarantines the download and Gatekeeper
+  refuses the plugin until the flag is cleared with the one command in the
+  README's Download section; Windows shows a SmartScreen warning that *More
+  info → Run anyway* dismisses.
+- The editor is a fixed 1160×760 window and does not resize; it is cramped on
+  a 13-inch laptop.
+- Anything else known to be wrong in this release carries the `known-issue`
+  label: [open known issues](https://github.com/JimAKennedy/poly/issues?q=is%3Aissue+is%3Aopen+label%3Aknown-issue).
+
+#### Report a problem
+
+[Open an issue](https://github.com/JimAKennedy/poly/issues/new/choose) with
+your host, its version and what you expected to hear; a security concern goes
+by email as [SECURITY.md](https://github.com/JimAKennedy/poly/blob/main/SECURITY.md)
+describes.
+
 ### Fixed
+
+- **The first thing a musician reads about a release is a few hundred words written for them, and the engineering history is one link away.** Slice S01 of open-source-launch M005 closes two rows. `release.yml` published a version's whole changelog section as the Release body — for 0.2.0, 15,327 words of engineering narrative whose first paragraph was about `lockPresetReferent`. Each version's section now opens with a `### For musicians` block, and `scripts/gen-release-notes.mjs` emits that block and one link to the full changelog at the tag; a version without the block fails loud, which the never-tagged 0.1.0 section now demonstrates in the contract, since tagging it would have published June's notes. The 0.2.0 block is 301 words against the owner's 400-word ceiling: what Poly is, in the positioning sentence and three more; the supported hosts — Cubase Pro 15 on macOS and Cubase 14 on Windows, nothing else measured, Logic not supported and why; four known issues — Cubase only, unsigned builds and what each platform shows, the fixed 1160×760 editor, and a query for anything filed later under a new `known-issue` label; and how to report a problem. `scripts/check-release-workflow.mjs` holds the four headings, the ceiling, the absence of any engineering entry in the body, the hosts and known-issues content and the closing link, 32 cases to 33, every new case red first; `RELEASING.md` states the rule. S02, the listings on KVR and the outlets, waits on M006's first Release. (open-source-launch M005/S01)
 
 - **A stranger can tell in one sentence what Poly is, try it in the browser, download it, set it up in Cubase, and report a problem, from pages written for them.** Milestone M004 of the open-source-launch programme closes eleven rows in four slices. **The About panel was empty** — no description, website or topics, so the repository appeared under neither `euclidean-rhythm` nor `vst3`; it now carries the positioning sentence, `poly.jk.digital` and six topics, set through the API by the owner's permission and read back into the evidence. **`ROADMAP.md` listed four issue numbers, all closed**, while five others were open; each theme now links its open-issues query by label and points design-led work at the delivery ledgers under `docs/plans/`, the repository having no GitHub milestones to query, and `scripts/check-front-door.mjs` fails if a `#NNN` returns. **The repository said "polymetric drum pattern generator" and the launch intent said "open-source Euclidean sequencer"**; the owner chose one sentence naming the four things a free Euclidean sequencer does not have — grooves grounded in real drumming traditions, a guide that cites where every preset comes from, deterministic output, and an engine that runs in the browser — and it opens the README and `CLAUDE.md`, is the site's meta description and the About description, held verbatim by `site/tests/positioning.test.mjs`. **The README put Building before Installing**, gave signing-secret provisioning its own section, had no screenshot, never mentioned the in-browser engine and carried six internal identifiers, with two more in `CONTRIBUTING.md`; it now runs sentence, screenshot, features, try it in the browser, download, DAW compatibility, guide, contributing, building, architecture, licence, each body the old text with its identifiers removed; `RELEASING.md` is new and holds the signing section whole; the guard holds the order and forbids the identifiers, red on both files first. **`CLAUDE.md` listed VSTGUI 4** a year after the editor became a choc WebView; **`.bg-shell/manifest.json` was tracked and ignored at once**; and **nothing told a contributor which of `docs/`'s 250 files to read** — `docs/README.md` now classifies them into for-users (nothing: the guide), for-contributors (twelve documents) and delivery records, kept complete both ways by `scripts/check-docs-index.mjs`. **Every site page said the guide was under construction** after first-release M001–M004 had verified it, and the hero offered no download and no way to hear the engine; the banner is now a pre-release notice linking the Releases page, for M006 to retire when it tags, and the hero offers Download, Try it in the browser (the Foundations chapter, the first with playable previews) and Read the guide. **The guide told readers to copy `Poly.vst3` or `Poly.component`** when the release zips contain a `poly_plugin.vst3` bundle and no release has ever contained an Audio Unit; the install section names the zips and the bundle and describes no Audio Unit, with `Poly.vst3` and `Poly.component` forbidden by a test. The site suite went from 338 to 345 and the guards from 17 to 19. (open-source-launch M004)
 
