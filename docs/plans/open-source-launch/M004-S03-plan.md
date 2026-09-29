@@ -14,7 +14,7 @@ created; `xattr` stays until M009; the docs index gets a guard and a
 - [x] Task 1 — The stale manifest is untracked and its excludes are gone
       (OS24)
 - [x] Task 2 — `CLAUDE.md` names the WebView editor (OS23)
-- [ ] Task 3 — `docs/README.md` tells a contributor what to read, and a guard
+- [x] Task 3 — `docs/README.md` tells a contributor what to read, and a guard
       keeps it complete (OS25)
 - [ ] Task 4 — The README reads for the downloader, signing moves to
       `RELEASING.md`, and no internal ID remains (OS22); the slice closes

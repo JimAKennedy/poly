@@ -71,6 +71,10 @@ run_guard "workflow-hygiene contract"  node --test scripts/check-workflow-hygien
 # keep the section order written for the person downloading.
 run_guard "front-door contract"        node --test scripts/check-front-door.mjs
 
+# open-source-launch M004/S03 (OS25): docs/README.md names every top-level
+# document and directory under docs/ and nothing that is gone.
+run_guard "docs-index"                 node --test scripts/check-docs-index.mjs
+
 echo
 if [ "${#FAILED[@]}" -eq 0 ]; then
     echo "=== check-guards.sh: ${RAN} guard invocation(s) passed ==="

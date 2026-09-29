@@ -175,6 +175,11 @@ mappings:
 # ---------------------------------------------------------------------------
 
 cannot_drift:
+  # An index of the directory itself, not a description of any source: kept
+  # complete by scripts/check-docs-index.mjs (every top-level document and
+  # directory listed, nothing listed that is gone) rather than by a pairing.
+  - doc: "docs/README.md"
+    reason: "An index of docs/ with no source to drift from; scripts/check-docs-index.mjs holds it complete in both directions."
   # --- (a) Emitted or data-driven at build time -----------------------------
 
   - doc: "site/src/content/docs/appendix-parameters.mdx"
