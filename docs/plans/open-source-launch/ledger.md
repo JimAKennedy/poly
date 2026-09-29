@@ -259,21 +259,21 @@ records both.
 **Plan:** M003-S03-plan.md
 **Validation:** format, doc-discipline, guards
 **Evidence:** evidence/M003-S03.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The owner's decision is recorded in this milestone's decisions file and
+- [x] The owner's decision is recorded in this milestone's decisions file and
       cited by M007/S01
-- [ ] If supported: an `aumi` unit passes `auval`, drives an instrument track in
+- [x] If supported: an `aumi` unit passes `auval`, drives an instrument track in
       Logic (evidence), carries the real version, and the release builds and
-      ships it
-- [ ] If declined: the README and guide say Logic is not supported, and
+      ships it — n/a, declined
+- [x] If declined: the README and guide say Logic is not supported, and
       `build-au-macos` carries a comment saying it exists for validation only
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| OS17 | `plugin/resource/au-info.plist` declares the AU as type `aumu` with version `0xFFFFFFFF`. `build-au-macos` builds it on every PR and no release contains it. Logic has no VST3 and routes generated MIDI only from a MIDI FX (`aumi`) unit, so as built it could not drive another instrument there even if it shipped. **Feasibility comes before the decision:** the VST3 SDK's AUv2 wrapper builds instruments and effects, and whether it can produce an `aumi` at all is unverified — if it cannot, "supported" means writing a wrapper, and the honest decision may be forced. M007 (the macOS installer) waits on this row | `disclose` | `plugin/resource/au-info.plist`, `plugin/CMakeLists.txt`, `.github/workflows/ci.yml`, `README.md` | The feasibility check is recorded first; then either arm of the DoD, not both; M007/S01 cites the decision rather than re-deciding it. **Amended 2026-09-29:** the decision is for the first release; M010/S02 revisits it with a wrapper spike | `open` |
+| OS17 | `plugin/resource/au-info.plist` declares the AU as type `aumu` with version `0xFFFFFFFF`. `build-au-macos` builds it on every PR and no release contains it. Logic has no VST3 and routes generated MIDI only from a MIDI FX (`aumi`) unit, so as built it could not drive another instrument there even if it shipped. **Feasibility comes before the decision:** the VST3 SDK's AUv2 wrapper builds instruments and effects, and whether it can produce an `aumi` at all is unverified — if it cannot, "supported" means writing a wrapper, and the honest decision may be forced. M007 (the macOS installer) waits on this row | `disclose` | `plugin/resource/au-info.plist`, `plugin/CMakeLists.txt`, `.github/workflows/ci.yml`, `README.md` | The feasibility check is recorded first; then either arm of the DoD, not both; M007/S01 cites the decision rather than re-deciding it. **Amended 2026-09-29:** the decision is for the first release; M010/S02 revisits it with a wrapper spike | `done` |
 
 ## Milestone M004 — A stranger can find it, file against it, and follow it
 

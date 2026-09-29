@@ -80,3 +80,22 @@ test('chapter 17 opens its routing with one instrument on all channels, before a
   assert.match(section, /all (MIDI )?channels/i, 'the one-instrument section must say the instrument listens on all channels');
   assert.doesNotMatch(section, /set every lane.*channel 1/i, 'the one-instrument section must not tell the reader to set lanes to Channel 1');
 });
+
+// M003/S03, OS17: Logic is declined for the first release. The SDK's AUv2
+// wrapper cannot produce the MIDI-FX unit Logic routes generated MIDI from,
+// so the guide must not list Logic as a host that loads Poly, and both the
+// README and the guide must say it is not supported.
+const GUIDE = readFileSync(resolve(REPO, 'site/src/content/docs/guide-using-poly.mdx'), 'utf8');
+
+test('the guide does not list Logic as a host that loads Poly', () => {
+  const load = GUIDE.slice(GUIDE.indexOf('### Load Poly'));
+  const list = load.slice(0, load.indexOf('\n\n', load.indexOf('\n- ')));
+  assert.doesNotMatch(list, /^- \*\*Logic Pro:\*\* Track >/m, 'the Load Poly list still gives Logic loading steps');
+  assert.doesNotMatch(GUIDE, /^\*\*Logic Pro:\*\*$/m, 'a Logic Pro routing block remains in the guide');
+});
+
+test('README and guide say Logic is not supported', () => {
+  for (const [name, text] of [['README.md', README], ['guide-using-poly.mdx', GUIDE]]) {
+    assert.match(text, /Logic Pro[^.\n]*not supported/i, `${name} does not say Logic Pro is not supported`);
+  }
+});

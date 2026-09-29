@@ -112,9 +112,14 @@ jobs:
   #   3. Install the .component and validate it end-to-end with
   #      `auval -v aumu Poly JkDl` — exit 0 is a validation PASS; the full auval -v
   #      log is the diagnostic surface for AU load/validation failures.
-  #   4. Upload the .component. There is no separate release workflow in this repo;
-  #      CI artifact upload IS the distribution channel, mirroring `Upload plugin`
-  #      for the VST3.
+  #   4. Upload the .component as a CI artifact, for inspection only.
+  #
+  # OS17 (open-source-launch M003/S03, declined 2026-09-29): this AU exists for
+  # validation only and is shipped by no release. Logic routes generated MIDI
+  # only from a MIDI-FX (aumi) unit, and the SDK wrapper builds instruments and
+  # effects alone, so the aumu could not do Poly's one job there. M007 packages
+  # the VST3 alone; M010/S02 revisits Logic with a wrapper spike. The decision
+  # is in docs/plans/open-source-launch/M003-decisions.md.
   build-au-macos:
     runs-on: macos-14
     steps:

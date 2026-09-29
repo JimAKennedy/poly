@@ -45,6 +45,10 @@ jk_target_warnings(poly_plugin)
 # Identity contract (must match plugin/resource/au-info.plist and the CI auval
 # invocation `auval -v aumu Poly JkDl`):
 #   type=aumu  subtype=Poly  manufacturer=JkDl  factoryFunction=AUWrapperFactory
+#
+# Validation only, shipped by no release (OS17, declined 2026-09-29): Logic
+# routes generated MIDI only from a MIDI-FX (aumi) unit, which this wrapper
+# cannot produce. See docs/plans/open-source-launch/M003-decisions.md.
 # -----------------------------------------------------------------------------
 if(APPLE AND XCODE AND SMTG_ENABLE_AUV2_BUILDS)
     # The VST3 SDK appends its cmake/modules to CMAKE_MODULE_PATH inside its own

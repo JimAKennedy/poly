@@ -10,18 +10,18 @@ touches Logic's lines only, and the guide's AU install prose stays for OS41.
 
 ## Task status
 
-- [ ] Task 1 — Logic is declined in the README, the guide and the AU build's
+- [x] Task 1 — Logic is declined in the README, the guide and the AU build's
       own comments, with the feasibility finding recorded; the slice closes
       (OS17)
 
 ## Definition of Done
 
-- [ ] The owner's decision is recorded in this milestone's decisions file and
+- [x] The owner's decision is recorded in this milestone's decisions file and
       cited by M007/S01
-- [ ] If supported: an `aumi` unit passes `auval`, drives an instrument track in
+- [x] If supported: an `aumi` unit passes `auval`, drives an instrument track in
       Logic (evidence), carries the real version, and the release builds and
-      ships it
-- [ ] If declined: the README and guide say Logic is not supported, and
+      ships it — n/a, declined
+- [x] If declined: the README and guide say Logic is not supported, and
       `build-au-macos` carries a comment saying it exists for validation only
 
 ## Validation

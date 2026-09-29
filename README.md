@@ -159,6 +159,11 @@ historical context only.
 Poly is built and tested in Cubase. Other hosts may work and have not been
 tried; a measured host table for them is planned.
 
+**Logic Pro is not supported.** Logic routes generated MIDI only from a
+MIDI-FX Audio Unit, and Poly's Audio Unit is an instrument built by the VST3
+SDK's wrapper, which cannot produce one; the Audio Unit is built in CI for
+validation and is not part of any release.
+
 ## Guide
 
 **[poly.jk.digital](https://poly.jk.digital)** -- the full guide covering polyrhythmic
