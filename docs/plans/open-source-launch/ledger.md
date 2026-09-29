@@ -384,16 +384,17 @@ what Poly does, which hosts it supports and what is known to be wrong — and th
 launch is listed where musicians look.
 
 **Branch:** milestone/M005-release-notes
-**Status:** planned
+**Status:** in-progress
 **Demo:** The Release body for the first version is a few hundred words a
 non-developer can read, and the engineering history is one link away.
 
 ### Slice M005/S01 — A release body a musician reads
 
 **Depends:** M001/S01, M003/S01
+**Plan:** M005-S01-plan.md
 **Validation:** format, doc-discipline, guards
 **Evidence:** evidence/M005-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
