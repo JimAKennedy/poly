@@ -11,7 +11,7 @@ the one-instrument case.
 
 ## Task status
 
-- [ ] Task 1 — The README and chapter 17 carry one host table, Cubase in it
+- [x] Task 1 — The README and chapter 17 carry one host table, Cubase in it
       and nothing else claimed (OS14)
 - [ ] Task 2 — Chapter 17's routing starts with one drum instrument and
       keeps per-lane channels as the advanced case (OS15); the slice closes

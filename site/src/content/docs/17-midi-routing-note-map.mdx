@@ -12,6 +12,22 @@ The preceding chapters have focused on what Poly generates -- Euclidean distribu
 
 This separation is deliberate. The engine generates patterns based on Euclidean mathematics, cycle lengths, and macro modulation. The routing layer shapes the sonic result independently. Change a lane's MIDI channel and the pattern stays identical -- only the destination instrument changes. Remap a note and the rhythm is untouched -- only the timbre shifts. This decoupling means you can experiment with orchestration freely, swapping kit pieces or entire instruments without rebuilding your patch from scratch.
 
+## Hosts
+
+Poly generates MIDI and plays nothing itself, so everything in this chapter
+happens inside a host that routes that MIDI to a drum instrument. This is
+the host table the project publishes, and it lists only what has been
+measured:
+
+| Host | Version | Platform | Status | Routing |
+|---|---|---|---|---|
+| Cubase | Pro 15 | macOS | supported | Instrument track for Poly; a drum instrument whose MIDI input is Poly on all channels, or a MIDI Send from the Poly track |
+| Cubase | 14 | Windows | supported | The same; exercised nightly by the Cubase harness |
+| Other VST3 hosts | — | — | untested | Routing MIDI out of a plugin is where hosts differ most; nothing has been measured |
+
+Poly is built and tested in Cubase. Other hosts may work and have not been
+tried; a measured host table for them is planned.
+
 ## Per-Lane MIDI Channel
 
 Each lane in Poly has a `midiChannel` parameter that determines which MIDI channel its output events are sent on. The parameter accepts two kinds of values:
