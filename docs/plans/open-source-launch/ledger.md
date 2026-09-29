@@ -362,20 +362,20 @@ exists to replace.
 **Plan:** M004-S04-plan.md
 **Validation:** format, site-unit, doc-conformance, guards
 **Evidence:** evidence/M004-S04.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] No page carries the construction banner
-- [ ] The home page's hero offers the download and the in-browser engine beside
+- [x] No page carries the construction banner
+- [x] The home page's hero offers the download and the in-browser engine beside
       the guide
-- [ ] The guide's install section names the bundle a release actually contains
+- [x] The guide's install section names the bundle a release actually contains
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
 | OS26 | `site/src/components/Banner.astro:4` shows "🚧 Under active construction — content being developed and verified" on every page of a guide whose bibliography, screenshots and chapters first-release M001–M004 just verified | `docs` | `site/src/components/Banner.astro`, `site/astro.config.mjs` | The banner is removed or replaced by a release notice; a site test asserts the construction text is absent | `done` |
 | OS27 | The hero in `site/src/content/docs/index.mdx` offers *Start Reading* and *GitHub*. There is no download, and the in-browser engine — the one thing no competitor has — is not on the front page | `docs` | `site/src/content/docs/index.mdx` | The hero's actions are download (the Releases page), try it, and read the guide; `guards` passes its site-asset checks | `done` |
-| OS41 | `guide-using-poly.mdx`'s install section names the VST3 bundle `Poly.vst3` when the artifact is `poly_plugin.vst3`, and tells the reader to copy `Poly.component` into their Components folder when no release contains an AU. First-release M004 matched the guide to the plugin UI, not to the release artifacts | `defect` | `site/src/content/docs/guide-using-poly.mdx` | The section describes the zip as it ships — the real bundle name, and the AU only if OS17 says it ships; a claim test forbids `Poly.vst3` returning. M009/S01 rewrites the same section for the installers | `open` |
+| OS41 | `guide-using-poly.mdx`'s install section names the VST3 bundle `Poly.vst3` when the artifact is `poly_plugin.vst3`, and tells the reader to copy `Poly.component` into their Components folder when no release contains an AU. First-release M004 matched the guide to the plugin UI, not to the release artifacts | `defect` | `site/src/content/docs/guide-using-poly.mdx` | The section describes the zip as it ships — the real bundle name, and the AU only if OS17 says it ships; a claim test forbids `Poly.vst3` returning. M009/S01 rewrites the same section for the installers | `done` |
 
 ## Milestone M005 — The release notes are for musicians
 

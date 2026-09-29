@@ -14,15 +14,15 @@ the Audio Unit.
 
 - [x] Task 1 — The banner says pre-release and the hero offers download, try
       it and the guide (OS26, OS27)
-- [ ] Task 2 — The guide's install section describes the zip that ships
+- [x] Task 2 — The guide's install section describes the zip that ships
       (OS41); the slice closes
 
 ## Definition of Done
 
-- [ ] No page carries the construction banner
-- [ ] The home page's hero offers the download and the in-browser engine beside
+- [x] No page carries the construction banner
+- [x] The home page's hero offers the download and the in-browser engine beside
       the guide
-- [ ] The guide's install section names the bundle a release actually contains
+- [x] The guide's install section names the bundle a release actually contains
 
 ## Validation
 

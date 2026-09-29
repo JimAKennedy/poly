@@ -99,3 +99,14 @@ test('README and guide say Logic is not supported', () => {
     assert.match(text, /Logic Pro[^.\n]*not supported/i, `${name} does not say Logic Pro is not supported`);
   }
 });
+
+// M004/S04, OS41: the install section describes the zip a release actually
+// contains — a poly_plugin.vst3 bundle — and not a Poly.vst3 or a
+// Poly.component that no release has ever shipped.
+test("the guide's install section names the bundle a release contains", () => {
+  const install = GUIDE.slice(GUIDE.indexOf('### Install'), GUIDE.indexOf('### Load Poly'));
+  assert.ok(install.includes('poly_plugin.vst3'), 'the install section does not name poly_plugin.vst3 (OS41)');
+  assert.doesNotMatch(GUIDE, /Poly\.vst3\b/, 'the guide still names Poly.vst3, a bundle no release contains (OS41)');
+  assert.doesNotMatch(GUIDE, /Poly\.component\b/, 'the guide still names Poly.component, a bundle no release contains (OS41)');
+  assert.doesNotMatch(GUIDE, /ships in two formats/i, 'the guide still says Poly ships in two formats (OS41)');
+});
