@@ -95,6 +95,12 @@ actually fails on regressions.
   with `// RT-SAFE-OK`.
 - `check-release-workflow.mjs` — contract test locking the shape of
   `release.yml`, which cannot be exercised by a real tag push in CI.
+- `check-release-verify-workflow.mjs` — contract test locking the shape of
+  `release-verify.yml`, the workflow that installs a published Release on
+  fresh hosted runners and reports what a clean machine measures: checksum
+  and attestation, quarantine and Gatekeeper on macOS, Mark-of-the-Web and
+  Authenticode on Windows, pluginval on the installed bundle
+  (open-source-launch M006).
 - `check-sample-manifest.sh` — every shipped audio file has a manifest entry
   and every manifest entry has a file.
 - `check-scripts-readme.sh` / `check-scripts-readme.mjs` — this README stays

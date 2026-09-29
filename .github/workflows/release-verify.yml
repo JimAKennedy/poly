@@ -1,0 +1,207 @@
+name: Release Verify
+
+# What a clean machine measures of a published Release (open-source-launch
+# M006/S01, OS33). A hosted runner is a fresh VM every time — which is what
+# "clean" meant — so there is no user to create or clean down. On each shipping
+# platform this workflow gets the tag's assets the way a stranger does (from the
+# Release), verifies the checksum and the provenance attestation, installs the
+# bundle where the DAW looks, records the verdicts that produce the platform's
+# dialogs — the quarantine attribute and spctl on macOS, the Mark-of-the-Web
+# and Authenticode status on Windows — clears the quarantine the way the
+# README tells a user to, and runs pluginval against the installed bundle. The
+# verdicts are measurements and cannot fail the job; the download, the digest,
+# the attestation and pluginval can. Each job uploads its report.
+#
+# Runs on demand with a tag, and on every published Release, so no one has to
+# remember. scripts/check-release-verify-workflow.mjs locks this shape.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to verify, e.g. v0.2.0-rc.1'
+        required: true
+        type: string
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+env:
+  GH_REPO: JimAKennedy/poly
+  GH_TOKEN: ${{ github.token }}
+  TAG: ${{ github.event.inputs.tag || github.event.release.tag_name }}
+
+jobs:
+  verify-macos:
+    name: Verify install (macOS)
+    runs-on: macos-14
+    steps:
+      - name: Download the Release assets as a stranger would
+        run: |
+          set -euo pipefail
+          echo "Verifying $TAG"
+          mkdir -p dl
+          gh release download "$TAG" --pattern "poly-$TAG-macos-universal.zip" --pattern SHA256SUMS --dir dl
+          ls -la dl
+      - name: Verify the digest and the provenance attestation
+        run: |
+          set -euo pipefail
+          cd dl
+          grep macos-universal SHA256SUMS | shasum -a 256 -c
+          cd ..
+          gh attestation verify "dl/poly-$TAG-macos-universal.zip" --owner JimAKennedy
+      - name: Extract, quarantine as a browser download would, and install where the DAW looks
+        run: |
+          set -euo pipefail
+          # gh release download sets no quarantine attribute; a browser does.
+          # Apply it to the zip and, after extraction, to the bundle, so the
+          # verdicts below are the ones a downloader meets.
+          xattr -w com.apple.quarantine "0083;$(printf '%x' "$(date +%s)");Safari;" "dl/poly-$TAG-macos-universal.zip"
+          mkdir -p extracted
+          ditto -x -k "dl/poly-$TAG-macos-universal.zip" extracted
+          xattr -w -r com.apple.quarantine "0083;$(printf '%x' "$(date +%s)");Safari;" extracted/poly_plugin.vst3
+          mkdir -p "$HOME/Library/Audio/Plug-Ins/VST3"
+          ditto extracted/poly_plugin.vst3 "$HOME/Library/Audio/Plug-Ins/VST3/poly_plugin.vst3"
+          ls -la "$HOME/Library/Audio/Plug-Ins/VST3"
+      - name: Record what the machine says about the quarantined bundle
+        run: |
+          B="$HOME/Library/Audio/Plug-Ins/VST3/poly_plugin.vst3"
+          R=report-macos-universal.md
+          {
+            echo "# Release verify — macOS"
+            echo
+            echo "- tag: $TAG"
+            echo "- runner: macos-14, $(sw_vers -productName) $(sw_vers -productVersion) ($(uname -m))"
+            echo "- installed to: $B"
+            echo
+            echo "## Quarantine attribute, as a browser download carries it"
+            echo '```'
+          } > "$R"
+          xattr -l "$B" 2>&1 | tee -a "$R" || true
+          { echo '```'; echo; echo "## Signature (codesign -dv)"; echo '```'; } >> "$R"
+          codesign -dv --verbose=2 "$B" 2>&1 | tee -a "$R" || true
+          { echo '```'; echo; echo "## Gatekeeper verdict on the quarantined bundle (spctl --assess)"; echo '```'; } >> "$R"
+          spctl --assess --type execute --verbose=4 "$B" 2>&1 | tee -a "$R" || true
+          echo '```' >> "$R"
+      - name: Clear the quarantine the way the README tells a user to, and record the verdict again
+        run: |
+          B="$HOME/Library/Audio/Plug-Ins/VST3/poly_plugin.vst3"
+          R=report-macos-universal.md
+          xattr -dr com.apple.quarantine "$B"
+          { echo; echo "## After \`xattr -dr com.apple.quarantine\` (the README's instruction)"; echo '```'; } >> "$R"
+          xattr -l "$B" 2>&1 | tee -a "$R" || true
+          echo "(no output above means no attribute remains)" | tee -a "$R"
+          spctl --assess --type execute --verbose=4 "$B" 2>&1 | tee -a "$R" || true
+          echo '```' >> "$R"
+      - name: Download pluginval
+        run: |
+          set -euo pipefail
+          curl -fsSL -o pluginval.zip https://github.com/Tracktion/pluginval/releases/download/v1.0.4/pluginval_macOS.zip
+          # OS05: the same pinned digest ci.yml verifies before executing it.
+          echo "3c4c533bda0c5059eea3ddaea752d757ee2025041f0f47e6bcb0e87f6082b29f  pluginval.zip" | shasum -a 256 -c
+          unzip -q pluginval.zip
+          chmod +x "pluginval.app/Contents/MacOS/pluginval"
+      - name: Run pluginval against the installed bundle
+        run: |
+          set -euo pipefail
+          B="$HOME/Library/Audio/Plug-Ins/VST3/poly_plugin.vst3"
+          R=report-macos-universal.md
+          { echo; echo "## pluginval 1.0.4, strictness 8, against the installed bundle"; echo '```'; } >> "$R"
+          "pluginval.app/Contents/MacOS/pluginval" --strictness-level 8 --timeout-ms 120000 --validate "$B" 2>&1 | tee pluginval.log | tail -20 >> "$R"
+          echo '```' >> "$R"
+          grep -q 'SUCCESS' pluginval.log
+      - name: Upload the report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: verify-report-macos-universal
+          path: report-macos-universal.md
+          if-no-files-found: error
+
+  verify-windows:
+    name: Verify install (Windows)
+    runs-on: windows-2022
+    steps:
+      - name: Download the Release assets as a stranger would
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Verifying $TAG"
+          mkdir -p dl
+          gh release download "$TAG" --pattern "poly-$TAG-windows-x64.zip" --pattern SHA256SUMS --dir dl
+          ls -la dl
+      - name: Verify the digest and the provenance attestation
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd dl
+          grep windows-x64 SHA256SUMS | sha256sum -c
+          cd ..
+          gh attestation verify "dl/poly-$TAG-windows-x64.zip" --owner JimAKennedy
+      - name: Mark the zip as a browser download, extract, and install where the DAW looks
+        shell: pwsh
+        run: |
+          $zip = "dl/poly-$env:TAG-windows-x64.zip"
+          # gh release download sets no Mark-of-the-Web; a browser does (ZoneId=3, Internet).
+          Set-Content -Path $zip -Stream Zone.Identifier -Value "[ZoneTransfer]`r`nZoneId=3"
+          New-Item -ItemType Directory -Force -Path extracted | Out-Null
+          Expand-Archive -Path $zip -DestinationPath extracted -Force
+          $dest = Join-Path $env:LOCALAPPDATA 'Programs\Common\VST3'
+          New-Item -ItemType Directory -Force -Path $dest | Out-Null
+          Copy-Item -Recurse -Force extracted\poly_plugin.vst3 (Join-Path $dest 'poly_plugin.vst3')
+          Get-ChildItem -Recurse $dest | Select-Object FullName | Out-String | Write-Output
+      - name: Record what the machine says about the download and the installed bundle
+        shell: pwsh
+        run: |
+          $zip = "dl/poly-$env:TAG-windows-x64.zip"
+          $dest = Join-Path $env:LOCALAPPDATA 'Programs\Common\VST3\poly_plugin.vst3'
+          $dll = Get-ChildItem -Recurse -Path $dest -Filter *.vst3 -File | Select-Object -First 1
+          $R = 'report-windows-x64.md'
+          $os = (Get-CimInstance Win32_OperatingSystem)
+          @(
+            '# Release verify — Windows',
+            '',
+            "- tag: $env:TAG",
+            "- runner: windows-2022, $($os.Caption) $($os.Version)",
+            "- installed to: $dest",
+            "- binary: $($dll.FullName)",
+            '',
+            '## Mark-of-the-Web on the zip, as a browser download carries it',
+            '```'
+          ) | Set-Content $R
+          Get-Content -Path $zip -Stream Zone.Identifier -ErrorAction SilentlyContinue | Add-Content $R
+          @('```', '', '## Mark-of-the-Web on the installed binary (propagated by extraction, or not)', '```') | Add-Content $R
+          $motw = Get-Content -Path $dll.FullName -Stream Zone.Identifier -ErrorAction SilentlyContinue
+          if ($motw) { $motw | Add-Content $R } else { '(no Zone.Identifier stream on the installed binary)' | Add-Content $R }
+          @('```', '', '## Authenticode status of the installed binary', '```') | Add-Content $R
+          $sig = Get-AuthenticodeSignature -FilePath $dll.FullName -ErrorAction SilentlyContinue
+          "Status: $($sig.Status)  StatusMessage: $($sig.StatusMessage)  Signer: $($sig.SignerCertificate.Subject)" | Add-Content $R
+          '```' | Add-Content $R
+          Get-Content $R
+      - name: Download pluginval
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL -o pluginval.zip https://github.com/Tracktion/pluginval/releases/download/v1.0.4/pluginval_Windows.zip
+          # OS05: the same pinned digest ci.yml verifies before executing it.
+          echo "c08e61ce3b96db41636f8ec7e76f4c7e2c13ebdac7fa1b5a1f52b4f32ec715ab  pluginval.zip" | sha256sum -c
+          unzip -q pluginval.zip
+      - name: Run pluginval against the installed bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          B="$LOCALAPPDATA/Programs/Common/VST3/poly_plugin.vst3"
+          R=report-windows-x64.md
+          { echo; echo "## pluginval 1.0.4, strictness 8, against the installed bundle"; echo '```'; } >> "$R"
+          ./pluginval.exe --strictness-level 8 --timeout-ms 120000 --validate "$B" 2>&1 | tee pluginval.log | tail -20 >> "$R"
+          echo '```' >> "$R"
+          grep -q 'SUCCESS' pluginval.log
+      - name: Upload the report
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: verify-report-windows-x64
+          path: report-windows-x64.md
+          if-no-files-found: error

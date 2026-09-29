@@ -311,6 +311,46 @@ test('every pluginval download in every workflow is verified against the pinned 
 // `if:`, removing notarytool --wait, dropping stapling, or reordering signing
 // after packaging. (M030 S03, D031.) ---
 
+// --- OS34 (open-source-launch M006/S02): an unsigned build cannot ship quietly ---
+//
+// The signing steps skip when the secrets are absent, and nothing said so. Each
+// leg now records whether it signed, refuses to package unsigned unless the
+// repository variable ALLOW_UNSIGNED_RELEASE is exactly 'true', and the release
+// job writes a Signed: line into the body from what the legs recorded.
+
+test('each leg refuses to ship unsigned unless ALLOW_UNSIGNED_RELEASE is true (OS34)', () => {
+  const gates = [...wf.matchAll(/- name: Require signing or an explicit allowance/g)];
+  assert.equal(gates.length, 2, `expected the gate step on both legs, found ${gates.length}`);
+  const refs = [...wf.matchAll(/vars\.ALLOW_UNSIGNED_RELEASE/g)];
+  assert.ok(refs.length >= 2, 'both gate steps must read vars.ALLOW_UNSIGNED_RELEASE');
+  // Order on each leg: the gate after the last signing step and before packaging.
+  const staple = wf.indexOf('- name: Staple notarization ticket (macOS)');
+  const macGate = wf.indexOf('- name: Require signing or an explicit allowance');
+  const macPack = wf.indexOf('- name: Locate and package VST3 (macOS)');
+  assert.ok(staple < macGate && macGate < macPack, 'macOS gate must sit after stapling and before packaging');
+  const winGate = wf.indexOf('- name: Require signing or an explicit allowance', macGate + 1);
+  const winPack = wf.indexOf('- name: Locate and package VST3 (Windows)');
+  assert.ok(winGate !== -1 && winGate < winPack, 'Windows gate must sit before Windows packaging');
+  for (const idx of [macGate, winGate]) {
+    const body = wf.slice(idx, wf.indexOf('- name:', idx + 1));
+    assert.match(body, /exit 1/, 'the gate must fail the leg, not warn');
+  }
+});
+
+test('each leg records whether it signed, and the release job says so in the body (OS34)', () => {
+  const records = [...wf.matchAll(/- name: Record signing status \((macOS|Windows)\)/g)].map((m) => m[1]);
+  assert.deepEqual(records, ['macOS', 'Windows'], 'both legs must record their signing status');
+  assert.match(wf, /signed-\$\{\{ matrix\.asset \}\}\.txt|signed-\*\.txt/, 'the status file must be named per asset and travel with the zip');
+  const append = wf.indexOf('- name: Append signing status to the body');
+  const gen = wf.indexOf('- name: Generate release notes');
+  const publish = wf.indexOf('- name: Publish GitHub Release');
+  assert.ok(append !== -1, 'the release job must append the signing status to the body');
+  assert.ok(gen < append && append < publish, 'the Signed line is appended after the notes are generated and before publishing');
+  const body = wf.slice(append, publish);
+  assert.match(body, /Signed:/, 'the appended line must begin with Signed:');
+  assert.match(body, /release-notes\.md/, 'the line must be appended to release-notes.md');
+});
+
 test('signing secrets are mapped to job-level env (step if: reads env, not secrets)', () => {
   // GitHub does not expose the `secrets` context in step `if:` expressions —
   // only `env` — so the gated steps require these job-level env mappings to
@@ -512,6 +552,26 @@ test('the musician block names the supported hosts and lists the known issues wi
     known.includes('issues?q=is%3Aissue+is%3Aopen+label%3Aknown-issue'),
     'Known issues does not link the open issues carrying the known-issue label (OS29)',
   );
+});
+
+// --- OS32 (open-source-launch M006/S01): a suffixed tag is a pre-release ---
+
+test('a hyphen-suffixed tag publishes as a pre-release (OS32)', () => {
+  assert.match(
+    wf,
+    /prerelease:\s*\$\{\{\s*contains\(github\.ref_name,\s*'-'\)\s*\}\}/,
+    "the publish step must set prerelease from the tag: contains(github.ref_name, '-') — a release-candidate tag must not land as the latest stable version",
+  );
+});
+
+test('gen-release-notes maps a pre-release version to its base section and links the full tag (OS32)', () => {
+  const version = cmakeVersion();
+  const base = execFileSync('node', [GEN, version], { encoding: 'utf8' }).trim();
+  const rc = execFileSync('node', [GEN, `${version}-rc.1`], { encoding: 'utf8' }).trim();
+  const link = (v) => `Full changelog: https://github.com/JimAKennedy/poly/blob/v${v}/CHANGELOG.md`;
+  assert.ok(base.endsWith(link(version)));
+  assert.ok(rc.endsWith(link(`${version}-rc.1`)), 'the pre-release body must link the changelog at the full tag');
+  assert.equal(rc.slice(0, -link(`${version}-rc.1`).length), base.slice(0, -link(version).length), 'the pre-release body must be the base version\'s musician block');
 });
 
 test('gen-release-notes fails loud (exit 1) on a missing CHANGELOG section', () => {

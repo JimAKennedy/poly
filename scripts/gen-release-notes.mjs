@@ -8,8 +8,10 @@
 //
 // Behavior:
 // - Reads CHANGELOG.md at repo root.
-// - Finds the H2 section whose bracketed token matches the version
-//   (`## [0.2.0]`, `## [0.2.0] - 2026-10-01`, case-insensitive).
+// - Finds the H2 section whose bracketed token matches the version's base
+//   (`## [0.2.0]`, `## [0.2.0] - 2026-10-01`, case-insensitive). A pre-release
+//   version such as 0.2.0-rc.1 takes the 0.2.0 section: the release candidate
+//   describes the same tree (OS32), and the link below still names the full tag.
 // - Within it, finds `### For musicians` and prints the lines after it up to
 //   the next H3 or H2, trimmed, then a blank line and
 //   `Full changelog: https://github.com/JimAKennedy/poly/blob/v<version>/CHANGELOG.md`.
@@ -52,7 +54,8 @@ for (let i = 0; i < lines.length; i++) {
     if (/^##\s+\[/.test(lines[i])) h2Indexes.push(i);
 }
 
-const target = version.toLowerCase();
+// A hyphen-suffixed version is a pre-release of its base (0.2.0-rc.1 -> 0.2.0).
+const target = version.split("-")[0].toLowerCase();
 let startIdx = -1;
 for (const idx of h2Indexes) {
     // Match the bracketed token case-insensitively, so `Unreleased`, `unreleased`,

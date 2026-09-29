@@ -147,6 +147,7 @@ jobs:
       # the runtime codesign flag, the secret `if:` gate, notarytool --wait,
       # stapling, and the order (after pluginval, before packaging).
       - name: Codesign VST3 (macOS)
+        id: codesign
         if: runner.os == 'macOS' && env.MACOS_CERTIFICATE_P12_BASE64 != '' && env.MACOS_SIGNING_IDENTITY != ''
         run: |
           set -euo pipefail
@@ -175,6 +176,7 @@ jobs:
           codesign --force --deep --options runtime --timestamp \
             --sign "$MACOS_SIGNING_IDENTITY" "$VST3_PATH"
           codesign --verify --deep --strict --verbose=2 "$VST3_PATH"
+          echo "signed=yes" >> "$GITHUB_OUTPUT"
           rm -f "$RUNNER_TEMP/cert.p12"
       - name: Notarize VST3 (macOS)
         if: runner.os == 'macOS' && env.MACOS_NOTARY_APPLE_ID != '' && env.MACOS_NOTARY_PASSWORD != '' && env.MACOS_NOTARY_TEAM_ID != ''
@@ -197,6 +199,7 @@ jobs:
             --wait
           rm -f "$RUNNER_TEMP/notarize.zip"
       - name: Staple notarization ticket (macOS)
+        id: staple
         if: runner.os == 'macOS' && env.MACOS_NOTARY_APPLE_ID != '' && env.MACOS_NOTARY_PASSWORD != '' && env.MACOS_NOTARY_TEAM_ID != ''
         run: |
           set -euo pipefail
@@ -209,6 +212,26 @@ jobs:
           # offline (no ticket fetch needed on the end user's machine).
           xcrun stapler staple "$VST3_PATH"
           xcrun stapler validate "$VST3_PATH"
+          echo "notarized=yes" >> "$GITHUB_OUTPUT"
+      # OS34 (open-source-launch M006/S02): an unsigned build cannot ship
+      # quietly. Each leg records what it did, then refuses to package an
+      # unsigned bundle unless the repository variable ALLOW_UNSIGNED_RELEASE is
+      # exactly 'true' — set on purpose, by a maintainer, for a release that is
+      # unsigned by design. The release job reads the records into the body.
+      - name: Record signing status (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          SIGNED="${{ steps.codesign.outputs.signed || 'no' }}"
+          NOTARIZED="${{ steps.staple.outputs.notarized || 'no' }}"
+          printf 'signed=%s\nnotarized=%s\n' "$SIGNED" "$NOTARIZED" > "signed-${{ matrix.asset }}.txt"
+          cat "signed-${{ matrix.asset }}.txt"
+      - name: Require signing or an explicit allowance
+        if: runner.os == 'macOS'
+        run: |
+          if ! grep -q '^signed=yes$' "signed-${{ matrix.asset }}.txt" && [ "${{ vars.ALLOW_UNSIGNED_RELEASE }}" != "true" ]; then
+            echo "::error::The macOS bundle is unsigned and ALLOW_UNSIGNED_RELEASE is not 'true'. Provision the signing secrets (RELEASING.md) or set the repository variable to allow an unsigned release on purpose."
+            exit 1
+          fi
       # Package the shipping .vst3 bundle as a zipped release asset. `probe` is
       # the midi_probe test tool's bundle (tools/midi_probe) — exclude it so we
       # ship poly_plugin.vst3, matching ci.yml's pluginval find pattern.
@@ -224,6 +247,22 @@ jobs:
           echo "Located VST3: $VST3_PATH"
           ditto -c -k --keepParent "$VST3_PATH" "$ASSET"
           echo "Packaged asset: $ASSET"
+      - name: Record signing status (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          # No Windows signing step exists until M008; the record says so.
+          "signed=no" | Set-Content -Path "signed-${{ matrix.asset }}.txt"
+          Get-Content "signed-${{ matrix.asset }}.txt"
+      - name: Require signing or an explicit allowance
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $signed = (Get-Content "signed-${{ matrix.asset }}.txt") -contains 'signed=yes'
+          if (-not $signed -and '${{ vars.ALLOW_UNSIGNED_RELEASE }}' -ne 'true') {
+            Write-Output "::error::The Windows bundle is unsigned and ALLOW_UNSIGNED_RELEASE is not 'true'. Set the repository variable to allow an unsigned release on purpose."
+            exit 1
+          }
       - name: Locate and package VST3 (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
@@ -242,7 +281,9 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: release-${{ matrix.asset }}
-          path: poly-*.zip
+          path: |
+            poly-*.zip
+            signed-*.txt
           retention-days: 7
           if-no-files-found: error
 
@@ -292,10 +333,24 @@ jobs:
           node scripts/gen-release-notes.mjs "$VERSION" > release-notes.md
           echo "----- release body -----"
           cat release-notes.md
+      # OS34: the body says whether each artifact is signed, from what the legs
+      # recorded — not from what a maintainer typed.
+      - name: Append signing status to the body
+        run: |
+          mac_signed=$(grep -h '^signed=' dist/signed-macos-universal.txt | cut -d= -f2)
+          mac_notarized=$(grep -h '^notarized=' dist/signed-macos-universal.txt | cut -d= -f2)
+          win_signed=$(grep -h '^signed=' dist/signed-windows-x64.txt | cut -d= -f2)
+          printf '\nSigned: macOS %s (notarized %s) · Windows %s\n' "$mac_signed" "$mac_notarized" "$win_signed" >> release-notes.md
+          echo "----- release body, with signing status -----"
+          cat release-notes.md
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           body_path: release-notes.md
+          # OS32 (open-source-launch M006/S01): a hyphen-suffixed tag
+          # (v0.2.0-rc.1) is a pre-release and must not land on the Releases
+          # page as the latest stable version.
+          prerelease: ${{ contains(github.ref_name, '-') }}
           files: |
             dist/*.zip
             dist/SHA256SUMS
