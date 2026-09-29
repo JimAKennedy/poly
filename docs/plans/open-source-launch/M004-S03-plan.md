@@ -16,20 +16,20 @@ created; `xattr` stays until M009; the docs index gets a guard and a
 - [x] Task 2 — `CLAUDE.md` names the WebView editor (OS23)
 - [x] Task 3 — `docs/README.md` tells a contributor what to read, and a guard
       keeps it complete (OS25)
-- [ ] Task 4 — The README reads for the downloader, signing moves to
+- [x] Task 4 — The README reads for the downloader, signing moves to
       `RELEASING.md`, and no internal ID remains (OS22); the slice closes
 
 ## Definition of Done
 
-- [ ] The README's order is: positioning, screenshot, try it in the browser,
+- [x] The README's order is: positioning, screenshot, try it in the browser,
       download, DAW setup — then contributing and building
-- [ ] Signing-secret provisioning moves to a maintainer document the README
+- [x] Signing-secret provisioning moves to a maintainer document the README
       links to
-- [ ] No internal decision or milestone ID appears in `README.md` or
+- [x] No internal decision or milestone ID appears in `README.md` or
       `CONTRIBUTING.md`, and a guard fails if one returns
-- [ ] A contributor can tell from one index which documents under `docs/` are
+- [x] A contributor can tell from one index which documents under `docs/` are
       for them
-- [ ] The two stale artefacts are gone
+- [x] The two stale artefacts are gone
 
 ## Validation
 
