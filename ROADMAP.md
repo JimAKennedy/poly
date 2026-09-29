@@ -1,63 +1,63 @@
 # Poly Roadmap
 
-This is the public, issue-backed roadmap for Poly — a polymetric drum pattern
-generator that outputs MIDI via VST3. It organizes the currently open work by
-theme and priority so contributors can see where the project is headed and where
-help is most welcome.
+This is the public roadmap for Poly — a polymetric drum sequencer that outputs
+MIDI via VST3. It names the themes the open work falls under and links the
+live issue queries for each, so contributors can see where the project is
+headed and where help is most welcome without this file ever listing a number
+that a closed issue makes stale.
 
 **How this fits together:**
 
 - **Shipped work** is recorded in the [CHANGELOG](CHANGELOG.md).
-- **Release milestones** are tracked as
-  [GitHub milestones](https://github.com/JimAKennedy/poly/milestones); the
-  milestone, slice, and task decomposition behind them lives in delivery ledgers
-  under `docs/plans/`, where each slice carries its definition of done and the
-  validations it owes.
-- **Forward work** is tracked as
-  [GitHub issues](https://github.com/JimAKennedy/poly/issues) and grouped below.
+- **Planned work** lives in the delivery ledgers under
+  [`docs/plans/`](docs/plans/), where each milestone is broken into slices,
+  each slice carries its definition of done and the validations it owes, and
+  every commit that implements one names it.
+- **Open work** is tracked as
+  [GitHub issues](https://github.com/JimAKennedy/poly/issues) and grouped by
+  label below.
 - **New here?** See [CONTRIBUTING.md](CONTRIBUTING.md) and jump straight to the
   [good first issue](https://github.com/JimAKennedy/poly/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
   list.
 
-> This roadmap is a living document. Issue numbers and priorities change as work
-> lands — treat the linked GitHub issue list as the source of truth and this file
-> as the map.
+> This roadmap is a living document. The linked queries are the source of
+> truth for what is open; this file is the map.
 
-## Priority 1 — Keep the build green (bugs, CI, test stability)
+## Keep the build green
 
 Correctness and a reliable CI signal come first — these keep contributions
 mergeable.
 
-| Issue | Title | Labels |
-|-------|-------|--------|
-| [#172](https://github.com/JimAKennedy/poly/issues/172) | Cubase nightly failure | `cubase-nightly-failure` |
-| [#142](https://github.com/JimAKennedy/poly/issues/142) | Sanitizer nightly failure: TSAN-PLUGIN | `sanitizer-failure` |
-| [#89](https://github.com/JimAKennedy/poly/issues/89) | `tests-e2e/reich-play.spec.ts` flaky: timing threshold too tight | `bug` |
+- [Open bugs](https://github.com/JimAKennedy/poly/issues?q=is%3Aissue+is%3Aopen+label%3Abug)
+- [Sanitizer nightly failures](https://github.com/JimAKennedy/poly/issues?q=is%3Aissue+is%3Aopen+label%3Asanitizer-failure)
+  — filed by the nightly ASan/UBSan/TSan and fuzz jobs when something trips
+- [Cubase nightly failures](https://github.com/JimAKennedy/poly/issues?q=is%3Aissue+is%3Aopen+label%3Acubase-nightly-failure)
+  — filed by the self-hosted Cubase harness
 
-## Priority 2 — Documentation and onboarding
+## Documentation and onboarding
 
-Well-scoped, high-leverage work that makes the project easier to understand and
-contribute to. Many of these are good candidates for a first contribution.
+Well-scoped, high-leverage work that makes the project easier to understand
+and contribute to. Many of these are good candidates for a first contribution.
 
-| Issue | Title | Labels |
-|-------|-------|--------|
-| [#100](https://github.com/JimAKennedy/poly/issues/100) | `appendix-presets.mdx` documents only 14 of 43 factory presets | `documentation` |
-| [#111](https://github.com/JimAKennedy/poly/issues/111) | Convert website architecture diagrams from ASCII to build-time Mermaid | `documentation`, `enhancement` |
+- [Documentation issues](https://github.com/JimAKennedy/poly/issues?q=is%3Aissue+is%3Aopen+label%3Adocumentation)
+- [Good first issues](https://github.com/JimAKennedy/poly/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
 
-## Priority 3 — Rhythm engine and musicality enhancements
+## Rhythm engine and musicality
 
-The long-horizon direction: deepening the groove engine with feel, phrasing, and
-tradition-specific musical grammar. Larger design-led work — good for
+The long-horizon direction: deepening the groove engine with feel, phrasing,
+and tradition-specific musical grammar. Larger design-led work — good for
 contributors who want to dig into the engine.
 
-| Issue | Title | Labels |
-|-------|-------|--------|
+- [Enhancement requests](https://github.com/JimAKennedy/poly/issues?q=is%3Aissue+is%3Aopen+label%3Aenhancement)
+- Design-led engine work is planned milestone by milestone in the
+  [delivery ledgers](docs/plans/) before it becomes an issue; read a ledger's
+  vision section to see what is coming.
 
 ## Finding something to work on
 
 The best entry points are labeled
 [good first issue](https://github.com/JimAKennedy/poly/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
 — scoped, self-contained, and reviewable without deep engine context. If none
-are open right now, the Priority 2 documentation items above are a good place to
-start. Read [CONTRIBUTING.md](CONTRIBUTING.md) for the fork-branch-PR workflow,
-build setup, and code-style expectations, then comment on the issue to claim it.
+are open right now, the documentation query above is a good place to start.
+Read [CONTRIBUTING.md](CONTRIBUTING.md) for the fork-branch-PR workflow, build
+setup, and code-style expectations, then comment on the issue to claim it.

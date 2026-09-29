@@ -296,20 +296,20 @@ exists to replace.
 **Plan:** M004-S01-plan.md
 **Validation:** format, doc-discipline
 **Evidence:** evidence/M004-S01.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] A non-collaborator account can open an issue from each template
-- [ ] The About panel carries a description, the site URL and topics
-- [ ] `ROADMAP.md` links to issues by label and milestone rather than
+- [x] A non-collaborator account can open an issue from each template
+- [x] The About panel carries a description, the site URL and topics
+- [x] `ROADMAP.md` links to issues by label and milestone rather than
       enumerating numbers, so closing an issue cannot make it stale
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
 | OS18 | The review reported that GitHub shows a visitor "Issue creation is restricted in this repository". **Not reproduced.** On 2026-09-23 the owner read the repository's issue-creation setting as "All users"; the API shows issues enabled, no interaction limits, and no human non-collaborator has ever filed one (all 17 non-owner issues are the Actions app's nightly reports), so nothing contradicts the setting. A logged-out browser greys the button on every repository and proves nothing. Closed as already satisfied; if a signed-in non-collaborator ever meets the message, reopen | `defect` | repository settings | The setting reads "All users", recorded here; no further proof available without a second account | `done` |
 | OS19 | The About panel has no description, website or topics, so the repository appears under neither `euclidean-rhythm` nor `vst3` | `docs` | repository settings | The description is OS21's sentence; the website is `poly.jk.digital`; topics include `vst3`, `midi`, `euclidean-rhythm`, `polyrhythm`, `drum-machine`, `audio-plugin` | `done` |
-| OS20 | `ROADMAP.md` lists #172, #142, #89 and #111 — all closed — while the open issues are #320, #305, #282, #266 and #100; its Priority 3 table is empty. Enumerated issue numbers drift by construction | `docs` | `ROADMAP.md` | The roadmap names themes and links label and milestone queries; no `#NNN` issue reference remains, so there is nothing for a closure to invalidate | `open` |
+| OS20 | `ROADMAP.md` lists #172, #142, #89 and #111 — all closed — while the open issues are #320, #305, #282, #266 and #100; its Priority 3 table is empty. Enumerated issue numbers drift by construction | `docs` | `ROADMAP.md` | The roadmap names themes and links label and milestone queries; no `#NNN` issue reference remains, so there is nothing for a closure to invalidate | `done` |
 
 ### Slice M004/S02 — One sentence says what Poly is
 

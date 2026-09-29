@@ -12,14 +12,14 @@ of milestone queries; the `check-front-door.mjs` guard.
 
 - [x] Task 1 — The About panel carries the sentence, the site URL and the
       topics (OS19)
-- [ ] Task 2 — The roadmap names themes and links queries, with no issue
+- [x] Task 2 — The roadmap names themes and links queries, with no issue
       number left to go stale (OS20); the slice closes
 
 ## Definition of Done
 
-- [ ] A non-collaborator account can open an issue from each template
-- [ ] The About panel carries a description, the site URL and topics
-- [ ] `ROADMAP.md` links to issues by label and milestone rather than
+- [x] A non-collaborator account can open an issue from each template
+- [x] The About panel carries a description, the site URL and topics
+- [x] `ROADMAP.md` links to issues by label and milestone rather than
       enumerating numbers, so closing an issue cannot make it stale
 
 ## Validation
