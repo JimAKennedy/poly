@@ -11,7 +11,7 @@ tag.
 
 ## Task status
 
-- [ ] Task 1 — A hyphen-suffixed tag publishes as a pre-release from its
+- [x] Task 1 — A hyphen-suffixed tag publishes as a pre-release from its
       base version's notes, and the contract asserts it (OS32)
 - [ ] Task 2 — `release-verify.yml` installs a Release on fresh runners and
       reports what a clean machine measures, with its own contract (OS33)

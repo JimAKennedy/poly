@@ -347,6 +347,10 @@ jobs:
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
           body_path: release-notes.md
+          # OS32 (open-source-launch M006/S01): a hyphen-suffixed tag
+          # (v0.2.0-rc.1) is a pre-release and must not land on the Releases
+          # page as the latest stable version.
+          prerelease: ${{ contains(github.ref_name, '-') }}
           files: |
             dist/*.zip
             dist/SHA256SUMS

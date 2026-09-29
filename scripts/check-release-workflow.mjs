@@ -554,6 +554,26 @@ test('the musician block names the supported hosts and lists the known issues wi
   );
 });
 
+// --- OS32 (open-source-launch M006/S01): a suffixed tag is a pre-release ---
+
+test('a hyphen-suffixed tag publishes as a pre-release (OS32)', () => {
+  assert.match(
+    wf,
+    /prerelease:\s*\$\{\{\s*contains\(github\.ref_name,\s*'-'\)\s*\}\}/,
+    "the publish step must set prerelease from the tag: contains(github.ref_name, '-') — a release-candidate tag must not land as the latest stable version",
+  );
+});
+
+test('gen-release-notes maps a pre-release version to its base section and links the full tag (OS32)', () => {
+  const version = cmakeVersion();
+  const base = execFileSync('node', [GEN, version], { encoding: 'utf8' }).trim();
+  const rc = execFileSync('node', [GEN, `${version}-rc.1`], { encoding: 'utf8' }).trim();
+  const link = (v) => `Full changelog: https://github.com/JimAKennedy/poly/blob/v${v}/CHANGELOG.md`;
+  assert.ok(base.endsWith(link(version)));
+  assert.ok(rc.endsWith(link(`${version}-rc.1`)), 'the pre-release body must link the changelog at the full tag');
+  assert.equal(rc.slice(0, -link(`${version}-rc.1`).length), base.slice(0, -link(version).length), 'the pre-release body must be the base version\'s musician block');
+});
+
 test('gen-release-notes fails loud (exit 1) on a missing CHANGELOG section', () => {
   // A mistagged/undocumented version must halt the release, not publish an empty body.
   assert.throws(

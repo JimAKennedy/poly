@@ -1,6 +1,8 @@
 # Releasing Poly
 
-For maintainers. A release is cut by pushing a `v*.*.*` tag: `.github/workflows/release.yml`
+For maintainers. A release is cut by pushing a `v*.*.*` tag; a tag with a
+hyphen suffix, such as `v0.2.0-rc.1`, publishes as a pre-release and takes
+its notes from the base version's changelog section. `.github/workflows/release.yml`
 builds the plugin on macOS and Windows, runs the tests and pluginval on the
 configuration it packages, signs and notarizes the macOS bundle when the
 secrets below exist, and publishes the zips with `SHA256SUMS` and a
