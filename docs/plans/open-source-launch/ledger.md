@@ -282,7 +282,7 @@ browser, download it, set it up in their DAW, and report a problem — all from
 pages written for them.
 
 **Branch:** milestone/M004-front-door
-**Status:** in-progress
+**Status:** done
 **Demo:** A non-collaborator opens an issue from the bug template; the README
 reads positioning → screenshot → try it → download → DAW setup before any
 build instruction; the site's hero offers the download.
