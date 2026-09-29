@@ -1,0 +1,42 @@
+# Releasing Poly
+
+For maintainers. A release is cut by pushing a `v*.*.*` tag: `.github/workflows/release.yml`
+builds the plugin on macOS and Windows, runs the tests and pluginval on the
+configuration it packages, signs and notarizes the macOS bundle when the
+secrets below exist, and publishes the zips with `SHA256SUMS` and a
+build-provenance attestation. `scripts/check-release-workflow.mjs` locks that
+shape.
+
+## Signing and notarization
+
+The macOS release leg (`.github/workflows/release.yml`) auto-signs, notarizes,
+and staples the `.vst3` **the moment the six repository secrets below are
+provisioned** — no code change required. Each signing step is gated on its
+secrets being non-empty (`env.MACOS_* != ''`); while the secrets are absent the
+steps **skip** and the leg ships an unsigned zip (see the Gatekeeper note
+above). Signing runs automatically once the secrets
+exist; until then releases ship unsigned.
+
+Provision these under **Settings → Secrets and variables → Actions** in the
+GitHub repo:
+
+| Secret | What it is |
+|--------|-----------|
+| `MACOS_CERTIFICATE_P12_BASE64` | Base64 of the exported *Developer ID Application* certificate + private key (`.p12`). Export from Keychain Access, then `base64 -i cert.p12 \| pbcopy`. |
+| `MACOS_CERTIFICATE_PASSWORD` | The password set when exporting the `.p12`. |
+| `MACOS_SIGNING_IDENTITY` | The codesign identity string, e.g. `Developer ID Application: Your Name (TEAMID)`. |
+| `MACOS_NOTARY_APPLE_ID` | Apple ID email used for notarization. |
+| `MACOS_NOTARY_PASSWORD` | An **app-specific password** for that Apple ID (appleid.apple.com → Sign-In and Security → App-Specific Passwords), *not* the account password. |
+| `MACOS_NOTARY_TEAM_ID` | Your Apple Developer Team ID (the `TEAMID` in the identity string above). |
+
+To provision:
+
+1. Enroll in the [Apple Developer Program](https://developer.apple.com/programs/)
+   and create a *Developer ID Application* certificate.
+2. Export it from Keychain Access as a `.p12` (certificate **and** private key),
+   set an export password, and base64-encode the file.
+3. Generate an app-specific password for the notarization Apple ID.
+4. Add all six secrets to the repo, then push a `v*.*.*` tag. The
+   **Codesign / Notarize / Staple VST3 (macOS)** steps run after pluginval and
+   before packaging; `notarytool submit --wait` fails the leg if Apple rejects
+   the submission, so a bad build never ships mislabeled.

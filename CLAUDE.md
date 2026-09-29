@@ -1,6 +1,6 @@
 # Poly
 
-Polymetric drum pattern generator — VST3 instrument outputting MIDI.
+Poly is a free, open-source polymetric drum sequencer for your DAW: grooves grounded in real drumming traditions, a guide that cites where every preset comes from, deterministic output, and an engine that runs in your browser.
 
 ## Architecture
 
@@ -8,14 +8,14 @@ Poly is a **MIDI-only VST3 instrument** that generates evolving polyrhythmic gro
 
 **Engine isolation** is the core architectural principle: `poly_engine` is a pure C++ static library with zero VST3/audio-thread dependencies. The plugin layer (`poly_plugin`) feeds it transport/parameter state and drains its `NoteEvent` output. The engine must compile and pass all tests without the VST3 SDK.
 
-See `ARCHITECTURE.md` for the current architecture. Active roadmap is public
-[GitHub milestones](https://github.com/JimAKennedy/poly/milestones) +
+See `ARCHITECTURE.md` for the current architecture. The roadmap is `ROADMAP.md`,
+planned work is the delivery ledgers under `docs/plans/`, and shipped work is
 `CHANGELOG.md`; `IMPLEMENTATION_PLAN.md` is archived Phase 0 planning.
 
 ## Tech Stack
 
 - **C++20** (trial before wider jk.digital adoption — C++17 is the current portfolio standard)
-- VST3 SDK 3.7+, VSTGUI 4
+- VST3 SDK 3.7+; the editor is a choc WebView (`webui/`), not VSTGUI, which is switched off in CMake
 - CMake 3.14+, Google Test
 - clang-tidy, clang-format
 
@@ -47,7 +47,7 @@ See `ARCHITECTURE.md` for the current architecture. Active roadmap is public
 - The Windows CI build (`windows-2022`, MSVC) will reject missing includes that compile on macOS/Linux
 
 ### Ownership Transfer Annotations
-- All `new` expressions in `plugin/source/` that transfer ownership to VST3/VSTGUI must have `// ownership-transfer`
+- All `new` expressions in `plugin/source/` that transfer ownership to VST3 must have `// ownership-transfer`
 - The NFR review scanner flags unannotated raw `new` — this comment suppresses the finding
 
 ### jk-standards Check Configuration

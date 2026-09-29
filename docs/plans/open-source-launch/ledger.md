@@ -282,7 +282,7 @@ browser, download it, set it up in their DAW, and report a problem — all from
 pages written for them.
 
 **Branch:** milestone/M004-front-door
-**Status:** planned
+**Status:** done
 **Demo:** A non-collaborator opens an issue from the bug template; the README
 reads positioning → screenshot → try it → download → DAW setup before any
 build instruction; the site's hero offers the download.
@@ -293,85 +293,89 @@ exists to replace.
 
 ### Slice M004/S01 — The repository accepts a stranger
 
+**Plan:** M004-S01-plan.md
 **Validation:** format, doc-discipline
 **Evidence:** evidence/M004-S01.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] A non-collaborator account can open an issue from each template
-- [ ] The About panel carries a description, the site URL and topics
-- [ ] `ROADMAP.md` links to issues by label and milestone rather than
+- [x] A non-collaborator account can open an issue from each template
+- [x] The About panel carries a description, the site URL and topics
+- [x] `ROADMAP.md` links to issues by label and milestone rather than
       enumerating numbers, so closing an issue cannot make it stale
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
 | OS18 | The review reported that GitHub shows a visitor "Issue creation is restricted in this repository". **Not reproduced.** On 2026-09-23 the owner read the repository's issue-creation setting as "All users"; the API shows issues enabled, no interaction limits, and no human non-collaborator has ever filed one (all 17 non-owner issues are the Actions app's nightly reports), so nothing contradicts the setting. A logged-out browser greys the button on every repository and proves nothing. Closed as already satisfied; if a signed-in non-collaborator ever meets the message, reopen | `defect` | repository settings | The setting reads "All users", recorded here; no further proof available without a second account | `done` |
-| OS19 | The About panel has no description, website or topics, so the repository appears under neither `euclidean-rhythm` nor `vst3` | `docs` | repository settings | The description is OS21's sentence; the website is `poly.jk.digital`; topics include `vst3`, `midi`, `euclidean-rhythm`, `polyrhythm`, `drum-machine`, `audio-plugin` | `open` |
-| OS20 | `ROADMAP.md` lists #172, #142, #89 and #111 — all closed — while the open issues are #320, #305, #282, #266 and #100; its Priority 3 table is empty. Enumerated issue numbers drift by construction | `docs` | `ROADMAP.md` | The roadmap names themes and links label and milestone queries; no `#NNN` issue reference remains, so there is nothing for a closure to invalidate | `open` |
+| OS19 | The About panel has no description, website or topics, so the repository appears under neither `euclidean-rhythm` nor `vst3` | `docs` | repository settings | The description is OS21's sentence; the website is `poly.jk.digital`; topics include `vst3`, `midi`, `euclidean-rhythm`, `polyrhythm`, `drum-machine`, `audio-plugin` | `done` |
+| OS20 | `ROADMAP.md` lists #172, #142, #89 and #111 — all closed — while the open issues are #320, #305, #282, #266 and #100; its Priority 3 table is empty. Enumerated issue numbers drift by construction | `docs` | `ROADMAP.md` | The roadmap names themes and links label and milestone queries; no `#NNN` issue reference remains, so there is nothing for a closure to invalidate | `done` |
 
 ### Slice M004/S02 — One sentence says what Poly is
 
+**Plan:** M004-S02-plan.md
 **Validation:** format, doc-discipline, site-unit
 **Evidence:** evidence/M004-S02.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The owner has chosen a one-sentence positioning statement and recorded it
+- [x] The owner has chosen a one-sentence positioning statement and recorded it
       with the reasoning
-- [ ] The README's opening, the site's meta description, the About description
+- [x] The README's opening, the site's meta description, the About description
       and `CLAUDE.md` carry the same statement
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| OS21 | The repository says "polymetric drum pattern generator"; the launch intent says "open-source Euclidean sequencer". Free Euclidean sequencers are a crowded category — HY-RPE2's free tier, HY-ESG, XiiixxiQ, the open-source GenerativeMIDI, Ableton Live 12's built-in generator — and Poly loses a checklist against them. Its difference is tradition-grounded grooves with a cited guide to 45 presets, deterministic output, and an engine that runs in the browser | `docs` | `README.md`, `site/astro.config.mjs`, `CLAUDE.md`, `docs/plans/open-source-launch/M004-decisions.md` | The chosen sentence appears verbatim in all four surfaces and the About panel; the decisions file records the alternatives considered | `open` |
+| OS21 | The repository says "polymetric drum pattern generator"; the launch intent says "open-source Euclidean sequencer". Free Euclidean sequencers are a crowded category — HY-RPE2's free tier, HY-ESG, XiiixxiQ, the open-source GenerativeMIDI, Ableton Live 12's built-in generator — and Poly loses a checklist against them. Its difference is tradition-grounded grooves with a cited guide to 45 presets, deterministic output, and an engine that runs in the browser | `docs` | `README.md`, `site/astro.config.mjs`, `CLAUDE.md`, `docs/plans/open-source-launch/M004-decisions.md` | The chosen sentence appears verbatim in all four surfaces and the About panel; the decisions file records the alternatives considered | `done` |
 
 ### Slice M004/S03 — The README is written for the person downloading
 
 **Depends:** M003/S01, M004/S02
+**Plan:** M004-S03-plan.md
 **Validation:** format, doc-discipline, doc-conformance, guards
 **Evidence:** evidence/M004-S03.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The README's order is: positioning, screenshot, try it in the browser,
+- [x] The README's order is: positioning, screenshot, try it in the browser,
       download, DAW setup — then contributing and building
-- [ ] Signing-secret provisioning moves to a maintainer document the README
+- [x] Signing-secret provisioning moves to a maintainer document the README
       links to
-- [ ] No internal decision or milestone ID appears in `README.md` or
+- [x] No internal decision or milestone ID appears in `README.md` or
       `CONTRIBUTING.md`, and a guard fails if one returns
-- [ ] A contributor can tell from one index which documents under `docs/` are
+- [x] A contributor can tell from one index which documents under `docs/` are
       for them
-- [ ] The two stale artefacts are gone
+- [x] The two stale artefacts are gone
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| OS22 | `README.md` puts Building (line 26) before Installing (line 67), gives signing-secret provisioning its own top-level section (line 105), has no screenshot, never mentions the in-browser engine, and carries six internal IDs: `D029` ×2, `M054`, `D031`, `M030 S03`, `D004` (lines 63, 77, 112). `CONTRIBUTING.md:16` carries two more | `docs` | `README.md`, `CONTRIBUTING.md`, `RELEASING.md`, `scripts/` | The section order matches the DoD; a guard matching `\bD0\d\d\b` and `\bM0\d\d\b` over both files fails when one is reintroduced, seen red; `RELEASING.md` holds the secrets table unchanged | `open` |
-| OS23 | `CLAUDE.md:18` lists "VSTGUI 4" in the tech stack; `CMakeLists.txt` has turned SDK VSTGUI support off since M053/S05 and the editor is a choc WebView | `docs` | `CLAUDE.md` | The line names the WebView editor; no VSTGUI reference remains that describes current state | `open` |
-| OS24 | `.bg-shell/manifest.json` is tracked (content `[]`, added in `0d383fc`) although `.gitignore:322` ignores `.bg-shell/` — it predates the ignore rule | `tooling` | `.bg-shell/manifest.json` | `git rm --cached`; `git ls-files .bg-shell` is empty and the pre-commit excludes for it can be dropped | `open` |
-| OS25 | `docs/` holds 247 files and roughly 345k words, most of them delivery records. That is right for how this repository works, but nothing tells a contributor which few documents to read. **A move is declined** — `docs/plans/` is named by `jk-standards.yaml`, the drift map and test fixtures | `docs` | `docs/README.md` | An index classifies `docs/` into user, contributor, and delivery-record documents, and the README's Contributing section links it; `doc-discipline` passes | `open` |
+| OS22 | `README.md` puts Building (line 26) before Installing (line 67), gives signing-secret provisioning its own top-level section (line 105), has no screenshot, never mentions the in-browser engine, and carries six internal IDs: `D029` ×2, `M054`, `D031`, `M030 S03`, `D004` (lines 63, 77, 112). `CONTRIBUTING.md:16` carries two more | `docs` | `README.md`, `CONTRIBUTING.md`, `RELEASING.md`, `scripts/` | The section order matches the DoD; a guard matching `\bD0\d\d\b` and `\bM0\d\d\b` over both files fails when one is reintroduced, seen red; `RELEASING.md` holds the secrets table unchanged | `done` |
+| OS23 | `CLAUDE.md:18` lists "VSTGUI 4" in the tech stack; `CMakeLists.txt` has turned SDK VSTGUI support off since M053/S05 and the editor is a choc WebView | `docs` | `CLAUDE.md` | The line names the WebView editor; no VSTGUI reference remains that describes current state | `done` |
+| OS24 | `.bg-shell/manifest.json` is tracked (content `[]`, added in `0d383fc`) although `.gitignore:322` ignores `.bg-shell/` — it predates the ignore rule | `tooling` | `.bg-shell/manifest.json` | `git rm --cached`; `git ls-files .bg-shell` is empty and the pre-commit excludes for it can be dropped | `done` |
+| OS25 | `docs/` holds 247 files and roughly 345k words, most of them delivery records. That is right for how this repository works, but nothing tells a contributor which few documents to read. **A move is declined** — `docs/plans/` is named by `jk-standards.yaml`, the drift map and test fixtures | `docs` | `docs/README.md` | An index classifies `docs/` into user, contributor, and delivery-record documents, and the README's Contributing section links it; `doc-discipline` passes | `done` |
 
 ### Slice M004/S04 — The site sends readers to the download
 
 **Depends:** M004/S02
+**Plan:** M004-S04-plan.md
 **Validation:** format, site-unit, doc-conformance, guards
 **Evidence:** evidence/M004-S04.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] No page carries the construction banner
-- [ ] The home page's hero offers the download and the in-browser engine beside
+- [x] No page carries the construction banner
+- [x] The home page's hero offers the download and the in-browser engine beside
       the guide
-- [ ] The guide's install section names the bundle a release actually contains
+- [x] The guide's install section names the bundle a release actually contains
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| OS26 | `site/src/components/Banner.astro:4` shows "🚧 Under active construction — content being developed and verified" on every page of a guide whose bibliography, screenshots and chapters first-release M001–M004 just verified | `docs` | `site/src/components/Banner.astro`, `site/astro.config.mjs` | The banner is removed or replaced by a release notice; a site test asserts the construction text is absent | `open` |
-| OS27 | The hero in `site/src/content/docs/index.mdx` offers *Start Reading* and *GitHub*. There is no download, and the in-browser engine — the one thing no competitor has — is not on the front page | `docs` | `site/src/content/docs/index.mdx` | The hero's actions are download (the Releases page), try it, and read the guide; `guards` passes its site-asset checks | `open` |
-| OS41 | `guide-using-poly.mdx`'s install section names the VST3 bundle `Poly.vst3` when the artifact is `poly_plugin.vst3`, and tells the reader to copy `Poly.component` into their Components folder when no release contains an AU. First-release M004 matched the guide to the plugin UI, not to the release artifacts | `defect` | `site/src/content/docs/guide-using-poly.mdx` | The section describes the zip as it ships — the real bundle name, and the AU only if OS17 says it ships; a claim test forbids `Poly.vst3` returning. M009/S01 rewrites the same section for the installers | `open` |
+| OS26 | `site/src/components/Banner.astro:4` shows "🚧 Under active construction — content being developed and verified" on every page of a guide whose bibliography, screenshots and chapters first-release M001–M004 just verified | `docs` | `site/src/components/Banner.astro`, `site/astro.config.mjs` | The banner is removed or replaced by a release notice; a site test asserts the construction text is absent | `done` |
+| OS27 | The hero in `site/src/content/docs/index.mdx` offers *Start Reading* and *GitHub*. There is no download, and the in-browser engine — the one thing no competitor has — is not on the front page | `docs` | `site/src/content/docs/index.mdx` | The hero's actions are download (the Releases page), try it, and read the guide; `guards` passes its site-asset checks | `done` |
+| OS41 | `guide-using-poly.mdx`'s install section names the VST3 bundle `Poly.vst3` when the artifact is `poly_plugin.vst3`, and tells the reader to copy `Poly.component` into their Components folder when no release contains an AU. First-release M004 matched the guide to the plugin UI, not to the release artifacts | `defect` | `site/src/content/docs/guide-using-poly.mdx` | The section describes the zip as it ships — the real bundle name, and the AU only if OS17 says it ships; a claim test forbids `Poly.vst3` returning. M009/S01 rewrites the same section for the installers | `done` |
 
 ## Milestone M005 — The release notes are for musicians
 

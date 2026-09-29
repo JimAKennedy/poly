@@ -13,44 +13,33 @@ Everything you need to use Poly in one place: installation, MIDI routing, the pl
 
 ### Install
 
-Poly ships in two formats: a **VST3** (all platforms) and an **Audio Unit** (macOS only). Both wrap the same engine — pick whichever your DAW prefers. Logic Pro only loads Audio Units, so macOS Logic users need the `.component`.
+Poly ships as a **VST3** for macOS and Windows. Download the zip for your
+platform from the [Releases page](https://github.com/JimAKennedy/poly/releases)
+— `poly-<version>-macos.zip` or `poly-<version>-windows.zip` — and unzip it.
+It extracts to a single `poly_plugin.vst3` bundle; copy that whole bundle
+directory, not its loose contents, into your VST3 folder:
 
-**VST3** — copy the `Poly.vst3` bundle to your system's VST3 plugin folder:
-
-- **macOS:** `~/Library/Audio/Plug-Ins/VST3/`
+- **macOS:** `~/Library/Audio/Plug-Ins/VST3/` (per-user) or `/Library/Audio/Plug-Ins/VST3/` (all users)
 - **Windows:** `C:\Program Files\Common Files\VST3\`
 
-**Audio Unit (macOS)** — copy the `Poly.component` bundle to your Components folder:
-
-- **macOS:** `~/Library/Audio/Plug-Ins/Components/`
-
-The Audio Unit is an AUv2 instrument (`aumu` music-device) that wraps the VST3, exposing the identical engine to AU hosts. It registers under the manufacturer **jk.digital** as **Poly**.
-
-Restart your DAW so it rescans for new plugins. On macOS, if a freshly installed AU does not appear in Logic, quit Logic and run `killall -9 AudioComponentRegistrar` in Terminal to force the system to re-scan the Components folder, then relaunch.
+Restart your DAW so it rescans for new plugins. On macOS, an unsigned build
+carries a quarantine flag that Gatekeeper enforces; the [README](https://github.com/JimAKennedy/poly#download)
+has the one command that clears it. Logic Pro is not supported — see the note
+under [Load Poly](#load-poly).
 
 ### Build from Source
 
-Prebuilt binaries aside, both formats build from the repository with CMake. The VST3 builds on any platform with the standard Ninja configuration. The Audio Unit is macOS-only and requires the **Xcode generator** (the Steinberg AU wrapper is gated behind it):
+Prebuilt binaries aside, the VST3 builds from the repository with CMake on
+macOS and Windows:
 
 ```sh
-# VST3 (all platforms)
 cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 cmake --build build
-
-# Audio Unit (macOS, Xcode generator required)
-cmake -S . -B build-au -G Xcode -DSMTG_ENABLE_AUV2_BUILDS=ON
-cmake --build build-au --config Release
 ```
 
-The AU build emits `Poly.component`. Copy it into `~/Library/Audio/Plug-Ins/Components/` as described above.
-
-**Validate the Audio Unit** with Apple's `auval` tool, which loads the component end-to-end and confirms the host will accept it:
-
-```sh
-auval -v aumu Poly JkDl
-```
-
-A clean run ends in `* * PASS`. The four-character codes are Poly's AU identity: type `aumu` (music device / instrument), subtype `Poly`, manufacturer `JkDl`. If `auval` reports the component is not found, re-run `killall -9 AudioComponentRegistrar` and try again — the AU registry caches aggressively.
+The bundle lands under `build/VST3/Release/`; copy it into the VST3 folder
+above. The repository also builds an Audio Unit in CI for validation only;
+no release contains it.
 
 ### Load Poly
 

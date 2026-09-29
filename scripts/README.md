@@ -59,6 +59,15 @@ actually fails on regressions.
   `projectversion.h`, and the two private npm manifests carry no version at
   all. Five strings disagreed before open-source-launch M001, and the one a DAW
   displayed was the wrong one.
+- `check-docs-index.mjs` — the docs directory's README names every top-level
+  document and directory there and nothing that is gone, the same rule
+  `check-scripts-readme.sh` applies to this directory (open-source-launch
+  M004).
+- `check-front-door.mjs` — what a stranger meets first cannot go stale by
+  itself: `ROADMAP.md` links label queries rather than issue numbers, and
+  `README.md` and `CONTRIBUTING.md` carry no decision or milestone identifier
+  and keep the section order written for the person downloading
+  (open-source-launch M004).
 - `check-workflow-hygiene.mjs` — every workflow declares a top-level
   `permissions:` block, `ci.yml` cancels superseded pull-request runs and
   never a push to `main`, and no checkout of a third-party repository floats
