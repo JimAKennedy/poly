@@ -10,7 +10,7 @@ of milestone queries; the `check-front-door.mjs` guard.
 
 ## Task status
 
-- [ ] Task 1 — The About panel carries the sentence, the site URL and the
+- [x] Task 1 — The About panel carries the sentence, the site URL and the
       topics (OS19)
 - [ ] Task 2 — The roadmap names themes and links queries, with no issue
       number left to go stale (OS20); the slice closes
