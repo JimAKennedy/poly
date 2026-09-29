@@ -9,15 +9,15 @@ pre-push gate keeps its flag.
 
 ## Task status
 
-- [ ] Task 1 — pluginval runs its GUI tests on all four CI legs, the contract
+- [x] Task 1 — pluginval runs its GUI tests on all four CI legs, the contract
       asserts it, and the slice closes (OS16)
 
 ## Definition of Done
 
-- [ ] pluginval runs its GUI tests on the macOS CI leg, or the evidence records
+- [x] pluginval runs its GUI tests on the macOS CI leg, or the evidence records
       why a hosted runner cannot and what covers the editor instead
-- [ ] The same is true of the Windows leg
-- [ ] The release workflow matches whatever CI settles on
+- [x] The same is true of the Windows leg
+- [x] The release workflow matches whatever CI settles on
 
 ## Validation
 

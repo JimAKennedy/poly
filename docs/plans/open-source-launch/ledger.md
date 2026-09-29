@@ -241,18 +241,18 @@ records both.
 **Plan:** M003-S02-plan.md
 **Validation:** format, unit, guards
 **Evidence:** evidence/M003-S02.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] pluginval runs its GUI tests on the macOS CI leg, or the evidence records
+- [x] pluginval runs its GUI tests on the macOS CI leg, or the evidence records
       why a hosted runner cannot and what covers the editor instead
-- [ ] The same is true of the Windows leg
-- [ ] The release workflow matches whatever CI settles on
+- [x] The same is true of the Windows leg
+- [x] The release workflow matches whatever CI settles on
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| OS16 | pluginval runs with `--skip-gui-tests` on all four legs (`ci.yml:441`, `:486`, `release.yml:103`, `:122`). The editor is a WebView — the likeliest source of a host crash on open, close and reopen — and only the Windows Cubase nightly ever opens it; nothing automated opens it on macOS | `coverage` | `.github/workflows/ci.yml`, `.github/workflows/release.yml`, `scripts/check-release-workflow.mjs` | The flag is removed on each leg that can run GUI tests, proved by a green run; any leg that keeps it carries a comment naming the reason and the evidence entry | `open` |
+| OS16 | pluginval runs with `--skip-gui-tests` on all four legs (`ci.yml:441`, `:486`, `release.yml:103`, `:122`). The editor is a WebView — the likeliest source of a host crash on open, close and reopen — and only the Windows Cubase nightly ever opens it; nothing automated opens it on macOS | `coverage` | `.github/workflows/ci.yml`, `.github/workflows/release.yml`, `scripts/check-release-workflow.mjs` | The flag is removed on each leg that can run GUI tests, proved by a green run; any leg that keeps it carries a comment naming the reason and the evidence entry | `done` |
 
 ### Slice M003/S03 — Logic is supported or declined on purpose
 

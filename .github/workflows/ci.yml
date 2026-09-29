@@ -458,12 +458,15 @@ jobs:
           # scripts/check-release-workflow.mjs holds the same constant.
           echo "3c4c533bda0c5059eea3ddaea752d757ee2025041f0f47e6bcb0e87f6082b29f  pluginval.zip" | shasum -a 256 -c
           unzip -q pluginval.zip
+      # OS16 (open-source-launch M003/S02): GUI tests on. The editor is a
+      # WebView, the likeliest source of a host crash on open, close and
+      # reopen. macOS proved locally at strictness 8 on 2026-09-29; Windows
+      # proved by this job's run on the M003 pull request.
       - name: Run pluginval
         run: |
           chmod +x "pluginval.app/Contents/MacOS/pluginval"
           "pluginval.app/Contents/MacOS/pluginval" \
             --strictness-level 8 \
-            --skip-gui-tests \
             --timeout-ms 120000 \
             --validate "${{ steps.find-vst3.outputs.path }}"
 
@@ -508,11 +511,14 @@ jobs:
           # scripts/check-release-workflow.mjs holds the same constant.
           echo "c08e61ce3b96db41636f8ec7e76f4c7e2c13ebdac7fa1b5a1f52b4f32ec715ab  pluginval.zip" | sha256sum -c
           unzip -q pluginval.zip
+      # OS16 (open-source-launch M003/S02): GUI tests on. The editor is a
+      # WebView, the likeliest source of a host crash on open, close and
+      # reopen. macOS proved locally at strictness 8 on 2026-09-29; Windows
+      # proved by this job's run on the M003 pull request.
       - name: Run pluginval
         run: |
           ./pluginval.exe \
             --strictness-level 8 \
-            --skip-gui-tests \
             --timeout-ms 120000 \
             --validate "${{ steps.find-vst3.outputs.path }}"
 
