@@ -282,7 +282,7 @@ browser, download it, set it up in their DAW, and report a problem — all from
 pages written for them.
 
 **Branch:** milestone/M004-front-door
-**Status:** planned
+**Status:** in-progress
 **Demo:** A non-collaborator opens an issue from the bug template; the README
 reads positioning → screenshot → try it → download → DAW setup before any
 build instruction; the site's hero offers the download.
@@ -293,9 +293,10 @@ exists to replace.
 
 ### Slice M004/S01 — The repository accepts a stranger
 
+**Plan:** M004-S01-plan.md
 **Validation:** format, doc-discipline
 **Evidence:** evidence/M004-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
@@ -312,9 +313,10 @@ exists to replace.
 
 ### Slice M004/S02 — One sentence says what Poly is
 
+**Plan:** M004-S02-plan.md
 **Validation:** format, doc-discipline, site-unit
 **Evidence:** evidence/M004-S02.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
@@ -330,9 +332,10 @@ exists to replace.
 ### Slice M004/S03 — The README is written for the person downloading
 
 **Depends:** M003/S01, M004/S02
+**Plan:** M004-S03-plan.md
 **Validation:** format, doc-discipline, doc-conformance, guards
 **Evidence:** evidence/M004-S03.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
@@ -356,9 +359,10 @@ exists to replace.
 ### Slice M004/S04 — The site sends readers to the download
 
 **Depends:** M004/S02
+**Plan:** M004-S04-plan.md
 **Validation:** format, site-unit, doc-conformance, guards
 **Evidence:** evidence/M004-S04.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
