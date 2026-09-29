@@ -440,44 +440,59 @@ stranger meets on each platform is recorded verbatim, and an unsigned build
 cannot ship without that being a deliberate, recorded choice.
 
 **Branch:** milestone/M006-first-cut
-**Status:** planned
+**Status:** in-progress
 **Demo:** A pre-release tag publishes a Release marked pre-release, with both
 zips, checksums and provenance; the Release body says whether the artifacts are
-signed; and the evidence records every dialog a clean machine showed.
+signed; and a verification workflow on fresh hosted runners records what a
+clean machine measures of the install on each platform.
 
 **Why this waits for M001.** The cheapest way to learn what the release path
 produces is to cut one, but cutting one today would record a plugin reporting
 `1.0.0` from a `0.1.0` build with June's notes — findings M001 exists to
 prevent. Cut the first tag against the hardened pipeline.
 
+**Amended 2026-09-29.** S02 now lands before S01, so the first cut exercises
+the unsigned gate and its body carries the Signed line — one cut, not two.
+And OS33's by-hand install on a clean machine became a workflow: hosted
+runners are fresh VMs, which is what "clean" meant, and what they cannot show
+(a dialog) they can measure (the verdict that produces it). The owner asked
+for no manual work and a check that runs repeatedly; both amendments are in
+`M006-decisions.md`. M005/S01 ships before this milestone's tag, so the first
+Release body is the musician block.
+
 ### Slice M006/S01 — The first pre-release exists
 
-**Depends:** M001/S01, M001/S02
+**Depends:** M001/S01, M001/S02, M006/S02
+**Plan:** M006-S01-plan.md
 **Validation:** format, guards, doc-discipline
 **Evidence:** evidence/M006-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
 - [ ] A tag with a pre-release suffix publishes a Release marked pre-release,
       and the contract check asserts the mapping
-- [ ] Both zips were downloaded and installed by hand on a clean machine per
-      platform, and the evidence records the host, OS version and every warning
-      dialog verbatim
+- [ ] Both zips were downloaded, verified against `SHA256SUMS` and the
+      provenance attestation, and installed on a fresh hosted runner per
+      platform by `release-verify.yml`, whose report records the OS version,
+      the quarantine and Gatekeeper verdicts on macOS, the Mark-of-the-Web and
+      Authenticode verdicts on Windows, and pluginval loading the bundle from
+      the installed location
 - [ ] Anything the first cut broke is a row here or an issue, not a note
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
 | OS31 | No release has ever been cut: one tag, `v0.1.0-doccov-baseline`, pointing at a July commit, and an empty Release list. The pipeline has never produced an artifact a stranger downloaded, so any plan that assumes it works because it exists is assuming | `verify` | `.github/workflows/release.yml`, `evidence/M006-S01.md` | A real pre-release tag runs the workflow to completion; the evidence names the run, the assets and their sizes | `open` |
 | OS32 | `release.yml` publishes every `v*.*.*` tag as a full release: `softprops/action-gh-release` is called without `prerelease:`, so a release-candidate tag lands on the Releases page as the latest stable version | `defect` | `.github/workflows/release.yml`, `scripts/check-release-workflow.mjs` | A tag carrying a hyphen suffix (`v0.2.0-rc.1`) publishes with `prerelease: true`; the contract check asserts it and is seen red when the flag is removed | `open` |
-| OS33 | What a stranger experiences on a clean machine — the quarantine prompt, SmartScreen, the folder hunt — has never been observed, only described from the README. The zip path stays the fallback for anyone who declines an installer, so its experience is recorded even after M007 and M008 land | `verify` | `evidence/M006-S01.md` | The evidence records the install by hand on one clean macOS and one clean Windows machine, dialog text verbatim, and whether the DAW found the plugin on the next scan | `open` |
+| OS33 | What a stranger experiences on a clean machine — the quarantine prompt, SmartScreen, the folder hunt — has never been observed, only described from the README. The zip path stays the fallback for anyone who declines an installer, so its experience is recorded even after M007 and M008 land. **Amended 2026-09-29:** measured by a workflow on fresh hosted runners, repeatably, rather than by hand once | `verify` | `.github/workflows/release-verify.yml`, `scripts/check-release-verify-workflow.mjs`, `evidence/M006-S01.md` | `release-verify.yml`, dispatched with the tag, installs each zip on a fresh runner and reports the verdicts that produce the dialogs — `spctl` and the quarantine attribute on macOS, Authenticode status and the Mark-of-the-Web on Windows — and pluginval against the installed bundle; the evidence names the run and quotes the report; a contract test locks the workflow's shape | `open` |
 
 ### Slice M006/S02 — An unsigned build cannot ship quietly
 
-**Depends:** M006/S01
+**Depends:** M001/S02
+**Plan:** M006-S02-plan.md
 **Validation:** format, guards
 **Evidence:** evidence/M006-S02.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
@@ -704,6 +719,8 @@ M006 is waiting on it.
 
 **M006 follows M001** — the first cut should exercise the pipeline M001
 hardens, and OS02's version decision is what the first tag is named from.
+Within M006, S02 lands before S01 (amended 2026-09-29), and M005/S01 merges
+before the tag so the Release body is the musician block.
 **M007 also waits on M003/S03**, because the package cannot know whether to
 carry the AU until OS17 is decided. **M007 and M008 are independent of each
 other** and each splits into an unsigned half that finishes now and a signed
