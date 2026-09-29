@@ -3,9 +3,9 @@ repos:
     rev: v6.0.0
     hooks:
       - id: trailing-whitespace
-        exclude: '^(\.gsd/|\.bg-shell/|.*\.uidesc$)'
+        exclude: '^(\.gsd/|.*\.uidesc$)'
       - id: end-of-file-fixer
-        exclude: '^(\.gsd/|\.bg-shell/|.*\.uidesc$)'
+        exclude: '^(\.gsd/|.*\.uidesc$)'
       - id: check-yaml
         # .clang-format uses a multi-document YAML stream (--- separates the
         # Cpp and ObjC language sections). clang-format is its real validator

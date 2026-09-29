@@ -11,7 +11,7 @@ created; `xattr` stays until M009; the docs index gets a guard and a
 
 ## Task status
 
-- [ ] Task 1 — The stale manifest is untracked and its excludes are gone
+- [x] Task 1 — The stale manifest is untracked and its excludes are gone
       (OS24)
 - [ ] Task 2 — `CLAUDE.md` names the WebView editor (OS23)
 - [ ] Task 3 — `docs/README.md` tells a contributor what to read, and a guard
