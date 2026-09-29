@@ -8,14 +8,14 @@ the alternatives not taken.
 
 ## Task status
 
-- [ ] Task 1 — The sentence appears verbatim in the README, the site config,
+- [x] Task 1 — The sentence appears verbatim in the README, the site config,
       `CLAUDE.md` and the About panel, held by a test; the slice closes (OS21)
 
 ## Definition of Done
 
-- [ ] The owner has chosen a one-sentence positioning statement and recorded it
+- [x] The owner has chosen a one-sentence positioning statement and recorded it
       with the reasoning
-- [ ] The README's opening, the site's meta description, the About description
+- [x] The README's opening, the site's meta description, the About description
       and `CLAUDE.md` carry the same statement
 
 ## Validation

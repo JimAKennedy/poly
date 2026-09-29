@@ -316,18 +316,18 @@ exists to replace.
 **Plan:** M004-S02-plan.md
 **Validation:** format, doc-discipline, site-unit
 **Evidence:** evidence/M004-S02.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The owner has chosen a one-sentence positioning statement and recorded it
+- [x] The owner has chosen a one-sentence positioning statement and recorded it
       with the reasoning
-- [ ] The README's opening, the site's meta description, the About description
+- [x] The README's opening, the site's meta description, the About description
       and `CLAUDE.md` carry the same statement
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| OS21 | The repository says "polymetric drum pattern generator"; the launch intent says "open-source Euclidean sequencer". Free Euclidean sequencers are a crowded category — HY-RPE2's free tier, HY-ESG, XiiixxiQ, the open-source GenerativeMIDI, Ableton Live 12's built-in generator — and Poly loses a checklist against them. Its difference is tradition-grounded grooves with a cited guide to 45 presets, deterministic output, and an engine that runs in the browser | `docs` | `README.md`, `site/astro.config.mjs`, `CLAUDE.md`, `docs/plans/open-source-launch/M004-decisions.md` | The chosen sentence appears verbatim in all four surfaces and the About panel; the decisions file records the alternatives considered | `open` |
+| OS21 | The repository says "polymetric drum pattern generator"; the launch intent says "open-source Euclidean sequencer". Free Euclidean sequencers are a crowded category — HY-RPE2's free tier, HY-ESG, XiiixxiQ, the open-source GenerativeMIDI, Ableton Live 12's built-in generator — and Poly loses a checklist against them. Its difference is tradition-grounded grooves with a cited guide to 45 presets, deterministic output, and an engine that runs in the browser | `docs` | `README.md`, `site/astro.config.mjs`, `CLAUDE.md`, `docs/plans/open-source-launch/M004-decisions.md` | The chosen sentence appears verbatim in all four surfaces and the About panel; the decisions file records the alternatives considered | `done` |
 
 ### Slice M004/S03 — The README is written for the person downloading
 

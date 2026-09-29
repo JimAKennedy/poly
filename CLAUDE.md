@@ -1,6 +1,6 @@
 # Poly
 
-Polymetric drum pattern generator — VST3 instrument outputting MIDI.
+Poly is a free, open-source polymetric drum sequencer for your DAW: grooves grounded in real drumming traditions, a guide that cites where every preset comes from, deterministic output, and an engine that runs in your browser.
 
 ## Architecture
 
