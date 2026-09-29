@@ -24,12 +24,22 @@ your platform and follow the
 #### Supported hosts
 
 Cubase Pro 15 on macOS and Cubase 14 on Windows are where Poly is built and
-tested.
+tested, and the only hosts anyone has measured. Other VST3 hosts may work and
+have not been tried. Logic Pro is not supported: it routes generated MIDI only
+from a MIDI-FX Audio Unit, which Poly does not ship.
 
 #### Known issues
 
 - Only Cubase has been measured. Other VST3 hosts may work and have not been
-  tried.
+  tried; the README's host table is the record.
+- This build is unsigned. macOS quarantines the download and Gatekeeper
+  refuses the plugin until the flag is cleared with the one command in the
+  README's Download section; Windows shows a SmartScreen warning that *More
+  info → Run anyway* dismisses.
+- The editor is a fixed 1160×760 window and does not resize; it is cramped on
+  a 13-inch laptop.
+- Anything else known to be wrong in this release carries the `known-issue`
+  label: [open known issues](https://github.com/JimAKennedy/poly/issues?q=is%3Aissue+is%3Aopen+label%3Aknown-issue).
 
 #### Report a problem
 

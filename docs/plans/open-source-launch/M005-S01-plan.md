@@ -12,17 +12,17 @@ hand-written known issues plus a `known-issue` label.
 
 - [x] Task 1 — The generator emits the musician block and nothing else, the
       contract holds its shape and ceiling, and 0.2.0 has the block (OS28)
-- [ ] Task 2 — The block names the supported hosts and the known issues, the
+- [x] Task 2 — The block names the supported hosts and the known issues, the
       label exists, and the slice closes (OS29)
 
 ## Definition of Done
 
-- [ ] The owner has decided where musician-facing notes live
-- [ ] The Release body for the first version names what Poly does, the
+- [x] The owner has decided where musician-facing notes live
+- [x] The Release body for the first version names what Poly does, the
       supported hosts, the known issues, and how to report one
-- [ ] The engineering narrative is kept, reachable from the notes, and not the
+- [x] The engineering narrative is kept, reachable from the notes, and not the
       Release body
-- [ ] `check-release-workflow.mjs` asserts the body's source
+- [x] `check-release-workflow.mjs` asserts the body's source
 
 ## Validation
 

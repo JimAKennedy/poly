@@ -488,6 +488,32 @@ test('gen-release-notes emits the musician block for the version CMakeLists.txt 
   );
 });
 
+// OS29: the two things that decide whether a broken setup is the user's
+// mistake or Poly's — which hosts are supported, and what is known to be
+// wrong — with the known-issue label query so a future issue joins the list
+// without editing prose.
+test('the musician block names the supported hosts and lists the known issues with the label query', () => {
+  const out = execFileSync('node', [GEN, cmakeVersion()], { encoding: 'utf8' });
+  const section = (name) => {
+    const start = out.indexOf(`#### ${name}`);
+    assert.notEqual(start, -1, `no "#### ${name}" section`);
+    const rest = out.slice(start + name.length + 5);
+    const next = rest.indexOf('\n#### ');
+    return next === -1 ? rest : rest.slice(0, next);
+  };
+  const hosts = section('Supported hosts');
+  for (const word of ['Cubase', 'macOS', 'Windows']) {
+    assert.ok(hosts.includes(word), `Supported hosts does not mention ${word} (OS29)`);
+  }
+  const known = section('Known issues');
+  const items = known.split('\n').filter((l) => /^- /.test(l.trim()));
+  assert.ok(items.length >= 3, `Known issues lists ${items.length} item(s); at least three are expected (OS29)`);
+  assert.ok(
+    known.includes('issues?q=is%3Aissue+is%3Aopen+label%3Aknown-issue'),
+    'Known issues does not link the open issues carrying the known-issue label (OS29)',
+  );
+});
+
 test('gen-release-notes fails loud (exit 1) on a missing CHANGELOG section', () => {
   // A mistagged/undocumented version must halt the release, not publish an empty body.
   assert.throws(
