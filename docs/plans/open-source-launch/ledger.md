@@ -36,6 +36,12 @@ certificate the pipeline does not know about. The owner decided the routes
 before any row was written: **Azure Artifact Signing for Windows, the Apple
 Developer Program for macOS.**
 
+**Amended on 2026-09-29:** the owner narrowed the first release to Cubase,
+the host Poly is built and tested in. M003 now measures Cubase alone and
+claims nothing else; the other DAW candidates and the Logic wrapper question
+became M010 (OS43, OS44), which waits for a published Release to install.
+Two actionable items were added; none closed.
+
 Every count below was measured on `main` at `412020d`, not carried over from
 the vision.
 
@@ -191,44 +197,51 @@ engine warning fails CI.
 
 ## Milestone M003 — A musician's DAW finds it and it plays
 
-**Vision:** Every host the release claims is one somebody has loaded Poly in,
-routed its MIDI, and heard; the editor is exercised on both shipping platforms;
-Logic is supported or declined on purpose.
+**Vision:** The one host the first release claims — Cubase — is one Poly has
+been loaded in, routed and heard on both shipping platforms, and the README
+says so and nothing more; the editor is exercised on both platforms; Logic is
+supported or declined on purpose.
 
 **Branch:** milestone/M003-hosts
-**Status:** planned
-**Demo:** The README's host table names each supported DAW with its routing
-steps, each backed by an evidence entry, and pluginval runs its GUI tests on
-both platforms.
+**Status:** in-progress
+**Demo:** The README's host table names Cubase with its version on each
+platform and its routing steps, backed by an evidence entry, says every other
+host is untested, and pluginval runs its GUI tests on both platforms.
 
-**Why this is measured by hand.** Only Cubase can be driven in CI, through the
-self-hosted nightly. The other hosts are a one-time manual run recorded in
-evidence — the same honesty M006/S01 asks of the first download.
+**Cubase only, by the owner's decision on 2026-09-29.** The first release
+supports the host Poly is built and tested in. The other candidates — Reaper,
+Bitwig, Ableton Live 12, FL Studio, Studio One — are M010's, measured against
+an installed Release rather than a build directory. Cubase is exercised on
+Windows by the self-hosted nightly and on macOS by the owner; the evidence
+records both.
 
-### Slice M003/S01 — Hosts are measured, not assumed
+### Slice M003/S01 — Cubase is measured, and nothing else is claimed
 
+**Plan:** M003-S01-plan.md
 **Validation:** format, doc-discipline, doc-conformance, site-unit
 **Evidence:** evidence/M003-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
-- [ ] Each candidate host has been loaded, routed and played on at least one
-      shipping OS, with the host version and the exact routing steps recorded
-- [ ] The README and guide chapter 17 carry the same host table, and it
-      distinguishes "supported" from "reported to work"
-- [ ] The default channel layout is decided against what those hosts did
+- [ ] Cubase has been loaded, routed and played on both shipping OSes, with the
+      host version and the exact routing steps recorded — Windows from a named
+      nightly run, macOS from the owner's session
+- [ ] The README and guide chapter 17 carry the same host table: Cubase as
+      supported, every other host as untested, and no "should work" claim
+- [ ] The default channel layout is decided against what Cubase did
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| OS14 | `README.md:151` says Poly "should work with any VST3-compatible host". Routing MIDI **out** of a plugin is where hosts differ most — Ableton Live needs a second track whose *MIDI From* selects the plugin — and only Cubase is exercised. Candidates: Reaper, Bitwig, Ableton Live 12, FL Studio, Studio One | `verify` | `README.md`, `site/src/content/docs/17-midi-routing-note-map.mdx`, `evidence/M003-S01.md` | Evidence records host, version, OS, routing steps and outcome for each; the README and chapter 17 name only hosts with an evidence entry as supported | `open` |
-| OS15 | `types.h:268` defaults `midiChannel` to `-1` — auto, one channel per lane — so a single-channel drum sampler hears one lane until the user finds the Note Map | `verify` | `engine/include/poly/types.h`, `engine/src/presets.cpp` | Decided from OS14's runs and recorded; if the default changes, a state-migration test proves saved projects keep their channels | `open` |
+| OS14 | `README.md:151` says Poly "should work with any VST3-compatible host". Routing MIDI **out** of a plugin is where hosts differ most, and only Cubase is exercised. **Amended 2026-09-29:** the first release claims Cubase alone; the other candidates moved to OS43 in M010 | `verify` | `README.md`, `site/src/content/docs/17-midi-routing-note-map.mdx`, `evidence/M003-S01.md` | Evidence records Cubase's version, OS, routing steps and outcome on both platforms; the README and chapter 17 name Cubase as supported, say other hosts are untested, and carry no host the evidence lacks | `open` |
+| OS15 | `types.h:268` defaults `midiChannel` to `-1` — auto, one channel per lane — so a single-channel drum sampler hears one lane until the user finds the Note Map | `verify` | `engine/include/poly/types.h`, `engine/src/presets.cpp` | Decided from OS14's Cubase runs and recorded; if the default changes, a state-migration test proves saved projects keep their channels | `open` |
 
 ### Slice M003/S02 — The editor is exercised on both platforms
 
+**Plan:** M003-S02-plan.md
 **Validation:** format, unit, guards
 **Evidence:** evidence/M003-S02.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
@@ -243,9 +256,10 @@ evidence — the same honesty M006/S01 asks of the first download.
 
 ### Slice M003/S03 — Logic is supported or declined on purpose
 
+**Plan:** M003-S03-plan.md
 **Validation:** format, doc-discipline, guards
 **Evidence:** evidence/M003-S03.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
@@ -259,7 +273,7 @@ evidence — the same honesty M006/S01 asks of the first download.
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| OS17 | `plugin/resource/au-info.plist` declares the AU as type `aumu` with version `0xFFFFFFFF`. `build-au-macos` builds it on every PR and no release contains it. Logic has no VST3 and routes generated MIDI only from a MIDI FX (`aumi`) unit, so as built it could not drive another instrument there even if it shipped. **Feasibility comes before the decision:** the VST3 SDK's AUv2 wrapper builds instruments and effects, and whether it can produce an `aumi` at all is unverified — if it cannot, "supported" means writing a wrapper, and the honest decision may be forced. M007 (the macOS installer) waits on this row | `disclose` | `plugin/resource/au-info.plist`, `plugin/CMakeLists.txt`, `.github/workflows/ci.yml`, `README.md` | The feasibility check is recorded first; then either arm of the DoD, not both; M007/S01 cites the decision rather than re-deciding it | `open` |
+| OS17 | `plugin/resource/au-info.plist` declares the AU as type `aumu` with version `0xFFFFFFFF`. `build-au-macos` builds it on every PR and no release contains it. Logic has no VST3 and routes generated MIDI only from a MIDI FX (`aumi`) unit, so as built it could not drive another instrument there even if it shipped. **Feasibility comes before the decision:** the VST3 SDK's AUv2 wrapper builds instruments and effects, and whether it can produce an `aumi` at all is unverified — if it cannot, "supported" means writing a wrapper, and the honest decision may be forced. M007 (the macOS installer) waits on this row | `disclose` | `plugin/resource/au-info.plist`, `plugin/CMakeLists.txt`, `.github/workflows/ci.yml`, `README.md` | The feasibility check is recorded first; then either arm of the DoD, not both; M007/S01 cites the decision rather than re-deciding it. **Amended 2026-09-29:** the decision is for the first release; M010/S02 revisits it with a wrapper spike | `open` |
 
 ## Milestone M004 — A stranger can find it, file against it, and follow it
 
@@ -620,6 +634,62 @@ point between.
 |---|---|---|---|---|---|
 | OS40 | `README.md` lines 67–104 teach the zip, the folder conventions and `xattr -dr com.apple.quarantine`. Once an installer exists, documentation that still describes the zip is worse than none | `docs` | `README.md`, `site/src/content/docs/guide-using-poly.mdx`, `site/tests/` | The section matches the DoD; a claim test forbids `xattr` in both files, seen red before the edit; `doc-discipline` passes | `open` |
 
+## Milestone M010 — Other DAWs, after the release
+
+**Vision:** A musician on Reaper, Bitwig, Ableton Live, FL Studio or Studio One
+finds routing steps someone has followed, and Logic is revisited with a real
+wrapper question rather than a plist.
+
+**Branch:** milestone/M010-other-daws
+**Status:** planned
+**Demo:** The host table gains a row per host with a version, an OS and routing
+steps, each backed by an evidence entry from an installed Release; Logic's row
+says supported, or why not, from a MIDI-FX feasibility spike.
+
+**Why it waits for the release.** Deferred from M003 on 2026-09-29: the first
+release supports Cubase alone, and the other hosts are measured against an
+installed Release rather than a build directory.
+
+### Slice M010/S01 — Other VST3 hosts are measured, not assumed
+
+**Depends:** M003/S01, M006/S01
+**Validation:** format, doc-discipline, doc-conformance, site-unit
+**Evidence:** evidence/M010-S01.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] Each candidate host has been loaded from a published Release, routed and
+      played on at least one shipping OS, with the host version and the exact
+      routing steps recorded
+- [ ] The README and chapter 17 host table gain one row per measured host,
+      "supported" or "reported to work" as the evidence says
+- [ ] A host that fails is a row here or an issue, not a note
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| OS43 | Deferred from OS14 on 2026-09-29: Reaper, Bitwig, Ableton Live 12, FL Studio and Studio One have never had Poly loaded in them. Routing MIDI **out** of a plugin is where hosts differ most — Live needs a second track whose *MIDI From* selects the Poly track | `verify` | `README.md`, `site/src/content/docs/17-midi-routing-note-map.mdx`, `evidence/M010-S01.md` | Evidence records host, version, OS, routing steps and outcome for each; the table names only hosts with an evidence entry | `open` |
+
+### Slice M010/S02 — Logic is revisited with a wrapper spike, or declined again
+
+**Depends:** M010/S01
+**Validation:** format, doc-discipline, guards
+**Evidence:** evidence/M010-S02.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] A spike records whether a MIDI-FX (`aumi`) unit can be built around
+      `poly_engine` and what it would cost — the SDK's AUv2 wrapper cannot
+      produce one
+- [ ] The owner's decision is recorded; if supported, the unit passes `auval`,
+      drives an instrument track in Logic (evidence), and the release ships it
+- [ ] If declined again, the README and guide keep saying so
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| OS44 | Deferred from OS17 on 2026-09-29: the VST3 SDK's AUv2 wrapper subclasses `MusicDeviceBase` and allows only the Effect and MusicDevice types, so the `aumu` it builds cannot be the `aumi` MIDI-FX unit Logic routes generated MIDI from, though it does implement the MIDI output callback. Supporting Logic means a wrapper of Poly's own | `verify` | `plugin/`, `README.md`, `docs/plans/open-source-launch/M010-decisions.md` | The spike's finding and cost are recorded; the decision follows it; either arm's DoD, not both | `open` |
+
 ## Sequencing
 
 **M001, M002 and M003 are independent** — the release workflow, the CI
@@ -639,6 +709,10 @@ section of.
 **M004/S03 depends on M003/S01 and M004/S02** — the README publishes the host
 table and the positioning sentence, so it is written after both exist.
 M004/S01 and M004/S02 can start at once.
+
+**M010 is after the release** — both slices wait on M006/S01, a published
+Release to install, and on M003/S01, the table they extend; it is last and
+blocks nothing.
 
 **M005/S01 depends on M001/S01 and M003/S01** — it needs the version and the
 host list. **M005/S02 also depends on M006/S01**, because there is nothing to
