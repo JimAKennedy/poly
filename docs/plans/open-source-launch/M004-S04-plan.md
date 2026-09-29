@@ -12,7 +12,7 @@ the Audio Unit.
 
 ## Task status
 
-- [ ] Task 1 — The banner says pre-release and the hero offers download, try
+- [x] Task 1 — The banner says pre-release and the hero offers download, try
       it and the guide (OS26, OS27)
 - [ ] Task 2 — The guide's install section describes the zip that ships
       (OS41); the slice closes
