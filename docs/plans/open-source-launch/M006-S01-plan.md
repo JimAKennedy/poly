@@ -13,7 +13,7 @@ tag.
 
 - [x] Task 1 — A hyphen-suffixed tag publishes as a pre-release from its
       base version's notes, and the contract asserts it (OS32)
-- [ ] Task 2 — `release-verify.yml` installs a Release on fresh runners and
+- [x] Task 2 — `release-verify.yml` installs a Release on fresh runners and
       reports what a clean machine measures, with its own contract (OS33)
 - [ ] Task 3 — The tag is pushed, the Release exists, the verifier's report
       is in the evidence, and the slice closes (OS31, OS33)

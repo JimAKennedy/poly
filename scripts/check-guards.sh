@@ -61,6 +61,11 @@ run_guard "version-source"            node --test scripts/check-version-source.m
 # only in comments. It was worse off than the eleven, which at least ran in CI.
 run_guard "release-workflow contract"  node --test scripts/check-release-workflow.mjs
 
+# open-source-launch M006/S01 (OS33): release-verify.yml is what a clean
+# machine measures of a published Release; a verifier nothing checks is the
+# gap this programme keeps finding.
+run_guard "release-verify contract"    node --test scripts/check-release-verify-workflow.mjs
+
 # open-source-launch M002/S01 (OS06, OS08): every workflow declares a top-level
 # permissions block and no third-party checkout floats. The three jk-standards
 # workflow checks pass on a tree that violates both, so this is the guard.

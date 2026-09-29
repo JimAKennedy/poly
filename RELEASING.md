@@ -24,6 +24,15 @@ removed once signing is provisioned. The Release body ends with a line of
 the form `Signed: macOS no (notarized no) · Windows no`, written from what
 the legs recorded.
 
+After a Release is published, `.github/workflows/release-verify.yml` runs on
+fresh hosted runners — and on demand with a tag — and does what a stranger
+does: downloads the zips from the Release, verifies `SHA256SUMS` and the
+provenance attestation, installs the bundle where the DAW looks, records the
+quarantine and Gatekeeper verdicts on macOS and the Mark-of-the-Web and
+Authenticode verdicts on Windows, clears the quarantine the way the README
+tells a user to, and runs pluginval against the installed bundle. Each job
+uploads a report; read them before announcing a release.
+
 ## Signing and notarization
 
 The macOS release leg (`.github/workflows/release.yml`) auto-signs, notarizes,
