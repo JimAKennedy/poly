@@ -203,7 +203,7 @@ says so and nothing more; the editor is exercised on both platforms; Logic is
 supported or declined on purpose.
 
 **Branch:** milestone/M003-hosts
-**Status:** in-progress
+**Status:** done
 **Demo:** The README's host table names Cubase with its version on each
 platform and its routing steps, backed by an evidence entry, says every other
 host is untested, and pluginval runs its GUI tests on both platforms.
