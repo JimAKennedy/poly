@@ -10,7 +10,7 @@ hand-written known issues plus a `known-issue` label.
 
 ## Task status
 
-- [ ] Task 1 — The generator emits the musician block and nothing else, the
+- [x] Task 1 — The generator emits the musician block and nothing else, the
       contract holds its shape and ceiling, and 0.2.0 has the block (OS28)
 - [ ] Task 2 — The block names the supported hosts and the known issues, the
       label exists, and the slice closes (OS29)

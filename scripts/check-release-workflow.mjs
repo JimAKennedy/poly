@@ -439,12 +439,21 @@ test('Windows packaging does NOT glob the bundle contents (a flattened archive b
   );
 });
 
-// --- gen-release-notes.mjs behaviour (runs at tag time; must not fail loud) ---
+// --- gen-release-notes.mjs behaviour (runs at tag time) ---
+//
+// open-source-launch M005/S01 (OS28): the Release body is the version's
+// "### For musicians" block and a link to the full changelog, never the
+// engineering narrative below it. A version without the block fails the
+// release rather than publishing 15,000 words a musician cannot use.
 
-test('gen-release-notes emits a non-empty body for shipping version 0.1.0', () => {
-  // The workflow strips the leading v (v0.1.0 -> 0.1.0) before invoking this.
-  const out = execFileSync('node', [GEN, '0.1.0'], { encoding: 'utf8' });
-  assert.ok(out.trim().length > 0, 'gen-release-notes produced an empty body for 0.1.0');
+test('gen-release-notes fails loud on a version with no For musicians block (0.1.0 was never tagged)', () => {
+  // 0.1.0's section is June's engineering notes, kept as history by M001 and
+  // never tagged; tagging it must halt, not publish them.
+  assert.throws(
+    () => execFileSync('node', [GEN, '0.1.0'], { encoding: 'utf8', stdio: 'pipe' }),
+    (err) => err.status === 1 && /For musicians/.test(String(err.stderr)),
+    'expected exit 1 naming the missing For musicians block for 0.1.0',
+  );
 });
 
 // open-source-launch M001/S01 (OS02): the section the next tag will publish
@@ -452,16 +461,30 @@ test('gen-release-notes emits a non-empty body for shipping version 0.1.0', () =
 // project(poly VERSION …), so the test reads that and asks the generator for
 // it — tagging a version with no section fails loud at tag time (test below),
 // but that is one push too late; this catches it on every guards run.
-test('gen-release-notes emits a non-empty body for the version CMakeLists.txt declares', () => {
+const MUSICIAN_HEADINGS = ['What Poly is', 'Supported hosts', 'Known issues', 'Report a problem'];
+const WORD_CEILING = 400; // the owner's decision, M005-decisions.md, 2026-09-29
+
+function cmakeVersion() {
   const cmake = readFileSync(resolve(REPO, 'CMakeLists.txt'), 'utf8');
   const m = cmake.match(/project\s*\(\s*poly[^)]*\bVERSION\s+(\d+\.\d+\.\d+)/s);
   assert.ok(m, 'CMakeLists.txt has no project(poly … VERSION x.y.z)');
-  const version = m[1];
-  const out = execFileSync('node', [GEN, version], { encoding: 'utf8' });
+  return m[1];
+}
+
+test('gen-release-notes emits the musician block for the version CMakeLists.txt declares: four headings, under the ceiling, engineering one link away', () => {
+  const version = cmakeVersion();
+  const out = execFileSync('node', [GEN, version], { encoding: 'utf8' }).trim();
+  assert.ok(out.length > 0, `gen-release-notes produced an empty body for ${version}`);
+  const words = out.split(/\s+/).length;
+  assert.ok(words <= WORD_CEILING, `the release body for ${version} is ${words} words; the ceiling is ${WORD_CEILING} (OS28)`);
+  for (const h of MUSICIAN_HEADINGS) {
+    assert.ok(out.includes(`#### ${h}`), `the release body for ${version} has no "#### ${h}" section (OS28)`);
+  }
+  assert.doesNotMatch(out, /^### /m, 'the release body must not contain an H3 — that is the engineering section leaking in');
+  assert.doesNotMatch(out, /\(open-source-launch M\d/, 'the release body carries an engineering entry (the milestone tail)');
   assert.ok(
-    out.trim().length > 0,
-    `gen-release-notes produced an empty body for ${version} — CHANGELOG.md has no "## [${version}]" section, ` +
-      'so a tag of this version would publish nothing or fail',
+    out.endsWith(`Full changelog: https://github.com/JimAKennedy/poly/blob/v${version}/CHANGELOG.md`),
+    'the release body must end with the link to the full changelog at the tag',
   );
 });
 

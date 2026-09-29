@@ -407,7 +407,7 @@ non-developer can read, and the engineering history is one link away.
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| OS28 | `[Unreleased]` is 47 entries and about 13,100 words of engineering narrative — accurate, and written for the next maintainer. `release.yml` publishes the matching section verbatim as the Release body, so the first thing a musician reads would be a paragraph about `lockPresetReferent` | `pipeline` | `CHANGELOG.md` or a notes file, `scripts/gen-release-notes.mjs`, `scripts/check-release-workflow.mjs` | `gen-release-notes.mjs <version>` prints the musician-facing section; a test fails if it exceeds a word ceiling the decision sets; the engineering entries survive unchanged | `open` |
+| OS28 | `[Unreleased]` is 47 entries and about 13,100 words of engineering narrative — accurate, and written for the next maintainer. `release.yml` publishes the matching section verbatim as the Release body, so the first thing a musician reads would be a paragraph about `lockPresetReferent` | `pipeline` | `CHANGELOG.md` or a notes file, `scripts/gen-release-notes.mjs`, `scripts/check-release-workflow.mjs` | `gen-release-notes.mjs <version>` prints the musician-facing section; a test fails if it exceeds a word ceiling the decision sets; the engineering entries survive unchanged | `done` |
 | OS29 | Nothing in a Release tells a user what is known to be wrong or which hosts are supported — the two things that decide whether a broken setup is their mistake or Poly's | `docs` | the notes source from OS28 | The first Release body carries a Supported hosts list taken from OS14's evidence and a Known issues list linking open issues | `open` |
 
 ### Slice M005/S02 — The launch is listed where musicians look
