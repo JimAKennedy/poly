@@ -61,3 +61,27 @@ after S01 and says so.
 - **The Supported hosts text is the README's host table in prose**, the
   same three facts, so the two cannot disagree; the test does not compare
   them, because the notes are prose and the table is a table.
+
+## 2026-09-30 — M005/S02 at its boundary: descoped
+
+The boundary was reached: M006/S01 published `v0.2.0-rc.1`, and the two
+deferred questions — which outlets, and the listing copy — were put to the
+owner, with a third the first cut raised, whether anything should be
+announced against a release candidate.
+
+- **Q:** which outlets, when, and who writes the copy? — **A:** none: "I
+  want to avoid advertising the plug-in for now and keep it to friends and
+  family. So let's descope S02."
+- **Decision:** S02 is `accepted` as not done, OS30 `accepted`, the plan
+  file records the path and carries no tasks, and the milestone's vision
+  says its last clause waits for a public-launch decision — **Why:** the
+  owner's call on the product's exposure; a listing is an announcement, and
+  none is wanted yet.
+
+### Taken on the owner's behalf
+
+- **The descope is `accepted`, not deleted.** The rows and the DoD stay in
+  the ledger unticked, so a later decision to launch reopens a slice whose
+  shape is already written rather than re-planning from the vision.
+- **The changelog gains no entry for S02.** Nothing shipped; the milestone's
+  entry at ship time says the slice was descoped.
