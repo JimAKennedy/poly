@@ -440,7 +440,7 @@ stranger meets on each platform is recorded verbatim, and an unsigned build
 cannot ship without that being a deliberate, recorded choice.
 
 **Branch:** milestone/M006-first-cut
-**Status:** in-progress
+**Status:** done
 **Demo:** A pre-release tag publishes a Release marked pre-release, with both
 zips, checksums and provenance; the Release body says whether the artifacts are
 signed; and a verification workflow on fresh hosted runners records what a
