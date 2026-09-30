@@ -95,3 +95,17 @@ its generator change and this milestone's would conflict. Hosted
   M001 decided the date is written when 0.2.0 itself is tagged; the
   generator maps `0.2.0-rc.1` to the `0.2.0` section whatever the heading's
   date suffix says.
+
+## 2026-09-29 — judgment calls when resuming for the tag
+
+- **The merged `--slice` PR does not end the run.** The orient rule stops
+  when a PR has merged for the branch; that rule is for a milestone's PR,
+  and #347 was the `--slice M006/S02` pass this file planned on 2026-09-29.
+  The milestone is still `in-progress` with S01's tag task open, so the run
+  continues to it.
+- **The branch was reset to `origin/main`, not rebased.** After the squash
+  merge every one of the branch's five commits was already in `main`'s
+  content, so replaying them conflicted on the first; `git diff` between the
+  two trees was empty, and the reset discarded nothing. Obviously right: a
+  rebase that can only reproduce what `main` already holds has nothing to
+  carry.

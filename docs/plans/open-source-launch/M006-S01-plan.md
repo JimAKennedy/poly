@@ -15,20 +15,20 @@ tag.
       base version's notes, and the contract asserts it (OS32)
 - [x] Task 2 — `release-verify.yml` installs a Release on fresh runners and
       reports what a clean machine measures, with its own contract (OS33)
-- [ ] Task 3 — The tag is pushed, the Release exists, the verifier's report
+- [x] Task 3 — The tag is pushed, the Release exists, the verifier's report
       is in the evidence, and the slice closes (OS31, OS33)
 
 ## Definition of Done
 
-- [ ] A tag with a pre-release suffix publishes a Release marked pre-release,
+- [x] A tag with a pre-release suffix publishes a Release marked pre-release,
       and the contract check asserts the mapping
-- [ ] Both zips were downloaded, verified against `SHA256SUMS` and the
+- [x] Both zips were downloaded, verified against `SHA256SUMS` and the
       provenance attestation, and installed on a fresh hosted runner per
       platform by `release-verify.yml`, whose report records the OS version,
       the quarantine and Gatekeeper verdicts on macOS, the Mark-of-the-Web and
       Authenticode verdicts on Windows, and pluginval loading the bundle from
       the installed location
-- [ ] Anything the first cut broke is a row here or an issue, not a note
+- [x] Anything the first cut broke is a row here or an issue, not a note
 
 ## Validation
 

@@ -466,25 +466,25 @@ Release body is the musician block.
 **Plan:** M006-S01-plan.md
 **Validation:** format, guards, doc-discipline
 **Evidence:** evidence/M006-S01.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] A tag with a pre-release suffix publishes a Release marked pre-release,
+- [x] A tag with a pre-release suffix publishes a Release marked pre-release,
       and the contract check asserts the mapping
-- [ ] Both zips were downloaded, verified against `SHA256SUMS` and the
+- [x] Both zips were downloaded, verified against `SHA256SUMS` and the
       provenance attestation, and installed on a fresh hosted runner per
       platform by `release-verify.yml`, whose report records the OS version,
       the quarantine and Gatekeeper verdicts on macOS, the Mark-of-the-Web and
       Authenticode verdicts on Windows, and pluginval loading the bundle from
       the installed location
-- [ ] Anything the first cut broke is a row here or an issue, not a note
+- [x] Anything the first cut broke is a row here or an issue, not a note
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| OS31 | No release has ever been cut: one tag, `v0.1.0-doccov-baseline`, pointing at a July commit, and an empty Release list. The pipeline has never produced an artifact a stranger downloaded, so any plan that assumes it works because it exists is assuming | `verify` | `.github/workflows/release.yml`, `evidence/M006-S01.md` | A real pre-release tag runs the workflow to completion; the evidence names the run, the assets and their sizes | `open` |
+| OS31 | No release has ever been cut: one tag, `v0.1.0-doccov-baseline`, pointing at a July commit, and an empty Release list. The pipeline has never produced an artifact a stranger downloaded, so any plan that assumes it works because it exists is assuming | `verify` | `.github/workflows/release.yml`, `evidence/M006-S01.md` | A real pre-release tag runs the workflow to completion; the evidence names the run, the assets and their sizes | `done` |
 | OS32 | `release.yml` publishes every `v*.*.*` tag as a full release: `softprops/action-gh-release` is called without `prerelease:`, so a release-candidate tag lands on the Releases page as the latest stable version | `defect` | `.github/workflows/release.yml`, `scripts/check-release-workflow.mjs` | A tag carrying a hyphen suffix (`v0.2.0-rc.1`) publishes with `prerelease: true`; the contract check asserts it and is seen red when the flag is removed | `done` |
-| OS33 | What a stranger experiences on a clean machine — the quarantine prompt, SmartScreen, the folder hunt — has never been observed, only described from the README. The zip path stays the fallback for anyone who declines an installer, so its experience is recorded even after M007 and M008 land. **Amended 2026-09-29:** measured by a workflow on fresh hosted runners, repeatably, rather than by hand once | `verify` | `.github/workflows/release-verify.yml`, `scripts/check-release-verify-workflow.mjs`, `evidence/M006-S01.md` | `release-verify.yml`, dispatched with the tag, installs each zip on a fresh runner and reports the verdicts that produce the dialogs — `spctl` and the quarantine attribute on macOS, Authenticode status and the Mark-of-the-Web on Windows — and pluginval against the installed bundle; the evidence names the run and quotes the report; a contract test locks the workflow's shape | `open` |
+| OS33 | What a stranger experiences on a clean machine — the quarantine prompt, SmartScreen, the folder hunt — has never been observed, only described from the README. The zip path stays the fallback for anyone who declines an installer, so its experience is recorded even after M007 and M008 land. **Amended 2026-09-29:** measured by a workflow on fresh hosted runners, repeatably, rather than by hand once | `verify` | `.github/workflows/release-verify.yml`, `scripts/check-release-verify-workflow.mjs`, `evidence/M006-S01.md` | `release-verify.yml`, dispatched with the tag, installs each zip on a fresh runner and reports the verdicts that produce the dialogs — `spctl` and the quarantine attribute on macOS, Authenticode status and the Mark-of-the-Web on Windows — and pluginval against the installed bundle; the evidence names the run and quotes the report; a contract test locks the workflow's shape | `done` |
 
 ### Slice M006/S02 — An unsigned build cannot ship quietly
 
