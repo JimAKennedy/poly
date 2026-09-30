@@ -387,7 +387,7 @@ so the listings (S02) are descoped and accepted as not done; the vision's last
 clause waits for a decision to launch publicly.
 
 **Branch:** milestone/M005-release-notes
-**Status:** in-progress
+**Status:** done
 **Demo:** The Release body for the first version is a few hundred words a
 non-developer can read, and the engineering history is one link away.
 
