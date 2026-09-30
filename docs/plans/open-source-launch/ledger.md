@@ -381,10 +381,13 @@ exists to replace.
 
 **Vision:** The first thing a musician reads about a release is short, says
 what Poly does, which hosts it supports and what is known to be wrong — and the
-launch is listed where musicians look.
+launch is listed where musicians look. **Amended 2026-09-30:** the owner is
+keeping Poly to friends and family for now and does not want it advertised,
+so the listings (S02) are descoped and accepted as not done; the vision's last
+clause waits for a decision to launch publicly.
 
 **Branch:** milestone/M005-release-notes
-**Status:** in-progress
+**Status:** done
 **Demo:** The Release body for the first version is a few hundred words a
 non-developer can read, and the engineering history is one link away.
 
@@ -413,9 +416,14 @@ non-developer can read, and the engineering history is one link away.
 ### Slice M005/S02 — The launch is listed where musicians look
 
 **Depends:** M005/S01, M006/S01
+**Plan:** M005-S02-plan.md
 **Validation:** format
 **Evidence:** evidence/M005-S02.md
-**Status:** open
+**Status:** accepted
+
+**Descoped 2026-09-30.** The owner is keeping Poly to friends and family for
+now and does not want it advertised; the slice is accepted as not done and
+reopens if and when a public launch is decided. Nothing below was attempted.
 
 **This slice has no gate beyond its evidence.** Its deliverables are listings
 on sites this repository does not control, so no token can check them; the
@@ -431,7 +439,7 @@ here so nobody mistakes `format` for a check of the work.
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| OS30 | A GitHub release is invisible to the people it is for. Free Euclidean and rhythm plugins reach musicians through KVR Audio listings and outlets such as Rekkerd and Bedroom Producers Blog, which cover exactly this category | `docs` | external listings, `evidence/M005-S02.md` | Evidence records each listing's URL and the date submitted; waits on M006/S01's first published Release | `open` |
+| OS30 | A GitHub release is invisible to the people it is for. Free Euclidean and rhythm plugins reach musicians through KVR Audio listings and outlets such as Rekkerd and Bedroom Producers Blog, which cover exactly this category | `docs` | external listings, `evidence/M005-S02.md` | Evidence records each listing's URL and the date submitted; waits on M006/S01's first published Release. **Accepted 2026-09-30, not done:** no advertising for now, by the owner's decision | `accepted` |
 
 ## Milestone M006 — A release is cut, and says whether it is signed
 
