@@ -12,11 +12,11 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null,
+      "archiveFile": "01 - Toussaint.pdf",
       "retrieval": {
-        "status": "not-attempted",
-        "checked": null,
-        "detail": "the archived 01 - Toussaint.pdf was the 2007 arXiv paper, not the 2005 BRIDGES paper the entry cites; kept as 01 - Toussaint 2007 arXiv.pdf"
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from archive.bridgesmathart.org (pdf), 93398 bytes"
       }
     },
     "ref-2": {
@@ -86,9 +86,9 @@
       "price": null,
       "archiveFile": null,
       "retrieval": {
-        "status": "not-attempted",
-        "checked": null,
-        "detail": null
+        "status": "script-refused",
+        "checked": "2026-10-01",
+        "detail": "render produced no document from scalar.usc.edu"
       }
     },
     "ref-8": {
@@ -174,11 +174,11 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null,
+      "archiveFile": "12 - Piano Montunos The Complete Guide.pdf",
       "retrieval": {
-        "status": "not-attempted",
-        "checked": null,
-        "detail": null
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from pianowithjonny.com (rendered html), 25328651 bytes"
       }
     },
     "ref-13": {
@@ -246,11 +246,11 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null,
+      "archiveFile": "16 - Afro House Explained Rhythm, Culture, and Production Techniques.pdf",
       "retrieval": {
-        "status": "not-attempted",
-        "checked": null,
-        "detail": null
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from www.samplesoundmusic.com (rendered html), 22782993 bytes"
       }
     },
     "ref-17": {
@@ -318,11 +318,11 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null,
+      "archiveFile": "20 - Yudane.pdf",
       "retrieval": {
-        "status": "not-attempted",
-        "checked": null,
-        "detail": null
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from gamelan.org.nz (pdf), 69196 bytes; title page read: this is the work the link serves, not the work the entry names (see the M002 mismatch note); kept archived by the owner’s decision of 2026-10-01"
       }
     },
     "ref-21": {
@@ -338,9 +338,9 @@
       "price": null,
       "archiveFile": null,
       "retrieval": {
-        "status": "not-attempted",
-        "checked": null,
-        "detail": null
+        "status": "script-refused",
+        "checked": "2026-10-01",
+        "detail": "no response from artiumacademy.com (TypeError)"
       }
     },
     "ref-22": {
@@ -428,9 +428,9 @@
       "price": null,
       "archiveFile": null,
       "retrieval": {
-        "status": "not-attempted",
-        "checked": null,
-        "detail": null
+        "status": "script-refused",
+        "checked": "2026-10-01",
+        "detail": "bot challenge at emusicology.org"
       }
     },
     "ref-27": {
@@ -444,11 +444,11 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null,
+      "archiveFile": "27 - Balkan Dance Rhythms.pdf",
       "retrieval": {
-        "status": "not-attempted",
-        "checked": null,
-        "detail": null
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from chromatone.center (rendered html), 4497444 bytes"
       }
     },
     "ref-28": {
@@ -462,11 +462,11 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null,
+      "archiveFile": "28 - Holzapfel.pdf",
       "retrieval": {
-        "status": "not-attempted",
-        "checked": null,
-        "detail": null
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from www.diva-portal.org (pdf), 613261 bytes; title page read: this is the work the link serves, not the work the entry names (see the M002 mismatch note); kept archived by the owner’s decision of 2026-10-01"
       }
     },
     "ref-29": {
@@ -480,11 +480,11 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null,
+      "archiveFile": "29 - Holzapfel.pdf",
       "retrieval": {
-        "status": "not-attempted",
-        "checked": null,
-        "detail": null
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from www.diva-portal.org (pdf), 537565 bytes; title page read: this is the work the link serves, not the work the entry names (see the M002 mismatch note); kept archived by the owner’s decision of 2026-10-01"
       }
     },
     "ref-30": {
@@ -516,11 +516,11 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null,
+      "archiveFile": "31 - Aji.pdf",
       "retrieval": {
-        "status": "not-attempted",
-        "checked": null,
-        "detail": null
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from tnp.mtsnys.org (rendered html), 787358 bytes; title page read: this is the work the link serves, not the work the entry names (see the M002 mismatch note); kept archived by the owner’s decision of 2026-10-01"
       }
     },
     "ref-32": {
@@ -534,11 +534,11 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null,
+      "archiveFile": "32 - Steve Reich.pdf",
       "retrieval": {
-        "status": "not-attempted",
-        "checked": null,
-        "detail": null
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from en.wikipedia.org (rendered html), 1240353 bytes"
       }
     },
     "ref-33": {
@@ -552,11 +552,11 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null,
+      "archiveFile": "33 - The Story of Minimalism A New Way of Listening.pdf",
       "retrieval": {
-        "status": "not-attempted",
-        "checked": null,
-        "detail": null
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from www.allclassical.org (rendered html), 963814 bytes"
       }
     },
     "ref-34": {
@@ -570,11 +570,11 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null,
+      "archiveFile": "34 - Schwarz.pdf",
       "retrieval": {
-        "status": "not-attempted",
-        "checked": null,
-        "detail": null
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from www.ime.unicamp.br (pdf), 5671462 bytes"
       }
     },
     "ref-35": {
@@ -606,11 +606,11 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null,
+      "archiveFile": "36 - Roger Linn on Drum Machine Groove and J Dilla's Off-Beat Sound.pdf",
       "retrieval": {
-        "status": "not-attempted",
-        "checked": null,
-        "detail": null
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from brettworks.com (rendered html), 1523486 bytes"
       }
     },
     "ref-37": {
@@ -624,11 +624,11 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null,
+      "archiveFile": "37 - In Praise of the Akai MPC A Hip-Hop Time Machine.pdf",
       "retrieval": {
-        "status": "not-attempted",
-        "checked": null,
-        "detail": null
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from happymag.tv (rendered html), 1840518 bytes"
       }
     },
     "ref-38": {
@@ -642,11 +642,11 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null,
+      "archiveFile": "38 - Hein.pdf",
       "retrieval": {
-        "status": "not-attempted",
-        "checked": null,
-        "detail": null
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from www.ethanhein.com (rendered html), 658361 bytes"
       }
     },
     "ref-39": {
@@ -678,11 +678,11 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null,
+      "archiveFile": "40 - L'analyse des ensembles microrythmiques dans l'Intelligent Dance Music.pdf",
       "retrieval": {
-        "status": "not-attempted",
-        "checked": null,
-        "detail": null
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from revuemusicaleoicrm.org (rendered html), 1963785 bytes"
       }
     },
     "ref-41": {
@@ -714,11 +714,11 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null,
+      "archiveFile": "42 - Schloss.pdf",
       "retrieval": {
-        "status": "not-attempted",
-        "checked": null,
-        "detail": null
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from web.uvic.ca (pdf), 318637 bytes; title page read: this is the work the link serves, not the work the entry names (see the M002 mismatch note); kept archived by the owner’s decision of 2026-10-01"
       }
     },
     "ref-43": {
@@ -732,11 +732,11 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null,
+      "archiveFile": "43 - Baião (music).pdf",
       "retrieval": {
-        "status": "not-attempted",
-        "checked": null,
-        "detail": null
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from en.wikipedia.org (rendered html), 278417 bytes"
       }
     },
     "ref-44": {
@@ -750,11 +750,11 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null,
+      "archiveFile": "44 - Gotham.pdf",
       "retrieval": {
-        "status": "not-attempted",
-        "checked": null,
-        "detail": null
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from mtosmt.org (rendered html), 306539 bytes"
       }
     },
     "ref-46": {
@@ -912,11 +912,11 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null,
+      "archiveFile": "FR - Anku 2000.pdf",
       "retrieval": {
-        "status": "not-attempted",
-        "checked": null,
-        "detail": null
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from mtosmt.org (rendered html), 982959 bytes"
       }
     },
     "fr-polak-2010": {
@@ -930,11 +930,11 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null,
+      "archiveFile": "FR - Polak 2010.pdf",
       "retrieval": {
-        "status": "not-attempted",
-        "checked": null,
-        "detail": null
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from mtosmt.org (rendered html), 1842425 bytes"
       }
     },
     "fr-polak-london-2014": {
@@ -948,11 +948,11 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null,
+      "archiveFile": "FR - Polak London 2014.pdf",
       "retrieval": {
-        "status": "not-attempted",
-        "checked": null,
-        "detail": null
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from mtosmt.org (rendered html), 2157028 bytes"
       }
     },
     "fr-novotney-1998": {
@@ -1328,9 +1328,9 @@
       "price": null,
       "archiveFile": null,
       "retrieval": {
-        "status": "not-attempted",
-        "checked": null,
-        "detail": null
+        "status": "script-refused",
+        "checked": "2026-10-01",
+        "detail": "no response from doi.org (TypeError)"
       }
     },
     "fr-brailoiu-1951": {
@@ -1382,9 +1382,9 @@
       "price": null,
       "archiveFile": null,
       "retrieval": {
-        "status": "not-attempted",
-        "checked": null,
-        "detail": null
+        "status": "script-refused",
+        "checked": "2026-10-01",
+        "detail": "bot challenge at emusicology.org"
       }
     },
     "fr-holzapfel-2015": {
@@ -1902,11 +1902,11 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null,
+      "archiveFile": "FR - Hennig 2011.pdf",
       "retrieval": {
-        "status": "not-attempted",
-        "checked": null,
-        "detail": null
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from journals.plos.org (rendered html), 862423 bytes"
       }
     }
   }

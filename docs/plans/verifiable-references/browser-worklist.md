@@ -47,6 +47,19 @@ without `POLY_REFERENCES_ARCHIVE` set.
 
 ## Pending
 
+### Refused by M003/S01's scripted pass — 5 entries, 2026-09-30
+
+Open access by M002's verdict, refused to `scripts/fetch-references.mjs`. Each
+is `script-refused` in the manifest. Save the file under the exact name given.
+
+| Entry | URL | Refusal | What to save | Save as |
+|---|---|---|---|---|
+| `ref-7` | `https://scalar.usc.edu/works/music-in-global-america/musical-traditions-of-sub-saharan-africa` | headless Chrome produced no document | Print the page to PDF. | `07 - Musical Traditions of Sub-Saharan Africa.pdf` |
+| `ref-21` | `https://artiumacademy.com/blogs/silent-language-of-taal-in-music-exploring-philosophical-underpinnings-of-tala-in-indian-classical-music/` | no response to the script | Print the page to PDF. | `21 - The Silent Language of Taal Exploring Philosophical Underpinnings of Tala in.pdf` |
+| `ref-26` | `https://doi.org/10.18061/emr.v10i4.4891` | Anubis bot challenge at `emusicology.org` | Save the article PDF from *Empirical Musicology Review*. | `26 - Bonini Baraldi.pdf` |
+| `fr-silverman-2007` | `https://doi.org/10.2298/muz0707069s` | no response from `doi.org` | Save the article PDF from *Muzikologija* 7. | `FR - Silverman 2007.pdf` |
+| `fr-goldberg-2015` | `https://doi.org/10.18061/emr.v10i4.4884` | Anubis bot challenge at `emusicology.org` | Save the article PDF from *Empirical Musicology Review*. | `FR - Goldberg 2015.pdf` |
+
 ### Queued by M002/S02 — 19 entries that are browser-only and unverified
 
 Every entry below is obtainable by a person and was not obtained by automation.

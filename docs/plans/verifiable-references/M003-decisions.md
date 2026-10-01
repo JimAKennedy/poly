@@ -125,3 +125,35 @@ installed.
   M002 recorded that section as the one chapter 6 leans on, which is the
   plan's rule for choosing; the article head and the cultural-context section
   are `- part 2` and `- part 3`.
+
+## 2026-10-01 — halt during M003/S01 task 4, and the owner's answer
+
+The scripted pass fetched five files that are what the entry's link serves
+but not the work the entry names — `ref-20`, `ref-28`, `ref-29`, `ref-31`,
+`ref-42`, each already a `mismatch` in M002. Task 4 step 4 said to delete
+such a file and mark the record `script-refused`, which would have queued a
+citation fault on the browser worklist as if a host had refused a script.
+
+- **Q:** Keep the five as archived, keep them under a new non-archived
+  status, or delete them? — **A:** keep them as archived (option 1).
+- **Decision:** the five stay `archived` under the convention's names; each
+  record's `retrieval.detail` says the file is the linked work, not the cited
+  one, and points at the M002 mismatch note — **Why:** the file is what the
+  citation links to, the mismatch is already recorded, and M004 needs the
+  linked document in hand to correct the entry. Task 4 step 4's delete rule
+  stands for a fetched file that is neither the cited work nor the linked one.
+
+## 2026-10-01 — judgment calls during M003/S01 task 4
+
+- **The challenge detector was narrowed mid-task.** The first pass refused
+  seven ordinary pages as bot challenges because the word "captcha" appears
+  in their scripts (MediaWiki config, reCAPTCHA comment forms, WooCommerce).
+  The detector now needs Anubis's script, Cloudflare's challenge token, a
+  challenge title, or "captcha" on a page under 20,000 characters; a test
+  built from the six snippets that fired locks it, and `--retry` re-ran the
+  refusals. Obviously right: the plan's purpose was to refuse challenge pages,
+  and these were articles.
+- **The worklist guard's non-vacuity proof is a permanent test, not a scratch
+  copy.** The plan said to prove it on a discarded copy; a test that sets one
+  record to `script-refused` and asserts the guard reports it does the same
+  thing and keeps doing it.

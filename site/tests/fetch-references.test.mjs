@@ -78,6 +78,25 @@ test('isChallengePage recognises bot challenges and passes an article', () => {
   );
 });
 
+// M003/S01 task 4: the first real pass refused six ordinary articles because
+// the word "captcha" appears in the scripts of pages that are not challenges —
+// MediaWiki's edit config, a reCAPTCHA comment form, WooCommerce's checkout.
+// These are the snippets that fired, each from a page that rendered fine.
+test('an article that merely loads a captcha library is not a challenge', () => {
+  const article = (title, snippet) =>
+    `<html><head><title>${title}</title></head><body>${'<p>text</p>'.repeat(4000)}${snippet}</body></html>`;
+  for (const [title, snippet] of [
+    ['Steve Reich - Wikipedia', '"wgConfirmEditCaptchaNeededForGenericEdit":false'],
+    ['MUSICAL TRADITIONS OF SUB-SAHARAN AFRICA', '<link id="recaptcha2_site_key" href="x">'],
+    ['Afro House Explained', '<script id="captcha-bootstrap">!function(){}()</script>'],
+    ['Rhythmic Cycles of Taal in Music', '"wc_invalid_captcha":"Invalid Captcha Code"'],
+    ['The Story of Minimalism', '<script src="https://www.google.com/recaptcha/api.js"></script>'],
+    ['Vol. 2 n&ordm; 2, mai 2015', '.woocommerce-checkout .c4wp_captcha_field { margin: 0 }'],
+  ]) {
+    assert.equal(isChallengePage(article(title, snippet)), false, `${title} is an article, not a challenge`);
+  }
+});
+
 const record = (over) => ({
   obtainability: 'open-access',
   identifier: { doi: null, isbn: null },

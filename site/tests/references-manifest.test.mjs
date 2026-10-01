@@ -382,3 +382,38 @@ test('every archived file follows the naming convention', async () => {
     .map(([a, actual, expected]) => `${a}: ${actual} → ${expected}`);
   assert.deepEqual(off, [], 'archived under a name other than the convention gives:\n' + off.join('\n'));
 });
+
+// verifiable-references M003/S01 task 4: a refusal is a queue entry. The
+// DoD's third box — sources that resist scripted fetching are recorded as
+// such, not retried silently — means a `script-refused` record must have been
+// handed to a person, which is what the worklist's Pending section is.
+export function pendingSection(worklist) {
+  const start = worklist.indexOf('\n## Pending');
+  const end = worklist.indexOf('\n## Resolved');
+  if (start < 0 || end < 0 || end < start) {
+    throw new Error('browser-worklist.md must have ## Pending before ## Resolved');
+  }
+  return worklist.slice(start, end);
+}
+
+export function refusedNotQueued(manifest, worklist) {
+  const pending = pendingSection(worklist);
+  return Object.entries(manifest.entries)
+    .filter(([, r]) => r.retrieval?.status === 'script-refused')
+    .map(([a]) => a)
+    .filter((a) => !pending.includes(`\`${a}\``));
+}
+
+test('every script-refused entry is queued in the worklist', async () => {
+  const m = await loadManifest();
+  const worklist = await readFile(WORKLIST_PATH, 'utf8');
+  const missing = refusedNotQueued(m, worklist);
+  assert.deepEqual(missing, [], 'refused by the script and not queued for a person: ' + missing.join(', '));
+});
+
+test('the refusal guard fires on an unqueued refusal', async () => {
+  const m = structuredClone(await loadManifest());
+  const worklist = await readFile(WORKLIST_PATH, 'utf8');
+  m.entries['ref-1'].retrieval = { status: 'script-refused', checked: '2026-09-30', detail: 'HTTP 403' };
+  assert.deepEqual(refusedNotQueued(m, worklist), ['ref-1'], 'a check that cannot fire is not a check');
+});

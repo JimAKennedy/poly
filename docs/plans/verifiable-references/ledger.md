@@ -179,20 +179,20 @@ Dropbox research folder addressed through an environment variable.
 **Plan:** M003-S01-plan.md
 **Validation:** format, site-unit, guards
 **Evidence:** evidence/M003-S01.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Every source classified as a plain fetch is in the archive under the
+- [x] Every source classified as a plain fetch is in the archive under the
       `NN - Name.pdf` convention, with the manifest updated to match
-- [ ] The retrieval reads its destination from the environment and fails with a
+- [x] The retrieval reads its destination from the environment and fails with a
       clear message when unset, rather than writing somewhere arbitrary
-- [ ] Sources that resist scripted fetching are recorded as such, not retried
+- [x] Sources that resist scripted fetching are recorded as such, not retried
       silently
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| VR09 | Four sources are already collected by hand under an `NN - Name.pdf` convention. Nothing else is archived, and nothing records the convention | `tooling` | `scripts/`, the archive | Scripted-class sources are present and named; the manifest lists them | `open` |
+| VR09 | Four sources are already collected by hand under an `NN - Name.pdf` convention. Nothing else is archived, and nothing records the convention | `tooling` | `scripts/`, the archive | Scripted-class sources are present and named; the manifest lists them | `done` |
 
 ### Slice M003/S02 — The browser worklist finishes the archive
 

@@ -45,10 +45,21 @@ const FETCH_TIMEOUT_MS = 30_000;
 const RENDER_TIMEOUT_MS = 90_000;
 const MIN_RENDER_BYTES = 10 * 1024;
 
-const CHALLENGE_MARKERS = [/anubis/i, /just a moment\.\.\./i, /cf[-_]chl/i, /captcha/i];
+// A challenge is recognised by what only a challenge carries: Anubis's
+// script, Cloudflare's challenge token, or a title saying the page is checking
+// for a bot. The bare word "captcha" is not enough — ordinary articles load
+// reCAPTCHA for their comment forms, and MediaWiki names it in its config — so
+// it counts only on a page too small to be an article. The first real pass
+// refused six articles on that word alone.
+const CHALLENGE_MARKERS = [/anubis/i, /cf[-_]chl/i];
+const CHALLENGE_TITLE = /just a moment|not a bot|attention required|checking your browser/i;
+const SMALL_PAGE_CHARS = 20_000;
 
 export function isChallengePage(html) {
-  return CHALLENGE_MARKERS.some((re) => re.test(html));
+  if (CHALLENGE_MARKERS.some((re) => re.test(html))) return true;
+  const title = /<title[^>]*>([^<]*)/i.exec(html)?.[1] ?? '';
+  if (CHALLENGE_TITLE.test(title)) return true;
+  return html.length < SMALL_PAGE_CHARS && /captcha/i.test(html);
 }
 
 export function selectCandidates(manifest, bibliography, { retry }) {

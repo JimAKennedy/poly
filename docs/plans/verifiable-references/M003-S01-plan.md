@@ -13,17 +13,17 @@ restructured. Decisions behind every choice below are in `M003-decisions.md`.
 - [x] 1. The manifest records retrieval state, and the naming convention is code
 - [x] 2. The retrieval script, refusing to run without a destination
 - [x] 3. The owner's existing files are matched, renamed and adopted
-- [ ] 4. The scripted pass runs, and every refusal is queued
+- [x] 4. The scripted pass runs, and every refusal is queued
 
 ## Definition of Done
 
 Copied verbatim from the slice:
 
-- [ ] Every source classified as a plain fetch is in the archive under the
+- [x] Every source classified as a plain fetch is in the archive under the
       `NN - Name.pdf` convention, with the manifest updated to match
-- [ ] The retrieval reads its destination from the environment and fails with a
+- [x] The retrieval reads its destination from the environment and fails with a
       clear message when unset, rather than writing somewhere arbitrary
-- [ ] Sources that resist scripted fetching are recorded as such, not retried
+- [x] Sources that resist scripted fetching are recorded as such, not retried
       silently
 
 ## Validation
