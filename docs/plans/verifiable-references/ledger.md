@@ -148,7 +148,7 @@ opening the PDF. Expect a long tail where the only way to answer is to look.
 repository records what it holds without holding it.
 
 **Branch:** milestone/M003-archive
-**Status:** planned
+**Status:** in-progress
 **Demo:** The archive holds every source classified as retrievable, and the
 manifest names each one.
 
@@ -176,9 +176,10 @@ Dropbox research folder addressed through an environment variable.
 ### Slice M003/S01 — Scripted retrieval fills what it can
 
 **Depends:** M002/S02
+**Plan:** M003-S01-plan.md
 **Validation:** format, site-unit, guards
 **Evidence:** evidence/M003-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
@@ -196,6 +197,7 @@ Dropbox research folder addressed through an environment variable.
 ### Slice M003/S02 — The browser worklist finishes the archive
 
 **Depends:** M003/S01
+**Plan:** M003-S02-plan.md
 **Validation:** format, site-unit
 **Evidence:** evidence/M003-S02.md
 **Status:** open
