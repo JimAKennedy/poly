@@ -83,3 +83,23 @@ installed.
   is a planned pause: the run stops there, the owner works the worklist in a
   browser, and re-issuing `/jk:auto M003` resumes at task 3 to record what was
   found. Not a question, but a boundary only a person can cross.
+
+## 2026-09-30 — judgment calls during M003/S01 task 2
+
+- **The script carries no SPDX header.** The plan said "SPDX header like its
+  neighbours"; one of the eighteen `scripts/*.mjs` carries one and
+  `check-spdx-headers` covers C/C++ sources only, so matching the neighbours
+  means no header. Obviously right: the plan's intent was consistency, and
+  that is what consistency is here.
+- **Chrome renders with a throwaway profile.** `--user-data-dir` points at a
+  temporary directory removed after each page, so a run never touches the
+  owner's Chrome profile or collides with a running Chrome. The plan named
+  the flags it needed and not this one; without it, a headless run would
+  share the default profile with whatever Chrome the owner has open.
+- **An entry with a link labelled PDF is fetched from that link, not its
+  first.** The plan said "the href of the entry's first markdown link". The
+  dry run showed `ref-34` routed to its JSTOR page, which is paywalled,
+  while its second link is the free PDF the open-access verdict was reached
+  on. Obviously right: the plan's purpose was the free copy, and the label
+  says which link that is. Locked by a test, as is the companion fix for a
+  URL containing parentheses (`ref-43`'s Wikipedia link was cut short).

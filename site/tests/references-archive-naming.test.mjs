@@ -93,3 +93,15 @@ test('an entry with no link has a null url, and its text keeps no markup', async
   assert.match(anku.text, /^Anku, W\. \(2000\)/);
   assert.doesNotMatch(anku.text, /<\/?span|\*\*\[/);
 });
+
+test('a link whose URL contains parentheses is read whole', async () => {
+  const bib = await readBibliography();
+  assert.equal(bib.get('ref-43').url, 'https://en.wikipedia.org/wiki/Bai%C3%A3o_(music)');
+});
+
+test('an entry offering a PDF link and another link is routed to the PDF', async () => {
+  const bib = await readBibliography();
+  // ref-34 links JSTOR first (paywalled) and a free PDF second; the
+  // open-access verdict is about the PDF.
+  assert.match(bib.get('ref-34').url, /unicamp\.br.*\.pdf$/);
+});

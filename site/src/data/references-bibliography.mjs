@@ -20,12 +20,18 @@ export const BIBLIOGRAPHY_PATHS = [
 ];
 
 const ANCHOR = /<span id="((?:ref|fr)-[A-Za-z0-9-]+)"[^>]*>/;
-const LINK = /\[([^\]]*)\]\(([^)\s]+)\)/g;
+// A URL may itself contain one level of balanced parentheses —
+// Wikipedia's `Baião_(music)` — so the closing paren is matched, not the first.
+const LINK = /\[([^\]]*)\]\(([^\s()]*(?:\([^\s()]*\)[^\s()]*)*)\)/g;
 
 function parseLine(line) {
   const m = ANCHOR.exec(line);
   if (!m) return null;
-  const urls = [...line.matchAll(LINK)].map((l) => l[2]);
+  const links = [...line.matchAll(LINK)].map((l) => ({ label: l[1], url: l[2] }));
+  // An entry offering a PDF beside another route (ref-34: JSTOR, then a free
+  // PDF) is routed to the PDF — that is the copy an open-access verdict means.
+  const pdf = links.find((l) => /^pdf$/i.test(l.label.trim()));
+  const url = (pdf ?? links[0])?.url ?? null;
   const text = line
     .replace(/^\s*-\s*/, '')
     .replace(/<\/?span[^>]*>/g, '')
@@ -34,7 +40,7 @@ function parseLine(line) {
     .replace(/\s*·\s*/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
-  return [m[1], { text, url: urls[0] ?? null }];
+  return [m[1], { text, url }];
 }
 
 export async function readBibliography() {
