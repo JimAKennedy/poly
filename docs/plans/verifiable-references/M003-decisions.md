@@ -103,3 +103,25 @@ installed.
   on. Obviously right: the plan's purpose was the free copy, and the label
   says which link that is. Locked by a test, as is the companion fix for a
   URL containing parentheses (`ref-43`'s Wikipedia link was cut short).
+
+## 2026-09-30 — correction, and judgment calls during M003/S01 task 3
+
+- **Correction.** The planning entry above says ten manifest records named an
+  `archiveFile`. It was nine (`ref-1`, `ref-2`, `ref-4`, `ref-9`,
+  `fr-locke-1982`, `fr-vitale-1990`, `fr-powers-1980`, `fr-brailoiu-1951`,
+  `fr-cohn-1992`), counted from `main` during task 3. Task 1's evidence
+  repeated the error and is corrected in the same file.
+- **`ref-1`'s archived file was not the cited work, so it was un-adopted and
+  renamed aside.** `01 - Toussaint.pdf` is "The Distance Geometry of Music"
+  (arXiv 2007), which M002 already recorded as the mismatch behind the theory
+  bundle's link; the shipping appendix now cites and links the 2005 BRIDGES
+  paper. Task 3 adopts only confirmed matches, so `ref-1` goes back to
+  `not-attempted` for the scripted pass to fetch the BRIDGES PDF, and the
+  arXiv file is kept, renamed `01 - Toussaint 2007 arXiv.pdf` so it no longer
+  holds the name the cited work needs. Obviously right: the owner asked for
+  every file to be renamed to the convention, and the alternative was either
+  calling the wrong paper archived or never fetching the right one.
+- **`fr-powers-1980`'s canonical file is the "Rhythm and tāla" section.**
+  M002 recorded that section as the one chapter 6 leans on, which is the
+  plan's rule for choosing; the article head and the cultural-context section
+  are `- part 2` and `- part 3`.

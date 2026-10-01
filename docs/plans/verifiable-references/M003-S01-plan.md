@@ -12,7 +12,7 @@ restructured. Decisions behind every choice below are in `M003-decisions.md`.
 
 - [x] 1. The manifest records retrieval state, and the naming convention is code
 - [x] 2. The retrieval script, refusing to run without a destination
-- [ ] 3. The owner's existing files are matched, renamed and adopted
+- [x] 3. The owner's existing files are matched, renamed and adopted
 - [ ] 4. The scripted pass runs, and every refusal is queued
 
 ## Definition of Done

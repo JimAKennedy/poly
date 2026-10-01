@@ -365,3 +365,20 @@ test('a record that names a file is archived', async () => {
     .map(([a]) => a);
   assert.deepEqual(offenders, [], 'archiveFile is named but retrieval does not say archived: ' + offenders.join(', '));
 });
+
+// verifiable-references M003/S01 task 3: every archived file is named by the
+// convention (VR09). A file saved under whatever name its host gave it
+// (`cohnreich1992.pdf`) is findable only by whoever saved it.
+import { archiveFileName } from '../src/data/references-archive.mjs';
+import { readBibliography } from '../src/data/references-bibliography.mjs';
+
+test('every archived file follows the naming convention', async () => {
+  const m = await loadManifest();
+  const bib = await readBibliography();
+  const off = Object.entries(m.entries)
+    .filter(([, r]) => typeof r.archiveFile === 'string')
+    .map(([a, r]) => [a, r.archiveFile, archiveFileName(a, bib.get(a)?.text ?? '')])
+    .filter(([, actual, expected]) => actual !== expected)
+    .map(([a, actual, expected]) => `${a}: ${actual} → ${expected}`);
+  assert.deepEqual(off, [], 'archived under a name other than the convention gives:\n' + off.join('\n'));
+});
