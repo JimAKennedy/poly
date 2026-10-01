@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "entries": {
     "ref-1": {
       "obtainability": "open-access",
@@ -12,7 +12,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": "01 - Toussaint.pdf"
+      "archiveFile": "01 - Toussaint.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-09-20",
+        "detail": "archived before M003; adopted by M003/S01 task 3"
+      }
     },
     "ref-2": {
       "obtainability": "open-access",
@@ -25,7 +30,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": "02 - Goldberg.pdf"
+      "archiveFile": "02 - Goldberg.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-09-20",
+        "detail": "archived before M003; adopted by M003/S01 task 3"
+      }
     },
     "ref-4": {
       "obtainability": "open-access",
@@ -38,7 +48,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": "04 - Rhythm in Sub-Saharan Africa - Wikipedia.pdf"
+      "archiveFile": "04 - Rhythm in Sub-Saharan Africa - Wikipedia.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-09-20",
+        "detail": "archived before M003; adopted by M003/S01 task 3"
+      }
     },
     "ref-6": {
       "obtainability": "borrowable",
@@ -51,7 +66,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-7": {
       "obtainability": "open-access",
@@ -64,7 +84,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-8": {
       "obtainability": "browser-only",
@@ -77,7 +102,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-9": {
       "obtainability": "open-access",
@@ -90,7 +120,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": "09 - 11866_DISSERTATION_-_FULL_Oluranti.pdf"
+      "archiveFile": "09 - 11866_DISSERTATION_-_FULL_Oluranti.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-09-20",
+        "detail": "archived before M003; adopted by M003/S01 task 3"
+      }
     },
     "ref-10": {
       "obtainability": "browser-only",
@@ -103,7 +138,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-11": {
       "obtainability": "browser-only",
@@ -116,7 +156,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-12": {
       "obtainability": "open-access",
@@ -129,7 +174,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-13": {
       "obtainability": "purchasable",
@@ -142,7 +192,12 @@
         "isbn": null
       },
       "price": "USD 22.00 (PDF) / USD 36.00 (print), shermusic.com",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-14": {
       "obtainability": "browser-only",
@@ -155,7 +210,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-15": {
       "obtainability": "browser-only",
@@ -168,7 +228,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-16": {
       "obtainability": "open-access",
@@ -181,7 +246,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-17": {
       "obtainability": "browser-only",
@@ -194,7 +264,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-18": {
       "obtainability": "browser-only",
@@ -207,7 +282,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-19": {
       "obtainability": "browser-only",
@@ -220,7 +300,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-20": {
       "obtainability": "open-access",
@@ -233,7 +318,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-21": {
       "obtainability": "open-access",
@@ -246,7 +336,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-22": {
       "obtainability": "open-access",
@@ -259,7 +354,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-23": {
       "obtainability": "browser-only",
@@ -272,7 +372,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-24": {
       "obtainability": "browser-only",
@@ -285,7 +390,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-25": {
       "obtainability": "browser-only",
@@ -298,7 +408,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-26": {
       "obtainability": "open-access",
@@ -311,7 +426,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-27": {
       "obtainability": "open-access",
@@ -324,7 +444,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-28": {
       "obtainability": "open-access",
@@ -337,7 +462,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-29": {
       "obtainability": "open-access",
@@ -350,7 +480,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-30": {
       "obtainability": "browser-only",
@@ -363,7 +498,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-31": {
       "obtainability": "open-access",
@@ -376,7 +516,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-32": {
       "obtainability": "open-access",
@@ -389,7 +534,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-33": {
       "obtainability": "open-access",
@@ -402,7 +552,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-34": {
       "obtainability": "open-access",
@@ -415,7 +570,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-35": {
       "obtainability": "browser-only",
@@ -428,7 +588,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-36": {
       "obtainability": "open-access",
@@ -441,7 +606,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-37": {
       "obtainability": "open-access",
@@ -454,7 +624,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-38": {
       "obtainability": "open-access",
@@ -467,7 +642,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-39": {
       "obtainability": "browser-only",
@@ -480,7 +660,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-40": {
       "obtainability": "open-access",
@@ -493,7 +678,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-41": {
       "obtainability": "browser-only",
@@ -506,7 +696,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-42": {
       "obtainability": "open-access",
@@ -519,7 +714,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-43": {
       "obtainability": "open-access",
@@ -532,7 +732,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-44": {
       "obtainability": "open-access",
@@ -545,7 +750,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-46": {
       "obtainability": "browser-only",
@@ -558,7 +768,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-toussaint-2013": {
       "obtainability": "borrowable",
@@ -571,7 +786,12 @@
         "isbn": "9781466512023"
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-london-2012": {
       "obtainability": "purchasable",
@@ -584,7 +804,12 @@
         "isbn": "9780199744374"
       },
       "price": "ISBN 9780199744374, Oxford University Press — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-pressing-2002": {
       "obtainability": "library-only",
@@ -597,7 +822,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-arom-1991": {
       "obtainability": "purchasable",
@@ -610,7 +840,12 @@
         "isbn": "9780521616010"
       },
       "price": "ISBN 9780521616010, Cambridge University Press — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-locke-1998": {
       "obtainability": "purchasable",
@@ -623,7 +858,12 @@
         "isbn": "9780941677042"
       },
       "price": "ISBN 9780941677042, White Cliffs Media — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-locke-1982": {
       "obtainability": "purchasable",
@@ -636,7 +876,12 @@
         "isbn": null
       },
       "price": "USD 19.50/month or USD 199/year (JPASS, JSTOR personal access; about.jstor.org/jpass read 2026-09-22)",
-      "archiveFile": "Locke-PrinciplesOffbeatTiming-1982.pdf"
+      "archiveFile": "Locke-PrinciplesOffbeatTiming-1982.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-09-22",
+        "detail": "archived before M003; adopted by M003/S01 task 3"
+      }
     },
     "fr-chernoff-1979": {
       "obtainability": "borrowable",
@@ -649,7 +894,12 @@
         "isbn": "9780226103457"
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-anku-2000": {
       "obtainability": "open-access",
@@ -662,7 +912,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-polak-2010": {
       "obtainability": "open-access",
@@ -675,7 +930,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-polak-london-2014": {
       "obtainability": "open-access",
@@ -688,7 +948,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-novotney-1998": {
       "obtainability": "browser-only",
@@ -701,7 +966,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-agawu-2006": {
       "obtainability": "library-only",
@@ -714,7 +984,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-charry-2000": {
       "obtainability": "purchasable",
@@ -727,7 +1002,12 @@
         "isbn": "9780226101637"
       },
       "price": "ISBN 9780226101637, University of Chicago Press — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-kubik-1999": {
       "obtainability": "borrowable",
@@ -740,7 +1020,12 @@
         "isbn": "9781578061464"
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-agawu-2003": {
       "obtainability": "purchasable",
@@ -753,7 +1038,12 @@
         "isbn": "9780415943901"
       },
       "price": "ISBN 9780415943901, Routledge — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-acosta-2003": {
       "obtainability": "purchasable",
@@ -766,7 +1056,12 @@
         "isbn": "9781588341471"
       },
       "price": "ISBN 9781588341471, Smithsonian Books — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-penalosa-2009": {
       "obtainability": "purchasable",
@@ -779,7 +1074,12 @@
         "isbn": "9781886502802"
       },
       "price": "ISBN 9781886502802, Bembe Books — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-mauleon-1993": {
       "obtainability": "purchasable",
@@ -792,7 +1092,12 @@
         "isbn": "0961470194"
       },
       "price": "ISBN 0961470194, Sher Music — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-uribe-1996": {
       "obtainability": "purchasable",
@@ -805,7 +1110,12 @@
         "isbn": "9781576236192"
       },
       "price": "ISBN 9781576236192, Alfred Publishing — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-washburne-1997": {
       "obtainability": "library-only",
@@ -818,7 +1128,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-lomax-1950": {
       "obtainability": "borrowable",
@@ -831,7 +1146,12 @@
         "isbn": "9780520024021"
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-allen-veal-2013": {
       "obtainability": "purchasable",
@@ -844,7 +1164,12 @@
         "isbn": "9780822355915"
       },
       "price": "ISBN 9780822355915, Duke University Press — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-veal-2000": {
       "obtainability": "purchasable",
@@ -857,7 +1182,12 @@
         "isbn": "9780585366739"
       },
       "price": "ISBN 9780585366739, Temple University Press — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-tenzer-2000": {
       "obtainability": "borrowable",
@@ -870,7 +1200,12 @@
         "isbn": "9780226792811"
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-vitale-1990": {
       "obtainability": "open-access",
@@ -883,7 +1218,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": "v_4_2_Kotekan_the_technique_of_interlocking_parts_in_Balinese_music_Vitale.pdf"
+      "archiveFile": "v_4_2_Kotekan_the_technique_of_interlocking_parts_in_Balinese_music_Vitale.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-09-22",
+        "detail": "archived before M003; adopted by M003/S01 task 3"
+      }
     },
     "fr-sumarsam-1995": {
       "obtainability": "borrowable",
@@ -896,7 +1236,12 @@
         "isbn": "9780226780108"
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-powers-1980": {
       "obtainability": "purchasable",
@@ -909,7 +1254,12 @@
         "isbn": null
       },
       "price": "Grove Music Online, Oxford University Press — individual subscription; price not established from here (oxfordmusiconline.com refuses automation with 403); also licensed by many public libraries",
-      "archiveFile": "Powers first section of India Subcontinent Of.pdf"
+      "archiveFile": "Powers first section of India Subcontinent Of.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-09-22",
+        "detail": "archived before M003; adopted by M003/S01 task 3"
+      }
     },
     "fr-clayton-2000": {
       "obtainability": "borrowable",
@@ -922,7 +1272,12 @@
         "isbn": "9780198166863"
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-nelson-2008": {
       "obtainability": "purchasable",
@@ -935,7 +1290,12 @@
         "isbn": "9780819568717"
       },
       "price": "ISBN 9780819568717, Wesleyan University Press — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-kippen-1988": {
       "obtainability": "borrowable",
@@ -948,7 +1308,12 @@
         "isbn": "9780521335294"
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-silverman-2007": {
       "obtainability": "open-access",
@@ -961,7 +1326,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-brailoiu-1951": {
       "obtainability": "purchasable",
@@ -974,7 +1344,12 @@
         "isbn": null
       },
       "price": "USD 19.50/month or USD 199/year (JPASS, JSTOR personal access; about.jstor.org/jpass read 2026-09-22)",
-      "archiveFile": "Braloiu-LerythmeAksak-1951.pdf"
+      "archiveFile": "Braloiu-LerythmeAksak-1951.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-09-22",
+        "detail": "archived before M003; adopted by M003/S01 task 3"
+      }
     },
     "fr-rice-1994": {
       "obtainability": "purchasable",
@@ -987,7 +1362,12 @@
         "isbn": "9780226711225"
       },
       "price": "ISBN 9780226711225, University of Chicago Press — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-goldberg-2015": {
       "obtainability": "open-access",
@@ -1000,7 +1380,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-holzapfel-2015": {
       "obtainability": "open-access",
@@ -1013,7 +1398,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-reich-2002": {
       "obtainability": "purchasable",
@@ -1026,7 +1416,12 @@
         "isbn": "9780195111712"
       },
       "price": "ISBN 9780195111712, Oxford University Press — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-cohn-1992": {
       "obtainability": "browser-only",
@@ -1039,7 +1434,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": "cohnreich1992.pdf"
+      "archiveFile": "cohnreich1992.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-09-22",
+        "detail": "archived before M003; adopted by M003/S01 task 3"
+      }
     },
     "fr-potter-2000": {
       "obtainability": "borrowable",
@@ -1052,7 +1452,12 @@
         "isbn": "9780521482509"
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-gann-1995": {
       "obtainability": "borrowable",
@@ -1065,7 +1470,12 @@
         "isbn": "9780521465342"
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-scherzinger-2010": {
       "obtainability": "browser-only",
@@ -1078,7 +1488,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-harrison-2025": {
       "obtainability": "purchasable",
@@ -1091,7 +1506,12 @@
         "isbn": null
       },
       "price": "ISBN 9781032509105, Routledge — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-linn-attack-2020": {
       "obtainability": "open-access",
@@ -1104,7 +1524,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-butler-2006": {
       "obtainability": "borrowable",
@@ -1117,7 +1542,12 @@
         "isbn": "9780253346629"
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-danielsen-2010": {
       "obtainability": "purchasable",
@@ -1130,7 +1560,12 @@
         "isbn": "9781317091394"
       },
       "price": "ISBN 9781317091394, Ashgate / Routledge — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-collins-2001": {
       "obtainability": "browser-only",
@@ -1143,7 +1578,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-reynolds-1998": {
       "obtainability": "purchasable",
@@ -1156,7 +1596,12 @@
         "isbn": "9780330350563"
       },
       "price": "ISBN 9780330350563, Picador — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-crook-2009": {
       "obtainability": "purchasable",
@@ -1169,7 +1614,12 @@
         "isbn": "9780415960656"
       },
       "price": "ISBN 9780415960656, Routledge — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-sandroni-2001": {
       "obtainability": "purchasable",
@@ -1182,7 +1632,12 @@
         "isbn": "9788571106062"
       },
       "price": "ISBN 9788571106062, Jorge Zahar Editor — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-gerischer-2006": {
       "obtainability": "library-only",
@@ -1195,7 +1650,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-naveda-2011": {
       "obtainability": "library-only",
@@ -1208,7 +1668,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-fryer-2000": {
       "obtainability": "borrowable",
@@ -1221,7 +1686,12 @@
         "isbn": "9780745303833"
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-born-hesmondhalgh-2000": {
       "obtainability": "purchasable",
@@ -1234,7 +1704,12 @@
         "isbn": "9780520220843"
       },
       "price": "ISBN 9780520220843, University of California Press — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-danielsen-2006": {
       "obtainability": "borrowable",
@@ -1247,7 +1722,12 @@
         "isbn": "9780819568779"
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-stewart-2000": {
       "obtainability": "library-only",
@@ -1260,7 +1740,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-berliner-1994": {
       "obtainability": "purchasable",
@@ -1273,7 +1758,12 @@
         "isbn": "9780226043814"
       },
       "price": "ISBN 9780226043814, University of Chicago Press — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-monson-1996": {
       "obtainability": "borrowable",
@@ -1286,7 +1776,12 @@
         "isbn": "9780226534787"
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-riley-1994": {
       "obtainability": "purchasable",
@@ -1299,7 +1794,12 @@
         "isbn": "9780898988901"
       },
       "price": "ISBN 9780898988901, Manhattan Music — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-keil-1987": {
       "obtainability": "library-only",
@@ -1312,7 +1812,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-friberg-2002": {
       "obtainability": "library-only",
@@ -1325,7 +1830,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-benadon-2006": {
       "obtainability": "library-only",
@@ -1338,7 +1848,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-progler-1995": {
       "obtainability": "library-only",
@@ -1351,7 +1866,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-iyer-2002": {
       "obtainability": "library-only",
@@ -1364,7 +1884,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-hennig-2011": {
       "obtainability": "open-access",
@@ -1377,7 +1902,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     }
   }
 }

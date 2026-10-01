@@ -44,6 +44,7 @@ const RECORD_KEYS = [
   'identifier',
   'price',
   'archiveFile',
+  'retrieval',
 ];
 
 async function loadManifest() {
@@ -51,9 +52,9 @@ async function loadManifest() {
   return JSON.parse(raw);
 }
 
-test('references manifest declares schemaVersion 1 and an entries object', async () => {
+test('references manifest declares schemaVersion 2 and an entries object', async () => {
   const m = await loadManifest();
-  assert.equal(m.schemaVersion, 1, 'schemaVersion must be 1');
+  assert.equal(m.schemaVersion, 2, 'schemaVersion must be 2 (M003/S01 added retrieval)');
   assert.equal(
     Object.prototype.toString.call(m.entries),
     '[object Object]',
@@ -305,4 +306,62 @@ test('every browser-only unverified entry is named in the browser worklist', asy
     'browser-only and unverified, but not named in the worklist, so no one has ' +
       'been asked to look: ' + missing.join(', '),
   );
+});
+
+// verifiable-references M003/S01 task 1: retrieval state.
+//
+// VR10. `archiveFile: null` alone could mean "never tried", "tried and the
+// host refused" or "there is nothing to archive", and those call for different
+// work. Every record now says which, and `archived` is tied to `archiveFile`
+// in both directions so the two can never disagree.
+import { RETRIEVAL_STATUS } from '../src/data/references-archive.mjs';
+
+test('RETRIEVAL_STATUS is the six declared states', () => {
+  assert.ok(
+    Array.isArray(RETRIEVAL_STATUS) && RETRIEVAL_STATUS.length === 6,
+    'RETRIEVAL_STATUS must be an array of six states — a renamed or missing ' +
+      'export would make every status check below assert nothing',
+  );
+});
+
+test('every record carries a well-formed retrieval state', async () => {
+  const m = await loadManifest();
+  const bad = [];
+  for (const [anchor, r] of Object.entries(m.entries)) {
+    const ret = r.retrieval;
+    if (Object.prototype.toString.call(ret) !== '[object Object]') {
+      bad.push(`${anchor}: retrieval must be an object`);
+      continue;
+    }
+    const keys = Object.keys(ret).sort();
+    if (JSON.stringify(keys) !== JSON.stringify(['checked', 'detail', 'status'])) {
+      bad.push(`${anchor}: retrieval keys are ${keys.join(', ')}`);
+    }
+    if (!RETRIEVAL_STATUS.includes(ret.status)) {
+      bad.push(`${anchor}: retrieval.status ${JSON.stringify(ret.status)} is not one of ${RETRIEVAL_STATUS.join(', ')}`);
+    }
+    if (!(ret.checked === null || (typeof ret.checked === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(ret.checked)))) {
+      bad.push(`${anchor}: retrieval.checked must be null or YYYY-MM-DD`);
+    }
+    if (!(ret.detail === null || typeof ret.detail === 'string')) {
+      bad.push(`${anchor}: retrieval.detail must be null or a string`);
+    }
+  }
+  assert.deepEqual(bad, [], bad.join('\n'));
+});
+
+test('an archived record names its file', async () => {
+  const m = await loadManifest();
+  const offenders = Object.entries(m.entries)
+    .filter(([, r]) => r.retrieval?.status === 'archived' && typeof r.archiveFile !== 'string')
+    .map(([a]) => a);
+  assert.deepEqual(offenders, [], 'retrieval says archived but no archiveFile is named: ' + offenders.join(', '));
+});
+
+test('a record that names a file is archived', async () => {
+  const m = await loadManifest();
+  const offenders = Object.entries(m.entries)
+    .filter(([, r]) => typeof r.archiveFile === 'string' && r.retrieval?.status !== 'archived')
+    .map(([a]) => a);
+  assert.deepEqual(offenders, [], 'archiveFile is named but retrieval does not say archived: ' + offenders.join(', '));
 });

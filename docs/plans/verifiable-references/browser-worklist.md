@@ -25,6 +25,26 @@ filename and never a path, so no machine-specific root can reach a tracked file
 — `check-personal-paths` rejected the absolute form in the vision's own first
 draft, and this makes that failure unreachable rather than merely reviewed.
 
+## The archive
+
+Every file in the archive is named by one convention, defined by
+`archiveFileName` in `site/src/data/references-archive.mjs` and held by a test
+against every file the manifest names:
+
+- **Numbered entries** — `NN - Name.pdf`: the reference number, zero-padded to
+  two digits, and the lead author's surname, or for an authorless entry its
+  title. `ref-1` is `01 - Toussaint.pdf`; `ref-4` is
+  `04 - Rhythm in Sub-Saharan Africa.pdf`.
+- **Further Reading** — `FR - Surname Year.pdf`, taken from the anchor:
+  `fr-polak-london-2014` is `FR - Polak London 2014.pdf`.
+
+A web page is archived as a PDF printed from it. Each manifest record's
+`retrieval.status` says what retrieval did: `archived`, `script-refused` (a
+host refused the script, and the entry is queued here for a person),
+`scan-only`, `institution-only`, `no-text` (a video), or `not-attempted`.
+`scripts/fetch-references.mjs` does the scripted part and will not run
+without `POLY_REFERENCES_ARCHIVE` set.
+
 ## Pending
 
 ### Queued by M002/S02 — 19 entries that are browser-only and unverified
