@@ -60,84 +60,89 @@ is `script-refused` in the manifest. Save the file under the exact name given.
 | `fr-silverman-2007` | `https://doi.org/10.2298/muz0707069s` | no response from `doi.org` | Save the article PDF from *Muzikologija* 7. | `FR - Silverman 2007.pdf` |
 | `fr-goldberg-2015` | `https://doi.org/10.18061/emr.v10i4.4884` | Anubis bot challenge at `emusicology.org` | Save the article PDF from *Empirical Musicology Review*. | `FR - Goldberg 2015.pdf` |
 
-### Queued by M002/S02 — 19 entries that are browser-only and unverified
+### Queued by M002/S02 — 18 entries that are browser-only and unverified
 
 Every entry below is obtainable by a person and was not obtained by automation.
 Grouped by host, because hosts fail as a class: one session on a host settles
 every entry on it. The manifest at `site/src/data/references.json` carries the
 measured evidence for each.
 
-#### Academia.edu
-
-| Entry | URL | What to check |
-|---|---|---|
-| `ref-30` | `https://www.academia.edu/12360331/Structures_of_Rhythm_in_Mevlevi_Music_A_Cyclical_Analysis_Model` | You have an account. Confirm the paper’s title and author, and save the PDF. |
-
 #### IFTAWM / AAWM
 
-| Entry | URL | What to check |
-|---|---|---|
-| `ref-23` | `https://journal.iftawm.org/wp-content/uploads/2023/12/Reindl_AAWM_Vol_11_2.pdf` | Read the PDF’s title page and record the exact article title and journal name. This settles VR17. |
+| Entry | URL | What to check | Save as |
+|---|---|---|---|
+| `ref-23` | `https://journal.iftawm.org/wp-content/uploads/2023/12/Reindl_AAWM_Vol_11_2.pdf` | Read the PDF’s title page and record the exact article title and journal name. This settles VR17. | `23 - Reindl.pdf` |
 
-#### No URL recorded
+#### No URL recorded, or none that answers a script
 
-| Entry | URL | What to check |
-|---|---|---|
-| `fr-collins-2001` | — none in the entry — | The entry carries no URL. Find the work, then record a route to it. |
-| `fr-novotney-1998` | — none in the entry — | The entry carries no URL. Find the work, then record a route to it. |
-| `ref-39` | `https://www.cambridge.org/core/services/aop-cambridge-core/content/view/BBC410F9849DB982AEBFACEA14D38F32/S0261143023000041a.pdf/shaping_rhythm_timing_and_sound_in_five_groovebased_genres.pdf` | The entry carries no URL. Find the work, then record a route to it. |
-| `ref-8` | `https://www.scribd.com/document/218700737/unit-6-62-mustapha-tettey-addy-ghana-agbekor-dance` | The entry carries no URL. Find the work, then record a route to it. |
+| Entry | URL | What to check | Save as |
+|---|---|---|---|
+| `fr-collins-2001` | — none in the entry — | The entry carries no URL. Find the work, then record a route to it. | `FR - Collins 2001.pdf` |
+| `fr-novotney-1998` | — none in the entry — | The entry carries no URL. Find the work, then record a route to it. | `FR - Novotney 1998.pdf` |
+| `ref-39` | `https://www.cambridge.org/core/services/aop-cambridge-core/content/view/BBC410F9849DB982AEBFACEA14D38F32/S0261143023000041a.pdf/shaping_rhythm_timing_and_sound_in_five_groovebased_genres.pdf` | Open it in a browser and record whether the PDF is readable, purchasable or institution-only; save it if it is readable. | `39 - Shaping Rhythm, Timing, and Sound in Five Groove-Based Genres.pdf` |
+| `ref-8` | `https://www.scribd.com/document/218700737/unit-6-62-mustapha-tettey-addy-ghana-agbekor-dance` | Log in to Scribd, confirm the upload is Addy’s Agbekor unit, and save it. An account-walled upload may still be removed by M004/VR12. | `08 - Addy.pdf` |
 
 #### Oxford Academic
 
-| Entry | URL | What to check |
-|---|---|---|
-| `ref-18` | `https://academic.oup.com/edited-volume/28278/chapter/214416541` | Record whether the chapter is readable, purchasable or institution-only, and the price if one is shown. |
-| `ref-19` | `https://academic.oup.com/book/6495/chapter/150390558` | Record whether the chapter is readable, purchasable or institution-only, and the price if one is shown. |
+| Entry | URL | What to check | Save as |
+|---|---|---|---|
+| `ref-18` | `https://academic.oup.com/edited-volume/28278/chapter/214416541` | Record whether the chapter is readable, purchasable or institution-only, and the price if one is shown. | `18 - Algorithmic Thinking and the Art of Javanese Gamelan.pdf` |
+| `ref-19` | `https://academic.oup.com/book/6495/chapter/150390558` | Record whether the chapter is readable, purchasable or institution-only, and the price if one is shown. | `19 - Ladrang Pangkur Colotomic Structure in Javanese Gamelan.pdf` |
 
 #### PubPub
 
-| Entry | URL | What to check |
-|---|---|---|
-| `ref-24` | `https://alpaca.pubpub.org/pub/ofzrb3a6/release/12` | Open access behind a bot block. Confirm the title and save the PDF. |
+| Entry | URL | What to check | Save as |
+|---|---|---|---|
+| `ref-24` | `https://alpaca.pubpub.org/pub/ofzrb3a6/release/12` | Open access behind a bot block. Confirm the title and save the PDF. | `24 - Konnakol Algorithmic Pattern and Oral Composition.pdf` |
 
 #### Semantic Scholar
 
-| Entry | URL | What to check |
-|---|---|---|
-| `ref-46` | `https://www.semanticscholar.org/paper/The-Theory-of-Rep-Rate-Pattern-Generation-in-the-Bjorklund/c652d0a32895afc5d50b6527447824c31a553659` | Find and save Bjorklund (2003); it underpins the engine’s Euclidean generator. |
+| Entry | URL | What to check | Save as |
+|---|---|---|---|
+| `ref-46` | `https://www.semanticscholar.org/paper/The-Theory-of-Rep-Rate-Pattern-Generation-in-the-Bjorklund/c652d0a32895afc5d50b6527447824c31a553659` | Find and save Bjorklund (2003); it underpins the engine’s Euclidean generator. | `46 - Bjorklund.pdf` |
 
 #### YouTube
 
-| Entry | URL | What to check |
-|---|---|---|
-| `ref-10` | `https://www.youtube.com/watch?v=T-bXVeAmGiM` | Confirm the video exists and note its actual title and uploader. There is no text to review, so this settles existence only — removal is M004/VR12. |
-| `ref-11` | `https://www.youtube.com/watch?v=OE7X1PgmF54` | Confirm the video exists and note its actual title and uploader. There is no text to review, so this settles existence only — removal is M004/VR12. |
-| `ref-14` | `https://www.youtube.com/watch?v=OoyGKEqfyZw` | Confirm the video exists and note its actual title and uploader. There is no text to review, so this settles existence only — removal is M004/VR12. |
-| `ref-15` | `https://www.youtube.com/watch?v=ryTTHmUYc2o` | Confirm the video exists and note its actual title and uploader. There is no text to review, so this settles existence only — removal is M004/VR12. |
-| `ref-25` | `https://www.youtube.com/watch?v=uephXrkxH1E` | Confirm the video exists and note its actual title and uploader. There is no text to review, so this settles existence only — removal is M004/VR12. |
+| Entry | URL | What to check | Save as |
+|---|---|---|---|
+| `ref-10` | `https://www.youtube.com/watch?v=T-bXVeAmGiM` | Confirm the video exists and note its actual title and uploader. There is no text to review, so this settles existence only — removal is M004/VR12. | — no text; record existence only — |
+| `ref-11` | `https://www.youtube.com/watch?v=OE7X1PgmF54` | Confirm the video exists and note its actual title and uploader. There is no text to review, so this settles existence only — removal is M004/VR12. | — no text; record existence only — |
+| `ref-14` | `https://www.youtube.com/watch?v=OoyGKEqfyZw` | Confirm the video exists and note its actual title and uploader. There is no text to review, so this settles existence only — removal is M004/VR12. | — no text; record existence only — |
+| `ref-15` | `https://www.youtube.com/watch?v=ryTTHmUYc2o` | Confirm the video exists and note its actual title and uploader. There is no text to review, so this settles existence only — removal is M004/VR12. | — no text; record existence only — |
+| `ref-25` | `https://www.youtube.com/watch?v=uephXrkxH1E` | Confirm the video exists and note its actual title and uploader. There is no text to review, so this settles existence only — removal is M004/VR12. | — no text; record existence only — |
 
 #### lianproductions.com
 
-| Entry | URL | What to check |
-|---|---|---|
-| `ref-17` | `https://lianproductions.com/afro-house/` | Answers a 202 challenge stub. Confirm the article exists and note its title. |
+| Entry | URL | What to check | Save as |
+|---|---|---|---|
+| `ref-17` | `https://lianproductions.com/afro-house/` | Answers a 202 challenge stub. Confirm the article exists and note its title. | `17 - Afro House Production Guide.pdf` |
 
 #### martinscherzinger.org
 
-| Entry | URL | What to check |
-|---|---|---|
-| `fr-scherzinger-2010` | — none in the entry — | The host did not respond at all. Check whether the PDF is still there; if not, find the ICTM proceedings version. |
-| `ref-35` | `http://martinscherzinger.org/wp-content/uploads/Piano-Phase-in-Global-Perspective-.pdf` | The host did not respond at all. Check whether the PDF is still there; if not, find the ICTM proceedings version. |
+| Entry | URL | What to check | Save as |
+|---|---|---|---|
+| `fr-scherzinger-2010` | — none in the entry — | The host did not respond at all. Check whether the PDF is still there; if not, find the ICTM proceedings version. | `FR - Scherzinger 2010.pdf` |
+| `ref-35` | `http://martinscherzinger.org/wp-content/uploads/Piano-Phase-in-Global-Perspective-.pdf` | The host did not respond at all. Check whether the PDF is still there; if not, find the ICTM proceedings version. | `35 - Scherzinger.pdf` |
 
 #### Érudit
 
-| Entry | URL | What to check |
-|---|---|---|
-| `ref-41` | `https://www.erudit.org/en/journals/sqrm/2015-v16-n1-2-sqrm03043/1039619ar.pdf` | Behind an Anubis challenge that returns HTTP 200. Confirm the article title and save the PDF. |
+| Entry | URL | What to check | Save as |
+|---|---|---|---|
+| `ref-41` | `https://www.erudit.org/en/journals/sqrm/2015-v16-n1-2-sqrm03043/1039619ar.pdf` | Behind an Anubis challenge that returns HTTP 200. Confirm the article title and save the PDF. | `41 - Rhythmic Ambiguity in Aphex Twin.pdf` |
 
 
 ## Resolved
+
+### `ref-30` — Baysal and Karadeniz, Mevlevi rhythm — **settled from the owner's archive, 2026-09-30**
+
+Queued by M002/S02 for an Academia.edu session. The owner had already
+downloaded it: M003/S01 task 3 found it in the archive's Academia.edu folder,
+read its title page — "Structures of Rhythm in Mevlevi Music: A Cyclical
+Analysis Model", Ozan Baysal and Sirin Karadeniz — and archived it as
+`30 - Structures of Rhythm in Mevlevi Music A Cyclical Analysis Model.pdf`.
+The row as it was queued:
+
+| `ref-30` | `https://www.academia.edu/12360331/Structures_of_Rhythm_in_Mevlevi_Music_A_Cyclical_Analysis_Model` | You have an account. Confirm the paper’s title and author, and save the PDF. |
 
 ### The six library-only entries queued by first-release M003/S02 — **all settled, 2026-09-22**
 

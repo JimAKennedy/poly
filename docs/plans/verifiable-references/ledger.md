@@ -200,7 +200,7 @@ Dropbox research folder addressed through an environment variable.
 **Plan:** M003-S02-plan.md
 **Validation:** format, site-unit
 **Evidence:** evidence/M003-S02.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 

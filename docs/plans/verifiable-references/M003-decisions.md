@@ -157,3 +157,15 @@ citation fault on the browser worklist as if a host had refused a script.
   copy.** The plan said to prove it on a discarded copy; a test that sets one
   record to `script-refused` and asserts the guard reports it does the same
   thing and keeps doing it.
+
+## 2026-10-01 — judgment calls during M003/S02 task 1
+
+- **`ref-8` and `ref-39` got instructions that match their rows.** Both sat
+  under "No URL recorded" with "The entry carries no URL" while their URL
+  cells carry one. Their instructions now say what a browser session should
+  do with the URL each has, and the group is renamed "No URL recorded, or
+  none that answers a script". Obviously right: DoD 1 asks every row to say
+  what to save, and these two said something false.
+- **`ref-30`'s description verdict became `verified`.** Its worklist row
+  asked to confirm title and author; task 3 read both on the file's own first
+  pages, which is M002's meaning of `verified` (the text was read).

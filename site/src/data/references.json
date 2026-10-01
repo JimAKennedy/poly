@@ -489,9 +489,9 @@
     },
     "ref-30": {
       "obtainability": "browser-only",
-      "evidence": "academia.edu returns 403 to automation with a ~5.9 KB block page. Academia.edu requires an account, which the owner has, so this is browser-settleable rather than unobtainable.",
-      "checked": "2026-09-20",
-      "description": "unverified",
+      "evidence": "academia.edu returns 403 to automation with a ~5.9 KB block page. Academia.edu requires an account, which the owner has, so this is browser-settleable rather than unobtainable. M003/S01 task 3 found the owner’s Academia.edu download in the archive and read its first two pages: the title is \"Structures of Rhythm in Mevlevi Music: A Cyclical Analysis Model\", by Ozan Baysal and Sirin Karadeniz, matching the entry.",
+      "checked": "2026-09-30",
+      "description": "verified",
       "note": "",
       "identifier": {
         "doi": null,

@@ -417,3 +417,46 @@ test('the refusal guard fires on an unqueued refusal', async () => {
   m.entries['ref-1'].retrieval = { status: 'script-refused', checked: '2026-09-30', detail: 'HTTP 403' };
   assert.deepEqual(refusedNotQueued(m, worklist), ['ref-1'], 'a check that cannot fire is not a check');
 });
+
+// verifiable-references M003/S02 task 1 (VR10): every pending worklist row
+// tells the person working it exactly what to save it as. A file saved under
+// the host's own name has to be found and renamed afterwards, which is the
+// state the archive was in before M003. Video rows have nothing to save and
+// carry a fixed marker instead.
+const NO_TEXT_MARK = '— no text; record existence only —';
+
+export function pendingRows(worklist) {
+  const rows = [];
+  let header = null;
+  for (const line of pendingSection(worklist).split('\n')) {
+    if (!line.startsWith('|')) { header = null; continue; }
+    const cells = line.split('|').slice(1, -1).map((c) => c.trim());
+    if (header === null) { header = cells; continue; }
+    if (cells.every((c) => /^-+$/.test(c))) continue;
+    const anchor = /^`((?:ref|fr)-[a-z0-9-]+)`$/.exec(cells[0])?.[1];
+    if (!anchor) continue;
+    rows.push({ anchor, cell: Object.fromEntries(header.map((h, i) => [h, cells[i] ?? ''])) });
+  }
+  return rows;
+}
+
+test('every pending worklist row names its URL, the task, and the exact file to save', async () => {
+  const m = await loadManifest();
+  const bib = await readBibliography();
+  const worklist = await readFile(WORKLIST_PATH, 'utf8');
+  const rows = pendingRows(worklist);
+  assert.ok(rows.length > 0, 'no pending rows parsed — has the table shape changed?');
+  const bad = [];
+  for (const { anchor, cell } of rows) {
+    const url = cell.URL ?? '';
+    const task = cell['What to check'] ?? cell['What to save'] ?? '';
+    const saveAs = cell['Save as'];
+    if (url === '') bad.push(`${anchor}: empty URL cell`);
+    if (task === '') bad.push(`${anchor}: no instruction`);
+    if (saveAs === undefined) { bad.push(`${anchor}: no Save as column`); continue; }
+    const video = /youtube\.com/.test(url) && m.entries[anchor]?.obtainability === 'browser-only';
+    const want = video ? NO_TEXT_MARK : '`' + archiveFileName(anchor, bib.get(anchor)?.text ?? '') + '`';
+    if (saveAs !== want) bad.push(`${anchor}: Save as is ${saveAs}, want ${want}`);
+  }
+  assert.deepEqual(bad, [], bad.join('\n'));
+});
