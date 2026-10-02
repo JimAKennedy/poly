@@ -47,6 +47,46 @@ without `POLY_REFERENCES_ARCHIVE` set.
 
 ## Pending
 
+Nothing is pending. The last pass is under Resolved.
+
+## Resolved
+
+### The worklist, as worked by the owner — **M003/S02, settled 2026-10-02**
+
+Every row M002/S02 and M003/S01 queued, worked by the owner in two rounds
+recorded verbatim in `M003-decisions.md`. Each manifest record's
+`retrieval.detail` carries the route, and each `mismatch` its `note`.
+`to-replace` and the mismatches are M004's to correct; nothing below is
+pending.
+
+| Entry | Retrieval | Description | Archived as |
+|---|---|---|---|
+| `ref-7` | to-replace | verified | — |
+| `ref-21` | to-replace | verified | — |
+| `ref-26` | archived | verified | `26 - Bonini Baraldi.pdf` |
+| `fr-silverman-2007` | archived | verified | `FR - Silverman 2007.pdf` |
+| `fr-goldberg-2015` | archived | verified | `FR - Goldberg 2015.pdf` |
+| `ref-23` | archived | mismatch | `23 - Reindl.pdf` |
+| `fr-collins-2001` | archived | verified | `FR - Collins 2001.pdf` |
+| `fr-novotney-1998` | institution-only | unverified | — |
+| `ref-39` | archived | verified | `39 - Shaping Rhythm, Timing, and Sound in Five Groove-Based Genres.pdf` |
+| `ref-8` | to-replace | unverified | — |
+| `ref-18` | not-attempted | unverified | — |
+| `ref-19` | not-attempted | unverified | — |
+| `ref-24` | to-replace | unverified | — |
+| `ref-46` | archived | mismatch | `46 - Bjorklund.pdf` |
+| `ref-10` | no-text | unverified | — |
+| `ref-11` | no-text | unverified | — |
+| `ref-14` | no-text | unverified | — |
+| `ref-15` | no-text | unverified | — |
+| `ref-25` | no-text | unverified | — |
+| `ref-17` | archived | mismatch | `17 - Afro House Production Guide.pdf` |
+| `fr-scherzinger-2010` | archived | mismatch | `FR - Scherzinger 2010.pdf` |
+| `ref-35` | archived | verified | `35 - Scherzinger.pdf` |
+| `ref-41` | archived | mismatch | `41 - Rhythmic Ambiguity in Aphex Twin.pdf` |
+
+<details><summary>The queue as written</summary>
+
 ### Refused by M003/S01's scripted pass — 5 entries, 2026-09-30
 
 Open access by M002's verdict, refused to `scripts/fetch-references.mjs`. Each
@@ -130,8 +170,7 @@ measured evidence for each.
 |---|---|---|---|
 | `ref-41` | `https://www.erudit.org/en/journals/sqrm/2015-v16-n1-2-sqrm03043/1039619ar.pdf` | Behind an Anubis challenge that returns HTTP 200. Confirm the article title and save the PDF. | `41 - Rhythmic Ambiguity in Aphex Twin.pdf` |
 
-
-## Resolved
+</details>
 
 ### `ref-30` — Baysal and Karadeniz, Mevlevi rhythm — **settled from the owner's archive, 2026-09-30**
 

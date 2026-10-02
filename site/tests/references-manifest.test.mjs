@@ -316,10 +316,10 @@ test('every browser-only unverified entry is named in the browser worklist', asy
 // in both directions so the two can never disagree.
 import { RETRIEVAL_STATUS } from '../src/data/references-archive.mjs';
 
-test('RETRIEVAL_STATUS is the six declared states', () => {
+test('RETRIEVAL_STATUS is the seven declared states', () => {
   assert.ok(
-    Array.isArray(RETRIEVAL_STATUS) && RETRIEVAL_STATUS.length === 6,
-    'RETRIEVAL_STATUS must be an array of six states — a renamed or missing ' +
+    Array.isArray(RETRIEVAL_STATUS) && RETRIEVAL_STATUS.length === 7,
+    'RETRIEVAL_STATUS must be an array of seven states — a renamed or missing ' +
       'export would make every status check below assert nothing',
   );
 });
@@ -445,7 +445,12 @@ test('every pending worklist row names its URL, the task, and the exact file to 
   const bib = await readBibliography();
   const worklist = await readFile(WORKLIST_PATH, 'utf8');
   const rows = pendingRows(worklist);
-  assert.ok(rows.length > 0, 'no pending rows parsed — has the table shape changed?');
+  // Zero rows is a pass only when the section says so in words; otherwise it
+  // means the table shape changed and this check stopped seeing anything.
+  if (rows.length === 0) {
+    assert.match(pendingSection(worklist), /Nothing is pending\./, 'no pending rows parsed — has the table shape changed?');
+    return;
+  }
   const bad = [];
   for (const { anchor, cell } of rows) {
     const url = cell.URL ?? '';
@@ -459,4 +464,20 @@ test('every pending worklist row names its URL, the task, and the exact file to 
     if (saveAs !== want) bad.push(`${anchor}: Save as is ${saveAs}, want ${want}`);
   }
   assert.deepEqual(bad, [], bad.join('\n'));
+});
+
+// verifiable-references M003/S02 task 3 (VR10): the archive is finished. Every
+// source a person can reach for free is either in the archive or recorded as
+// what it is — a scan, an institution's, a video, or one the owner judged
+// unsuitable and M004 replaces. Neither "not tried" nor "refused" is an end
+// state: both mean nobody has finished looking.
+const END_STATES = ['archived', 'scan-only', 'institution-only', 'no-text', 'to-replace'];
+
+test('every free source is archived or recorded as what it is', async () => {
+  const m = await loadManifest();
+  const open = Object.entries(m.entries)
+    .filter(([, r]) => ['open-access', 'browser-only'].includes(r.obtainability))
+    .filter(([, r]) => !END_STATES.includes(r.retrieval?.status))
+    .map(([a, r]) => `${a} (${r.obtainability}, ${r.retrieval?.status})`);
+  assert.deepEqual(open, [], 'free, but neither archived nor recorded as unarchivable:\n' + open.join('\n'));
 });

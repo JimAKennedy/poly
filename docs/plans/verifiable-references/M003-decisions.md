@@ -287,3 +287,42 @@ questions put in the same round are still open.
 - **ref-14 →** the owner doubts its credibility (a channel of about 600
   subscribers, focused on social movement more than music); ref-15 is the
   stronger of the two Fela Kuti videos.
+
+## 2026-10-02 — the last two entries, and judgment calls during M003/S02 task 3
+
+The end-state test caught two open-access entries that no step had touched:
+both carry no link or DOI, so the script never selected them, and neither was
+ever queued. Not anticipated by the plan, so both were put to the owner.
+
+- **Q:** `fr-holzapfel-2015` cites "Metrical Structure in Turkish Makam
+  Music", which no published work is called. The owner pointed out that
+  `ref-29`'s file, Holzapfel & Bozkurt (2012), "Metrical Strength and
+  Contradiction in Turkish Makam Music", is probably the paper meant. Treat it
+  as a duplicate? — **A:** yes.
+- **Decision:** archived as `FR - Holzapfel 2015.pdf`, a copy of
+  `29 - Holzapfel.pdf`; `mismatch`, with the owner's reading in `note` —
+  **Why:** the 2012 paper supports the one place the entry is cited
+  (theory-balkan's "the related Turkish usul system").
+- **Q:** May the Attack Magazine interview behind `fr-linn-attack-2020` be
+  printed and archived here? — **A:** yes.
+- **Decision:** its three web pages printed with headless Chrome and joined
+  with `pdfunite`; `mismatch`, because the page dates it 2 July 2013 and
+  credits Greg Scarth & Roger Linn, where the entry says 2020 — **Why:** the
+  owner's approval, and the date read on the page itself.
+
+### Judgment calls
+
+- **The duplicate Scherzinger file was renamed, not deleted.** The owner
+  allowed deleting `Piano-Phase-in-Global-Perspective-.pdf`, byte-identical
+  to `35 - Scherzinger.pdf`. `fr-scherzinger-2010` is the same work and
+  needs a file under its own conventional name, so the duplicate became
+  `FR - Scherzinger 2010.pdf`. Obviously right: the same end as deletion (no
+  stray non-convention file) without making a second copy.
+- **`ref-18` and `ref-19` became `purchasable`, with the owner's prices.**
+  They were `browser-only`; the owner found them buyable and not open to a
+  personal account, which is what `purchasable` means, and VR06 requires the
+  price that came with it.
+- **The worklist test passes on an empty queue only when the queue says so in
+  words.** An empty Pending section after the last pass is the goal; an empty
+  parse is also what a changed table shape looks like. "Nothing is pending."
+  tells the two apart.

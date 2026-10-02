@@ -46,13 +46,15 @@ export function resolveArchiveFile(name) {
 // `archived` holds exactly when the record names an archiveFile; the other
 // states say why it does not — refused by a host's bot policy and queued for a
 // person, free only as an unsearchable scan, free only through an institution,
-// nothing to archive because the source is a video, or not yet tried.
+// nothing to archive because the source is a video, judged unsuitable by the
+// owner and left for M004 to replace (M003/S02), or not yet tried.
 export const RETRIEVAL_STATUS = [
   'archived',
   'script-refused',
   'scan-only',
   'institution-only',
   'no-text',
+  'to-replace',
   'not-attempted',
 ];
 

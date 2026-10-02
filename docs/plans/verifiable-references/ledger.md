@@ -200,19 +200,19 @@ Dropbox research folder addressed through an environment variable.
 **Plan:** M003-S02-plan.md
 **Validation:** format, site-unit
 **Evidence:** evidence/M003-S02.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] A worklist names every browser-only source: URL, what to save, and the
+- [x] A worklist names every browser-only source: URL, what to save, and the
       exact filename to save it as
-- [ ] The worklist has been worked and the archive contains its results
-- [ ] Sources that are free but only as unsearchable scans, or free only to an
+- [x] The worklist has been worked and the archive contains its results
+- [x] Sources that are free but only as unsearchable scans, or free only to an
       institution, are recorded as what they are rather than as archived
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| VR10 | Scholarly hosts routinely refuse scripts — five entries return 403 and one 406 to automation. One is confirmed to load fine by hand: the owner reached the D-Scholarship@Pitt record behind `ref-9` in a browser and downloaded the PDF, from the same URL that 403s to every script tried. The rest are inferred from the response class, not measured. Treating "a script cannot fetch it" as "unobtainable" would wrongly condemn good sources | `docs` | `docs/plans/verifiable-references/`, the archive | The worklist exists and its entries are archived; the manifest distinguishes retrieved from unretrievable | `open` |
+| VR10 | Scholarly hosts routinely refuse scripts — five entries return 403 and one 406 to automation. One is confirmed to load fine by hand: the owner reached the D-Scholarship@Pitt record behind `ref-9` in a browser and downloaded the PDF, from the same URL that 403s to every script tried. The rest are inferred from the response class, not measured. Treating "a script cannot fetch it" as "unobtainable" would wrongly condemn good sources | `docs` | `docs/plans/verifiable-references/`, the archive | The worklist exists and its entries are archived; the manifest distinguishes retrieved from unretrievable | `done` |
 
 ## Milestone M004 — Nothing unreviewable is cited
 

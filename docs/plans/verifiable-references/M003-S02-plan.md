@@ -12,16 +12,16 @@ M003/S01 added. Decisions are in `M003-decisions.md`.
 
 - [x] 1. Every pending row names its filename, and the dead guard is retired
 - [x] 2. The owner works the worklist (planned pause)
-- [ ] 3. The results are recorded, and nothing open is left unaccounted for
+- [x] 3. The results are recorded, and nothing open is left unaccounted for
 
 ## Definition of Done
 
 Copied verbatim from the slice:
 
-- [ ] A worklist names every browser-only source: URL, what to save, and the
+- [x] A worklist names every browser-only source: URL, what to save, and the
       exact filename to save it as
-- [ ] The worklist has been worked and the archive contains its results
-- [ ] Sources that are free but only as unsearchable scans, or free only to an
+- [x] The worklist has been worked and the archive contains its results
+- [x] Sources that are free but only as unsearchable scans, or free only to an
       institution, are recorded as what they are rather than as archived
 
 ## Validation
