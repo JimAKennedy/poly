@@ -169,3 +169,57 @@ citation fault on the browser worklist as if a host had refused a script.
 - **`ref-30`'s description verdict became `verified`.** Its worklist row
   asked to confirm title and author; task 3 read both on the file's own first
   pages, which is M002's meaning of `verified` (the text was read).
+
+## 2026-10-02 — the worklist, as worked (first round)
+
+The owner's per-row answers, verbatim. Task 2 stays open: three rows asked
+for more information, and several answers raise questions for a second
+round.
+
+> ref-7 - this is course material, so we need to find another more academic reference
+>
+> ref-21 - also course material. Needs replacing
+>
+> ref-26 - Downloaded from https://www.academia.edu/128341480/Measuring_Aksak_Rhythm_and_Synchronization_in_Transylvanian_Village_Music_by_Using_Motion_Capture?sm=a&rhid=43078958440 as the provided URL doesn’t allow access to the actual article. Added to Dropbox references folder. Note this requires an academia account
+>
+> fr-silverman-2007 - entire Muzikologija downloaded freely from https://muzikologija-musicology.com/index.php/MM/issue/view/No.7 (the URL provided in the doc doesn’t work) and added to Dropbox. Silverman starts on page 69
+>
+> fr-goldberg-2015 - downloaded from https://www.academia.edu/21699680/Timing_Variations_in_Two_Balkan_Percussion_Performances?sm=a&rhid=43078926096 (the other URL doesn’t allow access to the article) and saved to Dropbox. Note this requires an academia account
+>
+> ref-23 - added to Dropbox. Exact title is: “Indian Rhythmic Systems as Sources of Inspiration for Western Composers”. Journal is “Analytical Approaches to World Musics, Vol. 11, No. 2. Published December 2023.”
+>
+> fr-collins-2001 - I need more info in the doc to find this
+>
+> fr-novotney-1998 - I need more info in the doc to find this
+>
+> ref-39 - saved to Dropbox. Open accessible
+>
+> ref-8 - course materials as expected and it’s the unit you expected. Accessible with a scribd subscription. While we’re there, is there any value in (for example) this doc 477028076-The-rhythmic-structure-of-west-african-music-kofi-agawu.pdf (downloaded from https://www.scribd.com/document/477028076/The-rhythmic-structure-of-west-african-music-kofi-agawu) - or let’s find an alternative
+>
+> ref-18 - I don’t have access through my personal account at OUP, can be purchased for 54.79 (paperback) at https://www.amazon.com/dp/0190226994?tag=oxacglobal-20&linkCode=osi&th=1&psc=1
+>
+> ref-19 - also not accessible with my personal account. Can be purchased for $59.00 at https://www.amazon.com/dp/0195177894?tag=oxacglobal-20&linkCode=osi&th=1&psc=1
+>
+> Ref-24. This is someone’s learning log, so I don’t think it’s a suitable reference. It contains this potentially useful info though “here are a few texts in English on the artform. “The Art of Konnakkol” by is a great practical introduction, which would probably go well with some of the many video tutorials available that you can find online [undefined]. Lisa Young has made her Masters [undefined] and PhD [undefined] theses on the topic available online. Rafael Reina has a book on applying Karnatic rhythmical techniques to Western music [undefined], and David Nelson has published a Solkattu Manual [undefined]. There is also software with illuminating documentation, such as the Carnatic Music Typesetter by Arun K. As a British person exploring Karnatic music without having ever travelled to India, I’m mindful that I am missing much of the context of this artform, and feel at the start of a journey in many respects.
+> ”
+>
+> ref-46 - I can’t find a way of getting this paper. The link gives access to citation details, but when you try to download the paper itself, the website is unresponsive. I am not eligible to access it via ResearchGate as I am not part of a scientific organization that has access.
+>
+> ref-10 - YouTube video exists. Publisher is Rhythm Notes.  Title is: Clave Rhythm - Why It's the Key to Latin Music
+>
+> ref-11 - Exists. Publisher is World Drum Club. Title is: Clave Explained / Son, Rumba, 3-2, 2-3 and more
+>
+> ref-14 - Exists. Publisher is Monumental Movement, only has 600ish subscribers, so not very credible at this point. Not sure if it’s the best source for Fela Kuti musical commentary, it’s focused on music in the context of a social movement. Title is: How Fela Kuti Turned Music into a Weapon: Afrobeat Creator and Political Icon
+>
+> ref-15 - Exists, looks better than ref-14 (100s of thousands of subscribers). Publisher name is Sound Field. Title: The Genius of Fela Kuti and Afrobeat (feat. Femi & Made Kuti)
+>
+> ref-25 - Exists. Publisher: Henrik Andersen. Not a huge number of subscribers, also demonstrating Indian rhythm but I’d honestly rather have someone ethnically Indian to present this - we should research a bit. It’s a great video though. Title is: Konnakol Mastery: Subdivisions & Polyrhythms in 7 (2+2+3) – Feel the Groove!
+> Can we consider replacing with this: “KONNAKKOL BASICS | EP 1 | Introduction To Konnakkol” published by “Konnakkol Somashekar Jois” He has 1.k subscribers, >100K views of this intro video. URL is: https://www.youtube.com/watch?v=ZuZF8BaOt58
+>
+> ref-17 - Title is: Rhythm, Structure and Emotion Inside Afro House Productions. I've printed to pdf and stored as "17 - Afro House Production Guide.pdf" in Dropbox
+>
+> fr-scherzinger-2010 - I need more info in the doc to search for this, but I can access his website and there is a lot of material on there.
+>
+> ref-35 - exists. File downloaded to Dropbox and named as requested
+>
+> ref-41 - article title: "Stylistic Features of Intelligent Dance Music: Ambiguity and Rupture Phenomena in Aphex Twin’s Rhythms", publication: "Les Cahiers de la Société québécoise de recherche en musique". Saved as requested.
