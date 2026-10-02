@@ -223,3 +223,26 @@ round.
 > ref-35 - exists. File downloaded to Dropbox and named as requested
 >
 > ref-41 - article title: "Stylistic Features of Intelligent Dance Music: Ambiguity and Rupture Phenomena in Aphex Twin’s Rhythms", publication: "Les Cahiers de la Société québécoise de recherche en musique". Saved as requested.
+
+## 2026-10-02 — the worklist, as worked (second round)
+
+The owner's answers to the follow-up information, verbatim. The five
+questions put in the same round are still open.
+
+> Ref-39 - I've saved ref-39 properly now. Article title is: Shaping rhythm: timing and
+>   sound in five groove-based genres.
+>
+> fr-collins-2001: Nick Collins, "Algorithmic Composition Methods for Breakbeat Science"
+> Full text available from: https://composerprogrammer.com/research/acmethodsforbbsci.pdf
+> File downloaded to Dropbox
+>
+> fr-novotney-1998: I cannot find a downloadable link
+>
+> fr-scherzinger-2010
+> Originally published at: "Clash! Generationen – Kulturen – Identitäten in der Gegenwartsmusik", edited by Jörn Peter Hiekel (Mainz: Schott, 2018), 144–63.
+>
+> ref-46 Bjorklund: sourced from wayback as you proposed and downloaded to Dropbox.
+>
+> - ref-18 and ref-19:
+> Title: ANALYTICAL STUDIES IN WORLD MUSIC: Analytical Studies in World Music; ISBN-10: 0195177894
+> Title: The Oxford Handbook of Algorithmic Music; ISBN-10: 0197554369
