@@ -246,3 +246,44 @@ questions put in the same round are still open.
 > - ref-18 and ref-19:
 > Title: ANALYTICAL STUDIES IN WORLD MUSIC: Analytical Studies in World Music; ISBN-10: 0195177894
 > Title: The Oxford Handbook of Algorithmic Music; ISBN-10: 0197554369
+
+## 2026-10-02 — the second-round questions, answered
+
+- **Q:** ref-7, ref-21, ref-8 (course material) and ref-24 (a learning log):
+  what should M003 record? — **A:** a new status, `to-replace`.
+- **Decision:** `RETRIEVAL_STATUS` gains `to-replace`, meaning the owner
+  judged the cited source unsuitable and M004 replaces it; nothing is
+  archived for these four. S02 task 3's end-state test admits it — **Why:**
+  replacing citations is M004/VR13's work, and an honest record of the
+  verdict is what M003 owes.
+- **Q:** Five entries misdescribe their source; correct now or record for
+  M004? — **A:** record; M004 corrects.
+- **Decision:** `ref-17`, `ref-23`, `ref-41`, `ref-46` and
+  `fr-scherzinger-2010` become `mismatch` with what the source actually is in
+  `note` — **Why:** the same treatment as the five linked-work mismatches.
+- **Q:** fr-novotney-1998 has no free copy; record as? — **A:**
+  institution-only.
+- **Q:** Housekeeping? — **A:** all four: delete the duplicate Scherzinger
+  file; keep the whole Muzikologija issue; record Agawu 1987 as M004's lead
+  for replacing ref-8, from the journal on JSTOR; hand the ref-25 video
+  suggestion to M004 as a question for VR12.
+
+### Handed to M004
+
+- **ref-8 →** Agawu, V. K., "The Rhythmic Structure of West African Music",
+  from its journal on JSTOR. The owner's Scribd copy
+  (`477028076-The-rhythmic-structure-of-west-african-music-kofi-agawu.pdf`)
+  is in the archive, unrenamed; its title page shows the title, the author
+  and a first page of 400. The journal, volume and year are to be confirmed
+  on JSTOR, not taken from here.
+- **ref-24 →** the owner's leads: Rafael Reina on Karnatic rhythmic
+  techniques applied to Western music; David Nelson's *Solkattu Manual*;
+  Lisa Young's Master's and PhD theses on konnakol.
+- **ref-25, a question for VR12 →** the owner would rather cite an Indian
+  presenter and suggests "KONNAKKOL BASICS | EP 1 | Introduction To
+  Konnakkol" by Konnakkol Somashekar Jois
+  (`https://www.youtube.com/watch?v=ZuZF8BaOt58`). VR12 as written removes
+  every YouTube citation, so this is a policy question for M004, not a swap.
+- **ref-14 →** the owner doubts its credibility (a channel of about 600
+  subscribers, focused on social movement more than music); ref-15 is the
+  stronger of the two Fela Kuti videos.

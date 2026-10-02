@@ -11,7 +11,7 @@ M003/S01 added. Decisions are in `M003-decisions.md`.
 ## Task status
 
 - [x] 1. Every pending row names its filename, and the dead guard is retired
-- [ ] 2. The owner works the worklist (planned pause)
+- [x] 2. The owner works the worklist (planned pause)
 - [ ] 3. The results are recorded, and nothing open is left unaccounted for
 
 ## Definition of Done
