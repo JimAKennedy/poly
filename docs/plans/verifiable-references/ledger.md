@@ -267,19 +267,19 @@ M003's measurements:
 **Plan:** M004-S01-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M004-S01.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The policy is written down: whether Wikipedia may be cited at all, and if
+- [x] The policy is written down: whether Wikipedia may be cited at all, and if
       so for what — with its reason, once, rather than per entry
-- [ ] The three Wikipedia entries conform to it
-- [ ] Any claim that loses its citation is rewritten to need none, not left
+- [x] The three Wikipedia entries conform to it
+- [x] Any claim that loses its citation is rewritten to need none, not left
       uncited
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| VR11 | Three Wikipedia entries are cited from the theory deep dives. Wikipedia is reviewable text and often a fair summary, and is also not a source a scholarly guide should rest a claim on. Deciding "never" and deciding "orientation only" are both defensible; deciding per entry is not | `docs` | `theory-references.mdx`, citing deep dives | The policy is stated once and the three entries match it; a claim test pins the outcome | `open` |
+| VR11 | Three Wikipedia entries are cited from the theory deep dives. Wikipedia is reviewable text and often a fair summary, and is also not a source a scholarly guide should rest a claim on. Deciding "never" and deciding "orientation only" are both defensible; deciding per entry is not | `docs` | `theory-references.mdx`, citing deep dives | The policy is stated once and the three entries match it; a claim test pins the outcome | `done` |
 
 ### Slice M004/S02 — The remaining unreviewable entries go
 

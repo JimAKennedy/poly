@@ -442,3 +442,33 @@ test(`S01-F17-tree: the fabricated ref-2 title appears in no doc`, async () => {
       'of contents, checked 2026-09-01).',
   );
 });
+
+// verifiable-references M004: hosts the guide does not cite, by the policy in
+// the appendix introduction ("What this bibliography cites."). Tree-wide over
+// every page, shipping and deferred, because a policy that held only in the
+// bibliography would let an inline link carry the same source back in.
+const FORBIDDEN_HOSTS = [
+  { host: 'wikipedia.org', reason: 'VR11: the guide does not cite Wikipedia' },
+];
+
+async function contentPages() {
+  const pages = [];
+  for (const dir of [DOCS, THEORY]) {
+    for (const f of await readdir(dir)) {
+      if (f.endsWith('.mdx')) pages.push({ name: f, text: await readFile(join(dir, f), 'utf8') });
+    }
+  }
+  if (pages.length === 0) throw new Error('no .mdx pages read — has the content root moved?');
+  return pages;
+}
+
+test('no page cites a host the citation policy excludes', async () => {
+  const pages = await contentPages();
+  const hits = [];
+  for (const { host, reason } of FORBIDDEN_HOSTS) {
+    for (const { name, text } of pages) {
+      if (text.includes(host)) hits.push(`${name}: ${host} (${reason})`);
+    }
+  }
+  assert.deepEqual(hits, [], hits.join('\n'));
+});

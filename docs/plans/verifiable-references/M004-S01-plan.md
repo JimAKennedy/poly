@@ -11,16 +11,16 @@ shipping appendix's introduction, and leaving entries are **retired**.
 ## Task status
 
 - [x] 1. The policy is written once
-- [ ] 2. The three Wikipedia entries are retired
+- [x] 2. The three Wikipedia entries are retired
 
 ## Definition of Done
 
 Copied verbatim from the slice:
 
-- [ ] The policy is written down: whether Wikipedia may be cited at all, and if
+- [x] The policy is written down: whether Wikipedia may be cited at all, and if
       so for what — with its reason, once, rather than per entry
-- [ ] The three Wikipedia entries conform to it
-- [ ] Any claim that loses its citation is rewritten to need none, not left
+- [x] The three Wikipedia entries conform to it
+- [x] Any claim that loses its citation is rewritten to need none, not left
       uncited
 
 ## Validation

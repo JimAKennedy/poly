@@ -15,7 +15,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { archiveFileName } from '../src/data/references-archive.mjs';
-import { readBibliography } from '../src/data/references-bibliography.mjs';
+import { parseLine, readBibliography } from '../src/data/references-bibliography.mjs';
 
 test('a numbered entry is named by its lead author', () => {
   assert.equal(
@@ -94,9 +94,14 @@ test('an entry with no link has a null url, and its text keeps no markup', async
   assert.doesNotMatch(anku.text, /<\/?span|\*\*\[/);
 });
 
-test('a link whose URL contains parentheses is read whole', async () => {
-  const bib = await readBibliography();
-  assert.equal(bib.get('ref-43').url, 'https://en.wikipedia.org/wiki/Bai%C3%A3o_(music)');
+// M004/S01: this case read ref-43, a Wikipedia link the citation policy then
+// retired. The rule it locks is the parser's, so it now runs on a fixed line.
+test('a link whose URL contains parentheses is read whole', () => {
+  const [anchor, entry] = parseLine(
+    '<span id="ref-99" data-tier="A">**[99]**</span> "X." [Link](https://en.example.org/wiki/A_(b))',
+  );
+  assert.equal(anchor, 'ref-99');
+  assert.equal(entry.url, 'https://en.example.org/wiki/A_(b)');
 });
 
 test('an entry offering a PDF link and another link is routed to the PDF', async () => {
