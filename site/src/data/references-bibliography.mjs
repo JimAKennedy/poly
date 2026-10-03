@@ -24,7 +24,7 @@ const ANCHOR = /<span id="((?:ref|fr)-[A-Za-z0-9-]+)"[^>]*>/;
 // Wikipedia's `Baião_(music)` — so the closing paren is matched, not the first.
 const LINK = /\[([^\]]*)\]\(([^\s()]*(?:\([^\s()]*\)[^\s()]*)*)\)/g;
 
-function parseLine(line) {
+export function parseLine(line) {
   const m = ANCHOR.exec(line);
   if (!m) return null;
   const links = [...line.matchAll(LINK)].map((l) => ({ label: l[1], url: l[2] }));

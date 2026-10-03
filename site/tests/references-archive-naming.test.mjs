@@ -13,9 +13,10 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 
 import { archiveFileName } from '../src/data/references-archive.mjs';
-import { readBibliography } from '../src/data/references-bibliography.mjs';
+import { parseLine, readBibliography } from '../src/data/references-bibliography.mjs';
 
 test('a numbered entry is named by its lead author', () => {
   assert.equal(
@@ -73,7 +74,13 @@ test('an anchor outside both conventions throws rather than inventing a name', (
 
 test('readBibliography spans both bibliographies', async () => {
   const bib = await readBibliography();
-  assert.ok(bib.size > 100, `expected more than 100 anchors, got ${bib.size}`);
+  // Derived, not a literal: M004 retires entries, and a floor of 100 broke the
+  // first time it did. The manifest holds one record per anchor across both
+  // bibliographies (its completeness test proves that in both directions).
+  const { entries } = JSON.parse(
+    await readFile(new URL('../src/data/references.json', import.meta.url), 'utf8'),
+  );
+  assert.equal(bib.size, Object.keys(entries).length, 'one parsed entry per manifest record');
   assert.ok(bib.has('ref-20'), 'ref-20 lives only in the theory bundle and must be read');
   assert.match(bib.get('ref-20').url, /gamelan\.org\.nz/);
   assert.match(bib.get('ref-20').text, /^Yudane\./);
@@ -94,9 +101,14 @@ test('an entry with no link has a null url, and its text keeps no markup', async
   assert.doesNotMatch(anku.text, /<\/?span|\*\*\[/);
 });
 
-test('a link whose URL contains parentheses is read whole', async () => {
-  const bib = await readBibliography();
-  assert.equal(bib.get('ref-43').url, 'https://en.wikipedia.org/wiki/Bai%C3%A3o_(music)');
+// M004/S01: this case read ref-43, a Wikipedia link the citation policy then
+// retired. The rule it locks is the parser's, so it now runs on a fixed line.
+test('a link whose URL contains parentheses is read whole', () => {
+  const [anchor, entry] = parseLine(
+    '<span id="ref-99" data-tier="A">**[99]**</span> "X." [Link](https://en.example.org/wiki/A_(b))',
+  );
+  assert.equal(anchor, 'ref-99');
+  assert.equal(entry.url, 'https://en.example.org/wiki/A_(b)');
 });
 
 test('an entry offering a PDF link and another link is routed to the PDF', async () => {

@@ -332,6 +332,144 @@ const CLAIMS = [
     // being sourced, so this case can only ever fail on the present side.
     presentRegex: [/#fr-lomax-1950/],
   },
+  {
+    id: 'POLICY-WIKIPEDIA',
+    file: 'appendix-references.mdx',
+    rule:
+      'verifiable-references VR11, decided by the owner 2026-10-03: the guide ' +
+      'cites no Wikipedia article. Wikipedia is reviewable and often a fair ' +
+      'summary, but it summarises other sources, and a claim in this guide ' +
+      'names the source itself. Stated once, in the appendix introduction, ' +
+      'rather than argued per entry',
+    present: ['The guide does not cite Wikipedia'],
+  },
+  {
+    id: 'POLICY-VIDEO',
+    file: 'appendix-references.mdx',
+    rule:
+      'verifiable-references VR12, kept as written by the owner 2026-10-03: no ' +
+      'video is cited. A video may be excellent and still has no text a reader ' +
+      'can check against the claim it is cited for',
+    present: ['Nor does it cite a video'],
+  },
+  {
+    id: 'POLICY-WEB',
+    file: 'appendix-references.mdx',
+    rule:
+      'verifiable-references VR13, amended and decided by the owner 2026-10-03: ' +
+      'a source is judged by what it is, not by its tier. Course material, ' +
+      'commercial or marketing pages and blogs are not cited; a practitioner\'s ' +
+      'own text may be, at Tier B, with the reason recorded',
+    present: ['course material'],
+  },
+  {
+    id: 'AGAWU-1987',
+    file: 'theory-references.mdx',
+    rule:
+      'verifiable-references M004/S02: Agawu (1987) replaces ref-8, a Scribd ' +
+      'upload of a course unit. Crossref and the article\'s first page agree: ' +
+      'Journal of Musicology 5(3), 400-418, DOI 10.2307/763699',
+    presentRegex: [
+      /id="fr-agawu-1987"[^\n]*Journal of Musicology/,
+      /id="fr-agawu-1987"[^\n]*10\.2307\/763699/,
+    ],
+  },
+  // verifiable-references M004/S02 task 3: every manifest mismatch corrected
+  // to what its document is, read from its own title page (M002, M003) or
+  // Crossref. Each forbids the wrong form and requires the right one on the
+  // entry's own line, so the correction cannot drift onto a neighbour.
+  {
+    id: 'REF1-TOUSSAINT-THEORY',
+    file: 'theory-references.mdx',
+    rule: 'The theory bundle kept the arXiv link first-release M003 corrected in the appendix (REF1-TOUSSAINT)',
+    forbiddenRegex: [/0705\.4085/],
+    presentRegex: [/id="ref-1"[^\n]*bridgesmathart\.org\/2005\/bridges2005-47/],
+  },
+  {
+    id: 'REF34-SCHWARZ-THEORY',
+    file: 'theory-references.mdx',
+    rule: 'The theory bundle kept the Reich attribution first-release M003 corrected in the appendix (REF34-SCHWARZ)',
+    forbidden: ['Reich, S. "Music as a Gradual Process'],
+    presentRegex: [/id="ref-34"[^\n]*Schwarz, K\. R\./],
+  },
+  {
+    id: 'REF20-YUDANE',
+    file: 'theory-references.mdx',
+    rule: 'The PDF is "Notation for Gamelan Bali", put together by Yudane; kept at Tier B as a practitioner\'s own text',
+    forbidden: ['Introduction to Balinese Gamelan'],
+    presentRegex: [/id="ref-20"[^\n]*Notation for Gamelan Bali/],
+  },
+  {
+    id: 'REF23-REINDL',
+    file: 'theory-references.mdx',
+    rule: 'Tomas Reindl, Analytical Approaches to World Musics 11(2), December 2023 (owner, title page read)',
+    forbidden: ['Comparative Perspective'],
+    presentRegex: [
+      /id="ref-23"[^\n]*Sources of Inspiration for Western Composers/,
+      /id="ref-23"[^\n]*Analytical Approaches to World Musics/,
+    ],
+  },
+  {
+    id: 'REF28-SRINIVASAMURTHY',
+    file: 'theory-references.mdx',
+    rule: 'The DiVA postprint is Srinivasamurthy, Holzapfel & Serra (2014), JNMR 43(1), 94-114; the cited title belongs to no published work',
+    forbidden: ['Metrical Structure in Turkish Makam Music'],
+    presentRegex: [/id="ref-28"[^\n]*Srinivasamurthy/, /id="ref-28"[^\n]*10\.1080\/09298215\.2013\.879902/],
+  },
+  {
+    id: 'REF29-HOLZAPFEL-BOZKURT',
+    file: 'theory-references.mdx',
+    rule: 'The DiVA postprint is Holzapfel & Bozkurt (2012), Proceedings of the 2nd CompMusic Workshop, 79-84',
+    forbidden: ['Syncopation Distribution'],
+    presentRegex: [/id="ref-29"[^\n]*Metrical Strength and Contradiction in Turkish Makam Music/, /id="ref-29"[^\n]*Bozkurt/],
+  },
+  {
+    id: 'REF31-AJI',
+    file: 'theory-references.mdx',
+    rule: 'The page is Aji, "Rhythmic-Temporal Disruptions and the Feeling of Tarab", Theory and Practice 49-50',
+    forbidden: ['Arab Rhythmic Cycles'],
+    presentRegex: [/id="ref-31"[^\n]*Rhythmic-Temporal Disruptions/],
+  },
+  {
+    id: 'REF41-PAPAVASSILIOU',
+    file: 'theory-references.mdx',
+    rule: 'Papavassiliou (2015), Les Cahiers de la SQRM 16(1-2), not Circuit; title page read',
+    forbidden: ['Rhythmic Ambiguity in Aphex Twin'],
+    presentRegex: [
+      /id="ref-41"[^\n]*Papavassiliou/,
+      /id="ref-41"[^\n]*Cahiers de la Société québécoise de recherche en musique/,
+    ],
+  },
+  {
+    id: 'REF42-SANTOS-NETO',
+    file: 'theory-references.mdx',
+    rule: 'The article is by Jovino Santos Neto; Schloss hosts the course directory it sits in. Kept at Tier B as a practitioner\'s own text',
+    forbidden: ['Schloss, A.'],
+    presentRegex: [/id="ref-42"[^\n]*Santos Neto/],
+  },
+  {
+    id: 'REF46-CNTRL-99',
+    file: 'appendix-references.mdx',
+    rule: 'The tech note is SNS-NOTE-CNTRL-99 by its own title page and Demaine et al. (2007); CNTRL-100 is the companion note on evenness',
+    forbidden: ['CNTRL-100'],
+    presentRegex: [/id="ref-46"[^\n]*SNS-NOTE-CNTRL-99/],
+  },
+  ...['appendix-references.mdx', 'theory-references.mdx'].flatMap((file) => [
+    {
+      id: `SCHERZINGER-2018-${file.startsWith('appendix') ? 'APPENDIX' : 'THEORY'}`,
+      file,
+      rule: 'Published in Clash!, ed. Hiekel (Schott, 2018), 144-63 (owner, 2026-10-02); no ICTM proceedings, no 2010',
+      forbidden: ['Proceedings of the ICTM'],
+      presentRegex: [/id="fr-scherzinger-2010"[^\n]*Clash!/, /id="fr-scherzinger-2010"[^\n]*\(2018\)/],
+    },
+    {
+      id: `LINN-2013-${file.startsWith('appendix') ? 'APPENDIX' : 'THEORY'}`,
+      file,
+      rule: 'Attack Magazine dates the interview 2 July 2013 and credits Greg Scarth & Roger Linn (page read 2026-10-02)',
+      forbiddenRegex: [/Attack Magazine\* \(2020\)/],
+      presentRegex: [/id="fr-linn-attack-2020"[^\n]*\(2013\)/, /id="fr-linn-attack-2020"[^\n]*attackmagazine\.com/],
+    },
+  ]),
 ];
 
 registerClaimTests({ test, assert, claims: CLAIMS, loadSource });
@@ -430,4 +568,59 @@ test(`S01-F17-tree: the fabricated ref-2 title appears in no doc`, async () => {
       'Authority: MTO 31(2) carries no article of this title (publisher table ' +
       'of contents, checked 2026-09-01).',
   );
+});
+
+// verifiable-references M004: hosts the guide does not cite, by the policy in
+// the appendix introduction ("What this bibliography cites."). Tree-wide over
+// every page, shipping and deferred, because a policy that held only in the
+// bibliography would let an inline link carry the same source back in.
+const FORBIDDEN_HOSTS = [
+  { host: 'wikipedia.org', reason: 'VR11: the guide does not cite Wikipedia' },
+  { host: 'youtube.com', reason: 'VR12: a video has no text to check a claim against' },
+  { host: 'youtu.be', reason: 'VR12: a video has no text to check a claim against' },  { host: 'scribd.com', reason: "VR13: an account-walled upload, not the publication" },
+  { host: 'scalar.usc.edu', reason: "VR13: course material" },
+  { host: 'pianowithjonny.com', reason: "VR13: a commercial lesson site" },
+  { host: 'samplesoundmusic.com', reason: "VR13: a sample-pack shop's marketing blog" },
+  { host: 'lianproductions.com', reason: "VR13: a production blog" },
+  { host: 'artiumacademy.com', reason: "VR13: a music school's course-marketing blog" },
+  { host: 'pubpub.org', reason: "VR13: a learning log, not a publication" },
+  { host: 'chromatone.center', reason: "VR13: a web app, not a source" },
+  { host: 'allclassical.org', reason: "VR13: a radio station's blog" },
+  { host: 'brettworks.com', reason: "VR13: a blog relaying an interview the guide cites directly" },
+  { host: 'noisemachines.studio', reason: "VR13: a blog" },
+  { host: 'ethanhein.com', reason: "VR13: a blog" },
+];
+
+async function contentPages() {
+  const pages = [];
+  for (const dir of [DOCS, THEORY]) {
+    for (const f of await readdir(dir)) {
+      if (f.endsWith('.mdx')) pages.push({ name: f, text: await readFile(join(dir, f), 'utf8') });
+    }
+  }
+  if (pages.length === 0) throw new Error('no .mdx pages read — has the content root moved?');
+  return pages;
+}
+
+test('no page cites a host the citation policy excludes', async () => {
+  const pages = await contentPages();
+  const hits = [];
+  for (const { host, reason } of FORBIDDEN_HOSTS) {
+    for (const { name, text } of pages) {
+      if (text.includes(host)) hits.push(`${name}: ${host} (${reason})`);
+    }
+  }
+  assert.deepEqual(hits, [], hits.join('\n'));
+});
+
+// M004/S02 task 3: link texts that carried a wrong year or a retired anchor.
+const FORBIDDEN_LINK_TEXT = ['[Scherzinger 2010]', '[Linn 2020]', '[Holzapfel 2015]'];
+
+test('no page cites a corrected source under its old name', async () => {
+  const pages = await contentPages();
+  const hits = [];
+  for (const t of FORBIDDEN_LINK_TEXT) {
+    for (const { name, text } of pages) if (text.includes(t)) hits.push(`${name}: ${t}`);
+  }
+  assert.deepEqual(hits, [], hits.join('\n'));
 });

@@ -219,7 +219,7 @@ Dropbox research folder addressed through an environment variable.
 **Vision:** No claim in the guide rests on a source with no text to review.
 
 **Branch:** milestone/M004-reviewable
-**Status:** planned
+**Status:** done
 **Demo:** No YouTube link remains in the bibliography, and every entry that
 stays is either reviewable text or recorded as a primary artefact with its
 reason.
@@ -264,44 +264,46 @@ M003's measurements:
 ### Slice M004/S01 — The Wikipedia policy is decided and applied
 
 **Depends:** M002/S02
+**Plan:** M004-S01-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M004-S01.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The policy is written down: whether Wikipedia may be cited at all, and if
+- [x] The policy is written down: whether Wikipedia may be cited at all, and if
       so for what — with its reason, once, rather than per entry
-- [ ] The three Wikipedia entries conform to it
-- [ ] Any claim that loses its citation is rewritten to need none, not left
+- [x] The three Wikipedia entries conform to it
+- [x] Any claim that loses its citation is rewritten to need none, not left
       uncited
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| VR11 | Three Wikipedia entries are cited from the theory deep dives. Wikipedia is reviewable text and often a fair summary, and is also not a source a scholarly guide should rest a claim on. Deciding "never" and deciding "orientation only" are both defensible; deciding per entry is not | `docs` | `theory-references.mdx`, citing deep dives | The policy is stated once and the three entries match it; a claim test pins the outcome | `open` |
+| VR11 | Three Wikipedia entries are cited from the theory deep dives. Wikipedia is reviewable text and often a fair summary, and is also not a source a scholarly guide should rest a claim on. Deciding "never" and deciding "orientation only" are both defensible; deciding per entry is not | `docs` | `theory-references.mdx`, citing deep dives | The policy is stated once and the three entries match it; a claim test pins the outcome | `done` |
 
 ### Slice M004/S02 — The remaining unreviewable entries go
 
 **Depends:** M004/S01
+**Plan:** M004-S02-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M004-S02.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] No YouTube entry remains in the bibliography
-- [ ] Every remaining entry that is not scholarship — whatever its tier — is
+- [x] No YouTube entry remains in the bibliography
+- [x] Every remaining entry that is not scholarship — whatever its tier — is
       either reviewable text from a source fit to cite, or the primary
       artefact rather than a commentary on one, with that reason recorded
-- [ ] Every entry the manifest marks as a description mismatch is corrected
+- [x] Every entry the manifest marks as a description mismatch is corrected
       or replaced — M002's and M003's alike
-- [ ] Every entry the manifest marks `to-replace` is replaced, or dropped with
+- [x] Every entry the manifest marks `to-replace` is replaced, or dropped with
       its claim rewritten
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| VR12 | Five YouTube entries carry no text to review, no page to cite, and no way to check that they say what the guide claims. A video may be excellent and still fail this test. The owner's alternative for `ref-25` (an Indian presenter's konnakol introduction, M003-decisions) is a video too, so it is an argument about this row's policy, not a swap | `docs` | `theory-references.mdx`, citing deep dives | No `youtube.com` URL remains; a claim test forbids their return | `open` |
-| VR13 | Entries that are not scholarship are cited from the deep dives, in Tier B as well as Tier C. **Amended 2026-10-03:** measured on M003's branch, the Tier-C subjects are `ref-8` (Scribd course unit), `ref-12` (a lesson site), `ref-16` (a sample-pack shop's blog), `ref-17` (a production blog), `ref-33` (a radio station's blog), and `ref-36`, `ref-37`, `ref-38` (blogs); the Tier-B subjects are `ref-7` and `ref-21` (course material), `ref-24` (a learning log), `ref-20` (a notation handout), `ref-27` (a web app) and `ref-42` (an article reposted on a course page). Some are primary artefacts and should stay; the rest are commentary a better source says properly. The owner's leads from M003 are in `M003-decisions.md` | `docs` | `theory-references.mdx`, citing deep dives | Each is replaced, kept with a recorded reason, or dropped with its claim rewritten; a test fails if a `to-replace` record remains | `open` |
+| VR12 | Five YouTube entries carry no text to review, no page to cite, and no way to check that they say what the guide claims. A video may be excellent and still fail this test. The owner's alternative for `ref-25` (an Indian presenter's konnakol introduction, M003-decisions) is a video too, so it is an argument about this row's policy, not a swap | `docs` | `theory-references.mdx`, citing deep dives | No `youtube.com` URL remains; a claim test forbids their return | `done` |
+| VR13 | Entries that are not scholarship are cited from the deep dives, in Tier B as well as Tier C. **Amended 2026-10-03:** measured on M003's branch, the Tier-C subjects are `ref-8` (Scribd course unit), `ref-12` (a lesson site), `ref-16` (a sample-pack shop's blog), `ref-17` (a production blog), `ref-33` (a radio station's blog), and `ref-36`, `ref-37`, `ref-38` (blogs); the Tier-B subjects are `ref-7` and `ref-21` (course material), `ref-24` (a learning log), `ref-20` (a notation handout), `ref-27` (a web app) and `ref-42` (an article reposted on a course page). Some are primary artefacts and should stay; the rest are commentary a better source says properly. The owner's leads from M003 are in `M003-decisions.md` | `docs` | `theory-references.mdx`, citing deep dives | Each is replaced, kept with a recorded reason, or dropped with its claim rewritten; a test fails if a `to-replace` record remains | `done` |
 
 ## Milestone M005 — One bibliography, one standard
 
