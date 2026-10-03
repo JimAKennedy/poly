@@ -219,7 +219,7 @@ Dropbox research folder addressed through an environment variable.
 **Vision:** No claim in the guide rests on a source with no text to review.
 
 **Branch:** milestone/M004-reviewable
-**Status:** planned
+**Status:** in-progress
 **Demo:** No YouTube link remains in the bibliography, and every entry that
 stays is either reviewable text or recorded as a primary artefact with its
 reason.
@@ -264,9 +264,10 @@ M003's measurements:
 ### Slice M004/S01 — The Wikipedia policy is decided and applied
 
 **Depends:** M002/S02
+**Plan:** M004-S01-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M004-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
@@ -283,6 +284,7 @@ M003's measurements:
 ### Slice M004/S02 — The remaining unreviewable entries go
 
 **Depends:** M004/S01
+**Plan:** M004-S02-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M004-S02.md
 **Status:** open
