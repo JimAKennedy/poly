@@ -492,3 +492,21 @@ test('no record is waiting to be replaced', async () => {
     .map(([a]) => a);
   assert.deepEqual(waiting, [], 'judged unsuitable and still cited: ' + waiting.join(', '));
 });
+
+// verifiable-references M004/S02 task 4: every description mismatch M002 and
+// M003 found has been corrected. A new one would mean a citation describes a
+// different work from the one it links — the defect this programme exists for.
+test('no citation describes a different work from the one it links', async () => {
+  const m = await loadManifest();
+  const off = Object.entries(m.entries).filter(([, r]) => r.description === 'mismatch').map(([a]) => a);
+  assert.deepEqual(off, [], 'still a mismatch: ' + off.join(', '));
+});
+
+// The kept non-scholarly entries say why they stay (VR13: "kept with a
+// recorded reason"). Named, not inferred: these are the three the owner kept.
+test('every kept non-scholarly entry records why it stays', async () => {
+  const m = await loadManifest();
+  const kept = ['ref-20', 'ref-42', 'fr-linn-attack-2020'];
+  const silent = kept.filter((a) => !/Kept \(VR13\):/.test(m.entries[a]?.note ?? ''));
+  assert.deepEqual(silent, [], 'kept without a recorded reason: ' + silent.join(', '));
+});

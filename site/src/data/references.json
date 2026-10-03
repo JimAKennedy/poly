@@ -132,7 +132,7 @@
       "evidence": "gamelan.org.nz returns 200 application/pdf, 69196 bytes; the PDF was read directly.",
       "checked": "2026-10-03",
       "description": "verified",
-      "note": "The document’s own heading is \"NOTATION FOR GAMELAN BALI - put together by Yudane\". The entry titles it \"Introduction to Balinese Gamelan\", which is not the document’s title. The author attribution is right and the subject is adjacent, but the title as cited does not exist. Corrected 2026-10-03 (verifiable-references M004/S02): entry corrected to Yudane, \"Notation for Gamelan Bali\".",
+      "note": "The document’s own heading is \"NOTATION FOR GAMELAN BALI - put together by Yudane\". The entry titles it \"Introduction to Balinese Gamelan\", which is not the document’s title. The author attribution is right and the subject is adjacent, but the title as cited does not exist. Corrected 2026-10-03 (verifiable-references M004/S02): entry corrected to Yudane, \"Notation for Gamelan Bali\". Kept (VR13): a practitioner’s own text — a notation introduction put together by Yudane, a Balinese composer — reviewable and free; Tier B, by the owner’s decision of 2026-10-03.",
       "identifier": {
         "doi": null,
         "isbn": null
@@ -366,7 +366,7 @@
       "evidence": "web.uvic.ca returns 200 application/pdf, 318637 bytes; the PDF was read directly.",
       "checked": "2026-10-03",
       "description": "verified",
-      "note": "The document is \"Ginga: a Brazilian way to groove\" by Jovino Santos Neto. The entry cites it as Schloss, A., \"The Brazilian Groove: Ginga and Rhythmic Feel\" — both the author and the title are wrong. Schloss is the University of Victoria faculty member whose course directory hosts the file; the entry credits the host of the web directory rather than the author of the paper. Corrected 2026-10-03 (verifiable-references M004/S02): entry corrected to Santos Neto, J., \"Ginga: a Brazilian way to groove\".",
+      "note": "The document is \"Ginga: a Brazilian way to groove\" by Jovino Santos Neto. The entry cites it as Schloss, A., \"The Brazilian Groove: Ginga and Rhythmic Feel\" — both the author and the title are wrong. Schloss is the University of Victoria faculty member whose course directory hosts the file; the entry credits the host of the web directory rather than the author of the paper. Corrected 2026-10-03 (verifiable-references M004/S02): entry corrected to Santos Neto, J., \"Ginga: a Brazilian way to groove\". Kept (VR13): a practitioner’s own text — Jovino Santos Neto writing on ginga at length — reviewable and free; Tier B, by the owner’s decision of 2026-10-03.",
       "identifier": {
         "doi": null,
         "isbn": null
@@ -1140,7 +1140,7 @@
       "evidence": "An Attack Magazine interview, freely readable on the web, but the entry records no URL and no identifier exists for a magazine interview. This is VR08 in its purest form: the work is free and findable, and the bibliography gives a reader no route to it. A URL should be added by M005.",
       "checked": "2026-10-03",
       "description": "verified",
-      "note": "The interview is \"Roger Linn on Swing, Groove & the Magic of the MPC’s Timing\", Attack Magazine, credited to Greg Scarth & Roger Linn and dated 2nd July 2013 on its own page (read 2026-10-02), at https://attackmagazine.com/features/interview/roger-linn-swing-groove-magic-mpc-timing/ (three web pages). The entry dates it 2020 and records no URL. M004 corrects the year and adds the URL. Corrected 2026-10-03 (verifiable-references M004/S02): entry corrected to Scarth & Linn (2013) with its URL; link text now \"Linn 2013\".",
+      "note": "The interview is \"Roger Linn on Swing, Groove & the Magic of the MPC’s Timing\", Attack Magazine, credited to Greg Scarth & Roger Linn and dated 2nd July 2013 on its own page (read 2026-10-02), at https://attackmagazine.com/features/interview/roger-linn-swing-groove-magic-mpc-timing/ (three web pages). The entry dates it 2020 and records no URL. M004 corrects the year and adds the URL. Corrected 2026-10-03 (verifiable-references M004/S02): entry corrected to Scarth & Linn (2013) with its URL; link text now \"Linn 2013\". Kept (VR13): the primary account — Roger Linn describing his own swing implementation — rather than a commentary on it; Tier B.",
       "identifier": {
         "doi": null,
         "isbn": null

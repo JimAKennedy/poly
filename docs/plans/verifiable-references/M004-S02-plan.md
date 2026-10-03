@@ -12,19 +12,19 @@ claim test in the shape S01 and `REF1-TOUSSAINT` use. Decisions are in
 - [x] 1. No video is cited
 - [x] 2. The non-scholarly entries are retired, and Agawu replaces ref-8
 - [x] 3. Every mismatch is corrected to what its document is
-- [ ] 4. The manifest holds no mismatch and nothing to replace
+- [x] 4. The manifest holds no mismatch and nothing to replace
 
 ## Definition of Done
 
 Copied verbatim from the slice:
 
-- [ ] No YouTube entry remains in the bibliography
-- [ ] Every remaining entry that is not scholarship — whatever its tier — is
+- [x] No YouTube entry remains in the bibliography
+- [x] Every remaining entry that is not scholarship — whatever its tier — is
       either reviewable text from a source fit to cite, or the primary
       artefact rather than a commentary on one, with that reason recorded
-- [ ] Every entry the manifest marks as a description mismatch is corrected
+- [x] Every entry the manifest marks as a description mismatch is corrected
       or replaced — M002's and M003's alike
-- [ ] Every entry the manifest marks `to-replace` is replaced, or dropped with
+- [x] Every entry the manifest marks `to-replace` is replaced, or dropped with
       its claim rewritten
 
 ## Validation
