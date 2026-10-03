@@ -148,7 +148,7 @@ opening the PDF. Expect a long tail where the only way to answer is to look.
 repository records what it holds without holding it.
 
 **Branch:** milestone/M003-archive
-**Status:** in-progress
+**Status:** done
 **Demo:** The archive holds every source classified as retrievable, and the
 manifest names each one.
 
