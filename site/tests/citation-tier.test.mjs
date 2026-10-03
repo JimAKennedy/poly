@@ -343,6 +343,15 @@ const CLAIMS = [
       'rather than argued per entry',
     present: ['The guide does not cite Wikipedia'],
   },
+  {
+    id: 'POLICY-VIDEO',
+    file: 'appendix-references.mdx',
+    rule:
+      'verifiable-references VR12, kept as written by the owner 2026-10-03: no ' +
+      'video is cited. A video may be excellent and still has no text a reader ' +
+      'can check against the claim it is cited for',
+    present: ['Nor does it cite a video'],
+  },
 ];
 
 registerClaimTests({ test, assert, claims: CLAIMS, loadSource });
@@ -449,6 +458,8 @@ test(`S01-F17-tree: the fabricated ref-2 title appears in no doc`, async () => {
 // bibliography would let an inline link carry the same source back in.
 const FORBIDDEN_HOSTS = [
   { host: 'wikipedia.org', reason: 'VR11: the guide does not cite Wikipedia' },
+  { host: 'youtube.com', reason: 'VR12: a video has no text to check a claim against' },
+  { host: 'youtu.be', reason: 'VR12: a video has no text to check a claim against' },
 ];
 
 async function contentPages() {

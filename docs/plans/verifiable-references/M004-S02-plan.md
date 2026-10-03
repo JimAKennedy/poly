@@ -9,7 +9,7 @@ claim test in the shape S01 and `REF1-TOUSSAINT` use. Decisions are in
 
 ## Task status
 
-- [ ] 1. No video is cited
+- [x] 1. No video is cited
 - [ ] 2. The non-scholarly entries are retired, and Agawu replaces ref-8
 - [ ] 3. Every mismatch is corrected to what its document is
 - [ ] 4. The manifest holds no mismatch and nothing to replace

@@ -109,42 +109,6 @@
         "detail": "owner’s copy, title page read: \"Polyrhythm as an Integral Feature of African Pianism\""
       }
     },
-    "ref-10": {
-      "obtainability": "browser-only",
-      "evidence": "youtube.com returned 429 to automation, so even the video’s existence was not confirmed here. A video carries no text to review, so no description verdict is reachable by reading; removal is M004/VR12 rather than an accuracy question.",
-      "checked": "2026-09-20",
-      "description": "unverified",
-      "note": "",
-      "identifier": {
-        "doi": null,
-        "isbn": null
-      },
-      "price": null,
-      "archiveFile": null,
-      "retrieval": {
-        "status": "no-text",
-        "checked": "2026-10-02",
-        "detail": "owner, 2026-10-02: the video exists; uploader Rhythm Notes; title \"Clave Rhythm - Why It's the Key to Latin Music\""
-      }
-    },
-    "ref-11": {
-      "obtainability": "browser-only",
-      "evidence": "youtube.com returned 429 to automation, so even the video’s existence was not confirmed here. A video carries no text to review, so no description verdict is reachable by reading; removal is M004/VR12 rather than an accuracy question.",
-      "checked": "2026-09-20",
-      "description": "unverified",
-      "note": "",
-      "identifier": {
-        "doi": null,
-        "isbn": null
-      },
-      "price": null,
-      "archiveFile": null,
-      "retrieval": {
-        "status": "no-text",
-        "checked": "2026-10-02",
-        "detail": "owner, 2026-10-02: the video exists; uploader World Drum Club; title \"Clave Explained / Son, Rumba, 3-2, 2-3 and more\""
-      }
-    },
     "ref-12": {
       "obtainability": "open-access",
       "evidence": "pianowithjonny.com returns 200 text/html, 197419 bytes; the page title is \"Piano Montunos – The Complete Guide\", matching the entry. A commercial lesson site, so Tier C is right.",
@@ -179,42 +143,6 @@
         "status": "not-attempted",
         "checked": null,
         "detail": null
-      }
-    },
-    "ref-14": {
-      "obtainability": "browser-only",
-      "evidence": "youtube.com returned 429 to automation. A video carries no text to review, so no description verdict is reachable by reading; removal is M004/VR12.",
-      "checked": "2026-09-20",
-      "description": "unverified",
-      "note": "",
-      "identifier": {
-        "doi": null,
-        "isbn": null
-      },
-      "price": null,
-      "archiveFile": null,
-      "retrieval": {
-        "status": "no-text",
-        "checked": "2026-10-02",
-        "detail": "owner, 2026-10-02: the video exists; uploader Monumental Movement; title \"How Fela Kuti Turned Music into a Weapon: Afrobeat Creator and Political Icon\"; owner: about 600 subscribers, focused on the social movement more than the music, so not very credible"
-      }
-    },
-    "ref-15": {
-      "obtainability": "browser-only",
-      "evidence": "youtube.com returned 429 to automation. A video carries no text to review, so no description verdict is reachable by reading; removal is M004/VR12.",
-      "checked": "2026-09-20",
-      "description": "unverified",
-      "note": "",
-      "identifier": {
-        "doi": null,
-        "isbn": null
-      },
-      "price": null,
-      "archiveFile": null,
-      "retrieval": {
-        "status": "no-text",
-        "checked": "2026-10-02",
-        "detail": "owner, 2026-10-02: the video exists; uploader Sound Field; title \"The Genius of Fela Kuti and Afrobeat (feat. Femi & Made Kuti)\"; owner: hundreds of thousands of subscribers, the stronger of the two Fela Kuti videos"
       }
     },
     "ref-16": {
@@ -377,24 +305,6 @@
         "status": "to-replace",
         "checked": "2026-10-02",
         "detail": "owner, 2026-10-02: someone’s learning log, not a suitable reference. Not archived. M004 leads: Rafael Reina on Karnatic rhythm for Western music; David Nelson’s Solkattu Manual; Lisa Young’s Master’s and PhD theses."
-      }
-    },
-    "ref-25": {
-      "obtainability": "browser-only",
-      "evidence": "youtube.com returned 429 to automation. A video carries no text to review; removal is M004/VR12.",
-      "checked": "2026-09-20",
-      "description": "unverified",
-      "note": "",
-      "identifier": {
-        "doi": null,
-        "isbn": null
-      },
-      "price": null,
-      "archiveFile": null,
-      "retrieval": {
-        "status": "no-text",
-        "checked": "2026-10-02",
-        "detail": "owner, 2026-10-02: the video exists; uploader Henrik Andersen; title \"Konnakol Mastery: Subdivisions & Polyrhythms in 7 (2+2+3) – Feel the Groove!\"; owner: a great video, but would rather an Indian presenter; suggests \"KONNAKKOL BASICS | EP 1 | Introduction To Konnakkol\" by Konnakkol Somashekar Jois as a question for M004/VR12"
       }
     },
     "ref-26": {

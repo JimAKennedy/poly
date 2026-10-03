@@ -99,3 +99,16 @@ postprint's own title page alike.
 
 - None. Every decision the milestone needs was taken above; no task waits on
   the owner.
+
+## 2026-10-03 — judgment calls during M004/S02 task 1
+
+- **`POLICY-VIDEO` checks "Nor does it cite a video", not "nor a video".**
+  The plan's literal string only fits an ungrammatical sentence; the claim
+  pins the sentence as written. Obviously right: the test exists to hold the
+  policy in place, not a particular fragment.
+- **`readBibliography spans both bibliographies` compares with the manifest,
+  not with 100.** M003's test asserted more than 100 anchors; retiring the
+  videos took the total to 98 and turned it red. The test now requires one
+  parsed entry per manifest record, the count the completeness test already
+  ties to the anchors. Obviously right: the floor was a literal standing in
+  for "both files were read", and this milestone exists to shrink the count.

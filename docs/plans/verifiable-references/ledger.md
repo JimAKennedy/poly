@@ -287,7 +287,7 @@ M003's measurements:
 **Plan:** M004-S02-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M004-S02.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
@@ -302,7 +302,7 @@ M003's measurements:
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| VR12 | Five YouTube entries carry no text to review, no page to cite, and no way to check that they say what the guide claims. A video may be excellent and still fail this test. The owner's alternative for `ref-25` (an Indian presenter's konnakol introduction, M003-decisions) is a video too, so it is an argument about this row's policy, not a swap | `docs` | `theory-references.mdx`, citing deep dives | No `youtube.com` URL remains; a claim test forbids their return | `open` |
+| VR12 | Five YouTube entries carry no text to review, no page to cite, and no way to check that they say what the guide claims. A video may be excellent and still fail this test. The owner's alternative for `ref-25` (an Indian presenter's konnakol introduction, M003-decisions) is a video too, so it is an argument about this row's policy, not a swap | `docs` | `theory-references.mdx`, citing deep dives | No `youtube.com` URL remains; a claim test forbids their return | `done` |
 | VR13 | Entries that are not scholarship are cited from the deep dives, in Tier B as well as Tier C. **Amended 2026-10-03:** measured on M003's branch, the Tier-C subjects are `ref-8` (Scribd course unit), `ref-12` (a lesson site), `ref-16` (a sample-pack shop's blog), `ref-17` (a production blog), `ref-33` (a radio station's blog), and `ref-36`, `ref-37`, `ref-38` (blogs); the Tier-B subjects are `ref-7` and `ref-21` (course material), `ref-24` (a learning log), `ref-20` (a notation handout), `ref-27` (a web app) and `ref-42` (an article reposted on a course page). Some are primary artefacts and should stay; the rest are commentary a better source says properly. The owner's leads from M003 are in `M003-decisions.md` | `docs` | `theory-references.mdx`, citing deep dives | Each is replaced, kept with a recorded reason, or dropped with its claim rewritten; a test fails if a `to-replace` record remains | `open` |
 
 ## Milestone M005 — One bibliography, one standard

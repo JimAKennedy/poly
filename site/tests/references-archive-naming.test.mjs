@@ -13,6 +13,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 
 import { archiveFileName } from '../src/data/references-archive.mjs';
 import { parseLine, readBibliography } from '../src/data/references-bibliography.mjs';
@@ -73,7 +74,13 @@ test('an anchor outside both conventions throws rather than inventing a name', (
 
 test('readBibliography spans both bibliographies', async () => {
   const bib = await readBibliography();
-  assert.ok(bib.size > 100, `expected more than 100 anchors, got ${bib.size}`);
+  // Derived, not a literal: M004 retires entries, and a floor of 100 broke the
+  // first time it did. The manifest holds one record per anchor across both
+  // bibliographies (its completeness test proves that in both directions).
+  const { entries } = JSON.parse(
+    await readFile(new URL('../src/data/references.json', import.meta.url), 'utf8'),
+  );
+  assert.equal(bib.size, Object.keys(entries).length, 'one parsed entry per manifest record');
   assert.ok(bib.has('ref-20'), 'ref-20 lives only in the theory bundle and must be read');
   assert.match(bib.get('ref-20').url, /gamelan\.org\.nz/);
   assert.match(bib.get('ref-20').text, /^Yudane\./);
