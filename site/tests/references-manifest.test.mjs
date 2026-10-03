@@ -481,3 +481,14 @@ test('every free source is archived or recorded as what it is', async () => {
     .map(([a, r]) => `${a} (${r.obtainability}, ${r.retrieval?.status})`);
   assert.deepEqual(open, [], 'free, but neither archived nor recorded as unarchivable:\n' + open.join('\n'));
 });
+
+// verifiable-references M004/S02 (VR13): every source the owner judged
+// unsuitable in M003 has been replaced or dropped. `to-replace` is a hand-off
+// state, and a hand-off nobody picked up is the failure this closes.
+test('no record is waiting to be replaced', async () => {
+  const m = await loadManifest();
+  const waiting = Object.entries(m.entries)
+    .filter(([, r]) => r.retrieval?.status === 'to-replace')
+    .map(([a]) => a);
+  assert.deepEqual(waiting, [], 'judged unsuitable and still cited: ' + waiting.join(', '));
+});

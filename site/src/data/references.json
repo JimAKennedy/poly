@@ -55,42 +55,6 @@
         "detail": null
       }
     },
-    "ref-7": {
-      "obtainability": "open-access",
-      "evidence": "scalar.usc.edu returns 200 text/html, 63075 bytes; the page title is \"MUSICAL TRADITIONS OF SUB-SAHARAN AFRICA\", matching the entry.",
-      "checked": "2026-09-20",
-      "description": "verified",
-      "note": "",
-      "identifier": {
-        "doi": null,
-        "isbn": null
-      },
-      "price": null,
-      "archiveFile": null,
-      "retrieval": {
-        "status": "to-replace",
-        "checked": "2026-10-02",
-        "detail": "owner, 2026-10-02: course material; replace with a more academic reference (M004/VR13). Not archived."
-      }
-    },
-    "ref-8": {
-      "obtainability": "browser-only",
-      "evidence": "Scribd returns 200 but only 3038 bytes of HTML, a login or bot wall rather than the document. An account is required, and an account-walled upload is not a citable source regardless of what it contains.",
-      "checked": "2026-09-20",
-      "description": "unverified",
-      "note": "",
-      "identifier": {
-        "doi": null,
-        "isbn": null
-      },
-      "price": null,
-      "archiveFile": null,
-      "retrieval": {
-        "status": "to-replace",
-        "checked": "2026-10-02",
-        "detail": "owner, 2026-10-02: course material, the expected Agbekor unit, readable with a Scribd subscription. Not archived. M004 lead: Agawu, \"The Rhythmic Structure of West African Music\", cited from its journal on JSTOR; the owner’s Scribd copy is in the archive, unrenamed."
-      }
-    },
     "ref-9": {
       "obtainability": "open-access",
       "evidence": "D-Scholarship@Pitt refuses every automated fetch with 403; the owner retrieved the PDF in a browser. The PDF was read directly and its title page matches the entry exactly, including the author name Stephen Ayodamope Oluranti and the companion composition.",
@@ -109,24 +73,6 @@
         "detail": "owner’s copy, title page read: \"Polyrhythm as an Integral Feature of African Pianism\""
       }
     },
-    "ref-12": {
-      "obtainability": "open-access",
-      "evidence": "pianowithjonny.com returns 200 text/html, 197419 bytes; the page title is \"Piano Montunos – The Complete Guide\", matching the entry. A commercial lesson site, so Tier C is right.",
-      "checked": "2026-09-20",
-      "description": "verified",
-      "note": "",
-      "identifier": {
-        "doi": null,
-        "isbn": null
-      },
-      "price": null,
-      "archiveFile": "12 - Piano Montunos The Complete Guide.pdf",
-      "retrieval": {
-        "status": "archived",
-        "checked": "2026-10-01",
-        "detail": "fetched from pianowithjonny.com (rendered html), 25328651 bytes"
-      }
-    },
     "ref-13": {
       "obtainability": "purchasable",
       "evidence": "The cited sample-pages PDF is gone: the URL redirects to the product page for \"Salsa Guidebook for Piano & Ensemble\" and the response carries 404 and error markers. The book is on sale at the recorded prices. The entry titles the work \"Rhythmic Styles and Structures\", which does not match the product title; whether that is a chapter within the book could not be established without the book itself.",
@@ -143,42 +89,6 @@
         "status": "not-attempted",
         "checked": null,
         "detail": null
-      }
-    },
-    "ref-16": {
-      "obtainability": "open-access",
-      "evidence": "samplesoundmusic.com returns 200 text/html, 595797 bytes; the page h1 is \"Afro House Explained: Rhythm, Culture, and Production Techniques\", matching the entry exactly. A commercial sample-library blog, so Tier C is right.",
-      "checked": "2026-09-20",
-      "description": "verified",
-      "note": "",
-      "identifier": {
-        "doi": null,
-        "isbn": null
-      },
-      "price": null,
-      "archiveFile": "16 - Afro House Explained Rhythm, Culture, and Production Techniques.pdf",
-      "retrieval": {
-        "status": "archived",
-        "checked": "2026-10-01",
-        "detail": "fetched from www.samplesoundmusic.com (rendered html), 22782993 bytes"
-      }
-    },
-    "ref-17": {
-      "obtainability": "browser-only",
-      "evidence": "lianproductions.com answers 202 with 182 bytes — a challenge or JavaScript-required stub, not the article. Nothing about the content could be established from here.",
-      "checked": "2026-10-02",
-      "description": "mismatch",
-      "note": "The page at the entry’s URL is \"Rhythm, Structure and Emotion Inside Afro House Productions\", posted 18/12/2025 by Lian Productions (owner, printed to PDF 2026-10-02). The entry titles it \"Afro House Production Guide\". M004 corrects or replaces the entry (VR13).",
-      "identifier": {
-        "doi": null,
-        "isbn": null
-      },
-      "price": null,
-      "archiveFile": "17 - Afro House Production Guide.pdf",
-      "retrieval": {
-        "status": "archived",
-        "checked": "2026-10-02",
-        "detail": "owner, browser session 2026-10-02; title page read: \"Rhythm, Structure and Emotion Inside Afro House Productions\""
       }
     },
     "ref-18": {
@@ -235,24 +145,6 @@
         "detail": "fetched from gamelan.org.nz (pdf), 69196 bytes; title page read: this is the work the link serves, not the work the entry names (see the M002 mismatch note); kept archived by the owner’s decision of 2026-10-01"
       }
     },
-    "ref-21": {
-      "obtainability": "open-access",
-      "evidence": "artiumacademy.com returns 200 text/html, 191790 bytes. The page h1 is \"Exploring the Underpinnings of Taal in Music: The Silent Language of Indian Classical Music\" — the same article the entry cites, with the title’s clauses reordered and \"Tala\" substituted for \"Taal\". Recorded as verified rather than mismatch because it is the same work, but the cited title is not the published one and M004 may want to correct the wording. A commercial music-school blog, so Tier B is generous.",
-      "checked": "2026-09-20",
-      "description": "verified",
-      "note": "",
-      "identifier": {
-        "doi": null,
-        "isbn": null
-      },
-      "price": null,
-      "archiveFile": null,
-      "retrieval": {
-        "status": "to-replace",
-        "checked": "2026-10-02",
-        "detail": "owner, 2026-10-02: course material; needs replacing (M004/VR13). Not archived."
-      }
-    },
     "ref-22": {
       "obtainability": "open-access",
       "evidence": "Music Theory Online 26(1), platinum open access, full text readable without login. DOI resolves 200 to the article; Crossref confirms title, author, volume and year.",
@@ -289,24 +181,6 @@
         "detail": "owner, browser session 2026-10-02; title page read: \"Indian Rhythmic Systems as Sources of Inspiration for Western Composers\""
       }
     },
-    "ref-24": {
-      "obtainability": "browser-only",
-      "evidence": "alpaca.pubpub.org returns 403 to automation with a ~5.8 KB block page. PubPub is open access, so this is a bot block rather than a paywall, and a browser should settle it.",
-      "checked": "2026-09-20",
-      "description": "unverified",
-      "note": "",
-      "identifier": {
-        "doi": null,
-        "isbn": null
-      },
-      "price": null,
-      "archiveFile": null,
-      "retrieval": {
-        "status": "to-replace",
-        "checked": "2026-10-02",
-        "detail": "owner, 2026-10-02: someone’s learning log, not a suitable reference. Not archived. M004 leads: Rafael Reina on Karnatic rhythm for Western music; David Nelson’s Solkattu Manual; Lisa Young’s Master’s and PhD theses."
-      }
-    },
     "ref-26": {
       "obtainability": "open-access",
       "evidence": "Empirical Musicology Review 10(4) 265-291, open access. DOI resolves 200; Crossref pages match the entry. The journal host serves an Anubis challenge to automation, so the PDF itself was not fetched.",
@@ -323,24 +197,6 @@
         "status": "archived",
         "checked": "2026-10-02",
         "detail": "owner, browser session 2026-10-02; title page read: \"Measuring Aksak Rhythm and Synchronization in Transylvanian Village Music by Using Motion Capture\"; Empirical Musicology Review 10(4), 2015. The DOI route is behind an Anubis challenge; the owner downloaded it from Academia.edu (account needed): https://www.academia.edu/128341480"
-      }
-    },
-    "ref-27": {
-      "obtainability": "open-access",
-      "evidence": "chromatone.center returns 200 text/html, 34353 bytes; og:title is \"Balkan dances\". The entry calls it \"Balkan Dance Rhythms\" — the same page with a slightly expanded title, so verified rather than mismatch, with the wording noted for M004.",
-      "checked": "2026-09-20",
-      "description": "verified",
-      "note": "",
-      "identifier": {
-        "doi": null,
-        "isbn": null
-      },
-      "price": null,
-      "archiveFile": "27 - Balkan Dance Rhythms.pdf",
-      "retrieval": {
-        "status": "archived",
-        "checked": "2026-10-01",
-        "detail": "fetched from chromatone.center (rendered html), 4497444 bytes"
       }
     },
     "ref-28": {
@@ -415,24 +271,6 @@
         "detail": "fetched from tnp.mtsnys.org (rendered html), 787358 bytes; title page read: this is the work the link serves, not the work the entry names (see the M002 mismatch note); kept archived by the owner’s decision of 2026-10-01"
       }
     },
-    "ref-33": {
-      "obtainability": "open-access",
-      "evidence": "allclassical.org returns 200; og:title is \"The Story of Minimalism – Part One: A New Way of Listening\", matching the entry.",
-      "checked": "2026-09-20",
-      "description": "verified",
-      "note": "",
-      "identifier": {
-        "doi": null,
-        "isbn": null
-      },
-      "price": null,
-      "archiveFile": "33 - The Story of Minimalism A New Way of Listening.pdf",
-      "retrieval": {
-        "status": "archived",
-        "checked": "2026-10-01",
-        "detail": "fetched from www.allclassical.org (rendered html), 963814 bytes"
-      }
-    },
     "ref-34": {
       "obtainability": "open-access",
       "evidence": "ime.unicamp.br returns 200 application/pdf, 5671462 bytes; the PDF was read directly.",
@@ -467,60 +305,6 @@
         "status": "archived",
         "checked": "2026-10-02",
         "detail": "owner, browser session 2026-10-02; title page read: \"Steve Reich’s “Piano Phase” in Global Perspective: Myths & Realities\""
-      }
-    },
-    "ref-36": {
-      "obtainability": "open-access",
-      "evidence": "brettworks.com returns 200; og:title is \"Roger Linn On Drum Machine Groove And J Dilla’s Off-Beat Sound\", matching the entry.",
-      "checked": "2026-09-20",
-      "description": "verified",
-      "note": "",
-      "identifier": {
-        "doi": null,
-        "isbn": null
-      },
-      "price": null,
-      "archiveFile": "36 - Roger Linn on Drum Machine Groove and J Dilla's Off-Beat Sound.pdf",
-      "retrieval": {
-        "status": "archived",
-        "checked": "2026-10-01",
-        "detail": "fetched from brettworks.com (rendered html), 1523486 bytes"
-      }
-    },
-    "ref-37": {
-      "obtainability": "open-access",
-      "evidence": "noisemachines.studio returns 200; og:title is \"In praise of the AKAI MPC: a hip-hop time machine\", matching the entry.",
-      "checked": "2026-09-20",
-      "description": "verified",
-      "note": "",
-      "identifier": {
-        "doi": null,
-        "isbn": null
-      },
-      "price": null,
-      "archiveFile": "37 - In Praise of the Akai MPC A Hip-Hop Time Machine.pdf",
-      "retrieval": {
-        "status": "archived",
-        "checked": "2026-10-01",
-        "detail": "fetched from happymag.tv (rendered html), 1840518 bytes"
-      }
-    },
-    "ref-38": {
-      "obtainability": "open-access",
-      "evidence": "ethanhein.com returns 200; the page h1 is \"Building the Amen break\", matching the entry.",
-      "checked": "2026-09-20",
-      "description": "verified",
-      "note": "",
-      "identifier": {
-        "doi": null,
-        "isbn": null
-      },
-      "price": null,
-      "archiveFile": "38 - Hein.pdf",
-      "retrieval": {
-        "status": "archived",
-        "checked": "2026-10-01",
-        "detail": "fetched from www.ethanhein.com (rendered html), 658361 bytes"
       }
     },
     "ref-39": {
@@ -1763,6 +1547,24 @@
         "status": "archived",
         "checked": "2026-10-01",
         "detail": "fetched from journals.plos.org (rendered html), 862423 bytes"
+      }
+    },
+    "fr-agawu-1987": {
+      "obtainability": "purchasable",
+      "evidence": "Crossref, 2026-10-03: \"The Rhythmic Structure of West African Music\", V. Kofi Agawu, Journal of Musicology 5(3), 1987, 400–418, DOI 10.2307/763699 (a JSTOR DOI). The owner’s copy was read on its first page: the title, \"V. KOFI AGAWU\", page 400, and a note that the essay began as a 1985 AMS Southwest Chapter paper.",
+      "checked": "2026-10-03",
+      "description": "verified",
+      "note": "Added by M004/S02 in place of ref-8 (a Scribd upload of a course unit), on the owner’s lead from M003.",
+      "identifier": {
+        "doi": "10.2307/763699",
+        "isbn": null
+      },
+      "price": "JSTOR: readable with a JPASS personal subscription (the owner’s route) or bought per article; a per-article price was not established",
+      "archiveFile": "FR - Agawu 1987.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-10-03",
+        "detail": "the owner’s copy, a Scribd upload of the journal pages, renamed from 477028076-The-rhythmic-structure-of-west-african-music-kofi-agawu.pdf; title page read: \"The Rhythmic Structure of West African Music\""
       }
     }
   }

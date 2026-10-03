@@ -352,6 +352,28 @@ const CLAIMS = [
       'can check against the claim it is cited for',
     present: ['Nor does it cite a video'],
   },
+  {
+    id: 'POLICY-WEB',
+    file: 'appendix-references.mdx',
+    rule:
+      'verifiable-references VR13, amended and decided by the owner 2026-10-03: ' +
+      'a source is judged by what it is, not by its tier. Course material, ' +
+      'commercial or marketing pages and blogs are not cited; a practitioner\'s ' +
+      'own text may be, at Tier B, with the reason recorded',
+    present: ['course material'],
+  },
+  {
+    id: 'AGAWU-1987',
+    file: 'theory-references.mdx',
+    rule:
+      'verifiable-references M004/S02: Agawu (1987) replaces ref-8, a Scribd ' +
+      'upload of a course unit. Crossref and the article\'s first page agree: ' +
+      'Journal of Musicology 5(3), 400-418, DOI 10.2307/763699',
+    presentRegex: [
+      /id="fr-agawu-1987"[^\n]*Journal of Musicology/,
+      /id="fr-agawu-1987"[^\n]*10\.2307\/763699/,
+    ],
+  },
 ];
 
 registerClaimTests({ test, assert, claims: CLAIMS, loadSource });
@@ -459,7 +481,18 @@ test(`S01-F17-tree: the fabricated ref-2 title appears in no doc`, async () => {
 const FORBIDDEN_HOSTS = [
   { host: 'wikipedia.org', reason: 'VR11: the guide does not cite Wikipedia' },
   { host: 'youtube.com', reason: 'VR12: a video has no text to check a claim against' },
-  { host: 'youtu.be', reason: 'VR12: a video has no text to check a claim against' },
+  { host: 'youtu.be', reason: 'VR12: a video has no text to check a claim against' },  { host: 'scribd.com', reason: "VR13: an account-walled upload, not the publication" },
+  { host: 'scalar.usc.edu', reason: "VR13: course material" },
+  { host: 'pianowithjonny.com', reason: "VR13: a commercial lesson site" },
+  { host: 'samplesoundmusic.com', reason: "VR13: a sample-pack shop's marketing blog" },
+  { host: 'lianproductions.com', reason: "VR13: a production blog" },
+  { host: 'artiumacademy.com', reason: "VR13: a music school's course-marketing blog" },
+  { host: 'pubpub.org', reason: "VR13: a learning log, not a publication" },
+  { host: 'chromatone.center', reason: "VR13: a web app, not a source" },
+  { host: 'allclassical.org', reason: "VR13: a radio station's blog" },
+  { host: 'brettworks.com', reason: "VR13: a blog relaying an interview the guide cites directly" },
+  { host: 'noisemachines.studio', reason: "VR13: a blog" },
+  { host: 'ethanhein.com', reason: "VR13: a blog" },
 ];
 
 async function contentPages() {
