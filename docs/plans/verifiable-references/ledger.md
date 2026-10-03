@@ -148,7 +148,7 @@ opening the PDF. Expect a long tail where the only way to answer is to look.
 repository records what it holds without holding it.
 
 **Branch:** milestone/M003-archive
-**Status:** planned
+**Status:** done
 **Demo:** The archive holds every source classified as retrievable, and the
 manifest names each one.
 
@@ -176,41 +176,43 @@ Dropbox research folder addressed through an environment variable.
 ### Slice M003/S01 — Scripted retrieval fills what it can
 
 **Depends:** M002/S02
+**Plan:** M003-S01-plan.md
 **Validation:** format, site-unit, guards
 **Evidence:** evidence/M003-S01.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Every source classified as a plain fetch is in the archive under the
+- [x] Every source classified as a plain fetch is in the archive under the
       `NN - Name.pdf` convention, with the manifest updated to match
-- [ ] The retrieval reads its destination from the environment and fails with a
+- [x] The retrieval reads its destination from the environment and fails with a
       clear message when unset, rather than writing somewhere arbitrary
-- [ ] Sources that resist scripted fetching are recorded as such, not retried
+- [x] Sources that resist scripted fetching are recorded as such, not retried
       silently
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| VR09 | Four sources are already collected by hand under an `NN - Name.pdf` convention. Nothing else is archived, and nothing records the convention | `tooling` | `scripts/`, the archive | Scripted-class sources are present and named; the manifest lists them | `open` |
+| VR09 | Four sources are already collected by hand under an `NN - Name.pdf` convention. Nothing else is archived, and nothing records the convention | `tooling` | `scripts/`, the archive | Scripted-class sources are present and named; the manifest lists them | `done` |
 
 ### Slice M003/S02 — The browser worklist finishes the archive
 
 **Depends:** M003/S01
+**Plan:** M003-S02-plan.md
 **Validation:** format, site-unit
 **Evidence:** evidence/M003-S02.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] A worklist names every browser-only source: URL, what to save, and the
+- [x] A worklist names every browser-only source: URL, what to save, and the
       exact filename to save it as
-- [ ] The worklist has been worked and the archive contains its results
-- [ ] Sources that are free but only as unsearchable scans, or free only to an
+- [x] The worklist has been worked and the archive contains its results
+- [x] Sources that are free but only as unsearchable scans, or free only to an
       institution, are recorded as what they are rather than as archived
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| VR10 | Scholarly hosts routinely refuse scripts — five entries return 403 and one 406 to automation. One is confirmed to load fine by hand: the owner reached the D-Scholarship@Pitt record behind `ref-9` in a browser and downloaded the PDF, from the same URL that 403s to every script tried. The rest are inferred from the response class, not measured. Treating "a script cannot fetch it" as "unobtainable" would wrongly condemn good sources | `docs` | `docs/plans/verifiable-references/`, the archive | The worklist exists and its entries are archived; the manifest distinguishes retrieved from unretrievable | `open` |
+| VR10 | Scholarly hosts routinely refuse scripts — five entries return 403 and one 406 to automation. One is confirmed to load fine by hand: the owner reached the D-Scholarship@Pitt record behind `ref-9` in a browser and downloaded the PDF, from the same URL that 403s to every script tried. The rest are inferred from the response class, not measured. Treating "a script cannot fetch it" as "unobtainable" would wrongly condemn good sources | `docs` | `docs/plans/verifiable-references/`, the archive | The worklist exists and its entries are archived; the manifest distinguishes retrieved from unretrievable | `done` |
 
 ## Milestone M004 — Nothing unreviewable is cited
 
@@ -240,6 +242,25 @@ faster.
 > If the deep dives are ever republished, this milestone becomes live again
 > exactly as written.
 
+**Amended 2026-10-03, before M003 shipped.** The owner's call on the question
+above: **M004 cleans the theory bundle before any republication**, and is not
+done merely because the shipping guide is clean. Three changes follow from
+M003's measurements:
+
+- **The rows land in the theory bundle.** Every subject of VR11–VR13 is in
+  `site/src/content/theory/theory-references.mdx` and cited from the deep
+  dives; none is in `appendix-references.mdx`.
+- **VR13 is judged by what a source is, not by its tier.** M003's worklist
+  showed Tier-B entries — course material, a learning log, a web app — that
+  are no more citable than the Tier-C ones, such as a sample-pack shop's
+  blog. The owner's four `to-replace` verdicts from M003/S02 (`ref-7`,
+  `ref-8`, `ref-21`, `ref-24`) are VR13 subjects, and three of them are
+  Tier B.
+- **Every mismatch is corrected, not only M002's.** M003 recorded seven more
+  (`ref-17`, `ref-23`, `ref-41`, `ref-46`, `fr-scherzinger-2010`,
+  `fr-holzapfel-2015`, `fr-linn-attack-2020`); the manifest's `mismatch`
+  verdicts are the list, whichever milestone found them.
+
 ### Slice M004/S01 — The Wikipedia policy is decided and applied
 
 **Depends:** M002/S02
@@ -257,7 +278,7 @@ faster.
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| VR11 | Three Wikipedia entries are cited from the guide. Wikipedia is reviewable text and often a fair summary, and is also not a source a scholarly guide should rest a claim on. Deciding "never" and deciding "orientation only" are both defensible; deciding per entry is not | `docs` | `appendix-references.mdx`, citing chapters | The policy is stated once and the three entries match it; a claim test pins the outcome | `open` |
+| VR11 | Three Wikipedia entries are cited from the theory deep dives. Wikipedia is reviewable text and often a fair summary, and is also not a source a scholarly guide should rest a claim on. Deciding "never" and deciding "orientation only" are both defensible; deciding per entry is not | `docs` | `theory-references.mdx`, citing deep dives | The policy is stated once and the three entries match it; a claim test pins the outcome | `open` |
 
 ### Slice M004/S02 — The remaining unreviewable entries go
 
@@ -269,15 +290,18 @@ faster.
 **Definition of Done**
 
 - [ ] No YouTube entry remains in the bibliography
-- [ ] Every remaining Tier-C entry is either reviewable text, or the primary
+- [ ] Every remaining entry that is not scholarship — whatever its tier — is
+      either reviewable text from a source fit to cite, or the primary
       artefact rather than a commentary on one, with that reason recorded
-- [ ] Every entry M002/S02 marked as a description mismatch is corrected or
-      replaced
+- [ ] Every entry the manifest marks as a description mismatch is corrected
+      or replaced — M002's and M003's alike
+- [ ] Every entry the manifest marks `to-replace` is replaced, or dropped with
+      its claim rewritten
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| VR12 | Five YouTube entries carry no text to review, no page to cite, and no way to check that they say what the guide claims. A video may be excellent and still fail this test | `docs` | `appendix-references.mdx`, citing chapters | No `youtube.com` URL remains; a claim test forbids their return | `open` |
-| VR13 | Eleven further Tier-C entries — Scribd, blogs, course-marketing pages — are cited from the guide. Some are primary artefacts and should stay; the rest are commentary that a better source says properly | `docs` | `appendix-references.mdx`, citing chapters | Each is replaced, kept with a recorded reason, or dropped with its claim rewritten | `open` |
+| VR12 | Five YouTube entries carry no text to review, no page to cite, and no way to check that they say what the guide claims. A video may be excellent and still fail this test. The owner's alternative for `ref-25` (an Indian presenter's konnakol introduction, M003-decisions) is a video too, so it is an argument about this row's policy, not a swap | `docs` | `theory-references.mdx`, citing deep dives | No `youtube.com` URL remains; a claim test forbids their return | `open` |
+| VR13 | Entries that are not scholarship are cited from the deep dives, in Tier B as well as Tier C. **Amended 2026-10-03:** measured on M003's branch, the Tier-C subjects are `ref-8` (Scribd course unit), `ref-12` (a lesson site), `ref-16` (a sample-pack shop's blog), `ref-17` (a production blog), `ref-33` (a radio station's blog), and `ref-36`, `ref-37`, `ref-38` (blogs); the Tier-B subjects are `ref-7` and `ref-21` (course material), `ref-24` (a learning log), `ref-20` (a notation handout), `ref-27` (a web app) and `ref-42` (an article reposted on a course page). Some are primary artefacts and should stay; the rest are commentary a better source says properly. The owner's leads from M003 are in `M003-decisions.md` | `docs` | `theory-references.mdx`, citing deep dives | Each is replaced, kept with a recorded reason, or dropped with its claim rewritten; a test fails if a `to-replace` record remains | `open` |
 
 ## Milestone M005 — One bibliography, one standard
 

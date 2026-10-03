@@ -41,3 +41,58 @@ export function resolveArchiveFile(name) {
   }
   return join(archiveRoot(), name);
 }
+
+// verifiable-references M003/S01: what retrieval has done for each record.
+// `archived` holds exactly when the record names an archiveFile; the other
+// states say why it does not — refused by a host's bot policy and queued for a
+// person, free only as an unsearchable scan, free only through an institution,
+// nothing to archive because the source is a video, judged unsuitable by the
+// owner and left for M004 to replace (M003/S02), or not yet tried.
+export const RETRIEVAL_STATUS = [
+  'archived',
+  'script-refused',
+  'scan-only',
+  'institution-only',
+  'no-text',
+  'to-replace',
+  'not-attempted',
+];
+
+const NAME_MAX = 80;
+
+function cleanName(raw) {
+  let name = raw.replace(/[\\/:*?"<>|]/g, '').replace(/\s+/g, ' ').trim();
+  if (name.length > NAME_MAX) {
+    const cut = name.lastIndexOf(' ', NAME_MAX);
+    name = name.slice(0, cut > 0 ? cut : NAME_MAX).trim();
+  }
+  return name;
+}
+
+// The archive naming convention (VR09). `text` is the entry as
+// readBibliography() returns it; Further Reading names come from the anchor
+// alone, so `text` is only read for numbered entries.
+export function archiveFileName(anchor, text) {
+  const numbered = /^ref-(\d+)$/.exec(anchor);
+  if (numbered) {
+    const nn = numbered[1].padStart(2, '0');
+    const t = String(text ?? '').trim();
+    let lead;
+    if (t.startsWith('"')) {
+      const close = t.indexOf('"', 1);
+      lead = (close > 0 ? t.slice(1, close) : t.slice(1)).replace(/\.$/, '');
+    } else {
+      const end = t.search(/,|\.|\s\(/);
+      lead = end > 0 ? t.slice(0, end) : t;
+    }
+    const name = cleanName(lead);
+    if (name === '') throw new Error(`cannot derive a name for anchor ${anchor} from ${JSON.stringify(text)}`);
+    return `${nn} - ${name}.pdf`;
+  }
+  const further = /^fr-([a-z]+(?:-[a-z]+)*)-(\d{4})$/.exec(anchor);
+  if (further) {
+    const parts = further[1].split('-').map((p) => p[0].toUpperCase() + p.slice(1));
+    return `FR - ${parts.join(' ')} ${further[2]}.pdf`;
+  }
+  throw new Error(`anchor ${JSON.stringify(anchor)} is neither ref-N nor fr-<surname>-<year>`);
+}

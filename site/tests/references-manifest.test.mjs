@@ -44,6 +44,7 @@ const RECORD_KEYS = [
   'identifier',
   'price',
   'archiveFile',
+  'retrieval',
 ];
 
 async function loadManifest() {
@@ -51,9 +52,9 @@ async function loadManifest() {
   return JSON.parse(raw);
 }
 
-test('references manifest declares schemaVersion 1 and an entries object', async () => {
+test('references manifest declares schemaVersion 2 and an entries object', async () => {
   const m = await loadManifest();
-  assert.equal(m.schemaVersion, 1, 'schemaVersion must be 1');
+  assert.equal(m.schemaVersion, 2, 'schemaVersion must be 2 (M003/S01 added retrieval)');
   assert.equal(
     Object.prototype.toString.call(m.entries),
     '[object Object]',
@@ -305,4 +306,178 @@ test('every browser-only unverified entry is named in the browser worklist', asy
     'browser-only and unverified, but not named in the worklist, so no one has ' +
       'been asked to look: ' + missing.join(', '),
   );
+});
+
+// verifiable-references M003/S01 task 1: retrieval state.
+//
+// VR10. `archiveFile: null` alone could mean "never tried", "tried and the
+// host refused" or "there is nothing to archive", and those call for different
+// work. Every record now says which, and `archived` is tied to `archiveFile`
+// in both directions so the two can never disagree.
+import { RETRIEVAL_STATUS } from '../src/data/references-archive.mjs';
+
+test('RETRIEVAL_STATUS is the seven declared states', () => {
+  assert.ok(
+    Array.isArray(RETRIEVAL_STATUS) && RETRIEVAL_STATUS.length === 7,
+    'RETRIEVAL_STATUS must be an array of seven states — a renamed or missing ' +
+      'export would make every status check below assert nothing',
+  );
+});
+
+test('every record carries a well-formed retrieval state', async () => {
+  const m = await loadManifest();
+  const bad = [];
+  for (const [anchor, r] of Object.entries(m.entries)) {
+    const ret = r.retrieval;
+    if (Object.prototype.toString.call(ret) !== '[object Object]') {
+      bad.push(`${anchor}: retrieval must be an object`);
+      continue;
+    }
+    const keys = Object.keys(ret).sort();
+    if (JSON.stringify(keys) !== JSON.stringify(['checked', 'detail', 'status'])) {
+      bad.push(`${anchor}: retrieval keys are ${keys.join(', ')}`);
+    }
+    if (!RETRIEVAL_STATUS.includes(ret.status)) {
+      bad.push(`${anchor}: retrieval.status ${JSON.stringify(ret.status)} is not one of ${RETRIEVAL_STATUS.join(', ')}`);
+    }
+    if (!(ret.checked === null || (typeof ret.checked === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(ret.checked)))) {
+      bad.push(`${anchor}: retrieval.checked must be null or YYYY-MM-DD`);
+    }
+    if (!(ret.detail === null || typeof ret.detail === 'string')) {
+      bad.push(`${anchor}: retrieval.detail must be null or a string`);
+    }
+  }
+  assert.deepEqual(bad, [], bad.join('\n'));
+});
+
+test('an archived record names its file', async () => {
+  const m = await loadManifest();
+  const offenders = Object.entries(m.entries)
+    .filter(([, r]) => r.retrieval?.status === 'archived' && typeof r.archiveFile !== 'string')
+    .map(([a]) => a);
+  assert.deepEqual(offenders, [], 'retrieval says archived but no archiveFile is named: ' + offenders.join(', '));
+});
+
+test('a record that names a file is archived', async () => {
+  const m = await loadManifest();
+  const offenders = Object.entries(m.entries)
+    .filter(([, r]) => typeof r.archiveFile === 'string' && r.retrieval?.status !== 'archived')
+    .map(([a]) => a);
+  assert.deepEqual(offenders, [], 'archiveFile is named but retrieval does not say archived: ' + offenders.join(', '));
+});
+
+// verifiable-references M003/S01 task 3: every archived file is named by the
+// convention (VR09). A file saved under whatever name its host gave it
+// (`cohnreich1992.pdf`) is findable only by whoever saved it.
+import { archiveFileName } from '../src/data/references-archive.mjs';
+import { readBibliography } from '../src/data/references-bibliography.mjs';
+
+test('every archived file follows the naming convention', async () => {
+  const m = await loadManifest();
+  const bib = await readBibliography();
+  const off = Object.entries(m.entries)
+    .filter(([, r]) => typeof r.archiveFile === 'string')
+    .map(([a, r]) => [a, r.archiveFile, archiveFileName(a, bib.get(a)?.text ?? '')])
+    .filter(([, actual, expected]) => actual !== expected)
+    .map(([a, actual, expected]) => `${a}: ${actual} → ${expected}`);
+  assert.deepEqual(off, [], 'archived under a name other than the convention gives:\n' + off.join('\n'));
+});
+
+// verifiable-references M003/S01 task 4: a refusal is a queue entry. The
+// DoD's third box — sources that resist scripted fetching are recorded as
+// such, not retried silently — means a `script-refused` record must have been
+// handed to a person, which is what the worklist's Pending section is.
+export function pendingSection(worklist) {
+  const start = worklist.indexOf('\n## Pending');
+  const end = worklist.indexOf('\n## Resolved');
+  if (start < 0 || end < 0 || end < start) {
+    throw new Error('browser-worklist.md must have ## Pending before ## Resolved');
+  }
+  return worklist.slice(start, end);
+}
+
+export function refusedNotQueued(manifest, worklist) {
+  const pending = pendingSection(worklist);
+  return Object.entries(manifest.entries)
+    .filter(([, r]) => r.retrieval?.status === 'script-refused')
+    .map(([a]) => a)
+    .filter((a) => !pending.includes(`\`${a}\``));
+}
+
+test('every script-refused entry is queued in the worklist', async () => {
+  const m = await loadManifest();
+  const worklist = await readFile(WORKLIST_PATH, 'utf8');
+  const missing = refusedNotQueued(m, worklist);
+  assert.deepEqual(missing, [], 'refused by the script and not queued for a person: ' + missing.join(', '));
+});
+
+test('the refusal guard fires on an unqueued refusal', async () => {
+  const m = structuredClone(await loadManifest());
+  const worklist = await readFile(WORKLIST_PATH, 'utf8');
+  m.entries['ref-1'].retrieval = { status: 'script-refused', checked: '2026-09-30', detail: 'HTTP 403' };
+  assert.deepEqual(refusedNotQueued(m, worklist), ['ref-1'], 'a check that cannot fire is not a check');
+});
+
+// verifiable-references M003/S02 task 1 (VR10): every pending worklist row
+// tells the person working it exactly what to save it as. A file saved under
+// the host's own name has to be found and renamed afterwards, which is the
+// state the archive was in before M003. Video rows have nothing to save and
+// carry a fixed marker instead.
+const NO_TEXT_MARK = '— no text; record existence only —';
+
+export function pendingRows(worklist) {
+  const rows = [];
+  let header = null;
+  for (const line of pendingSection(worklist).split('\n')) {
+    if (!line.startsWith('|')) { header = null; continue; }
+    const cells = line.split('|').slice(1, -1).map((c) => c.trim());
+    if (header === null) { header = cells; continue; }
+    if (cells.every((c) => /^-+$/.test(c))) continue;
+    const anchor = /^`((?:ref|fr)-[a-z0-9-]+)`$/.exec(cells[0])?.[1];
+    if (!anchor) continue;
+    rows.push({ anchor, cell: Object.fromEntries(header.map((h, i) => [h, cells[i] ?? ''])) });
+  }
+  return rows;
+}
+
+test('every pending worklist row names its URL, the task, and the exact file to save', async () => {
+  const m = await loadManifest();
+  const bib = await readBibliography();
+  const worklist = await readFile(WORKLIST_PATH, 'utf8');
+  const rows = pendingRows(worklist);
+  // Zero rows is a pass only when the section says so in words; otherwise it
+  // means the table shape changed and this check stopped seeing anything.
+  if (rows.length === 0) {
+    assert.match(pendingSection(worklist), /Nothing is pending\./, 'no pending rows parsed — has the table shape changed?');
+    return;
+  }
+  const bad = [];
+  for (const { anchor, cell } of rows) {
+    const url = cell.URL ?? '';
+    const task = cell['What to check'] ?? cell['What to save'] ?? '';
+    const saveAs = cell['Save as'];
+    if (url === '') bad.push(`${anchor}: empty URL cell`);
+    if (task === '') bad.push(`${anchor}: no instruction`);
+    if (saveAs === undefined) { bad.push(`${anchor}: no Save as column`); continue; }
+    const video = /youtube\.com/.test(url) && m.entries[anchor]?.obtainability === 'browser-only';
+    const want = video ? NO_TEXT_MARK : '`' + archiveFileName(anchor, bib.get(anchor)?.text ?? '') + '`';
+    if (saveAs !== want) bad.push(`${anchor}: Save as is ${saveAs}, want ${want}`);
+  }
+  assert.deepEqual(bad, [], bad.join('\n'));
+});
+
+// verifiable-references M003/S02 task 3 (VR10): the archive is finished. Every
+// source a person can reach for free is either in the archive or recorded as
+// what it is — a scan, an institution's, a video, or one the owner judged
+// unsuitable and M004 replaces. Neither "not tried" nor "refused" is an end
+// state: both mean nobody has finished looking.
+const END_STATES = ['archived', 'scan-only', 'institution-only', 'no-text', 'to-replace'];
+
+test('every free source is archived or recorded as what it is', async () => {
+  const m = await loadManifest();
+  const open = Object.entries(m.entries)
+    .filter(([, r]) => ['open-access', 'browser-only'].includes(r.obtainability))
+    .filter(([, r]) => !END_STATES.includes(r.retrieval?.status))
+    .map(([a, r]) => `${a} (${r.obtainability}, ${r.retrieval?.status})`);
+  assert.deepEqual(open, [], 'free, but neither archived nor recorded as unarchivable:\n' + open.join('\n'));
 });

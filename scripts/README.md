@@ -140,6 +140,10 @@ hand-edit the output (enforced by the jk-standards generated-freshness check).
 
 - `fetch-samples.sh` — fetch the CC0/CC-BY drum one-shots from their pinned
   upstream repos into the site's samples tree.
+- `fetch-references.mjs` — archive the open-access references a script can
+  fetch, printing web pages to PDF, and record every refusal in
+  `site/src/data/references.json`; `--verify` checks the archive. Requires
+  `POLY_REFERENCES_ARCHIVE` and has no default destination.
 - `gen-release-notes.mjs` — extract a CHANGELOG section body for
   `gh release create --notes-file`; no CI wiring.
 - `install-pluginval.sh` — install pluginval locally for pre-push

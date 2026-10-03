@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "entries": {
     "ref-1": {
       "obtainability": "open-access",
@@ -12,7 +12,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": "01 - Toussaint.pdf"
+      "archiveFile": "01 - Toussaint.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from archive.bridgesmathart.org (pdf), 93398 bytes"
+      }
     },
     "ref-2": {
       "obtainability": "open-access",
@@ -25,7 +30,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": "02 - Goldberg.pdf"
+      "archiveFile": "02 - Goldberg.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-09-30",
+        "detail": "owner’s copy, title page read: \"Music Theory as an Instrument of Nationalism: Notation, Identity, and Systemization in Dobri Hristov’s Conception of Bulgarian Meter\""
+      }
     },
     "ref-4": {
       "obtainability": "open-access",
@@ -38,7 +48,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": "04 - Rhythm in Sub-Saharan Africa - Wikipedia.pdf"
+      "archiveFile": "04 - Rhythm in Sub-Saharan Africa.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-09-30",
+        "detail": "owner’s copy, title page read: \"Rhythm in Sub-Saharan Africa - Wikipedia\""
+      }
     },
     "ref-6": {
       "obtainability": "borrowable",
@@ -51,7 +66,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-7": {
       "obtainability": "open-access",
@@ -64,7 +84,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "to-replace",
+        "checked": "2026-10-02",
+        "detail": "owner, 2026-10-02: course material; replace with a more academic reference (M004/VR13). Not archived."
+      }
     },
     "ref-8": {
       "obtainability": "browser-only",
@@ -77,7 +102,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "to-replace",
+        "checked": "2026-10-02",
+        "detail": "owner, 2026-10-02: course material, the expected Agbekor unit, readable with a Scribd subscription. Not archived. M004 lead: Agawu, \"The Rhythmic Structure of West African Music\", cited from its journal on JSTOR; the owner’s Scribd copy is in the archive, unrenamed."
+      }
     },
     "ref-9": {
       "obtainability": "open-access",
@@ -90,7 +120,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": "09 - 11866_DISSERTATION_-_FULL_Oluranti.pdf"
+      "archiveFile": "09 - Oluranti.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-09-30",
+        "detail": "owner’s copy, title page read: \"Polyrhythm as an Integral Feature of African Pianism\""
+      }
     },
     "ref-10": {
       "obtainability": "browser-only",
@@ -103,7 +138,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "no-text",
+        "checked": "2026-10-02",
+        "detail": "owner, 2026-10-02: the video exists; uploader Rhythm Notes; title \"Clave Rhythm - Why It's the Key to Latin Music\""
+      }
     },
     "ref-11": {
       "obtainability": "browser-only",
@@ -116,7 +156,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "no-text",
+        "checked": "2026-10-02",
+        "detail": "owner, 2026-10-02: the video exists; uploader World Drum Club; title \"Clave Explained / Son, Rumba, 3-2, 2-3 and more\""
+      }
     },
     "ref-12": {
       "obtainability": "open-access",
@@ -129,7 +174,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "12 - Piano Montunos The Complete Guide.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from pianowithjonny.com (rendered html), 25328651 bytes"
+      }
     },
     "ref-13": {
       "obtainability": "purchasable",
@@ -142,7 +192,12 @@
         "isbn": null
       },
       "price": "USD 22.00 (PDF) / USD 36.00 (print), shermusic.com",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "ref-14": {
       "obtainability": "browser-only",
@@ -155,7 +210,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "no-text",
+        "checked": "2026-10-02",
+        "detail": "owner, 2026-10-02: the video exists; uploader Monumental Movement; title \"How Fela Kuti Turned Music into a Weapon: Afrobeat Creator and Political Icon\"; owner: about 600 subscribers, focused on the social movement more than the music, so not very credible"
+      }
     },
     "ref-15": {
       "obtainability": "browser-only",
@@ -168,7 +228,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "no-text",
+        "checked": "2026-10-02",
+        "detail": "owner, 2026-10-02: the video exists; uploader Sound Field; title \"The Genius of Fela Kuti and Afrobeat (feat. Femi & Made Kuti)\"; owner: hundreds of thousands of subscribers, the stronger of the two Fela Kuti videos"
+      }
     },
     "ref-16": {
       "obtainability": "open-access",
@@ -181,46 +246,66 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "16 - Afro House Explained Rhythm, Culture, and Production Techniques.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from www.samplesoundmusic.com (rendered html), 22782993 bytes"
+      }
     },
     "ref-17": {
       "obtainability": "browser-only",
       "evidence": "lianproductions.com answers 202 with 182 bytes — a challenge or JavaScript-required stub, not the article. Nothing about the content could be established from here.",
-      "checked": "2026-09-20",
-      "description": "unverified",
-      "note": "",
+      "checked": "2026-10-02",
+      "description": "mismatch",
+      "note": "The page at the entry’s URL is \"Rhythm, Structure and Emotion Inside Afro House Productions\", posted 18/12/2025 by Lian Productions (owner, printed to PDF 2026-10-02). The entry titles it \"Afro House Production Guide\". M004 corrects or replaces the entry (VR13).",
       "identifier": {
         "doi": null,
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "17 - Afro House Production Guide.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-10-02",
+        "detail": "owner, browser session 2026-10-02; title page read: \"Rhythm, Structure and Emotion Inside Afro House Productions\""
+      }
     },
     "ref-18": {
-      "obtainability": "browser-only",
-      "evidence": "academic.oup.com returns 403 to automation with a ~5.7 KB block page. Whether the chapter is readable, purchasable or institution-only could not be established from here, so no obtainability finer than browser-only is claimed and no price is recorded. The entry titles it \"Algorithmic Thinking and the Art of Javanese Gamelan\".",
-      "checked": "2026-09-20",
+      "obtainability": "purchasable",
+      "evidence": "academic.oup.com returns 403 to automation with a ~5.7 KB block page. Whether the chapter is readable, purchasable or institution-only could not be established from here, so no obtainability finer than browser-only is claimed and no price is recorded. The entry titles it \"Algorithmic Thinking and the Art of Javanese Gamelan\". The owner could not open it with a personal Oxford Academic account (2026-10-01); the chapter’s book is The Oxford Handbook of Algorithmic Music; the owner reported ISBN-10 0190226994 from the Amazon listing and later 0197554369.",
+      "checked": "2026-10-02",
       "description": "unverified",
       "note": "",
       "identifier": {
         "doi": null,
         "isbn": null
       },
-      "price": null,
-      "archiveFile": null
+      "price": "USD 54.79 (paperback), Amazon, owner 2026-10-01",
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": "2026-10-02",
+        "detail": "not free: purchasable only, so not archived"
+      }
     },
     "ref-19": {
-      "obtainability": "browser-only",
-      "evidence": "academic.oup.com returns 403 to automation with a ~5.7 KB block page. Whether the chapter is readable, purchasable or institution-only could not be established from here, so no obtainability finer than browser-only is claimed and no price is recorded. The entry titles it \"Ladrang Pangkur: Colotomic Structure in Javanese Gamelan\".",
-      "checked": "2026-09-20",
+      "obtainability": "purchasable",
+      "evidence": "academic.oup.com returns 403 to automation with a ~5.7 KB block page. Whether the chapter is readable, purchasable or institution-only could not be established from here, so no obtainability finer than browser-only is claimed and no price is recorded. The entry titles it \"Ladrang Pangkur: Colotomic Structure in Javanese Gamelan\". The owner could not open it with a personal Oxford Academic account (2026-10-01); the chapter’s book is Analytical Studies in World Music, ISBN-10 0195177894.",
+      "checked": "2026-10-02",
       "description": "unverified",
       "note": "",
       "identifier": {
         "doi": null,
         "isbn": null
       },
-      "price": null,
-      "archiveFile": null
+      "price": "USD 59.00, Amazon, owner 2026-10-01",
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": "2026-10-02",
+        "detail": "not free: purchasable only, so not archived"
+      }
     },
     "ref-20": {
       "obtainability": "open-access",
@@ -233,7 +318,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "20 - Yudane.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from gamelan.org.nz (pdf), 69196 bytes; title page read: this is the work the link serves, not the work the entry names (see the M002 mismatch note); kept archived by the owner’s decision of 2026-10-01"
+      }
     },
     "ref-21": {
       "obtainability": "open-access",
@@ -246,7 +336,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "to-replace",
+        "checked": "2026-10-02",
+        "detail": "owner, 2026-10-02: course material; needs replacing (M004/VR13). Not archived."
+      }
     },
     "ref-22": {
       "obtainability": "open-access",
@@ -259,20 +354,30 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "22 - Clayton.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-09-30",
+        "detail": "owner’s copy, title page read: \"Theory and Practice of Long-form Non-isochronous Meters: The Case of the North Indian rūpak tāl\""
+      }
     },
     "ref-23": {
       "obtainability": "browser-only",
       "evidence": "journal.iftawm.org resets every automated connection (curl exit 35, 0 bytes) — the whole host, not this path. The PDF could not be read from here, so the suspicion below is recorded as a suspicion and not as a verdict.",
-      "checked": "2026-09-20",
-      "description": "unverified",
-      "note": "VR17. Two independent search results and the journal’s own article landing page (journal.iftawm.org/previous/2023-volume-11-no-2/reindl/) indicate the article is \"Indian Rhythmic Systems as Sources of Inspiration for…\" in Analytical Approaches to World Music 11(2), December 2023. The entry says \"…in Comparative Perspective\" in the \"Journal of the International Folk Art and World Music Society\", which reads like a guessed expansion of \"iftawm\" — IFTAWM is the International Foundation for the Theory and Analysis of World Musics. Both the title and the journal name need confirming in a browser before M004 corrects them.",
+      "checked": "2026-10-02",
+      "description": "mismatch",
+      "note": "The article is Tomáš Reindl, \"Indian Rhythmic Systems as Sources of Inspiration for Western Composers\", Analytical Approaches to World Musics 11(2), December 2023 (owner, 2026-10-02; title page read). The entry gives the title as \"Indian Rhythmic Systems in Comparative Perspective\", the author’s initial as M., and the journal as the Journal of the International Folk Art and World Music Society. M004 corrects the entry.",
       "identifier": {
         "doi": null,
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "23 - Reindl.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-10-02",
+        "detail": "owner, browser session 2026-10-02; title page read: \"Indian Rhythmic Systems as Sources of Inspiration for Western Composers\""
+      }
     },
     "ref-24": {
       "obtainability": "browser-only",
@@ -285,7 +390,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "to-replace",
+        "checked": "2026-10-02",
+        "detail": "owner, 2026-10-02: someone’s learning log, not a suitable reference. Not archived. M004 leads: Rafael Reina on Karnatic rhythm for Western music; David Nelson’s Solkattu Manual; Lisa Young’s Master’s and PhD theses."
+      }
     },
     "ref-25": {
       "obtainability": "browser-only",
@@ -298,12 +408,17 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "no-text",
+        "checked": "2026-10-02",
+        "detail": "owner, 2026-10-02: the video exists; uploader Henrik Andersen; title \"Konnakol Mastery: Subdivisions & Polyrhythms in 7 (2+2+3) – Feel the Groove!\"; owner: a great video, but would rather an Indian presenter; suggests \"KONNAKKOL BASICS | EP 1 | Introduction To Konnakkol\" by Konnakkol Somashekar Jois as a question for M004/VR12"
+      }
     },
     "ref-26": {
       "obtainability": "open-access",
       "evidence": "Empirical Musicology Review 10(4) 265-291, open access. DOI resolves 200; Crossref pages match the entry. The journal host serves an Anubis challenge to automation, so the PDF itself was not fetched.",
-      "checked": "2026-09-20",
+      "checked": "2026-10-02",
       "description": "verified",
       "note": "",
       "identifier": {
@@ -311,7 +426,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "26 - Bonini Baraldi.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-10-02",
+        "detail": "owner, browser session 2026-10-02; title page read: \"Measuring Aksak Rhythm and Synchronization in Transylvanian Village Music by Using Motion Capture\"; Empirical Musicology Review 10(4), 2015. The DOI route is behind an Anubis challenge; the owner downloaded it from Academia.edu (account needed): https://www.academia.edu/128341480"
+      }
     },
     "ref-27": {
       "obtainability": "open-access",
@@ -324,7 +444,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "27 - Balkan Dance Rhythms.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from chromatone.center (rendered html), 4497444 bytes"
+      }
     },
     "ref-28": {
       "obtainability": "open-access",
@@ -337,7 +462,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "28 - Holzapfel.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from www.diva-portal.org (pdf), 613261 bytes; title page read: this is the work the link serves, not the work the entry names (see the M002 mismatch note); kept archived by the owner’s decision of 2026-10-01"
+      }
     },
     "ref-29": {
       "obtainability": "open-access",
@@ -350,20 +480,30 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "29 - Holzapfel.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from www.diva-portal.org (pdf), 537565 bytes; title page read: this is the work the link serves, not the work the entry names (see the M002 mismatch note); kept archived by the owner’s decision of 2026-10-01"
+      }
     },
     "ref-30": {
       "obtainability": "browser-only",
-      "evidence": "academia.edu returns 403 to automation with a ~5.9 KB block page. Academia.edu requires an account, which the owner has, so this is browser-settleable rather than unobtainable.",
-      "checked": "2026-09-20",
-      "description": "unverified",
+      "evidence": "academia.edu returns 403 to automation with a ~5.9 KB block page. Academia.edu requires an account, which the owner has, so this is browser-settleable rather than unobtainable. M003/S01 task 3 found the owner’s Academia.edu download in the archive and read its first two pages: the title is \"Structures of Rhythm in Mevlevi Music: A Cyclical Analysis Model\", by Ozan Baysal and Sirin Karadeniz, matching the entry.",
+      "checked": "2026-09-30",
+      "description": "verified",
       "note": "",
       "identifier": {
         "doi": null,
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "30 - Structures of Rhythm in Mevlevi Music A Cyclical Analysis Model.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-09-30",
+        "detail": "owner’s copy, title page read: \"Structures of Rhythm in Mevlevi Music: A Cyclical Analysis Model\""
+      }
     },
     "ref-31": {
       "obtainability": "open-access",
@@ -376,7 +516,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "31 - Aji.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from tnp.mtsnys.org (rendered html), 787358 bytes; title page read: this is the work the link serves, not the work the entry names (see the M002 mismatch note); kept archived by the owner’s decision of 2026-10-01"
+      }
     },
     "ref-32": {
       "obtainability": "open-access",
@@ -389,7 +534,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "32 - Steve Reich.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from en.wikipedia.org (rendered html), 1240353 bytes"
+      }
     },
     "ref-33": {
       "obtainability": "open-access",
@@ -402,7 +552,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "33 - The Story of Minimalism A New Way of Listening.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from www.allclassical.org (rendered html), 963814 bytes"
+      }
     },
     "ref-34": {
       "obtainability": "open-access",
@@ -415,20 +570,30 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "34 - Schwarz.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from www.ime.unicamp.br (pdf), 5671462 bytes"
+      }
     },
     "ref-35": {
       "obtainability": "browser-only",
       "evidence": "martinscherzinger.org does not respond to automation at all (0 bytes, connection failed). Whether the PDF is still there could not be established from here.",
-      "checked": "2026-09-20",
-      "description": "unverified",
+      "checked": "2026-10-02",
+      "description": "verified",
       "note": "",
       "identifier": {
         "doi": null,
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "35 - Scherzinger.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-10-02",
+        "detail": "owner, browser session 2026-10-02; title page read: \"Steve Reich’s “Piano Phase” in Global Perspective: Myths & Realities\""
+      }
     },
     "ref-36": {
       "obtainability": "open-access",
@@ -441,7 +606,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "36 - Roger Linn on Drum Machine Groove and J Dilla's Off-Beat Sound.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from brettworks.com (rendered html), 1523486 bytes"
+      }
     },
     "ref-37": {
       "obtainability": "open-access",
@@ -454,7 +624,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "37 - In Praise of the Akai MPC A Hip-Hop Time Machine.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from happymag.tv (rendered html), 1840518 bytes"
+      }
     },
     "ref-38": {
       "obtainability": "open-access",
@@ -467,20 +642,30 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "38 - Hein.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from www.ethanhein.com (rendered html), 658361 bytes"
+      }
     },
     "ref-39": {
       "obtainability": "browser-only",
       "evidence": "cambridge.org returns 403 to automation with a ~6.3 KB block page. Popular Music is subscription-based, so this may be a paywall rather than only a bot block; access level could not be distinguished from here, so no price is claimed.",
-      "checked": "2026-09-20",
-      "description": "unverified",
+      "checked": "2026-10-02",
+      "description": "verified",
       "note": "",
       "identifier": {
         "doi": null,
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "39 - Shaping Rhythm, Timing, and Sound in Five Groove-Based Genres.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-10-02",
+        "detail": "owner, browser session 2026-10-02; title page read: \"Shaping rhythm: timing and sound in five groove-based genres\"; Popular Music 42(1), 2023, pp. 20–41, open access (CC BY 4.0), DOI 10.1017/S0261143023000041"
+      }
     },
     "ref-40": {
       "obtainability": "open-access",
@@ -493,20 +678,30 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "40 - L'analyse des ensembles microrythmiques dans l'Intelligent Dance Music.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from revuemusicaleoicrm.org (rendered html), 1963785 bytes"
+      }
     },
     "ref-41": {
       "obtainability": "browser-only",
       "evidence": "erudit.org returns HTTP 200 for the .pdf URL but serves 7806 bytes of HTML titled \"Making sure you’re not a bot!\" — an Anubis proof-of-work challenge, not the article. This is the second confirmed instance of a 200 response carrying no document, and it is the case M006’s liveness check must not score as healthy.",
-      "checked": "2026-09-20",
-      "description": "unverified",
-      "note": "",
+      "checked": "2026-10-02",
+      "description": "mismatch",
+      "note": "The article is Anthony Papavassiliou, \"Une caractéristique stylistique de l’Intelligent Dance Music : ambiguïté et rupture rythmiques chez Aphex Twin\" / \"Stylistic Features of Intelligent Dance Music: Ambiguity and Rupture Phenomena in Aphex Twin’s Rhythms\", Les Cahiers de la Société québécoise de recherche en musique 16(1–2), 2015 (title page read). The entry titles it \"Rhythmic Ambiguity in Aphex Twin\" and names Circuit: Musiques contemporaines. M004 corrects the entry.",
       "identifier": {
         "doi": null,
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "41 - Rhythmic Ambiguity in Aphex Twin.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-10-02",
+        "detail": "owner, browser session 2026-10-02; title page read: \"Stylistic Features of Intelligent Dance Music: Ambiguity and Rupture Phenomena in Aphex Twin’s Rhythms\""
+      }
     },
     "ref-42": {
       "obtainability": "open-access",
@@ -519,7 +714,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "42 - Schloss.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from web.uvic.ca (pdf), 318637 bytes; title page read: this is the work the link serves, not the work the entry names (see the M002 mismatch note); kept archived by the owner’s decision of 2026-10-01"
+      }
     },
     "ref-43": {
       "obtainability": "open-access",
@@ -532,7 +732,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "43 - Baião (music).pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from en.wikipedia.org (rendered html), 278417 bytes"
+      }
     },
     "ref-44": {
       "obtainability": "open-access",
@@ -545,20 +750,30 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "44 - Gotham.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from mtosmt.org (rendered html), 306539 bytes"
+      }
     },
     "ref-46": {
       "obtainability": "browser-only",
       "evidence": "semanticscholar.org answers 202 with 0 bytes — a challenge, not a page. Bjorklund’s paper underpins the engine’s Euclidean generator, so this entry is worth settling in a browser rather than leaving at a landing page.",
-      "checked": "2026-09-20",
-      "description": "unverified",
-      "note": "",
+      "checked": "2026-10-02",
+      "description": "mismatch",
+      "note": "The tech note is SNS-NOTE-CNTRL-99 (its own title page, and the reference list of Demaine et al. 2007). The entry gives SNS-NOTE-CNTRL-100, which is Bjorklund’s companion note \"A metric for measuring the evenness of timing system rep-rate patterns\". Title and author match. M004 corrects the number.",
       "identifier": {
         "doi": null,
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "46 - Bjorklund.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-10-02",
+        "detail": "owner, browser session 2026-10-02; title page read: \"The Theory of Rep-Rate Pattern Generation in the SNS Timing System\"; from the Wayback Machine’s 2016-12-22 snapshot of https://ics-web.sns.ornl.gov/timing/Rep-Rate%20Tech%20Note.pdf"
+      }
     },
     "fr-toussaint-2013": {
       "obtainability": "borrowable",
@@ -571,7 +786,12 @@
         "isbn": "9781466512023"
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-london-2012": {
       "obtainability": "purchasable",
@@ -584,7 +804,12 @@
         "isbn": "9780199744374"
       },
       "price": "ISBN 9780199744374, Oxford University Press — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-pressing-2002": {
       "obtainability": "library-only",
@@ -597,7 +822,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-arom-1991": {
       "obtainability": "purchasable",
@@ -610,7 +840,12 @@
         "isbn": "9780521616010"
       },
       "price": "ISBN 9780521616010, Cambridge University Press — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-locke-1998": {
       "obtainability": "purchasable",
@@ -623,7 +858,12 @@
         "isbn": "9780941677042"
       },
       "price": "ISBN 9780941677042, White Cliffs Media — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-locke-1982": {
       "obtainability": "purchasable",
@@ -636,7 +876,12 @@
         "isbn": null
       },
       "price": "USD 19.50/month or USD 199/year (JPASS, JSTOR personal access; about.jstor.org/jpass read 2026-09-22)",
-      "archiveFile": "Locke-PrinciplesOffbeatTiming-1982.pdf"
+      "archiveFile": "FR - Locke 1982.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-09-30",
+        "detail": "owner’s copy, title page read: \"Principles of Offbeat Timing and Cross-Rhythm in Southern Ewe Dance Drumming\""
+      }
     },
     "fr-chernoff-1979": {
       "obtainability": "borrowable",
@@ -649,7 +894,12 @@
         "isbn": "9780226103457"
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-anku-2000": {
       "obtainability": "open-access",
@@ -662,7 +912,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "FR - Anku 2000.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from mtosmt.org (rendered html), 982959 bytes"
+      }
     },
     "fr-polak-2010": {
       "obtainability": "open-access",
@@ -675,7 +930,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "FR - Polak 2010.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from mtosmt.org (rendered html), 1842425 bytes"
+      }
     },
     "fr-polak-london-2014": {
       "obtainability": "open-access",
@@ -688,7 +948,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "FR - Polak London 2014.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from mtosmt.org (rendered html), 2157028 bytes"
+      }
     },
     "fr-novotney-1998": {
       "obtainability": "browser-only",
@@ -701,7 +966,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "institution-only",
+        "checked": "2026-10-02",
+        "detail": "owner, browser session 2026-10-02: no downloadable copy found; a 1998 University of Illinois PhD dissertation, reachable through ProQuest Dissertations or a university library"
+      }
     },
     "fr-agawu-2006": {
       "obtainability": "library-only",
@@ -714,7 +984,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-charry-2000": {
       "obtainability": "purchasable",
@@ -727,7 +1002,12 @@
         "isbn": "9780226101637"
       },
       "price": "ISBN 9780226101637, University of Chicago Press — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-kubik-1999": {
       "obtainability": "borrowable",
@@ -740,7 +1020,12 @@
         "isbn": "9781578061464"
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-agawu-2003": {
       "obtainability": "purchasable",
@@ -753,7 +1038,12 @@
         "isbn": "9780415943901"
       },
       "price": "ISBN 9780415943901, Routledge — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-acosta-2003": {
       "obtainability": "purchasable",
@@ -766,7 +1056,12 @@
         "isbn": "9781588341471"
       },
       "price": "ISBN 9781588341471, Smithsonian Books — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-penalosa-2009": {
       "obtainability": "purchasable",
@@ -779,7 +1074,12 @@
         "isbn": "9781886502802"
       },
       "price": "ISBN 9781886502802, Bembe Books — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-mauleon-1993": {
       "obtainability": "purchasable",
@@ -792,7 +1092,12 @@
         "isbn": "0961470194"
       },
       "price": "ISBN 0961470194, Sher Music — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-uribe-1996": {
       "obtainability": "purchasable",
@@ -805,7 +1110,12 @@
         "isbn": "9781576236192"
       },
       "price": "ISBN 9781576236192, Alfred Publishing — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-washburne-1997": {
       "obtainability": "library-only",
@@ -818,7 +1128,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-lomax-1950": {
       "obtainability": "borrowable",
@@ -831,7 +1146,12 @@
         "isbn": "9780520024021"
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-allen-veal-2013": {
       "obtainability": "purchasable",
@@ -844,7 +1164,12 @@
         "isbn": "9780822355915"
       },
       "price": "ISBN 9780822355915, Duke University Press — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-veal-2000": {
       "obtainability": "purchasable",
@@ -857,7 +1182,12 @@
         "isbn": "9780585366739"
       },
       "price": "ISBN 9780585366739, Temple University Press — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-tenzer-2000": {
       "obtainability": "borrowable",
@@ -870,7 +1200,12 @@
         "isbn": "9780226792811"
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-vitale-1990": {
       "obtainability": "open-access",
@@ -883,7 +1218,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": "v_4_2_Kotekan_the_technique_of_interlocking_parts_in_Balinese_music_Vitale.pdf"
+      "archiveFile": "FR - Vitale 1990.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-09-30",
+        "detail": "owner’s copy, title page read: \"Kotekan: the technique of interlocking parts in Balinese music\""
+      }
     },
     "fr-sumarsam-1995": {
       "obtainability": "borrowable",
@@ -896,7 +1236,12 @@
         "isbn": "9780226780108"
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-powers-1980": {
       "obtainability": "purchasable",
@@ -909,7 +1254,12 @@
         "isbn": null
       },
       "price": "Grove Music Online, Oxford University Press — individual subscription; price not established from here (oxfordmusiconline.com refuses automation with 403); also licensed by many public libraries",
-      "archiveFile": "Powers first section of India Subcontinent Of.pdf"
+      "archiveFile": "FR - Powers 1980.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-09-30",
+        "detail": "owner’s copy, title page read: \"India, Theory and practice of classical music: Rhythm and tāla\"; the article head and the cultural-context section are kept beside it as FR - Powers 1980 - part 2.pdf and - part 3.pdf"
+      }
     },
     "fr-clayton-2000": {
       "obtainability": "borrowable",
@@ -922,7 +1272,12 @@
         "isbn": "9780198166863"
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-nelson-2008": {
       "obtainability": "purchasable",
@@ -935,7 +1290,12 @@
         "isbn": "9780819568717"
       },
       "price": "ISBN 9780819568717, Wesleyan University Press — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-kippen-1988": {
       "obtainability": "borrowable",
@@ -948,20 +1308,30 @@
         "isbn": "9780521335294"
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-silverman-2007": {
       "obtainability": "open-access",
       "evidence": "Crossref confirms the article in Muzikologija 7, 2007, matching author and year. Muzikologija is open access, so the text is reachable; it was not opened in this pass and the entry is left unverified rather than claimed.",
-      "checked": "2026-09-20",
-      "description": "unverified",
+      "checked": "2026-10-02",
+      "description": "verified",
       "note": "",
       "identifier": {
         "doi": "10.2298/muz0707069s",
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "FR - Silverman 2007.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-10-02",
+        "detail": "owner, browser session 2026-10-02; title page read: \"Bulgarian Wedding Music between Folk and Chalga: Politics, Markets, and Current Directions\"; the file is the whole of Muzikologija No. 7 (404 pages), downloaded freely from https://muzikologija-musicology.com/index.php/MM/issue/view/No.7 because the DOI did not resolve; the article starts at PDF page 71, journal page 69"
+      }
     },
     "fr-brailoiu-1951": {
       "obtainability": "purchasable",
@@ -974,7 +1344,12 @@
         "isbn": null
       },
       "price": "USD 19.50/month or USD 199/year (JPASS, JSTOR personal access; about.jstor.org/jpass read 2026-09-22)",
-      "archiveFile": "Braloiu-LerythmeAksak-1951.pdf"
+      "archiveFile": "FR - Brailoiu 1951.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-09-30",
+        "detail": "owner’s copy, title page read: \"Le rythme Aksak\""
+      }
     },
     "fr-rice-1994": {
       "obtainability": "purchasable",
@@ -987,33 +1362,48 @@
         "isbn": "9780226711225"
       },
       "price": "ISBN 9780226711225, University of Chicago Press — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-goldberg-2015": {
       "obtainability": "open-access",
       "evidence": "Crossref confirms \"Timing Variations in Two Balkan Percussion Performances\", Empirical Musicology Review 10(4), pp. 305–328, matching the entry; Crossref stamps the record 2016, the issue is 10(4) 2015, which is an online-date difference rather than a discrepancy. Open access, but emusicology.org serves an Anubis challenge to automation, so the text was not read here.",
-      "checked": "2026-09-20",
-      "description": "unverified",
+      "checked": "2026-10-02",
+      "description": "verified",
       "note": "",
       "identifier": {
         "doi": "10.18061/emr.v10i4.4884",
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "FR - Goldberg 2015.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-10-02",
+        "detail": "owner, browser session 2026-10-02; title page read: \"Timing Variations in Two Balkan Percussion Performances\"; Empirical Musicology Review 10(4), 2015. The DOI route is behind an Anubis challenge; the owner downloaded it from Academia.edu (account needed): https://www.academia.edu/21699680"
+      }
     },
     "fr-holzapfel-2015": {
       "obtainability": "open-access",
       "evidence": "Crossref has no work titled \"Metrical Structure in Turkish Makam Music\" by any author; a title query returns only unrelated Turkish-makam papers. The nearest real Holzapfel work is \"Relation Between Surface Rhythm and Rhythmic Modes in Turkish Makam Music\", Journal of New Music Research 44(1), DOI 10.1080/09298215.2014.939661.",
-      "checked": "2026-09-20",
+      "checked": "2026-10-02",
       "description": "mismatch",
-      "note": "The cited title corresponds to no published work. This is the same phantom title as ref [28], whose DiVA PDF was read directly and is Srinivasamurthy, Holzapfel & Serra (2014), \"In Search of Automatic Rhythm Analysis Methods for Turkish and Indian Art Music\". The same incorrect citation therefore appears twice in this bibliography, once in each list, which is an argument for M005 merging them: two lists let one error be maintained in parallel.",
+      "note": "The cited title corresponds to no published work. This is the same phantom title as ref [28], whose DiVA PDF was read directly and is Srinivasamurthy, Holzapfel & Serra (2014), \"In Search of Automatic Rhythm Analysis Methods for Turkish and Indian Art Music\". The same incorrect citation therefore appears twice in this bibliography, once in each list, which is an argument for M005 merging them: two lists let one error be maintained in parallel. Owner, 2026-10-02: the intended work is taken to be Holzapfel, A. & Bozkurt, B. (2012), \"Metrical Strength and Contradiction in Turkish Makam Music\", Proceedings of the 2nd CompMusic Workshop, 79–84 — the work behind ref-29’s link. It supports the one place this entry is cited, theory-balkan’s \"(the related Turkish usul system)\". M004 corrects the entry; M005 merges the duplicate.",
       "identifier": {
         "doi": null,
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "FR - Holzapfel 2015.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-10-02",
+        "detail": "a copy of 29 - Holzapfel.pdf (DiVA postprint), by the owner’s reading that this entry and ref-29 cite the same work; title page read: \"Metrical Strength and Contradiction in Turkish Makam Music\""
+      }
     },
     "fr-reich-2002": {
       "obtainability": "purchasable",
@@ -1026,7 +1416,12 @@
         "isbn": "9780195111712"
       },
       "price": "ISBN 9780195111712, Oxford University Press — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-cohn-1992": {
       "obtainability": "browser-only",
@@ -1039,7 +1434,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": "cohnreich1992.pdf"
+      "archiveFile": "FR - Cohn 1992.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-09-30",
+        "detail": "owner’s copy, title page read: \"Transpositional Combination of Beat-Class Sets in Steve Reich’s Phase-Shifting Music\""
+      }
     },
     "fr-potter-2000": {
       "obtainability": "borrowable",
@@ -1052,7 +1452,12 @@
         "isbn": "9780521482509"
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-gann-1995": {
       "obtainability": "borrowable",
@@ -1065,20 +1470,30 @@
         "isbn": "9780521465342"
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-scherzinger-2010": {
       "obtainability": "browser-only",
       "evidence": "No Crossref record; the nearest hit was an unrelated review. This is ICTM proceedings, commonly unindexed. The same work is cited as ref [35], whose URL on martinscherzinger.org did not respond to automation at all — so both lists point at one work that neither route could reach from here.",
-      "checked": "2026-09-20",
-      "description": "unverified",
-      "note": "",
+      "checked": "2026-10-02",
+      "description": "mismatch",
+      "note": "Originally published in \"Clash! Generationen – Kulturen – Identitäten in der Gegenwartsmusik\", edited by Jörn Peter Hiekel (Mainz: Schott, 2018), 144–63 (owner, 2026-10-02). The entry gives 2010 and the Proceedings of the ICTM. The same work is ref-35. M004 corrects the entry; M005 merges the two.",
       "identifier": {
         "doi": null,
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "FR - Scherzinger 2010.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-10-02",
+        "detail": "owner, browser session 2026-10-02; title page read: \"Steve Reich’s “Piano Phase” in Global Perspective: Myths & Realities\"; the same work as ref-35, and the same file"
+      }
     },
     "fr-harrison-2025": {
       "obtainability": "purchasable",
@@ -1091,20 +1506,30 @@
         "isbn": null
       },
       "price": "ISBN 9781032509105, Routledge — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-linn-attack-2020": {
       "obtainability": "open-access",
       "evidence": "An Attack Magazine interview, freely readable on the web, but the entry records no URL and no identifier exists for a magazine interview. This is VR08 in its purest form: the work is free and findable, and the bibliography gives a reader no route to it. A URL should be added by M005.",
-      "checked": "2026-09-20",
-      "description": "unverified",
-      "note": "",
+      "checked": "2026-10-02",
+      "description": "mismatch",
+      "note": "The interview is \"Roger Linn on Swing, Groove & the Magic of the MPC’s Timing\", Attack Magazine, credited to Greg Scarth & Roger Linn and dated 2nd July 2013 on its own page (read 2026-10-02), at https://attackmagazine.com/features/interview/roger-linn-swing-groove-magic-mpc-timing/ (three web pages). The entry dates it 2020 and records no URL. M004 corrects the year and adds the URL.",
       "identifier": {
         "doi": null,
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "FR - Linn Attack 2020.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-10-02",
+        "detail": "the three web pages printed to PDF with headless Chrome and joined (60 pages), with the owner’s approval; title read on page 1: \"Roger Linn on Swing, Groove & the Magic of the MPC’s Timing\""
+      }
     },
     "fr-butler-2006": {
       "obtainability": "borrowable",
@@ -1117,7 +1542,12 @@
         "isbn": "9780253346629"
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-danielsen-2010": {
       "obtainability": "purchasable",
@@ -1130,20 +1560,30 @@
         "isbn": "9781317091394"
       },
       "price": "ISBN 9781317091394, Ashgate / Routledge — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-collins-2001": {
       "obtainability": "browser-only",
       "evidence": "No Crossref record for \"Algorithmic Composition Methods for Breakbeat Science\"; the nearest hit was a different 2009 Collins article in Contemporary Music Review, which is not it. Conference proceedings of this kind are frequently unindexed, and the author distributes his papers from his own site, so a browser would settle it.",
-      "checked": "2026-09-20",
-      "description": "unverified",
+      "checked": "2026-10-02",
+      "description": "verified",
       "note": "",
       "identifier": {
         "doi": null,
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "FR - Collins 2001.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-10-02",
+        "detail": "owner, browser session 2026-10-02; title page read: \"Algorithmic Composition Methods for Breakbeat Science\"; Nick Collins; the foreword says it was first published in the proceedings of the Music Without Walls conference. From the author’s site: https://composerprogrammer.com/research/acmethodsforbbsci.pdf"
+      }
     },
     "fr-reynolds-1998": {
       "obtainability": "purchasable",
@@ -1156,7 +1596,12 @@
         "isbn": "9780330350563"
       },
       "price": "ISBN 9780330350563, Picador — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-crook-2009": {
       "obtainability": "purchasable",
@@ -1169,7 +1614,12 @@
         "isbn": "9780415960656"
       },
       "price": "ISBN 9780415960656, Routledge — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-sandroni-2001": {
       "obtainability": "purchasable",
@@ -1182,7 +1632,12 @@
         "isbn": "9788571106062"
       },
       "price": "ISBN 9788571106062, Jorge Zahar Editor — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-gerischer-2006": {
       "obtainability": "library-only",
@@ -1195,7 +1650,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-naveda-2011": {
       "obtainability": "library-only",
@@ -1208,7 +1668,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-fryer-2000": {
       "obtainability": "borrowable",
@@ -1221,7 +1686,12 @@
         "isbn": "9780745303833"
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-born-hesmondhalgh-2000": {
       "obtainability": "purchasable",
@@ -1234,7 +1704,12 @@
         "isbn": "9780520220843"
       },
       "price": "ISBN 9780520220843, University of California Press — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-danielsen-2006": {
       "obtainability": "borrowable",
@@ -1247,7 +1722,12 @@
         "isbn": "9780819568779"
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-stewart-2000": {
       "obtainability": "library-only",
@@ -1260,7 +1740,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-berliner-1994": {
       "obtainability": "purchasable",
@@ -1273,7 +1758,12 @@
         "isbn": "9780226043814"
       },
       "price": "ISBN 9780226043814, University of Chicago Press — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-monson-1996": {
       "obtainability": "borrowable",
@@ -1286,7 +1776,12 @@
         "isbn": "9780226534787"
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-riley-1994": {
       "obtainability": "purchasable",
@@ -1299,7 +1794,12 @@
         "isbn": "9780898988901"
       },
       "price": "ISBN 9780898988901, Manhattan Music — price not established from here; obtain from the publisher or any bookseller",
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-keil-1987": {
       "obtainability": "library-only",
@@ -1312,7 +1812,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-friberg-2002": {
       "obtainability": "library-only",
@@ -1325,7 +1830,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-benadon-2006": {
       "obtainability": "library-only",
@@ -1338,7 +1848,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-progler-1995": {
       "obtainability": "library-only",
@@ -1351,7 +1866,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-iyer-2002": {
       "obtainability": "library-only",
@@ -1364,7 +1884,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": null,
+      "retrieval": {
+        "status": "not-attempted",
+        "checked": null,
+        "detail": null
+      }
     },
     "fr-hennig-2011": {
       "obtainability": "open-access",
@@ -1377,7 +1902,12 @@
         "isbn": null
       },
       "price": null,
-      "archiveFile": null
+      "archiveFile": "FR - Hennig 2011.pdf",
+      "retrieval": {
+        "status": "archived",
+        "checked": "2026-10-01",
+        "detail": "fetched from journals.plos.org (rendered html), 862423 bytes"
+      }
     }
   }
 }
