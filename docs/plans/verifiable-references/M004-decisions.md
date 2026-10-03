@@ -112,3 +112,13 @@ postprint's own title page alike.
   parsed entry per manifest record, the count the completeness test already
   ties to the anchors. Obviously right: the floor was a literal standing in
   for "both files were read", and this milestone exists to shrink the count.
+
+## 2026-10-03 — judgment calls during M004/S02 task 3
+
+- **Three archived files were renamed when their entries' authors were
+  corrected.** The convention names a numbered file by its lead author, so
+  `28 - Holzapfel.pdf`, `41 - Rhythmic Ambiguity in Aphex Twin.pdf` and
+  `42 - Schloss.pdf` became `28 - Srinivasamurthy.pdf`,
+  `41 - Papavassiliou.pdf` and `42 - Santos Neto.pdf` (`mv -n`), and the
+  manifest followed. Obviously right: the convention test turned red exactly
+  as designed, and the old names credited the wrong authors.

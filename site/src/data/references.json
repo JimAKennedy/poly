@@ -4,9 +4,9 @@
     "ref-1": {
       "obtainability": "open-access",
       "evidence": "arxiv.org/pdf/0705.4085.pdf returns 200 application/pdf, 483191 bytes. The PDF was read directly; its own margin stamp reads arXiv:0705.4085v1 [cs.CG] 28 May 2007.",
-      "checked": "2026-09-20",
-      "description": "mismatch",
-      "note": "The URL serves \"The Distance Geometry of Music\" (Demaine, Gomez-Martin, Meijer, Rappaport, Taslakian, Toussaint, Winograd and Wood, 2007), not the 2005 BRIDGES paper \"The Euclidean Algorithm Generates Traditional Musical Rhythms\" that the entry names. Toussaint is one of eight authors rather than the sole author. Both works are real and both discuss Euclidean rhythms, so the link is useful, but the citation describes a different work from the one it points at. This is the guide’s foundational Euclidean citation.",
+      "checked": "2026-10-03",
+      "description": "verified",
+      "note": "The URL serves \"The Distance Geometry of Music\" (Demaine, Gomez-Martin, Meijer, Rappaport, Taslakian, Toussaint, Winograd and Wood, 2007), not the 2005 BRIDGES paper \"The Euclidean Algorithm Generates Traditional Musical Rhythms\" that the entry names. Toussaint is one of eight authors rather than the sole author. Both works are real and both discuss Euclidean rhythms, so the link is useful, but the citation describes a different work from the one it points at. This is the guide’s foundational Euclidean citation. Corrected 2026-10-03 (verifiable-references M004/S02): theory bundle corrected to match the appendix (first-release M003).",
       "identifier": {
         "doi": null,
         "isbn": null
@@ -130,9 +130,9 @@
     "ref-20": {
       "obtainability": "open-access",
       "evidence": "gamelan.org.nz returns 200 application/pdf, 69196 bytes; the PDF was read directly.",
-      "checked": "2026-09-20",
-      "description": "mismatch",
-      "note": "The document’s own heading is \"NOTATION FOR GAMELAN BALI - put together by Yudane\". The entry titles it \"Introduction to Balinese Gamelan\", which is not the document’s title. The author attribution is right and the subject is adjacent, but the title as cited does not exist.",
+      "checked": "2026-10-03",
+      "description": "verified",
+      "note": "The document’s own heading is \"NOTATION FOR GAMELAN BALI - put together by Yudane\". The entry titles it \"Introduction to Balinese Gamelan\", which is not the document’s title. The author attribution is right and the subject is adjacent, but the title as cited does not exist. Corrected 2026-10-03 (verifiable-references M004/S02): entry corrected to Yudane, \"Notation for Gamelan Bali\".",
       "identifier": {
         "doi": null,
         "isbn": null
@@ -166,9 +166,9 @@
     "ref-23": {
       "obtainability": "browser-only",
       "evidence": "journal.iftawm.org resets every automated connection (curl exit 35, 0 bytes) — the whole host, not this path. The PDF could not be read from here, so the suspicion below is recorded as a suspicion and not as a verdict.",
-      "checked": "2026-10-02",
-      "description": "mismatch",
-      "note": "The article is Tomáš Reindl, \"Indian Rhythmic Systems as Sources of Inspiration for Western Composers\", Analytical Approaches to World Musics 11(2), December 2023 (owner, 2026-10-02; title page read). The entry gives the title as \"Indian Rhythmic Systems in Comparative Perspective\", the author’s initial as M., and the journal as the Journal of the International Folk Art and World Music Society. M004 corrects the entry.",
+      "checked": "2026-10-03",
+      "description": "verified",
+      "note": "The article is Tomáš Reindl, \"Indian Rhythmic Systems as Sources of Inspiration for Western Composers\", Analytical Approaches to World Musics 11(2), December 2023 (owner, 2026-10-02; title page read). The entry gives the title as \"Indian Rhythmic Systems in Comparative Perspective\", the author’s initial as M., and the journal as the Journal of the International Folk Art and World Music Society. M004 corrects the entry. Corrected 2026-10-03 (verifiable-references M004/S02): entry corrected to Reindl, T. (2023), Analytical Approaches to World Musics 11(2).",
       "identifier": {
         "doi": null,
         "isbn": null
@@ -202,27 +202,27 @@
     "ref-28": {
       "obtainability": "open-access",
       "evidence": "diva-portal.org returns 200 application/pdf, 613261 bytes; the PDF was read directly.",
-      "checked": "2026-09-20",
-      "description": "mismatch",
-      "note": "The document is Srinivasamurthy, A., Holzapfel, A. & Serra, X. (2014), \"In Search of Automatic Rhythm Analysis Methods for Turkish and Indian Art Music\", a postprint of a Journal for New Music Research paper. The entry cites it as Holzapfel, A., \"Metrical Structure in Turkish Makam Music\" — a different title, and Holzapfel is the second of three authors rather than the sole author.",
+      "checked": "2026-10-03",
+      "description": "verified",
+      "note": "The document is Srinivasamurthy, A., Holzapfel, A. & Serra, X. (2014), \"In Search of Automatic Rhythm Analysis Methods for Turkish and Indian Art Music\", a postprint of a Journal for New Music Research paper. The entry cites it as Holzapfel, A., \"Metrical Structure in Turkish Makam Music\" — a different title, and Holzapfel is the second of three authors rather than the sole author. Corrected 2026-10-03 (verifiable-references M004/S02): entry corrected to Srinivasamurthy, Holzapfel & Serra (2014), JNMR 43(1), 94–114.",
       "identifier": {
         "doi": null,
         "isbn": null
       },
       "price": null,
-      "archiveFile": "28 - Holzapfel.pdf",
+      "archiveFile": "28 - Srinivasamurthy.pdf",
       "retrieval": {
         "status": "archived",
         "checked": "2026-10-01",
-        "detail": "fetched from www.diva-portal.org (pdf), 613261 bytes; title page read: this is the work the link serves, not the work the entry names (see the M002 mismatch note); kept archived by the owner’s decision of 2026-10-01"
+        "detail": "fetched from www.diva-portal.org (pdf), 613261 bytes; title page read: this is the work the link serves, not the work the entry names (see the M002 mismatch note); kept archived by the owner’s decision of 2026-10-01; renamed \"28 - Holzapfel.pdf\" to \"28 - Srinivasamurthy.pdf\" on 2026-10-03, when the entry’s author was corrected"
       }
     },
     "ref-29": {
       "obtainability": "open-access",
       "evidence": "diva-portal.org returns 200 application/pdf, 537565 bytes; the PDF was read directly.",
-      "checked": "2026-09-20",
-      "description": "mismatch",
-      "note": "The document is Holzapfel, A. & Bozkurt, B. (2012), \"Metrical Strength and Contradiction in Turkish Makam Music\", a postprint from the 2nd CompMusic Workshop. The entry cites it as Holzapfel alone, titled \"Metrical Strength and Syncopation Distribution in Turkish Usul\" — \"Contradiction\" is not \"Syncopation Distribution\" and \"Makam Music\" is not \"Usul\".",
+      "checked": "2026-10-03",
+      "description": "verified",
+      "note": "The document is Holzapfel, A. & Bozkurt, B. (2012), \"Metrical Strength and Contradiction in Turkish Makam Music\", a postprint from the 2nd CompMusic Workshop. The entry cites it as Holzapfel alone, titled \"Metrical Strength and Syncopation Distribution in Turkish Usul\" — \"Contradiction\" is not \"Syncopation Distribution\" and \"Makam Music\" is not \"Usul\". Corrected 2026-10-03 (verifiable-references M004/S02): entry corrected to Holzapfel & Bozkurt (2012), Proceedings of the 2nd CompMusic Workshop, 79–84; fr-holzapfel-2015 retired into it.",
       "identifier": {
         "doi": null,
         "isbn": null
@@ -256,9 +256,9 @@
     "ref-31": {
       "obtainability": "open-access",
       "evidence": "tnp.mtsnys.org returns 200 text/html, 57397 bytes; the page h1 was read directly.",
-      "checked": "2026-09-20",
-      "description": "mismatch",
-      "note": "The article is \"Rhythmic-Temporal Disruptions and the Feeling of Ṭarab\" by Issa Aji. The entry titles it \"Arab Rhythmic Cycles (Iqa’at)\", which is not a rewording of the published title but a different one; the author is right.",
+      "checked": "2026-10-03",
+      "description": "verified",
+      "note": "The article is \"Rhythmic-Temporal Disruptions and the Feeling of Ṭarab\" by Issa Aji. The entry titles it \"Arab Rhythmic Cycles (Iqa’at)\", which is not a rewording of the published title but a different one; the author is right. Corrected 2026-10-03 (verifiable-references M004/S02): entry corrected to Aji, \"Rhythmic-Temporal Disruptions and the Feeling of Ṭarab\", Theory and Practice 49–50.",
       "identifier": {
         "doi": null,
         "isbn": null
@@ -274,9 +274,9 @@
     "ref-34": {
       "obtainability": "open-access",
       "evidence": "ime.unicamp.br returns 200 application/pdf, 5671462 bytes; the PDF was read directly.",
-      "checked": "2026-09-20",
-      "description": "mismatch",
-      "note": "The document is \"Steve Reich: Music as a Gradual Process Part II\" by K. Robert Schwarz, Perspectives of New Music 20(1/2), Autumn 1981 – Summer 1982, pp. 225–286, JSTOR stable URL 942414. The entry attributes it to Reich, S. It is an article ABOUT Reich’s compositional process, not Reich’s own essay — the same failure as ref [6] before M001 corrected it, where a commentary was cited as the work it comments on.",
+      "checked": "2026-10-03",
+      "description": "verified",
+      "note": "The document is \"Steve Reich: Music as a Gradual Process Part II\" by K. Robert Schwarz, Perspectives of New Music 20(1/2), Autumn 1981 – Summer 1982, pp. 225–286, JSTOR stable URL 942414. The entry attributes it to Reich, S. It is an article ABOUT Reich’s compositional process, not Reich’s own essay — the same failure as ref [6] before M001 corrected it, where a commentary was cited as the work it comments on. Corrected 2026-10-03 (verifiable-references M004/S02): theory bundle corrected to match the appendix (first-release M003).",
       "identifier": {
         "doi": null,
         "isbn": null
@@ -346,37 +346,37 @@
     "ref-41": {
       "obtainability": "browser-only",
       "evidence": "erudit.org returns HTTP 200 for the .pdf URL but serves 7806 bytes of HTML titled \"Making sure you’re not a bot!\" — an Anubis proof-of-work challenge, not the article. This is the second confirmed instance of a 200 response carrying no document, and it is the case M006’s liveness check must not score as healthy.",
-      "checked": "2026-10-02",
-      "description": "mismatch",
-      "note": "The article is Anthony Papavassiliou, \"Une caractéristique stylistique de l’Intelligent Dance Music : ambiguïté et rupture rythmiques chez Aphex Twin\" / \"Stylistic Features of Intelligent Dance Music: Ambiguity and Rupture Phenomena in Aphex Twin’s Rhythms\", Les Cahiers de la Société québécoise de recherche en musique 16(1–2), 2015 (title page read). The entry titles it \"Rhythmic Ambiguity in Aphex Twin\" and names Circuit: Musiques contemporaines. M004 corrects the entry.",
+      "checked": "2026-10-03",
+      "description": "verified",
+      "note": "The article is Anthony Papavassiliou, \"Une caractéristique stylistique de l’Intelligent Dance Music : ambiguïté et rupture rythmiques chez Aphex Twin\" / \"Stylistic Features of Intelligent Dance Music: Ambiguity and Rupture Phenomena in Aphex Twin’s Rhythms\", Les Cahiers de la Société québécoise de recherche en musique 16(1–2), 2015 (title page read). The entry titles it \"Rhythmic Ambiguity in Aphex Twin\" and names Circuit: Musiques contemporaines. M004 corrects the entry. Corrected 2026-10-03 (verifiable-references M004/S02): entry corrected to Papavassiliou (2015), Les Cahiers de la SQRM 16(1–2).",
       "identifier": {
         "doi": null,
         "isbn": null
       },
       "price": null,
-      "archiveFile": "41 - Rhythmic Ambiguity in Aphex Twin.pdf",
+      "archiveFile": "41 - Papavassiliou.pdf",
       "retrieval": {
         "status": "archived",
         "checked": "2026-10-02",
-        "detail": "owner, browser session 2026-10-02; title page read: \"Stylistic Features of Intelligent Dance Music: Ambiguity and Rupture Phenomena in Aphex Twin’s Rhythms\""
+        "detail": "owner, browser session 2026-10-02; title page read: \"Stylistic Features of Intelligent Dance Music: Ambiguity and Rupture Phenomena in Aphex Twin’s Rhythms\"; renamed \"41 - Rhythmic Ambiguity in Aphex Twin.pdf\" to \"41 - Papavassiliou.pdf\" on 2026-10-03, when the entry’s author was corrected"
       }
     },
     "ref-42": {
       "obtainability": "open-access",
       "evidence": "web.uvic.ca returns 200 application/pdf, 318637 bytes; the PDF was read directly.",
-      "checked": "2026-09-20",
-      "description": "mismatch",
-      "note": "The document is \"Ginga: a Brazilian way to groove\" by Jovino Santos Neto. The entry cites it as Schloss, A., \"The Brazilian Groove: Ginga and Rhythmic Feel\" — both the author and the title are wrong. Schloss is the University of Victoria faculty member whose course directory hosts the file; the entry credits the host of the web directory rather than the author of the paper.",
+      "checked": "2026-10-03",
+      "description": "verified",
+      "note": "The document is \"Ginga: a Brazilian way to groove\" by Jovino Santos Neto. The entry cites it as Schloss, A., \"The Brazilian Groove: Ginga and Rhythmic Feel\" — both the author and the title are wrong. Schloss is the University of Victoria faculty member whose course directory hosts the file; the entry credits the host of the web directory rather than the author of the paper. Corrected 2026-10-03 (verifiable-references M004/S02): entry corrected to Santos Neto, J., \"Ginga: a Brazilian way to groove\".",
       "identifier": {
         "doi": null,
         "isbn": null
       },
       "price": null,
-      "archiveFile": "42 - Schloss.pdf",
+      "archiveFile": "42 - Santos Neto.pdf",
       "retrieval": {
         "status": "archived",
         "checked": "2026-10-01",
-        "detail": "fetched from web.uvic.ca (pdf), 318637 bytes; title page read: this is the work the link serves, not the work the entry names (see the M002 mismatch note); kept archived by the owner’s decision of 2026-10-01"
+        "detail": "fetched from web.uvic.ca (pdf), 318637 bytes; title page read: this is the work the link serves, not the work the entry names (see the M002 mismatch note); kept archived by the owner’s decision of 2026-10-01; renamed \"42 - Schloss.pdf\" to \"42 - Santos Neto.pdf\" on 2026-10-03, when the entry’s author was corrected"
       }
     },
     "ref-44": {
@@ -400,9 +400,9 @@
     "ref-46": {
       "obtainability": "browser-only",
       "evidence": "semanticscholar.org answers 202 with 0 bytes — a challenge, not a page. Bjorklund’s paper underpins the engine’s Euclidean generator, so this entry is worth settling in a browser rather than leaving at a landing page.",
-      "checked": "2026-10-02",
-      "description": "mismatch",
-      "note": "The tech note is SNS-NOTE-CNTRL-99 (its own title page, and the reference list of Demaine et al. 2007). The entry gives SNS-NOTE-CNTRL-100, which is Bjorklund’s companion note \"A metric for measuring the evenness of timing system rep-rate patterns\". Title and author match. M004 corrects the number.",
+      "checked": "2026-10-03",
+      "description": "verified",
+      "note": "The tech note is SNS-NOTE-CNTRL-99 (its own title page, and the reference list of Demaine et al. 2007). The entry gives SNS-NOTE-CNTRL-100, which is Bjorklund’s companion note \"A metric for measuring the evenness of timing system rep-rate patterns\". Title and author match. M004 corrects the number. Corrected 2026-10-03 (verifiable-references M004/S02): entry corrected to SNS-NOTE-CNTRL-99.",
       "identifier": {
         "doi": null,
         "isbn": null
@@ -886,9 +886,9 @@
     "fr-powers-1980": {
       "obtainability": "purchasable",
       "evidence": "doi.org/10.1093/gmo/9781561592630.article.43272 redirects into an Oxford University Press login (oup2-idp.sams-sigma.com) and loops there for automation, so the article is behind a subscription wall rather than a bot block. The owner opened it on 2026-09-22 and saved the overview page, whose footer reads \"Subscriber: Mr James Kennedy\", and which lists the article's sections; the one chapter 6 leans on is \"India, theory and practice of classical music: Rhythm and tāla\". The saved pages were read directly: title \"India, subcontinent of\", authors as in the note, DOI as above, \"Published in print: 20 January 2001\".",
-      "checked": "2026-09-22",
-      "description": "mismatch",
-      "note": "The entry cited Powers, H. (1980), \"India, subcontinent of\", The New Grove Dictionary of Music and Musicians vol. 9. The version a reader can reach is the 2001 second-edition rewrite in Grove Music Online, DOI 10.1093/gmo/9781561592630.article.43272, credited to Regula Qureshi, Harold S. Powers, Jonathan Katz, Richard Widdess and sixteen further contributors, print date 20 January 2001. Same title, different edition and authorship. Owner's decision 2026-09-22: the entry now cites the 2001 article; the anchor keeps its name because anchors are never reassigned and a theory-audit guard pins it.",
+      "checked": "2026-10-03",
+      "description": "verified",
+      "note": "The entry cited Powers, H. (1980), \"India, subcontinent of\", The New Grove Dictionary of Music and Musicians vol. 9. The version a reader can reach is the 2001 second-edition rewrite in Grove Music Online, DOI 10.1093/gmo/9781561592630.article.43272, credited to Regula Qureshi, Harold S. Powers, Jonathan Katz, Richard Widdess and sixteen further contributors, print date 20 January 2001. Same title, different edition and authorship. Owner's decision 2026-09-22: the entry now cites the 2001 article; the anchor keeps its name because anchors are never reassigned and a theory-audit guard pins it. Corrected 2026-10-03 (verifiable-references M004/S02): the entry was corrected to the 2001 Grove article by first-release M003.",
       "identifier": {
         "doi": "10.1093/gmo/9781561592630.article.43272",
         "isbn": null
@@ -1027,24 +1027,6 @@
         "detail": "owner, browser session 2026-10-02; title page read: \"Timing Variations in Two Balkan Percussion Performances\"; Empirical Musicology Review 10(4), 2015. The DOI route is behind an Anubis challenge; the owner downloaded it from Academia.edu (account needed): https://www.academia.edu/21699680"
       }
     },
-    "fr-holzapfel-2015": {
-      "obtainability": "open-access",
-      "evidence": "Crossref has no work titled \"Metrical Structure in Turkish Makam Music\" by any author; a title query returns only unrelated Turkish-makam papers. The nearest real Holzapfel work is \"Relation Between Surface Rhythm and Rhythmic Modes in Turkish Makam Music\", Journal of New Music Research 44(1), DOI 10.1080/09298215.2014.939661.",
-      "checked": "2026-10-02",
-      "description": "mismatch",
-      "note": "The cited title corresponds to no published work. This is the same phantom title as ref [28], whose DiVA PDF was read directly and is Srinivasamurthy, Holzapfel & Serra (2014), \"In Search of Automatic Rhythm Analysis Methods for Turkish and Indian Art Music\". The same incorrect citation therefore appears twice in this bibliography, once in each list, which is an argument for M005 merging them: two lists let one error be maintained in parallel. Owner, 2026-10-02: the intended work is taken to be Holzapfel, A. & Bozkurt, B. (2012), \"Metrical Strength and Contradiction in Turkish Makam Music\", Proceedings of the 2nd CompMusic Workshop, 79–84 — the work behind ref-29’s link. It supports the one place this entry is cited, theory-balkan’s \"(the related Turkish usul system)\". M004 corrects the entry; M005 merges the duplicate.",
-      "identifier": {
-        "doi": null,
-        "isbn": null
-      },
-      "price": null,
-      "archiveFile": "FR - Holzapfel 2015.pdf",
-      "retrieval": {
-        "status": "archived",
-        "checked": "2026-10-02",
-        "detail": "a copy of 29 - Holzapfel.pdf (DiVA postprint), by the owner’s reading that this entry and ref-29 cite the same work; title page read: \"Metrical Strength and Contradiction in Turkish Makam Music\""
-      }
-    },
     "fr-reich-2002": {
       "obtainability": "purchasable",
       "evidence": "Open Library confirms \"Writings on Music, 1965–2000\" with a matching author and publisher; no free full text found. Not read.",
@@ -1120,9 +1102,9 @@
     "fr-scherzinger-2010": {
       "obtainability": "browser-only",
       "evidence": "No Crossref record; the nearest hit was an unrelated review. This is ICTM proceedings, commonly unindexed. The same work is cited as ref [35], whose URL on martinscherzinger.org did not respond to automation at all — so both lists point at one work that neither route could reach from here.",
-      "checked": "2026-10-02",
-      "description": "mismatch",
-      "note": "Originally published in \"Clash! Generationen – Kulturen – Identitäten in der Gegenwartsmusik\", edited by Jörn Peter Hiekel (Mainz: Schott, 2018), 144–63 (owner, 2026-10-02). The entry gives 2010 and the Proceedings of the ICTM. The same work is ref-35. M004 corrects the entry; M005 merges the two.",
+      "checked": "2026-10-03",
+      "description": "verified",
+      "note": "Originally published in \"Clash! Generationen – Kulturen – Identitäten in der Gegenwartsmusik\", edited by Jörn Peter Hiekel (Mainz: Schott, 2018), 144–63 (owner, 2026-10-02). The entry gives 2010 and the Proceedings of the ICTM. The same work is ref-35. M004 corrects the entry; M005 merges the two. Corrected 2026-10-03 (verifiable-references M004/S02): entry corrected to Scherzinger (2018) in Clash!, ed. Hiekel, Schott, 144–163; link text now \"Scherzinger 2018\".",
       "identifier": {
         "doi": null,
         "isbn": null
@@ -1156,9 +1138,9 @@
     "fr-linn-attack-2020": {
       "obtainability": "open-access",
       "evidence": "An Attack Magazine interview, freely readable on the web, but the entry records no URL and no identifier exists for a magazine interview. This is VR08 in its purest form: the work is free and findable, and the bibliography gives a reader no route to it. A URL should be added by M005.",
-      "checked": "2026-10-02",
-      "description": "mismatch",
-      "note": "The interview is \"Roger Linn on Swing, Groove & the Magic of the MPC’s Timing\", Attack Magazine, credited to Greg Scarth & Roger Linn and dated 2nd July 2013 on its own page (read 2026-10-02), at https://attackmagazine.com/features/interview/roger-linn-swing-groove-magic-mpc-timing/ (three web pages). The entry dates it 2020 and records no URL. M004 corrects the year and adds the URL.",
+      "checked": "2026-10-03",
+      "description": "verified",
+      "note": "The interview is \"Roger Linn on Swing, Groove & the Magic of the MPC’s Timing\", Attack Magazine, credited to Greg Scarth & Roger Linn and dated 2nd July 2013 on its own page (read 2026-10-02), at https://attackmagazine.com/features/interview/roger-linn-swing-groove-magic-mpc-timing/ (three web pages). The entry dates it 2020 and records no URL. M004 corrects the year and adds the URL. Corrected 2026-10-03 (verifiable-references M004/S02): entry corrected to Scarth & Linn (2013) with its URL; link text now \"Linn 2013\".",
       "identifier": {
         "doi": null,
         "isbn": null

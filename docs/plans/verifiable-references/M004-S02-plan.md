@@ -11,7 +11,7 @@ claim test in the shape S01 and `REF1-TOUSSAINT` use. Decisions are in
 
 - [x] 1. No video is cited
 - [x] 2. The non-scholarly entries are retired, and Agawu replaces ref-8
-- [ ] 3. Every mismatch is corrected to what its document is
+- [x] 3. Every mismatch is corrected to what its document is
 - [ ] 4. The manifest holds no mismatch and nothing to replace
 
 ## Definition of Done

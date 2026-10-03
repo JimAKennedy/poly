@@ -374,6 +374,102 @@ const CLAIMS = [
       /id="fr-agawu-1987"[^\n]*10\.2307\/763699/,
     ],
   },
+  // verifiable-references M004/S02 task 3: every manifest mismatch corrected
+  // to what its document is, read from its own title page (M002, M003) or
+  // Crossref. Each forbids the wrong form and requires the right one on the
+  // entry's own line, so the correction cannot drift onto a neighbour.
+  {
+    id: 'REF1-TOUSSAINT-THEORY',
+    file: 'theory-references.mdx',
+    rule: 'The theory bundle kept the arXiv link first-release M003 corrected in the appendix (REF1-TOUSSAINT)',
+    forbiddenRegex: [/0705\.4085/],
+    presentRegex: [/id="ref-1"[^\n]*bridgesmathart\.org\/2005\/bridges2005-47/],
+  },
+  {
+    id: 'REF34-SCHWARZ-THEORY',
+    file: 'theory-references.mdx',
+    rule: 'The theory bundle kept the Reich attribution first-release M003 corrected in the appendix (REF34-SCHWARZ)',
+    forbidden: ['Reich, S. "Music as a Gradual Process'],
+    presentRegex: [/id="ref-34"[^\n]*Schwarz, K\. R\./],
+  },
+  {
+    id: 'REF20-YUDANE',
+    file: 'theory-references.mdx',
+    rule: 'The PDF is "Notation for Gamelan Bali", put together by Yudane; kept at Tier B as a practitioner\'s own text',
+    forbidden: ['Introduction to Balinese Gamelan'],
+    presentRegex: [/id="ref-20"[^\n]*Notation for Gamelan Bali/],
+  },
+  {
+    id: 'REF23-REINDL',
+    file: 'theory-references.mdx',
+    rule: 'Tomas Reindl, Analytical Approaches to World Musics 11(2), December 2023 (owner, title page read)',
+    forbidden: ['Comparative Perspective'],
+    presentRegex: [
+      /id="ref-23"[^\n]*Sources of Inspiration for Western Composers/,
+      /id="ref-23"[^\n]*Analytical Approaches to World Musics/,
+    ],
+  },
+  {
+    id: 'REF28-SRINIVASAMURTHY',
+    file: 'theory-references.mdx',
+    rule: 'The DiVA postprint is Srinivasamurthy, Holzapfel & Serra (2014), JNMR 43(1), 94-114; the cited title belongs to no published work',
+    forbidden: ['Metrical Structure in Turkish Makam Music'],
+    presentRegex: [/id="ref-28"[^\n]*Srinivasamurthy/, /id="ref-28"[^\n]*10\.1080\/09298215\.2013\.879902/],
+  },
+  {
+    id: 'REF29-HOLZAPFEL-BOZKURT',
+    file: 'theory-references.mdx',
+    rule: 'The DiVA postprint is Holzapfel & Bozkurt (2012), Proceedings of the 2nd CompMusic Workshop, 79-84',
+    forbidden: ['Syncopation Distribution'],
+    presentRegex: [/id="ref-29"[^\n]*Metrical Strength and Contradiction in Turkish Makam Music/, /id="ref-29"[^\n]*Bozkurt/],
+  },
+  {
+    id: 'REF31-AJI',
+    file: 'theory-references.mdx',
+    rule: 'The page is Aji, "Rhythmic-Temporal Disruptions and the Feeling of Tarab", Theory and Practice 49-50',
+    forbidden: ['Arab Rhythmic Cycles'],
+    presentRegex: [/id="ref-31"[^\n]*Rhythmic-Temporal Disruptions/],
+  },
+  {
+    id: 'REF41-PAPAVASSILIOU',
+    file: 'theory-references.mdx',
+    rule: 'Papavassiliou (2015), Les Cahiers de la SQRM 16(1-2), not Circuit; title page read',
+    forbidden: ['Rhythmic Ambiguity in Aphex Twin'],
+    presentRegex: [
+      /id="ref-41"[^\n]*Papavassiliou/,
+      /id="ref-41"[^\n]*Cahiers de la Société québécoise de recherche en musique/,
+    ],
+  },
+  {
+    id: 'REF42-SANTOS-NETO',
+    file: 'theory-references.mdx',
+    rule: 'The article is by Jovino Santos Neto; Schloss hosts the course directory it sits in. Kept at Tier B as a practitioner\'s own text',
+    forbidden: ['Schloss, A.'],
+    presentRegex: [/id="ref-42"[^\n]*Santos Neto/],
+  },
+  {
+    id: 'REF46-CNTRL-99',
+    file: 'appendix-references.mdx',
+    rule: 'The tech note is SNS-NOTE-CNTRL-99 by its own title page and Demaine et al. (2007); CNTRL-100 is the companion note on evenness',
+    forbidden: ['CNTRL-100'],
+    presentRegex: [/id="ref-46"[^\n]*SNS-NOTE-CNTRL-99/],
+  },
+  ...['appendix-references.mdx', 'theory-references.mdx'].flatMap((file) => [
+    {
+      id: `SCHERZINGER-2018-${file.startsWith('appendix') ? 'APPENDIX' : 'THEORY'}`,
+      file,
+      rule: 'Published in Clash!, ed. Hiekel (Schott, 2018), 144-63 (owner, 2026-10-02); no ICTM proceedings, no 2010',
+      forbidden: ['Proceedings of the ICTM'],
+      presentRegex: [/id="fr-scherzinger-2010"[^\n]*Clash!/, /id="fr-scherzinger-2010"[^\n]*\(2018\)/],
+    },
+    {
+      id: `LINN-2013-${file.startsWith('appendix') ? 'APPENDIX' : 'THEORY'}`,
+      file,
+      rule: 'Attack Magazine dates the interview 2 July 2013 and credits Greg Scarth & Roger Linn (page read 2026-10-02)',
+      forbiddenRegex: [/Attack Magazine\* \(2020\)/],
+      presentRegex: [/id="fr-linn-attack-2020"[^\n]*\(2013\)/, /id="fr-linn-attack-2020"[^\n]*attackmagazine\.com/],
+    },
+  ]),
 ];
 
 registerClaimTests({ test, assert, claims: CLAIMS, loadSource });
@@ -513,6 +609,18 @@ test('no page cites a host the citation policy excludes', async () => {
     for (const { name, text } of pages) {
       if (text.includes(host)) hits.push(`${name}: ${host} (${reason})`);
     }
+  }
+  assert.deepEqual(hits, [], hits.join('\n'));
+});
+
+// M004/S02 task 3: link texts that carried a wrong year or a retired anchor.
+const FORBIDDEN_LINK_TEXT = ['[Scherzinger 2010]', '[Linn 2020]', '[Holzapfel 2015]'];
+
+test('no page cites a corrected source under its old name', async () => {
+  const pages = await contentPages();
+  const hits = [];
+  for (const t of FORBIDDEN_LINK_TEXT) {
+    for (const { name, text } of pages) if (text.includes(t)) hits.push(`${name}: ${t}`);
   }
   assert.deepEqual(hits, [], hits.join('\n'));
 });
