@@ -94,6 +94,11 @@ Every commit on the branch carries `Plan:` and `Slice:` lines.
 - `eaed47e` M003/S02 task 2 — the owner has worked the worklist — Slice M003/S02
 - `a53a7fb` M003/S02 task 3 — the results are recorded, and nothing open is left unaccounted for — Slice M003/S02, Rows VR10
 
+**Commits after the gate:**
+
+- `f0530c7` Ledger: amend M004 from what M003 measured, before M003 ships — Plan
+  only; an amendment to M004, at the owner's request, landing with M003.
+
 **Untraced commits:** none.
 
 ## What a reviewer should look at twice
@@ -127,6 +132,10 @@ Every commit on the branch carries `Plan:` and `Slice:` lines.
 - **Commit trailers sit in the paragraph above `Co-Authored-By`,** so
   `git interpret-trailers` sees only the co-author line. `git log --grep`
   — the join the workflow uses — finds them. M002 has the same shape.
+- **M004 was amended on this branch.** Its rows now land in the theory
+  bundle, VR13 covers non-scholarly sources of any tier, and S02 owes every
+  manifest mismatch and `to-replace` record. Review the M004 section of the
+  ledger alongside this report.
 - **Handed onward, not done here:** `to-replace` ×4 with the owner's leads
   (Agawu for `ref-8`; Reina, Nelson and Young for `ref-24`), the
   `ref-25` video suggestion as a policy question for VR12, and two
