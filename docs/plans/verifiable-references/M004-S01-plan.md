@@ -10,7 +10,7 @@ shipping appendix's introduction, and leaving entries are **retired**.
 
 ## Task status
 
-- [ ] 1. The policy is written once
+- [x] 1. The policy is written once
 - [ ] 2. The three Wikipedia entries are retired
 
 ## Definition of Done

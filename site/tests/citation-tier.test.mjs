@@ -332,6 +332,17 @@ const CLAIMS = [
     // being sourced, so this case can only ever fail on the present side.
     presentRegex: [/#fr-lomax-1950/],
   },
+  {
+    id: 'POLICY-WIKIPEDIA',
+    file: 'appendix-references.mdx',
+    rule:
+      'verifiable-references VR11, decided by the owner 2026-10-03: the guide ' +
+      'cites no Wikipedia article. Wikipedia is reviewable and often a fair ' +
+      'summary, but it summarises other sources, and a claim in this guide ' +
+      'names the source itself. Stated once, in the appendix introduction, ' +
+      'rather than argued per entry',
+    present: ['The guide does not cite Wikipedia'],
+  },
 ];
 
 registerClaimTests({ test, assert, claims: CLAIMS, loadSource });
