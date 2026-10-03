@@ -219,7 +219,7 @@ Dropbox research folder addressed through an environment variable.
 **Vision:** No claim in the guide rests on a source with no text to review.
 
 **Branch:** milestone/M004-reviewable
-**Status:** in-progress
+**Status:** done
 **Demo:** No YouTube link remains in the bibliography, and every entry that
 stays is either reviewable text or recorded as a primary artefact with its
 reason.
