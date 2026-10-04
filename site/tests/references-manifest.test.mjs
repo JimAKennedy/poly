@@ -517,6 +517,7 @@ test('every kept non-scholarly entry records why it stays', async () => {
 // to be in. Now every entry is a list item under one heading per group.
 const ONE_LIST_FILES = [
   join(HERE, '..', 'src', 'content', 'docs', 'appendix-references.mdx'),
+  join(HERE, '..', 'src', 'content', 'theory', 'theory-references.mdx'),
 ];
 
 export function oneListProblems(mdx) {
