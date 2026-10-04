@@ -510,3 +510,42 @@ test('every kept non-scholarly entry records why it stays', async () => {
   const silent = kept.filter((a) => !/Kept \(VR13\):/.test(m.entries[a]?.note ?? ''));
   assert.deepEqual(silent, [], 'kept without a recorded reason: ' + silent.join(', '));
 });
+
+// verifiable-references M005/S02 (VR15): each bibliography is one list. Before
+// M005 each was a numbered section followed by a Further Reading section with
+// its own chapter grouping, so a reader had to know which list a source used
+// to be in. Now every entry is a list item under one heading per group.
+const ONE_LIST_FILES = [
+  join(HERE, '..', 'src', 'content', 'docs', 'appendix-references.mdx'),
+];
+
+export function oneListProblems(mdx) {
+  const body = mdx.replace(/^---\n[\s\S]*?\n---\n/, '');
+  const lines = body.split('\n');
+  const problems = [];
+  const firstH2 = lines.findIndex((l) => l.startsWith('## '));
+  if (firstH2 < 0) problems.push('no ## heading');
+  const headings = lines.filter((l) => /^#{2,3} /.test(l));
+  const seen = new Set();
+  for (const h of headings) {
+    if (h.startsWith('### ')) problems.push(`a sub-list heading remains: ${h}`);
+    if (seen.has(h)) problems.push(`heading repeats: ${h}`);
+    seen.add(h);
+  }
+  lines.forEach((l, i) => {
+    if (l === '---') problems.push(`a section separator remains at body line ${i + 1}`);
+    if (/id="(?:ref|fr)-/.test(l)) {
+      if (!l.startsWith('- <span id=')) problems.push(`not a list item: ${l.slice(0, 60)}`);
+      if (i < firstH2) problems.push(`entry before the first heading: ${l.slice(0, 60)}`);
+    }
+  });
+  return problems;
+}
+
+test('each bibliography is one list, grouped once', async () => {
+  const all = [];
+  for (const f of ONE_LIST_FILES) {
+    for (const p of oneListProblems(await readFile(f, 'utf8'))) all.push(`${f.split('/').pop()}: ${p}`);
+  }
+  assert.deepEqual(all, [], all.join('\n'));
+});
