@@ -596,11 +596,11 @@
       }
     },
     "fr-novotney-1998": {
-      "obtainability": "browser-only",
+      "obtainability": "library-only",
       "evidence": "A 1998 University of Illinois PhD dissertation. No DOI and no free full text were found from here; ProQuest or the institutional repository would settle it in a browser.",
-      "checked": "2026-09-20",
+      "checked": "2026-10-04",
       "description": "unverified",
-      "note": "",
+      "note": "Obtainability corrected 2026-10-04 (M005/S02): library-only, matching M003’s institution-only retrieval verdict — the owner found no free copy.",
       "identifier": {
         "doi": null,
         "isbn": null
@@ -1190,11 +1190,11 @@
       }
     },
     "fr-collins-2001": {
-      "obtainability": "browser-only",
+      "obtainability": "open-access",
       "evidence": "No Crossref record for \"Algorithmic Composition Methods for Breakbeat Science\"; the nearest hit was a different 2009 Collins article in Contemporary Music Review, which is not it. Conference proceedings of this kind are frequently unindexed, and the author distributes his papers from his own site, so a browser would settle it.",
-      "checked": "2026-10-02",
+      "checked": "2026-10-04",
       "description": "verified",
-      "note": "",
+      "note": "Obtainability corrected 2026-10-04 (M005/S02): open-access — free on the author’s own site, https://composerprogrammer.com/research/acmethodsforbbsci.pdf (M003).",
       "identifier": {
         "doi": null,
         "isbn": null

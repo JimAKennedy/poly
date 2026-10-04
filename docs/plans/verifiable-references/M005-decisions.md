@@ -75,3 +75,11 @@ for numbering them.
   ProQuest Dissertations or Illinois's IDEALS repository for a publication
   number, handle or OCLC number, and checks whether the degree was a PhD or a
   DMA. Planned pause, not a failure.
+
+## 2026-10-04 — judgment calls during M005/S02 task 3
+
+- **A naming test's "entry with no link" example became a fixed line.**
+  M003's test used `fr-anku-2000` as an entry with no link; task 3 gave it a
+  DOI route, as it gives every entry one, so the null-URL case now parses a
+  fixed line through `parseLine` and Anku keeps the no-markup check.
+  Obviously right: the same move M004 made for `ref-43`, for the same reason.

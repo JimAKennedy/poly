@@ -93,10 +93,16 @@ test('where both bibliographies carry an anchor, the shipping appendix wins', as
   assert.match(bib.get('ref-1').url, /bridgesmathart\.org/);
 });
 
-test('an entry with no link has a null url, and its text keeps no markup', async () => {
+// M005/S02 gave every entry a route, so "an entry with no link" is now a
+// fixed line rather than a live one (fr-anku-2000 was the example until then).
+test('an entry with no link has a null url', () => {
+  const [, entry] = parseLine('- <span id="fr-x-2000" data-tier="A">X, Y. (2000). "Z."</span>');
+  assert.equal(entry.url, null);
+});
+
+test('an entry\'s text keeps no markup', async () => {
   const bib = await readBibliography();
   const anku = bib.get('fr-anku-2000');
-  assert.equal(anku.url, null);
   assert.match(anku.text, /^Anku, W\. \(2000\)/);
   assert.doesNotMatch(anku.text, /<\/?span|\*\*\[/);
 });

@@ -10,7 +10,7 @@ text changes; every anchor stays. Decisions are in `M005-decisions.md`.
 
 - [x] 1. The shipping appendix is one list
 - [x] 2. The theory bundle is one list
-- [ ] 3. Every entry shows its route and access
+- [x] 3. Every entry shows its route and access
 - [ ] 4. Novotney's record (planned pause)
 
 ## Definition of Done

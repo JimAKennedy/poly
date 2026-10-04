@@ -550,3 +550,43 @@ test('each bibliography is one list, grouped once', async () => {
   }
   assert.deepEqual(all, [], all.join('\n'));
 });
+
+// verifiable-references M005/S02 task 3 (VR15): every entry carries the same
+// fields. Tier is the `data-tier` attribute; access and route are visible, so
+// a reader can tell from the entry itself whether and how to get the source.
+// Both are checked against the manifest, so the page cannot drift from the
+// verdicts behind it.
+const ACCESS_LABEL = {
+  'open-access': 'Open access',
+  'browser-only': 'Free online',
+  borrowable: 'Borrowable',
+  purchasable: 'Purchasable',
+  'library-only': 'Library',
+};
+// The owner is finding Novotney's record (ProQuest, IDEALS or WorldCat):
+// M005/S02 task 4 removes this exemption. Nothing else may be listed here.
+const PENDING_ROUTE = ['fr-novotney-1998'];
+
+test('every entry shows its route and access', async () => {
+  const m = await loadManifest();
+  const bad = [];
+  for (const f of ONE_LIST_FILES) {
+    const name = f.split('/').pop();
+    for (const line of (await readFile(f, 'utf8')).split('\n')) {
+      const anchor = /id="((?:ref|fr)-[a-z0-9-]+)"/.exec(line)?.[1];
+      if (!anchor) continue;
+      const rec = m.entries[anchor];
+      const want = ACCESS_LABEL[rec?.obtainability];
+      if (!want) { bad.push(`${name} ${anchor}: no access label for obtainability ${rec?.obtainability}`); continue; }
+      const labels = [...line.matchAll(/\*\(([^)]+)\)\*/g)].map((x) => x[1]).filter((l) => Object.values(ACCESS_LABEL).includes(l));
+      if (labels.length !== 1 || labels[0] !== want) bad.push(`${name} ${anchor}: access label ${JSON.stringify(labels)}, want ["${want}"]`);
+      const routed = /\]\(https?:\/\/[^)\s]+\)/.test(line) || /ISBN [0-9X-]{10,}/.test(line);
+      if (PENDING_ROUTE.includes(anchor)) {
+        if (routed) bad.push(`${name} ${anchor}: has a route now — remove it from PENDING_ROUTE`);
+      } else if (!routed) {
+        bad.push(`${name} ${anchor}: no route (a link, a DOI link, or an ISBN)`);
+      }
+    }
+  }
+  assert.deepEqual(bad, [], bad.join('\n'));
+});
