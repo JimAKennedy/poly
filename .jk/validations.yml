@@ -115,8 +115,8 @@ sanitizers: >
 # POLY_FUZZ_CXX at Homebrew's LLVM (/opt/homebrew/opt/llvm/bin/clang{,++}).
 # The engine's warnings-as-errors default is turned off here: this build exists
 # to find crashes, engine-isolation is the warnings gate, and Homebrew LLVM's
-# libc++ emits a #warning about the 10.15 deployment target that -Werror would
-# otherwise promote. The nightly on Ubuntu keeps the default.
+# libc++ has emitted #warnings about the deployment target before that -Werror
+# would otherwise promote. The nightly on Ubuntu keeps the default.
 # pre-push-exempt: fuzz — needs an LLVM Clang with -fsanitize=fuzzer, which a
 # clean macOS checkout does not have, and two minutes of fuzzing on top of a
 # Debug ASan build. The nightly runs the same targets on every scheduled build.
