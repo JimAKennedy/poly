@@ -382,7 +382,7 @@ author–year, and nothing is renumbered. Nothing below was attempted.
 reader.
 
 **Branch:** milestone/M006-liveness
-**Status:** in-progress
+**Status:** done
 **Demo:** A deliberately broken URL appears in the next scheduled report.
 
 **Advisory, never a gate.** A hard gate on third-party availability makes every
