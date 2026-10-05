@@ -382,7 +382,7 @@ author–year, and nothing is renumbered. Nothing below was attempted.
 reader.
 
 **Branch:** milestone/M006-liveness
-**Status:** planned
+**Status:** in-progress
 **Demo:** A deliberately broken URL appears in the next scheduled report.
 
 **Advisory, never a gate.** A hard gate on third-party availability makes every
@@ -391,9 +391,10 @@ gets disabled — which is worse than not having one.
 
 ### Slice M006/S01 — The scheduled check reports
 
+**Plan:** M006-S01-plan.md
 **Validation:** format, guards
 **Evidence:** evidence/M006-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
