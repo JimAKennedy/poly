@@ -74,6 +74,9 @@ actually fails on regressions.
   on a branch or tag. The three jk-standards workflow checks pass on a tree
   that violates all three (open-source-launch M002/S01), so this is the guard;
   each rule carries an inline red fixture so "seen red" is part of every run.
+- `check-reference-links-workflow.mjs` — locks `.github/workflows/reference-links.yml`'s
+  shape: weekly, never failing a PR, and writing an issue only from scheduled
+  and manual runs.
 - `check-ledger-row-ids.mjs` — row IDs are unique within each delivery ledger.
   jk-standards' `ledger` check validates structure and statuses but not ID
   uniqueness, which let guide-parity M004 add a `GP11` while M005/S01 already

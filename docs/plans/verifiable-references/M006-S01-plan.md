@@ -13,17 +13,17 @@ repository's existing shape (the sanitizer nightly's deduplicated issue,
 
 - [x] 1. The checker classifies a URL the way the decisions say
 - [x] 2. The checker reads both bibliographies and catches a dead URL in a real run
-- [ ] 3. The workflow runs it weekly and reports, and a contract locks its shape
+- [x] 3. The workflow runs it weekly and reports, and a contract locks its shape
 
 ## Definition of Done
 
 Copied verbatim from the slice:
 
-- [ ] A scheduled job checks every URL in the bibliography and reports what it
+- [x] A scheduled job checks every URL in the bibliography and reports what it
       found, without failing a pull request
-- [ ] It does not report the browser-only class as dead: 403 and 406 are
+- [x] It does not report the browser-only class as dead: 403 and 406 are
       distinguished from 404 and no-response
-- [ ] It is shown to detect a genuinely dead URL, by introducing one
+- [x] It is shown to detect a genuinely dead URL, by introducing one
 
 ## Validation
 

@@ -71,6 +71,13 @@ run_guard "release-verify contract"    node --test scripts/check-release-verify-
 # workflow checks pass on a tree that violates both, so this is the guard.
 run_guard "workflow-hygiene contract"  node --test scripts/check-workflow-hygiene.mjs
 
+# verifiable-references M006/S01 (VR16): the weekly dead-reference check is
+# advisory only while its shape holds — scheduled, never failing a PR, writing
+# issues only from scheduled and manual runs — and its classes (a bot refusal
+# is blocked, never dead) are proved against a local HTTP server.
+run_guard "reference-links contract"   node --test scripts/check-reference-links-workflow.mjs
+run_guard "reference-links classes"    node --test scripts/reference-links.test.mjs
+
 # open-source-launch M004 (OS20, OS22): the roadmap links queries rather than
 # numbers, and the README and CONTRIBUTING carry no internal identifier and
 # keep the section order written for the person downloading.
