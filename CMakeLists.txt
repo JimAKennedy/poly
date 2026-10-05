@@ -14,7 +14,10 @@ if(NOT DEFINED CMAKE_POLICY_VERSION_MINIMUM)
         "Minimum policy version for stale third-party cmake_minimum_required calls")
 endif()
 
-set(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "")
+# macOS 11 (Big Sur) is the minimum. Xcode 27's libc++ refuses an older
+# deployment target with a #warning that -Werror promotes to an error in every
+# translation unit, so 10.15 can no longer be built with a current toolchain.
+set(CMAKE_OSX_DEPLOYMENT_TARGET "11.0" CACHE STRING "")
 
 project(poly
     VERSION 0.2.0
