@@ -311,7 +311,7 @@ M003's measurements:
 under a single standard.
 
 **Branch:** milestone/M005-one-bibliography
-**Status:** planned
+**Status:** done
 **Demo:** A reader reaching the references appendix sees one list, and the
 scholarship M005 added is as reachable as the numbered entries.
 
@@ -330,9 +330,18 @@ carrying unreviewable ones; merging before M002 means renumbering twice.
 ### Slice M005/S01 — Further Reading entries become citable
 
 **Depends:** M004/S02
+**Plan:** M005-S01-plan.md
 **Validation:** format, site-unit, doc-conformance
 **Evidence:** evidence/M005-S01.md
-**Status:** open
+**Status:** accepted
+
+**Accepted as not done, 2026-10-04,** by the owner's decision when M005 was
+planned (`M005-decisions.md`). VR14's reason for numbering every Further
+Reading entry — a prefix for the archive's naming convention — was removed by
+M003, whose `FR - Surname Year.pdf` names every Further Reading file; and
+author–year citation already lets a reader cite one. The merged bibliography
+keeps both labels: numbered entries keep `[N]`, Further Reading stays
+author–year, and nothing is renumbered. Nothing below was attempted.
 
 **Definition of Done**
 
@@ -345,26 +354,27 @@ carrying unreviewable ones; merging before M002 means renumbering twice.
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| VR14 | The 64 Further Reading entries have no citation number, so the archive naming convention has no prefix for them and a reader cannot cite one the way they cite `[9]` | `docs` | `appendix-references.mdx`, citing chapters | Every entry has a number; `research-provenance` reports every citation resolving | `open` |
+| VR14 | The 64 Further Reading entries have no citation number, so the archive naming convention has no prefix for them and a reader cannot cite one the way they cite `[9]` | `docs` | `appendix-references.mdx`, citing chapters | Every entry has a number; `research-provenance` reports every citation resolving | `accepted` |
 
 ### Slice M005/S02 — The two lists become one
 
 **Depends:** M005/S01
+**Plan:** M005-S02-plan.md
 **Validation:** format, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M005-S02.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The appendix presents one bibliography, ordered so a reader can find an
+- [x] The appendix presents one bibliography, ordered so a reader can find an
       entry from a citation without knowing which list it used to be in
-- [ ] Every entry carries the same fields: tier, obtainability, and an
+- [x] Every entry carries the same fields: tier, obtainability, and an
       identifier or URL
-- [ ] No citation anywhere in the guide is broken by the merge
+- [x] No citation anywhere in the guide is broken by the merge
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| VR15 | Two bibliographies in one appendix, with opposite problems and no stated relationship. The good scholarship sits below a section a reader may never reach | `docs` | `appendix-references.mdx` | One list; `research-provenance` and the manifest completeness test both pass | `open` |
+| VR15 | Two bibliographies in one appendix, with opposite problems and no stated relationship. The good scholarship sits below a section a reader may never reach | `docs` | `appendix-references.mdx` | One list; `research-provenance` and the manifest completeness test both pass | `done` |
 
 ## Milestone M006 — A dead reference is found by a check
 

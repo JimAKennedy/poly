@@ -510,3 +510,87 @@ test('every kept non-scholarly entry records why it stays', async () => {
   const silent = kept.filter((a) => !/Kept \(VR13\):/.test(m.entries[a]?.note ?? ''));
   assert.deepEqual(silent, [], 'kept without a recorded reason: ' + silent.join(', '));
 });
+
+// verifiable-references M005/S02 (VR15): each bibliography is one list. Before
+// M005 each was a numbered section followed by a Further Reading section with
+// its own chapter grouping, so a reader had to know which list a source used
+// to be in. Now every entry is a list item under one heading per group.
+const ONE_LIST_FILES = [
+  join(HERE, '..', 'src', 'content', 'docs', 'appendix-references.mdx'),
+  join(HERE, '..', 'src', 'content', 'theory', 'theory-references.mdx'),
+];
+
+export function oneListProblems(mdx) {
+  const body = mdx.replace(/^---\n[\s\S]*?\n---\n/, '');
+  const lines = body.split('\n');
+  const problems = [];
+  const firstH2 = lines.findIndex((l) => l.startsWith('## '));
+  if (firstH2 < 0) problems.push('no ## heading');
+  const headings = lines.filter((l) => /^#{2,3} /.test(l));
+  const seen = new Set();
+  for (const h of headings) {
+    if (h.startsWith('### ')) problems.push(`a sub-list heading remains: ${h}`);
+    if (seen.has(h)) problems.push(`heading repeats: ${h}`);
+    seen.add(h);
+  }
+  lines.forEach((l, i) => {
+    if (l === '---') problems.push(`a section separator remains at body line ${i + 1}`);
+    if (/id="(?:ref|fr)-/.test(l)) {
+      if (!l.startsWith('- <span id=')) problems.push(`not a list item: ${l.slice(0, 60)}`);
+      if (i < firstH2) problems.push(`entry before the first heading: ${l.slice(0, 60)}`);
+    }
+  });
+  return problems;
+}
+
+test('each bibliography is one list, grouped once', async () => {
+  const all = [];
+  for (const f of ONE_LIST_FILES) {
+    for (const p of oneListProblems(await readFile(f, 'utf8'))) all.push(`${f.split('/').pop()}: ${p}`);
+  }
+  assert.deepEqual(all, [], all.join('\n'));
+});
+
+// verifiable-references M005/S02 task 3 (VR15): every entry carries the same
+// fields. Tier is the `data-tier` attribute; access and route are visible, so
+// a reader can tell from the entry itself whether and how to get the source.
+// Both are checked against the manifest, so the page cannot drift from the
+// verdicts behind it.
+const ACCESS_LABEL = {
+  'open-access': 'Open access',
+  'browser-only': 'Free online',
+  borrowable: 'Borrowable',
+  purchasable: 'Purchasable',
+  'library-only': 'Library',
+};
+// The one recorded exception (M005/S02 task 4, owner 2026-10-05): Novotney's
+// 1998 thesis has no public identifier and no copy reachable without a
+// university library, so it is cited as an unpublished doctoral thesis, the
+// form a 2025 Empirical Musicology Review article uses. Each exception must
+// say on the page why it has no route. Nothing else may be listed here.
+const NO_ROUTE = { 'fr-novotney-1998': 'Unpublished doctoral thesis' };
+
+test('every entry shows its route and access', async () => {
+  const m = await loadManifest();
+  const bad = [];
+  for (const f of ONE_LIST_FILES) {
+    const name = f.split('/').pop();
+    for (const line of (await readFile(f, 'utf8')).split('\n')) {
+      const anchor = /id="((?:ref|fr)-[a-z0-9-]+)"/.exec(line)?.[1];
+      if (!anchor) continue;
+      const rec = m.entries[anchor];
+      const want = ACCESS_LABEL[rec?.obtainability];
+      if (!want) { bad.push(`${name} ${anchor}: no access label for obtainability ${rec?.obtainability}`); continue; }
+      const labels = [...line.matchAll(/\*\(([^)]+)\)\*/g)].map((x) => x[1]).filter((l) => Object.values(ACCESS_LABEL).includes(l));
+      if (labels.length !== 1 || labels[0] !== want) bad.push(`${name} ${anchor}: access label ${JSON.stringify(labels)}, want ["${want}"]`);
+      const routed = /\]\(https?:\/\/[^)\s]+\)/.test(line) || /ISBN [0-9X-]{10,}/.test(line);
+      if (anchor in NO_ROUTE) {
+        if (routed) bad.push(`${name} ${anchor}: has a route now — remove it from NO_ROUTE`);
+        if (!line.includes(NO_ROUTE[anchor])) bad.push(`${name} ${anchor}: must say "${NO_ROUTE[anchor]}" — the reason it has no route`);
+      } else if (!routed) {
+        bad.push(`${name} ${anchor}: no route (a link, a DOI link, or an ISBN)`);
+      }
+    }
+  }
+  assert.deepEqual(bad, [], bad.join('\n'));
+});
