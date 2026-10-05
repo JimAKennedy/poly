@@ -83,3 +83,22 @@ for numbering them.
   DOI route, as it gives every entry one, so the null-URL case now parses a
   fixed line through `parseLine` and Anku keeps the no-markup check.
   Obviously right: the same move M004 made for `ref-43`, for the same reason.
+
+## 2026-10-05 — the Novotney record (the deferred question, answered)
+
+> From a 2025 article in Empirical Musicology Review, I have the following citation: "Novotney, E. D. (1998). The 3:2 relationship as the foundation of timelines in West African musics. Unpublished doctoral thesis, University of Illinois at Urbana-Champaign." I think we should go with this since it's basically impossible to get hold of it, so logging as unpublished is likely as correct as you are going to get without access to a university library (which I do not have)
+
+- **Q:** a ProQuest, IDEALS or WorldCat record for Novotney (1998), and PhD
+  or DMA? — **A:** (above) no record is reachable without a university
+  library; cite it as an unpublished doctoral thesis, as a 2025 *Empirical
+  Musicology Review* article does.
+- **Decision:** `fr-novotney-1998` becomes the bibliography's one recorded
+  exception to "every entry shows a route": cited as "Novotney, E. D. (1998).
+  … Unpublished doctoral thesis, University of Illinois at Urbana-Champaign",
+  access label "Library", no identifier. The fields test's pending list
+  becomes a named exception with this reason, and requires the entry to say
+  "Unpublished doctoral thesis" so a reader sees why there is no route. "PhD
+  dissertation" goes, because the degree was not established — **Why:** the
+  owner's call; the plan named this case a halt for the owner to decide, and
+  the owner decided it. The DoD's "identifier or URL" box is ticked with this
+  one exception recorded, not silently.

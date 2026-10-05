@@ -11,17 +11,17 @@ text changes; every anchor stays. Decisions are in `M005-decisions.md`.
 - [x] 1. The shipping appendix is one list
 - [x] 2. The theory bundle is one list
 - [x] 3. Every entry shows its route and access
-- [ ] 4. Novotney's record (planned pause)
+- [x] 4. Novotney's record (planned pause)
 
 ## Definition of Done
 
 Copied verbatim from the slice:
 
-- [ ] The appendix presents one bibliography, ordered so a reader can find an
+- [x] The appendix presents one bibliography, ordered so a reader can find an
       entry from a citation without knowing which list it used to be in
-- [ ] Every entry carries the same fields: tier, obtainability, and an
+- [x] Every entry carries the same fields: tier, obtainability, and an
       identifier or URL
-- [ ] No citation anywhere in the guide is broken by the merge
+- [x] No citation anywhere in the guide is broken by the merge
 
 ## Validation
 

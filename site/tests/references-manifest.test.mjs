@@ -563,9 +563,12 @@ const ACCESS_LABEL = {
   purchasable: 'Purchasable',
   'library-only': 'Library',
 };
-// The owner is finding Novotney's record (ProQuest, IDEALS or WorldCat):
-// M005/S02 task 4 removes this exemption. Nothing else may be listed here.
-const PENDING_ROUTE = ['fr-novotney-1998'];
+// The one recorded exception (M005/S02 task 4, owner 2026-10-05): Novotney's
+// 1998 thesis has no public identifier and no copy reachable without a
+// university library, so it is cited as an unpublished doctoral thesis, the
+// form a 2025 Empirical Musicology Review article uses. Each exception must
+// say on the page why it has no route. Nothing else may be listed here.
+const NO_ROUTE = { 'fr-novotney-1998': 'Unpublished doctoral thesis' };
 
 test('every entry shows its route and access', async () => {
   const m = await loadManifest();
@@ -581,8 +584,9 @@ test('every entry shows its route and access', async () => {
       const labels = [...line.matchAll(/\*\(([^)]+)\)\*/g)].map((x) => x[1]).filter((l) => Object.values(ACCESS_LABEL).includes(l));
       if (labels.length !== 1 || labels[0] !== want) bad.push(`${name} ${anchor}: access label ${JSON.stringify(labels)}, want ["${want}"]`);
       const routed = /\]\(https?:\/\/[^)\s]+\)/.test(line) || /ISBN [0-9X-]{10,}/.test(line);
-      if (PENDING_ROUTE.includes(anchor)) {
-        if (routed) bad.push(`${name} ${anchor}: has a route now — remove it from PENDING_ROUTE`);
+      if (anchor in NO_ROUTE) {
+        if (routed) bad.push(`${name} ${anchor}: has a route now — remove it from NO_ROUTE`);
+        if (!line.includes(NO_ROUTE[anchor])) bad.push(`${name} ${anchor}: must say "${NO_ROUTE[anchor]}" — the reason it has no route`);
       } else if (!routed) {
         bad.push(`${name} ${anchor}: no route (a link, a DOI link, or an ISBN)`);
       }

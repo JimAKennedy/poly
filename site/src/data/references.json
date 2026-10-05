@@ -598,9 +598,9 @@
     "fr-novotney-1998": {
       "obtainability": "library-only",
       "evidence": "A 1998 University of Illinois PhD dissertation. No DOI and no free full text were found from here; ProQuest or the institutional repository would settle it in a browser.",
-      "checked": "2026-10-04",
+      "checked": "2026-10-05",
       "description": "unverified",
-      "note": "Obtainability corrected 2026-10-04 (M005/S02): library-only, matching M003’s institution-only retrieval verdict — the owner found no free copy.",
+      "note": "Obtainability corrected 2026-10-04 (M005/S02): library-only, matching M003’s institution-only retrieval verdict — the owner found no free copy. Entry corrected 2026-10-05 (M005/S02): \"Novotney, E. D. (1998) … Unpublished doctoral thesis, University of Illinois at Urbana-Champaign\", the form a 2025 Empirical Musicology Review article cites it in (owner). The degree (PhD or DMA) was not established, so the entry no longer says PhD. No public identifier exists; this is the bibliography’s one recorded exception to showing a route.",
       "identifier": {
         "doi": null,
         "isbn": null
