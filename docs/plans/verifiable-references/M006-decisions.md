@@ -54,3 +54,11 @@ ref-scoped concurrency group, and to pin third-party actions by SHA.
 ### Deferred
 
 - None.
+
+## 2026-10-05 — judgment calls during M006/S01 task 1
+
+- **The two README entries landed in task 1, not task 2.** The plan put
+  `scripts/README.md` in task 2, but `check-scripts-readme` (in `guards`)
+  fails on any script without an entry, so task 1 could not commit green
+  without them. Obviously right: the guard requires the entry in the same
+  change that adds the script.

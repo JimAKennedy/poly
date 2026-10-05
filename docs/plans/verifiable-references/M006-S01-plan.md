@@ -11,7 +11,7 @@ repository's existing shape (the sanitizer nightly's deduplicated issue,
 
 ## Task status
 
-- [ ] 1. The checker classifies a URL the way the decisions say
+- [x] 1. The checker classifies a URL the way the decisions say
 - [ ] 2. The checker reads both bibliographies and catches a dead URL in a real run
 - [ ] 3. The workflow runs it weekly and reports, and a contract locks its shape
 
