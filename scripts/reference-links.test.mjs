@@ -75,3 +75,80 @@ test('a refused connection is dead', async () => {
   const got = await checkUrl(`http://127.0.0.1:${closedPort}/`, { timeoutMs: 500 });
   assert.equal(got.class, 'dead', JSON.stringify(got));
 });
+
+// ---- task 2: collecting URLs, and the command line ------------------------
+
+import { spawnSync } from 'node:child_process';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { collectUrls, readBibliographyTexts } from './reference-links.mjs';
+
+const SCRIPT = join(dirname(fileURLToPath(import.meta.url)), 'reference-links.mjs');
+
+test('collectUrls takes every link in every entry, deduplicated, with its anchors', () => {
+  const text = [
+    '- <span id="ref-6" data-tier="A">**[6]**</span> Jones. [Scan](https://archive.org/a) · [Review](https://example.org/r) *(Borrowable)*',
+    '- <span id="fr-x-2000" data-tier="A">X. (2000).</span> [DOI](https://doi.org/10.1/x) *(Purchasable)*',
+    '- <span id="fr-y-2001" data-tier="A">Y. (2001).</span> [DOI](https://doi.org/10.1/x) *(Purchasable)*',
+    'Prose with a [link](https://not-an-entry.example) is not an entry.',
+  ].join('\n');
+  const urls = collectUrls([{ name: 'fixture.mdx', text }]);
+  assert.deepEqual(
+    [...urls.entries()].map(([u, a]) => [u, [...a]]),
+    [
+      ['https://archive.org/a', ['ref-6']],
+      ['https://example.org/r', ['ref-6']],
+      ['https://doi.org/10.1/x', ['fr-x-2000', 'fr-y-2001']],
+    ],
+  );
+});
+
+test('the real bibliographies yield URLs, every one http(s)', async () => {
+  const urls = collectUrls(await readBibliographyTexts());
+  assert.ok(urls.size > 0, 'no URLs collected from the bibliographies');
+  for (const u of urls.keys()) assert.match(u, /^https?:\/\//);
+});
+
+function cli(args, env = {}) {
+  return spawnSync(process.execPath, [SCRIPT, ...args], { encoding: 'utf8', env: { ...process.env, ...env } });
+}
+
+test('--dry-run counts URLs without fetching and exits 0', () => {
+  const r = cli(['--dry-run']);
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(r.stdout, /\d+ URLs? to check/);
+});
+
+test('a bibliography that cannot be read exits 2, never 0', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'poly-links-'));
+  try {
+    const r = cli(['--dry-run'], { POLY_BIBLIOGRAPHY_ROOT: dir });
+    assert.equal(r.status, 2, `expected 2, got ${r.status}: ${r.stderr}`);
+    assert.match(r.stderr, /bibliography/i);
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+// ---- task 2's real run: undici's own timeouts are no-responses -------------
+// The first real run classified doi.org → doiserbia.nb.rs, whose host never
+// accepts a connection, as "check by hand": undici reports a connect timeout
+// as a TypeError whose cause carries UND_ERR_CONNECT_TIMEOUT, not as an abort.
+// A host that never answers is the "no-response" the slice calls dead.
+import { classifyError, describeError } from './reference-links.mjs';
+
+const undici = (code) => Object.assign(new TypeError('fetch failed'), { cause: { code } });
+
+test('undici connect, headers and body timeouts are no-responses, so dead', () => {
+  for (const code of ['UND_ERR_CONNECT_TIMEOUT', 'UND_ERR_HEADERS_TIMEOUT', 'UND_ERR_BODY_TIMEOUT']) {
+    assert.equal(classifyError(undici(code)), 'dead', code);
+  }
+});
+
+test('a redirect loop stays "check by hand", and the report says why', () => {
+  const loop = Object.assign(new TypeError('fetch failed'), { cause: new Error('redirect count exceeded') });
+  assert.equal(classifyError(loop), 'error');
+  assert.equal(describeError(loop), 'redirect count exceeded');
+});

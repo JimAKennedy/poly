@@ -62,3 +62,17 @@ ref-scoped concurrency group, and to pin third-party actions by SHA.
   fails on any script without an entry, so task 1 could not commit green
   without them. Obviously right: the guard requires the entry in the same
   change that adds the script.
+
+## 2026-10-05 — judgment calls during M006/S01 task 2
+
+- **undici's own timeouts count as no-response.** The first real run filed
+  Silverman's DOI, which redirects to `doiserbia.nb.rs` and never gets a
+  connection, as "check by hand": undici reports a connect timeout as a
+  `TypeError` with `UND_ERR_CONNECT_TIMEOUT`, not as an abort. Connect,
+  headers and body timeouts now retry once and then count as `dead`, which is
+  the decisions file's "no response within the timeout". Obviously right: the
+  class was already decided; the code missed one way of saying it.
+- **A redirect loop stays "check by hand", and says so.** Powers's Grove DOI
+  loops ("redirect count exceeded"), typical of a cookie wall but also of a
+  broken site, so it is not called blocked or dead; the report now prints the
+  cause instead of "TypeError".
