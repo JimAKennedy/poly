@@ -311,7 +311,7 @@ M003's measurements:
 under a single standard.
 
 **Branch:** milestone/M005-one-bibliography
-**Status:** in-progress
+**Status:** done
 **Demo:** A reader reaching the references appendix sees one list, and the
 scholarship M005 added is as reachable as the numbered entries.
 
