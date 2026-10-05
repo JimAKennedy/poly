@@ -71,11 +71,15 @@ Reading.
 
 Every commit on the branch carries `Plan:` and `Slice:` lines.
 
-- `a0b9370` M005 planning — one bibliography: decisions, S01 accepted, and S02's plan — Slice M005/S02, Rows VR14
-- `ec7abbf` M005/S02 task 1 — the shipping appendix is one list — Slice M005/S02
-- `dad6f8a` M005/S02 task 2 — the theory bundle is one list — Slice M005/S02
-- `0100589` M005/S02 task 3 — every entry shows its route and access — Slice M005/S02
-- `ec943f6` M005/S02 task 4 — Novotney is cited as an unpublished doctoral thesis — Slice M005/S02, Rows VR15
+- `dc24661` M005 planning — one bibliography: decisions, S01 accepted, and S02's plan — Slice M005/S02, Rows VR14
+- `78f73e9` M005/S02 task 1 — the shipping appendix is one list — Slice M005/S02
+- `d283350` M005/S02 task 2 — the theory bundle is one list — Slice M005/S02
+- `08abc78` M005/S02 task 3 — every entry shows its route and access — Slice M005/S02
+- `a0602de` M005/S02 task 4 — Novotney is cited as an unpublished doctoral thesis — Slice M005/S02, Rows VR15
+- the report itself, the commit that carries this file
+
+Hashes regenerated after the branch was rebased onto `main` at #355 (the
+macOS deployment-target fix), which rewrote every commit on the branch.
 
 **Untraced commits:** none.
 
