@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Poly's Windows installer (open-source-launch M008/S01, OS37). WiX v5,
+  built by build-windows-msi.ps1:
+
+    wix build poly.wxs -arch x64 -d Version=<v> -d BundleDir=<poly_plugin.vst3> -o <out.msi>
+
+  One per-machine MSI that installs the VST3 bundle to
+  C:\Program Files\Common Files\VST3\poly_plugin.vst3, the folder the VST3
+  specification names, and nothing else. Windows Installer records every file,
+  so "Uninstall" in Apps & features removes exactly what was installed. The
+  UpgradeCode is fixed for good: it is how a newer Poly MSI finds and replaces
+  an older one. Unsigned until M008/S02. poly-wxs.test.mjs holds this source
+  to M008-decisions.md.
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Package Name="Poly"
+           Manufacturer="jk.digital"
+           Version="$(Version)"
+           UpgradeCode="CAC811BE-A55D-452F-A377-9442360217CD"
+           Scope="perMachine">
+    <MajorUpgrade DowngradeErrorMessage="A newer version of Poly is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <StandardDirectory Id="CommonFiles64Folder">
+      <Directory Id="VST3FOLDER" Name="VST3">
+        <Directory Id="INSTALLFOLDER" Name="poly_plugin.vst3" />
+      </Directory>
+    </StandardDirectory>
+
+    <Feature Id="Main" Title="Poly VST3">
+      <Files Include="$(BundleDir)\**" Directory="INSTALLFOLDER" />
+    </Feature>
+  </Package>
+</Wix>

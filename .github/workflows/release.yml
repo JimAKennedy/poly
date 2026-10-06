@@ -3,9 +3,9 @@ name: Release
 # Tag-triggered release pipeline (M030 S01). On push of a semver tag (v*.*.*)
 # this builds the two shipping VST3 targets per locked decision D029/D030 —
 # macOS universal (arm64+x86_64) and Windows x64 — zips each .vst3 bundle, builds
-# a macOS installer package beside the zip (open-source-launch M007), and
-# publishes them as assets on a GitHub Release whose body is generated from
-# CHANGELOG.md via scripts/gen-release-notes.mjs.
+# a macOS installer package and a Windows MSI beside the zips (open-source-launch
+# M007, M008), and publishes them as assets on a GitHub Release whose body is
+# generated from CHANGELOG.md via scripts/gen-release-notes.mjs.
 #
 # There is intentionally NO Linux leg: Poly ships no Linux plugin binary
 # (plugin/CMakeLists.txt gates the plugin on `if(APPLE OR WIN32)`; Linux is
@@ -298,6 +298,31 @@ jobs:
           Write-Output "Located VST3: $($vst3.FullName)"
           Compress-Archive -Path $vst3.FullName -DestinationPath $asset
           Write-Output "Packaged asset: $asset"
+      # open-source-launch M008/S01 (OS37): the Windows installer, an MSI built
+      # with WiX 5.0.2 beside the zip, after the Windows signing gate above.
+      # Tested by a silent install and uninstall on this leg's own fresh runner
+      # before upload; shipped unsigned until M008/S02 adds Azure Artifact
+      # Signing (the CI job's self-signed sign is a proof, not a release step).
+      # scripts/check-release-workflow.mjs locks the order and the inputs.
+      - name: Build installer package (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $vst3 = Get-ChildItem -Path build -Recurse -Directory -Filter *.vst3 |
+            Where-Object { $_.Name -notlike '*probe*' } | Select-Object -First 1
+          if (-not $vst3) {
+            Write-Output "::error::No poly_plugin.vst3 bundle found under build for the installer"
+            exit 1
+          }
+          $version = $env:GITHUB_REF_NAME -replace '^v', ''
+          pwsh scripts/packaging/build-windows-msi.ps1 -Bundle $vst3.FullName -Version $version -Out "poly-$env:GITHUB_REF_NAME-${{ matrix.asset }}.msi"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Test installer package (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          pwsh scripts/packaging/test-windows-msi.ps1 -Msi "poly-$env:GITHUB_REF_NAME-${{ matrix.asset }}.msi"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Upload release asset
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -305,6 +330,7 @@ jobs:
           path: |
             poly-*.zip
             poly-*.pkg
+            poly-*.msi
             signed-*.txt
           retention-days: 7
           if-no-files-found: error
@@ -338,7 +364,7 @@ jobs:
       - name: Write checksums
         run: |
           cd dist
-          sha256sum *.zip *.pkg > SHA256SUMS
+          sha256sum *.zip *.pkg *.msi > SHA256SUMS
           cat SHA256SUMS
       - name: Attest build provenance
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
@@ -346,6 +372,7 @@ jobs:
           subject-path: |
             dist/*.zip
             dist/*.pkg
+            dist/*.msi
       # Strip the leading `v` from the tag (v0.1.0 -> 0.1.0) and pull the body
       # from CHANGELOG.md. gen-release-notes.mjs exits non-zero if the section
       # is missing or empty, so a mistagged/undocumented version fails loud here
@@ -378,5 +405,6 @@ jobs:
           files: |
             dist/*.zip
             dist/*.pkg
+            dist/*.msi
             dist/SHA256SUMS
           fail_on_unmatched_files: true

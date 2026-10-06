@@ -637,3 +637,44 @@ test('the release publishes the package with checksums and provenance, like ever
   assert.match(rel, /subject-path:[\s\S]*?dist\/\*\.pkg/, 'the provenance attestation must cover the package');
   assert.match(rel, /files:[\s\S]*?dist\/\*\.pkg/, 'the Release must publish the package');
 });
+
+// --- open-source-launch M008/S01 (OS37): the Windows leg also builds the MSI,
+// tests it by installing and uninstalling it on its own fresh runner, and the
+// release publishes it beside the zip with the same checksum and provenance.
+// After the Windows signing gate and the Windows zip, before the upload. The
+// release ships it unsigned until M008/S02, so the test runs without the CI
+// job's -SelfSign. ---
+
+test('the Windows leg builds the MSI from the located bundle and the tag (OS37)', () => {
+  const body = stepBody(wf, 'Build installer package \\(Windows\\)');
+  assert.ok(body, 'no "Build installer package (Windows)" step');
+  assert.match(body, /if:\s*runner\.os == 'Windows'/, 'the MSI step must be Windows-only');
+  assert.match(body, /pwsh scripts\/packaging\/build-windows-msi\.ps1 -Bundle \$vst3\.FullName -Version \$version -Out "poly-\$env:GITHUB_REF_NAME-\$\{\{ matrix\.asset \}\}\.msi"/,
+    'the MSI step must pass the located bundle, the tag version and the poly-<tag>-<asset>.msi name');
+  assert.match(body, /\$version = \$env:GITHUB_REF_NAME -replace '\^v', ''/, 'the version must come from the tag');
+});
+
+test('the MSI is built after the Windows signing gate and zip, tested, then uploaded (OS37)', () => {
+  const macGate = wf.indexOf('- name: Require signing or an explicit allowance');
+  const winGate = wf.indexOf('- name: Require signing or an explicit allowance', macGate + 1);
+  const zip = stepIndex(wf, 'Locate and package VST3 \\(Windows\\)');
+  const build = stepIndex(wf, 'Build installer package \\(Windows\\)');
+  const testMsi = stepIndex(wf, 'Test installer package \\(Windows\\)');
+  const upload = stepIndex(wf, 'Upload release asset');
+  assert.ok(winGate > macGate && zip >= 0 && build >= 0 && testMsi >= 0 && upload >= 0, 'a step is missing');
+  assert.ok(winGate < build, 'the MSI must be built after the Windows signing gate');
+  assert.ok(zip < build, 'the MSI is built after the zip, beside it');
+  assert.ok(build < testMsi && testMsi < upload, 'build, then install-and-uninstall test, then upload');
+  const t = stepBody(wf, 'Test installer package \\(Windows\\)');
+  assert.match(t, /pwsh scripts\/packaging\/test-windows-msi\.ps1 -Msi "poly-\$env:GITHUB_REF_NAME-\$\{\{ matrix\.asset \}\}\.msi"/, 'the test step must install the MSI the build step wrote');
+  assert.doesNotMatch(t, /-SelfSign/, 'the release ships the MSI unsigned until S02; the self-signed sign is a CI proof only');
+});
+
+test('the release publishes the MSI with checksums and provenance, like every zip (OS37)', () => {
+  const upload = stepBody(wf, 'Upload release asset');
+  assert.match(upload, /poly-\*\.msi/, 'the leg must upload the MSI');
+  const rel = wf.slice(wf.indexOf('\n  release:'));
+  assert.match(rel, /sha256sum[^\n]*\*\.msi[^\n]*>\s*SHA256SUMS/, 'SHA256SUMS must cover the MSI');
+  assert.match(rel, /subject-path:[\s\S]*?dist\/\*\.msi/, 'the provenance attestation must cover the MSI');
+  assert.match(rel, /files:[\s\S]*?dist\/\*\.msi/, 'the Release must publish the MSI');
+});

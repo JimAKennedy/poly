@@ -129,6 +129,14 @@ actually fails on regressions.
   builds and expands one without installing; `packaging/test-macos-pkg.sh`
   installs and removes it, system-wide and per-user, on a clean Mac (CI's
   `package-macos` job), and refuses to run where Poly is already installed.
+  For Windows (M008): `packaging/poly.wxs` is the WiX v5 source of a
+  per-machine MSI that installs the VST3 to `Common Files\VST3`, and
+  `packaging/poly-wxs.test.mjs` holds it to its decisions anywhere WiX
+  cannot run.
+  `packaging/build-windows-msi.ps1` builds it with WiX 5.0.2, and
+  `packaging/test-windows-msi.ps1` signs it once with a throwaway
+  certificate (CI only), installs and uninstalls it on a clean machine (CI's
+  `package-windows` job), and refuses to run where Poly is installed.
 
 ## Generators
 

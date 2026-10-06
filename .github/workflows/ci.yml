@@ -566,6 +566,47 @@ jobs:
             --timeout-ms 120000 \
             --validate "${{ steps.find-vst3.outputs.path }}"
 
+  # open-source-launch M008/S01 (OS37): the Windows installer, built from this
+  # PR's plugin as an MSI (WiX 5.0.2), signed once with a throwaway self-signed
+  # certificate to prove the one-step signtool sign M008/S02 will do, installed
+  # silently on the fresh runner, checked in Common Files\VST3 and in Apps &
+  # features, uninstalled, and checked gone. Unsigned in the release until S02.
+  package-windows:
+    needs: build
+    runs-on: windows-2022
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
+      - name: Download plugin artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: plugin-windows-2022
+          path: plugin
+      - name: Build the installer
+        run: |
+          $bundle = Get-ChildItem -Path plugin -Recurse -Directory -Filter *.vst3 |
+            Where-Object { $_.Name -notlike '*probe*' } | Select-Object -First 1
+          if (-not $bundle) { Write-Output "::error::No poly_plugin.vst3 bundle in the plugin artifact"; exit 1 }
+          $version = (Select-String -Path CMakeLists.txt -Pattern '^\s*VERSION\s+(\d+\.\d+\.\d+)\s*$' | Select-Object -First 1).Matches[0].Groups[1].Value
+          if (-not $version) { Write-Output "::error::No project VERSION in CMakeLists.txt"; exit 1 }
+          New-Item -ItemType Directory -Force -Path out | Out-Null
+          pwsh scripts/packaging/build-windows-msi.ps1 -Bundle $bundle.FullName -Version $version -Out out/poly-windows.msi
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Sign once, install and uninstall on this clean runner
+        run: |
+          pwsh scripts/packaging/test-windows-msi.ps1 -Msi out/poly-windows.msi -SelfSign
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Upload the installer and its logs
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: package-windows
+          path: out/
+          retention-days: 7
+          if-no-files-found: warn
+
   wasm-build:
     runs-on: ubuntu-latest
     steps:
@@ -725,7 +766,7 @@ jobs:
           if-no-files-found: ignore
 
   ci-complete:
-    needs: [code-quality, clang-tidy, build, build-au-macos, engine-isolation, secrets-scan, code-coverage, plugin-coverage, webui-tests, pluginval-macos, pluginval-windows, package-macos, wasm-build, site-lint, site-e2e]
+    needs: [code-quality, clang-tidy, build, build-au-macos, engine-isolation, secrets-scan, code-coverage, plugin-coverage, webui-tests, pluginval-macos, pluginval-windows, package-macos, package-windows, wasm-build, site-lint, site-e2e]
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -743,6 +784,7 @@ jobs:
              [[ "${{ needs.pluginval-macos.result }}" != "success" ]] || \
              [[ "${{ needs.pluginval-windows.result }}" != "success" ]] || \
              [[ "${{ needs.package-macos.result }}" != "success" ]] || \
+             [[ "${{ needs.package-windows.result }}" != "success" ]] || \
              [[ "${{ needs.wasm-build.result }}" != "success" ]] || \
              [[ "${{ needs.site-lint.result }}" != "success" ]] || \
              [[ "${{ needs.site-e2e.result }}" != "success" ]]; then
