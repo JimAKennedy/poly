@@ -133,6 +133,10 @@ actually fails on regressions.
   per-machine MSI that installs the VST3 to `Common Files\VST3`, and
   `packaging/poly-wxs.test.mjs` holds it to its decisions anywhere WiX
   cannot run.
+  `packaging/build-windows-msi.ps1` builds it with WiX 5.0.2, and
+  `packaging/test-windows-msi.ps1` signs it once with a throwaway
+  certificate (CI only), installs and uninstalls it on a clean machine (CI's
+  `package-windows` job), and refuses to run where Poly is installed.
 
 ## Generators
 

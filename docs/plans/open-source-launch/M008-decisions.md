@@ -79,3 +79,11 @@ the owner's Mac.
 - **M008/S02 — signing through Azure Artifact Signing**, waiting at the
   S01→S02 boundary on the Azure account and its identity validation. A
   planned pause, not a failure.
+
+## 2026-10-06 — judgment calls during M008/S01 task 2
+
+- **A pre-release version builds as its numeric part.** An MSI's
+  ProductVersion must be `major.minor.build`, so `build-windows-msi.ps1`
+  builds `0.2.0-rc.1` as `0.2.0`; the asset's file name keeps the full tag.
+  Obviously right: Windows Installer rejects anything else, and the
+  pre-release distinction already lives in the tag and the Release.
