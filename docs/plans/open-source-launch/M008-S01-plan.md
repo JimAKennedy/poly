@@ -13,18 +13,18 @@ the format comparison OS37 requires, are in `M008-decisions.md`.
 
 - [x] 1. The WiX source says what the installer does, and a test holds it there
 - [x] 2. A CI job builds, signs, installs and removes the MSI on a fresh runner
-- [ ] 3. The release builds, tests and publishes it beside the zip
+- [x] 3. The release builds, tests and publishes it beside the zip
 
 ## Definition of Done
 
 Copied verbatim from the slice:
 
-- [ ] The installer format is chosen on which one signs and uninstalls cleanly
+- [x] The installer format is chosen on which one signs and uninstalls cleanly
       in CI, with the alternatives and the reason in this milestone's decisions
       file
-- [ ] The release workflow builds it; installing on a clean machine places the
+- [x] The release workflow builds it; installing on a clean machine places the
       bundle where the DAW looks, and uninstalling removes it
-- [ ] The contract check asserts the package step's position and inputs
+- [x] The contract check asserts the package step's position and inputs
 
 ## Validation
 

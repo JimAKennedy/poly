@@ -590,20 +590,20 @@ different installer tooling, no shared code.
 **Plan:** M008-S01-plan.md
 **Validation:** format, guards
 **Evidence:** evidence/M008-S01.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The installer format is chosen on which one signs and uninstalls cleanly
+- [x] The installer format is chosen on which one signs and uninstalls cleanly
       in CI, with the alternatives and the reason in this milestone's decisions
       file
-- [ ] The release workflow builds it; installing on a clean machine places the
+- [x] The release workflow builds it; installing on a clean machine places the
       bundle where the DAW looks, and uninstalling removes it
-- [ ] The contract check asserts the package step's position and inputs
+- [x] The contract check asserts the package step's position and inputs
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| OS37 | The Windows artifact is a zip. The installer format — WiX/MSI, Inno Setup, NSIS — is a genuine choice to be made on CI signing and clean uninstall, not on taste; whichever is chosen must produce a single artifact `signtool` can sign in one step | `pipeline` | `.github/workflows/release.yml`, `scripts/packaging/`, `docs/plans/open-source-launch/M008-decisions.md` | The decision is recorded with what was tried; the installer installs and uninstalls cleanly on a clean machine (evidence); the release publishes it beside the zip | `open` |
+| OS37 | The Windows artifact is a zip. The installer format — WiX/MSI, Inno Setup, NSIS — is a genuine choice to be made on CI signing and clean uninstall, not on taste; whichever is chosen must produce a single artifact `signtool` can sign in one step | `pipeline` | `.github/workflows/release.yml`, `scripts/packaging/`, `docs/plans/open-source-launch/M008-decisions.md` | The decision is recorded with what was tried; the installer installs and uninstalls cleanly on a clean machine (evidence); the release publishes it beside the zip | `done` |
 
 ### Slice M008/S02 — The installer is signed through Azure Artifact Signing
 
