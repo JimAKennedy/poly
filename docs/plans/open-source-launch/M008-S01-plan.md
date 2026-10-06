@@ -11,7 +11,7 @@ the format comparison OS37 requires, are in `M008-decisions.md`.
 
 ## Task status
 
-- [ ] 1. The WiX source says what the installer does, and a test holds it there
+- [x] 1. The WiX source says what the installer does, and a test holds it there
 - [ ] 2. A CI job builds, signs, installs and removes the MSI on a fresh runner
 - [ ] 3. The release builds, tests and publishes it beside the zip
 

@@ -84,6 +84,12 @@ run_guard "reference-links classes"    node --test scripts/reference-links.test.
 # with a stated reason off macOS.
 run_guard "macOS package contents"     node --test scripts/packaging/build-macos-pkg.test.mjs
 
+# open-source-launch M008/S01 (OS37): the Windows installer's WiX source — one
+# per-machine MSI into Common Files\VST3, a fixed UpgradeCode, no custom
+# actions. WiX builds only on Windows; this checks the source anywhere, and the
+# package-windows CI job builds, signs, installs and removes the MSI.
+run_guard "Windows MSI source"         node --test scripts/packaging/poly-wxs.test.mjs
+
 # open-source-launch M004 (OS20, OS22): the roadmap links queries rather than
 # numbers, and the README and CONTRIBUTING carry no internal identifier and
 # keep the section order written for the person downloading.
