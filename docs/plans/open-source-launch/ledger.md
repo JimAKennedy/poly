@@ -520,7 +520,7 @@ installer's questions, and their DAW finds Poly on the next scan — no folder
 conventions, no quarantine flag.
 
 **Branch:** milestone/M007-macos-pkg
-**Status:** planned
+**Status:** in-progress
 **Demo:** A signed, notarized, stapled `.pkg` on the Releases page opens with
 no warning on a clean Mac and installs the VST3 (and the AU, if OS17 says it
 ships) where the DAW looks, with a per-user option.
@@ -533,9 +533,10 @@ while the paperwork is pending.
 ### Slice M007/S01 — A package is built and tested unsigned
 
 **Depends:** M006/S02, M003/S03
+**Plan:** M007-S01-plan.md
 **Validation:** format, guards
 **Evidence:** evidence/M007-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
