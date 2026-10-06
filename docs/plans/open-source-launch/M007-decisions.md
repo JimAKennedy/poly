@@ -69,3 +69,24 @@ folders (`~/Library/…` per-user, `/Library/…` all users).
   S01→S02 boundary on the Apple Developer Program enrolment, the Developer
   ID Application and Developer ID Installer certificates, and the seven
   repository secrets. A planned pause, not a failure.
+
+## 2026-10-06 — judgment calls during M007/S01 task 1
+
+- **The package strips extended attributes from the bundle it stages.** The
+  first build carried AppleDouble `._` entries in its payload: `pkgbuild`
+  packs a file's extended attributes, and `ditto` had copied the build
+  machine's (macOS's provenance tag on the fixture). Staging now uses
+  `ditto --norsrc --noextattr --noqtn`, so no attribute the build machine set
+  — quarantine included — ships to a user. Obviously right: the test's
+  "payload is the bundle and nothing else" rule caught it, and a quarantine
+  attribute inside an installer would undo what the installer is for.
+- **Correction to the entry above.** It said no attribute the build machine
+  set ships. That overstated it: macOS stamps `com.apple.provenance` on every
+  file a process writes, and neither `ditto --noextattr`, `xattr -cr` nor
+  `COPYFILE_DISABLE` removes it, so the payload's `._` entries are that
+  attribute and the installer restores it as an attribute, not as a file.
+  What the stripping does guarantee, and the test now proves red-then-green,
+  is that **no quarantine attribute ships**: a fixture carrying
+  `com.apple.quarantine` builds a package whose extracted payload has none;
+  with a plain copy it has one. The payload test treats `._` entries as the
+  attribute metadata they are.

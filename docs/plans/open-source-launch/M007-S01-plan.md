@@ -10,7 +10,7 @@ three steps in `release.yml` locked by new assertions in the existing
 
 ## Task status
 
-- [ ] 1. The package is built, and its payload proves where it installs
+- [x] 1. The package is built, and its payload proves where it installs
 - [ ] 2. A CI job installs and removes it on a fresh Mac
 - [ ] 3. The release builds, tests and publishes it beside the zip
 

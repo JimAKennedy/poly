@@ -78,6 +78,12 @@ run_guard "workflow-hygiene contract"  node --test scripts/check-workflow-hygien
 run_guard "reference-links contract"   node --test scripts/check-reference-links-workflow.mjs
 run_guard "reference-links classes"    node --test scripts/reference-links.test.mjs
 
+# open-source-launch M007/S01 (OS35): the macOS installer package installs the
+# VST3 where a DAW looks, offers a per-user install, carries nothing but the
+# bundle and no quarantine attribute. Built and expanded, never installed; skips
+# with a stated reason off macOS.
+run_guard "macOS package contents"     node --test scripts/packaging/build-macos-pkg.test.mjs
+
 # open-source-launch M004 (OS20, OS22): the roadmap links queries rather than
 # numbers, and the README and CONTRIBUTING carry no internal identifier and
 # keep the section order written for the person downloading.
