@@ -42,6 +42,14 @@ both ways, with `scripts/packaging/test-macos-pkg.sh`, and the package joins
 until open-source-launch M007/S02 adds a Developer ID Installer signature and
 notarization.
 
+The Windows leg likewise builds `poly-<tag>-windows-x64.msi` with WiX 5.0.2: a
+per-machine installer that puts the VST3 in `C:\Program Files\Common Files\VST3`
+and is removed from Apps & features. The leg installs and uninstalls it
+silently on its own runner before upload, and it joins `SHA256SUMS` and the
+attestation. It is unsigned until open-source-launch M008/S02 adds Azure
+Artifact Signing; CI already proves it signs in one `signtool` step, with a
+throwaway certificate on every pull request.
+
 ## Signing and notarization
 
 The macOS release leg (`.github/workflows/release.yml`) auto-signs, notarizes,
