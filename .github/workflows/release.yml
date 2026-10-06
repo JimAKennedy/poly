@@ -2,7 +2,8 @@ name: Release
 
 # Tag-triggered release pipeline (M030 S01). On push of a semver tag (v*.*.*)
 # this builds the two shipping VST3 targets per locked decision D029/D030 —
-# macOS universal (arm64+x86_64) and Windows x64 — zips each .vst3 bundle, and
+# macOS universal (arm64+x86_64) and Windows x64 — zips each .vst3 bundle, builds
+# a macOS installer package beside the zip (open-source-launch M007), and
 # publishes them as assets on a GitHub Release whose body is generated from
 # CHANGELOG.md via scripts/gen-release-notes.mjs.
 #
@@ -247,6 +248,26 @@ jobs:
           echo "Located VST3: $VST3_PATH"
           ditto -c -k --keepParent "$VST3_PATH" "$ASSET"
           echo "Packaged asset: $ASSET"
+      # open-source-launch M007/S01 (OS35): the installer package, beside the
+      # zip. Built after the signing gate above, so an unsigned package cannot
+      # ship quietly either; tested by installing and removing it — all users
+      # and only me — on this leg's own fresh runner before it is uploaded.
+      # Unsigned until M007/S02 adds productsign, notarytool and stapler.
+      # scripts/check-release-workflow.mjs locks the order and the inputs.
+      - name: Build installer package (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          set -euo pipefail
+          VST3_PATH=$(find build -name "*.vst3" -not -name "*probe*" -type d | head -1)
+          if [ -z "$VST3_PATH" ]; then
+            echo "::error::No poly_plugin.vst3 bundle found under build for the installer package"
+            exit 1
+          fi
+          VERSION="${GITHUB_REF_NAME#v}"
+          bash scripts/packaging/build-macos-pkg.sh "$VST3_PATH" "$VERSION" "poly-${GITHUB_REF_NAME}-${{ matrix.asset }}.pkg"
+      - name: Test installer package (macOS)
+        if: runner.os == 'macOS'
+        run: bash scripts/packaging/test-macos-pkg.sh "poly-${GITHUB_REF_NAME}-${{ matrix.asset }}.pkg"
       - name: Record signing status (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
@@ -283,6 +304,7 @@ jobs:
           name: release-${{ matrix.asset }}
           path: |
             poly-*.zip
+            poly-*.pkg
             signed-*.txt
           retention-days: 7
           if-no-files-found: error
@@ -316,12 +338,14 @@ jobs:
       - name: Write checksums
         run: |
           cd dist
-          sha256sum *.zip > SHA256SUMS
+          sha256sum *.zip *.pkg > SHA256SUMS
           cat SHA256SUMS
       - name: Attest build provenance
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
-          subject-path: 'dist/*.zip'
+          subject-path: |
+            dist/*.zip
+            dist/*.pkg
       # Strip the leading `v` from the tag (v0.1.0 -> 0.1.0) and pull the body
       # from CHANGELOG.md. gen-release-notes.mjs exits non-zero if the section
       # is missing or empty, so a mistagged/undocumented version fails loud here
@@ -353,5 +377,6 @@ jobs:
           prerelease: ${{ contains(github.ref_name, '-') }}
           files: |
             dist/*.zip
+            dist/*.pkg
             dist/SHA256SUMS
           fail_on_unmatched_files: true

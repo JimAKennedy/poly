@@ -12,18 +12,18 @@ three steps in `release.yml` locked by new assertions in the existing
 
 - [x] 1. The package is built, and its payload proves where it installs
 - [x] 2. A CI job installs and removes it on a fresh Mac
-- [ ] 3. The release builds, tests and publishes it beside the zip
+- [x] 3. The release builds, tests and publishes it beside the zip
 
 ## Definition of Done
 
 Copied verbatim from the slice:
 
-- [ ] The release workflow builds a `.pkg` that installs the VST3 to
+- [x] The release workflow builds a `.pkg` that installs the VST3 to
       `/Library/Audio/Plug-Ins/VST3/`, or per-user on request, and the AU to
       `Components/` only if OS17 decided it ships
-- [ ] Installing on a clean Mac, then removing, leaves the plug-in folders as
+- [x] Installing on a clean Mac, then removing, leaves the plug-in folders as
       they were, and the evidence records both
-- [ ] The contract check asserts the package step's position and inputs
+- [x] The contract check asserts the package step's position and inputs
 
 ## Validation
 

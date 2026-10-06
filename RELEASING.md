@@ -33,6 +33,15 @@ Authenticode verdicts on Windows, clears the quarantine the way the README
 tells a user to, and runs pluginval against the installed bundle. Each job
 uploads a report; read them before announcing a release.
 
+The macOS leg also builds an installer package, `poly-<tag>-macos-universal.pkg`,
+beside the zip: it installs the VST3 to `/Library/Audio/Plug-Ins/VST3`, or to
+the user's own `~/Library/…` when they choose "only me" in the installer.
+Before it is uploaded, the leg installs and removes it on its own fresh runner,
+both ways, with `scripts/packaging/test-macos-pkg.sh`, and the package joins
+`SHA256SUMS` and the provenance attestation like every zip. It is unsigned
+until open-source-launch M007/S02 adds a Developer ID Installer signature and
+notarization.
+
 ## Signing and notarization
 
 The macOS release leg (`.github/workflows/release.yml`) auto-signs, notarizes,

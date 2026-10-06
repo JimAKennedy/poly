@@ -90,3 +90,12 @@ folders (`~/Library/…` per-user, `/Library/…` all users).
   `com.apple.quarantine` builds a package whose extracted payload has none;
   with a plain copy it has one. The payload test treats `._` entries as the
   attribute metadata they are.
+
+## 2026-10-06 — judgment calls during M007/S01 task 3
+
+- **OS04's attestation assertion accepts a block-scalar `subject-path`.**
+  Attesting the package beside the zips needs two paths, so `subject-path`
+  became a `|` block; the existing assertion only matched the one-line form.
+  It now matches either, still requiring `dist/*.zip`, and the new OS35 test
+  requires `dist/*.pkg`. Obviously right: no coverage was dropped, only the
+  shape of the line changed.
