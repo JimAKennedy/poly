@@ -382,7 +382,7 @@ author–year, and nothing is renumbered. Nothing below was attempted.
 reader.
 
 **Branch:** milestone/M006-liveness
-**Status:** planned
+**Status:** done
 **Demo:** A deliberately broken URL appears in the next scheduled report.
 
 **Advisory, never a gate.** A hard gate on third-party availability makes every
@@ -391,21 +391,22 @@ gets disabled — which is worse than not having one.
 
 ### Slice M006/S01 — The scheduled check reports
 
+**Plan:** M006-S01-plan.md
 **Validation:** format, guards
 **Evidence:** evidence/M006-S01.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] A scheduled job checks every URL in the bibliography and reports what it
+- [x] A scheduled job checks every URL in the bibliography and reports what it
       found, without failing a pull request
-- [ ] It does not report the browser-only class as dead: 403 and 406 are
+- [x] It does not report the browser-only class as dead: 403 and 406 are
       distinguished from 404 and no-response
-- [ ] It is shown to detect a genuinely dead URL, by introducing one
+- [x] It is shown to detect a genuinely dead URL, by introducing one
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| VR16 | Nothing fetches anything. `research-provenance` checks that a citation resolves to an anchor and `citation-tier` checks the declared tier; a Tier-A source rotted to a 404 with every gate green | `tooling` | `.github/workflows/`, `scripts/` | The job runs and reports; mutation-proved by breaking a URL and seeing it named | `open` |
+| VR16 | Nothing fetches anything. `research-provenance` checks that a citation resolves to an anchor and `citation-tier` checks the declared tier; a Tier-A source rotted to a 404 with every gate green | `tooling` | `.github/workflows/`, `scripts/` | The job runs and reports; mutation-proved by breaking a URL and seeing it named | `done` |
 
 ## Sequencing
 

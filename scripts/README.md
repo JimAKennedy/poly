@@ -74,6 +74,9 @@ actually fails on regressions.
   on a branch or tag. The three jk-standards workflow checks pass on a tree
   that violates all three (open-source-launch M002/S01), so this is the guard;
   each rule carries an inline red fixture so "seen red" is part of every run.
+- `check-reference-links-workflow.mjs` — locks `.github/workflows/reference-links.yml`'s
+  shape: weekly, never failing a PR, and writing an issue only from scheduled
+  and manual runs.
 - `check-ledger-row-ids.mjs` — row IDs are unique within each delivery ledger.
   jk-standards' `ledger` check validates structure and statuses but not ID
   uniqueness, which let guide-parity M004 add a `GP11` while M005/S01 already
@@ -144,6 +147,12 @@ hand-edit the output (enforced by the jk-standards generated-freshness check).
   fetch, printing web pages to PDF, and record every refusal in
   `site/src/data/references.json`; `--verify` checks the archive. Requires
   `POLY_REFERENCES_ARCHIVE` and has no default destination.
+- `reference-links.mjs` — check every URL the two bibliographies print and
+  classify it ok, blocked (a bot refusal, never reported as dead), dead or
+  error; run weekly by `.github/workflows/reference-links.yml`. Advisory:
+  exits 0 whatever it finds.
+- `reference-links.test.mjs` — the checker's classes, proved against a local
+  HTTP server.
 - `gen-release-notes.mjs` — extract a CHANGELOG section body for
   `gh release create --notes-file`; no CI wiring.
 - `install-pluginval.sh` — install pluginval locally for pre-push

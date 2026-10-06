@@ -1,0 +1,121 @@
+name: Reference links
+
+# A dead reference is found by a check, not by a reader (verifiable-references
+# M006/S01, VR16). Every URL the shipping appendix and the theory bundle print
+# is fetched weekly and classified ok, blocked, dead or error by
+# scripts/reference-links.mjs. Blocked — a bot refusal (401/403/406/429 or a
+# challenge page) — is reachable by a person and never reported as dead.
+#
+# Advisory, never a gate: the checker exits 0 whatever it finds, so this
+# workflow's status means "the check ran". Scheduled and manual runs keep one
+# "Dead references" issue current; a pull_request run, triggered only when the
+# bibliographies or the checker change, reports in its summary and touches no
+# issue. scripts/check-reference-links-workflow.mjs locks this shape.
+
+on:
+  schedule:
+    - cron: '0 4 * * 1'
+  workflow_dispatch:
+    inputs:
+      extra_url:
+        description: 'A URL to check alongside the bibliographies, e.g. one known to be dead, to prove detection'
+        required: false
+        type: string
+  pull_request:
+    branches: [main]
+    paths:
+      - 'site/src/content/docs/appendix-references.mdx'
+      - 'site/src/content/theory/theory-references.mdx'
+      - 'scripts/reference-links.mjs'
+      - '.github/workflows/reference-links.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  check:
+    name: Check reference links
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24'
+      - name: Check every bibliography URL
+        env:
+          EXTRA_URL: ${{ github.event.inputs.extra_url }}
+        run: |
+          set -euo pipefail
+          EXTRA=()
+          if [ -n "${EXTRA_URL:-}" ]; then EXTRA=(--extra-url "$EXTRA_URL"); fi
+          node scripts/reference-links.mjs "${EXTRA[@]}" --json reference-links.json --summary reference-links.md
+          cat reference-links.md >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload the report
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: reference-links
+          path: |
+            reference-links.json
+            reference-links.md
+          retention-days: 30
+          if-no-files-found: error
+
+  report:
+    name: Keep the dead-references issue current
+    needs: check
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: reference-links
+      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const fs = require('fs');
+            const report = JSON.parse(fs.readFileSync('reference-links.json', 'utf8'));
+            const dead = report.findings.filter((f) => f.class === 'dead');
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const label = 'dead-reference';
+            const open = await github.rest.issues.listForRepo({
+              owner: context.repo.owner, repo: context.repo.repo, labels: label, state: 'open',
+            });
+            const existing = open.data[0];
+            if (dead.length === 0) {
+              if (existing) {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner, repo: context.repo.repo, issue_number: existing.number,
+                  body: `All clear: no dead references in [this run](${runUrl}).`,
+                });
+                await github.rest.issues.update({
+                  owner: context.repo.owner, repo: context.repo.repo, issue_number: existing.number, state: 'closed',
+                });
+              }
+              return;
+            }
+            const rows = dead.map((f) => `| ${f.url} | ${f.status ?? f.error} | ${f.anchors.join(', ')} |`);
+            const body = [
+              `${dead.length} dead reference${dead.length === 1 ? '' : 's'} in [the weekly check](${runUrl}) of ${report.checked} URLs.`,
+              '',
+              '| URL | Result | Cited as |',
+              '|---|---|---|',
+              ...rows,
+              '',
+              'Blocked hosts (bot refusals) are listed in the run summary and are not dead.',
+            ].join('\n');
+            if (existing) {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo, issue_number: existing.number, body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner, repo: context.repo.repo,
+                title: 'Dead references', body, labels: [label],
+              });
+            }

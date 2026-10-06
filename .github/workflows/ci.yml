@@ -50,6 +50,10 @@ jobs:
         run: node --test scripts/check-scripts-readme.mjs
       - name: Workflow hygiene contract (top-level permissions, pinned third-party checkouts, PR concurrency)
         run: node --test scripts/check-workflow-hygiene.mjs
+      - name: Reference-links workflow contract and classes (advisory, scheduled, a bot refusal is never dead)
+        run: |
+          node --test scripts/check-reference-links-workflow.mjs
+          node --test scripts/reference-links.test.mjs
 
   build:
     strategy:
