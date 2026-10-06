@@ -576,7 +576,7 @@ while the paperwork is pending.
 attributes it to a named publisher rather than warning against it.
 
 **Branch:** milestone/M008-windows-installer
-**Status:** planned
+**Status:** in-progress
 **Demo:** A signed installer on the Releases page places the VST3 in
 `C:\Program Files\Common Files\VST3\`, uninstalls from Apps & features, and
 carries a publisher name in its SmartScreen dialog.
@@ -587,9 +587,10 @@ different installer tooling, no shared code.
 ### Slice M008/S01 — An installer is built and tested unsigned
 
 **Depends:** M006/S02
+**Plan:** M008-S01-plan.md
 **Validation:** format, guards
 **Evidence:** evidence/M008-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
