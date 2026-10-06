@@ -258,7 +258,8 @@ test('release publishes SHA256SUMS over every zip (OS04)', () => {
 test('release attests build provenance for every zip with the pinned action (OS04)', () => {
   const rel = wf.slice(wf.indexOf('\n  release:'));
   assert.ok(rel.includes(`uses: ${ATTEST_ACTION}`), `release job must use ${ATTEST_ACTION} (SHA-pinned like every other action)`);
-  assert.match(rel, /subject-path:\s*['"]?dist\/\*\.zip/, 'attestation subject-path must cover dist/*.zip');
+  // A block scalar since M007/S01, when the package joined the zips.
+  assert.match(rel, /subject-path:\s*(?:\|\s*\n\s*)?['"]?dist\/\*\.zip/, 'attestation subject-path must cover dist/*.zip');
   const attest = stepIndex(rel, 'Attest build provenance');
   const publish = stepIndex(rel, 'Publish GitHub Release');
   assert.ok(attest >= 0 && attest < publish, 'attestation must precede publishing');
@@ -589,4 +590,50 @@ test('gen-release-notes rejects a missing version argument (exit 2)', () => {
     (err) => err.status === 2,
     'expected exit 2 when no version argument is given',
   );
+});
+
+// --- open-source-launch M007/S01 (OS35): the macOS leg also builds the
+// installer package, tests it by installing and removing it on its own fresh
+// runner, and the release publishes it beside the zip with the same checksum
+// and provenance every zip gets. The package step comes after the signing gate
+// (an unsigned build still cannot ship quietly) and after the zip, and before
+// the upload; the test step follows the build. Unsigned until M007/S02. ---
+
+function stepBody(src, name) {
+  const start = src.search(new RegExp(`^\\s*-\\s*name:\\s*${name}\\s*$`, 'm'));
+  if (start < 0) return '';
+  const next = src.indexOf('\n      - ', start + 1);
+  return src.slice(start, next < 0 ? undefined : next);
+}
+
+test('the macOS leg builds the installer package from the located bundle and the tag (OS35)', () => {
+  const body = stepBody(wf, 'Build installer package \\(macOS\\)');
+  assert.ok(body, 'no "Build installer package (macOS)" step');
+  assert.match(body, /if:\s*runner\.os == 'macOS'/, 'the package step must be macOS-only');
+  assert.match(body, /bash scripts\/packaging\/build-macos-pkg\.sh\s+"\$VST3_PATH"\s+"\$VERSION"\s+"poly-\$\{GITHUB_REF_NAME\}-\$\{\{ matrix\.asset \}\}\.pkg"/,
+    'the package step must pass the located bundle, the tag version and the poly-<tag>-<asset>.pkg name');
+  assert.match(body, /VERSION="\$\{GITHUB_REF_NAME#v\}"/, 'the version must come from the tag, as the release job derives it');
+});
+
+test('the package is built after the signing gate and the zip, tested, then uploaded (OS35)', () => {
+  const gate = wf.indexOf('- name: Require signing or an explicit allowance');
+  const zip = stepIndex(wf, 'Locate and package VST3 \\(macOS\\)');
+  const build = stepIndex(wf, 'Build installer package \\(macOS\\)');
+  const testPkg = stepIndex(wf, 'Test installer package \\(macOS\\)');
+  const upload = stepIndex(wf, 'Upload release asset');
+  assert.ok(gate >= 0 && zip >= 0 && build >= 0 && testPkg >= 0 && upload >= 0, 'a step is missing');
+  assert.ok(gate < build, 'the package must be built after the signing gate, so an unsigned package cannot ship quietly');
+  assert.ok(zip < build, 'the package is built after the zip, beside it');
+  assert.ok(build < testPkg && testPkg < upload, 'build, then install-and-remove test, then upload');
+  const t = stepBody(wf, 'Test installer package \\(macOS\\)');
+  assert.match(t, /bash scripts\/packaging\/test-macos-pkg\.sh\s+"poly-\$\{GITHUB_REF_NAME\}-\$\{\{ matrix\.asset \}\}\.pkg"/, 'the test step must install the package the build step wrote');
+});
+
+test('the release publishes the package with checksums and provenance, like every zip (OS35)', () => {
+  const upload = stepBody(wf, 'Upload release asset');
+  assert.match(upload, /poly-\*\.pkg/, 'the leg must upload the package');
+  const rel = wf.slice(wf.indexOf('\n  release:'));
+  assert.match(rel, /sha256sum[^\n]*\*\.pkg[^\n]*>\s*SHA256SUMS/, 'SHA256SUMS must cover the package');
+  assert.match(rel, /subject-path:[\s\S]*?dist\/\*\.pkg/, 'the provenance attestation must cover the package');
+  assert.match(rel, /files:[\s\S]*?dist\/\*\.pkg/, 'the Release must publish the package');
 });

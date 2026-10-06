@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The macOS installer's distribution (open-source-launch M007/S01, OS35).
+  build-macos-pkg.sh substitutes @VERSION@. Two install domains: the whole
+  machine (/Library/Audio/Plug-Ins/VST3, the default) or the current user only
+  (~/Library/Audio/Plug-Ins/VST3) — the per-user choice the installer offers.
+  No other volume, no customisation, no scripts: the package is the smallest
+  thing that puts the bundle where a DAW looks.
+-->
+<installer-gui-script minSpecVersion="2">
+    <title>Poly</title>
+    <domains enable_anywhere="false" enable_currentUserHome="true" enable_localSystem="true"/>
+    <options customize="never" require-scripts="false" hostArchitectures="arm64,x86_64"/>
+    <choices-outline>
+        <line choice="digital.jk.poly.vst3"/>
+    </choices-outline>
+    <choice id="digital.jk.poly.vst3" visible="false" title="Poly VST3">
+        <pkg-ref id="digital.jk.poly.vst3"/>
+    </choice>
+    <pkg-ref id="digital.jk.poly.vst3" version="@VERSION@">poly-vst3.pkg</pkg-ref>
+</installer-gui-script>

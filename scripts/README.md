@@ -119,6 +119,17 @@ actually fails on regressions.
 - `check-wasm-freshness.sh` — the deployed WASM + JS glue hash-matches a fresh
   local build of the engine they claim to be.
 
+## Packaging
+
+- `packaging/` — the macOS installer package (open-source-launch M007).
+  `packaging/build-macos-pkg.sh` builds an unsigned `.pkg` that installs the VST3 to
+  `/Library/Audio/Plug-Ins/VST3` or, on request, the user's own;
+  `packaging/distribution.xml` is its installer definition;
+  `packaging/build-macos-pkg.test.mjs`
+  builds and expands one without installing; `packaging/test-macos-pkg.sh`
+  installs and removes it, system-wide and per-user, on a clean Mac (CI's
+  `package-macos` job), and refuses to run where Poly is already installed.
+
 ## Generators
 
 Emit generated docs/data — edit the source of truth and rerun, never

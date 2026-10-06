@@ -520,7 +520,7 @@ installer's questions, and their DAW finds Poly on the next scan — no folder
 conventions, no quarantine flag.
 
 **Branch:** milestone/M007-macos-pkg
-**Status:** planned
+**Status:** in-progress
 **Demo:** A signed, notarized, stapled `.pkg` on the Releases page opens with
 no warning on a clean Mac and installs the VST3 (and the AU, if OS17 says it
 ships) where the DAW looks, with a per-user option.
@@ -533,22 +533,23 @@ while the paperwork is pending.
 ### Slice M007/S01 — A package is built and tested unsigned
 
 **Depends:** M006/S02, M003/S03
+**Plan:** M007-S01-plan.md
 **Validation:** format, guards
 **Evidence:** evidence/M007-S01.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The release workflow builds a `.pkg` that installs the VST3 to
+- [x] The release workflow builds a `.pkg` that installs the VST3 to
       `/Library/Audio/Plug-Ins/VST3/`, or per-user on request, and the AU to
       `Components/` only if OS17 decided it ships
-- [ ] Installing on a clean Mac, then removing, leaves the plug-in folders as
+- [x] Installing on a clean Mac, then removing, leaves the plug-in folders as
       they were, and the evidence records both
-- [ ] The contract check asserts the package step's position and inputs
+- [x] The contract check asserts the package step's position and inputs
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| OS35 | The macOS artifact is a zip the user must unpack and place by hand. A `.pkg` built with `pkgbuild`/`productbuild` — the one format Gatekeeper and notarization treat as first-class — places the bundle where the DAW looks and offers the per-user choice through the installer's own UI | `pipeline` | `.github/workflows/release.yml`, `scripts/packaging/`, `scripts/check-release-workflow.mjs` | The pkg installs and uninstalls cleanly on a clean machine (evidence); the release publishes it beside the zip; if the AU ships, the release builds it universal, since `build-au-macos` is arm64-only today | `open` |
+| OS35 | The macOS artifact is a zip the user must unpack and place by hand. A `.pkg` built with `pkgbuild`/`productbuild` — the one format Gatekeeper and notarization treat as first-class — places the bundle where the DAW looks and offers the per-user choice through the installer's own UI | `pipeline` | `.github/workflows/release.yml`, `scripts/packaging/`, `scripts/check-release-workflow.mjs` | The pkg installs and uninstalls cleanly on a clean machine (evidence); the release publishes it beside the zip; if the AU ships, the release builds it universal, since `build-au-macos` is arm64-only today | `done` |
 
 ### Slice M007/S02 — The package is signed, notarized and stapled
 
