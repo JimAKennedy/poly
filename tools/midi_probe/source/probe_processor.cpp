@@ -6,7 +6,9 @@
 #include <cstdlib>
 #include <cstring>
 #include <fstream>
+#include <mutex>
 #include <string>
+#include <vector>
 
 #include "pluginterfaces/vst/ivstevents.h"
 #include "pluginterfaces/vst/ivstprocesscontext.h"
@@ -18,6 +20,48 @@ using namespace Steinberg;
 using namespace Steinberg::Vst;
 
 namespace probe {
+
+namespace {
+
+// Slot registry shared by every probe instance in the host process. Touched
+// only from initialize()/terminate(), never from process().
+std::mutex gSlotMutex;
+std::vector<bool> gSlotTaken;
+
+int claimSlot() {
+    std::lock_guard<std::mutex> lock(gSlotMutex);
+    for (size_t i = 0; i < gSlotTaken.size(); ++i) {
+        if (!gSlotTaken[i]) {
+            gSlotTaken[i] = true;
+            return static_cast<int>(i);
+        }
+    }
+    gSlotTaken.push_back(true);
+    return static_cast<int>(gSlotTaken.size() - 1);
+}
+
+void releaseSlot(int slot) {
+    std::lock_guard<std::mutex> lock(gSlotMutex);
+    if (slot >= 0 && static_cast<size_t>(slot) < gSlotTaken.size())
+        gSlotTaken[static_cast<size_t>(slot)] = false;
+}
+
+} // namespace
+
+std::string outputPathForSlot(const std::string& base, int slot) {
+    if (base.empty() || slot <= 0)
+        return base;
+    const auto sep = base.find_last_of("/\\");
+    const auto dot = base.find_last_of('.');
+    const bool hasExt = dot != std::string::npos && (sep == std::string::npos || dot > sep);
+    const std::string suffix = "-" + std::to_string(slot + 1);
+    return hasExt ? base.substr(0, dot) + suffix + base.substr(dot) : base + suffix;
+}
+
+std::string ProbeProcessor::outputPath() const {
+    const char* path = std::getenv("POLY_PROBE_OUTPUT");
+    return outputPathForSlot(path ? std::string(path) : std::string(), slot_ < 0 ? 0 : slot_);
+}
 
 ProbeProcessor::ProbeProcessor() {
     // Pair this processor with the probe's edit-controller so Cubase can
@@ -37,6 +81,7 @@ tresult PLUGIN_API ProbeProcessor::initialize(FUnknown* context) {
     addAudioOutput(STR16("Stereo Out"), SpeakerArr::kStereo);
     addEventInput(STR16("MIDI In"));
 
+    slot_ = claimSlot();
     return kResultOk;
 }
 
@@ -48,6 +93,8 @@ tresult PLUGIN_API ProbeProcessor::terminate() {
     // is not called on the runner's hard-kill path, but a graceful host reaches
     // it; the flush-during-playback sidecar covers the hard-kill path.
     writeStatusSidecar();
+    releaseSlot(slot_);
+    slot_ = -1;
     return AudioEffect::terminate();
 }
 
@@ -141,8 +188,8 @@ tresult PLUGIN_API ProbeProcessor::setState(IBStream* /*state*/) {
 }
 
 void ProbeProcessor::flushToOutputPath() {
-    const char* path = std::getenv("POLY_PROBE_OUTPUT");
-    envSeen_ = (path != nullptr && path[0] != '\0');
+    const std::string path = outputPath();
+    envSeen_ = !path.empty();
     if (envSeen_) {
         lastFlushOk_ = writeJsonl(path);
         lastFlushedEventCount_ = events_.size();
@@ -157,10 +204,10 @@ void ProbeProcessor::writeStatusSidecar() const {
     // Derive the sidecar path from POLY_PROBE_OUTPUT (probe.jsonl ->
     // probe-status.txt in the same dir). If the env var is absent we can't know
     // where the artifact dir is, so there is nowhere durable to write — skip.
-    const char* path = std::getenv("POLY_PROBE_OUTPUT");
+    const std::string path = outputPath();
     std::string statusPath;
-    if (path != nullptr && path[0] != '\0') {
-        std::string p(path);
+    if (!path.empty()) {
+        const std::string& p = path;
         const auto dot = p.find_last_of('.');
         // Strip the extension if present, then append the sidecar suffix.
         statusPath = (dot == std::string::npos ? p : p.substr(0, dot)) + "-status.txt";
@@ -173,7 +220,8 @@ void ProbeProcessor::writeStatusSidecar() const {
         return;
 
     out << "env_seen=" << (envSeen_ ? "yes" : "no") << '\n'
-        << "env_path=" << (path ? path : "") << '\n'
+        << "env_path=" << path << '\n'
+        << "slot=" << slot_ << '\n'
         << "process_calls=" << processCalls_ << '\n'
         << "event_count=" << events_.size() << '\n'
         << "flush_count=" << flushCount_ << '\n'

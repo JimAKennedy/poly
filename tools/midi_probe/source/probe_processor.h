@@ -10,6 +10,13 @@
 
 namespace probe {
 
+// M004 S05: where an instance writes its capture. Slot 0 -- the only slot in
+// a single-probe project -- writes `base` itself, so every existing fixture and
+// workflow step is unchanged. Slot n > 0 inserts "-<n+1>" before the extension
+// (probe.jsonl -> probe-2.jsonl), so two probes in one Cubase no longer
+// overwrite each other's file. An empty base stays empty: nothing is written.
+std::string outputPathForSlot(const std::string& base, int slot);
+
 struct ProbeEvent {
     enum Type : uint8_t { NoteOn, NoteOff };
     Type type;
@@ -54,7 +61,16 @@ private:
     // this lands in cubase-nightly-artifacts even when probe.jsonl does not.
     void writeStatusSidecar() const;
 
+    // POLY_PROBE_OUTPUT adjusted for this instance's slot (outputPathForSlot),
+    // or empty when the env var is unset.
+    std::string outputPath() const;
+
     std::vector<ProbeEvent> events_;
+    // The lowest slot no live instance holds, claimed in initialize() and
+    // released in terminate(). Lowest-free rather than a running count so a
+    // host that creates and destroys a probe while scanning or loading cannot
+    // push the project's first probe off slot 0 and its file name.
+    int slot_ = -1;
     // Tracks the transport play state across process() blocks so we can flush on
     // the playing->stopped edge. This runner hard-kills Cubase (the Hub blocks a
     // clean exit), so setActive(false) never fires — flushing on transport-stop
