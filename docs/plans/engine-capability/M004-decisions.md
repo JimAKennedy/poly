@@ -175,3 +175,100 @@ failures stopped on 2026-09-13.
   `TAIL_SECONDS`. The transport is still rolling through the tail, so this is
   still a locate mid-playback — it just no longer truncates the passage the
   golden describes.
+
+## 2026-10-07 — `/jk:auto M004`, resuming at the runner
+
+**What changed since the halt.** The session now runs *on* `JIMW1`, in the
+interactive console session the runner uses, and can screenshot the desktop.
+The halt's second answer — "build them at the runner machine" — is therefore
+satisfiable by this session: UI automation is checked against a screenshot in
+seconds rather than against an eight-minute dispatch.
+
+- **Q:** Driving Cubase takes over the shared desktop, and the runner listener
+  can start a job mid-session. How should the desktop be handled? — **A:** Take
+  it, and pause the runner.
+- **Decision:** The `Runner.Listener` is stopped while this session drives
+  Cubase, and restarted before each dispatch this session triggers; the owner
+  stays off the keyboard while Cubase is foregrounded. — **Why:** A dispatch
+  landing on a desktop someone else is automating would fail for reasons that
+  have nothing to do with the spec, and keystrokes sent to the wrong window are
+  not recoverable.
+
+- **Q:** S05's two-instance `.cpr` — built by this session driving Cubase, or
+  by the owner? — **A:** This session builds it.
+- **Decision:** Derived from `poly-4bar.cpr` with a second Poly instance on its
+  own track, saved under a new name, and reviewed in the PR. — **Why:** It
+  supersedes the 2026-09-16 answer only in who does the authoring; the fixture
+  is still authored on the runner in Cubase 14, which is the constraint the
+  fixture README records.
+
+- **The deferred question, answered up front.** **Q:** If a slice's spec is red
+  in its group's dispatch, fix and re-dispatch, or stop? — **A:** Fix and
+  re-dispatch, at most twice per group.
+- **Decision:** A red spec is fixed locally against Cubase and the group is
+  re-dispatched; a group still red after two re-dispatches halts the run with
+  the failing log's headline. — **Why:** Local iteration is now cheap, so the
+  dispatch is confirmation rather than discovery; the cap keeps a runner-only
+  failure from consuming the machine indefinitely.
+
+## 2026-10-07 — building S01, S04, S05, S06, S07 at the runner (judgment calls)
+
+Each of these resolves something a plan left open or got slightly wrong, in a
+way that is obviously right once seen on the runner. None widens a slice.
+
+- **Every M004 spec runs in a Cubase session of its own.** The plans placed
+  the new specs as steps inside the nightly's single session. Each of them
+  changes host state a later spec would inherit -- an editor cycled, an
+  automation lane written, a project saved and reopened, a bounce rendered, a
+  different fixture -- which is the ordering trap 2026-09-16's S02 finding
+  named. `scripts/cubase/run-session-spec.ps1` starts a fresh Cubase on a
+  scratch copy of the fixture, runs one spec and always quits. **Why:** it
+  makes each slice's result independent of the others' and of the first
+  session's golden comparison, and it is what the fixtures README already
+  requires of any run that saves.
+- **The host is driven through the MIDI Remote surface, not UI automation.**
+  2026-09-16 recorded "nothing makes Cubase save / close and reopen the editor /
+  export a mixdown / write an automation lane". The surface already in the repo
+  reaches all four: `makeCommandBinding` (File > Save, File > Export Audio
+  Mixdown), the instrument slot's `mEdit`, `mAutomationWrite`/`mAutomationRead`,
+  and direct access to one parameter. Only two clicks remain -- the Export
+  dialog's button and Cubase's moved-project prompts -- each in a script of its
+  own (`export-audio-mixdown.ps1`, `dismiss-moved-project.ps1`). **Why:** a CC
+  is deterministic where a click is not, and the CC map is unit-testable.
+- **S01's reopen is a second session on the saved copy, not a relaunch of the
+  fixture.** The plan said "relaunch Cubase on the same fixture"; the fixture
+  must never be written, so the save goes to a scratch copy and the reopen
+  opens that copy. **Why:** the fixtures README's read-only rule.
+- **S06 bounces with Export Audio Mixdown, not `export-midi.spec.ts`'s route.**
+  The plan said to reuse that route. It is Poly's own SMF export, rendered from
+  the engine outside the host, so it never drives `process()` offline -- the
+  thing the row is about. The audio mixdown does, and the probe captures it.
+  **Why:** the plan's route cannot test the row; this one does, and the spec
+  says so in its header.
+- **S07's automation driver is `remote.py automate`, not an extension of
+  `play_scenario.py`.** Same directory, same constants and handshake, imported
+  from `play_scenario.py`; the transport driver stays byte-for-byte what the
+  first session runs. **Why:** the nightly's golden comparison depends on
+  `play_scenario.py`, and nothing about automation needs to touch it.
+- **S05 changes `poly_midi_probe` so two probes write two files.** The probe
+  read one path from `POLY_PROBE_OUTPUT`, so two instances in one Cubase
+  overwrote each other. Each instance now claims the lowest free slot; slot 0
+  writes the configured path exactly as before, slot 1 writes `probe-2.jsonl`.
+  The probe is test tooling under `tools/midi_probe/`, not the shipped plugin.
+  **Why:** without it S05's output isolation is unobservable; with slot 0
+  unchanged, every existing fixture and step is unaffected.
+- **S05's fixture is authored from the runner checkout's `poly-4bar.cpr`.** A
+  first version authored from a scratch copy embedded that scratch folder's
+  path, which the personal-paths guard rejected and which made Cubase raise a
+  "Set Project Folder" picker for its copies. Re-authored by opening the runner
+  checkout's fixture in place and saving beside it, so the only path it records
+  is the one `poly-4bar.cpr` records. `dismiss-moved-project.ps1` answers the
+  picker too, in case a future fixture raises it.
+- **The job timeout goes from 30 to 45 minutes.** Six more Cubase launches at
+  about a minute and a half each on a run that took seven. **Why:** the ceiling
+  exists to bound a hang, not to fail a healthy run.
+- **One green dispatch and one red dispatch cover all five slices.** The
+  batching decision grouped the slices by what the workflow needed; built at
+  the runner, all five landed together, so the groups collapse into one
+  closing run. **Why:** the decision's reason -- one run genuinely shows
+  several specs green -- holds for five as for four.
