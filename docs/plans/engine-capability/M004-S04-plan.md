@@ -12,17 +12,17 @@ own.
 
 ## Task status
 
-- [ ] 1. The spec, its contract, and the workflow step
-- [ ] 2. Cite the nightly run and close the slice
+- [x] 1. The spec, its contract, and the workflow step
+- [x] 2. Cite the nightly run and close the slice
 
 ## Definition of Done
 
 Copied verbatim from the slice.
 
-- [ ] The spec opens and closes the plugin editor repeatedly within one session
+- [x] The spec opens and closes the plugin editor repeatedly within one session
       and asserts the plugin still responds and still emits notes afterwards
-- [ ] The spec has been shown to fail when the WebView does not re-attach
-- [ ] A nightly run is named in the evidence with this spec green
+- [x] The spec has been shown to fail when the WebView does not re-attach
+- [x] A nightly run is named in the evidence with this spec green
 
 ## Validation
 

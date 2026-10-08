@@ -8,6 +8,13 @@ class: gated
 nightly. It opens the `poly-test` loopMIDI virtual port, waits for the MIDI
 Remote script's ready ping, plays a fixed number of bars, and stops.
 
+`remote.py` (M004) drives the rest of the MIDI Remote surface: `editor
+open|close` (S04), `save` (S01), `export` (opens Export Audio Mixdown, S06) and
+`automate` (S07: a baseline pass, a pass that writes a lane-0 "Active"
+automation lane with Poly's W switch on, and a pass that reads it back). It
+reuses this driver's ready handshake and constants; the CC map is in
+`tests/cubase/midi-remote/README.md`.
+
 ## What it does
 
 1. Opens the `poly-test` input and output ports (substring match on the port

@@ -347,6 +347,70 @@ TEST_F(ProbeTestFixture, FlushesDuringPlaybackBeforeAnyStopEdge) {
 #endif
 }
 
+// --- M004 S05: one capture file per probe instance ---
+
+TEST(ProbeOutputPath, SlotZeroKeepsTheConfiguredPath) {
+    // A single-probe project must write exactly where it always has.
+    EXPECT_EQ(probe::outputPathForSlot("C:\\art\\probe.jsonl", 0), "C:\\art\\probe.jsonl");
+}
+
+TEST(ProbeOutputPath, LaterSlotsGetANumberedSibling) {
+    EXPECT_EQ(probe::outputPathForSlot("C:\\art\\probe.jsonl", 1), "C:\\art\\probe-2.jsonl");
+    EXPECT_EQ(probe::outputPathForSlot("/art/probe.jsonl", 2), "/art/probe-3.jsonl");
+}
+
+TEST(ProbeOutputPath, ADotInADirectoryIsNotAnExtension) {
+    EXPECT_EQ(probe::outputPathForSlot("C:\\a.b\\probe", 1), "C:\\a.b\\probe-2");
+}
+
+TEST(ProbeOutputPath, UnsetStaysUnset) {
+    EXPECT_EQ(probe::outputPathForSlot("", 1), "");
+}
+
+TEST(ProbeOutputPath, TwoLiveInstancesWriteTwoFilesAndASlotIsReused) {
+    const auto dir = ::testing::TempDir();
+    const std::string path = dir + "poly_probe_slots.jsonl";
+#ifdef _WIN32
+    _putenv_s("POLY_PROBE_OUTPUT", path.c_str());
+#else
+    setenv("POLY_PROBE_OUTPUT", path.c_str(), 1);
+#endif
+    auto* a = new ProbeProcessor();
+    auto* b = new ProbeProcessor();
+    ASSERT_EQ(a->initialize(&sHostApp), kResultOk);
+    ASSERT_EQ(b->initialize(&sHostApp), kResultOk);
+    ASSERT_EQ(a->setActive(true), kResultOk);
+    ASSERT_EQ(b->setActive(true), kResultOk);
+    std::remove(path.c_str());
+    std::remove(probe::outputPathForSlot(path, 1).c_str());
+
+    // Deactivation flushes each instance to its own file.
+    a->setActive(false);
+    b->setActive(false);
+    EXPECT_TRUE(std::ifstream(path).good());
+    EXPECT_TRUE(std::ifstream(probe::outputPathForSlot(path, 1)).good());
+
+    // Releasing slot 0 lets the next instance take it back.
+    a->terminate();
+    auto* c = new ProbeProcessor();
+    ASSERT_EQ(c->initialize(&sHostApp), kResultOk);
+    std::remove(path.c_str());
+    c->setActive(true);
+    c->setActive(false);
+    EXPECT_TRUE(std::ifstream(path).good());
+
+    c->terminate();
+    b->terminate();
+    a->release();
+    b->release();
+    c->release();
+#ifdef _WIN32
+    _putenv_s("POLY_PROBE_OUTPUT", "");
+#else
+    unsetenv("POLY_PROBE_OUTPUT");
+#endif
+}
+
 // --- T03: Poly -> Probe chain integration ---
 
 TEST(ProbeChain, PolyOutputMatchesProbeCapture) {

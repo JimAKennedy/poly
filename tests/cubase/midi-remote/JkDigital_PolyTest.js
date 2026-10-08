@@ -22,8 +22,23 @@
 //   CC 20 -> transport START   (value >= 64 triggers)
 //   CC 21 -> transport STOP     (value >= 64 triggers)
 //   CC 22 -> LOCATE to zero      (value >= 64 triggers; "To Left Locator")
+//   CC 23 -> File > SAVE          (value >= 64 triggers)            M004 S01
+//   CC 24 -> Poly's EDITOR        (absolute: >= 64 open, < 64 close) M004 S04
+//   CC 25 -> Poly's automation W  (absolute: >= 64 on, < 64 off)     M004 S07
+//   CC 26 -> Poly's automation R  (absolute: >= 64 on, < 64 off)     M004 S07
+//   CC 27 -> Poly PARAM_INDEX     (absolute: value / 127)            M004 S07
+//   CC 28 -> File > EXPORT AUDIO MIXDOWN (value >= 64 opens the dialog) M004 S06
+//   CC 117 OUT -> param echo  (value: the parameter's process value * 126, read
+//                              back after every CC 27 -- proof the set landed;
+//                              127 means it could not be resolved)
 //   CC 118 IN  -> ready POLL  (driver asks "are you live?")
 //   CC 119 OUT -> ready ping  (value 127; script's reply to a poll)
+//
+// "Poly" in CC 24-27 is the FIRST instrument channel in the MixConsole, which
+// every fixture puts on track 1 (tests/cubase/fixtures/README.md). It is
+// addressed by mixer position rather than through mTrackSelection because the
+// fixtures save with the probe track selected, and a binding that followed the
+// selection would drive the probe.
 
 var midiremote_api = require('midiremote_api_v1')
 
@@ -32,6 +47,21 @@ var CHANNEL = 0 // API channel index 0 == MIDI channel 1
 var CC_START = 20
 var CC_STOP = 21
 var CC_LOCATE = 22
+var CC_SAVE = 23
+var CC_EDITOR = 24
+var CC_AUTO_WRITE = 25
+var CC_AUTO_READ = 26
+var CC_PARAM = 27
+var CC_EXPORT = 28
+var CC_PARAM_ECHO = 117 // undefined CC in GM — echo of CC_PARAM's result (OUT)
+// The parameter CC_PARAM drives: lane 0's "Active", Poly's parameter index 8
+// (ParamIDs::laneParam(0, kActive) in plugin/source/plugids.h). Why this
+// parameter is recorded in tests/cubase/e2e/lib/automation-contract.ts.
+var PARAM_INDEX = 8
+var PARAM_TITLE = 'Active'
+// Echo values: the read-back process value scaled to 0..126, or 127 when the
+// parameter could not be resolved -- distinct from every success value.
+var PARAM_ECHO_FAILED = 127
 var CC_POLL = 118 // undefined CC in GM — driver's "are you live?" poll (IN)
 var CC_READY = 119 // undefined CC in GM — safe sentinel for the ready ping (OUT)
 var READY_VALUE = 127
@@ -86,6 +116,58 @@ page.makeValueBinding(stopButton.mSurfaceValue, page.mHostAccess.mTransport.mVal
 // left locator is at bar 1 (see tests/cubase/fixtures/README.md), so this
 // returns the cursor to the scenario start before a run.
 page.makeCommandBinding(locateButton.mSurfaceValue, 'Transport', 'To Left Locator')
+
+// --- M004: save, editor, automation switches and one parameter on Poly ---
+var saveButton = surface.makeButton(4, 0, 1, 1)
+var editorKnob = surface.makeKnob(5, 0, 1, 1)
+var autoWriteKnob = surface.makeKnob(6, 0, 1, 1)
+var autoReadKnob = surface.makeKnob(7, 0, 1, 1)
+var paramKnob = surface.makeKnob(8, 0, 1, 1)
+var exportButton = surface.makeButton(9, 0, 1, 1)
+
+saveButton.mSurfaceValue.mMidiBinding.setInputPort(midiInput).bindToControlChange(CHANNEL, CC_SAVE)
+editorKnob.mSurfaceValue.mMidiBinding.setInputPort(midiInput).bindToControlChange(CHANNEL, CC_EDITOR)
+autoWriteKnob.mSurfaceValue.mMidiBinding.setInputPort(midiInput).bindToControlChange(CHANNEL, CC_AUTO_WRITE)
+autoReadKnob.mSurfaceValue.mMidiBinding.setInputPort(midiInput).bindToControlChange(CHANNEL, CC_AUTO_READ)
+paramKnob.mSurfaceValue.mMidiBinding.setInputPort(midiInput).bindToControlChange(CHANNEL, CC_PARAM)
+exportButton.mSurfaceValue.mMidiBinding.setInputPort(midiInput).bindToControlChange(CHANNEL, CC_EXPORT)
+
+page.makeCommandBinding(saveButton.mSurfaceValue, 'File', 'Save')
+page.makeCommandBinding(exportButton.mSurfaceValue, 'File', 'Export Audio Mixdown')
+
+var polyBank = page.mHostAccess.mMixConsole.makeMixerBankZone('Poly').includeInstrumentChannels()
+var polySlot = polyBank.makeMixerBankChannel().mInstrumentPluginSlot
+page.makeValueBinding(editorKnob.mSurfaceValue, polySlot.mEdit)
+page.makeValueBinding(autoWriteKnob.mSurfaceValue, polySlot.mAutomationWrite)
+page.makeValueBinding(autoReadKnob.mSurfaceValue, polySlot.mAutomationRead)
+
+// The parameter goes through direct access, which addresses a VST3 ParamID by
+// tag. The parameter bank zone would also reach it, but by bank position, and
+// that position is Cubase's ordering rather than Poly's.
+var polyAccess = page.mHostAccess.makeDirectAccess(polySlot)
+var activeMapping = null
+page.mOnActivate = function (activeDevice, mapping) {
+    activeMapping = mapping
+}
+paramKnob.mSurfaceValue.mOnProcessValueChange = function (activeDevice, value) {
+    var echo = PARAM_ECHO_FAILED
+    if (activeMapping) {
+        // The instrument slot's own object carries the slot's parameters
+        // (Freeze, Activate Output, Extract Sound); the plugin is its one child.
+        var slotID = polyAccess.getBaseObjectID(activeMapping)
+        var pluginID = polyAccess.getChildObjectID(activeMapping, slotID, 0)
+        // Direct-access tags are Cubase's numbering, not Poly's ParamIDs (lane
+        // 0's Active is tag 4209 on Cubase 14), so resolve the tag from the
+        // index, which does follow Poly's registration order, and refuse to
+        // drive a parameter whose title is not the one expected.
+        var tag = polyAccess.getParameterTagByIndex(activeMapping, pluginID, PARAM_INDEX)
+        if (polyAccess.getParameterTitle(activeMapping, pluginID, tag, 32) === PARAM_TITLE) {
+            polyAccess.setParameterProcessValue(activeMapping, pluginID, tag, value)
+            echo = Math.round(polyAccess.getParameterProcessValue(activeMapping, pluginID, tag) * 126)
+        }
+    }
+    midiOutput.sendMidi(activeDevice, [0xB0 + CHANNEL, CC_PARAM_ECHO, echo])
+}
 
 // --- Ready handshake: driver polls, script replies ---
 // Readiness is driver-initiated instead of relying on the one-shot

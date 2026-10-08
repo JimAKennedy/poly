@@ -68,8 +68,10 @@ jobs:
     name: Cubase launch/quit smoke
     runs-on: [self-hosted, cubase]
     # The launch/quit cycle has a hard ceiling; if Cubase hangs, fail the job
-    # rather than pinning the single runner indefinitely.
-    timeout-minutes: 30
+    # rather than pinning the single runner indefinitely. 45 rather than 30
+    # since M004 added five Cubase sessions of roughly a minute and a half each
+    # to a run that took about seven minutes; the ceiling still bounds a hang.
+    timeout-minutes: 45
     env:
       # NOTE: the VST3 install dir is NOT set here. It is the per-user VST3
       # location (%LOCALAPPDATA%\Programs\Common\VST3), which cannot be spelled
@@ -565,6 +567,81 @@ jobs:
         env:
           POLY_E2E_MUTATE: ${{ inputs.e2e_mutate }}
         run: npx playwright test transport-motion.spec.ts
+
+      # --- M004: specs that need a Cubase session of their own -----------------
+      # Each of these changes host state a later spec would inherit -- an editor
+      # cycled, an automation lane written, a project saved, a bounce rendered,
+      # a different fixture -- so each gets a fresh Cubase on a SCRATCH COPY of
+      # its fixture, under _artifacts/<name>/, and quits before the next.
+      # scripts/cubase/run-session-spec.ps1 is the whole session: start, spec,
+      # quit (always). They run after the first session's post-quit assertions
+      # so its probe.jsonl is never touched, and on !cancelled() rather than
+      # success() so one red area does not hide the others' results.
+      # POLY_E2E_MUTATE turns each red the same way it does the specs above.
+      - name: "M004 S04: editor close/open cycles (own session)"
+        if: ${{ !cancelled() && env.POLY_CDP_PORT != '' }}
+        shell: pwsh
+        env:
+          POLY_E2E_MUTATE: ${{ inputs.e2e_mutate }}
+        run: >-
+          ./scripts/cubase/run-session-spec.ps1 -Name s04
+          -Spec editor-lifecycle.spec.ts
+          -FixtureCpr "${{ env.POLY_FIXTURE_CPR }}" -CopyFixture
+
+      - name: "M004 S07: host automation lane (own session)"
+        if: ${{ !cancelled() && env.POLY_CDP_PORT != '' }}
+        shell: pwsh
+        env:
+          POLY_E2E_MUTATE: ${{ inputs.e2e_mutate }}
+        run: >-
+          ./scripts/cubase/run-session-spec.ps1 -Name s07
+          -Spec host-automation.spec.ts
+          -FixtureCpr "${{ env.POLY_FIXTURE_CPR }}" -CopyFixture
+
+      # S01 is two sessions on one project: the first saves a scratch copy, the
+      # second reopens THAT copy in a fresh Cubase. -CopyFixture only on the
+      # first -- the second must open what was saved, not a new copy.
+      - name: "M004 S01: save the session (own session)"
+        id: s01_save
+        if: ${{ !cancelled() && env.POLY_CDP_PORT != '' }}
+        shell: pwsh
+        run: >-
+          ./scripts/cubase/run-session-spec.ps1 -Name s01
+          -Spec session-recall.spec.ts -Mode save
+          -FixtureCpr "${{ env.POLY_FIXTURE_CPR }}" -CopyFixture
+
+      - name: "M004 S01: reopen the saved session (own session)"
+        if: ${{ !cancelled() && steps.s01_save.outcome == 'success' }}
+        shell: pwsh
+        env:
+          POLY_E2E_MUTATE: ${{ inputs.e2e_mutate }}
+        run: >-
+          ./scripts/cubase/run-session-spec.ps1 -Name s01
+          -Spec session-recall.spec.ts -Mode reopen
+          -FixtureCpr "${{ env.POLY_ARTIFACT_DIR }}\s01\project\poly-4bar.cpr"
+
+      # S05 opens its own fixture: two Poly instances, each feeding its own
+      # probe (tests/cubase/fixtures/README.md).
+      - name: "M004 S05: two Poly instances (own session)"
+        if: ${{ !cancelled() && env.POLY_CDP_PORT != '' }}
+        shell: pwsh
+        env:
+          POLY_E2E_MUTATE: ${{ inputs.e2e_mutate }}
+        run: >-
+          ./scripts/cubase/run-session-spec.ps1 -Name s05
+          -Spec multi-instance.spec.ts
+          -FixtureCpr "${{ github.workspace }}\tests\cubase\fixtures\poly-2instance.cpr"
+          -CopyFixture
+
+      - name: "M004 S06: offline bounce vs realtime (own session)"
+        if: ${{ !cancelled() && env.POLY_CDP_PORT != '' }}
+        shell: pwsh
+        env:
+          POLY_E2E_MUTATE: ${{ inputs.e2e_mutate }}
+        run: >-
+          ./scripts/cubase/run-session-spec.ps1 -Name s06
+          -Spec offline-bounce.spec.ts
+          -FixtureCpr "${{ env.POLY_FIXTURE_CPR }}" -CopyFixture
 
       - name: Archive logs and probe output
         if: always()

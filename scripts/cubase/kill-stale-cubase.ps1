@@ -55,6 +55,28 @@ try {
     # these frees the shared user-data-dir so the next launch's
     # --remote-debugging-port flag is honored at first browser-process creation.
     Stop-StaleByName -Names @("msedgewebview2") -Kind "WebView2"
+
+    # M004: and WAIT for them to be gone. Stop-Process -Force returns before the
+    # process has exited, so a launch straight after this sweep can still find
+    # a dying msedgewebview2 holding the data dir -- and attach to it, dropping
+    # the CDP flag exactly as described above. Run 37710075119 lost that race:
+    # three WebView2 processes were "already exited or unkillable" mid-sweep,
+    # and the next Cubase's editor never opened its CDP port. Local launches
+    # had always won it. Bounded, and not fatal: if something survives, the
+    # launch proceeds and focus-editor-cdp.ps1 reports the missing port.
+    $deadline = (Get-Date).AddSeconds(20)
+    $names = @(Get-CubaseProcessNames) + @("msedgewebview2")
+    while ((Get-Process -Name $names -ErrorAction SilentlyContinue) -and (Get-Date) -lt $deadline) {
+        Start-Sleep -Milliseconds 250
+    }
+    $survivors = Get-Process -Name $names -ErrorAction SilentlyContinue
+    if ($survivors) {
+        Write-PolyPhase -Phase "kill-stale" -State "ok" `
+            -Detail "processes still present 20s after the sweep" `
+            -Extra @{ pids = (($survivors | ForEach-Object { $_.Id }) -join ",") }
+    } else {
+        Write-PolyPhase -Phase "kill-stale" -State "ok" -Detail "no Cubase or WebView2 process remains"
+    }
 } catch {
     Invoke-PolyPhaseFailure -Phase "kill-stale" -Message $_.Exception.Message
 }

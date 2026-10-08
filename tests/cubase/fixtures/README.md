@@ -92,6 +92,48 @@ Perform once on the `cubase`-labelled runner. Prerequisite: Poly and
    `POLY_FIXTURE_CPR` in the workflow and `launch-cubase.ps1`'s `-FixtureCpr`
    argument.
 
+## The two-instance fixture (M004 S05)
+
+| File | Purpose |
+|---|---|
+| `poly-2instance.cpr` | Two Poly instances, each feeding a probe of its own. Opened (as a scratch copy) by `multi-instance.spec.ts` to show the instances keep separate state, bridges and output. |
+
+| Track | Content |
+|---|---|
+| 1 `poly` | Poly on its default patch, editor open |
+| 2 `poly (D)` | A second Poly on the factory preset "Reich Phasing" (index 6), editor open |
+| 3 `probe` | Poly MIDI Probe, input `01. Poly - MIDI Out`, **monitor on**, selected |
+| 4 `probe (D)` | Poly MIDI Probe, input `02. Poly - MIDI Out`, **monitor on** |
+
+Two things differ from the single-instance recipe above, and both were found
+authoring it on the runner (Cubase 14, 2026-10-07):
+
+- **Both probes monitor.** In `poly-4bar.cpr` the probe track receives Poly's
+  MIDI because it is the selected track and record-arming follows selection.
+  With two probes only one can be selected, and the other captured nothing
+  until its Monitor button was switched on. Monitoring passes the track's input
+  through regardless of selection, so both probes are set that way.
+- **Each probe writes its own file.** `poly_midi_probe` claims the lowest free
+  slot at `initialize()`: slot 0 writes `POLY_PROBE_OUTPUT` itself and slot 1
+  writes `probe-2.jsonl` beside it (`outputPathForSlot` in
+  `tools/midi_probe/source/probe_processor.cpp`). Which probe takes which slot
+  follows load order, so the spec does not assume a mapping.
+
+Recipe: open the **runner checkout's** `poly-4bar.cpr` in place
+(`C:\actions-runner\_work\poly\poly\tests\cubase\fixtures\poly-4bar.cpr`), so the project
+records no folder but the one `poly-4bar.cpr` already records. Select track 1
+and **Project → Duplicate Tracks**; select the probe track and duplicate it;
+set the new probe's input routing to `02. Poly - MIDI Out`; switch Monitor on
+for both probes; open the second Poly's editor (the keyboard icon on its track)
+and select "Reich Phasing"; select the first probe track; **File → Save As**
+`poly-2instance.cpr` beside `poly-4bar.cpr` in that folder; copy it here and
+delete it there. Do not author it from a scratch copy: a first version made
+that way embedded the scratch folder's path, which
+`scripts/check-personal-paths.sh` rejects, and made Cubase raise a "Set
+Project Folder" picker for its copies. `dismiss-moved-project.ps1` answers that
+picker and the "project file has been moved" prompt alike, since which one a
+`.cpr` raises -- if any -- depends on what it recorded.
+
 ## Regenerating the fixture
 
 Re-run the recipe above whenever the fixture must change (new preset, different

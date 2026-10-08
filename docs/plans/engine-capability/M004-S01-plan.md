@@ -12,18 +12,18 @@ own.
 
 ## Task status
 
-- [ ] 1. The spec, its contract, and the workflow step
-- [ ] 2. Cite the nightly run and close the slice
+- [x] 1. The spec, its contract, and the workflow step
+- [x] 2. Cite the nightly run and close the slice
 
 ## Definition of Done
 
 Copied verbatim from the slice.
 
-- [ ] A Cubase project saved with a non-default Poly patch reopens carrying that
+- [x] A Cubase project saved with a non-default Poly patch reopens carrying that
       patch — edited steps, selected preset, and per-step micro-timing
-- [ ] The spec has been shown to fail when the saved state is perturbed before
+- [x] The spec has been shown to fail when the saved state is perturbed before
       reopening, so it is a round-trip check rather than a "did it load" check
-- [ ] A nightly run is named in the evidence with this spec green
+- [x] A nightly run is named in the evidence with this spec green
 
 ## Validation
 

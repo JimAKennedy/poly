@@ -59,7 +59,33 @@ files are the two halves of one contract.
 | driver → Cubase | CC 20, value ≥ 64, ch 1 | transport START |
 | driver → Cubase | CC 21, value ≥ 64, ch 1 | transport STOP |
 | driver → Cubase | CC 22, value ≥ 64, ch 1 | LOCATE to zero (To Left Locator) |
-| Cubase → driver | CC 119, value 127, ch 1 | ready ping (sent on surface connect) |
+| driver → Cubase | CC 23, value ≥ 64, ch 1 | File > Save (M004 S01) |
+| driver → Cubase | CC 24, absolute, ch 1 | Poly's editor: ≥ 64 open, < 64 close (M004 S04) |
+| driver → Cubase | CC 25, absolute, ch 1 | Poly's plugin automation Write switch (M004 S07) |
+| driver → Cubase | CC 26, absolute, ch 1 | Poly's plugin automation Read switch (M004 S07) |
+| driver → Cubase | CC 27, absolute, ch 1 | Poly parameter index 8, lane 0 "Active", set to value/127 (M004 S07) |
+| driver → Cubase | CC 28, value ≥ 64, ch 1 | File > Export Audio Mixdown (opens the dialog; M004 S06) |
+| Cubase → driver | CC 117, ch 1 | CC 27's read-back: the parameter's value × 126, or 127 if it could not be resolved |
+| driver → Cubase | CC 118, ch 1 | ready poll |
+| Cubase → driver | CC 119, value 127, ch 1 | ready ping (the reply to a poll) |
+
+The M004 rows (`tests/cubase/driver/remote.py` sends them) act on **the first
+instrument channel in the MixConsole** -- track 1, Poly, in every fixture --
+rather than on the selected track, because the fixtures save with a probe
+track selected. Two facts found building them on the runner (Cubase 14,
+2026-10-07):
+
+- **Direct-access tags are Cubase's numbering, not Poly's ParamIDs.** Lane 0's
+  "Active" (ParamID 8) is tag 4209. The script resolves the tag from the
+  parameter *index*, which does follow Poly's registration order, and checks
+  the title before setting anything. The parameters live on the instrument
+  slot's one child object; the slot object itself carries only Freeze,
+  Activate Output and Extract Sound.
+- **The CC 27 handler needs `page.mOnActivate`** for the active mapping that
+  direct access takes. The warning below is about sending the ready ping from
+  that callback; capturing the mapping there has worked in every unattended
+  session `scripts/cubase/start-session.ps1` launched on the runner, which is
+  the configuration the nightly uses.
 
 Channel 1 is the API's channel index `0`. CC 119 is undefined in General MIDI,
 so it is a safe sentinel that will not collide with musical CC traffic.
