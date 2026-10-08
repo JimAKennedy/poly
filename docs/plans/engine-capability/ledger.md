@@ -285,7 +285,7 @@ multiple instances, offline rendering and host automation — so a regression th
 appears only inside a DAW fails the night it lands rather than in someone's
 project.
 **Branch:** milestone/M004-daw-regression
-**Status:** in-progress
+**Status:** done
 **Demo:** A nightly run whose summary lists a spec per area above, each green,
 against a Cubase session the runner launched unattended.
 
