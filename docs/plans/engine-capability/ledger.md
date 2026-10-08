@@ -419,19 +419,18 @@ lengthen one serialised run, and that runner already has an open failure issue
 **Plan:** M004-S06-plan.md
 **Validation:** format, cubase-harness
 **Evidence:** evidence/M004-S06.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] A bounced or offline-rendered passage matches the realtime capture of the
+- [x] A bounced or offline-rendered passage matches the realtime capture of the
       same passage, note for note and position for position
-- [ ] The spec has been shown to fail when the two diverge
-- [ ] A nightly run is named in the evidence with this spec green
+- [x] The spec has been shown to fail when the two diverge
+- [x] A nightly run is named in the evidence with this spec green
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| DAW06 | Determinism is asserted for the engine's own render, not across Cubase's offline and realtime paths. Offline rendering drives `process()` with different block sizes and a different clock, which is exactly where a block-size dependency would show | `coverage` | `tests/cubase/e2e/`, `tests/cubase/validate_smf_export.py` | A spec renders a fixed passage both ways and compares the captures; proved by perturbing one capture. Evidence names the nightly run | `open` |
-
+| DAW06 | Determinism is asserted for the engine's own render, not across Cubase's offline and realtime paths. Offline rendering drives `process()` with different block sizes and a different clock, which is exactly where a block-size dependency would show | `coverage` | `tests/cubase/e2e/`, `tests/cubase/validate_smf_export.py` | A spec renders a fixed passage both ways and compares the captures; proved by perturbing one capture. Evidence names the nightly run | `done` |
 ### Slice M004/S07 — Host parameter automation
 
 **Plan:** M004-S07-plan.md

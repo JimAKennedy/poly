@@ -13,16 +13,16 @@ own.
 ## Task status
 
 - [x] 1. The spec, its contract, and the workflow step
-- [ ] 2. Cite the nightly run and close the slice
+- [x] 2. Cite the nightly run and close the slice
 
 ## Definition of Done
 
 Copied verbatim from the slice.
 
-- [ ] A bounced or offline-rendered passage matches the realtime capture of the
+- [x] A bounced or offline-rendered passage matches the realtime capture of the
       same passage, note for note and position for position
-- [ ] The spec has been shown to fail when the two diverge
-- [ ] A nightly run is named in the evidence with this spec green
+- [x] The spec has been shown to fail when the two diverge
+- [x] A nightly run is named in the evidence with this spec green
 
 ## Validation
 
