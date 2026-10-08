@@ -327,20 +327,19 @@ lengthen one serialised run, and that runner already has an open failure issue
 **Plan:** M004-S01-plan.md
 **Validation:** format, cubase-harness
 **Evidence:** evidence/M004-S01.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] A Cubase project saved with a non-default Poly patch reopens carrying that
+- [x] A Cubase project saved with a non-default Poly patch reopens carrying that
       patch — edited steps, selected preset, and per-step micro-timing
-- [ ] The spec has been shown to fail when the saved state is perturbed before
+- [x] The spec has been shown to fail when the saved state is perturbed before
       reopening, so it is a round-trip check rather than a "did it load" check
-- [ ] A nightly run is named in the evidence with this spec green
+- [x] A nightly run is named in the evidence with this spec green
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| DAW01 | Nothing exercises Poly's state round-trip inside a host. `kStateVersion` is at 16 and `CLAUDE.md` calls serialising without a version "a preset compatibility time bomb", but no test saves a Cubase project and reopens it | `coverage` | `tests/cubase/e2e/`, `.github/workflows/cubase-nightly.yml` | A spec saves the project, reopens it, and asserts the patch matches what was saved; proved by perturbing the saved state and watching the spec fail. Evidence names the nightly run | `open` |
-
+| DAW01 | Nothing exercises Poly's state round-trip inside a host. `kStateVersion` is at 16 and `CLAUDE.md` calls serialising without a version "a preset compatibility time bomb", but no test saves a Cubase project and reopens it | `coverage` | `tests/cubase/e2e/`, `.github/workflows/cubase-nightly.yml` | A spec saves the project, reopens it, and asserts the patch matches what was saved; proved by perturbing the saved state and watching the spec fail. Evidence names the nightly run | `done` |
 ### Slice M004/S02 — Preset recall across all 45
 
 **Plan:** M004-S02-plan.md
