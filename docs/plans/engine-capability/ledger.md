@@ -316,6 +316,14 @@ than blind: an eight-minute dispatch is the wrong feedback loop for UI
 automation. `S03` is the exception — it needs MIDI Remote bindings, which is
 code — and is left open with the rest rather than started and abandoned.
 
+**Resolved at the runner (2026-10-07).** All five were then built on `JIMW1`
+itself. The missing affordances turned out to be reachable through the MIDI
+Remote surface already in the repo -- save, the editor switch, automation
+W/R, a parameter by direct access, Export Audio Mixdown -- and the
+two-instance fixture was authored there in Cubase 14. Each runs in a Cubase
+session of its own; `M004-decisions.md` records the choices, and runs
+37712335201 (green) and 37713421465 (red) close them.
+
 **One cost, stated once.** `jk-standards.yaml` declares `cubase-nightly` a
 repo-wide global lock, because Cubase, loopMIDI and the interactive desktop
 session exist once on a single self-hosted Windows runner. These seven slices
@@ -436,20 +444,19 @@ lengthen one serialised run, and that runner already has an open failure issue
 **Plan:** M004-S07-plan.md
 **Validation:** format, cubase-harness
 **Evidence:** evidence/M004-S07.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] A host automation lane driving a Poly parameter changes the emitted MIDI
+- [x] A host automation lane driving a Poly parameter changes the emitted MIDI
       at the automated positions
-- [ ] The spec has been shown to fail when automation is ignored, and when it is
+- [x] The spec has been shown to fail when automation is ignored, and when it is
       applied at the wrong position
-- [ ] A nightly run is named in the evidence with this spec green
+- [x] A nightly run is named in the evidence with this spec green
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| DAW07 | VST3 parameter automation from the host is untested. Poly exposes its parameters for automation and the plugin layer feeds them to the engine each block, but nothing drives one from a host's automation lane and checks the output moved when and where it should | `coverage` | `tests/cubase/e2e/`, `plugin/source/` | A spec writes an automation lane, plays it, and asserts the output changes at the automated positions and not before; proved by flattening the lane. Evidence names the nightly run | `open` |
-
+| DAW07 | VST3 parameter automation from the host is untested. Poly exposes its parameters for automation and the plugin layer feeds them to the engine each block, but nothing drives one from a host's automation lane and checks the output moved when and where it should | `coverage` | `tests/cubase/e2e/`, `plugin/source/` | A spec writes an automation lane, plays it, and asserts the output changes at the automated positions and not before; proved by flattening the lane. Evidence names the nightly run | `done` |
 ---
 
 ## Milestone M005 — Preset pipeline integrity

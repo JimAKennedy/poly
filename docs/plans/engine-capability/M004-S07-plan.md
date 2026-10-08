@@ -13,17 +13,17 @@ own.
 ## Task status
 
 - [x] 1. The spec, its contract, and the workflow step
-- [ ] 2. Cite the nightly run and close the slice
+- [x] 2. Cite the nightly run and close the slice
 
 ## Definition of Done
 
 Copied verbatim from the slice.
 
-- [ ] A host automation lane driving a Poly parameter changes the emitted MIDI
+- [x] A host automation lane driving a Poly parameter changes the emitted MIDI
       at the automated positions
-- [ ] The spec has been shown to fail when automation is ignored, and when it is
+- [x] The spec has been shown to fail when automation is ignored, and when it is
       applied at the wrong position
-- [ ] A nightly run is named in the evidence with this spec green
+- [x] A nightly run is named in the evidence with this spec green
 
 ## Validation
 
