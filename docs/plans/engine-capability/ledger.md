@@ -385,19 +385,18 @@ lengthen one serialised run, and that runner already has an open failure issue
 **Plan:** M004-S04-plan.md
 **Validation:** format, cubase-harness
 **Evidence:** evidence/M004-S04.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The spec opens and closes the plugin editor repeatedly within one session
+- [x] The spec opens and closes the plugin editor repeatedly within one session
       and asserts the plugin still responds and still emits notes afterwards
-- [ ] The spec has been shown to fail when the WebView does not re-attach
-- [ ] A nightly run is named in the evidence with this spec green
+- [x] The spec has been shown to fail when the WebView does not re-attach
+- [x] A nightly run is named in the evidence with this spec green
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| DAW04 | `CLAUDE.md` records that some hosts call `setActive()` from the audio thread, so no allocation is permitted there, and that `allocateMessage()`/`sendMessage()` in `process()` is not guaranteed lock-free. Both conventions are documented and neither is exercised by opening and closing Poly's editor in a host | `coverage` | `tests/cubase/e2e/`, `plugin/source/webui/` | A spec cycles the editor open and closed, then asserts continued MIDI output and a responsive bridge; proved by forcing a failed re-attach. Evidence names the nightly run | `open` |
-
+| DAW04 | `CLAUDE.md` records that some hosts call `setActive()` from the audio thread, so no allocation is permitted there, and that `allocateMessage()`/`sendMessage()` in `process()` is not guaranteed lock-free. Both conventions are documented and neither is exercised by opening and closing Poly's editor in a host | `coverage` | `tests/cubase/e2e/`, `plugin/source/webui/` | A spec cycles the editor open and closed, then asserts continued MIDI output and a responsive bridge; proved by forcing a failed re-attach. Evidence names the nightly run | `done` |
 ### Slice M004/S05 — Multiple instances
 
 **Plan:** M004-S05-plan.md
