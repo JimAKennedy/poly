@@ -13,16 +13,16 @@ own.
 ## Task status
 
 - [x] 1. The spec, its contract, and the workflow step
-- [ ] 2. Cite the nightly run and close the slice
+- [x] 2. Cite the nightly run and close the slice
 
 ## Definition of Done
 
 Copied verbatim from the slice.
 
-- [ ] Two Poly instances in one project each hold their own patch and emit their
+- [x] Two Poly instances in one project each hold their own patch and emit their
       own MIDI, with no state or probe output crossing between them
-- [ ] The spec has been shown to fail if the two instances share state
-- [ ] A nightly run is named in the evidence with this spec green
+- [x] The spec has been shown to fail if the two instances share state
+- [x] A nightly run is named in the evidence with this spec green
 
 ## Validation
 

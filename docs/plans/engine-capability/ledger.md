@@ -402,19 +402,18 @@ lengthen one serialised run, and that runner already has an open failure issue
 **Plan:** M004-S05-plan.md
 **Validation:** format, cubase-harness
 **Evidence:** evidence/M004-S05.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Two Poly instances in one project each hold their own patch and emit their
+- [x] Two Poly instances in one project each hold their own patch and emit their
       own MIDI, with no state or probe output crossing between them
-- [ ] The spec has been shown to fail if the two instances share state
-- [ ] A nightly run is named in the evidence with this spec green
+- [x] The spec has been shown to fail if the two instances share state
+- [x] A nightly run is named in the evidence with this spec green
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| DAW05 | Nothing exercises two Poly instances in one project. Per-instance isolation of state, probe output and the WebUI bridge is assumed rather than demonstrated, and the probe writes to a path the second instance would also want | `coverage` | `tests/cubase/e2e/`, `plugin/source/` | A spec loads two instances with different patches and asserts each emits its own; proved by pointing both at one state blob and watching the spec fail. Evidence names the nightly run | `open` |
-
+| DAW05 | Nothing exercises two Poly instances in one project. Per-instance isolation of state, probe output and the WebUI bridge is assumed rather than demonstrated, and the probe writes to a path the second instance would also want | `coverage` | `tests/cubase/e2e/`, `plugin/source/` | A spec loads two instances with different patches and asserts each emits its own; proved by pointing both at one state blob and watching the spec fail. Evidence names the nightly run | `done` |
 ### Slice M004/S06 — Offline bounce equivalence
 
 **Plan:** M004-S06-plan.md
