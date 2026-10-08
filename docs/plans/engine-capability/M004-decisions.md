@@ -272,3 +272,18 @@ way that is obviously right once seen on the runner. None widens a slice.
   the runner, all five landed together, so the groups collapse into one
   closing run. **Why:** the decision's reason -- one run genuinely shows
   several specs green -- holds for five as for four.
+
+## 2026-10-08 — the first green dispatch (fix and re-dispatch, 1 of 2)
+
+- **Finding:** [Run 37710075119](https://github.com/JimAKennedy/poly/actions/runs/37710075119).
+  Every M004 area green except S04, whose session never started: Cubase
+  launched and settled, and the editor's CDP port never opened. The kill sweep
+  just before had found three WebView2 processes "already exited or
+  unkillable" -- `Stop-Process -Force` returns before a process has exited, so
+  the launch raced a dying `msedgewebview2` for the shared data folder, which
+  is the failure `kill-stale-cubase.ps1`'s own header describes.
+- **Decision:** `kill-stale-cubase.ps1` now waits, bounded at 20 s, until no
+  Cubase or WebView2 process remains. **Why:** it makes the sweep guarantee
+  what its header already claims, for every session including the first;
+  local launches had always won the race, so only the runner showed it. This
+  is the first of the two re-dispatches the 2026-10-07 answer allows.
