@@ -30,15 +30,6 @@ Write-PolyPhase -Phase "export-mixdown" -State "start"
 
 try {
     Add-Type -AssemblyName UIAutomationClient, UIAutomationTypes
-    Add-Type @"
-using System;
-using System.Runtime.InteropServices;
-public static class PolyExportMouse {
-    [DllImport("user32.dll")] public static extern bool SetCursorPos(int x, int y);
-    [DllImport("user32.dll")] public static extern void mouse_event(uint f, uint x, uint y, uint d, UIntPtr e);
-    [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr h);
-}
-"@
     $root = [System.Windows.Automation.AutomationElement]::RootElement
     $all = [System.Windows.Automation.Condition]::TrueCondition
     function Find-Dialog {
@@ -63,11 +54,9 @@ public static class PolyExportMouse {
     $r = $dialog.Current.BoundingRectangle
     $x = [int]($r.Right - $ButtonFromRight)
     $y = [int]($r.Bottom - $ButtonFromBottom)
-    [PolyExportMouse]::SetForegroundWindow([IntPtr]$dialog.Current.NativeWindowHandle) | Out-Null
-    [PolyExportMouse]::SetCursorPos($x, $y) | Out-Null
-    Start-Sleep -Milliseconds 200
-    [PolyExportMouse]::mouse_event(0x2, 0, 0, 0, [UIntPtr]::Zero) # left down
-    [PolyExportMouse]::mouse_event(0x4, 0, 0, 0, [UIntPtr]::Zero) # left up
+    # Clicks only if the point is inside this dialog (_common.ps1): a plain
+    # click at these coordinates goes to whatever window is on top there.
+    Invoke-PolyClickInWindow -Hwnd ([IntPtr]$dialog.Current.NativeWindowHandle) -X $x -Y $y
     Write-PolyPhase -Phase "export-mixdown" -State "ok" -Detail "pressed Export Audio" `
         -Extra @{ x = $x; y = $y }
 
