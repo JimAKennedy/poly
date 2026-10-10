@@ -80,8 +80,29 @@ Invoke-Step "dismiss-moved-project.ps1" @{
     ProjectDir     = (Split-Path -Parent $cpr)
     TimeoutSeconds = $(if ($CopyFixture) { 30 } else { 5 })
 }
-Invoke-Step "wait-for-ready.ps1" @{ TimeoutSeconds = 120 }
-Invoke-Step "focus-editor-cdp.ps1" @{ CdpPort = $CdpPort; TimeoutSeconds = 60 }
+# What the desktop looks like once the prompts are answered. Every M004
+# session failed in the scheduled nightlies of 2026-10-09 and -10 with the
+# editor's CDP port never opening, after a moved-project prompt the log says
+# was answered; the same sessions had passed in daytime dispatches. Whether
+# that click landed is visible here and nowhere else.
+& (Join-Path $PSScriptRoot "capture-desktop.ps1") -OutputPath (Join-Path $sessionDir "desktop-after-prompts.png")
+
+try {
+    Invoke-Step "wait-for-ready.ps1" @{ TimeoutSeconds = 120 }
+    Invoke-Step "focus-editor-cdp.ps1" @{ CdpPort = $CdpPort; TimeoutSeconds = 60 }
+} catch {
+    # The failure is re-raised; these only record what was on screen and what
+    # windows existed when it happened, into the session's artifact folder.
+    & (Join-Path $PSScriptRoot "capture-desktop.ps1") -OutputPath (Join-Path $sessionDir "desktop-at-failure.png")
+    try {
+        & (Join-Path $PSScriptRoot "diagnose-editor-window.ps1") -CdpPort $CdpPort `
+            -OutputPath (Join-Path $sessionDir "editor-window-topology.txt") | Out-Null
+    } catch {
+        Write-PolyPhase -Phase "start-session" -State "ok" `
+            -Detail "editor-window diagnostic failed: $($_.Exception.Message)"
+    }
+    throw
+}
 
 Write-PolyPhase -Phase "start-session" -State "ok" -Detail "session ready" `
     -Extra @{ name = $Name; cpr = $cpr }

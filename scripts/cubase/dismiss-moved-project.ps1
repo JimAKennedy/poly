@@ -10,19 +10,20 @@
 # answer: it keeps every write inside the copy's own folder.
 #
 # The buttons are exposed to UI Automation as plain panes with no Invoke
-# pattern (observed on the runner, 2026-10-07), and dismiss-safe-mode.ps1
-# records that SendKeys did not close the dialog it targets. So rather than
-# trusting a keystroke, this finds the pane named "New (1)" and clicks the
-# centre of its bounding rectangle.
+# pattern (observed on the runner, 2026-10-07), so the pane named "New (1)" is
+# clicked at its centre -- through Invoke-PolyClickInWindow, which makes the
+# dialog topmost and refuses to click unless the point is inside it. A plain
+# click at those coordinates once landed in a Windows Update window that
+# covered the dialog (2026-10-10).
 #
 # A project can instead raise a "Set Project Folder" picker -- observed on the
 # runner (2026-10-07) for copies of a fixture that had itself been saved from a
 # scratch copy, while copies of poly-4bar.cpr raise the prompt above and copies
 # of the committed poly-2instance.cpr raise nothing. Which one Cubase chooses
 # depends on what the .cpr recorded, so this answers either. The picker is a standard
-# Windows dialog: the project's own folder is typed in (Enter navigates into it)
-# and its Select Folder button invoked through UI Automation, which keeps the
-# copy's writes inside the copy for the same reason "New" does.
+# Windows dialog, answered entirely through UI Automation -- the project's own
+# folder set in its field, Select Folder invoked -- which keeps the copy's
+# writes inside the copy for the same reason "New" does.
 #
 # A no-op when neither appears within the window: a launch on the fixture's own
 # folder shows nothing, so running this on every launch is safe.
@@ -42,15 +43,6 @@ Write-PolyPhase -Phase "dismiss-moved-project" -State "start" `
 
 try {
     Add-Type -AssemblyName UIAutomationClient, UIAutomationTypes
-    Add-Type @"
-using System;
-using System.Runtime.InteropServices;
-public static class PolyMouse {
-    [DllImport("user32.dll")] public static extern bool SetCursorPos(int x, int y);
-    [DllImport("user32.dll")] public static extern void mouse_event(uint f, uint x, uint y, uint d, UIntPtr e);
-    [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr h);
-}
-"@
 
     $root = [System.Windows.Automation.AutomationElement]::RootElement
     $all = [System.Windows.Automation.Condition]::TrueCondition
@@ -64,22 +56,36 @@ public static class PolyMouse {
                 Invoke-PolyPhaseFailure -Phase "dismiss-moved-project" `
                     -Message "a 'Set Project Folder' picker appeared and no -ProjectDir was given"
             }
-            Add-Type -AssemblyName System.Windows.Forms
-            [PolyMouse]::SetForegroundWindow([IntPtr]$picker.Current.NativeWindowHandle) | Out-Null
-            Start-Sleep -Milliseconds 300
-            [System.Windows.Forms.SendKeys]::SendWait($ProjectDir)
-            Start-Sleep -Milliseconds 300
-            [System.Windows.Forms.SendKeys]::SendWait('{ENTER}')
-            Start-Sleep -Milliseconds 1000
+            # No keystrokes: SendKeys goes to whichever window has focus, which
+            # need not be this dialog. The folder field is set through UI
+            # Automation and Select Folder invoked the same way. A folder
+            # picker given a path navigates to it on the first Select Folder
+            # and selects it on the second, so it is invoked until the picker
+            # closes, at most three times.
+            $edit = $picker.FindAll('Descendants', $all) | Where-Object {
+                $_.Current.ControlType -eq [System.Windows.Automation.ControlType]::Edit -and
+                $_.Current.Name -eq 'Folder:'
+            } | Select-Object -First 1
             $select = $picker.FindAll('Descendants', $all) | Where-Object {
                 $_.Current.Name -eq 'Select Folder' -and
                 $_.Current.ControlType -eq [System.Windows.Automation.ControlType]::Button
             } | Select-Object -First 1
-            if (-not $select) {
+            if (-not ($edit -and $select)) {
                 Invoke-PolyPhaseFailure -Phase "dismiss-moved-project" `
-                    -Message "the 'Set Project Folder' picker has no Select Folder button"
+                    -Message "the 'Set Project Folder' picker has no folder field or Select Folder button"
             }
-            $select.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+            $edit.GetCurrentPattern([System.Windows.Automation.ValuePattern]::Pattern).SetValue($ProjectDir)
+            for ($attempt = 0; $attempt -lt 3; $attempt++) {
+                try {
+                    $select.GetCurrentPattern([System.Windows.Automation.InvokePattern]::Pattern).Invoke()
+                } catch {
+                    break # the picker closed under us: done
+                }
+                Start-Sleep -Milliseconds 1000
+                $still = $root.FindAll('Children', $all) |
+                    Where-Object { $_.Current.Name -eq 'Set Project Folder' } | Select-Object -First 1
+                if (-not $still) { break }
+            }
             Write-PolyPhase -Phase "dismiss-moved-project" -State "ok" `
                 -Detail "answered 'Set Project Folder' with the project's own folder" `
                 -Extra @{ projectDir = $ProjectDir }
@@ -95,14 +101,11 @@ public static class PolyMouse {
             # Both buttons, or it is some other "Cubase Pro" dialog.
             if (-not ($newPane -and $oldPane)) { continue }
 
-            [PolyMouse]::SetForegroundWindow([IntPtr]$dialog.Current.NativeWindowHandle) | Out-Null
             $r = $newPane.Current.BoundingRectangle
             $x = [int]($r.X + $r.Width / 2)
             $y = [int]($r.Y + $r.Height / 2)
-            [PolyMouse]::SetCursorPos($x, $y) | Out-Null
-            Start-Sleep -Milliseconds 150
-            [PolyMouse]::mouse_event(0x2, 0, 0, 0, [UIntPtr]::Zero) # left down
-            [PolyMouse]::mouse_event(0x4, 0, 0, 0, [UIntPtr]::Zero) # left up
+            # Clicks only if the point is inside this dialog (_common.ps1).
+            Invoke-PolyClickInWindow -Hwnd ([IntPtr]$dialog.Current.NativeWindowHandle) -X $x -Y $y
             Write-PolyPhase -Phase "dismiss-moved-project" -State "ok" `
                 -Detail "answered 'project file has been moved' with New (1)" `
                 -Extra @{ x = $x; y = $y }
