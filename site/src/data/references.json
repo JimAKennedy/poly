@@ -958,9 +958,9 @@
     "fr-silverman-2007": {
       "obtainability": "open-access",
       "evidence": "Crossref confirms the article in Muzikologija 7, 2007, matching author and year. Muzikologija is open access, so the text is reachable; it was not opened in this pass and the entry is left unverified rather than claimed.",
-      "checked": "2026-10-02",
+      "checked": "2026-10-10",
       "description": "verified",
-      "note": "",
+      "note": "Route changed 2026-10-10: the DOI (10.2298/muz0707069s, kept as the identifier) resolves to doiserbia.nb.rs, which never accepts a connection — reported dead by scripts/reference-links.mjs on its first run (M006/S01) and in PR #357’s CI. The entry now links the free issue page the owner found in M003, https://muzikologija-musicology.com/index.php/MM/issue/view/No.7 (the article starts at p. 69).",
       "identifier": {
         "doi": "10.2298/muz0707069s",
         "isbn": null
