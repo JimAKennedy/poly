@@ -104,6 +104,26 @@ void sanitizeLane(LaneConfig& lane, int laneIndex) {
     for (int i = 0; i < lane.cellCount; ++i)
         lane.cellSizes[static_cast<size_t>(i)] = clampi(lane.cellSizes[static_cast<size_t>(i)], 1, kMaxSteps);
 
+    // engine-capability M003 fields. The reader bounds the two counts, but
+    // nothing bounded the values: a non-finite profile entry made the additive
+    // cycle length NaN, and that NaN reached evaluateShapeFull as an envelope
+    // phase whose int cast indexed stepValues at INT_MIN (nightly libFuzzer,
+    // 2026-10-11). Profile entries are weights normalised by their sum, so
+    // finite and non-negative is the whole contract; kMaxSteps caps the ratio.
+    lane.profileCount = clampi(lane.profileCount, 0, kMaxSteps);
+    for (auto& v : lane.subdivisionProfile)
+        v = clampf(v, 0.0f, static_cast<float>(kMaxSteps), 0.0f);
+    if (static_cast<uint8_t>(lane.swingMode) > static_cast<uint8_t>(SwingMode::TempoAdaptive))
+        lane.swingMode = SwingMode::Fixed;
+    if (static_cast<uint8_t>(lane.humanizeMode) > static_cast<uint8_t>(HumanizeMode::Correlated))
+        lane.humanizeMode = HumanizeMode::WhiteNoise;
+    lane.noteSequenceLength = clampi(lane.noteSequenceLength, 0, kMaxNoteSequence);
+    for (auto& entry : lane.noteSequence) {
+        entry.pitch = static_cast<int16_t>(clampi(entry.pitch, 0, 127));
+        // 0 defers to noteDuration, so the same [0, 16] beat range applies.
+        entry.durationBeats = clampf(entry.durationBeats, 0.0f, 16.0f, 0.0f);
+    }
+
     lane.fixedPatternLength = clampi(lane.fixedPatternLength, 0, kMaxSteps);
     for (auto& v : lane.microTimingMs)
         v = clampf(v, -20.0f, 20.0f, 0.0f);

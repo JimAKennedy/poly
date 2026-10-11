@@ -2,6 +2,7 @@
 // Copyright 2024-2026 Jim Kennedy
 #include <cmath>
 #include <cstring>
+#include <limits>
 #include <vector>
 
 #include <gtest/gtest.h>
@@ -242,4 +243,87 @@ TEST(Sanitize, DuplicateLaneIdsProduceIndependentRollsAfterSanitize) {
     ASSERT_FALSE(lane1.empty());
     EXPECT_FALSE(rngDecisionsIdentical(lane0, lane1))
         << "post-fix: sanitize must repair lane ids so RNG channels diverge";
+}
+
+// Regression for the nightly libFuzzer finding of 2026-10-11 (fuzz_state_io).
+//
+// engine-capability added four serialised lane fields -- the subdivision
+// profile, the swing and humanize modes, and the note sequence -- and the
+// reader bounds their counts but sanitizeLane never saw their values. A
+// non-finite profile entry made the additive cycle length NaN, the NaN reached
+// evaluateShapeFull as an envelope phase, and its cast to int indexed
+// stepValues at INT_MIN.
+
+namespace {
+
+poly::GrooveState makeHostileEngineCapabilityState() {
+    poly::GrooveState state{};
+    state.activeLaneCount = 1;
+    auto& lane = state.lanes[0];
+    lane.cycle = {.steps = 4, .subdivision = 4};
+    lane.hitCount = 4;
+    lane.profileCount = 4;
+    lane.subdivisionProfile[0] = std::numeric_limits<float>::infinity();
+    lane.subdivisionProfile[1] = std::nanf("");
+    lane.subdivisionProfile[2] = -3.0f;
+    lane.subdivisionProfile[3] = 1.0f;
+    lane.swingMode = static_cast<poly::SwingMode>(200);
+    lane.humanizeMode = static_cast<poly::HumanizeMode>(200);
+    lane.noteSequenceLength = 2;
+    lane.noteSequence[0] = {.pitch = 999, .durationBeats = std::nanf("")};
+    lane.noteSequence[1] = {.pitch = -5, .durationBeats = -std::numeric_limits<float>::infinity()};
+    lane.envelopeCount = 1;
+    lane.envelopes[0].active = true;
+    lane.envelopes[0].envelope.shape = poly::Shape::StepList;
+    lane.envelopes[0].envelope.stepCount = 4;
+    return state;
+}
+
+} // namespace
+
+TEST(Sanitize, ClampsEngineCapabilityLaneFields) {
+    auto state = makeHostileEngineCapabilityState();
+    poly::sanitizeGrooveState(state);
+
+    const auto& lane = state.lanes[0];
+    for (int i = 0; i < lane.profileCount; ++i) {
+        const float v = lane.subdivisionProfile[static_cast<size_t>(i)];
+        EXPECT_TRUE(std::isfinite(v)) << "profile entry " << i;
+        EXPECT_GE(v, 0.0f) << "profile entry " << i;
+    }
+    EXPECT_LE(static_cast<int>(lane.swingMode), static_cast<int>(poly::SwingMode::TempoAdaptive));
+    EXPECT_LE(static_cast<int>(lane.humanizeMode), static_cast<int>(poly::HumanizeMode::Correlated));
+    for (int i = 0; i < lane.noteSequenceLength; ++i) {
+        const auto& entry = lane.noteSequence[static_cast<size_t>(i)];
+        EXPECT_GE(entry.pitch, 0);
+        EXPECT_LE(entry.pitch, 127);
+        EXPECT_TRUE(std::isfinite(entry.durationBeats)) << "sequence entry " << i;
+        EXPECT_GE(entry.durationBeats, 0.0f) << "sequence entry " << i;
+    }
+}
+
+TEST(Sanitize, NonFiniteSubdivisionProfileSurvivesTheStateRoundTrip) {
+    auto buffer = serialize(makeHostileEngineCapabilityState());
+
+    size_t pos = 0;
+    auto read = [&buffer, &pos](void* data, size_t size) -> bool {
+        if (pos + size > buffer.size())
+            return false;
+        std::memcpy(data, buffer.data() + pos, size);
+        pos += size;
+        return true;
+    };
+    poly::GrooveState restored{};
+    ASSERT_TRUE(poly::readGrooveState(read, restored));
+
+    poly::TransportContext tc{};
+    tc.playing = true;
+    tc.ppqStart = 0.0;
+    tc.ppqEnd = 4.0;
+    tc.tempo = 120.0;
+    poly::NoteEventBuffer out{};
+    poly::Engine engine{};
+    engine.renderRange(tc, restored, out);
+    for (size_t i = 0; i < out.count; ++i)
+        EXPECT_TRUE(std::isfinite(out.events[i].ppqPosition)) << "event " << i;
 }
