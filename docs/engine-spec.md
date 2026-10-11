@@ -575,7 +575,11 @@ supporting modules — refer to those sources for evaluation semantics:
   `SceneChainState::update`; the plugin's `PolyProcessor::process` chooses A,
   B, or a morph blend per block based on `SceneSelect` and optional chain state.
 - **State I/O** — `engine/include/poly/state_io.h` versions preset serialization
-  at `kCurrentStateVersion=16` (v16 migrates pre-Bjorklund lane rotations — see
+  at `kCurrentStateVersion=22` (v16 migrates pre-Bjorklund lane rotations — see
   `euclideanMigrationDelta`); `sanitizeGrooveState` enforces engine-safe
   ranges on every deserialize so a corrupted preset can never index past a
-  fixed-size array or produce a zero-length cycle.
+  fixed-size array or produce a zero-length cycle. Every serialised float is
+  clamped to a finite range, not only its count: one non-finite
+  `subdivisionProfile` entry once made a cycle length NaN, which reached an
+  envelope phase and indexed `stepValues` at `INT_MIN` (nightly libFuzzer,
+  2026-10-11).
