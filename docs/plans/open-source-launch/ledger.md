@@ -42,6 +42,14 @@ claims nothing else; the other DAW candidates and the Logic wrapper question
 became M010 (OS43, OS44), which waits for a published Release to install.
 Two actionable items were added; none closed.
 
+**Amended on 2026-10-12:** the owner asked for installs tested the way a
+musician meets them — the installer downloaded, a DAW finding Poly, an upgrade
+and an uninstall — repeatably and on every release. That became M011
+(OS45–OS50), designed in `M011-install-verify-design.md`. Designing it found
+that `release-verify.yml`'s publish trigger has never fired (OS49). M007/S02
+and M008/S02 now depend on M011/S04, the run their clean-machine evidence
+cites.
+
 Every count below was measured on `main` at `412020d`, not carried over from
 the vision.
 
@@ -553,7 +561,7 @@ while the paperwork is pending.
 
 ### Slice M007/S02 — The package is signed, notarized and stapled
 
-**Depends:** M007/S01
+**Depends:** M007/S01, M011/S04
 **Validation:** format, guards, doc-discipline
 **Evidence:** evidence/M007-S02.md
 **Status:** open
@@ -607,7 +615,7 @@ different installer tooling, no shared code.
 
 ### Slice M008/S02 — The installer is signed through Azure Artifact Signing
 
-**Depends:** M008/S01
+**Depends:** M008/S01, M011/S04
 **Validation:** format, guards, doc-discipline
 **Evidence:** evidence/M008-S02.md
 **Status:** open
@@ -720,6 +728,116 @@ installed Release rather than a build directory.
 |---|---|---|---|---|---|
 | OS44 | Deferred from OS17 on 2026-09-29: the VST3 SDK's AUv2 wrapper subclasses `MusicDeviceBase` and allows only the Effect and MusicDevice types, so the `aumu` it builds cannot be the `aumi` MIDI-FX unit Logic routes generated MIDI from, though it does implement the MIDI output callback. Supporting Logic means a wrapper of Poly's own | `verify` | `plugin/`, `README.md`, `docs/plans/open-source-launch/M010-decisions.md` | The spike's finding and cost are recorded; the decision follows it; either arm's DoD, not both | `open` |
 
+## Milestone M011 — A release is installed the way a musician installs it
+
+**Vision:** Every published Release is downloaded, opened, installed, found by
+a DAW, upgraded over and removed, on a clean Windows and a clean macOS machine,
+without anyone remembering to do it.
+
+**Branch:** milestone/M011-install-verify
+**Status:** in-progress
+**Demo:** Publishing a Release dispatches `installer-verify.yml`; its run shows,
+per platform, the first-run verdict and a screenshot, Cubase (Windows) and
+REAPER (macOS) loading Poly from the installed location, the upgrade from the
+previous Release, and an uninstall that leaves the plug-in folder as it was.
+
+**Why VMs the owner controls.** The hosted runners already install and remove
+both installers (M007/S01, M008/S01) and verify the zips (M006/S01), but hold
+no DAW licence and no history to upgrade over. Windows runs a Hyper-V guest on
+JIMW1, because installing the per-machine MSI on the runner itself would break
+its single-bundle invariant; macOS runs disposable Tart clones on the owner's
+only Mac, so workflow code never runs on the development machine. The design
+and the reasoning are in `M011-install-verify-design.md`.
+
+### Slice M011/S01 — The four unknowns are measured
+
+**Plan:** M011-S01-plan.md
+**Validation:** format, doc-discipline
+**Evidence:** evidence/M011-S01.md
+**Status:** in-progress
+
+**Definition of Done**
+
+- [ ] Each of the four questions in OS45 has a measured answer in
+      `M011-decisions.md`, with how it was measured
+- [ ] Any answer that changes the design has been taken to the owner, and the
+      design document and this milestone are amended before S02 or S03 starts
+- [ ] Nothing built for the measurement is kept; it is labelled throwaway in
+      the evidence
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| OS45 | Four premises of the design are unmeasured: (1) Cubase stays activated across Hyper-V checkpoint restores without using another Steinberg seat — Steinberg says nothing public about virtual machines; (2) a member of *Hyper-V Administrators* who is not an administrator can use PowerShell Direct and capture the guest's screen; (3) REAPER runs a ReaScript given on its command line, unattended, in a guest with no audio device; (4) Screen Recording permission granted in a Tart image survives `tart clone` | `verify` | `docs/plans/open-source-launch/M011-decisions.md`, `evidence/M011-S01.md` | Each answer records the command run and what it returned; (1) records Activation Manager's seat count before and after two restores | `open` |
+
+### Slice M011/S02 — The Windows guest installs, opens in Cubase, upgrades and uninstalls
+
+**Depends:** M011/S01
+**Validation:** format, guards
+**Evidence:** evidence/M011-S02.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] `docs/windows-install-vm-setup.md` builds `poly-install-vm` and its
+      `clean` checkpoint, and `polyci` joins *Hyper-V Administrators*, which
+      `check-runner-posture.ps1` asserts
+- [ ] `run-vm.ps1`, run by hand on JIMW1 against a local MSI, completes every
+      phase — first-run verdict and screenshot, install, Cubase opening the
+      fixture with Poly's editor, uninstall — and leaves the guest discarded
+- [ ] `test-windows-msi.ps1` runs its halves separately with `-Phase`, and CI's
+      `package-windows` job, which passes no phase, is unchanged
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| OS46 | No Windows machine can show Cubase finding Poly after the MSI installs it, or an upgrade over an earlier MSI: hosted runners hold no Cubase licence, and JIMW1's runner is non-admin with a single-bundle invariant the per-machine MSI would break | `tooling` | `docs/windows-install-vm-setup.md`, `scripts/install-verify/windows/`, `scripts/packaging/test-windows-msi.ps1`, `scripts/cubase/check-runner-posture.ps1` | The by-hand run's log and screenshots are in the evidence; `package-windows` still passes on the slice's PR; the posture check is seen red with `polyci` outside the group | `open` |
+
+### Slice M011/S03 — The macOS clone installs, opens in REAPER, upgrades and removes
+
+**Depends:** M011/S01
+**Validation:** format, guards
+**Evidence:** evidence/M011-S03.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] `docs/macos-install-vm-setup.md` builds `poly-install-golden`, and the
+      launcher runs as a LaunchAgent that never runs more than two VMs
+- [ ] A clone, run by hand against a local `.pkg`, completes every phase —
+      first-run verdict and screenshot, install, REAPER loading Poly on a
+      track, removal — and is deleted afterwards
+- [ ] `test-macos-pkg.sh` runs its halves separately with `--phase`, and CI's
+      `package-macos` job, which passes no phase, is unchanged
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| OS47 | No macOS machine can show a DAW finding Poly after the `.pkg` installs it, or an upgrade: the owner's only Mac is the development machine, where `test-macos-pkg.sh` rightly refuses to run, and an all-users install writes the shared `/Library` | `tooling` | `docs/macos-install-vm-setup.md`, `scripts/install-verify/macos/`, `scripts/packaging/test-macos-pkg.sh` | The by-hand run's log and screenshots are in the evidence; `package-macos` still passes on the slice's PR; the launcher is shown refusing a third VM | `open` |
+
+### Slice M011/S04 — Every published Release is verified without anyone remembering
+
+**Depends:** M011/S02, M011/S03
+**Validation:** format, guards, doc-discipline, site-unit
+**Evidence:** evidence/M011-S04.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] `installer-verify.yml`, dispatched with a published Release that ships
+      installers, is green on both platforms, with upgrade reported as `SKIP`
+      until a second such Release exists; the evidence names the run
+- [ ] `release.yml` dispatches `installer-verify.yml` and `release-verify.yml`
+      after publishing, and the next published Release shows both runs with
+      event `workflow_dispatch`
+- [ ] A platform whose job was never picked up is reported as not run, and a
+      failure opens or updates an `install-verify-failure` issue
+- [ ] If no published Release ships installers, the slice stops and asks the
+      owner to cut one; it never tags
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| OS48 | Nothing runs the two guests against a published Release. A workflow dispatched with a tag resolves the previous installer-bearing Release, runs both platforms' phases, uploads one artifact per platform and reports failures as an issue | `pipeline` | `.github/workflows/installer-verify.yml`, `.jk/validations.yml` | The dispatched run above; `install-verify` is declared in `.jk/validations.yml` as exempt from the pre-push gate with its reason, and `doc-conformance-wiring` passes | `open` |
+| OS49 | `release-verify.yml` says it runs on every published Release and never has: `release.yml` publishes with `GITHUB_TOKEN`, whose events start no other workflow except `workflow_dispatch`. `v0.2.0-rc.1` was published at 00:06:29 on 2026-09-30, and release-verify's only run is a manual dispatch at 00:07:42 | `defect` | `.github/workflows/release.yml`, `.github/workflows/release-verify.yml`, `scripts/check-release-workflow.mjs`, `scripts/check-release-verify-workflow.mjs` | `release.yml`'s last job dispatches both workflows and alone holds `actions: write`; the dead `release:` trigger and the comment claiming it are removed; the contract checks assert both, each seen red | `open` |
+| OS50 | Only a comment and the runbook keep `pull_request` off `cubase-nightly.yml`, and the repository is public. Two workflows will run on self-hosted machines, so the rule is a check, not a convention | `tooling` | `scripts/check-workflow-hygiene.mjs` | The check fails when any workflow with a `self-hosted` job gains a `pull_request`, `pull_request_target` or `push` trigger, seen red on a fixture, and passes on the tree | `open` |
+
 ## Sequencing
 
 **M001, M002 and M003 are independent** — the release workflow, the CI
@@ -741,6 +859,12 @@ section of.
 **M004/S03 depends on M003/S01 and M004/S02** — the README publishes the host
 table and the positioning sentence, so it is written after both exist.
 M004/S01 and M004/S02 can start at once.
+
+**M011 follows nothing and gates both signing slices.** S01 first; S02 and
+S03 are independent; S04 follows both. M007/S02 and M008/S02 wait on M011/S04
+because their clean-machine evidence is its run — since both also wait on
+outside paperwork, M011 is likely to finish first. M009 stays last, so the
+README can cite the run.
 
 **M010 is after the release** — both slices wait on M006/S01, a published
 Release to install, and on M003/S01, the table they extend; it is last and
