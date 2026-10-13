@@ -735,7 +735,7 @@ a DAW, upgraded over and removed, on a clean Windows and a clean macOS machine,
 without anyone remembering to do it.
 
 **Branch:** milestone/M011-install-verify
-**Status:** planned
+**Status:** in-progress
 **Demo:** Publishing a Release dispatches `installer-verify.yml`; its run shows,
 per platform, the first-run verdict and a screenshot, Cubase (Windows) and
 REAPER (macOS) loading Poly from the installed location, the upgrade from the
@@ -751,9 +751,10 @@ and the reasoning are in `M011-install-verify-design.md`.
 
 ### Slice M011/S01 — The four unknowns are measured
 
+**Plan:** M011-S01-plan.md
 **Validation:** format, doc-discipline
 **Evidence:** evidence/M011-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
