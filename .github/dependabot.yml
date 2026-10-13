@@ -15,6 +15,14 @@
 # PRs because they carry breaking-change risk (esp. Astro / Starlight / sharp).
 #
 # open-pull-requests-limit caps ecosystem inbox flood at 5 concurrent PRs.
+#
+# /site declares both `playwright` and `@playwright/test`, and
+# site/tests/mermaid-build-deps.test.mjs requires their ranges to match. Two
+# settings keep them in step: the `playwright` group moves both packages in
+# one PR for every update type, majors included, and `versioning-strategy:
+# increase` rewrites each range to the new version. Without the strategy,
+# #370 bumped both in the lockfile but left `playwright` at `^1.63.0`,
+# because that range already admitted 1.64.0.
 
 version: 2
 updates:
@@ -55,9 +63,15 @@ updates:
       - dependabot
       - npm
       - site
+    versioning-strategy: increase
     commit-message:
       prefix: chore(site-deps)
     groups:
+      # Declared first: a dependency joins the first group it matches.
+      playwright:
+        patterns:
+          - playwright
+          - "@playwright/test"
       site-minor-patch:
         update-types:
           - minor
