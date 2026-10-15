@@ -50,6 +50,12 @@ that `release-verify.yml`'s publish trigger has never fired (OS49). M007/S02
 and M008/S02 now depend on M011/S04, the run their clean-machine evidence
 cites.
 
+**Parked on 2026-10-15:** the owner parked the programme. An Apple ID problem
+stops them from enrolling in the Apple Developer Program with a US account, and
+without it no Developer ID certificate exists to sign the macOS package
+(M007/S02, OS36). No status changed: M011/S01 stays `in-progress` with none of
+its eight tasks started, and work resumes where it stopped.
+
 Every count below was measured on `main` at `412020d`, not carried over from
 the vision.
 
