@@ -75,10 +75,18 @@ Invoke-Step "launch-cubase.ps1" @{
     EnableCdp     = $true
     CdpPort       = $CdpPort
 }
-Invoke-Step "dismiss-safe-mode.ps1" @{ TimeoutSeconds = 10 }
-Invoke-Step "dismiss-moved-project.ps1" @{
-    ProjectDir     = (Split-Path -Parent $cpr)
-    TimeoutSeconds = $(if ($CopyFixture) { 30 } else { 5 })
+try {
+    Invoke-Step "dismiss-safe-mode.ps1" @{ TimeoutSeconds = 10 }
+    Invoke-Step "dismiss-moved-project.ps1" @{
+        ProjectDir     = (Split-Path -Parent $cpr)
+        TimeoutSeconds = $(if ($CopyFixture) { 30 } else { 5 })
+    }
+} catch {
+    # A prompt that could not be answered -- a refused click, most often --
+    # leaves the cause on screen. The 2026-10-15 nightly failed S04 and S07
+    # here with no screenshot, because both captures below come later.
+    & (Join-Path $PSScriptRoot "capture-desktop.ps1") -OutputPath (Join-Path $sessionDir "desktop-at-failure.png")
+    throw
 }
 # What the desktop looks like once the prompts are answered. Every M004
 # session failed in the scheduled nightlies of 2026-10-09 and -10 with the

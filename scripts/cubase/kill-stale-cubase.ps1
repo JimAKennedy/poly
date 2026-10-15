@@ -13,6 +13,12 @@
 # attaches to it and the CDP port flag is silently DROPPED (editor visible, port
 # absent). Cubase's own hard-kill does not reap its WebView2 children, so we do
 # it here. Kill Cubase FIRST so it cannot respawn a child mid-sweep.
+#
+# Also kill the Edge browser (msedge.exe -- NOT msedgewebview2, handled above).
+# A Windows feature update re-launches Edge at logon even with it removed from
+# startup apps, and a stray browser window on the runner's desktop can cover the
+# Cubase dialogs the session scripts click. Each kill is logged, so the run's
+# artifacts show how often it comes back.
 
 [CmdletBinding()]
 param()
@@ -55,6 +61,10 @@ try {
     # these frees the shared user-data-dir so the next launch's
     # --remote-debugging-port flag is honored at first browser-process creation.
     Stop-StaleByName -Names @("msedgewebview2") -Kind "WebView2"
+
+    # The Edge browser itself, re-launched by Windows Update (see header). Not
+    # waited on below: it holds nothing the launch needs, only screen space.
+    Stop-StaleByName -Names @("msedge") -Kind "Edge"
 
     # M004: and WAIT for them to be gone. Stop-Process -Force returns before the
     # process has exited, so a launch straight after this sweep can still find
