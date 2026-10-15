@@ -94,6 +94,21 @@ function Get-CubaseProcessNames {
     return @("Cubase", "Cubase14", "Cubase13", "Cubase12")
 }
 
+# Describe a top-level window for a log line: handle, title, class and owning
+# process. Every field is best-effort -- the window may close mid-call.
+# Requires the PolyWin32Click type, which Invoke-PolyClickInWindow loads.
+function Get-PolyWindowDescription([IntPtr] $Hwnd) {
+    $title = New-Object System.Text.StringBuilder 256
+    $class = New-Object System.Text.StringBuilder 256
+    [PolyWin32Click]::GetWindowText($Hwnd, $title, $title.Capacity) | Out-Null
+    [PolyWin32Click]::GetClassName($Hwnd, $class, $class.Capacity) | Out-Null
+    [uint32] $procId = 0
+    [PolyWin32Click]::GetWindowThreadProcessId($Hwnd, [ref] $procId) | Out-Null
+    $procName = (Get-Process -Id $procId -ErrorAction SilentlyContinue).ProcessName
+    if (-not $procName) { $procName = "?" }
+    return "$Hwnd '$title' (class $class, process $procName pid $procId)"
+}
+
 # Click a point that belongs to one specific top-level window, or refuse.
 #
 # The scripts that answer Cubase's dialogs used to raise the dialog with
@@ -127,6 +142,9 @@ public static class PolyWin32Click {
     [DllImport("user32.dll")] public static extern bool SetForegroundWindow(IntPtr h);
     [DllImport("user32.dll")] public static extern bool SetCursorPos(int x, int y);
     [DllImport("user32.dll")] public static extern void mouse_event(uint f, uint x, uint y, uint d, UIntPtr e);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern int GetWindowText(IntPtr h, System.Text.StringBuilder s, int n);
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)] public static extern int GetClassName(IntPtr h, System.Text.StringBuilder s, int n);
+    [DllImport("user32.dll")] public static extern uint GetWindowThreadProcessId(IntPtr h, out uint pid);
 }
 "@
     }
@@ -149,7 +167,11 @@ public static class PolyWin32Click {
             Start-Sleep -Milliseconds 100
         } while ((Get-Date) -lt $deadline)
         if ($owner -ne $Hwnd) {
-            throw ("refusing to click ($X, $Y): the window there is $owner, not the target $Hwnd " +
+            # A bare handle cannot be identified after the run, so name the
+            # window: the 2026-10-15 nightly refused two clicks on a window
+            # known only as 66118.
+            throw ("refusing to click ($X, $Y): the window there is $(Get-PolyWindowDescription $owner), " +
+                "not the target $(Get-PolyWindowDescription $Hwnd) " +
                 "-- another window covers it even after making the target topmost")
         }
 

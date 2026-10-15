@@ -204,6 +204,7 @@ jobs:
         run: ctest --test-dir build --build-config Release --output-on-failure
 
       - name: Install plugin for Cubase
+        id: install_plugin
         shell: pwsh
         run: |
           # Install BOTH VST3 bundles the fixture needs: poly_plugin (the
@@ -348,8 +349,13 @@ jobs:
       # deactivate). Windows-only — WKWebView exposes no CDP. Requires a fixture
       # + loopMIDI 'poly-test' port + MIDI Remote script (R10, owner-provisioned),
       # so it stays dormant until POLY_CDP_PORT is set.
+      #
+      # It runs on !cancelled() once the fresh plugin is installed, not on
+      # success(): the M004 sessions below need these deps even when the first
+      # session's Cubase launch failed, and they key off this step's outcome.
       - name: Install e2e deps (Playwright + chromium + mido driver)
-        if: env.POLY_CDP_PORT != ''
+        id: e2e_deps
+        if: ${{ !cancelled() && env.POLY_CDP_PORT != '' && steps.install_plugin.outcome == 'success' }}
         shell: pwsh
         working-directory: tests/cubase/e2e
         run: |
@@ -577,9 +583,14 @@ jobs:
       # quit (always). They run after the first session's post-quit assertions
       # so its probe.jsonl is never touched, and on !cancelled() rather than
       # success() so one red area does not hide the others' results.
+      # They do require e2e_deps to have succeeded -- which in turn requires the
+      # freshly-built plugin to be installed. Without that gate a failed posture
+      # check skipped Build, Install and the deps, yet every session still ran:
+      # against the previous night's plugin, and failing on a missing
+      # @playwright/test that buried the one real error (2026-10-15 nightly).
       # POLY_E2E_MUTATE turns each red the same way it does the specs above.
       - name: "M004 S04: editor close/open cycles (own session)"
-        if: ${{ !cancelled() && env.POLY_CDP_PORT != '' }}
+        if: ${{ !cancelled() && steps.e2e_deps.outcome == 'success' }}
         shell: pwsh
         env:
           POLY_E2E_MUTATE: ${{ inputs.e2e_mutate }}
@@ -589,7 +600,7 @@ jobs:
           -FixtureCpr "${{ env.POLY_FIXTURE_CPR }}" -CopyFixture
 
       - name: "M004 S07: host automation lane (own session)"
-        if: ${{ !cancelled() && env.POLY_CDP_PORT != '' }}
+        if: ${{ !cancelled() && steps.e2e_deps.outcome == 'success' }}
         shell: pwsh
         env:
           POLY_E2E_MUTATE: ${{ inputs.e2e_mutate }}
@@ -603,7 +614,7 @@ jobs:
       # first -- the second must open what was saved, not a new copy.
       - name: "M004 S01: save the session (own session)"
         id: s01_save
-        if: ${{ !cancelled() && env.POLY_CDP_PORT != '' }}
+        if: ${{ !cancelled() && steps.e2e_deps.outcome == 'success' }}
         shell: pwsh
         run: >-
           ./scripts/cubase/run-session-spec.ps1 -Name s01
@@ -623,7 +634,7 @@ jobs:
       # S05 opens its own fixture: two Poly instances, each feeding its own
       # probe (tests/cubase/fixtures/README.md).
       - name: "M004 S05: two Poly instances (own session)"
-        if: ${{ !cancelled() && env.POLY_CDP_PORT != '' }}
+        if: ${{ !cancelled() && steps.e2e_deps.outcome == 'success' }}
         shell: pwsh
         env:
           POLY_E2E_MUTATE: ${{ inputs.e2e_mutate }}
@@ -634,7 +645,7 @@ jobs:
           -CopyFixture
 
       - name: "M004 S06: offline bounce vs realtime (own session)"
-        if: ${{ !cancelled() && env.POLY_CDP_PORT != '' }}
+        if: ${{ !cancelled() && steps.e2e_deps.outcome == 'success' }}
         shell: pwsh
         env:
           POLY_E2E_MUTATE: ${{ inputs.e2e_mutate }}
