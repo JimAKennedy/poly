@@ -115,14 +115,15 @@ norms and eleven playable formulae, and its grids cannot disagree with the
 presets that play them.
 
 **Branch:** milestone/M003-central-africa-chapter
-**Status:** planned
+**Status:** in-progress
 
 ### Slice M003/S01 — The chapter's teaching text
 
 **Depends:** M001/S01
+**Plan:** M003-S01-plan.md
 **Validation:** format, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M003-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
@@ -153,9 +154,10 @@ presets that play them.
 ### Slice M003/S02 — The chapter plays
 
 **Depends:** M002/S01, M003/S01
+**Plan:** M003-S02-plan.md
 **Validation:** format, site-unit, doc-conformance, doc-discipline, e2e
 **Evidence:** evidence/M003-S02.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
