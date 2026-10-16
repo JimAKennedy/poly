@@ -12,19 +12,19 @@ class: gated
 
 - [x] 1. The grid test, proven on Aka: Ngbolu
 - [x] 2. The other ten formulae, their tempi, and the mould
-- [ ] 3. The site plays a Central African card
+- [x] 3. The site plays a Central African card
 
 ## Definition of Done
 
 Copied verbatim from the slice:
 
-- [ ] Each of the eleven formulae has a section with its grid, count row, lane
+- [x] Each of the eleven formulae has a section with its grid, count row, lane
       recipe and a `PolyPreviewCard` that plays its preset and opens Try it
-- [ ] Every card plays at a tempo taken from Arom's figure, and the page says
+- [x] Every card plays at a tempo taken from Arom's figure, and the page says
       how that tempo maps to the host's quarter-note BPM
-- [ ] The page tells the reader to open Aka: Ngbolu and turn the dì.kétɔ̀
+- [x] The page tells the reader to open Aka: Ngbolu and turn the dì.kétɔ̀
       lane's Rotation to place the mould of each other formula
-- [ ] A site test fails if any grid on the page differs from the preset that
+- [x] A site test fails if any grid on the page differs from the preset that
       plays it, or if any count row is not the sum of its grid
 
 ## Validation

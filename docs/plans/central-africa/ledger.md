@@ -157,25 +157,25 @@ presets that play them.
 **Plan:** M003-S02-plan.md
 **Validation:** format, site-unit, doc-conformance, doc-discipline, e2e
 **Evidence:** evidence/M003-S02.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Each of the eleven formulae has a section with its grid, count row, lane
+- [x] Each of the eleven formulae has a section with its grid, count row, lane
       recipe and a `PolyPreviewCard` that plays its preset and opens Try it
-- [ ] Every card plays at a tempo taken from Arom's figure, and the page says
+- [x] Every card plays at a tempo taken from Arom's figure, and the page says
       how that tempo maps to the host's quarter-note BPM
-- [ ] The page tells the reader to open Aka: Ngbolu and turn the dì.kétɔ̀
+- [x] The page tells the reader to open Aka: Ngbolu and turn the dì.kétɔ̀
       lane's Rotation to place the mould of each other formula
-- [ ] A site test fails if any grid on the page differs from the preset that
+- [x] A site test fails if any grid on the page differs from the preset that
       plays it, or if any count row is not the sum of its grid
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| CA25 | The eleven formulae have no section and no way to be heard on the site | `docs` | the new page | Each section embeds a card naming a preset that `resolvePresetName` resolves; e2e plays one | `open` |
-| CA26 | The note gives no tempo for àgà-tɔ̀rúmɔ̃, the ngbɔ̀lù drums alone or zɔ̀bɔ̀kɔ̀, and gàzà's ♩ = 112 is for a pulsation of eight values; `PRESET_BPM` has no entry for any formula | `source` | `site/src/audio/preset-patterns.ts`, the new page | The four tempi are read from the scan with page and example recorded in the evidence; each `PRESET_BPM` value is derivable from the figure's marking by the page's stated mapping | `open` |
-| CA27 | The mould is taught as rotation values, but nothing tells the reader to hear it by turning one knob | `docs` | the new page | The instruction names rotations 4, 22, 19, 13 and 10, each of which the grid test (CA15) proves | `open` |
-| CA28 | Nothing stops the page's grids drifting from the presets | `coverage` | `site/tests/` | The test fails when one page grid position is flipped, run once and recorded, and passes on the page as committed | `open` |
+| CA25 | The eleven formulae have no section and no way to be heard on the site | `docs` | the new page | Each section embeds a card naming a preset that `resolvePresetName` resolves; e2e plays one | `done` |
+| CA26 | The note gives no tempo for àgà-tɔ̀rúmɔ̃, the ngbɔ̀lù drums alone or zɔ̀bɔ̀kɔ̀, and gàzà's ♩ = 112 is for a pulsation of eight values; `PRESET_BPM` has no entry for any formula | `source` | `site/src/audio/preset-patterns.ts`, the new page | The four tempi are read from the scan with page and example recorded in the evidence; each `PRESET_BPM` value is derivable from the figure's marking by the page's stated mapping | `done` |
+| CA27 | The mould is taught as rotation values, but nothing tells the reader to hear it by turning one knob | `docs` | the new page | The instruction names rotations 4, 22, 19, 13 and 10, each of which the grid test (CA15) proves | `done` |
+| CA28 | Nothing stops the page's grids drifting from the presets | `coverage` | `site/tests/` | The test fails when one page grid position is flipped, run once and recorded, and passes on the page as committed | `done` |
 
 ## Milestone M004 — Chapter 2 says what the tradition does
 

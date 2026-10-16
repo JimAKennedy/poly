@@ -26,6 +26,8 @@ const CHAPTERS: Chapter[] = [
   { preset: 'Polymetric Foundation', path: '/01-foundations/', expectedFactoryName: 'Polymetric Foundation', expectedBpm: 120, resolutionPath: 'direct' },
   { preset: 'Ewe Polymetric Ensemble', path: '/02-sub-saharan-africa/', expectedFactoryName: 'Ewe Polymetric Ensemble', expectedBpm: 120, resolutionPath: 'direct' },
   { preset: 'Manding Djembe', path: '/02-sub-saharan-africa/', expectedFactoryName: 'Manding Djembe', expectedBpm: 120, resolutionPath: 'direct' },
+  { preset: 'Aka: Ngbolu', path: '/02b-central-africa/', expectedFactoryName: 'Aka: Ngbolu', expectedBpm: 216, resolutionPath: 'direct' },
+  { preset: 'Banda-Linda: Aga-torumo', path: '/02b-central-africa/', expectedFactoryName: 'Banda-Linda: Aga-torumo', expectedBpm: 110, resolutionPath: 'direct' },
   { preset: 'Cuban Son Montuno', path: '/03-afro-cuban/', expectedFactoryName: 'Cuban Son Montuno', expectedBpm: 120, resolutionPath: 'direct' },
   { preset: 'Afrobeat Lagos', path: '/04-afrobeat/', expectedFactoryName: 'Afrobeat Lagos', expectedBpm: 120, resolutionPath: 'direct' },
   { preset: 'Balinese Kotekan', path: '/05-gamelan/', expectedFactoryName: 'Balinese Kotekan', expectedBpm: 120, resolutionPath: 'direct' },
