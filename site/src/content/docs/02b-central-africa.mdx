@@ -108,3 +108,34 @@ dì.kpàkpà [. . x | . . x | . . x | . . x]   four groups of three
 **N9. Formulae are told apart by accent and tone colour.** Listeners recognise a formula by "the accentuation and the diversity of tone colour" (p. 304): which colours coincide and which stand alone at each position. *In Poly:* give every part its own sound, so its solo positions can be heard.
 
 **N10. Drum variation trades off against the melody.** The busier the singing, the more fixed the drums, and the reverse: variability in the drums is "inversely proportional" to that in the melodic parts (p. 298). The Aka vary their voices richly and their drums very little. *In Poly:* under a busy lead line, keep every drum lane fixed, with Mutation 0.
+
+## Building a formula
+
+Arom invites new combinations of his figures, provided the positions of their marks are unchanged: such combinations "should be perfectly acceptable to bearers of the tradition" (p. 299). The procedure below goes one step further and builds new figures, so treat its results as Poly's extension of the idiom, not as music the tradition plays. Each step names the rules and norms it applies.
+
+1. **Set the frame.** Eight ternary pulsations: 24 steps at 1/8, at a host tempo of 207 to 240 quarter-note BPM, a dotted quarter of 138 to 160. (R3, R5, N4, N6)
+2. **Write one oddity figure for the part marked by attacks alone.** Chain groups of two and three values to 24 so that no running total lands on 12; the nearest cut is then 11/13. Start from threes and insert twos. Enter it as additive cells, or as E(13,24) at any Rotation. (N2, N8)
+3. **Add a short commetric reference, or none.** One part on E(1,3) at Rotation 0, a rattle or claps, or leave the pulsation implicit. (R4)
+4. **Add two or three accented drum parts.** Give each a period that divides 24: 3, 4, 6, 12 or 24 steps. Put most marks off the pulsation and at varying offsets, and try a four-against-three pair for hemiola. (R7, N1, N3)
+5. **Audit the composite.** Write its `(count)` row. Aim for 20 or more of the 24 positions marked, no more than two positions shared by every part, and at least one solo position for each part. (R9, N5, N9)
+6. **Give every part its own sound.** One MIDI note per part, never two parts on one sound. (N9)
+7. **Fix the marks.** Every lane that carries marks gets Mutation 0, Drift Rate 0, Swing 0, Humanize 0, Probability 100% and no phrase gating. (R1, R2, R10)
+8. **Spend the variation on one part.** Split that part into two lanes: its marks on one, fixed as above, and its unaccented strokes on a quieter lane with a little Mutation. Keep alternative versions as Scene A and Scene B, or in a Chain, in any order. (R11, R12)
+
+## What breaks the idiom
+
+- **Co-prime lane lengths,** such as 12 against 7 or 5. Poly allows them, and Chapter 2 uses them; strict polyrhythm does not. (R7)
+- **A loud step 1 on every lane, or Emphasis above 0.** There is no downbeat, and Emphasis scatters accents the figure did not place. (R6)
+- **Mutation or Drift Rate on a lane that carries marks.** Both move steps, and the positions of the marks are the figure. (R10)
+- **The global macros on a Euclidean lane.** Density and Complexity recompute a Euclidean lane's Hits, Complexity and Syncopation move its Rotation, and Swing and Humanize move its timing. Timeline lanes are exempt from the macros; Euclidean lanes are not. The presets on this page set the macros so that every Euclidean lane plays its recipe as written, and moving a macro knob moves those lanes off Arom's grid. Rotation on the dì.kétɔ̀ lane is the one control that moves a mark on purpose, and it moves the whole mould at once. (R10)
+- **Swing or Humanize.** The movement is strictly proportional. (R1)
+- **Parts that line up vertically,** or an even stream with nothing to mark it. (R8, R9)
+- **Variation spread across several lanes.** One part varies; the rest are the reference it varies against. (R12)
+
+## Three printing inconsistencies
+
+The book disagrees with itself in three places that touch this chapter. Each was checked against the printed pages, and the grids here follow the reading given.
+
+- **The mò.kóndí ngúé, ex. 129 (p. 305).** The summary grid marks the ngúé at position 11 and not at 8. Exx. 95 (p. 283) and 107 (p. 289) both mark 8 and not 11, and the prose on p. 283 names position 8 as shared by dì.kpàkpà and ngúé. This chapter follows exx. 95 and 107.
+- **The 24-value oddity paradigm (p. 248).** The row labelled as a cycle of 24 minimal values prints groups that add up to 20. Ex. 35 on p. 247 gives the 24-value figure as 3.2.2.2.2 / 3.2.2.2.2.2, eleven against thirteen, and the oddity table above uses it.
+- **The mò.mbénzélé ngúé period (pp. 291 and 303).** P. 291 says the ngúé parts of mò.nzòlì and mò.mbénzélé have the same periodicity, half of dì.kétɔ̀'s twenty-four values. P. 303 puts the mò.mbénzélé ngúé in a 1:1 ratio to dì.kétɔ̀, and ex. 112 shows a figure that does not repeat after twelve values. This chapter follows p. 303 and ex. 112: the mò.mbénzélé ngúé runs the full twenty-four.

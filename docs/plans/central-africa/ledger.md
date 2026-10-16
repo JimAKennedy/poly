@@ -123,33 +123,33 @@ presets that play them.
 **Plan:** M003-S01-plan.md
 **Validation:** format, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M003-S01.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] A published page "Central Africa: Strict Polyrhythm" sits directly after
+- [x] A published page "Central Africa: Strict Polyrhythm" sits directly after
       Chapter 2 in the sidebar
-- [ ] The published `appendix-references.mdx` has an `fr-arom-1991` entry,
+- [x] The published `appendix-references.mdx` has an `fr-arom-1991` entry,
       added with the chapter's first citation of it
-- [ ] The page states rules R1–R12 and norms N1–N10, each with a page
+- [x] The page states rules R1–R12 and norms N1–N10, each with a page
       reference, and what each means in Poly
-- [ ] Every quote on the page is one phrase long and was found on the page it
+- [x] Every quote on the page is one phrase long and was found on the page it
       cites in the scan
-- [ ] The page's Poly guidance tells the reader to keep Mutation and Drift at 0
+- [x] The page's Poly guidance tells the reader to keep Mutation and Drift at 0
       on any lane that carries marks, and says the presets are marks-only
       reductions
-- [ ] The build procedure, what breaks the idiom (including the global macros)
+- [x] The build procedure, what breaks the idiom (including the global macros)
       and the book's three printing inconsistencies are on the page
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| CA02 | The book is absent from the published `appendix-references.mdx`. The FR20 rule admits an entry only once a published page cites it, and this chapter is the first that will. **Moved from M001/S01 on 2026-10-15:** the theory pages resolve their Arom links against their own bibliography, which has the entry, so no published link is broken today | `source` | `site/src/content/docs/appendix-references.mdx` | `appendix-entry-rules.test.mjs` (FR20 cited) passes with the entry present; `research-provenance` (doc-discipline) resolves the chapter's citations | `open` |
-| CA19 | Nothing on the site describes Central African music; the chapter page and its sidebar entry do not exist | `docs` | new page in `site/src/content/docs/`, `site/astro.config.mjs` | The site build includes the page; doc-discipline's doc-completeness maps it | `open` |
-| CA20 | A reader has no way to read box notation or a `(count)` row, Arom's three-step method (p. 277) | `docs` | the new page | A worked count row on the page equals the sum of its grid, checked by CA28's test | `open` |
-| CA21 | Rules R1–R12, with the vision's correction that timeline mode does not stop Mutation or Drift | `docs` | the new page | Each rule cites a page; each quote is checked against the scan and listed in the evidence | `open` |
-| CA22 | Norms N1–N10, with the rhythmic-oddity table and the hemiola | `docs` | the new page | Each norm cites a page; each oddity cell sequence on the page sums to its stated length and avoids the halfway cut, asserted by a site test | `open` |
-| CA23 | The build procedure and what breaks the idiom, including the global macros acting on Euclidean lanes | `docs` | the new page | The procedure's audit targets match N5 as stated on the page; reviewed against the vision's CA3 list | `open` |
-| CA24 | The book's three printing inconsistencies (ex. 129, p. 248, pp. 291 and 303), with the reading the chapter follows | `disclose` | the new page | Each is checked against the scan and the evidence records what was seen | `open` |
+| CA02 | The book is absent from the published `appendix-references.mdx`. The FR20 rule admits an entry only once a published page cites it, and this chapter is the first that will. **Moved from M001/S01 on 2026-10-15:** the theory pages resolve their Arom links against their own bibliography, which has the entry, so no published link is broken today | `source` | `site/src/content/docs/appendix-references.mdx` | `appendix-entry-rules.test.mjs` (FR20 cited) passes with the entry present; `research-provenance` (doc-discipline) resolves the chapter's citations | `done` |
+| CA19 | Nothing on the site describes Central African music; the chapter page and its sidebar entry do not exist | `docs` | new page in `site/src/content/docs/`, `site/astro.config.mjs` | The site build includes the page; doc-discipline's doc-completeness maps it | `done` |
+| CA20 | A reader has no way to read box notation or a `(count)` row, Arom's three-step method (p. 277) | `docs` | the new page | A worked count row on the page equals the sum of its grid, checked by CA28's test | `done` |
+| CA21 | Rules R1–R12, with the vision's correction that timeline mode does not stop Mutation or Drift | `docs` | the new page | Each rule cites a page; each quote is checked against the scan and listed in the evidence | `done` |
+| CA22 | Norms N1–N10, with the rhythmic-oddity table and the hemiola | `docs` | the new page | Each norm cites a page; each oddity cell sequence on the page sums to its stated length and avoids the halfway cut, asserted by a site test | `done` |
+| CA23 | The build procedure and what breaks the idiom, including the global macros acting on Euclidean lanes | `docs` | the new page | The procedure's audit targets match N5 as stated on the page; reviewed against the vision's CA3 list | `done` |
+| CA24 | The book's three printing inconsistencies (ex. 129, p. 248, pp. 291 and 303), with the reading the chapter follows | `disclose` | the new page | Each is checked against the scan and the evidence records what was seen | `done` |
 
 ### Slice M003/S02 — The chapter plays
 

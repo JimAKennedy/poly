@@ -12,24 +12,24 @@ class: gated
 
 - [x] 1. The page exists, is wired in, and teaches box notation
 - [x] 2. Rules R1–R12 and norms N1–N10, with the oddity test
-- [ ] 3. The build procedure, what breaks the idiom, and the printing inconsistencies
+- [x] 3. The build procedure, what breaks the idiom, and the printing inconsistencies
 
 ## Definition of Done
 
 Copied verbatim from the slice:
 
-- [ ] A published page "Central Africa: Strict Polyrhythm" sits directly after
+- [x] A published page "Central Africa: Strict Polyrhythm" sits directly after
       Chapter 2 in the sidebar
-- [ ] The published `appendix-references.mdx` has an `fr-arom-1991` entry,
+- [x] The published `appendix-references.mdx` has an `fr-arom-1991` entry,
       added with the chapter's first citation of it
-- [ ] The page states rules R1–R12 and norms N1–N10, each with a page
+- [x] The page states rules R1–R12 and norms N1–N10, each with a page
       reference, and what each means in Poly
-- [ ] Every quote on the page is one phrase long and was found on the page it
+- [x] Every quote on the page is one phrase long and was found on the page it
       cites in the scan
-- [ ] The page's Poly guidance tells the reader to keep Mutation and Drift at 0
+- [x] The page's Poly guidance tells the reader to keep Mutation and Drift at 0
       on any lane that carries marks, and says the presets are marks-only
       reductions
-- [ ] The build procedure, what breaks the idiom (including the global macros)
+- [x] The build procedure, what breaks the idiom (including the global macros)
       and the book's three printing inconsistencies are on the page
 
 ## Validation
