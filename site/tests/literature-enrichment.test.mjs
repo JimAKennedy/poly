@@ -104,7 +104,7 @@ const CITATIONS = [
     file: 'theory-sub-saharan-africa.mdx',
     anchor: 'fr-arom-1991',
     near: 'Western transcription usually omits',
-    why: "Arom's referent theory is the methodology behind the dance-beat claim; the Sources listing is not a citation at a claim",
+    why: "Arom is cited where the page names the pulsation as referent (p. 230); the dance beat is the page's own reading of Ewe practice, and the Sources listing is not a citation at a claim",
   },
   {
     row: 'F47',

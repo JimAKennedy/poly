@@ -32,29 +32,27 @@ its CA2 table as an item, plus four owner decisions.
 every page that cites it credits only what those pages say.
 
 **Branch:** milestone/M001-arom-record
-**Status:** planned
+**Status:** done
 
 ### Slice M001/S01 — Arom is recorded as read
 
+**Plan:** M001-S01-plan.md
 **Validation:** format, site-unit, doc-discipline, guards
 **Evidence:** evidence/M001-S01.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] `fr-arom-1991` in `site/src/data/references.json` carries a verified
+- [x] `fr-arom-1991` in `site/src/data/references.json` carries a verified
       description limited to pp. 229–306, and its evidence names the owner's
       scan and how it was checked; no scan is added to the reference archive
-- [ ] The published `appendix-references.mdx` has an `fr-arom-1991` entry, so
-      every link to that anchor resolves
-- [ ] Neither theory-bundle page credits Arom with a claim pp. 229–306 do not
+- [x] Neither theory-bundle page credits Arom with a claim pp. 229–306 do not
       make, and the test that pinned the F52 citation pins the corrected one
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| CA01 | `fr-arom-1991` still says "The text was not read" with `description: "unverified"`, though the owner has read and checked pp. 229–306 from a scan | `source` | `site/src/data/references.json` | `references-manifest.test.mjs` passes on the changed entry; the evidence quotes the new `evidence` and `description` values | `open` |
-| CA02 | The book is absent from the published `appendix-references.mdx`, yet the theory pages link to `/appendix-references/#fr-arom-1991` | `source` | `site/src/content/docs/appendix-references.mdx` | `research-provenance` (doc-discipline) resolves the anchor; site-unit passes | `open` |
-| CA03 | The theory bundle credits Arom with the timeline as "shared clock" and with the dance-beat referent. Pp. 229–306 name the pulsation, usually implicit, as referent (p. 230) and never use "timeline" | `correct` | `site/src/content/theory/theory-sub-saharan-africa.mdx`, `theory-counterpoint-overview.mdx`, `site/tests/literature-enrichment.test.mjs` | Each corrected sentence quotes or cites a page in 229–306 that was checked against the scan; the F52 case asserts the new citation site | `open` |
+| CA01 | `fr-arom-1991` still says "The text was not read" with `description: "unverified"`, though the owner has read and checked pp. 229–306 from a scan | `source` | `site/src/data/references.json` | `references-manifest.test.mjs` passes on the changed entry; the evidence quotes the new `evidence` and `description` values | `done` |
+| CA03 | The theory bundle credits Arom with the timeline as "shared clock" and with the dance-beat referent. Pp. 229–306 name the pulsation, usually implicit, as referent (p. 230) and never use "timeline" | `correct` | `site/src/content/theory/theory-sub-saharan-africa.mdx`, `theory-counterpoint-overview.mdx`, `site/tests/literature-enrichment.test.mjs` | Each corrected sentence quotes or cites a page in 229–306 that was checked against the scan; the F52 case asserts the new citation site | `done` |
 
 ## Milestone M002 — The eleven formulae are factory presets
 
@@ -129,6 +127,8 @@ presets that play them.
 
 - [ ] A published page "Central Africa: Strict Polyrhythm" sits directly after
       Chapter 2 in the sidebar
+- [ ] The published `appendix-references.mdx` has an `fr-arom-1991` entry,
+      added with the chapter's first citation of it
 - [ ] The page states rules R1–R12 and norms N1–N10, each with a page
       reference, and what each means in Poly
 - [ ] Every quote on the page is one phrase long and was found on the page it
@@ -141,6 +141,7 @@ presets that play them.
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
+| CA02 | The book is absent from the published `appendix-references.mdx`. The FR20 rule admits an entry only once a published page cites it, and this chapter is the first that will. **Moved from M001/S01 on 2026-10-15:** the theory pages resolve their Arom links against their own bibliography, which has the entry, so no published link is broken today | `source` | `site/src/content/docs/appendix-references.mdx` | `appendix-entry-rules.test.mjs` (FR20 cited) passes with the entry present; `research-provenance` (doc-discipline) resolves the chapter's citations | `open` |
 | CA19 | Nothing on the site describes Central African music; the chapter page and its sidebar entry do not exist | `docs` | new page in `site/src/content/docs/`, `site/astro.config.mjs` | The site build includes the page; doc-discipline's doc-completeness maps it | `open` |
 | CA20 | A reader has no way to read box notation or a `(count)` row, Arom's three-step method (p. 277) | `docs` | the new page | A worked count row on the page equals the sum of its grid, checked by CA28's test | `open` |
 | CA21 | Rules R1–R12, with the vision's correction that timeline mode does not stop Mutation or Drift | `docs` | the new page | Each rule cites a page; each quote is checked against the scan and listed in the evidence | `open` |
@@ -248,8 +249,9 @@ the Central Africa chapter relies on.
 **M001 and M002 are independent.** The record touches references only, and
 the presets cite nothing. Either can go first.
 
-**M003/S01 depends on M001/S01** because the chapter cites `fr-arom-1991`,
-whose published entry M001 creates. **M003/S02 depends on M002/S01** because
+**M003/S01 depends on M001/S01** because the chapter cites `fr-arom-1991`
+as M001 records it, and adds the published entry itself (CA02, moved there on
+2026-10-15). **M003/S02 depends on M002/S01** because
 its cards name the presets and its test reads them from `presets.json`, and on
 **M003/S01** because the formula sections sit on that page.
 
