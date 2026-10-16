@@ -28,8 +28,11 @@
 
 namespace {
 
+// One of Arom's parts. Usually one lane; bòndò's three drums play one model
+// rhythm as one part (exx. 101–103), so a part may span several lanes. Every
+// lane must sound the part's row, and Arom's (count) row counts parts, not lanes.
 struct Part {
-    int lane;
+    std::vector<int> lanes;
     const char* row; // 'x' = mark, '.' = none; '|' and spaces are for reading
 };
 
@@ -108,11 +111,113 @@ const std::vector<Formula>& formulae() {
          24,
          0.5,
          {
-             {0, ". . x | . . x | . . x | . . x | . . x | . . x | . . x | . . x"}, // dikpakpa
-             {1, "x . x | . x . | . . x | . x . | x . x | . x . | . . x | . x ."}, // ngue
-             {2, "x . x | . x . | x x . | x . x | . x . | x . x | x . x | . x ."}, // diketo
+             {{0}, ". . x | . . x | . . x | . . x | . . x | . . x | . . x | . . x"}, // dikpakpa
+             {{1}, "x . x | . x . | . . x | . x . | x . x | . x . | . . x | . x ."}, // ngue
+             {{2}, "x . x | . x . | x x . | x . x | . x . | x . x | x . x | . x ."}, // diketo
          },
          "2 . 3 | . 2 1 | 1 1 2 | 1 1 2 | 1 1 2 | 1 1 2 | 1 . 3 | . 2 1"},
+        // Mokondi, exx. 106–107, p. 289: four parts, ratio 1:2. Only position 1 by all four.
+        {"Aka: Mokondi",
+         24,
+         0.5,
+         {
+             {{0}, "x . . | x . x | x . x | x . . | x . . | x . x | x . x | x . ."}, // endomba
+             {{1}, "x . x | . . x | . x . | . x . | . x . | . x . | x . . | x . ."}, // dikpakpa
+             {{2}, "x . . | x x . | . x x | x . . | x . . | x x . | . x x | x . ."}, // ngue
+             {{3}, "x . x | x . x | . x . | x . x | . x . | x x . | x . x | . x ."}, // diketo
+         },
+         "4 . 2 | 3 1 3 | 1 3 2 | 3 1 1 | 2 2 . | 3 3 1 | 3 1 3 | 3 1 ."},
+        // Yombe, exx. 108–109, p. 290: endomba and dikpakpa play one cell, one value apart.
+        {"Aka: Yombe",
+         24,
+         0.5,
+         {
+             {{0}, ". x . | . x . | . x . | . x . | . x . | . x . | . x . | . x ."}, // endomba
+             {{1}, ". . x | . . x | . . x | . . x | . . x | . . x | . . x | . . x"}, // dikpakpa
+             {{2}, ". x . | . x x | x x . | . x . | . x . | . x x | x x . | . x ."}, // ngue
+             {{3}, "x . x | . x . | x . x | x . x | . x . | x . x | . x . | x x ."}, // diketo
+         },
+         "1 2 2 | . 3 2 | 2 2 2 | 1 2 2 | . 3 1 | 1 2 3 | 1 3 1 | 1 3 1"},
+        // Monzoli, ex. 111, p. 292: endomba's groups of 4 against dikpakpa's groups of 3.
+        {"Aka: Monzoli",
+         24,
+         0.5,
+         {
+             {{0}, "x x . | . x x | . . x | x . . | x x . | . x x | . . x | x . ."}, // endomba
+             {{1}, ". . x | . . x | . . x | . . x | . . x | . . x | . . x | . . x"}, // dikpakpa
+             {{2}, "x . . | . x . | x . . | . x . | x . . | . x . | x . . | . x ."}, // ngue
+             {{3}, "x x . | x . x | . x . | x . x | x . x | . x . | x . x | . x ."}, // diketo
+         },
+         "3 2 1 | 1 2 3 | 1 1 2 | 2 1 2 | 3 1 2 | . 3 2 | 2 . 3 | 1 2 1"},
+        // Mombenzele, ex. 112, pp. 292–293: differs from monzoli only in ngue, here
+        // over the full 24 values (p. 303).
+        {"Aka: Mombenzele",
+         24,
+         0.5,
+         {
+             {{0}, "x x . | . x x | . . x | x . . | x x . | . x x | . . x | x . ."}, // endomba
+             {{1}, ". . x | . . x | . . x | . . x | . . x | . . x | . . x | . . x"}, // dikpakpa
+             {{2}, "x x x | x x x | . . x | . . x | . . x | . . x | . . x | . . x"}, // ngue
+             {{3}, "x . x | . x . | x . x | . x . | x x . | x . x | . x . | x . x"}, // diketo
+         },
+         "3 2 3 | 1 3 3 | 1 . 4 | 1 1 2 | 2 2 2 | 1 1 4 | . 1 3 | 2 . 3"},
+        // Zoboko, exx. 113–120, pp. 294–297: mokongo's oddity figure against clapped pulsation.
+        {"Aka: Zoboko",
+         24,
+         0.5,
+         {
+             {{0}, "x . . | x . . | x . x | . . x | . x . | . x . | . x . | . x ."}, // mokongo
+             {{1}, "x . . | x . . | x . . | x . . | x . . | x . . | x . . | x . ."}, // claps
+             {{2}, "x . x | . x . | x . x | x . x | . x . | x . x | . x . | x x ."}, // diketo
+         },
+         "3 . 1 | 2 1 . | 3 . 2 | 2 . 2 | 1 2 . | 2 1 1 | 1 2 . | 2 2 ."},
+        // Bondo, exx. 101–103, pp. 286–287: three drums on one oddity model, 3+2+2+3+2.
+        {"Aka: Bondo",
+         12,
+         0.5,
+         {
+             {{0, 1, 2}, "x . . | x . x | . x . | . x ."}, // endomba, ngue, dikpakpa
+             {{3}, "x . x | x . x | . x x | . x ."},       // diketo
+             {{4}, "x . . | x . . | x . . | x . ."},       // rattle
+         },
+         "3 . 1 | 3 . 2 | 1 2 1 | 1 2 ."},
+        // Ngbolu drums alone, ex. 90, p. 281: positions 3 and 9 shared.
+        {"Aka: Ngbolu Drums",
+         12,
+         0.5,
+         {
+             {{0}, ". . x | . . x | . . x | . . x"}, // dikpakpa
+             {{1}, "x . x | . x . | . . x | . x ."}, // ngue
+         },
+         "1 . 2 | . 1 1 | . . 2 | . 1 1"},
+        // Gaza, exx. 83–84, p. 278: two pulsations of eight values; strictly interwoven,
+        // no position shared.
+        {"Banda-Dakpa: Gaza",
+         16,
+         0.25,
+         {
+             {{0}, ". . . . . . x . | . . . x . . x ."}, // husband
+             {{1}, ". . x . . . . . | x . . . . x . ."}, // mother
+         },
+         ". . 1 . . . 1 . | 1 . . 1 . 1 1 ."},
+        // Kponingbo, ex. 89, p. 281: only position 7 shared.
+        {"Zande: Kponingbo",
+         8,
+         0.25,
+         {
+             {{0}, "x . . x | . . x ."}, // guru drum
+             {{1}, ". . x . | . . x ."}, // pellet bells
+         },
+         "1 . 1 1 | . . 2 ."},
+        // Aga-torumo, ex. 99, p. 285: composite subdivision, five values per pulsation.
+        {"Banda-Linda: Aga-torumo",
+         10,
+         0.2,
+         {
+             {{0}, "x . x . . | x x x . ."}, // akone
+             {{1}, ". . . x x | . . x . x"}, // kaminga
+         },
+         "1 . 1 1 1 | 1 1 2 . 1"},
     };
     return all;
 }
@@ -127,7 +232,7 @@ TEST_P(CentralAfricanFormula, FixtureRowsSumToAromsCountRow) {
     std::vector<int> got(static_cast<size_t>(f.period), 0);
     for (const Part& p : f.parts) {
         const std::vector<bool> m = marks(p.row);
-        ASSERT_EQ(static_cast<int>(m.size()), f.period) << f.preset << " lane " << p.lane << ": row length";
+        ASSERT_EQ(static_cast<int>(m.size()), f.period) << f.preset << " lane " << p.lanes.front() << ": row length";
         for (int i = 0; i < f.period; ++i)
             got[static_cast<size_t>(i)] += m[static_cast<size_t>(i)] ? 1 : 0;
     }
@@ -139,17 +244,38 @@ TEST_P(CentralAfricanFormula, EveryLaneSoundsExactlyAromsMarks) {
     const int index = presetIndexByName(f.preset);
     ASSERT_GE(index, 0) << "no factory preset named " << f.preset;
     const poly::GrooveState state = poly::makeFactoryPreset(index);
-    ASSERT_EQ(state.activeLaneCount, static_cast<int>(f.parts.size())) << f.preset << ": one lane per part";
+    size_t lanes = 0;
+    for (const Part& p : f.parts)
+        lanes += p.lanes.size();
+    ASSERT_EQ(state.activeLaneCount, static_cast<int>(lanes)) << f.preset << ": every lane belongs to a part";
 
     std::vector<int> sounding(static_cast<size_t>(f.period), 0);
     for (const Part& p : f.parts) {
         const std::vector<bool> want = marks(p.row);
-        const std::vector<bool> got = renderedMarks(state, p.lane, f.period, f.stepPpq);
-        EXPECT_EQ(show(got), show(want)) << f.preset << " lane " << p.lane;
+        std::vector<bool> partSounds(static_cast<size_t>(f.period), false);
+        for (int lane : p.lanes) {
+            const std::vector<bool> got = renderedMarks(state, lane, f.period, f.stepPpq);
+            EXPECT_EQ(show(got), show(want)) << f.preset << " lane " << lane;
+            for (int i = 0; i < f.period; ++i)
+                partSounds[static_cast<size_t>(i)] = partSounds[static_cast<size_t>(i)] || got[static_cast<size_t>(i)];
+        }
         for (int i = 0; i < f.period; ++i)
-            sounding[static_cast<size_t>(i)] += got[static_cast<size_t>(i)] ? 1 : 0;
+            sounding[static_cast<size_t>(i)] += partSounds[static_cast<size_t>(i)] ? 1 : 0;
     }
     EXPECT_EQ(sounding, counts(f.count)) << f.preset << ": per-position count against Arom's (count) row";
+}
+
+// Composite subdivision (p. 231): five values to a pulsation. At 1/16 a Tempo
+// Mult of 1.25 shrinks a step to 0.25 / 1.25 = 0.2 quarter notes.
+TEST(CentralAfricanPresets, AgaTorumoStepsAreAFifthOfABeat) {
+    const int index = presetIndexByName("Banda-Linda: Aga-torumo");
+    ASSERT_GE(index, 0) << "no factory preset named Banda-Linda: Aga-torumo";
+    const poly::GrooveState state = poly::makeFactoryPreset(index);
+    for (int lane = 0; lane < state.activeLaneCount; ++lane) {
+        const poly::LaneConfig& cfg = state.lanes[static_cast<size_t>(lane)];
+        EXPECT_DOUBLE_EQ(4.0 / cfg.cycle.subdivision / static_cast<double>(cfg.tempoMultiplier), 0.2)
+            << "lane " << lane;
+    }
 }
 
 std::string formulaName(const ::testing::TestParamInfo<Formula>& info) {

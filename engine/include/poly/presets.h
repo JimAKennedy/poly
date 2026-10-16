@@ -12,7 +12,7 @@ struct PresetInfo {
     const char* category;
 };
 
-static constexpr int kFactoryPresetCount = 46;
+static constexpr int kFactoryPresetCount = 56;
 static constexpr int kFactoryPresetCategoryCount = 11;
 
 // Ordered category list — presentation order for plugin submenus and site chips.
@@ -44,6 +44,16 @@ GrooveState makeClappingMusic();
 
 // Central African strict polyrhythm (Arom 1991), presets_central_africa.cpp.
 GrooveState makeAkaNgbolu();
+GrooveState makeAkaMokondi();
+GrooveState makeAkaYombe();
+GrooveState makeAkaMonzoli();
+GrooveState makeAkaMombenzele();
+GrooveState makeAkaZoboko();
+GrooveState makeAkaBondo();
+GrooveState makeAkaNgboluDrums();
+GrooveState makeBandaDakpaGaza();
+GrooveState makeZandeKponingbo();
+GrooveState makeBandaLindaAgaTorumo();
 GrooveState makeAfrobeatLagos();
 GrooveState makeBaliKotekan();
 GrooveState makeJavaColotomic();

@@ -46,3 +46,13 @@ on the user's behalf during execution.
 - **Decision:** the mock host's two missing presets (Rumba Clave, Clapping
   Music) are added with the eleven — **Why:** its tables are positional, so
   indices 45–55 cannot exist without 43 and 44
+
+## 2026-10-15 — judgment call in M002/S01 task 2
+
+- **Decision:** the grid harness counts Arom's parts, not lanes: a part may
+  span several lanes, each of which must sound the part's row exactly —
+  **Why:** Arom's `(count)` row counts parts, and bòndò's three drums are one
+  part on one model rhythm (exx. 101–103), so a lane-wise sum would give 5
+  where he writes 3. The vision's reason for three lanes ("three tone colours
+  sounding together" make the 3) was wrong; the three lanes stay, as decided,
+  because they are three tone colours, and the count row is matched exactly

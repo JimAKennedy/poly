@@ -2845,6 +2845,26 @@ GrooveState makeFactoryPresetRaw(int index) {
         return makeClappingMusic();
     case 45:
         return makeAkaNgbolu();
+    case 46:
+        return makeAkaMokondi();
+    case 47:
+        return makeAkaYombe();
+    case 48:
+        return makeAkaMonzoli();
+    case 49:
+        return makeAkaMombenzele();
+    case 50:
+        return makeAkaZoboko();
+    case 51:
+        return makeAkaBondo();
+    case 52:
+        return makeAkaNgboluDrums();
+    case 53:
+        return makeBandaDakpaGaza();
+    case 54:
+        return makeZandeKponingbo();
+    case 55:
+        return makeBandaLindaAgaTorumo();
     default:
         return GrooveState{};
     }
@@ -2977,6 +2997,31 @@ const PresetInfo& getFactoryPresetInfo(int index) {
          "Minimalist / Compositional"},
         {"Aka: Ngbolu",
          "Aka ngbolu (Arom 1991, exx. 104-105): side-stick pulsation, ngue drum and the diketo iron mould",
+         "Central African"},
+        {"Aka: Mokondi",
+         "Aka mokondi (Arom 1991, exx. 106-107): four parts in ratio 1:2, the diketo mould five pulsations on",
+         "Central African"},
+        {"Aka: Yombe", "Aka yombe (Arom 1991, exx. 108-109): endomba and dikpakpa play one cell a value apart",
+         "Central African"},
+        {"Aka: Monzoli",
+         "Aka monzoli (Arom 1991, ex. 111): endomba's groups of four against dikpakpa's groups of three",
+         "Central African"},
+        {"Aka: Mombenzele",
+         "Aka mombenzele (Arom 1991, ex. 112): monzoli's parts with a ngue that alone tells them apart",
+         "Central African"},
+        {"Aka: Zoboko", "Aka zoboko (Arom 1991, exx. 113-120): mokongo's oddity figure against clapped pulsation",
+         "Central African"},
+        {"Aka: Bondo",
+         "Aka bondo (Arom 1991, exx. 101-103): three drums on one 3+2+2+3+2 model, iron strips and rattle",
+         "Central African"},
+        {"Aka: Ngbolu Drums", "Aka ngbolu drums alone (Arom 1991, ex. 90): side-stick pulsation against the ngue drum",
+         "Central African"},
+        {"Banda-Dakpa: Gaza",
+         "Banda-Dakpa gaza (Arom 1991, exx. 83-84): two slit drums strictly interwoven, no mark shared",
+         "Central African"},
+        {"Zande: Kponingbo", "Zande kponingbo (Arom 1991, ex. 89): guru drum and pellet bells sharing one position",
+         "Central African"},
+        {"Banda-Linda: Aga-torumo", "Banda-Linda aga-torumo (Arom 1991, ex. 99): two drums, five values to a pulsation",
          "Central African"},
     };
     static constexpr PresetInfo kEmpty{"", "", "Foundational"};
