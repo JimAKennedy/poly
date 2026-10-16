@@ -53,3 +53,12 @@ on the user's behalf during execution.
 - **Decision:** the formulae sit between the norms and the build procedure —
   **Why:** the vision's CA3 order puts the formulae (item 5) and the mould
   (item 6) before the procedure (item 7)
+
+## 2026-10-16 — judgment calls in M003/S02 task 2
+
+- **Decision:** the page says mò.mbénzélé's dì.kétɔ̀ sits four pulsations after
+  mò.nzòlì's, where the research note says one — **Why:** p. 298's offsets
+  (2 and 6 pulsations) and the presets' rotations (22 and 10) both give four
+- **Decision:** the lane tables are read from presets.json, so the bòndò
+  rattle and the kpóníngbó pellet bells appear as drawn lanes — **Why:** the
+  page describes the preset the card plays; M002 built those two lanes drawn

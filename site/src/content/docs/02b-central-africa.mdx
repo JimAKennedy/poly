@@ -111,7 +111,7 @@ dì.kpàkpà [. . x | . . x | . . x | . . x]   four groups of three
 
 ## The formulae
 
-Each formula below has its grid, its `(count)` row, the lanes of the preset that plays it, and a card. **Play** runs the preset in your browser; **Try it** opens it in the full Poly interface, where you can solo lanes and turn knobs. Every preset plays marks only, at the tempo Arom's figure gives, with Mutation, Drift Rate, Swing and Humanize at 0 on every lane. A test fails if any grid on this page and the preset that plays it disagree at a single position.
+Each formula below has its grid, its `(count)` row, the lanes of the preset that plays it, and a card. **Play** runs the preset in your browser; **Try it** opens it in the full Poly interface, where you can solo lanes and turn knobs. Every preset plays marks only, at the tempo Arom's figure gives (see [Tempo](#tempo)), with Mutation, Drift Rate, Swing and Humanize at 0 on every lane. A test fails if any grid on this page and the preset that plays it disagree at a single position.
 
 In the lane tables, "E(k,n) r*N*" is a Euclidean lane of *k* hits in *n* steps at Rotation *N*; "drawn" is a timeline lane with the grid row entered step by step.
 
@@ -133,6 +133,253 @@ dì.kétɔ̀   [x . x | . x . | x x . | x . x | . x . | x . x | x . x | . x .]
 | dì.kétɔ̀ | 24 | E(13,24) r4 | 67 High Agogo |
 
 <PolyPreviewCard preset="Aka: Ngbolu" caption="Aka ngbɔ̀lù — dì.kpàkpà, ngúé and the dì.kétɔ̀ iron strips, marks only (Arom exx. 104–105)" />
+
+### Banda-Dakpa: Gaza — strict interweaving
+
+Gàzà (exx. 83–84, p. 278) is played by two slit drums, the "husband" and the "mother", over two binary pulsations of eight values each, sixteen positions. It is Arom's example of strict interweaving: each drum marks three positions, and no position is marked by both.
+
+```text title="Banda-Dakpa: Gaza"
+husband [. . . . . . x . | . . . x . . x .]
+mother  [. . x . . . . . | x . . . . x . .]
+(count) [. . 1 . . . 1 . | 1 . . 1 . 1 1 .]
+```
+
+| Part | Steps | Lane | MIDI note |
+|---|---|---|---|
+| husband | 16 | drawn, 1/16 | 77 Low Wood Block |
+| mother | 16 | E(3,16) r8, 1/16 | 76 Hi Wood Block |
+
+<PolyPreviewCard preset="Banda-Dakpa: Gaza" caption="Banda-Dakpa gàzà — two slit drums, strictly interwoven (Arom exx. 83–84)" />
+
+### Zande: Kponingbo — two parts, one shared mark
+
+The Zande kpóníngbó dance (ex. 89, p. 281) has a drum and a pair of pellet bells over two binary pulsations of four values, eight positions. Four positions are marked, and only position 7 by both parts.
+
+```text title="Zande: Kponingbo"
+drum         [x . . x | . . x .]
+pellet bells [. . x . | . . x .]
+(count)      [1 . 1 1 | . . 2 .]
+```
+
+| Part | Steps | Lane | MIDI note |
+|---|---|---|---|
+| drum | 8 | E(3,8) r0, 1/16 | 64 Low Conga |
+| pellet bells | 4 | drawn, 1/16 | 54 Tambourine |
+
+The pellet bells repeat every four positions, half the drum's period: the 2:1 ratio of rule R7.
+
+<PolyPreviewCard preset="Zande: Kponingbo" caption="Zande kpóníngbó — drum and pellet bells (Arom ex. 89)" />
+
+### Aka: Ngbolu Drums — the drums alone
+
+The two drums of ngbɔ̀lù without the iron strips (ex. 90, p. 281), the formula used above to show how a `(count)` row is read. The dì.kpàkpà is the same three-value figure as in the full ngbɔ̀lù, and the ngúé the same twelve values.
+
+```text title="Aka: Ngbolu Drums"
+dì.kpàkpà [. . x | . . x | . . x | . . x]
+ngúé      [x . x | . x . | . . x | . x .]
+(count)   [1 . 2 | . 1 1 | . . 2 | . 1 1]
+```
+
+| Part | Steps | Lane | MIDI note |
+|---|---|---|---|
+| dì.kpàkpà | 3 | E(1,3) r2 | 37 Side Stick |
+| ngúé | 12 | drawn | 64 Low Conga |
+
+<PolyPreviewCard preset="Aka: Ngbolu Drums" caption="Aka ngbɔ̀lù, drums only — dì.kpàkpà and ngúé (Arom ex. 90)" />
+
+### Aka: Bondo — one model, five instruments
+
+In the Aka bòndò dance (exx. 101–103, pp. 286–287) the è.ndòmbà, the ngúé and the dì.kpàkpà all play one figure, the 3+2+2+3+2 oddity model of norm N2, over four ternary pulsations. The dì.kétɔ̀ splits two of its groups of three, and the mà.nzénzé rattle marks every pulsation, a rare regularly commetric part. The `(count)` row counts parts, so the three drums on one figure count once, and a position reaches 3 only where the dì.kétɔ̀ and the rattle both join the drums.
+
+```text title="Aka: Bondo"
+è.ndòmbà/ngúé/dì.kpàkpà [x . . | x . x | . x . | . x .]
+dì.kétɔ̀                 [x . x | x . x | . x x | . x .]
+mà.nzénzé               [x . . | x . . | x . . | x . .]
+(count)                 [3 . 1 | 3 . 2 | 1 2 1 | 1 2 .]
+```
+
+| Part | Steps | Lane | MIDI note |
+|---|---|---|---|
+| è.ndòmbà | 12 | E(5,12) r7 | 63 Open Hi Conga |
+| ngúé | 12 | E(5,12) r7 | 64 Low Conga |
+| dì.kpàkpà | 12 | E(5,12) r7 | 37 Side Stick |
+| dì.kétɔ̀ | 12 | E(7,12) r0 | 67 High Agogo |
+| mà.nzénzé | 3 | drawn | 70 Maracas |
+
+The bòndò dì.kétɔ̀ is the same set of onsets as the Ewe gankogui bell in Chapter 2, E(7,12) at Rotation 0. Arom does not read it as a timeline: here it is a split of the oddity model the drums play.
+
+<PolyPreviewCard preset="Aka: Bondo" caption="Aka bòndò — three drums on one oddity model, dì.kétɔ̀ and rattle (Arom exx. 101–103)" />
+
+### Banda-Linda: Aga-torumo — composite subdivision
+
+In the Banda-Linda àgà-tɔ̀rúmɔ̃ (ex. 99, p. 285) the pulsation divides into five values, Arom's composite subdivision. Two unaccented drums, marked by their alternating durations, cover two pulsations, ten positions. Eight positions are struck, and only position 8 by both.
+
+```text title="Banda-Linda: Aga-torumo"
+first drum  [x . x . . | x x x . .]
+second drum [. . . x x | . . x . x]
+(count)     [1 . 1 1 1 | 1 1 2 . 1]
+```
+
+| Part | Steps | Lane | MIDI note |
+|---|---|---|---|
+| first drum (àkɔ̄.nə̀) | 10 | drawn, 1/16, Tempo Mult 1.25 | 64 Low Conga |
+| second drum (kàmíngà) | 10 | drawn, 1/16, Tempo Mult 1.25 | 63 Open Hi Conga |
+
+Tempo Mult 1.25 shortens each sixteenth to 0.2 beats, so five steps fill one quarter note and the pulsation lands on every fifth step. The WebUI has no Tempo Mult control, so this preset is the way to hear a five-value pulsation there.
+
+<PolyPreviewCard preset="Banda-Linda: Aga-torumo" caption="Banda-Linda àgà-tɔ̀rúmɔ̃ — two drums on a five-value pulsation (Arom ex. 99)" />
+
+### Aka: Mokondi — four parts, ratio 1 : 2
+
+Mò.kóndí (exx. 106–107, p. 289) has four parts: the è.ndòmbà, the narrow-headed "child" drum, with the dì.kpàkpà, the ngúé and the dì.kétɔ̀. È.ndòmbà and ngúé repeat every twelve values, dì.kpàkpà and dì.kétɔ̀ every twenty-four. Twenty-one positions are marked, and only position 1 by all four parts.
+
+```text title="Aka: Mokondi"
+è.ndòmbà  [x . . | x . x | x . x | x . . | x . . | x . x | x . x | x . .]
+dì.kpàkpà [x . x | . . x | . x . | . x . | . x . | . x . | x . . | x . .]
+ngúé      [x . . | x x . | . x x | x . . | x . . | x x . | . x x | x . .]
+dì.kétɔ̀   [x . x | x . x | . x . | x . x | . x . | x x . | x . x | . x .]
+(count)   [4 . 2 | 3 1 3 | 1 3 2 | 3 1 1 | 2 2 . | 3 3 1 | 3 1 3 | 3 1 .]
+```
+
+| Part | Steps | Lane | MIDI note |
+|---|---|---|---|
+| è.ndòmbà | 12 | drawn | 63 Open Hi Conga |
+| dì.kpàkpà | 24 | drawn | 37 Side Stick |
+| ngúé | 12 | drawn | 64 Low Conga |
+| dì.kétɔ̀ | 24 | E(13,24) r13 | 67 High Agogo |
+
+<PolyPreviewCard preset="Aka: Mokondi" caption="Aka mò.kóndí — è.ndòmbà, dì.kpàkpà, ngúé and dì.kétɔ̀ (Arom exx. 106–107)" />
+
+### Aka: Yombe — one cell, crossed
+
+In yómbè (exx. 108–109, p. 290) the è.ndòmbà and the dì.kpàkpà play the same one-pulsation cell, a single mark, offset from each other by one value: strict, regular interweaving. Twenty-two positions are marked, and none by all four parts.
+
+```text title="Aka: Yombe"
+è.ndòmbà  [. x . | . x . | . x . | . x . | . x . | . x . | . x . | . x .]
+dì.kpàkpà [. . x | . . x | . . x | . . x | . . x | . . x | . . x | . . x]
+ngúé      [. x . | . x x | x x . | . x . | . x . | . x x | x x . | . x .]
+dì.kétɔ̀   [x . x | . x . | x . x | x . x | . x . | x . x | . x . | x x .]
+(count)   [1 2 2 | . 3 2 | 2 2 2 | 1 2 2 | . 3 1 | 1 2 3 | 1 3 1 | 1 3 1]
+```
+
+| Part | Steps | Lane | MIDI note |
+|---|---|---|---|
+| è.ndòmbà | 3 | E(1,3) r1 | 63 Open Hi Conga |
+| dì.kpàkpà | 3 | E(1,3) r2 | 37 Side Stick |
+| ngúé | 12 | drawn | 64 Low Conga |
+| dì.kétɔ̀ | 24 | E(13,24) r19 | 67 High Agogo |
+
+<PolyPreviewCard preset="Aka: Yombe" caption="Aka yómbè — two crossed one-pulsation cells, ngúé and dì.kétɔ̀ (Arom exx. 108–109)" />
+
+### Aka: Monzoli — vertical hemiola
+
+Mò.nzòlì (ex. 111, p. 292) sets the è.ndòmbà's groups of four against the dì.kpàkpà's groups of three, the vertical hemiola of norm N3. The ngúé and the dì.kpàkpà never coincide. Twenty-two positions are marked, and none by all four parts.
+
+```text title="Aka: Monzoli"
+è.ndòmbà  [x x . | . x x | . . x | x . . | x x . | . x x | . . x | x . .]
+dì.kpàkpà [. . x | . . x | . . x | . . x | . . x | . . x | . . x | . . x]
+ngúé      [x . . | . x . | x . . | . x . | x . . | . x . | x . . | . x .]
+dì.kétɔ̀   [x x . | x . x | . x . | x . x | x . x | . x . | x . x | . x .]
+(count)   [3 2 1 | 1 2 3 | 1 1 2 | 2 1 2 | 3 1 2 | . 3 2 | 2 . 3 | 1 2 1]
+```
+
+| Part | Steps | Lane | MIDI note |
+|---|---|---|---|
+| è.ndòmbà | 4 | drawn | 63 Open Hi Conga |
+| dì.kpàkpà | 3 | E(1,3) r2 | 37 Side Stick |
+| ngúé | 12 | drawn | 64 Low Conga |
+| dì.kétɔ̀ | 24 | E(13,24) r22 | 67 High Agogo |
+
+The four-step è.ndòmbà lane crosses the three-value pulsation, but four divides the twenty-four-value period, so rule R7 holds.
+
+<PolyPreviewCard preset="Aka: Monzoli" caption="Aka mò.nzòlì — four against three over an implicit ternary pulsation (Arom ex. 111)" />
+
+### Aka: Mombenzele — told apart by the ngúé
+
+Mò.mbénzélé (ex. 112, pp. 292–293) shares mò.nzòlì's è.ndòmbà and dì.kpàkpà, and its dì.kétɔ̀ is the same figure four pulsations later (p. 298). Arom calls the differing ngúé parts "the only means of distinguishing them" (p. 291). Here the ngúé runs the full twenty-four values, as p. 303 and ex. 112 give it (see [the printing inconsistencies](#three-printing-inconsistencies)). Twenty-one positions are marked, and positions 9 and 18 by all four parts.
+
+```text title="Aka: Mombenzele"
+è.ndòmbà  [x x . | . x x | . . x | x . . | x x . | . x x | . . x | x . .]
+dì.kpàkpà [. . x | . . x | . . x | . . x | . . x | . . x | . . x | . . x]
+ngúé      [x x x | x x x | . . x | . . x | . . x | . . x | . . x | . . x]
+dì.kétɔ̀   [x . x | . x . | x . x | . x . | x x . | x . x | . x . | x . x]
+(count)   [3 2 3 | 1 3 3 | 1 . 4 | 1 1 2 | 2 2 2 | 1 1 4 | . 1 3 | 2 . 3]
+```
+
+| Part | Steps | Lane | MIDI note |
+|---|---|---|---|
+| è.ndòmbà | 4 | drawn | 63 Open Hi Conga |
+| dì.kpàkpà | 3 | E(1,3) r2 | 37 Side Stick |
+| ngúé | 24 | drawn | 64 Low Conga |
+| dì.kétɔ̀ | 24 | E(13,24) r10 | 67 High Agogo |
+
+Play mò.nzòlì and then mò.mbénzélé. The è.ndòmbà and dì.kpàkpà are identical, so what changes is the ngúé, which opens with six strokes in a row, and the place of the dì.kétɔ̀ mould.
+
+<PolyPreviewCard preset="Aka: Mombenzele" caption="Aka mò.mbénzélé — mò.nzòlì's parts with a different ngúé (Arom ex. 112)" />
+
+### Aka: Zoboko — two oddity figures against clapped hands
+
+Zɔ̀bɔ̀kɔ̀ (exx. 113–120, pp. 294–297) sets the accents of the mò.kóngò, a tree trunk struck with sticks, grouped 3+3+2 / 3+2+3 / 3+3+2, against the dì.kétɔ̀, and adds handclaps that sound the pulsation itself. Seventeen positions are marked, and positions 1 and 7 by all three parts.
+
+```text title="Aka: Zoboko"
+mò.kóngò  [x . . | x . . | x . x | . . x | . x . | . x . | . x . | . x .]
+handclaps [x . . | x . . | x . . | x . . | x . . | x . . | x . . | x . .]
+dì.kétɔ̀   [x . x | . x . | x . x | x . x | . x . | x . x | . x . | x x .]
+(count)   [3 . 1 | 2 1 . | 3 . 2 | 2 . 2 | 1 2 . | 2 1 1 | 1 2 . | 2 2 .]
+```
+
+| Part | Steps | Lane | MIDI note |
+|---|---|---|---|
+| mò.kóngò | 24 | drawn | 76 Hi Wood Block |
+| handclaps | 3 | E(1,3) r0 | 39 Hand Clap |
+| dì.kétɔ̀ | 24 | E(13,24) r19 | 67 High Agogo |
+
+<PolyPreviewCard preset="Aka: Zoboko" caption="Aka zɔ̀bɔ̀kɔ̀ — mò.kóngò accents, handclaps and dì.kétɔ̀ (Arom exx. 113–120)" />
+
+## Tempo
+
+Every card plays at the tempo printed on Arom's figure. Arom marks the pulsation; the host's tempo is in quarter notes. One pulsation is a number of Poly steps, so the host must play that many steps' worth of beats per pulsation:
+
+host BPM = Arom's pulsation tempo × values per pulsation × beats per step
+
+| Grid | Values per pulsation | Poly step | Beats per pulsation | Example |
+|---|---|---|---|---|
+| Ternary (Aka) | 3 | 1/8, 0.5 beats | 1.5 | ♩. = 144 → 216 BPM |
+| Binary, gàzà | 8 | 1/16, 0.25 beats | 2 | ♩ = 112 → 224 BPM |
+| Binary, kpóníngbó | 4 | 1/16, 0.25 beats | 1 | ♩ = 168 → 168 BPM |
+| Composite, àgà-tɔ̀rúmɔ̃ | 5 | 1/16 at Tempo Mult 1.25, 0.2 beats | 1 | 110 → 110 BPM |
+
+| Preset | Arom's figure | Marking | Host BPM |
+|---|---|---|---|
+| Aka: Ngbolu | ex. 104, p. 288 | ♩. = 144 | 216 |
+| Aka: Mokondi | ex. 106, p. 289 | ♩. = 148 | 222 |
+| Aka: Yombe | ex. 108, p. 290 | ♩. = 144 | 216 |
+| Aka: Monzoli | ex. 111, p. 292 | ♩. = 138 | 207 |
+| Aka: Mombenzele | ex. 112, p. 292 | ♩. = 138 | 207 |
+| Aka: Zoboko | ex. 115, p. 294 | ♩. = 160 | 240 |
+| Aka: Bondo | ex. 102, p. 287 | ♩. = 158 | 237 |
+| Aka: Ngbolu Drums | ex. 104, p. 288 | ♩. = 144 | 216 |
+| Banda-Dakpa: Gaza | ex. 83, p. 278 | ♩ = 112 | 224 |
+| Zande: Kponingbo | ex. 89, p. 281 | ♩ = 168 | 168 |
+| Banda-Linda: Aga-torumo | ex. 100, p. 285 | dotted quaver tied to quaver = 110 | 110 |
+
+Two of these need a word. Ex. 90, the ngbɔ̀lù drums alone, prints no tempo, so that card takes the full ngbɔ̀lù's ex. 104. And for zɔ̀bɔ̀kɔ̀ the prose on p. 297 gives the tempo as an undotted crotchet of 160, while ex. 115 prints a dotted one; the subdivision is ternary, so the pulsation is the dotted crotchet, and the card follows ex. 115. In a DAW, set the host tempo from the table; Poly takes its tempo from the host.
+
+## The mould
+
+The dì.kétɔ̀ figure in ngbɔ̀lù, mò.kóndí, yómbè, mò.nzòlì, mò.mbénzélé and zɔ̀bɔ̀kɔ̀ never changes inside. What changes is where it starts against the pulsation: it "works like a mould" (p. 298). Arom gives each placement as a shift from the one before it, which add up to these offsets from ngbɔ̀lù. The figure is exactly the Euclidean rhythm E(13,24), so each placement is one Rotation value of one lane:
+
+| Formula | Offset from ngbɔ̀lù | E(13,24) Rotation |
+|---|---|---|
+| ngbɔ̀lù | 0 pulsations | 4 |
+| mò.nzòlì | 2 pulsations | 22 |
+| yómbè, zɔ̀bɔ̀kɔ̀ | 3 pulsations | 19 |
+| mò.kóndí | 5 pulsations | 13 |
+| mò.mbénzélé | 6 pulsations | 10 |
+
+Each pulsation of shift takes 3 off the Rotation, counting round from 24.
+
+**Hear it with one knob.** Open Aka: Ngbolu with **Try it** above, and find the dì.kétɔ̀ lane, the third. Its Rotation is 4. Turn it to 22, then 19, 13 and 10: each value places the iron strips where mò.nzòlì, yómbè and zɔ̀bɔ̀kɔ̀, mò.kóndí and mò.mbénzélé put them, against the same ngbɔ̀lù drums. Poly's Rotation works only on Euclidean lanes, which is why the dì.kétɔ̀ is one in every preset that carries it. The engine's tests check each of the five values against Arom's rows.
 
 ## Building a formula
 

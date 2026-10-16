@@ -11,7 +11,7 @@ class: gated
 ## Task status
 
 - [x] 1. The grid test, proven on Aka: Ngbolu
-- [ ] 2. The other ten formulae, their tempi, and the mould
+- [x] 2. The other ten formulae, their tempi, and the mould
 - [ ] 3. The site plays a Central African card
 
 ## Definition of Done

@@ -27,7 +27,19 @@ const PRESETS = JSON.parse(
   readFileSync(join(HERE, '..', 'src', 'generated', 'presets.json'), 'utf8'),
 ).presets;
 
-const REQUIRED = ['Aka: Ngbolu'];
+const REQUIRED = [
+  'Aka: Ngbolu',
+  'Aka: Mokondi',
+  'Aka: Yombe',
+  'Aka: Monzoli',
+  'Aka: Mombenzele',
+  'Aka: Zoboko',
+  'Aka: Bondo',
+  'Aka: Ngbolu Drums',
+  'Banda-Dakpa: Gaza',
+  'Zande: Kponingbo',
+  'Banda-Linda: Aga-torumo',
+];
 
 function gridsOf(source) {
   const fence = /^```text title="([^"]+)"\n([\s\S]*?)^```$/gm;
