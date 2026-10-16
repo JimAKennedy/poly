@@ -312,6 +312,11 @@ cannot_drift:
       Musicology of West and Central African bell patterns and polymetric
       layering. No repo source surface.
 
+  - doc: "site/src/content/docs/02b-central-africa.mdx"
+    reason: >-
+      Musicology of Central African strict polyrhythm (Arom 1991). Its grids
+      are guarded against presets.json by a site test, not by this map.
+
   - doc: "site/src/content/docs/03-afro-cuban.mdx"
     reason: >-
       Musicology of clave and the Afro-Cuban rhythmic matrix. No repo source

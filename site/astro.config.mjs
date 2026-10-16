@@ -54,6 +54,7 @@ export default defineConfig({
 					items: [
 						{ label: '1. Foundations', slug: '01-foundations' },
 						{ label: '2. Sub-Saharan Africa', slug: '02-sub-saharan-africa' },
+						{ label: '2b. Central Africa', slug: '02b-central-africa' },
 						{ label: '3. Afro-Cuban', slug: '03-afro-cuban' },
 						{ label: '4. Afrobeat', slug: '04-afrobeat' },
 						{ label: '5. Gamelan', slug: '05-gamelan' },
