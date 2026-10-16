@@ -11,16 +11,16 @@ class: gated
 ## Task status
 
 - [x] 1. `fr-arom-1991` records what was read
-- [ ] 2. The theory bundle credits Arom only with what pp. 229–306 say
+- [x] 2. The theory bundle credits Arom only with what pp. 229–306 say
 
 ## Definition of Done
 
 Copied verbatim from the slice:
 
-- [ ] `fr-arom-1991` in `site/src/data/references.json` carries a verified
+- [x] `fr-arom-1991` in `site/src/data/references.json` carries a verified
       description limited to pp. 229–306, and its evidence names the owner's
       scan and how it was checked; no scan is added to the reference archive
-- [ ] Neither theory-bundle page credits Arom with a claim pp. 229–306 do not
+- [x] Neither theory-bundle page credits Arom with a claim pp. 229–306 do not
       make, and the test that pinned the F52 citation pins the corrected one
 
 ## Validation

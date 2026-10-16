@@ -40,3 +40,13 @@ on the user's behalf during execution.
   plan's task 2 is removed and task 3 becomes task 2 — **Why:** the entry
   belongs in the commit that first cites it, which is what FR20 enforces;
   task 1 was already committed and stays ticked
+
+## 2026-10-15 — judgment call in M001/S01 task 2
+
+- **Decision:** the planning entry above says nothing on pp. 229–306 mentions a
+  timeline or dancers' footfalls as referent. Only p. 230 was read in this
+  session; the wider claim comes from the owner's research note (an OCR search
+  of all 78 scanned pages). The corrected sentences cite p. 230 alone, so none
+  of them depends on the wider claim — **Why:** an entry that implies a full
+  reading which did not happen would be the citation failure this programme
+  corrects; the evidence states the limit

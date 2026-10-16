@@ -35,3 +35,38 @@ test('the scan of a copyrighted book is not archived', async () => {
   assert.equal(rec.archiveFile, null);
   assert.equal(rec.retrieval.status, 'not-attempted');
 });
+
+// CA03. The theory bundle credited Arom with the timeline as the ensemble's
+// "shared clock" and with the dance beat as a referent. The chapter read
+// (pp. 229–306) names the pulsation — isochronous, usually implicit — as the
+// reference unit (p. 230). Each Arom citation in the bundle must now be for
+// that, and the timeline sentence must not carry his name.
+const THEORY = join(HERE, '..', 'src', 'content', 'theory');
+
+function sentencesCiting(mdx, anchor) {
+  const body = mdx.replace(/^---\n[\s\S]*?\n---\n/, '');
+  return body
+    .split(/(?<=[.!?])\s+(?=[A-Z*_(\[])/)
+    .filter((s) => s.includes(`#${anchor}`));
+}
+
+test('the timeline sentence no longer cites Arom', async () => {
+  const mdx = await readFile(join(THEORY, 'theory-sub-saharan-africa.mdx'), 'utf8');
+  const clock = mdx.split('\n').find((l) => l.includes("shared clock"));
+  if (!clock) throw new Error('the "shared clock" sentence is gone — this check would assert nothing');
+  const sentence = clock.split(/(?<=\.)\s+/).find((s) => s.includes('shared clock'));
+  assert.doesNotMatch(sentence, /#fr-arom-1991/);
+});
+
+test('every Arom citation in the theory bundle is for the pulsation, p. 230', async () => {
+  const bad = [];
+  let seen = 0;
+  for (const f of ['theory-sub-saharan-africa.mdx', 'theory-counterpoint-overview.mdx']) {
+    for (const s of sentencesCiting(await readFile(join(THEORY, f), 'utf8'), 'fr-arom-1991')) {
+      seen += 1;
+      if (!/pulsation/.test(s) || !/p\. 230/.test(s)) bad.push(`${f}: ${s.slice(0, 120)}`);
+    }
+  }
+  if (seen === 0) throw new Error('no Arom citation found in the theory bundle — this check would assert nothing');
+  assert.deepEqual(bad, [], `Arom cited for something other than the pulsation (p. 230):\n${bad.join('\n')}`);
+});

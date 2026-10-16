@@ -39,20 +39,20 @@ every page that cites it credits only what those pages say.
 **Plan:** M001-S01-plan.md
 **Validation:** format, site-unit, doc-discipline, guards
 **Evidence:** evidence/M001-S01.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] `fr-arom-1991` in `site/src/data/references.json` carries a verified
+- [x] `fr-arom-1991` in `site/src/data/references.json` carries a verified
       description limited to pp. 229–306, and its evidence names the owner's
       scan and how it was checked; no scan is added to the reference archive
-- [ ] Neither theory-bundle page credits Arom with a claim pp. 229–306 do not
+- [x] Neither theory-bundle page credits Arom with a claim pp. 229–306 do not
       make, and the test that pinned the F52 citation pins the corrected one
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| CA01 | `fr-arom-1991` still says "The text was not read" with `description: "unverified"`, though the owner has read and checked pp. 229–306 from a scan | `source` | `site/src/data/references.json` | `references-manifest.test.mjs` passes on the changed entry; the evidence quotes the new `evidence` and `description` values | `open` |
-| CA03 | The theory bundle credits Arom with the timeline as "shared clock" and with the dance-beat referent. Pp. 229–306 name the pulsation, usually implicit, as referent (p. 230) and never use "timeline" | `correct` | `site/src/content/theory/theory-sub-saharan-africa.mdx`, `theory-counterpoint-overview.mdx`, `site/tests/literature-enrichment.test.mjs` | Each corrected sentence quotes or cites a page in 229–306 that was checked against the scan; the F52 case asserts the new citation site | `open` |
+| CA01 | `fr-arom-1991` still says "The text was not read" with `description: "unverified"`, though the owner has read and checked pp. 229–306 from a scan | `source` | `site/src/data/references.json` | `references-manifest.test.mjs` passes on the changed entry; the evidence quotes the new `evidence` and `description` values | `done` |
+| CA03 | The theory bundle credits Arom with the timeline as "shared clock" and with the dance-beat referent. Pp. 229–306 name the pulsation, usually implicit, as referent (p. 230) and never use "timeline" | `correct` | `site/src/content/theory/theory-sub-saharan-africa.mdx`, `theory-counterpoint-overview.mdx`, `site/tests/literature-enrichment.test.mjs` | Each corrected sentence quotes or cites a page in 229–306 that was checked against the scan; the F52 case asserts the new citation site | `done` |
 
 ## Milestone M002 — The eleven formulae are factory presets
 
