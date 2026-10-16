@@ -85,7 +85,7 @@ mappings:
       - "engine/src/presets.cpp"
       - "engine/tools/emit_presets.cpp"
     doc: "docs/preset-taxonomy.md"
-    reason: "preset-taxonomy.md documents the 10-category taxonomy and every preset's category assignment. Adding, removing, or recategorizing a preset without updating the taxonomy is the exact drift that triggered M047."
+    reason: "preset-taxonomy.md documents the 11-category taxonomy and every preset's category assignment. Adding, removing, or recategorizing a preset without updating the taxonomy is the exact drift that triggered M047."
 
   # MIDI note capture and mapping
   - sources:

@@ -53,6 +53,50 @@ static const char* kWebPresetLaneNames[kFactoryPresetCount][kMaxLanes] = {
     {"Surdo", "Tamborim", "Agogo", "Pandeiro", "Tom Hi", "Tom Lo", "Ride", "Crash"},
     {"Mridangam Lo", "Mridangam Hi", "Ghatam", "Kanjira", "Tom Hi", "Tom Lo", "Ride", "Crash"},
     {"Kick", "Snare", "Hi-Hat", "Perc", "Glitch", "Tom Lo", "Ride", "Crash"},
+    // 14–44: no bespoke labels; default lane names apply.
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    {},
+    // 45–55: Central African presets, one label per Arom part (ASCII, <= 15 chars).
+    {"Dikpakpa", "Ngue", "Diketo"},                        // 45: Aka: Ngbolu
+    {"Endomba", "Dikpakpa", "Ngue", "Diketo"},             // 46: Aka: Mokondi
+    {"Endomba", "Dikpakpa", "Ngue", "Diketo"},             // 47: Aka: Yombe
+    {"Endomba", "Dikpakpa", "Ngue", "Diketo"},             // 48: Aka: Monzoli
+    {"Endomba", "Dikpakpa", "Ngue", "Diketo"},             // 49: Aka: Mombenzele
+    {"Mokongo", "Claps", "Diketo"},                        // 50: Aka: Zoboko
+    {"Endomba", "Ngue", "Dikpakpa", "Diketo", "Manzenze"}, // 51: Aka: Bondo
+    {"Dikpakpa", "Ngue"},                                  // 52: Aka: Ngbolu Drums
+    {"Husband", "Mother"},                                 // 53: Banda-Dakpa: Gaza
+    {"Guru", "Bells"},                                     // 54: Zande: Kponingbo
+    {"Akone", "Kaminga"},                                  // 55: Banda-Linda: Aga-torumo
 };
 
 // The table is intentionally sparse: only presets with bespoke lane labels

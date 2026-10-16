@@ -44,14 +44,14 @@ function parseMappingRows(md) {
   return rows;
 }
 
-// Parse the "The 10 categories" table: rows are `| N | Category | Count | ... |`.
+// Parse the "The 11 categories" table: rows are `| N | Category | Count | ... |`.
 function parseCategoryCountRows(md) {
   const rows = [];
   const lines = md.split('\n');
   const rowRe = /^\|\s*(\d+)\s*\|\s*([^|]+?)\s*\|\s*(\d+)\s*\|/;
   let inSection = false;
   for (const line of lines) {
-    if (line.startsWith('## The 10 categories')) {
+    if (line.startsWith('## The 11 categories')) {
       inSection = true;
       continue;
     }

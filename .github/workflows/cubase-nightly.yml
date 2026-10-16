@@ -464,7 +464,7 @@ jobs:
           python tests/cubase/driver/play_scenario.py --bars 4 --tempo 120
 
       # M004 S02 (DAW02): select every factory preset in the running host and
-      # compare each against site/src/generated/presets.json. 31 of the 45 had
+      # compare each against site/src/generated/presets.json. 31 of the then 45 had
       # never been opened in a DAW, and a sparse kWebPresetLaneNames once
       # crashed Cubase on preset change. Runs before the export e2e because a
       # crash here should be attributed to preset selection.
@@ -482,7 +482,7 @@ jobs:
       # So this is the last thing that happens while Cubase is up.
       # POLY_E2E_MUTATE is the red-path knob (M004-decisions.md):
       # unset in the nightly, set by hand to prove the sweep bites.
-      - name: Run L4-web preset sweep (all 45 presets, in-DAW)
+      - name: Run L4-web preset sweep (all 56 presets, in-DAW)
         if: env.POLY_CDP_PORT != ''
         shell: pwsh
         env:

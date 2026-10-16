@@ -13,9 +13,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 Poly is a free, open-source polymetric drum sequencer for your DAW: grooves
 grounded in real drumming traditions, a guide that cites where every preset
 comes from, deterministic output, and an engine that runs in your browser.
-Four to eight lanes each run their own cycle and Euclidean pattern, and 45
+Four to eight lanes each run their own cycle and Euclidean pattern, and 56
 presets carry grooves from named traditions — West African bell patterns,
-Afro-Cuban clave, gamelan, Balkan aksak and more. Poly makes no sound of its
+Central African polyrhythm, Afro-Cuban clave, gamelan, Balkan aksak and more. Poly makes no sound of its
 own: it sends MIDI to whatever drum instrument you already have, and the same
 settings always produce the same groove. To install, download the zip for
 your platform and follow the

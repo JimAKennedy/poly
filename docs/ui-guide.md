@@ -247,7 +247,7 @@ At 2.0x, a lane plays its pattern in half the time, effectively doubling its rat
 
 ## Presets
 
-<!-- counts-ok: legacy 14-preset table from M025 era; superseded by preset-taxonomy.md (43 across 10 categories) and the site's appendix-presets.mdx. Retained here as an early-tradition snapshot; do not extend inline — extend the taxonomy instead. -->
+<!-- counts-ok: legacy 14-preset table from M025 era; superseded by preset-taxonomy.md and the site's appendix-presets.mdx. Retained here as an early-tradition snapshot; do not extend inline — extend the taxonomy instead. -->
 
 Poly's engine ships a set of factory presets. The list below reflects the original 14-preset roster from milestone M025 and predates the M045 taxonomy expansion. For the current authoritative catalogue see [preset-taxonomy.md](preset-taxonomy.md); the site's [Preset Reference appendix](../site/src/content/docs/appendix-presets.mdx) documents each preset in detail.
 

@@ -3,7 +3,7 @@ import { test, expect, Frame, Page } from '@playwright/test';
 // M045 S02 T04 — Try It modal preset picker: category chip filter row.
 //
 // The preset dropdown in the modal now leads with a chip-row above the list
-// (role=tablist). "All" plus one chip per category (10 categories, ordered by
+// (role=tablist). "All" plus one chip per category (11 categories, ordered by
 // docs/preset-taxonomy.md). Selecting a chip filters the option list to
 // presets in that category; "All" restores. Keyboard: Left/Right/Home/End
 // move focus and selection within the chip row.
@@ -24,10 +24,11 @@ const EXPECTED_CATEGORIES = [
   'Jazz / Funk / Soul',
   'Breaks / Drum & Bass',
   'Latin / Brazilian',
-  'African',
+  'West African',
   'Asian Traditions',
   'Balkan / Eastern European',
   'Experimental / Fusion',
+  'Central African',
 ];
 
 const JAZZ_PRESETS = [
@@ -123,10 +124,10 @@ test.describe('M045 S02 modal preset chip filter — category-scoped dropdown', 
       .evaluate((el) => el?.getAttribute('data-category'));
     expect(initialActive, 'default active chip should be All').toBe('All');
 
-    // 2. All rows unhidden by default — spot-check that Init + all 43 presets
-    // are laid out (44 option rows total).
+    // 2. All rows unhidden by default — spot-check that Init + all 56 presets
+    // are laid out (57 option rows total).
     let rows = await readVisibleOptions(frame);
-    expect(rows.length, 'expected 1 Init row + 43 preset rows').toBe(44);
+    expect(rows.length, 'expected 1 Init row + 56 preset rows').toBe(57);
     expect(
       rows.every((r) => !r.hidden),
       '"All" filter must not hide any option row',
@@ -164,7 +165,7 @@ test.describe('M045 S02 modal preset chip filter — category-scoped dropdown', 
     await frame.locator('#presetMenu .preset-chip[data-category="All"]').click();
     rows = await readVisibleOptions(frame);
     expect(rows.filter((r) => r.hidden), 'All must un-hide every row').toHaveLength(0);
-    expect(rows).toHaveLength(44);
+    expect(rows).toHaveLength(57);
 
     // 5. Keyboard: focus first chip (All), ArrowRight four times, expect
     // Jazz / Funk / Soul to become active (it's the 4th category).
