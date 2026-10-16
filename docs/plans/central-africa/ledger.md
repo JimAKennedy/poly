@@ -32,13 +32,14 @@ its CA2 table as an item, plus four owner decisions.
 every page that cites it credits only what those pages say.
 
 **Branch:** milestone/M001-arom-record
-**Status:** planned
+**Status:** in-progress
 
 ### Slice M001/S01 — Arom is recorded as read
 
+**Plan:** M001-S01-plan.md
 **Validation:** format, site-unit, doc-discipline, guards
 **Evidence:** evidence/M001-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
