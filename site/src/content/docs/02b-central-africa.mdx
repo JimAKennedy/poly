@@ -109,6 +109,31 @@ dì.kpàkpà [. . x | . . x | . . x | . . x]   four groups of three
 
 **N10. Drum variation trades off against the melody.** The busier the singing, the more fixed the drums, and the reverse: variability in the drums is "inversely proportional" to that in the melodic parts (p. 298). The Aka vary their voices richly and their drums very little. *In Poly:* under a busy lead line, keep every drum lane fixed, with Mutation 0.
 
+## The formulae
+
+Each formula below has its grid, its `(count)` row, the lanes of the preset that plays it, and a card. **Play** runs the preset in your browser; **Try it** opens it in the full Poly interface, where you can solo lanes and turn knobs. Every preset plays marks only, at the tempo Arom's figure gives, with Mutation, Drift Rate, Swing and Humanize at 0 on every lane. A test fails if any grid on this page and the preset that plays it disagree at a single position.
+
+In the lane tables, "E(k,n) r*N*" is a Euclidean lane of *k* hits in *n* steps at Rotation *N*; "drawn" is a timeline lane with the grid row entered step by step.
+
+### Aka: Ngbolu — three periodicities
+
+Ngbɔ̀lù (exx. 104–105, p. 288) is eight ternary pulsations, twenty-four values. Its three parts have periods of 3, 12 and 24 values, in the ratio 1 : 4 : 8. Twenty positions are marked; two, positions 3 and 21, are marked by all three parts.
+
+```text title="Aka: Ngbolu"
+dì.kpàkpà [. . x | . . x | . . x | . . x | . . x | . . x | . . x | . . x]
+ngúé      [x . x | . x . | . . x | . x . | x . x | . x . | . . x | . x .]
+dì.kétɔ̀   [x . x | . x . | x x . | x . x | . x . | x . x | x . x | . x .]
+(count)   [2 . 3 | . 2 1 | 1 1 2 | 1 1 2 | 1 1 2 | 1 1 2 | 1 . 3 | . 2 1]
+```
+
+| Part | Steps | Lane | MIDI note |
+|---|---|---|---|
+| dì.kpàkpà | 3 | E(1,3) r2 | 37 Side Stick |
+| ngúé | 12 | drawn | 64 Low Conga |
+| dì.kétɔ̀ | 24 | E(13,24) r4 | 67 High Agogo |
+
+<PolyPreviewCard preset="Aka: Ngbolu" caption="Aka ngbɔ̀lù — dì.kpàkpà, ngúé and the dì.kétɔ̀ iron strips, marks only (Arom exx. 104–105)" />
+
 ## Building a formula
 
 Arom invites new combinations of his figures, provided the positions of their marks are unchanged: such combinations "should be perfectly acceptable to bearers of the tradition" (p. 299). The procedure below goes one step further and builds new figures, so treat its results as Poly's extension of the idiom, not as music the tradition plays. Each step names the rules and norms it applies.

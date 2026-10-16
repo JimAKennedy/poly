@@ -10,7 +10,7 @@ class: gated
 
 ## Task status
 
-- [ ] 1. The grid test, proven on Aka: Ngbolu
+- [x] 1. The grid test, proven on Aka: Ngbolu
 - [ ] 2. The other ten formulae, their tempi, and the mould
 - [ ] 3. The site plays a Central African card
 
@@ -83,11 +83,11 @@ re-reads every one from the scan and records it in the evidence.
 | Aka: Monzoli | ex. 111, p. 292 | ♩. = 138 | 1.5 | 207 |
 | Aka: Mombenzele | ex. 112, pp. 292–293 | ♩. = 138 | 1.5 | 207 |
 | Aka: Zoboko | ex. 115, p. 294 | ♩. = 160 | 1.5 | 240 |
-| Aka: Bondo | ex. 102, p. 286 | ♩. = 158 | 1.5 | 237 |
+| Aka: Bondo | ex. 102, p. 287 | ♩. = 158 | 1.5 | 237 |
 | Aka: Ngbolu Drums | ex. 104, p. 288 (ex. 90 has none) | ♩. = 144 | 1.5 | 216 |
 | Banda-Dakpa: Gaza | ex. 83, p. 278 | ♩ = 112 (8 values) | 2 | 224 |
 | Zande: Kponingbo | ex. 89, p. 281 | ♩ = 168 (4 values) | 1 | 168 |
-| Banda-Linda: Aga-torumo | ex. 100, p. 285 | two tied quavers = 110 (5 values) | 1 | 110 |
+| Banda-Linda: Aga-torumo | ex. 100, p. 285 | dotted quaver tied to quaver = 110 (5 values) | 1 | 110 |
 
 If the scan shows a marking that differs from this table, the scan wins:
 correct the table and the decisions file in the same commit, and record it.

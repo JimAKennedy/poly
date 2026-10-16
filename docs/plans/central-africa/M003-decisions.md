@@ -37,3 +37,19 @@ on the user's behalf during execution.
   where printed upside down — **Why:** no OCR tool is installed; the note's
   own OCR check is the owner's, and the DoD asks that each quote be found on
   its page in the scan
+
+## 2026-10-16 — judgment calls in M003/S01 and M003/S02 task 1
+
+- **Decision:** the planning entry's "two tied quavers = 110" for ex. 100 is
+  corrected to a dotted quaver tied to a quaver = 110, and bòndò's ex. 102 is
+  on p. 287, not p. 286 — **Why:** a close reading of the scan at 1200 dpi
+  found a faint dot on the first note, matching ex. 123 (p. 301), and found
+  ex. 102 on p. 287; the àgà marking is still five values to one pulsation,
+  and neither page change moves a BPM
+- **Decision:** zɔ̀bɔ̀kɔ̀ takes ex. 115's ♩. = 160, not p. 297's prose "♩ = 160"
+  — **Why:** the zɔ̀bɔ̀kɔ̀ subdivision is ternary (p. 297 itself), so the
+  pulsation is a dotted crotchet; the undotted prose is a misprint, and the
+  page says which it follows
+- **Decision:** the formulae sit between the norms and the build procedure —
+  **Why:** the vision's CA3 order puts the formulae (item 5) and the mould
+  (item 6) before the procedure (item 7)

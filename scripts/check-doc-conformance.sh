@@ -48,6 +48,7 @@ TESTS=(
     site/tests/scope-framing.test.mjs
     site/tests/literature-enrichment.test.mjs
     site/tests/central-africa-oddity.test.mjs
+    site/tests/central-africa-grids.test.mjs
     site/tests/doc-conformance-wiring.test.mjs
     docs/audits/theory-audit-remediation.test.mjs
     docs/audits/parity-matrix.test.mjs

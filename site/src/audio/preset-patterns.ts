@@ -95,6 +95,9 @@ const PRESET_BPM: Record<string, number> = {
   'IDM Glitch': 100,
   'Reich Phase Process': 100,
   'Jungle Break': 140,
+  // central-africa M003: host quarter-note BPM = Arom's pulsation tempo ×
+  // values per pulsation × step length in beats (chapter 2b, "Tempo").
+  'Aka: Ngbolu': 216,
 };
 
 // Role → card lane color. Falls back to the 'perc' hue for unmapped roles.
