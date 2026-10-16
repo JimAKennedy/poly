@@ -32,7 +32,7 @@ its CA2 table as an item, plus four owner decisions.
 every page that cites it credits only what those pages say.
 
 **Branch:** milestone/M001-arom-record
-**Status:** in-progress
+**Status:** done
 
 ### Slice M001/S01 — Arom is recorded as read
 
