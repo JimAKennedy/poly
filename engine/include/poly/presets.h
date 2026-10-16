@@ -12,8 +12,8 @@ struct PresetInfo {
     const char* category;
 };
 
-static constexpr int kFactoryPresetCount = 45;
-static constexpr int kFactoryPresetCategoryCount = 10;
+static constexpr int kFactoryPresetCount = 46;
+static constexpr int kFactoryPresetCategoryCount = 11;
 
 // Ordered category list — presentation order for plugin submenus and site chips.
 // Every PresetInfo::category MUST match one of these strings exactly.
@@ -41,6 +41,9 @@ GrooveState makeMandingDjembe();
 GrooveState makeCubanSon();
 GrooveState makeRumbaClave();
 GrooveState makeClappingMusic();
+
+// Central African strict polyrhythm (Arom 1991), presets_central_africa.cpp.
+GrooveState makeAkaNgbolu();
 GrooveState makeAfrobeatLagos();
 GrooveState makeBaliKotekan();
 GrooveState makeJavaColotomic();

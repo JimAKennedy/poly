@@ -2843,6 +2843,8 @@ GrooveState makeFactoryPresetRaw(int index) {
         return makeRumbaClave();
     case 44:
         return makeClappingMusic();
+    case 45:
+        return makeAkaNgbolu();
     default:
         return GrooveState{};
     }
@@ -2883,10 +2885,11 @@ const char* const kFactoryPresetCategories[kFactoryPresetCategoryCount] = {
     "Jazz / Funk / Soul",
     "Breaks / Drum & Bass",
     "Latin / Brazilian",
-    "African",
+    "West African",
     "Asian Traditions",
     "Balkan / Eastern European",
     "Experimental / Fusion",
+    "Central African",
 };
 
 const PresetInfo& getFactoryPresetInfo(int index) {
@@ -2905,7 +2908,7 @@ const PresetInfo& getFactoryPresetInfo(int index) {
         {"Pocket Groove", "J Dilla-style micro-timing — kick pushes late, snare pulls early, gentle mutation",
          "Jazz / Funk / Soul"},
         {"Afrobeat 12/8", "Compound-time groove with timeline bell pattern, four-on-the-floor kick and conga ghosts",
-         "African"},
+         "West African"},
         {"Balkan Aksak", "7/8 aksak [2+2+3] additive cells — davul, rim, zurna and darbuka",
          "Balkan / Eastern European"},
         {"Bossa Nova", "Clave timeline with ginga micro-timing — surdo, tamborim, agogo and pandeiro",
@@ -2914,18 +2917,19 @@ const PresetInfo& getFactoryPresetInfo(int index) {
         {"IDM Glitch", "Irregular additive cells with heavy mutation and erratic micro-timing offsets",
          "Experimental / Fusion"},
         {"Sub-Saharan: Agbekor", "Ewe-inspired polymetric ensemble — gankogui bell timeline, kidi, sogo and lead drum",
-         "African"},
+         "West African"},
         {"Gamelan: Colotomic", "Javanese colotomic nesting — ketuk, kempul, kenong and gong ageng at 4:8:16:32 ratios",
          "Asian Traditions"},
         {"Polymetric Foundation", "Two-lane polymetric demonstration — 12-step bell against 7-step counter pattern",
          "Foundational"},
         {"Ewe Polymetric Ensemble", "Gankogui bell timeline with support, responding, and interlocking lead drums",
-         "African"},
-        {"Manding Djembe", "Three-lane djembe ensemble — dunun, sangban, and lead sharing an 8-step cycle", "African"},
+         "West African"},
+        {"Manding Djembe", "Three-lane djembe ensemble — dunun, sangban, and lead sharing an 8-step cycle",
+         "West African"},
         {"Cuban Son Montuno", "Clave matrix with cascara, tumbao bass, conga, and shaker layers", "Latin / Brazilian"},
         {"Afrobeat Lagos",
          "Extended Afrobeat groove — bell timeline with staggered phrase gating on snare, shaker, and conga",
-         "African"},
+         "West African"},
         {"Balinese Kotekan", "Polos and sangsih interlocking with jegogan bass and reyong accents", "Asian Traditions"},
         {"Javanese Colotomic", "Nested colotomic hierarchy — ketuk, kempul, kenong, and gong at 4:8:16:32",
          "Asian Traditions"},
@@ -2971,6 +2975,9 @@ const PresetInfo& getFactoryPresetInfo(int index) {
         {"Clapping Music",
          "Reich's authored twelve-pulse cell, clapped steady against a partner shifting one position every twelve bars",
          "Minimalist / Compositional"},
+        {"Aka: Ngbolu",
+         "Aka ngbolu (Arom 1991, exx. 104-105): side-stick pulsation, ngue drum and the diketo iron mould",
+         "Central African"},
     };
     static constexpr PresetInfo kEmpty{"", "", "Foundational"};
     if (index >= 0 && index < kFactoryPresetCount)

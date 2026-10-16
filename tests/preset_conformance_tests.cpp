@@ -104,8 +104,8 @@ bool deriveKotekanPattern(const poly::GrooveState& state, int lane, std::array<b
 // — its swing is the point — so it is excluded even though it borrows gamelan
 // and clave material.
 bool isMetronomicTradition(const char* category) {
-    return std::strcmp(category, "African") == 0 || std::strcmp(category, "Balkan / Eastern European") == 0 ||
-           std::strcmp(category, "Asian Traditions") == 0;
+    return std::strcmp(category, "West African") == 0 || std::strcmp(category, "Central African") == 0 ||
+           std::strcmp(category, "Balkan / Eastern European") == 0 || std::strcmp(category, "Asian Traditions") == 0;
 }
 
 } // namespace
@@ -114,6 +114,14 @@ bool isMetronomicTradition(const char* category) {
 // one referent lane via the D2 mechanism (see isLockedReferent). Fails RED if a
 // preset leaves its referent unlocked (count 0) or locks more than one lane
 // (count >1) — giving the lint teeth against both under- and over-locking.
+//
+// central-africa M002/S01: the one exception is the Central African category.
+// Arom's strict polyrhythm has no single played referent: the referent is the
+// pulsation, isochronous and usually implicit (Arom 1991, p. 230), and every
+// part keeps its marks fixed (p. 253; variation belongs to one part, p. 258).
+// A formula with several drawn parts therefore locks several lanes, and the
+// only ways to exempt a drawn lane — probability, mutation, drift, phrase
+// gating — would move the marks. Those presets must lock at least one lane.
 TEST(PresetConformance, EveryPresetHasExactlyOneLockedReferent) {
     for (int i = 0; i < poly::kFactoryPresetCount; ++i) {
         auto state = poly::makeFactoryPreset(i);
@@ -125,6 +133,11 @@ TEST(PresetConformance, EveryPresetHasExactlyOneLockedReferent) {
                 ++lockedCount;
         }
 
+        if (std::strcmp(info.category, "Central African") == 0) {
+            EXPECT_GE(lockedCount, 1) << info.name << " (preset " << i << ") must have at least one locked lane; found "
+                                      << lockedCount;
+            continue;
+        }
         EXPECT_EQ(lockedCount, 1) << info.name << " (preset " << i
                                   << ") must have exactly one locked referent lane; found " << lockedCount;
     }

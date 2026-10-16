@@ -10,7 +10,7 @@ class: gated
 
 ## Task status
 
-- [ ] 1. The grid harness proves Aka: Ngbolu, and the category exists
+- [x] 1. The grid harness proves Aka: Ngbolu, and the category exists
 - [ ] 2. The other ten formulae pass the harness
 - [ ] 3. Every count and name site agrees with 56 presets and 11 categories
 - [ ] 4. The WASM engine and generated data carry the new presets
