@@ -61,7 +61,7 @@ ships as a factory preset that plays his marks exactly, and CI fails if one
 position moves.
 
 **Branch:** milestone/M002-central-african-presets
-**Status:** in-progress
+**Status:** done
 
 **One slice, not two.** The taxonomy conformance test fails the moment the
 engine's preset count changes, so the presets and every site that hard-codes
