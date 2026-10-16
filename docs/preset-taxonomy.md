@@ -6,22 +6,22 @@ class: gated
 
 # Poly Preset Taxonomy
 
-The 45 factory presets are grouped into 10 categories. This grouping is the source of truth for both the plugin's web UI preset browser (grouped `Category > Preset`) and the site's Try It category filter row.
+The 56 factory presets are grouped into 11 categories. This grouping is the source of truth for both the plugin's web UI preset browser (grouped `Category > Preset`) and the site's Try It category filter row.
 
-The category enum lives in the engine as `kFactoryPresetCategories[]` in `engine/src/presets.cpp`, and each `PresetInfo` entry in `kInfos[]` carries a `category` field that indexes into it. The JSON emitter (`engine/tools/emit_presets.cpp`) exports both the enum and each preset's category as `schemaVersion: 3`.
+The category enum lives in the engine as `kFactoryPresetCategories[]` in `engine/src/presets.cpp`, and each `PresetInfo` entry in `kInfos[]` carries a `category` field that must name one of its strings exactly. The JSON emitter (`engine/tools/emit_presets.cpp`) exports both the enum and each preset's category; see "JSON schema version" below for the current version.
 
 ## Design constraints
 
-- 8-10 categories total
-- 2-8 presets per category (relaxed to 2-7 to fit Asian Traditions without an 11th category)
+- 8-11 categories total
+- 2-11 presets per category. The cap was 8 until the eleven Central African formulae arrived together, from one source (Arom 1991) and one tradition; splitting them would separate formulae that share parts, which is what the category lets a reader compare
 - Each preset in exactly one category
-- Categories cover all 45 presets with no gaps
+- Categories cover all 56 presets with no gaps
 
 ## Ordering rationale
 
 Categories are ordered from foundational/reference material at the top down through Western dance styles, groove traditions, world traditions, and finally experimental / fusion. This is the order they should appear in both the plugin submenu and the site chip row so a user scanning left-to-right / top-to-bottom sees "learn the engine" before "play a style".
 
-## The 10 categories
+## The 11 categories
 
 | # | Category | Count | What lives here |
 |---|----------|-------|-----------------|
@@ -31,12 +31,13 @@ Categories are ordered from foundational/reference material at the top down thro
 | 4 | Jazz / Funk / Soul | 5 | US-tradition swing and pocket grooves — bop ride, Elvin cascade, JB funk, neo-soul, J Dilla pocket. |
 | 5 | Breaks / Drum & Bass | 3 | Chopped-break lineage — classic breakbeat, jungle, liquid DnB. |
 | 6 | Latin / Brazilian | 6 | Cuban clave family plus Brazilian bossa/samba. |
-| 7 | African | 5 | Sub-Saharan traditions and Afrobeat — Ewe, Manding djembe, Afrobeat 12/8, Afrobeat Lagos. |
+| 7 | West African | 5 | West African traditions and Afrobeat — Ewe, Manding djembe, Afrobeat 12/8, Afrobeat Lagos. |
 | 8 | Asian Traditions | 7 | Indonesian gamelan (Javanese colotomic, Balinese kotekan) plus Indian classical (Carnatic Adi tala, Hindustani Tintal, Rupak Tal). |
 | 9 | Balkan / Eastern European | 4 | Additive-cell grooves in 7/8 and 11/8 plus their funk fusion. |
 | 10 | Experimental / Fusion | 2 | Genre-crossing hybrids and glitch — IDM Glitch, Afro-Electronic Fusion. |
+| 11 | Central African | 11 | Strict polyrhythm from Arom (1991): seven Aka formulae plus Banda-Dakpa, Zande and Banda-Linda examples, each playing Arom's marks exactly. |
 
-Totals: 3 + 6 + 4 + 5 + 3 + 6 + 5 + 7 + 4 + 2 = **45**.
+Totals: 3 + 6 + 4 + 5 + 3 + 6 + 5 + 7 + 4 + 2 + 11 = **56**.
 
 ## Preset-to-category mapping
 
@@ -53,18 +54,18 @@ Indexes match `kInfos[]` order in `engine/src/presets.cpp`.
 | 6 | Reich Phasing | Minimalist / Compositional |
 | 7 | Kotekan Interlock | Asian Traditions |
 | 8 | Pocket Groove | Jazz / Funk / Soul |
-| 9 | Afrobeat 12/8 | African |
+| 9 | Afrobeat 12/8 | West African |
 | 10 | Balkan Aksak | Balkan / Eastern European |
 | 11 | Bossa Nova | Latin / Brazilian |
 | 12 | Carnatic Tala | Asian Traditions |
 | 13 | IDM Glitch | Experimental / Fusion |
-| 14 | Sub-Saharan: Agbekor | African |
+| 14 | Sub-Saharan: Agbekor | West African |
 | 15 | Gamelan: Colotomic | Asian Traditions |
 | 16 | Polymetric Foundation | Foundational |
-| 17 | Ewe Polymetric Ensemble | African |
-| 18 | Manding Djembe | African |
+| 17 | Ewe Polymetric Ensemble | West African |
+| 18 | Manding Djembe | West African |
 | 19 | Cuban Son Montuno | Latin / Brazilian |
-| 20 | Afrobeat Lagos | African |
+| 20 | Afrobeat Lagos | West African |
 | 21 | Balinese Kotekan | Asian Traditions |
 | 22 | Javanese Colotomic | Asian Traditions |
 | 23 | Tintal Groove | Asian Traditions |
@@ -89,21 +90,34 @@ Indexes match `kInfos[]` order in `engine/src/presets.cpp`.
 | 42 | Compositional Arc | Minimalist / Compositional |
 | 43 | Rumba Clave | Latin / Brazilian |
 | 44 | Clapping Music | Minimalist / Compositional |
+| 45 | Aka: Ngbolu | Central African |
+| 46 | Aka: Mokondi | Central African |
+| 47 | Aka: Yombe | Central African |
+| 48 | Aka: Monzoli | Central African |
+| 49 | Aka: Mombenzele | Central African |
+| 50 | Aka: Zoboko | Central African |
+| 51 | Aka: Bondo | Central African |
+| 52 | Aka: Ngbolu Drums | Central African |
+| 53 | Banda-Dakpa: Gaza | Central African |
+| 54 | Zande: Kponingbo | Central African |
+| 55 | Banda-Linda: Aga-torumo | Central African |
 
 ## Judgement calls worth flagging
 
-Three assignments merited a real decision rather than an obvious placement:
+Five assignments merited a real decision rather than an obvious placement:
 
 - **Polymetric Drift** and **Sparse Pulse** sit with Foundational rather than Minimalist. Both are style-agnostic engine demos (Drift shows prime-number cycles; Sparse Pulse shows wide spacing + ghost mutation). Minimalist is reserved for presets that reference a specific compositional practice (Reich, Riley, Nancarrow, and the Compositional Arc build). This keeps "Foundational" as the first-thing-to-try tutorial bucket.
 - **Balkan Funk** goes to Balkan / Eastern European rather than Experimental / Fusion. The description is `7/8 aksak with funk ghost notes and micro-timing on the hi-hat` — an aksak groove with funk seasoning, not a genre-crossing hybrid. The metric structure dominates.
-- **Asian Traditions** intentionally spans Indonesian gamelan and Indian classical (Carnatic + Hindustani) rather than splitting into two categories. Splitting would put us at 11 categories (over the cap) and give Indian only 3 entries; the shared ground — cyclical / nested / non-Western classical tradition — is defensible for a browsing menu. If the count grows past ~10 in either family, this should split into Gamelan / Southeast Asian and Indian in a future round.
+- **Asian Traditions** intentionally spans Indonesian gamelan and Indian classical (Carnatic + Hindustani) rather than splitting into two categories. Splitting would put us at 12 categories (over the cap) and give Indian only 3 entries; the shared ground — cyclical / nested / non-Western classical tradition — is defensible for a browsing menu. If the count grows past ~10 in either family, this should split into Gamelan / Southeast Asian and Indian in a future round.
+- **Central African** is a category of its own rather than part of an African category. Arom's strict polyrhythm has no Ewe-style timeline and no single played referent, and its formulae are told apart by the parts they share; one category lets a reader compare mò.nzòlì with mò.mbénzélé, which differ only in the ngúé drum. Its eleven presets take the per-category cap to 11.
+- **African** became **West African** when Central African arrived. Its five presets are Ewe, Manding and Nigerian Afrobeat, all West African; the old name claimed a continent the presets do not cover.
 
 ## Adding a new preset
 
-1. Add the `PresetInfo` entry to `kInfos[]` in `engine/src/presets.cpp`, including a `category` field pointing at one of the ten strings in `kFactoryPresetCategories`.
+1. Add the `PresetInfo` entry to `kInfos[]` in `engine/src/presets.cpp`, including a `category` field naming one of the eleven strings in `kFactoryPresetCategories`.
 2. Add a row to the preset-to-category table above. If the assignment isn't obvious, add a paragraph to "Judgement calls worth flagging" explaining why.
 3. Rerun `npm --prefix site run generate-presets` and commit the regenerated `site/src/generated/presets.json` and `site/public/webui/presets.json`.
-4. If total preset count in any category crosses 8, revisit the category structure rather than growing it further.
+4. If total preset count in any category crosses 11, revisit the category structure rather than growing it further.
 
 ## Adding a new category
 
@@ -114,7 +128,7 @@ Three assignments merited a real decision rather than an obvious placement:
 
 ## JSON schema version
 
-`presets.json` is emitted at **schemaVersion 5**. The version is written by
+`presets.json` is emitted at **schemaVersion 7**. The version is written by
 `engine/tools/emit_presets.cpp`, and `site/scripts/generate-presets-json.mjs`
 rejects any other value rather than reading an older shape as if the newer
 fields were merely absent — so a bump means the emitter, that guard, and
@@ -122,6 +136,8 @@ fields were merely absent — so a bump means the emitter, that guard, and
 
 | Version | Added |
 |---|---|
+| 7 | Per-lane `noteSequence` for lanes carrying a melodic cell (guide-parity M003). |
+| 6 | Per-lane `profileCount` and `subdivisionProfile` for lanes playing a non-isochronous subdivision (M003 S01). |
 | 5 | Per-lane `kotekanMode` and `kotekanOverlap` for lanes deriving a kotekan complement — the interlock style and how many structural points the pair strikes together. Only the rhythmic dimension of *telu* and *empat* is modelled; `theory-gamelan.mdx` discloses that and sources the pitch dimension (M002 S01). |
 | 4 | Per-lane `onsets` for timeline lanes — the positions of a hand-authored pattern. A lane not in timeline mode carries no `onsets` at all, so the field's absence is what says a pattern is derived rather than written down (M005 S02). |
 | 3 | Per-preset `macros`, and the per-lane parameter-table fields the appendix renders (M071 S04). |

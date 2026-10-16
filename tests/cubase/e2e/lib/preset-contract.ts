@@ -5,7 +5,8 @@ import { fileURLToPath } from 'node:url';
 // M004 S02 (DAW02) — the expectation the in-Cubase preset sweep compares
 // against, read from the generated preset data rather than restated here.
 //
-// 31 of the 45 factory presets have never been selected inside a DAW.
+// When this was written, 31 of the then 45 factory presets had never been
+// selected inside a DAW.
 // kWebPresetLaneNames was once initialised sparsely — 14 rows against a
 // kFactoryPresetCount-sized extent — and a null entry there crashed Cubase on
 // preset change. The null guard at the applyPreset call site is the only thing

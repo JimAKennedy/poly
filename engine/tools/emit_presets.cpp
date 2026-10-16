@@ -20,7 +20,7 @@
 // cellSizes, so the appendix-presets tables render from engine truth):
 // {
 //   "schemaVersion": 7,
-//   "presetCount": 43,
+//   "presetCount": 56,
 //   "categories": ["Foundational", "Minimalist / Compositional", ...],  // ordered
 //   "presets": [
 //     {

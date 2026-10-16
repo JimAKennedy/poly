@@ -239,6 +239,7 @@ test('preferredRoles: pattern-lane resolution snapshot covers all factory preset
     // new file) or reconcile the pattern's role name.
     '37:rim':       'clave/fischer808-clave.wav',       // clave has fallback:sidestick tag
     '39:clap':      'handclap/freepats-clap.flac',      // manifest role is 'handclap'
+    '54:perc':      'tambourine/freepats-tambourine.wav', // Zande: Kponingbo pellet bells; 54 has no lane role, lands on the only 54 entry
   };
 
   const missing = [];

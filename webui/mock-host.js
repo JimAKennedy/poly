@@ -2,7 +2,7 @@
 /**
  * Mock host: browser-standalone PolyHost implementation.
  * Owns the groove model and a WebAudio preview engine so the UI can be
- * developed, demoed, and CI-tested without the plugin. Provides all 43
+ * developed, demoed, and CI-tested without the plugin. Provides all 56
  * factory presets (matching presets.cpp) with representative lane data
  * for the most distinct presets.
  */
@@ -91,6 +91,19 @@
     { name: 'Afro-Electronic Fusion', description: 'Cuban clave meets techno kick and gamelan-inspired kotekan shimmer' },
     { name: 'Balkan Funk', description: '7/8 aksak with funk ghost notes and micro-timing on the hi-hat' },
     { name: 'Compositional Arc', description: 'Six-lane layered build — three continuous lanes plus three gated ornamental voices' },
+    { name: 'Rumba Clave', description: 'Guaguancó texture on the exact rumba clave — palitos, salidor, tres golpes, and a free quinto' },
+    { name: 'Clapping Music', description: 'Reich\'s authored twelve-pulse cell, clapped steady against a partner shifting one position every twelve bars' },
+    { name: 'Aka: Ngbolu', description: 'Aka ngbolu (Arom 1991, exx. 104-105): side-stick pulsation, ngue drum and the diketo iron mould' },
+    { name: 'Aka: Mokondi', description: 'Aka mokondi (Arom 1991, exx. 106-107): four parts in ratio 1:2, the diketo mould five pulsations on' },
+    { name: 'Aka: Yombe', description: 'Aka yombe (Arom 1991, exx. 108-109): endomba and dikpakpa play one cell a value apart' },
+    { name: 'Aka: Monzoli', description: 'Aka monzoli (Arom 1991, ex. 111): endomba\'s groups of four against dikpakpa\'s groups of three' },
+    { name: 'Aka: Mombenzele', description: 'Aka mombenzele (Arom 1991, ex. 112): monzoli\'s parts with a ngue that alone tells them apart' },
+    { name: 'Aka: Zoboko', description: 'Aka zoboko (Arom 1991, exx. 113-120): mokongo\'s oddity figure against clapped pulsation' },
+    { name: 'Aka: Bondo', description: 'Aka bondo (Arom 1991, exx. 101-103): three drums on one 3+2+2+3+2 model, iron strips and rattle' },
+    { name: 'Aka: Ngbolu Drums', description: 'Aka ngbolu drums alone (Arom 1991, ex. 90): side-stick pulsation against the ngue drum' },
+    { name: 'Banda-Dakpa: Gaza', description: 'Banda-Dakpa gaza (Arom 1991, exx. 83-84): two slit drums strictly interwoven, no mark shared' },
+    { name: 'Zande: Kponingbo', description: 'Zande kponingbo (Arom 1991, ex. 89): guru drum and pellet bells sharing one position' },
+    { name: 'Banda-Linda: Aga-torumo', description: 'Banda-Linda aga-torumo (Arom 1991, ex. 99): two drums, five values to a pulsation' },
   ];
 
   // Category enum + per-preset assignments. Mirrors kFactoryPresetCategories
@@ -102,10 +115,11 @@
     'Jazz / Funk / Soul',
     'Breaks / Drum & Bass',
     'Latin / Brazilian',
-    'African',
+    'West African',
     'Asian Traditions',
     'Balkan / Eastern European',
     'Experimental / Fusion',
+    'Central African',
   ];
 
   const PRESET_CATEGORY_BY_INDEX = [
@@ -118,18 +132,18 @@
     'Minimalist / Compositional',  // 6  Reich Phasing
     'Asian Traditions',            // 7  Kotekan Interlock
     'Jazz / Funk / Soul',          // 8  Pocket Groove
-    'African',                     // 9  Afrobeat 12/8
+    'West African',                     // 9  Afrobeat 12/8
     'Balkan / Eastern European',   // 10 Balkan Aksak
     'Latin / Brazilian',           // 11 Bossa Nova
     'Asian Traditions',            // 12 Carnatic Tala
     'Experimental / Fusion',       // 13 IDM Glitch
-    'African',                     // 14 Sub-Saharan: Agbekor
+    'West African',                     // 14 Sub-Saharan: Agbekor
     'Asian Traditions',            // 15 Gamelan: Colotomic
     'Foundational',                // 16 Polymetric Foundation
-    'African',                     // 17 Ewe Polymetric Ensemble
-    'African',                     // 18 Manding Djembe
+    'West African',                     // 17 Ewe Polymetric Ensemble
+    'West African',                     // 18 Manding Djembe
     'Latin / Brazilian',           // 19 Cuban Son Montuno
-    'African',                     // 20 Afrobeat Lagos
+    'West African',                     // 20 Afrobeat Lagos
     'Asian Traditions',            // 21 Balinese Kotekan
     'Asian Traditions',            // 22 Javanese Colotomic
     'Asian Traditions',            // 23 Tintal Groove
@@ -152,6 +166,19 @@
     'Experimental / Fusion',       // 40 Afro-Electronic Fusion
     'Balkan / Eastern European',   // 41 Balkan Funk
     'Minimalist / Compositional',  // 42 Compositional Arc
+    'Latin / Brazilian',             // 43 Rumba Clave
+    'Minimalist / Compositional',    // 44 Clapping Music
+    'Central African',               // 45 Aka: Ngbolu
+    'Central African',               // 46 Aka: Mokondi
+    'Central African',               // 47 Aka: Yombe
+    'Central African',               // 48 Aka: Monzoli
+    'Central African',               // 49 Aka: Mombenzele
+    'Central African',               // 50 Aka: Zoboko
+    'Central African',               // 51 Aka: Bondo
+    'Central African',               // 52 Aka: Ngbolu Drums
+    'Central African',               // 53 Banda-Dakpa: Gaza
+    'Central African',               // 54 Zande: Kponingbo
+    'Central African',               // 55 Banda-Linda: Aga-torumo
   ];
 
   PRESETS.forEach((p, i) => { p.category = PRESET_CATEGORY_BY_INDEX[i] || ''; });
@@ -200,6 +227,19 @@
     ['Clave', 'Kick', 'Polos', 'Sangsih', 'Shaker'],  // 40: Afro-Electronic
     ['Kick', 'Snare', 'Hi-Hat', 'Rim'],  // 41: Balkan Funk
     ['Kick', 'Bell', 'Hi-Hat', 'Conga', 'Rim', 'Lead'],  // 42: Comp Arc
+    ['Clave', 'Palitos', 'Salidor', 'Tres Golpes', 'Quinto'],  // 43: Rumba Clave
+    ['Steady', 'Shifting'],  // 44: Clapping Music
+    ['Dikpakpa', 'Ngue', 'Diketo'],  // 45: Aka: Ngbolu
+    ['Endomba', 'Dikpakpa', 'Ngue', 'Diketo'],  // 46: Aka: Mokondi
+    ['Endomba', 'Dikpakpa', 'Ngue', 'Diketo'],  // 47: Aka: Yombe
+    ['Endomba', 'Dikpakpa', 'Ngue', 'Diketo'],  // 48: Aka: Monzoli
+    ['Endomba', 'Dikpakpa', 'Ngue', 'Diketo'],  // 49: Aka: Mombenzele
+    ['Mokongo', 'Claps', 'Diketo'],  // 50: Aka: Zoboko
+    ['Endomba', 'Ngue', 'Dikpakpa', 'Diketo', 'Manzenze'],  // 51: Aka: Bondo
+    ['Dikpakpa', 'Ngue'],  // 52: Aka: Ngbolu Drums
+    ['Husband', 'Mother'],  // 53: Banda-Dakpa: Gaza
+    ['Guru', 'Bells'],  // 54: Zande: Kponingbo
+    ['Akone', 'Kaminga'],  // 55: Banda-Linda: Aga-torumo
   ];
 
   function makePresetLanes(index) {
@@ -476,9 +516,22 @@
     { complexity: 0.5, density: 0, syncopation: 0, swing: 0.15, tension: 0, humanize: 0 },  // 40: Afro-Electronic
     { complexity: 0, density: 0, syncopation: 0.3, swing: 0, tension: 0.4, humanize: 0 },  // 41: Balkan Funk
     { complexity: 0.4, density: 0.5, syncopation: 0, swing: 0, tension: 0, humanize: 0 },  // 42: Comp Arc
+    { complexity: 0.5, density: 0.55, syncopation: 0.5, swing: 0, tension: 0, humanize: 0 },  // 43: Rumba Clave
+    { complexity: 0.2, density: 0.5, syncopation: 0, swing: 0, tension: 0, humanize: 0 },  // 44: Clapping Music
+    { complexity: 0.5, density: 0.5, syncopation: 0, swing: 0, tension: 0, humanize: 0 },  // 45: Aka: Ngbolu
+    { complexity: 0.5, density: 0.5, syncopation: 0, swing: 0, tension: 0, humanize: 0 },  // 46: Aka: Mokondi
+    { complexity: 0.5, density: 0.5, syncopation: 0, swing: 0, tension: 0, humanize: 0 },  // 47: Aka: Yombe
+    { complexity: 0.5, density: 0.5, syncopation: 0, swing: 0, tension: 0, humanize: 0 },  // 48: Aka: Monzoli
+    { complexity: 0.5, density: 0.5, syncopation: 0, swing: 0, tension: 0, humanize: 0 },  // 49: Aka: Mombenzele
+    { complexity: 0.5, density: 0.5, syncopation: 0, swing: 0, tension: 0, humanize: 0 },  // 50: Aka: Zoboko
+    { complexity: 0.5, density: 0.5, syncopation: 0, swing: 0, tension: 0, humanize: 0 },  // 51: Aka: Bondo
+    { complexity: 0.5, density: 0.5, syncopation: 0, swing: 0, tension: 0, humanize: 0 },  // 52: Aka: Ngbolu Drums
+    { complexity: 0.5, density: 0.5, syncopation: 0, swing: 0, tension: 0, humanize: 0 },  // 53: Banda-Dakpa: Gaza
+    { complexity: 0.5, density: 0.5, syncopation: 0, swing: 0, tension: 0, humanize: 0 },  // 54: Zande: Kponingbo
+    { complexity: 0.5, density: 0.5, syncopation: 0, swing: 0, tension: 0, humanize: 0 },  // 55: Banda-Linda: Aga-torumo
   ];
 
-  const PRESET_SEEDS = [1, 7, 23, 42, 13, 31, 47, 55, 71, 88, 33, 17, 44, 99, 77, 63, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127];
+  const PRESET_SEEDS = [1, 7, 23, 42, 13, 31, 47, 55, 71, 88, 33, 17, 44, 99, 77, 63, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 143, 144, 288, 289, 290, 292, 293, 294, 286, 281, 278, 282, 285];
 
   let TEMPO = 126;
   const eighthSec = () => 60 / TEMPO / 2;

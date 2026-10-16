@@ -61,7 +61,7 @@ ships as a factory preset that plays his marks exactly, and CI fails if one
 position moves.
 
 **Branch:** milestone/M002-central-african-presets
-**Status:** planned
+**Status:** done
 
 **One slice, not two.** The taxonomy conformance test fails the moment the
 engine's preset count changes, so the presets and every site that hard-codes
@@ -70,42 +70,43 @@ twice.
 
 ### Slice M002/S01 — Eleven formulae are presets
 
+**Plan:** M002-S01-plan.md
 **Validation:** format, unit, rt-safety, site-unit, webui-e2e, cubase-harness, doc-discipline, e2e
 **Evidence:** evidence/M002-S01.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Eleven presets exist in a new "Central African" category, and the
+- [x] Eleven presets exist in a new "Central African" category, and the
       existing "African" category is named "West African"
-- [ ] Every preset's lanes, tiled to the formula's period, equal Arom's grid
+- [x] Every preset's lanes, tiled to the formula's period, equal Arom's grid
       position by position at the preset's own macro settings, and the
       per-position count of marking parts equals his `(count)` row, asserted
       by a test that fails if one position moves
-- [ ] Every lane that carries marks has Mutation, Drift, Swing and Humanize at
+- [x] Every lane that carries marks has Mutation, Drift, Swing and Humanize at
       0, Probability 1 and no phrase gating
-- [ ] Every place that hard-codes the preset or category count agrees with 56
+- [x] Every place that hard-codes the preset or category count agrees with 56
       and 11, and the WebUI lists all 56 presets with a lane name for each
       Central African lane
-- [ ] The committed WASM engine contains the new presets
+- [x] The committed WASM engine contains the new presets
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| CA04 | Aka: Ngbolu — ngbɔ̀lù, exx. 104–105, p. 288: three parts over 24 positions, the dì.kétɔ̀ lane E(13,24) rotation 4 | `capability` | `engine/src/presets.cpp`, `engine/include/poly/presets.h` | The grid test passes for this preset (CA15) | `open` |
-| CA05 | Aka: Mokondi — mò.kóndí, exx. 106–107, p. 289: four parts over 24 positions, dì.kétɔ̀ rotation 13 | `capability` | `engine/src/presets.cpp` | The grid test passes for this preset (CA15) | `open` |
-| CA06 | Aka: Yombe — yómbè, exx. 108–109, p. 290: four parts over 24 positions, dì.kétɔ̀ rotation 19 | `capability` | `engine/src/presets.cpp` | The grid test passes for this preset (CA15) | `open` |
-| CA07 | Aka: Monzoli — mò.nzòlì, ex. 111, p. 292: four parts over 24 positions, dì.kétɔ̀ rotation 22 | `capability` | `engine/src/presets.cpp` | The grid test passes for this preset (CA15) | `open` |
-| CA08 | Aka: Mombenzele — mò.mbénzélé, ex. 112, pp. 292–293: four parts over 24 positions, dì.kétɔ̀ rotation 10, ngúé over the full 24 values (p. 303) | `capability` | `engine/src/presets.cpp` | The grid test passes for this preset (CA15) | `open` |
-| CA09 | Aka: Zoboko — zɔ̀bɔ̀kɔ̀, exx. 113–120, pp. 294–297: three parts over 24 positions, handclaps on the pulsation, dì.kétɔ̀ rotation 19 | `capability` | `engine/src/presets.cpp` | The grid test passes for this preset (CA15) | `open` |
-| CA10 | Aka: Bondo — bòndò, exx. 101–103, pp. 286–287: five parts over 12 positions, three drums on one model rhythm as three lanes | `capability` | `engine/src/presets.cpp` | The grid test passes for this preset (CA15), including the count of 3 at the model's positions | `open` |
-| CA11 | Aka: Ngbolu Drums — ngbɔ̀lù drums only, ex. 90, p. 281: two parts over 12 positions | `capability` | `engine/src/presets.cpp` | The grid test passes for this preset (CA15) | `open` |
-| CA12 | Banda-Dakpa: Gaza — gàzà, exx. 83–84, p. 278: two slit drums over 16 positions, strictly interwoven | `capability` | `engine/src/presets.cpp` | The grid test passes for this preset (CA15), including no position shared | `open` |
-| CA13 | Zande: Kponingbo — kpóníngbó, ex. 89, p. 281: drum and pellet bells over 8 positions | `capability` | `engine/src/presets.cpp` | The grid test passes for this preset (CA15) | `open` |
-| CA14 | Banda-Linda: Aga-torumo — àgà-tɔ̀rúmɔ̃, ex. 99, p. 285: two drums over 10 positions at 1/16 with Tempo Mult 1.25 | `capability` | `engine/src/presets.cpp` | The grid test passes for this preset (CA15); a test asserts the step length is 0.2 beats | `open` |
-| CA15 | Nothing proves a preset plays what a book transcribes. The eleven grids and `(count)` rows become fixtures, compared position by position with each preset's rendered lanes at its own macro settings | `coverage` | `tests/` (engine tests), fixture data beside them | The test fails when a fixture position is flipped, run once and recorded in the evidence, and passes on the real fixtures | `open` |
-| CA16 | There is no Central African category, and "African" holds only West African and Afrobeat presets | `tooling` | `engine/src/presets.cpp`, `engine/include/poly/presets.h`, `docs/preset-taxonomy.md` | `preset-taxonomy-conformance.test.mjs` passes with 11 categories | `open` |
-| CA17 | The preset count is hard-coded in about ten places: `kWebPresetLaneNames`, the per-index tables in `webui/mock-host.js`, `docs/preset-taxonomy.md`, the Cubase nightly's "all 45 presets" with the preset-recall spec and contract, a site e2e test that expects 43, and a stale comment in `emit_presets.cpp` | `tooling` | the files named | A repo search for 43 and 45 as preset counts finds none; site-unit, webui-e2e and cubase-harness pass | `open` |
-| CA18 | The committed `webui/poly_engine.wasm` and `poly_engine.js` would not contain the new presets | `tooling` | `webui/poly_engine.js`, `webui/poly_engine.wasm` | The `e2e` token rebuilds them and the site plays a new preset; `wasm-freshness` passes in CI | `open` |
+| CA04 | Aka: Ngbolu — ngbɔ̀lù, exx. 104–105, p. 288: three parts over 24 positions, the dì.kétɔ̀ lane E(13,24) rotation 4 | `capability` | `engine/src/presets.cpp`, `engine/include/poly/presets.h` | The grid test passes for this preset (CA15) | `done` |
+| CA05 | Aka: Mokondi — mò.kóndí, exx. 106–107, p. 289: four parts over 24 positions, dì.kétɔ̀ rotation 13 | `capability` | `engine/src/presets.cpp` | The grid test passes for this preset (CA15) | `done` |
+| CA06 | Aka: Yombe — yómbè, exx. 108–109, p. 290: four parts over 24 positions, dì.kétɔ̀ rotation 19 | `capability` | `engine/src/presets.cpp` | The grid test passes for this preset (CA15) | `done` |
+| CA07 | Aka: Monzoli — mò.nzòlì, ex. 111, p. 292: four parts over 24 positions, dì.kétɔ̀ rotation 22 | `capability` | `engine/src/presets.cpp` | The grid test passes for this preset (CA15) | `done` |
+| CA08 | Aka: Mombenzele — mò.mbénzélé, ex. 112, pp. 292–293: four parts over 24 positions, dì.kétɔ̀ rotation 10, ngúé over the full 24 values (p. 303) | `capability` | `engine/src/presets.cpp` | The grid test passes for this preset (CA15) | `done` |
+| CA09 | Aka: Zoboko — zɔ̀bɔ̀kɔ̀, exx. 113–120, pp. 294–297: three parts over 24 positions, handclaps on the pulsation, dì.kétɔ̀ rotation 19 | `capability` | `engine/src/presets.cpp` | The grid test passes for this preset (CA15) | `done` |
+| CA10 | Aka: Bondo — bòndò, exx. 101–103, pp. 286–287: five parts over 12 positions, three drums on one model rhythm as three lanes | `capability` | `engine/src/presets.cpp` | The grid test passes for this preset (CA15), including the count of 3 at the model's positions | `done` |
+| CA11 | Aka: Ngbolu Drums — ngbɔ̀lù drums only, ex. 90, p. 281: two parts over 12 positions | `capability` | `engine/src/presets.cpp` | The grid test passes for this preset (CA15) | `done` |
+| CA12 | Banda-Dakpa: Gaza — gàzà, exx. 83–84, p. 278: two slit drums over 16 positions, strictly interwoven | `capability` | `engine/src/presets.cpp` | The grid test passes for this preset (CA15), including no position shared | `done` |
+| CA13 | Zande: Kponingbo — kpóníngbó, ex. 89, p. 281: drum and pellet bells over 8 positions | `capability` | `engine/src/presets.cpp` | The grid test passes for this preset (CA15) | `done` |
+| CA14 | Banda-Linda: Aga-torumo — àgà-tɔ̀rúmɔ̃, ex. 99, p. 285: two drums over 10 positions at 1/16 with Tempo Mult 1.25 | `capability` | `engine/src/presets.cpp` | The grid test passes for this preset (CA15); a test asserts the step length is 0.2 beats | `done` |
+| CA15 | Nothing proves a preset plays what a book transcribes. The eleven grids and `(count)` rows become fixtures, compared position by position with each preset's rendered lanes at its own macro settings | `coverage` | `tests/` (engine tests), fixture data beside them | The test fails when a fixture position is flipped, run once and recorded in the evidence, and passes on the real fixtures | `done` |
+| CA16 | There is no Central African category, and "African" holds only West African and Afrobeat presets | `tooling` | `engine/src/presets.cpp`, `engine/include/poly/presets.h`, `docs/preset-taxonomy.md` | `preset-taxonomy-conformance.test.mjs` passes with 11 categories | `done` |
+| CA17 | The preset count is hard-coded in about ten places: `kWebPresetLaneNames`, the per-index tables in `webui/mock-host.js`, `docs/preset-taxonomy.md`, the Cubase nightly's "all 45 presets" with the preset-recall spec and contract, a site e2e test that expects 43, and a stale comment in `emit_presets.cpp` | `tooling` | the files named | A repo search for 43 and 45 as preset counts finds none; site-unit, webui-e2e and cubase-harness pass | `done` |
+| CA18 | The committed `webui/poly_engine.wasm` and `poly_engine.js` would not contain the new presets | `tooling` | `webui/poly_engine.js`, `webui/poly_engine.wasm` | The `e2e` token rebuilds them and the site plays a new preset; `wasm-freshness` passes in CI | `done` |
 
 ## Milestone M003 — The Central Africa chapter
 

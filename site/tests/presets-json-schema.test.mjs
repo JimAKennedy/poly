@@ -42,10 +42,11 @@ const EXPECTED_CATEGORIES = [
   'Jazz / Funk / Soul',
   'Breaks / Drum & Bass',
   'Latin / Brazilian',
-  'African',
+  'West African',
   'Asian Traditions',
   'Balkan / Eastern European',
   'Experimental / Fusion',
+  'Central African',
 ];
 
 test('presets.json — schema shape', async () => {

@@ -11,6 +11,7 @@ add_library(poly_engine STATIC
     src/midi_reader.cpp
     src/offline_render.cpp
     src/presets.cpp
+    src/presets_central_africa.cpp
     src/sanitize.cpp
     src/scene.cpp
     src/smf_writer.cpp

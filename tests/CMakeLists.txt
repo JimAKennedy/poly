@@ -36,6 +36,7 @@ add_executable(poly_tests
     plugin_tests.cpp
     preset_tests.cpp
     preset_conformance_tests.cpp
+    central_african_preset_tests.cpp
     sanitize_tests.cpp
     scene_tests.cpp
     seed_lock_tests.cpp

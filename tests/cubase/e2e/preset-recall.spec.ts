@@ -10,8 +10,8 @@ import {
 
 // M004 S02 (DAW02) — select every factory preset inside Cubase.
 //
-// 31 of the 45 presets have never been opened in a DAW. kWebPresetLaneNames was
-// once initialised sparsely — 14 rows against a kFactoryPresetCount-sized
+// When this was written, 31 of the then 45 presets had never been opened in a
+// DAW. kWebPresetLaneNames was once initialised sparsely — 14 rows against a kFactoryPresetCount-sized
 // extent — and a null entry there crashed Cubase on preset change. The null
 // guard at the applyPreset call site is the only thing between that table and
 // the same crash, and nothing exercises it index by index.
@@ -93,10 +93,10 @@ async function readLanes(page: Page): Promise<{ laneCount: number; noteNumbers: 
 
 test.describe('L4-web: every factory preset loads inside Cubase', () => {
   test.describe.configure({ mode: 'serial' });
-  // 45 selections, each with a settle and a DOM read.
+  // 56 selections, each with a settle and a DOM read.
   test.setTimeout(Number(process.env.POLY_PRESET_TIMEOUT_MS || 600_000));
 
-  test('select all 45 presets and compare each against presets.json', async () => {
+  test('select all 56 presets and compare each against presets.json', async () => {
     const expected = applyMutation(loadPresetExpectations(), process.env.POLY_E2E_MUTATE);
     expect(expected.length).toBeGreaterThan(0);
 
