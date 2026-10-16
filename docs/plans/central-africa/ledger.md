@@ -61,7 +61,7 @@ ships as a factory preset that plays his marks exactly, and CI fails if one
 position moves.
 
 **Branch:** milestone/M002-central-african-presets
-**Status:** planned
+**Status:** in-progress
 
 **One slice, not two.** The taxonomy conformance test fails the moment the
 engine's preset count changes, so the presets and every site that hard-codes
@@ -70,9 +70,10 @@ twice.
 
 ### Slice M002/S01 — Eleven formulae are presets
 
+**Plan:** M002-S01-plan.md
 **Validation:** format, unit, rt-safety, site-unit, webui-e2e, cubase-harness, doc-discipline, e2e
 **Evidence:** evidence/M002-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
