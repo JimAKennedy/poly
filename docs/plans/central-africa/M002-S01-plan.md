@@ -13,24 +13,24 @@ class: gated
 - [x] 1. The grid harness proves Aka: Ngbolu, and the category exists
 - [x] 2. The other ten formulae pass the harness
 - [x] 3. Every count and name site agrees with 56 presets and 11 categories
-- [ ] 4. The WASM engine and generated data carry the new presets
+- [x] 4. The WASM engine and generated data carry the new presets
 
 ## Definition of Done
 
 Copied verbatim from the slice:
 
-- [ ] Eleven presets exist in a new "Central African" category, and the
+- [x] Eleven presets exist in a new "Central African" category, and the
       existing "African" category is named "West African"
-- [ ] Every preset's lanes, tiled to the formula's period, equal Arom's grid
+- [x] Every preset's lanes, tiled to the formula's period, equal Arom's grid
       position by position at the preset's own macro settings, and the
       per-position count of marking parts equals his `(count)` row, asserted
       by a test that fails if one position moves
-- [ ] Every lane that carries marks has Mutation, Drift, Swing and Humanize at
+- [x] Every lane that carries marks has Mutation, Drift, Swing and Humanize at
       0, Probability 1 and no phrase gating
-- [ ] Every place that hard-codes the preset or category count agrees with 56
+- [x] Every place that hard-codes the preset or category count agrees with 56
       and 11, and the WebUI lists all 56 presets with a lane name for each
       Central African lane
-- [ ] The committed WASM engine contains the new presets
+- [x] The committed WASM engine contains the new presets
 
 ## Validation
 
