@@ -11,7 +11,7 @@ class: gated
 ## Task status
 
 - [x] 1. The page exists, is wired in, and teaches box notation
-- [ ] 2. Rules R1–R12 and norms N1–N10, with the oddity test
+- [x] 2. Rules R1–R12 and norms N1–N10, with the oddity test
 - [ ] 3. The build procedure, what breaks the idiom, and the printing inconsistencies
 
 ## Definition of Done

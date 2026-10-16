@@ -32,3 +32,79 @@ ngúé      [x . x | . x . | . . x | . x .]
 ```
 
 Seven of the twelve positions are marked. Two, positions 3 and 9, are shared; the other five belong to one part each. The dì.kpàkpà, sticks struck on the side of the drum, marks the last value of every pulsation, while the marks of the ngúé, the wide-headed "mother" drum, move around inside the pulsation.
+
+## The rules
+
+Arom separates what a formula must do from what formulae usually do. These twelve are the first kind: break one and, by his account, the result is no longer strict polyrhythm. Each gives the rule, a phrase from the page it comes from, and what it means when you build in Poly.
+
+**R1. Steady tempo, no rubato.** The tempo neither speeds up nor slows down, and durations stay strictly proportional: the movement is "free of accelerando, rallentando, or rubato" (p. 229). Arom's measurements of performances years apart found "negligible fluctuations" (p. 232). *In Poly:* no tempo automation; Swing 0, Humanize 0 and Drift Rate 0 on every lane.
+
+**R2. Every part is a repeating figure.** Each part is an ostinato with a fixed period, and the texture is built from "the predominance of uninterrupted repetitive formulae" (p. 229). *In Poly:* every lane loops, and no lane that carries marks uses phrase gating.
+
+**R3. Periods are whole numbers of pulsations, usually even.** A period holds 2, 4, 6, 8 or 12 pulsations, and Arom states of the number that "It is invariably composed of whole numbers" (p. 230). *In Poly:* Steps = pulsations × values per pulsation, so eight ternary pulsations are 24 steps.
+
+**R4. One implicit pulsation is the shared referent.** Every part is measured against one isochronous pulsation, which is felt far more often than played: it is "only rarely given material existence" (p. 230). Zɔ̀bɔ̀kɔ̀ is an exception, with handclaps that "materialise the pulsation" (p. 296). *In Poly:* no click lane is needed. A clapped pulsation, where you want one, is E(1,3) at Rotation 0 on a ternary grid.
+
+**R5. One subdivision grid per formula.** The pulsation is split into two or four values (binary), three (ternary) or five (composite), and that minimal value is the grid every duration is a multiple of. For the Aka, "the subdivision is systematically ternary" (p. 297). *In Poly:*
+
+| Subdivision | Values per pulsation | Poly setting | One pulsation is |
+|---|---|---|---|
+| Ternary | 3 | 1/8 | 3 steps, a dotted quarter |
+| Binary | 4 | 1/16 | 4 steps, a quarter |
+| Composite | 5 | 1/16 with Tempo Mult 1.25 | 5 steps, a quarter |
+
+Tempo Mult divides the step: at 1.25 a sixteenth of 0.25 beats becomes 0.2 beats, so five steps fill one quarter note.
+
+**R6. No measure, no strong beat.** There is no bar line and no downbeat; Arom dispenses with "the notions of measure and strong beat" (p. 229), and the pulsations of a period "all have equal status" (p. 231). *In Poly:* do not accent step 1 out of habit, and keep Emphasis at 0 so no random accents appear. A mark is a mark because the figure places it, never because it falls on a "one".
+
+**R7. Periods stand in simple ratios.** Parts may differ in length, but always as 2:1, 3:1, 3:2 or 4:2, and the formula's period is "the period of the longest figure" (p. 277). *In Poly:* choose lane lengths that divide the longest one, such as 24, 12, 6, 4 and 3. Co-prime lengths such as 12 against 7 are Poly's own default for independent cycles, the layering Chapter 2 uses; they do not belong to this idiom.
+
+**R8. Every figure carries a mark.** A figure is marked by accents, tone colour or durations, Arom's "accentuation, change of tone colour, and alternation of durations" (p. 233); an even stream with nothing to mark it is metre, not rhythm. *In Poly:* a mark becomes an onset. Where a figure is marked by accents, put the accented strokes on their own lane; where it is marked by tone colour, give each colour its own lane and MIDI note. Note length does not matter, because Arom hears a rest as an extension of the sound before it.
+
+**R9. Parts interweave rather than stack.** Parts are offset so their marks mesh into one composite. Interweaving is strict when marks "never coincide" (p. 278) and partial when some do. *In Poly:* audit every formula with a `(count)` row, as above.
+
+**R10. A figure's identity is the position of its marks.** Variation may change what fills a cell, "provided the musician respects their position" (p. 256). *In Poly:* a lane that carries marks needs Mutation 0 **and** Drift Rate 0. Timeline mode alone does not protect it: the global macros leave a timeline lane alone, but the lane's own Mutation and Drift still move its steps. If you want variation, put the unaccented filler strokes on a second, quieter lane and give only that lane Mutation.
+
+**R11. Realisations combine freely, if the marks stay put.** The variants of a part may follow one another in any order, and any variant may sound against any other, as long as the interweaving holds, "as defined by the position of the marks within the period" (p. 299). *In Poly:* keep variants as Scene A and Scene B, or in a Chain, in any order.
+
+**R12. Variation belongs to one part.** The other parts stay nearly fixed so that one player, usually on the mother drum, can vary or stretch the figure: "The limitation of variation in the other parts is thus required" (p. 258). *In Poly:* give Mutation or phrase gating to one lane at most, and only to a lane that carries no marks.
+
+## The norms
+
+These ten are tendencies Arom observes across his examples rather than conditions he states. A formula can break one and still belong to the idiom; a formula that breaks most of them will not sound Central African.
+
+**N1. Marks sit mostly off the pulsation.** Arom finds "a very strong tendency towards contrametricity" (p. 250): most marks avoid the pulsation, and they avoid it at varying offsets. *In Poly:* on a ternary 24-step lane the pulsation falls on steps 1, 4, 7 and so on to 22. Put most marks elsewhere, and not always at the same offset.
+
+**N2. Rhythmic oddity: half−1 / half+1.** Many figures mix groups of two and three values irregularly, an "irregular juxtaposition of binary and ternary quantities" (p. 246), so that the cut nearest the middle always leaves two odd halves: a 24-value figure splits 11 + 13, never 12 + 12. Arom builds them by inserting twos into a frame of threes (p. 248). *In Poly:* the additive cell mode takes Arom's group sizes directly as Cell Sizes, and a hit lands at the start of each cell.
+
+| Example | Cells | Steps | Split | Onsets |
+|---|---|---|---|---|
+| ex. 31, p. 246 | 3+3+2 | 8 | 3/5 | `[x . . x . . x .]` |
+| ex. 33, p. 247 | 3+2+3+2+2 | 12 | 5/7 | `[x . . x . x . . x . x .]` |
+| ex. 56, p. 255 (bòndò) | 3+2+2+3+2 | 12 | 5/7 | `[x . . x . x . x . . x .]` |
+| ex. 34, p. 247 | 3+2+2+2+3+2+2 | 16 | 7/9 | `[x . . x . x . x . x . . x . x .]` |
+| ex. 35, p. 247 | 3+2+2+2+2+3+2+2+2+2+2 | 24 | 11/13 | `[x . . x . x . x . x . x . . x . x . x . x . x .]` |
+| ex. 36, p. 247 | 2+3+3+3+2+3+3+2+3 | 24 | 11/13 | `[x . x . . x . . x . . x . x . . x . . x . x . .]` |
+
+Ex. 31 is the 3+3+2 shape familiar from the tresillo; Arom reads it as the smallest case of rhythmic oddity.
+
+**N3. Hemiola: a cell that shifts against the pulsation.** Regular asymmetry usually comes from repeating one cell whose position against the pulsation moves each time, "the principle of the hemiola" (p. 245). With 12 or 24 values the Aka also stack it vertically, three groups of four against four groups of three, because those periods are "divisible by both two and three" (p. 291). In mò.nzòlì:
+
+```text
+è.ndòmbà  [x x . | . x x | . . x | x . .]   three groups of four
+dì.kpàkpà [. . x | . . x | . . x | . . x]   four groups of three
+```
+
+**N4. Four or eight ternary pulsations.** The Aka formulae run 4 or 8 ternary pulsations, 12 or 24 values, so that twos and threes can coexist. *In Poly:* 12 or 24 steps at 1/8.
+
+**N5. Partial interweaving, densely filled.** It is "extremely rare for all the parts of a polyrhythmic block to be strictly interwoven" (p. 278); partial interweaving is the rule. The Aka four-part formulae mark 21 or 22 of their 24 positions, yet only 0 to 2 positions are shared by every part (pp. 288–293). *In Poly:* after building, count. The marked positions should approach the whole cycle, and positions shared by every part should be rare.
+
+**N6. Short cycles at a fast tempo.** The superposed configurations are "always performed at a fast tempo" (p. 272). The Aka examples run at a dotted quarter of 138 to 160, so a 24-value cycle lasts about three to three and a half seconds. *In Poly:* a dotted quarter of 144 is a host tempo of 216 quarter-note BPM.
+
+**N7. A small, closed set of formulae.** A community's repertoire will "rarely contain more than about ten formulae" (p. 277), each tied to a social occasion, and some parts reappear unchanged in several of them (p. 288). *In Poly:* save each part as a lane you can reuse, and build formulae by recombining them.
+
+**N8. The mould: one figure at different offsets.** The dì.kétɔ̀, two iron strips struck together, plays one figure that never changes inside; each formula places it at a different offset from the pulsation, so it "works like a mould" (p. 298). *In Poly:* the figure is exactly the Euclidean rhythm E(13,24), so one Euclidean lane covers every placement by Rotation alone. The formulae below show how.
+
+**N9. Formulae are told apart by accent and tone colour.** Listeners recognise a formula by "the accentuation and the diversity of tone colour" (p. 304): which colours coincide and which stand alone at each position. *In Poly:* give every part its own sound, so its solo positions can be heard.
+
+**N10. Drum variation trades off against the melody.** The busier the singing, the more fixed the drums, and the reverse: variability in the drums is "inversely proportional" to that in the melodic parts (p. 298). The Aka vary their voices richly and their drums very little. *In Poly:* under a busy lead line, keep every drum lane fixed, with Mutation 0.
