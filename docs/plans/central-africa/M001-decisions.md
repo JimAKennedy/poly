@@ -27,3 +27,16 @@ on the user's behalf during execution.
   against the scan on 2026-10-15 — **Why:** it defines the pulsation as the
   reference unit and says it is usually implicit; nothing on pp. 229–306
   mentions a timeline or dancers' footfalls as referent
+
+## 2026-10-15 — halt at M001/S01 task 2: CA02 moved to M003/S01
+
+- **Q:** Task 2 cannot land: `appendix-entry-rules.test.mjs` ("FR20 cited")
+  admits an entry to the published bibliography only once a published page
+  cites it, and none cites Arom until the M003 chapter. The row's premise was
+  also wrong: the theory pages resolve their Arom links against their own
+  bibliography, which has the entry. Move CA02 into M003/S01, so the chapter's
+  first citation adds the entry? — **A:** yes
+- **Decision:** CA02 and its Definition of Done item move to M003/S01; the
+  plan's task 2 is removed and task 3 becomes task 2 — **Why:** the entry
+  belongs in the commit that first cites it, which is what FR20 enforces;
+  task 1 was already committed and stays ticked

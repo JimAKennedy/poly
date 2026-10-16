@@ -4,15 +4,14 @@ class: gated
 
 # M001/S01 — Arom is recorded as read
 
-**Slice:** central-africa M001/S01 (rows CA01–CA03)
+**Slice:** central-africa M001/S01 (rows CA01, CA03)
 **Ledger:** `docs/plans/central-africa/ledger.md`
 **Decisions consumed:** `M001-decisions.md` (2026-10-15)
 
 ## Task status
 
 - [x] 1. `fr-arom-1991` records what was read
-- [ ] 2. The published bibliography carries Arom
-- [ ] 3. The theory bundle credits Arom only with what pp. 229–306 say
+- [ ] 2. The theory bundle credits Arom only with what pp. 229–306 say
 
 ## Definition of Done
 
@@ -21,8 +20,6 @@ Copied verbatim from the slice:
 - [ ] `fr-arom-1991` in `site/src/data/references.json` carries a verified
       description limited to pp. 229–306, and its evidence names the owner's
       scan and how it was checked; no scan is added to the reference archive
-- [ ] The published `appendix-references.mdx` has an `fr-arom-1991` entry, so
-      every link to that anchor resolves
 - [ ] Neither theory-bundle page credits Arom with a claim pp. 229–306 do not
       make, and the test that pinned the F52 citation pins the corrected one
 
@@ -48,7 +45,7 @@ positions 7, 12, 15 and 3, 9, 14. The PDF page for book page *n* is *n* − 228.
 ## Task 1 — `fr-arom-1991` records what was read
 
 **Row:** CA01. **Consumes:** nothing. **Produces:** the record task 2's
-published entry and task 3's citations rest on.
+citations rest on.
 
 **Files:** `site/src/data/references.json`; a test beside
 `site/tests/references-manifest.test.mjs`.
@@ -71,33 +68,9 @@ published entry and task 3's citations rest on.
 4. Run `format` and `doc-discipline`, append the evidence, tick this box,
    commit with trailers `Plan`, `Slice: M001/S01`, `Rows: CA01`.
 
-## Task 2 — The published bibliography carries Arom
+## Task 2 — The theory bundle credits Arom only with what pp. 229–306 say
 
-**Row:** CA02. **Consumes:** task 1's record. **Produces:** the anchor
-`/appendix-references/#fr-arom-1991` resolves on the published site.
-
-**Files:** `site/src/content/docs/appendix-references.mdx`; the site test that
-checks the published bibliography's entries, if one asserts its list.
-
-1. Find where `appendix-references.mdx` lists `fr-` entries and how an entry is
-   written (the `<span id="fr-…" data-tier="…">` form). Confirm by grep that no
-   `fr-arom-1991` span exists in it today.
-2. Write the failing check first, if the site has no test that every
-   `/appendix-references/#…` link in `site/src/content/` resolves to a span in
-   the published appendix: a case asserting that `fr-arom-1991` is defined
-   there. Run it and watch it fail.
-3. Add the entry in the section where it belongs: Arom, S. (1991). *African
-   Polyphony and Polyrhythm: Musical Structure and Methodology*. Cambridge
-   University Press. ISBN 9780521616010, Tier A, *(Purchasable)*, matching the
-   theory bibliography's line.
-4. Run `site-unit` and `doc-discipline` (its `research-provenance` resolves
-   anchors) and watch them pass.
-5. Run `format`, append the evidence, tick this box, commit with
-   `Rows: CA02`.
-
-## Task 3 — The theory bundle credits Arom only with what pp. 229–306 say
-
-**Row:** CA03. **Consumes:** task 2's resolving anchor. **Produces:** the
+**Row:** CA03. **Consumes:** task 1's record. **Produces:** the
 slice's last row; the slice closes here.
 
 **Files:** `site/src/content/theory/theory-sub-saharan-africa.mdx`,
@@ -127,5 +100,5 @@ slice's last row; the slice closes here.
 5. Run `site-unit` and `doc-discipline` and watch them pass.
 6. Run `format` and `guards`, append the evidence (each changed sentence
    before and after, and the scan page each rests on), tick this box and the
-   Definition of Done, set the slice `done` and rows CA01–CA03 `done` in the
+   Definition of Done, set the slice `done` and rows CA01 and CA03 `done` in the
    ledger, run `jk-standards ledger`, and commit with `Rows: CA03`.
