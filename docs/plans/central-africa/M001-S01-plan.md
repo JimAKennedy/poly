@@ -10,7 +10,7 @@ class: gated
 
 ## Task status
 
-- [ ] 1. `fr-arom-1991` records what was read
+- [x] 1. `fr-arom-1991` records what was read
 - [ ] 2. The published bibliography carries Arom
 - [ ] 3. The theory bundle credits Arom only with what pp. 229–306 say
 

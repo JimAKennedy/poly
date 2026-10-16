@@ -471,9 +471,9 @@
     },
     "fr-arom-1991": {
       "obtainability": "purchasable",
-      "evidence": "Open Library confirms \"African Polyphony and Polyrhythm\" with a matching author and publisher, and no free full text was found. The text was not read, so no description verdict beyond the catalogue record is claimed. cambridge.org returns 403 to automation, so no price was obtained from the publisher.",
-      "checked": "2026-09-20",
-      "description": "unverified",
+      "evidence": "Open Library confirms \"African Polyphony and Polyrhythm\" with a matching author and publisher, and no free full text was found. The owner's scan of Book VI, Chapter 3 \"Strict polyrhythmics\", pp. 229–306, was read; the description is verified for those pages only, and the rest of the book is unexamined. Two pages were checked against the scan on 2026-10-15: p. 230 defines the pulsation as the isochronous reference unit, usually implicit, and p. 278 gives the gàzà accents at positions 7, 12, 15 and 3, 9, 14. The scan is not archived: it is a copyrighted book. cambridge.org returns 403 to automation, so no price was obtained from the publisher.",
+      "checked": "2026-10-15",
+      "description": "verified",
       "note": "",
       "identifier": {
         "doi": null,
