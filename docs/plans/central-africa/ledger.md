@@ -222,14 +222,15 @@ Central Africa chapter.
 the Central Africa chapter relies on.
 
 **Branch:** milestone/M005-appendices
-**Status:** planned
+**Status:** in-progress
 
 ### Slice M005/S01 — Appendices
 
 **Depends:** M003/S01
+**Plan:** M005-S01-plan.md
 **Validation:** format, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M005-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
