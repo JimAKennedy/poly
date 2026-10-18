@@ -1,6 +1,6 @@
 {
   "$schema": "M048 S14: single source of truth for the E(k,n) reference appendix.",
-  "$note": "Pattern and Grouping columns are computed from bjorklund(k,n) by scripts/generate-euclidean-appendix.mjs. Only Traditional Association, Chapter, and optional rotation are hand-authored per row. Rotation defaults to 0 (canonical Bjorklund); set it when the traditional rhythm is voiced at a specific rotation that the surrounding prose depends on (e.g. E(5,16) bossa nova at rotation 12 for gap sequence 3-3-4-3-3; E(7,12) Ewe gankogui bell at rotation 1 for grouping 2+2+1+2+2+1+2). To add a row: add {k, n, association, chapter, rotation?} to the appropriate section, then run 'node scripts/generate-euclidean-appendix.mjs'.",
+  "$note": "Pattern and Grouping columns are computed from bjorklund(k,n) by scripts/generate-euclidean-appendix.mjs. Only Traditional Association, Chapter, and optional rotation are hand-authored per row. Rotation defaults to 0 (canonical Bjorklund); set it when the traditional rhythm is voiced at a specific rotation that the surrounding prose depends on (e.g. E(5,16) bossa nova at rotation 12 for gap sequence 3-3-4-3-3; E(7,12) Ewe gankogui bell at rotation 2 for grouping 2+2+1+2+2+1+2). To add a row: add {k, n, association, chapter, rotation?} to the appropriate section, then run 'node scripts/generate-euclidean-appendix.mjs'.",
   "sections": [
     {
       "n": 4,
@@ -58,6 +58,7 @@
         { "k": 4, "association": "Triplet feel, shuffle accent", "chapter": 12 },
         { "k": 5, "association": "Reich phasing seed", "chapter": 8 },
         { "k": 7, "association": "Ewe gankogui bell (West Africa)", "chapter": 2, "rotation": 2 },
+        { "k": 7, "association": "Aka bòndò dì.kétɔ̀ (Central Africa)", "chapter": "2b" },
         { "k": 9, "association": "Dense 12/8 fill", "chapter": 4 }
       ]
     },
@@ -69,6 +70,16 @@
         { "k": 5, "association": "Bossa nova bass", "chapter": 10, "rotation": 10 },
         { "k": 7, "association": "Polymetric ghost layer", "chapter": 1 },
         { "k": 9, "association": "Dense hi-hat fill", "chapter": 9 }
+      ]
+    },
+    {
+      "n": 24,
+      "rows": [
+        { "k": 13, "association": "Aka dì.kétɔ̀ mould: ngbɔ̀lù", "chapter": "2b", "rotation": 4 },
+        { "k": 13, "association": "Aka dì.kétɔ̀ mould: mò.nzòlì", "chapter": "2b", "rotation": 22 },
+        { "k": 13, "association": "Aka dì.kétɔ̀ mould: yómbè, zɔ̀bɔ̀kɔ̀", "chapter": "2b", "rotation": 19 },
+        { "k": 13, "association": "Aka dì.kétɔ̀ mould: mò.kóndí", "chapter": "2b", "rotation": 13 },
+        { "k": 13, "association": "Aka dì.kétɔ̀ mould: mò.mbénzélé", "chapter": "2b", "rotation": 10 }
       ]
     }
   ]

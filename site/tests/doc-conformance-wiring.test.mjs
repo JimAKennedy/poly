@@ -63,6 +63,9 @@ const REQUIRED = [
   // central-africa M004/S01: Chapter 2 reconciled with the Central Africa
   // chapter — scope, Locke-bounded stacking, the patch table, the rotations.
   'site/tests/chapter-2-reconciled.test.mjs',
+  // central-africa M005/S01: the Euclidean Reference, Timing Model and
+  // Chapter 1 carry what the Central Africa chapter relies on.
+  'site/tests/appendices-catch-up.test.mjs',
   // M001 S01 audit-ledger completeness gates.
   'docs/audits/theory-audit-remediation.test.mjs',
   'docs/audits/parity-matrix.test.mjs',
