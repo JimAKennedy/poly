@@ -43,6 +43,43 @@ const CLAIMS = [
     rule: 'ledger CA34. Chapter 2 sends readers to Chapter 2b for Central African music',
     present: ['/02b-central-africa/'],
   },
+  {
+    id: 'CA30-tradition',
+    file: PAGE,
+    rule:
+      'ledger CA30. Polymetric Stacking said Ewe support drums "often run at ' +
+      'different cycle lengths from the bell" and cited nothing. Locke 1982 ' +
+      '(fr-locke-1982), read 2026-10-18, supports a simple-ratio account only: the ' +
+      'bell sets the period (p. 217), the kagan cycles 4 times and the kidi twice ' +
+      'per bell pattern (p. 219), and the common cross-rhythms are 3:2 and 3:4 ' +
+      '(p. 244). The section says that and no more about the tradition',
+    forbidden: [
+      'often run at different cycle lengths',
+      'The power of the Ewe approach is that support drums',
+      'Where Ewe drumming stacks many independent cycles',
+    ],
+    present: ['4 times per bell pattern', 'twice per bell pattern', '3:2 and 3:4', 'fr-locke-1982'],
+  },
+  {
+    id: 'CA30-extension',
+    file: PAGE,
+    rule:
+      'ledger CA30. With the tradition stated from Locke, 12/7/5 layering is ' +
+      'presented as what Poly adds, with the Ewe Polymetric Ensemble preset as ' +
+      'the Ewe-inspired example (vision decision: "honestly labelled")',
+    present: ["Poly's extension", 'Ewe-inspired', 'Ewe Polymetric Ensemble'],
+  },
+  {
+    id: 'CA31',
+    file: PAGE,
+    rule:
+      'ledger CA31. "Pulling forward toward the next downbeat" and "structural ' +
+      'downbeats" asserted a downbeat; Arom\'s R6 says there is no measure and no ' +
+      'strong beat. The lock is the word itself, so a third assertion cannot ' +
+      'replace the two removed',
+    forbidden: ['toward the next downbeat', 'structural downbeats'],
+    forbiddenRegex: [/\bdownbeats?\b/i],
+  },
 ];
 
 registerClaimTests({ test, assert, claims: CLAIMS, loadSource });
