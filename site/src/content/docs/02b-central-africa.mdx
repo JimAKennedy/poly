@@ -1,0 +1,413 @@
+---
+class: gated
+title: "2b. Central Africa: Strict Polyrhythm"
+description: "Simha Arom's strict polyrhythm of the Central African Republic: the rules a formula keeps, the norms idiomatic formulae follow, and the Aka, Banda and Zande formulae he transcribes, each playable in Poly."
+---
+
+import PolyPreviewCard from '../../components/PolyPreviewCard.astro';
+
+Chapter 2 is about West Africa: the Ewe bell and the Manding djembe ensemble, and the long co-prime cycles Poly layers on top of them. This chapter moves east, to the music of the Central African Republic as Simha Arom transcribed it in *African Polyphony and Polyrhythm* ([Arom 1991](/appendix-references/#fr-arom-1991)), Book VI, Chapter 3, "Strict polyrhythmics", pp. 229–306. His examples come from the Aka, the Banda-Dakpa, the Banda-Linda and the Zande, and the chapter states the conditions a formula meets and the tendencies it usually follows. Everything below is paraphrase of that chapter except the short quoted phrases, each with the page it comes from.
+
+The music here is not built like Chapter 2's layering. Arom's figures differ in length, but their periods "always stand in simple ratios" (p. 231): 2:1, 3:1, 3:2. No formula in the chapter sets 12 against 7. What makes it intricate is not drift between cycles but where each part puts its marks inside one shared period.
+
+## Reading box notation
+
+The grids on this page use one character per *minimal operational value*, Arom's term for "the smallest relevant duration" the pulsation is divided into (p. 231). One value is one Poly step.
+
+- `x` is a mark: an accent, a change of tone colour, or an attack, whichever defines the figure
+- `.` is no mark at that position
+- `|` is a pulsation boundary, drawn only to help reading; the pulsation itself is usually felt, not played
+- positions are numbered from 1 on the left, as in Arom's own grids
+
+The grids show **marks only**, not every stroke a player makes. Arom reduces a figure to the position of its marks and treats that reduction as the figure's model (p. 253). The Poly presets on this page are the same reduction: each lane plays a part's marks and nothing else, so what you hear is the skeleton the players hold to, not a performance.
+
+Arom audits a formula in three steps (p. 277): "count the total number of positions", list every position any part marks, then separate the positions several parts share from those one part marks alone. The `(count)` row under each grid does that in one line. Each digit is how many parts mark that position, and `.` means none.
+
+Here are the two drums of the Aka ngbɔ̀lù dance, without the rest of the ensemble (ex. 90, p. 281). The period is four ternary pulsations, twelve values:
+
+```text title="Aka: Ngbolu Drums"
+dì.kpàkpà [. . x | . . x | . . x | . . x]
+ngúé      [x . x | . x . | . . x | . x .]
+(count)   [1 . 2 | . 1 1 | . . 2 | . 1 1]
+```
+
+Seven of the twelve positions are marked. Two, positions 3 and 9, are shared; the other five belong to one part each. The dì.kpàkpà, sticks struck on the side of the drum, marks the last value of every pulsation, while the marks of the ngúé, the wide-headed "mother" drum, move around inside the pulsation.
+
+## The rules
+
+Arom separates what a formula must do from what formulae usually do. These twelve are the first kind: break one and, by his account, the result is no longer strict polyrhythm. Each gives the rule, a phrase from the page it comes from, and what it means when you build in Poly.
+
+**R1. Steady tempo, no rubato.** The tempo neither speeds up nor slows down, and durations stay strictly proportional: the movement is "free of accelerando, rallentando, or rubato" (p. 229). Arom's measurements of performances years apart found "negligible fluctuations" (p. 232). *In Poly:* no tempo automation; Swing 0, Humanize 0 and Drift Rate 0 on every lane.
+
+**R2. Every part is a repeating figure.** Each part is an ostinato with a fixed period, and the texture is built from "the predominance of uninterrupted repetitive formulae" (p. 229). *In Poly:* every lane loops, and no lane that carries marks uses phrase gating.
+
+**R3. Periods are whole numbers of pulsations, usually even.** A period holds 2, 4, 6, 8 or 12 pulsations, and Arom states of the number that "It is invariably composed of whole numbers" (p. 230). *In Poly:* Steps = pulsations × values per pulsation, so eight ternary pulsations are 24 steps.
+
+**R4. One implicit pulsation is the shared referent.** Every part is measured against one isochronous pulsation, which is felt far more often than played: it is "only rarely given material existence" (p. 230). Zɔ̀bɔ̀kɔ̀ is an exception, with handclaps that "materialise the pulsation" (p. 296). *In Poly:* no click lane is needed. A clapped pulsation, where you want one, is E(1,3) at Rotation 0 on a ternary grid.
+
+**R5. One subdivision grid per formula.** The pulsation is split into two or four values (binary), three (ternary) or five (composite), and that minimal value is the grid every duration is a multiple of. For the Aka, "the subdivision is systematically ternary" (p. 297). *In Poly:*
+
+| Subdivision | Values per pulsation | Poly setting | One pulsation is |
+|---|---|---|---|
+| Ternary | 3 | 1/8 | 3 steps, a dotted quarter |
+| Binary | 4 | 1/16 | 4 steps, a quarter |
+| Composite | 5 | 1/16 with Tempo Mult 1.25 | 5 steps, a quarter |
+
+Tempo Mult divides the step: at 1.25 a sixteenth of 0.25 beats becomes 0.2 beats, so five steps fill one quarter note.
+
+**R6. No measure, no strong beat.** There is no bar line and no downbeat; Arom dispenses with "the notions of measure and strong beat" (p. 229), and the pulsations of a period "all have equal status" (p. 231). *In Poly:* do not accent step 1 out of habit, and keep Emphasis at 0 so no random accents appear. A mark is a mark because the figure places it, never because it falls on a "one".
+
+**R7. Periods stand in simple ratios.** Parts may differ in length, but always as 2:1, 3:1, 3:2 or 4:2, and the formula's period is "the period of the longest figure" (p. 277). *In Poly:* choose lane lengths that divide the longest one, such as 24, 12, 6, 4 and 3. Co-prime lengths such as 12 against 7 are Poly's own default for independent cycles, the layering Chapter 2 uses; they do not belong to this idiom.
+
+**R8. Every figure carries a mark.** A figure is marked by accents, tone colour or durations, Arom's "accentuation, change of tone colour, and alternation of durations" (p. 233); an even stream with nothing to mark it is metre, not rhythm. *In Poly:* a mark becomes an onset. Where a figure is marked by accents, put the accented strokes on their own lane; where it is marked by tone colour, give each colour its own lane and MIDI note. Note length does not matter, because Arom hears a rest as an extension of the sound before it.
+
+**R9. Parts interweave rather than stack.** Parts are offset so their marks mesh into one composite. Interweaving is strict when marks "never coincide" (p. 278) and partial when some do. *In Poly:* audit every formula with a `(count)` row, as above.
+
+**R10. A figure's identity is the position of its marks.** Variation may change what fills a cell, "provided the musician respects their position" (p. 256). *In Poly:* a lane that carries marks needs Mutation 0 **and** Drift Rate 0. Timeline mode alone does not protect it: the global macros leave a timeline lane alone, but the lane's own Mutation and Drift still move its steps. If you want variation, put the unaccented filler strokes on a second, quieter lane and give only that lane Mutation.
+
+**R11. Realisations combine freely, if the marks stay put.** The variants of a part may follow one another in any order, and any variant may sound against any other, as long as the interweaving holds, "as defined by the position of the marks within the period" (p. 299). *In Poly:* keep variants as Scene A and Scene B, or in a Chain, in any order.
+
+**R12. Variation belongs to one part.** The other parts stay nearly fixed so that one player, usually on the mother drum, can vary or stretch the figure: "The limitation of variation in the other parts is thus required" (p. 258). *In Poly:* give Mutation or phrase gating to one lane at most, and only to a lane that carries no marks.
+
+## The norms
+
+These ten are tendencies Arom observes across his examples rather than conditions he states. A formula can break one and still belong to the idiom; a formula that breaks most of them will not sound Central African.
+
+**N1. Marks sit mostly off the pulsation.** Arom finds "a very strong tendency towards contrametricity" (p. 250): most marks avoid the pulsation, and they avoid it at varying offsets. *In Poly:* on a ternary 24-step lane the pulsation falls on steps 1, 4, 7 and so on to 22. Put most marks elsewhere, and not always at the same offset.
+
+**N2. Rhythmic oddity: half−1 / half+1.** Many figures mix groups of two and three values irregularly, an "irregular juxtaposition of binary and ternary quantities" (p. 246), so that the cut nearest the middle always leaves two odd halves: a 24-value figure splits 11 + 13, never 12 + 12. Arom builds them by inserting twos into a frame of threes (p. 248). *In Poly:* the additive cell mode takes Arom's group sizes directly as Cell Sizes, and a hit lands at the start of each cell.
+
+| Example | Cells | Steps | Split | Onsets |
+|---|---|---|---|---|
+| ex. 31, p. 246 | 3+3+2 | 8 | 3/5 | `[x . . x . . x .]` |
+| ex. 33, p. 247 | 3+2+3+2+2 | 12 | 5/7 | `[x . . x . x . . x . x .]` |
+| ex. 56, p. 255 (bòndò) | 3+2+2+3+2 | 12 | 5/7 | `[x . . x . x . x . . x .]` |
+| ex. 34, p. 247 | 3+2+2+2+3+2+2 | 16 | 7/9 | `[x . . x . x . x . x . . x . x .]` |
+| ex. 35, p. 247 | 3+2+2+2+2+3+2+2+2+2+2 | 24 | 11/13 | `[x . . x . x . x . x . x . . x . x . x . x . x .]` |
+| ex. 36, p. 247 | 2+3+3+3+2+3+3+2+3 | 24 | 11/13 | `[x . x . . x . . x . . x . x . . x . . x . x . .]` |
+
+Ex. 31 is the 3+3+2 shape familiar from the tresillo; Arom reads it as the smallest case of rhythmic oddity.
+
+**N3. Hemiola: a cell that shifts against the pulsation.** Regular asymmetry usually comes from repeating one cell whose position against the pulsation moves each time, "the principle of the hemiola" (p. 245). With 12 or 24 values the Aka also stack it vertically, three groups of four against four groups of three, because those periods are "divisible by both two and three" (p. 291). In mò.nzòlì:
+
+```text
+è.ndòmbà  [x x . | . x x | . . x | x . .]   three groups of four
+dì.kpàkpà [. . x | . . x | . . x | . . x]   four groups of three
+```
+
+**N4. Four or eight ternary pulsations.** The Aka formulae run 4 or 8 ternary pulsations, 12 or 24 values, so that twos and threes can coexist. *In Poly:* 12 or 24 steps at 1/8.
+
+**N5. Partial interweaving, densely filled.** It is "extremely rare for all the parts of a polyrhythmic block to be strictly interwoven" (p. 278); partial interweaving is the rule. The Aka four-part formulae mark 21 or 22 of their 24 positions, yet only 0 to 2 positions are shared by every part (pp. 288–293). *In Poly:* after building, count. The marked positions should approach the whole cycle, and positions shared by every part should be rare.
+
+**N6. Short cycles at a fast tempo.** The superposed configurations are "always performed at a fast tempo" (p. 272). The Aka examples run at a dotted quarter of 138 to 160, so a 24-value cycle lasts about three to three and a half seconds. *In Poly:* a dotted quarter of 144 is a host tempo of 216 quarter-note BPM.
+
+**N7. A small, closed set of formulae.** A community's repertoire will "rarely contain more than about ten formulae" (p. 277), each tied to a social occasion, and some parts reappear unchanged in several of them (p. 288). *In Poly:* save each part as a lane you can reuse, and build formulae by recombining them.
+
+**N8. The mould: one figure at different offsets.** The dì.kétɔ̀, two iron strips struck together, plays one figure that never changes inside; each formula places it at a different offset from the pulsation, so it "works like a mould" (p. 298). *In Poly:* the figure is exactly the Euclidean rhythm E(13,24), so one Euclidean lane covers every placement by Rotation alone. The formulae below show how.
+
+**N9. Formulae are told apart by accent and tone colour.** Listeners recognise a formula by "the accentuation and the diversity of tone colour" (p. 304): which colours coincide and which stand alone at each position. *In Poly:* give every part its own sound, so its solo positions can be heard.
+
+**N10. Drum variation trades off against the melody.** The busier the singing, the more fixed the drums, and the reverse: variability in the drums is "inversely proportional" to that in the melodic parts (p. 298). The Aka vary their voices richly and their drums very little. *In Poly:* under a busy lead line, keep every drum lane fixed, with Mutation 0.
+
+## The formulae
+
+Each formula below has its grid, its `(count)` row, the lanes of the preset that plays it, and a card. **Play** runs the preset in your browser; **Try it** opens it in the full Poly interface, where you can solo lanes and turn knobs. Every preset plays marks only, at the tempo Arom's figure gives (see [Tempo](#tempo)), with Mutation, Drift Rate, Swing and Humanize at 0 on every lane. A test fails if any grid on this page and the preset that plays it disagree at a single position.
+
+In the lane tables, "E(k,n) r*N*" is a Euclidean lane of *k* hits in *n* steps at Rotation *N*; "drawn" is a timeline lane with the grid row entered step by step.
+
+### Aka: Ngbolu — three periodicities
+
+Ngbɔ̀lù (exx. 104–105, p. 288) is eight ternary pulsations, twenty-four values. Its three parts have periods of 3, 12 and 24 values, in the ratio 1 : 4 : 8. Twenty positions are marked; two, positions 3 and 21, are marked by all three parts.
+
+```text title="Aka: Ngbolu"
+dì.kpàkpà [. . x | . . x | . . x | . . x | . . x | . . x | . . x | . . x]
+ngúé      [x . x | . x . | . . x | . x . | x . x | . x . | . . x | . x .]
+dì.kétɔ̀   [x . x | . x . | x x . | x . x | . x . | x . x | x . x | . x .]
+(count)   [2 . 3 | . 2 1 | 1 1 2 | 1 1 2 | 1 1 2 | 1 1 2 | 1 . 3 | . 2 1]
+```
+
+| Part | Steps | Lane | MIDI note |
+|---|---|---|---|
+| dì.kpàkpà | 3 | E(1,3) r2 | 37 Side Stick |
+| ngúé | 12 | drawn | 64 Low Conga |
+| dì.kétɔ̀ | 24 | E(13,24) r4 | 67 High Agogo |
+
+<PolyPreviewCard preset="Aka: Ngbolu" caption="Aka ngbɔ̀lù — dì.kpàkpà, ngúé and the dì.kétɔ̀ iron strips, marks only (Arom exx. 104–105)" />
+
+### Banda-Dakpa: Gaza — strict interweaving
+
+Gàzà (exx. 83–84, p. 278) is played by two slit drums, the "husband" and the "mother", over two binary pulsations of eight values each, sixteen positions. It is Arom's example of strict interweaving: each drum marks three positions, and no position is marked by both.
+
+```text title="Banda-Dakpa: Gaza"
+husband [. . . . . . x . | . . . x . . x .]
+mother  [. . x . . . . . | x . . . . x . .]
+(count) [. . 1 . . . 1 . | 1 . . 1 . 1 1 .]
+```
+
+| Part | Steps | Lane | MIDI note |
+|---|---|---|---|
+| husband | 16 | drawn, 1/16 | 77 Low Wood Block |
+| mother | 16 | E(3,16) r8, 1/16 | 76 Hi Wood Block |
+
+<PolyPreviewCard preset="Banda-Dakpa: Gaza" caption="Banda-Dakpa gàzà — two slit drums, strictly interwoven (Arom exx. 83–84)" />
+
+### Zande: Kponingbo — two parts, one shared mark
+
+The Zande kpóníngbó dance (ex. 89, p. 281) has a drum and a pair of pellet bells over two binary pulsations of four values, eight positions. Four positions are marked, and only position 7 by both parts.
+
+```text title="Zande: Kponingbo"
+drum         [x . . x | . . x .]
+pellet bells [. . x . | . . x .]
+(count)      [1 . 1 1 | . . 2 .]
+```
+
+| Part | Steps | Lane | MIDI note |
+|---|---|---|---|
+| drum | 8 | E(3,8) r0, 1/16 | 64 Low Conga |
+| pellet bells | 4 | drawn, 1/16 | 54 Tambourine |
+
+The pellet bells repeat every four positions, half the drum's period: the 2:1 ratio of rule R7.
+
+<PolyPreviewCard preset="Zande: Kponingbo" caption="Zande kpóníngbó — drum and pellet bells (Arom ex. 89)" />
+
+### Aka: Ngbolu Drums — the drums alone
+
+The two drums of ngbɔ̀lù without the iron strips (ex. 90, p. 281), the formula used above to show how a `(count)` row is read. The dì.kpàkpà is the same three-value figure as in the full ngbɔ̀lù, and the ngúé the same twelve values.
+
+```text title="Aka: Ngbolu Drums"
+dì.kpàkpà [. . x | . . x | . . x | . . x]
+ngúé      [x . x | . x . | . . x | . x .]
+(count)   [1 . 2 | . 1 1 | . . 2 | . 1 1]
+```
+
+| Part | Steps | Lane | MIDI note |
+|---|---|---|---|
+| dì.kpàkpà | 3 | E(1,3) r2 | 37 Side Stick |
+| ngúé | 12 | drawn | 64 Low Conga |
+
+<PolyPreviewCard preset="Aka: Ngbolu Drums" caption="Aka ngbɔ̀lù, drums only — dì.kpàkpà and ngúé (Arom ex. 90)" />
+
+### Aka: Bondo — one model, five instruments
+
+In the Aka bòndò dance (exx. 101–103, pp. 286–287) the è.ndòmbà, the ngúé and the dì.kpàkpà all play one figure, the 3+2+2+3+2 oddity model of norm N2, over four ternary pulsations. The dì.kétɔ̀ splits two of its groups of three, and the mà.nzénzé rattle marks every pulsation, a rare regularly commetric part. The `(count)` row counts parts, so the three drums on one figure count once, and a position reaches 3 only where the dì.kétɔ̀ and the rattle both join the drums.
+
+```text title="Aka: Bondo"
+è.ndòmbà/ngúé/dì.kpàkpà [x . . | x . x | . x . | . x .]
+dì.kétɔ̀                 [x . x | x . x | . x x | . x .]
+mà.nzénzé               [x . . | x . . | x . . | x . .]
+(count)                 [3 . 1 | 3 . 2 | 1 2 1 | 1 2 .]
+```
+
+| Part | Steps | Lane | MIDI note |
+|---|---|---|---|
+| è.ndòmbà | 12 | E(5,12) r7 | 63 Open Hi Conga |
+| ngúé | 12 | E(5,12) r7 | 64 Low Conga |
+| dì.kpàkpà | 12 | E(5,12) r7 | 37 Side Stick |
+| dì.kétɔ̀ | 12 | E(7,12) r0 | 67 High Agogo |
+| mà.nzénzé | 3 | drawn | 70 Maracas |
+
+The bòndò dì.kétɔ̀ is the same set of onsets as the Ewe gankogui bell in Chapter 2, E(7,12) at Rotation 0. Arom does not read it as a timeline: here it is a split of the oddity model the drums play.
+
+<PolyPreviewCard preset="Aka: Bondo" caption="Aka bòndò — three drums on one oddity model, dì.kétɔ̀ and rattle (Arom exx. 101–103)" />
+
+### Banda-Linda: Aga-torumo — composite subdivision
+
+In the Banda-Linda àgà-tɔ̀rúmɔ̃ (ex. 99, p. 285) the pulsation divides into five values, Arom's composite subdivision. Two unaccented drums, marked by their alternating durations, cover two pulsations, ten positions. Eight positions are struck, and only position 8 by both.
+
+```text title="Banda-Linda: Aga-torumo"
+first drum  [x . x . . | x x x . .]
+second drum [. . . x x | . . x . x]
+(count)     [1 . 1 1 1 | 1 1 2 . 1]
+```
+
+| Part | Steps | Lane | MIDI note |
+|---|---|---|---|
+| first drum (àkɔ̄.nə̀) | 10 | drawn, 1/16, Tempo Mult 1.25 | 64 Low Conga |
+| second drum (kàmíngà) | 10 | drawn, 1/16, Tempo Mult 1.25 | 63 Open Hi Conga |
+
+Tempo Mult 1.25 shortens each sixteenth to 0.2 beats, so five steps fill one quarter note and the pulsation lands on every fifth step. The WebUI has no Tempo Mult control, so this preset is the way to hear a five-value pulsation there.
+
+<PolyPreviewCard preset="Banda-Linda: Aga-torumo" caption="Banda-Linda àgà-tɔ̀rúmɔ̃ — two drums on a five-value pulsation (Arom ex. 99)" />
+
+### Aka: Mokondi — four parts, ratio 1 : 2
+
+Mò.kóndí (exx. 106–107, p. 289) has four parts: the è.ndòmbà, the narrow-headed "child" drum, with the dì.kpàkpà, the ngúé and the dì.kétɔ̀. È.ndòmbà and ngúé repeat every twelve values, dì.kpàkpà and dì.kétɔ̀ every twenty-four. Twenty-one positions are marked, and only position 1 by all four parts.
+
+```text title="Aka: Mokondi"
+è.ndòmbà  [x . . | x . x | x . x | x . . | x . . | x . x | x . x | x . .]
+dì.kpàkpà [x . x | . . x | . x . | . x . | . x . | . x . | x . . | x . .]
+ngúé      [x . . | x x . | . x x | x . . | x . . | x x . | . x x | x . .]
+dì.kétɔ̀   [x . x | x . x | . x . | x . x | . x . | x x . | x . x | . x .]
+(count)   [4 . 2 | 3 1 3 | 1 3 2 | 3 1 1 | 2 2 . | 3 3 1 | 3 1 3 | 3 1 .]
+```
+
+| Part | Steps | Lane | MIDI note |
+|---|---|---|---|
+| è.ndòmbà | 12 | drawn | 63 Open Hi Conga |
+| dì.kpàkpà | 24 | drawn | 37 Side Stick |
+| ngúé | 12 | drawn | 64 Low Conga |
+| dì.kétɔ̀ | 24 | E(13,24) r13 | 67 High Agogo |
+
+<PolyPreviewCard preset="Aka: Mokondi" caption="Aka mò.kóndí — è.ndòmbà, dì.kpàkpà, ngúé and dì.kétɔ̀ (Arom exx. 106–107)" />
+
+### Aka: Yombe — one cell, crossed
+
+In yómbè (exx. 108–109, p. 290) the è.ndòmbà and the dì.kpàkpà play the same one-pulsation cell, a single mark, offset from each other by one value: strict, regular interweaving. Twenty-two positions are marked, and none by all four parts.
+
+```text title="Aka: Yombe"
+è.ndòmbà  [. x . | . x . | . x . | . x . | . x . | . x . | . x . | . x .]
+dì.kpàkpà [. . x | . . x | . . x | . . x | . . x | . . x | . . x | . . x]
+ngúé      [. x . | . x x | x x . | . x . | . x . | . x x | x x . | . x .]
+dì.kétɔ̀   [x . x | . x . | x . x | x . x | . x . | x . x | . x . | x x .]
+(count)   [1 2 2 | . 3 2 | 2 2 2 | 1 2 2 | . 3 1 | 1 2 3 | 1 3 1 | 1 3 1]
+```
+
+| Part | Steps | Lane | MIDI note |
+|---|---|---|---|
+| è.ndòmbà | 3 | E(1,3) r1 | 63 Open Hi Conga |
+| dì.kpàkpà | 3 | E(1,3) r2 | 37 Side Stick |
+| ngúé | 12 | drawn | 64 Low Conga |
+| dì.kétɔ̀ | 24 | E(13,24) r19 | 67 High Agogo |
+
+<PolyPreviewCard preset="Aka: Yombe" caption="Aka yómbè — two crossed one-pulsation cells, ngúé and dì.kétɔ̀ (Arom exx. 108–109)" />
+
+### Aka: Monzoli — vertical hemiola
+
+Mò.nzòlì (ex. 111, p. 292) sets the è.ndòmbà's groups of four against the dì.kpàkpà's groups of three, the vertical hemiola of norm N3. The ngúé and the dì.kpàkpà never coincide. Twenty-two positions are marked, and none by all four parts.
+
+```text title="Aka: Monzoli"
+è.ndòmbà  [x x . | . x x | . . x | x . . | x x . | . x x | . . x | x . .]
+dì.kpàkpà [. . x | . . x | . . x | . . x | . . x | . . x | . . x | . . x]
+ngúé      [x . . | . x . | x . . | . x . | x . . | . x . | x . . | . x .]
+dì.kétɔ̀   [x x . | x . x | . x . | x . x | x . x | . x . | x . x | . x .]
+(count)   [3 2 1 | 1 2 3 | 1 1 2 | 2 1 2 | 3 1 2 | . 3 2 | 2 . 3 | 1 2 1]
+```
+
+| Part | Steps | Lane | MIDI note |
+|---|---|---|---|
+| è.ndòmbà | 4 | drawn | 63 Open Hi Conga |
+| dì.kpàkpà | 3 | E(1,3) r2 | 37 Side Stick |
+| ngúé | 12 | drawn | 64 Low Conga |
+| dì.kétɔ̀ | 24 | E(13,24) r22 | 67 High Agogo |
+
+The four-step è.ndòmbà lane crosses the three-value pulsation, but four divides the twenty-four-value period, so rule R7 holds.
+
+<PolyPreviewCard preset="Aka: Monzoli" caption="Aka mò.nzòlì — four against three over an implicit ternary pulsation (Arom ex. 111)" />
+
+### Aka: Mombenzele — told apart by the ngúé
+
+Mò.mbénzélé (ex. 112, pp. 292–293) shares mò.nzòlì's è.ndòmbà and dì.kpàkpà, and its dì.kétɔ̀ is the same figure four pulsations later (p. 298). Arom calls the differing ngúé parts "the only means of distinguishing them" (p. 291). Here the ngúé runs the full twenty-four values, as p. 303 and ex. 112 give it (see [the printing inconsistencies](#three-printing-inconsistencies)). Twenty-one positions are marked, and positions 9 and 18 by all four parts.
+
+```text title="Aka: Mombenzele"
+è.ndòmbà  [x x . | . x x | . . x | x . . | x x . | . x x | . . x | x . .]
+dì.kpàkpà [. . x | . . x | . . x | . . x | . . x | . . x | . . x | . . x]
+ngúé      [x x x | x x x | . . x | . . x | . . x | . . x | . . x | . . x]
+dì.kétɔ̀   [x . x | . x . | x . x | . x . | x x . | x . x | . x . | x . x]
+(count)   [3 2 3 | 1 3 3 | 1 . 4 | 1 1 2 | 2 2 2 | 1 1 4 | . 1 3 | 2 . 3]
+```
+
+| Part | Steps | Lane | MIDI note |
+|---|---|---|---|
+| è.ndòmbà | 4 | drawn | 63 Open Hi Conga |
+| dì.kpàkpà | 3 | E(1,3) r2 | 37 Side Stick |
+| ngúé | 24 | drawn | 64 Low Conga |
+| dì.kétɔ̀ | 24 | E(13,24) r10 | 67 High Agogo |
+
+Play mò.nzòlì and then mò.mbénzélé. The è.ndòmbà and dì.kpàkpà are identical, so what changes is the ngúé, which opens with six strokes in a row, and the place of the dì.kétɔ̀ mould.
+
+<PolyPreviewCard preset="Aka: Mombenzele" caption="Aka mò.mbénzélé — mò.nzòlì's parts with a different ngúé (Arom ex. 112)" />
+
+### Aka: Zoboko — two oddity figures against clapped hands
+
+Zɔ̀bɔ̀kɔ̀ (exx. 113–120, pp. 294–297) sets the accents of the mò.kóngò, a tree trunk struck with sticks, grouped 3+3+2 / 3+2+3 / 3+3+2, against the dì.kétɔ̀, and adds handclaps that sound the pulsation itself. Seventeen positions are marked, and positions 1 and 7 by all three parts.
+
+```text title="Aka: Zoboko"
+mò.kóngò  [x . . | x . . | x . x | . . x | . x . | . x . | . x . | . x .]
+handclaps [x . . | x . . | x . . | x . . | x . . | x . . | x . . | x . .]
+dì.kétɔ̀   [x . x | . x . | x . x | x . x | . x . | x . x | . x . | x x .]
+(count)   [3 . 1 | 2 1 . | 3 . 2 | 2 . 2 | 1 2 . | 2 1 1 | 1 2 . | 2 2 .]
+```
+
+| Part | Steps | Lane | MIDI note |
+|---|---|---|---|
+| mò.kóngò | 24 | drawn | 76 Hi Wood Block |
+| handclaps | 3 | E(1,3) r0 | 39 Hand Clap |
+| dì.kétɔ̀ | 24 | E(13,24) r19 | 67 High Agogo |
+
+<PolyPreviewCard preset="Aka: Zoboko" caption="Aka zɔ̀bɔ̀kɔ̀ — mò.kóngò accents, handclaps and dì.kétɔ̀ (Arom exx. 113–120)" />
+
+## Tempo
+
+Every card plays at the tempo printed on Arom's figure. Arom marks the pulsation; the host's tempo is in quarter notes. One pulsation is a number of Poly steps, so the host must play that many steps' worth of beats per pulsation:
+
+host BPM = Arom's pulsation tempo × values per pulsation × beats per step
+
+| Grid | Values per pulsation | Poly step | Beats per pulsation | Example |
+|---|---|---|---|---|
+| Ternary (Aka) | 3 | 1/8, 0.5 beats | 1.5 | ♩. = 144 → 216 BPM |
+| Binary, gàzà | 8 | 1/16, 0.25 beats | 2 | ♩ = 112 → 224 BPM |
+| Binary, kpóníngbó | 4 | 1/16, 0.25 beats | 1 | ♩ = 168 → 168 BPM |
+| Composite, àgà-tɔ̀rúmɔ̃ | 5 | 1/16 at Tempo Mult 1.25, 0.2 beats | 1 | 110 → 110 BPM |
+
+| Preset | Arom's figure | Marking | Host BPM |
+|---|---|---|---|
+| Aka: Ngbolu | ex. 104, p. 288 | ♩. = 144 | 216 |
+| Aka: Mokondi | ex. 106, p. 289 | ♩. = 148 | 222 |
+| Aka: Yombe | ex. 108, p. 290 | ♩. = 144 | 216 |
+| Aka: Monzoli | ex. 111, p. 292 | ♩. = 138 | 207 |
+| Aka: Mombenzele | ex. 112, p. 292 | ♩. = 138 | 207 |
+| Aka: Zoboko | ex. 115, p. 294 | ♩. = 160 | 240 |
+| Aka: Bondo | ex. 102, p. 287 | ♩. = 158 | 237 |
+| Aka: Ngbolu Drums | ex. 104, p. 288 | ♩. = 144 | 216 |
+| Banda-Dakpa: Gaza | ex. 83, p. 278 | ♩ = 112 | 224 |
+| Zande: Kponingbo | ex. 89, p. 281 | ♩ = 168 | 168 |
+| Banda-Linda: Aga-torumo | ex. 100, p. 285 | dotted quaver tied to quaver = 110 | 110 |
+
+Two of these need a word. Ex. 90, the ngbɔ̀lù drums alone, prints no tempo, so that card takes the full ngbɔ̀lù's ex. 104. And for zɔ̀bɔ̀kɔ̀ the prose on p. 297 gives the tempo as an undotted crotchet of 160, while ex. 115 prints a dotted one; the subdivision is ternary, so the pulsation is the dotted crotchet, and the card follows ex. 115. In a DAW, set the host tempo from the table; Poly takes its tempo from the host.
+
+## The mould
+
+The dì.kétɔ̀ figure in ngbɔ̀lù, mò.kóndí, yómbè, mò.nzòlì, mò.mbénzélé and zɔ̀bɔ̀kɔ̀ never changes inside. What changes is where it starts against the pulsation: it "works like a mould" (p. 298). Arom gives each placement as a shift from the one before it, which add up to these offsets from ngbɔ̀lù. The figure is exactly the Euclidean rhythm E(13,24), so each placement is one Rotation value of one lane:
+
+| Formula | Offset from ngbɔ̀lù | E(13,24) Rotation |
+|---|---|---|
+| ngbɔ̀lù | 0 pulsations | 4 |
+| mò.nzòlì | 2 pulsations | 22 |
+| yómbè, zɔ̀bɔ̀kɔ̀ | 3 pulsations | 19 |
+| mò.kóndí | 5 pulsations | 13 |
+| mò.mbénzélé | 6 pulsations | 10 |
+
+Each pulsation of shift takes 3 off the Rotation, counting round from 24.
+
+**Hear it with one knob.** Open Aka: Ngbolu with **Try it** above, and find the dì.kétɔ̀ lane, the third. Its Rotation is 4. Turn it to 22, then 19, 13 and 10: each value places the iron strips where mò.nzòlì, yómbè and zɔ̀bɔ̀kɔ̀, mò.kóndí and mò.mbénzélé put them, against the same ngbɔ̀lù drums. Poly's Rotation works only on Euclidean lanes, which is why the dì.kétɔ̀ is one in every preset that carries it. The engine's tests check each of the five values against Arom's rows.
+
+## Building a formula
+
+Arom invites new combinations of his figures, provided the positions of their marks are unchanged: such combinations "should be perfectly acceptable to bearers of the tradition" (p. 299). The procedure below goes one step further and builds new figures, so treat its results as Poly's extension of the idiom, not as music the tradition plays. Each step names the rules and norms it applies.
+
+1. **Set the frame.** Eight ternary pulsations: 24 steps at 1/8, at a host tempo of 207 to 240 quarter-note BPM, a dotted quarter of 138 to 160. (R3, R5, N4, N6)
+2. **Write one oddity figure for the part marked by attacks alone.** Chain groups of two and three values to 24 so that no running total lands on 12; the nearest cut is then 11/13. Start from threes and insert twos. Enter it as additive cells, or as E(13,24) at any Rotation. (N2, N8)
+3. **Add a short commetric reference, or none.** One part on E(1,3) at Rotation 0, a rattle or claps, or leave the pulsation implicit. (R4)
+4. **Add two or three accented drum parts.** Give each a period that divides 24: 3, 4, 6, 12 or 24 steps. Put most marks off the pulsation and at varying offsets, and try a four-against-three pair for hemiola. (R7, N1, N3)
+5. **Audit the composite.** Write its `(count)` row. Aim for 20 or more of the 24 positions marked, no more than two positions shared by every part, and at least one solo position for each part. (R9, N5, N9)
+6. **Give every part its own sound.** One MIDI note per part, never two parts on one sound. (N9)
+7. **Fix the marks.** Every lane that carries marks gets Mutation 0, Drift Rate 0, Swing 0, Humanize 0, Probability 100% and no phrase gating. (R1, R2, R10)
+8. **Spend the variation on one part.** Split that part into two lanes: its marks on one, fixed as above, and its unaccented strokes on a quieter lane with a little Mutation. Keep alternative versions as Scene A and Scene B, or in a Chain, in any order. (R11, R12)
+
+## What breaks the idiom
+
+- **Co-prime lane lengths,** such as 12 against 7 or 5. Poly allows them, and Chapter 2 uses them; strict polyrhythm does not. (R7)
+- **A loud step 1 on every lane, or Emphasis above 0.** There is no downbeat, and Emphasis scatters accents the figure did not place. (R6)
+- **Mutation or Drift Rate on a lane that carries marks.** Both move steps, and the positions of the marks are the figure. (R10)
+- **The global macros on a Euclidean lane.** Density and Complexity recompute a Euclidean lane's Hits, Complexity and Syncopation move its Rotation, and Swing and Humanize move its timing. Timeline lanes are exempt from the macros; Euclidean lanes are not. The presets on this page set the macros so that every Euclidean lane plays its recipe as written, and moving a macro knob moves those lanes off Arom's grid. Rotation on the dì.kétɔ̀ lane is the one control that moves a mark on purpose, and it moves the whole mould at once. (R10)
+- **Swing or Humanize.** The movement is strictly proportional. (R1)
+- **Parts that line up vertically,** or an even stream with nothing to mark it. (R8, R9)
+- **Variation spread across several lanes.** One part varies; the rest are the reference it varies against. (R12)
+
+## Three printing inconsistencies
+
+The book disagrees with itself in three places that touch this chapter. Each was checked against the printed pages, and the grids here follow the reading given.
+
+- **The mò.kóndí ngúé, ex. 129 (p. 305).** The summary grid marks the ngúé at position 11 and not at 8. Exx. 95 (p. 283) and 107 (p. 289) both mark 8 and not 11, and the prose on p. 283 names position 8 as shared by dì.kpàkpà and ngúé. This chapter follows exx. 95 and 107.
+- **The 24-value oddity paradigm (p. 248).** The row labelled as a cycle of 24 minimal values prints groups that add up to 20. Ex. 35 on p. 247 gives the 24-value figure as 3.2.2.2.2 / 3.2.2.2.2.2, eleven against thirteen, and the oddity table above uses it.
+- **The mò.mbénzélé ngúé period (pp. 291 and 303).** P. 291 says the ngúé parts of mò.nzòlì and mò.mbénzélé have the same periodicity, half of dì.kétɔ̀'s twenty-four values. P. 303 puts the mò.mbénzélé ngúé in a 1:1 ratio to dì.kétɔ̀, and ex. 112 shows a figure that does not repeat after twelve values. This chapter follows p. 303 and ex. 112: the mò.mbénzélé ngúé runs the full twenty-four.
