@@ -1,7 +1,7 @@
 ---
 class: gated
 title: "2. Sub-Saharan Africa: Bell Patterns and Polymetric Layering"
-description: "The rhythmic foundations of West and Central African drumming — timeline patterns, interlocking parts, and the polymetric stacking that Poly was built to model."
+description: "The rhythmic foundations of West African drumming — timeline patterns, interlocking parts, and the polymetric layering Poly adds to them."
 patternClaims:
   - label: "Gankogui bell E(7,12)"
     pattern: "x . x x . x . x x . x ."
@@ -17,7 +17,9 @@ import EuclideanDiagram from '../../components/EuclideanDiagram.astro';
 import PolyPreviewCard from '../../components/PolyPreviewCard.astro';
 import PolyScreenshot from '../../components/PolyScreenshot.astro';
 
-If there is a single tradition that Poly was designed to model, it is the polymetric drumming of West and Central Africa ([Kubik 1999](/appendix-references/#fr-kubik-1999) traces rhythmic practice across this belt and into the diaspora that Chapter 4 picks up). The principle of layering independent rhythmic cycles — each with its own length, density, and social function — did not arrive in Western music theory until the twentieth century. In the Ewe communities of southern Ghana it is the organising logic of ensemble music. The practice has been documented in the ethnomusicological literature since the mid-twentieth century — A. M. Jones's two-volume *Studies in African Music* is built largely on Ewe material<sup>[6](/appendix-references/#ref-6)</sup> — and Locke's analysis of Southern Ewe dance drumming sets out the offbeat-timing and cross-rhythm principles this chapter builds on ([Locke 1982](/appendix-references/#fr-locke-1982)).
+If there is a single tradition that Poly's lanes learn from, it is the ensemble drumming of West Africa ([Kubik 1999](/appendix-references/#fr-kubik-1999) traces rhythmic practice across this region and into the diaspora that Chapter 4 picks up). In the Ewe communities of southern Ghana, ensemble music is organised around one repeating cycle: a bell pattern sets the period, and every other part — each with its own density, timbre, and social function — is placed against it. The practice has been documented in the ethnomusicological literature since the mid-twentieth century — A. M. Jones's two-volume *Studies in African Music* is built largely on Ewe material<sup>[6](/appendix-references/#ref-6)</sup> — and Locke's analysis of Southern Ewe dance drumming sets out the offbeat-timing and cross-rhythm principles this chapter builds on ([Locke 1982](/appendix-references/#fr-locke-1982)).
+
+This chapter is about West Africa: the Ewe of southern Ghana and, further west, the Manding. The strict polyrhythm of Central Africa — the Aka, Banda and Zande formulae Simha Arom transcribed — follows different rules, and has its own chapter: [Chapter 2b](/02b-central-africa/).
 
 ## The Gankogui Bell: E(7,12)
 
@@ -27,7 +29,9 @@ The standard gankogui pattern distributes seven strokes across twelve pulses. It
 
 <EuclideanDiagram steps={12} hits={7} />
 
-Notice the asymmetry. The seven hits do not divide twelve evenly — they create an uneven grouping of long and short intervals (2-1-2-2-1-2-2). This asymmetry is not an accident. It is what gives the pattern its characteristic tension, the sense that it is always pulling forward toward the next downbeat without ever quite resolving.
+Notice the asymmetry. The seven hits do not divide twelve evenly — they create an uneven grouping of long and short intervals (2-1-2-2-1-2-2). Locke describes the bell's long strokes as falling in groups of two and three, separated by single short strokes, and the pattern as felt against four beats of three pulses each ([Locke 1982](/appendix-references/#fr-locke-1982), pp. 224–225). Seven strokes cannot sit evenly on four beats, so the bell keeps landing between them as well as on them.
+
+You will meet this bell at more than one starting point, and it is the same rhythm each time. The diagram above starts it at rotation 0 (2-1-2-2-1-2-2); the [Euclidean Reference](/appendix-euclidean-reference/) shows it at rotation 2 (2-2-1-2-2-1-2); the bell lane of the Sub-Saharan: Agbekor preset starts it at rotation 9 (2-2-1-2-2-2-1). Rotating a cycle changes where you begin counting, not the rhythm. Locke notes that the bell's continuous repetition makes the designation of a beginning point "somewhat inappropriate", and that players launch it in various ways ([Locke 1982](/appendix-references/#fr-locke-1982), p. 225).
 
 ## Role Separation: Timeline, Support, Lead
 
@@ -41,7 +45,9 @@ The **lead** drum (atsimevu in Ewe tradition) improvises. It plays across and ag
 
 ## Polymetric Stacking
 
-The power of the Ewe approach is that support drums often run at different cycle lengths from the bell. A 12-step bell layered with a 7-step support pattern creates a composite rhythm that does not repeat for 84 pulses. Add a 5-step third voice and the full cycle extends to 420 pulses — over thirty bars at 1/8 subdivision. The groove is always familiar but never quite the same.
+In an Ewe ensemble the bell sets the period, and the other parts fit inside it ([Locke 1982](/appendix-references/#fr-locke-1982), p. 217). In Atsiagbeko, the piece Locke draws most of his examples from, the rattle and two of the drums share the bell's phrase length and begin with it, the high-pitched kagan drum cycles 4 times per bell pattern, and the kidi twice per bell pattern (p. 219). The cross-rhythm comes from inside that one period: the two common ratios are 3:2 and 3:4, with 3:8 sometimes (p. 244), and a cross-rhythm's own period can be shorter than the bell's, so several fit within one cycle (p. 233). Every part's cycle divides the bell's.
+
+Poly's extension goes further, and it is Poly's rather than the tradition's. Its lanes need not divide the bell at all: a 12-step bell layered with a 7-step lane does not repeat for 84 pulses, and a 5-step third lane extends the full cycle to 420 pulses — over thirty bars at 1/8 subdivision. The patch below is Ewe-inspired in that sense: an Ewe bell and Ewe roles, layered at cycle lengths Locke does not describe. The groove is always familiar but never quite the same.
 
 <EuclideanDiagram steps={12} hits={5} />
 
@@ -49,17 +55,18 @@ E(5,12) distributes five hits across twelve steps — a sparser, more open patte
 
 <EuclideanDiagram steps={12} hits={3} />
 
-E(3,12) is the sparsest of the three, striking only on beats 1, 5, and 9. It provides a deep structural pulse beneath the busier patterns above.
+E(3,12) is the sparsest of the three, striking only on pulses 1, 5, and 9. It gives a slow, even pulse beneath the busier patterns above.
 
-<PolyPatch title="Ewe-Inspired Polymetric Ensemble" preset="Sub-Saharan: Agbekor">
+<PolyPatch title="Ewe Polymetric Ensemble" preset="Ewe Polymetric Ensemble">
 
 | Lane | Role | Steps | Hits | Rotation | Subdivision | Timeline | Note | Velocity | Ghost | Kotekan |
 |------|------|-------|------|----------|-------------|----------|------|----------|-------|---------|
-| 1 | Bell timeline | 12 | 7 | 0 | 1/8 | on | 56 | 110 | 0 | off |
-| 2 | Dance beat | 12 | 4 | 0 | 1/8 | off | 41 | 95 | 0 | off |
-| 3 | Support drum | 12 | 3 | 0 | 1/8 | off | 43 | 90 | 40 | off |
-| 4 | Responding drum | 5 | 3 | 0 | 1/8 | off | 45 | 85 | 50 | off |
-| 5 | Lead complement | 7 | 5 | 2 | 1/8 | off | 47 | 75 | 60 | L1 |
+| 1 | Bell timeline | 12 | 7 | 0 | 1/8 | on | 56 | 110 | 30 | off |
+| 2 | Support drum | 12 | 3 | 0 | 1/8 | off | 43 | 90 | 40 | off |
+| 3 | Responding drum | 5 | 3 | 0 | 1/8 | off | 45 | 85 | 50 | off |
+| 4 | Lead complement | 7 | 5 | 2 | 1/8 | off | 47 | 75 | 60 | L1 |
+
+To lay the dance beat under it, add a fifth lane: a low drum, 12 steps, 4 hits, rotation 0, 1/8.
 
 </PolyPatch>
 
@@ -69,13 +76,13 @@ Lane 4 uses the Kotekan setting `L1`, which generates a complementary pattern in
 
 <ListenFor>
 
-The 5-step and 7-step lanes create shifting accents against the steady 12-step bell. Pay attention to the moments of convergence — when all three cycle lengths align on the same pulse. These rare unison points feel like structural downbeats, and the tension between them is what drives the groove forward.
+The 5-step and 7-step lanes create shifting accents against the steady 12-step bell. Pay attention to the moments of convergence — when all three cycle lengths align on the same pulse. Those rare unison points are an effect of Poly's layering, not an accent the tradition places, and the tension between them is what drives this patch forward.
 
 </ListenFor>
 
 ## Manding Traditions: Djembe Ensembles
 
-West of the Ewe heartland, the Manding traditions of Mali, Guinea, and Senegal build their ensembles around the djembe. Where Ewe drumming stacks many independent cycles, Manding patterns typically lock to a shared cycle length but vary in density and timbre. The dunun bass drums provide a sparse timeline, the sangban plays a mid-density response, and the djembe soloist improvises over both.
+West of the Ewe heartland, the Manding traditions of Mali, Guinea, and Senegal build their ensembles around the djembe. Manding patterns, as this chapter presents them, lock to a shared cycle length but vary in density and timbre. The dunun bass drums provide a sparse timeline, the sangban plays a mid-density response, and the djembe soloist improvises over both.
 
 :::note[A simplification]
 Presenting Manding ensembles as sharing one cycle length is a **pedagogical simplification**, not a description of the whole tradition. Charry's survey of Maninka and Mandinka practice ([Charry 2000](/appendix-references/#fr-charry-2000)) treats jembe drumming as one of four distinct spheres, and is where to go for what the tradition actually contains. Manding dunun ensembles do in many contexts play parts of distinct cycle lengths, and the relationship between dunun, sangban and kenkeni varies by repertoire and region. The shared cycle is used here because it is the shortest route to a playable patch that sounds idiomatic; Charry (2000), *Mande Music*, is where to go for what it leaves out.
@@ -99,4 +106,4 @@ You can model this in Poly by keeping all lanes at the same step count but varyi
 
 Traditional lead drumming is never fully random — it follows shared vocabulary and responds to dancers and other musicians. In Poly, you approximate this not by cranking mutation to 100%, but by combining moderate mutation (15-30%) with phrase gating. Set a phrase length of 4-8 beats with a gap of 2-4 beats on the lead lane, and the pattern will breathe — playing for a phrase, resting, then re-entering with variation. The timeline and support lanes, ungated, continue without interruption.
 
-This call-and-response structure is fundamental to West African music. The bell calls. The support responds. The lead converses with both. In Poly, that conversation emerges from the interaction of independent Euclidean cycles, and no two bars are quite the same.
+This call-and-response structure is fundamental to West African music. The bell calls. The support responds. The lead converses with both. In Poly, you build that conversation from Euclidean lanes, and when you give them independent cycle lengths — Poly's extension, not the tradition's practice — no two bars are quite the same.

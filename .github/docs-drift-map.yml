@@ -309,8 +309,8 @@ cannot_drift:
 
   - doc: "site/src/content/docs/02-sub-saharan-africa.mdx"
     reason: >-
-      Musicology of West and Central African bell patterns and polymetric
-      layering. No repo source surface.
+      Musicology of West African bell patterns; the polymetric layering is
+      Poly's. No repo source surface.
 
   - doc: "site/src/content/docs/02b-central-africa.mdx"
     reason: >-

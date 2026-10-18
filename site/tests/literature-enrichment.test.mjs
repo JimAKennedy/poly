@@ -87,10 +87,11 @@ const CITATIONS = [
     file: '02-sub-saharan-africa.mdx',
     anchor: 'fr-kubik-1999',
     // Bound to the body sentence, not the bare place-name: the frontmatter
-    // description also says "West and Central African drumming", and matching
-    // that first would have tested a window with no citation in it.
-    near: 'it is the polymetric drumming of West and Central Africa',
-    why: "Kubik traces retentions through the Western and Central Sudanic belt, which is the scope the chapter's opening claims",
+    // description also says "West African drumming", and matching that first
+    // would have tested a window with no citation in it. central-africa
+    // M004/S01 (CA29) narrowed the sentence from "West and Central Africa".
+    near: 'it is the ensemble drumming of West Africa',
+    why: "Kubik traces retentions through the Western and Central Sudanic belt, which takes in the West African region the chapter's opening names",
   },
   {
     row: 'F46',
