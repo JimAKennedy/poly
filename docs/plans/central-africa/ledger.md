@@ -184,7 +184,7 @@ sources support, presents co-prime layering as Poly's own, and agrees with the
 Central Africa chapter.
 
 **Branch:** milestone/M004-chapter-2-reconciled
-**Status:** in-progress
+**Status:** done
 
 ### Slice M004/S01 — Chapter 2 reconciled
 
