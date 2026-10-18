@@ -60,6 +60,9 @@ const REQUIRED = [
   // M002 S06 citation-tier gate: every bibliography entry declares a tier,
   // and a named-theory claim may not cite below Tier A.
   'site/tests/citation-tier.test.mjs',
+  // central-africa M004/S01: Chapter 2 reconciled with the Central Africa
+  // chapter — scope, Locke-bounded stacking, the patch table, the rotations.
+  'site/tests/chapter-2-reconciled.test.mjs',
   // M001 S01 audit-ledger completeness gates.
   'docs/audits/theory-audit-remediation.test.mjs',
   'docs/audits/parity-matrix.test.mjs',

@@ -47,3 +47,16 @@ on the user's behalf during execution.
 - **Decision:** the CA31 lock forbids the word "downbeat" anywhere in the
   chapter — **Why:** a narrower lock on the two phrases would let a third
   downbeat assertion in; the rewritten text has no need of the word.
+
+## 2026-10-18 — executing M004/S01
+
+- **Judgment call:** `literature-enrichment.test.mjs` F45 bound the Kubik
+  citation to the phrase "it is the polymetric drumming of West and Central
+  Africa", which CA29 removes; its `near` now names the rewritten sentence,
+  and its `why` no longer says the opening claims the Central Sudanic belt —
+  **Why:** the lock's purpose is that the citation stays attached to the
+  opening sentence; the anchor follows the sentence, the binding is unchanged.
+- **Judgment call:** `chapter-2-reconciled.test.mjs` is added to `REQUIRED`
+  with its own comment rather than "beside the central-africa entries" as the
+  plan says — **Why:** M003 put its two tests in the runner only, so there
+  were no central-africa entries in `REQUIRED` to sit beside.

@@ -10,7 +10,7 @@ class: gated
 
 ## Task status
 
-- [ ] 1. Chapter 2 is scoped to West Africa and sends Central Africa onward
+- [x] 1. Chapter 2 is scoped to West Africa and sends Central Africa onward
 - [ ] 2. Polymetric Stacking says what Locke supports, and no downbeat is asserted
 - [ ] 3. The patch table is the preset it names
 - [ ] 4. One rhythm at three rotations
