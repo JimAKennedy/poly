@@ -115,7 +115,7 @@ norms and eleven playable formulae, and its grids cannot disagree with the
 presets that play them.
 
 **Branch:** milestone/M003-central-africa-chapter
-**Status:** in-progress
+**Status:** done
 
 ### Slice M003/S01 — The chapter's teaching text
 
