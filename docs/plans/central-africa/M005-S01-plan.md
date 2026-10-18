@@ -12,19 +12,19 @@ class: gated
 
 - [x] 1. The Euclidean Reference has a 24-step section and the bòndò row
 - [x] 2. The Timing Model explains composite subdivision
-- [ ] 3. Chapter 1 says co-prime cycles are Poly's, not the Central African norm
+- [x] 3. Chapter 1 says co-prime cycles are Poly's, not the Central African norm
 
 ## Definition of Done
 
 Copied verbatim from the slice:
 
-- [ ] The Euclidean Reference has a 24-step section with E(13,24) and the five
+- [x] The Euclidean Reference has a 24-step section with E(13,24) and the five
       mould rotations, and names bòndò's dì.kétɔ̀ as E(7,12) at rotation 0
-- [ ] The generator data no longer describes the gankogui bell at a rotation
+- [x] The generator data no longer describes the gankogui bell at a rotation
       the table does not show
-- [ ] The Timing Model explains composite subdivision as 1/16 with Tempo Mult
+- [x] The Timing Model explains composite subdivision as 1/16 with Tempo Mult
       1.25
-- [ ] Chapter 1's Cycle Independence says co-prime cycles are not the Central
+- [x] Chapter 1's Cycle Independence says co-prime cycles are not the Central
       African norm and links to the chapter
 
 ## Validation

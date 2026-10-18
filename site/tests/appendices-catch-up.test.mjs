@@ -13,6 +13,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -77,6 +78,20 @@ const CLAIMS = [
       'ledger CA35. The 24-step section sends the reader to the mould section of ' +
       'Chapter 2b, where the five rotations are taught',
     present: ['/02b-central-africa/#the-mould'],
+  },
+  {
+    id: 'CA37',
+    file: '01-foundations.mdx',
+    rule:
+      'ledger CA37, and M005-decisions.md. Cycle Independence presented co-prime cycles ' +
+      'as what West African and Southeast Asian ensembles do. Locke 1982 supports only ' +
+      'simple ratios for Ewe drumming (Chapter 2), and Arom gives periods in simple ' +
+      'ratios as a rule of Central African strict polyrhythm (R7, p. 277), so the ' +
+      'layering is Poly\'s own and the aside cites R7\'s page',
+    forbidden: [
+      'exactly as it does in the interlocking percussion ensembles of West Africa and Southeast Asia',
+    ],
+    present: ['/02b-central-africa/', '/appendix-references/#fr-arom-1991', 'p. 277'],
   },
 ];
 
@@ -175,4 +190,14 @@ test('CA36: the worked arithmetic holds', async () => {
   assert.ok(per, 'the section does not say how many steps fill one quarter note');
   assert.equal(words[per[1]], Math.round(1 / c), `${per[1]} steps of ${c} do not fill a quarter`);
   assert.ok(Math.abs(words[per[1]] * c - 1) < 1e-12);
+});
+
+test('CA37: the Chapter 1 aside sits in Cycle Independence and its link resolves', async () => {
+  const src = await loadSource('01-foundations.mdx');
+  const start = src.indexOf('## Cycle Independence');
+  assert.ok(start !== -1, '01-foundations.mdx has no "## Cycle Independence" section');
+  const body = src.slice(start, src.indexOf('\n## ', start + 1));
+  assert.ok(body.includes('/02b-central-africa/'), 'Cycle Independence does not link to Chapter 2b');
+  assert.ok(body.includes('p. 277'), "Cycle Independence does not cite R7's page");
+  assert.ok(existsSync(join(DOCS, CENTRAL_AFRICA)), `${CENTRAL_AFRICA} does not exist`);
 });

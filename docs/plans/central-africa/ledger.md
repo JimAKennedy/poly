@@ -230,24 +230,24 @@ the Central Africa chapter relies on.
 **Plan:** M005-S01-plan.md
 **Validation:** format, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M005-S01.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The Euclidean Reference has a 24-step section with E(13,24) and the five
+- [x] The Euclidean Reference has a 24-step section with E(13,24) and the five
       mould rotations, and names bòndò's dì.kétɔ̀ as E(7,12) at rotation 0
-- [ ] The generator data no longer describes the gankogui bell at a rotation
+- [x] The generator data no longer describes the gankogui bell at a rotation
       the table does not show
-- [ ] The Timing Model explains composite subdivision as 1/16 with Tempo Mult
+- [x] The Timing Model explains composite subdivision as 1/16 with Tempo Mult
       1.25
-- [ ] Chapter 1's Cycle Independence says co-prime cycles are not the Central
+- [x] Chapter 1's Cycle Independence says co-prime cycles are not the Central
       African norm and links to the chapter
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
 | CA35 | The Euclidean Reference has no 24-step section and no E(13,24); its data file's note still says the gankogui bell is at rotation 1 | `docs` | `site/src/data/euclidean-appendix.json`, `scripts/generate-euclidean-appendix.mjs` | `generated-freshness` passes; a site test checks every new row against `bjorklund.ts` | `done` |
 | CA36 | The engine accepts Tempo Mult 1.25, but the Timing Model never describes five steps to a beat. Partly satisfied: the capability exists, the documentation does not | `docs` | `site/src/content/docs/appendix-timing-model.mdx` | The worked arithmetic (0.25 ÷ 1.25 = 0.2 beats) is asserted by a site test | `done` |
-| CA37 | Chapter 1's Cycle Independence presents co-prime cycles without saying they are not the Central African norm | `docs` | `site/src/content/docs/01-foundations.mdx` | The link resolves in the site build; the aside cites R7's page | `open` |
+| CA37 | Chapter 1's Cycle Independence presents co-prime cycles without saying they are not the Central African norm | `docs` | `site/src/content/docs/01-foundations.mdx` | The link resolves in the site build; the aside cites R7's page | `done` |
 
 ## Sequencing
 
