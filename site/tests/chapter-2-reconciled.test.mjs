@@ -18,6 +18,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import presetsData from '../src/generated/presets.json' with { type: 'json' };
+import euclideanAppendix from '../src/data/euclidean-appendix.json' with { type: 'json' };
+import { bjorklund, rotateRight } from '../src/audio/bjorklund.ts';
 import { registerClaimTests } from './helpers/prose-claims.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -156,4 +158,42 @@ test('CA32: the prose names the lane that carries the Kotekan setting', async ()
     `the prose says Lane ${m[1]} carries ${m[2]}; the table's Kotekan lanes are ` +
       JSON.stringify(carriers.map((r) => `${r.Lane}:${r.Kotekan}`)),
   );
+});
+
+// --- CA33: one rhythm at three rotations --------------------------------------
+
+const gaps = (pattern) => {
+  const on = pattern.flatMap((hit, i) => (hit ? [i] : []));
+  return on.map((p, i) => ((on[(i + 1) % on.length] - p + pattern.length) % pattern.length || pattern.length));
+};
+
+test('CA33: the diagram, the appendix and the Agbekor bell are one rhythm at three rotations', async () => {
+  const src = await loadSource(PAGE);
+  const claims = [...src.matchAll(/rotation (\d+) \((\d(?:-\d)+)\)/g)].map((m) => ({
+    rotation: Number(m[1]),
+    printed: m[2],
+  }));
+  assert.deepEqual(
+    claims.map((c) => c.rotation).sort((a, b) => a - b),
+    [0, 2, 9],
+    `${PAGE} names the bell at rotations ${JSON.stringify(claims.map((c) => c.rotation))}, not 0, 2 and 9`,
+  );
+  for (const { rotation, printed } of claims) {
+    const derived = gaps(rotateRight(bjorklund(12, 7), rotation)).join('-');
+    assert.equal(printed, derived, `rotation ${rotation}: the page prints ${printed}, E(7,12) derives ${derived}`);
+  }
+
+  // Each rotation is the one its source actually uses.
+  const row = euclideanAppendix.sections
+    .filter((s) => s.n === 12)
+    .flatMap((s) => s.rows)
+    .find((r) => r.k === 7 && /gankogui/i.test(r.association));
+  assert.equal(row?.rotation, 2, 'the Euclidean appendix no longer shows the gankogui bell at rotation 2');
+  const bell = presetsData.presets.find((p) => p.name === 'Sub-Saharan: Agbekor').lanes[0];
+  const nine = rotateRight(bjorklund(12, 7), 9).flatMap((hit, i) => (hit ? [i] : []));
+  assert.deepEqual(bell.onsets, nine, 'the Sub-Saharan: Agbekor bell is no longer E(7,12) at rotation 9');
+
+  for (const link of ['/appendix-euclidean-reference/', 'fr-locke-1982']) {
+    assert.ok(src.includes(link), `${PAGE} does not link ${link}`);
+  }
 });

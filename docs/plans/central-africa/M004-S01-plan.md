@@ -13,22 +13,22 @@ class: gated
 - [x] 1. Chapter 2 is scoped to West Africa and sends Central Africa onward
 - [x] 2. Polymetric Stacking says what Locke supports, and no downbeat is asserted
 - [x] 3. The patch table is the preset it names
-- [ ] 4. One rhythm at three rotations
+- [x] 4. One rhythm at three rotations
 
 ## Definition of Done
 
 Copied verbatim from the slice:
 
-- [ ] Chapter 2's description and opening speak of West Africa, not West and
+- [x] Chapter 2's description and opening speak of West Africa, not West and
       Central Africa
-- [ ] Polymetric Stacking claims nothing about Ewe cycle lengths that Locke
+- [x] Polymetric Stacking claims nothing about Ewe cycle lengths that Locke
       1982 does not support, and presents 12/7/5 layering as Poly's extension
-- [ ] No passage in Chapter 2 asserts a downbeat as part of the tradition
-- [ ] The `PolyPatch` table matches the preset it names, and the prose names
+- [x] No passage in Chapter 2 asserts a downbeat as part of the tradition
+- [x] The `PolyPatch` table matches the preset it names, and the prose names
       the lane that actually carries the Kotekan setting
-- [ ] A reader can see that the chapter's diagram, the Euclidean appendix and
+- [x] A reader can see that the chapter's diagram, the Euclidean appendix and
       the Agbekor bell are one rhythm at three rotations
-- [ ] Chapter 2 links to the Central Africa chapter for Central African music
+- [x] Chapter 2 links to the Central Africa chapter for Central African music
 
 ## Validation
 

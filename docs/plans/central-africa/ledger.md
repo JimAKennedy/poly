@@ -192,29 +192,29 @@ Central Africa chapter.
 **Plan:** M004-S01-plan.md
 **Validation:** format, site-unit, doc-conformance, doc-discipline
 **Evidence:** evidence/M004-S01.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Chapter 2's description and opening speak of West Africa, not West and
+- [x] Chapter 2's description and opening speak of West Africa, not West and
       Central Africa
-- [ ] Polymetric Stacking claims nothing about Ewe cycle lengths that Locke
+- [x] Polymetric Stacking claims nothing about Ewe cycle lengths that Locke
       1982 does not support, and presents 12/7/5 layering as Poly's extension
-- [ ] No passage in Chapter 2 asserts a downbeat as part of the tradition
-- [ ] The `PolyPatch` table matches the preset it names, and the prose names
+- [x] No passage in Chapter 2 asserts a downbeat as part of the tradition
+- [x] The `PolyPatch` table matches the preset it names, and the prose names
       the lane that actually carries the Kotekan setting
-- [ ] A reader can see that the chapter's diagram, the Euclidean appendix and
+- [x] A reader can see that the chapter's diagram, the Euclidean appendix and
       the Agbekor bell are one rhythm at three rotations
-- [ ] Chapter 2 links to the Central Africa chapter for Central African music
+- [x] Chapter 2 links to the Central Africa chapter for Central African music
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| CA29 | The description and opening claim "West and Central African drumming" and offer timeline, support and lead roles for both | `reframe` | `site/src/content/docs/02-sub-saharan-africa.mdx` | `scope-framing.test.mjs` (or the suite that locks scope corrections) asserts the narrowed wording | `open` |
-| CA30 | Polymetric Stacking says Ewe support drums "often run at different cycle lengths", with a 12/7/5 example, and cites nothing. Arom's R7 says periods stand in simple ratios | `reframe` | `02-sub-saharan-africa.mdx` | Locke 1982 is checked first and the evidence records what it supports; if it supports no simple-ratio account, the section makes no claim about the tradition's cycle lengths; a test locks out the uncited sentence | `open` |
-| CA31 | "Pulling forward toward the next downbeat" and "structural downbeats" assert a downbeat; R6 says there is none | `correct` | `02-sub-saharan-africa.mdx` | A test asserts neither phrase returns | `open` |
-| CA32 | The `PolyPatch` labelled "Sub-Saharan: Agbekor" lists five lanes; that preset has four and the card below plays "Ewe Polymetric Ensemble". The prose puts Kotekan on lane 4; the table puts it on lane 5 | `patch-align` | `02-sub-saharan-africa.mdx` | `theory-patch-conformance` / preset-resolution tests pass against the corrected table | `open` |
-| CA33 | The chapter's E(7,12) diagram is rotation 0, the appendix shows rotation 2, and the Agbekor bell is a third rotation; nothing says they are one rhythm | `docs` | `02-sub-saharan-africa.mdx` | The sentence's rotations are checked against `bjorklund.ts` by an existing or new pattern-claims test | `open` |
-| CA34 | Chapter 2 does not send readers to Central Africa | `docs` | `02-sub-saharan-africa.mdx` | The link resolves in the site build | `open` |
+| CA29 | The description and opening claim "West and Central African drumming" and offer timeline, support and lead roles for both | `reframe` | `site/src/content/docs/02-sub-saharan-africa.mdx` | `scope-framing.test.mjs` (or the suite that locks scope corrections) asserts the narrowed wording | `done` |
+| CA30 | Polymetric Stacking says Ewe support drums "often run at different cycle lengths", with a 12/7/5 example, and cites nothing. Arom's R7 says periods stand in simple ratios | `reframe` | `02-sub-saharan-africa.mdx` | Locke 1982 is checked first and the evidence records what it supports; if it supports no simple-ratio account, the section makes no claim about the tradition's cycle lengths; a test locks out the uncited sentence | `done` |
+| CA31 | "Pulling forward toward the next downbeat" and "structural downbeats" assert a downbeat; R6 says there is none | `correct` | `02-sub-saharan-africa.mdx` | A test asserts neither phrase returns | `done` |
+| CA32 | The `PolyPatch` labelled "Sub-Saharan: Agbekor" lists five lanes; that preset has four and the card below plays "Ewe Polymetric Ensemble". The prose puts Kotekan on lane 4; the table puts it on lane 5 | `patch-align` | `02-sub-saharan-africa.mdx` | `theory-patch-conformance` / preset-resolution tests pass against the corrected table | `done` |
+| CA33 | The chapter's E(7,12) diagram is rotation 0, the appendix shows rotation 2, and the Agbekor bell is a third rotation; nothing says they are one rhythm | `docs` | `02-sub-saharan-africa.mdx` | The sentence's rotations are checked against `bjorklund.ts` by an existing or new pattern-claims test | `done` |
+| CA34 | Chapter 2 does not send readers to Central Africa | `docs` | `02-sub-saharan-africa.mdx` | The link resolves in the site build | `done` |
 
 ## Milestone M005 — The reference appendices catch up
 
