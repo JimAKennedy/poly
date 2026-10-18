@@ -116,6 +116,18 @@ This is the closest thing to "run this lane at a different tempo," and it is the
 
 Note that `Tempo Mult` scales the *step grid*, not the *phrase gating* — phrase length remains in absolute PPQ, so gating boundaries stay bar-aligned regardless of the multiplier.
 
+## Composite subdivision
+
+The Subdivision values 1/4, 1/8, 1/12 and 1/16 give one, two, three or four steps to a quarter note. Some music divides its beat into five, which Simha Arom calls composite subdivision. Poly reaches it with Tempo Mult: set the lane to 1/16 with Tempo Mult 1.25.
+
+```
+stepPpq  = 4.0 / 16        = 0.25   // a sixteenth
+stepPpq' = 0.25 ÷ 1.25 = 0.2        // the step at Tempo Mult 1.25
+cyclePpq = 0.2 * 10        = 2.0    // a 10-step lane spans two beats
+```
+
+At 0.25 ÷ 1.25 = 0.2 quarter notes per step, five steps fill one quarter note, so the beat falls on every fifth step. The Banda-Linda: Aga-torumo preset is built this way: two drums over ten positions, two pulsations of five values each. [Chapter 2b](/02b-central-africa/) transcribes it, and since the WebUI has no Tempo Mult control, that preset is the way to hear a five-value pulsation there.
+
 ## Additive (aksak) cell mode
 
 For completeness: when a lane is in additive cell mode (used for Balkan aksak meters like 2+2+3 = 7/8), the cycle length is not `steps * stepPpq`. Instead, each cell has its own step count and the total cycle is the sum of cell durations. The `stepPpq` and `Tempo Mult` scaling still apply per step; only the aggregation differs. See the [`Balkan`](/07-balkan/) chapter and the [`Parameter Reference`](/appendix-parameters/#additive--timeline) entry for Cell Sizes.

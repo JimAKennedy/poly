@@ -246,7 +246,7 @@ the Central Africa chapter relies on.
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
 | CA35 | The Euclidean Reference has no 24-step section and no E(13,24); its data file's note still says the gankogui bell is at rotation 1 | `docs` | `site/src/data/euclidean-appendix.json`, `scripts/generate-euclidean-appendix.mjs` | `generated-freshness` passes; a site test checks every new row against `bjorklund.ts` | `done` |
-| CA36 | The engine accepts Tempo Mult 1.25, but the Timing Model never describes five steps to a beat. Partly satisfied: the capability exists, the documentation does not | `docs` | `site/src/content/docs/appendix-timing-model.mdx` | The worked arithmetic (0.25 ÷ 1.25 = 0.2 beats) is asserted by a site test | `open` |
+| CA36 | The engine accepts Tempo Mult 1.25, but the Timing Model never describes five steps to a beat. Partly satisfied: the capability exists, the documentation does not | `docs` | `site/src/content/docs/appendix-timing-model.mdx` | The worked arithmetic (0.25 ÷ 1.25 = 0.2 beats) is asserted by a site test | `done` |
 | CA37 | Chapter 1's Cycle Independence presents co-prime cycles without saying they are not the Central African norm | `docs` | `site/src/content/docs/01-foundations.mdx` | The link resolves in the site build; the aside cites R7's page | `open` |
 
 ## Sequencing

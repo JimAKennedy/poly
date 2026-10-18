@@ -145,3 +145,34 @@ test('CA35: the fixture note describes the gankogui at the rotation the table pr
   );
   if (rotation !== 1) assert.ok(!euclideanAppendix.$note.includes('gankogui bell at rotation 1'));
 });
+
+const TIMING = 'appendix-timing-model.mdx';
+
+async function compositeSection() {
+  const src = await loadSource(TIMING);
+  const start = src.indexOf('## Composite subdivision');
+  assert.ok(start !== -1, `${TIMING} has no "## Composite subdivision" section`);
+  const end = src.indexOf('\n## ', start + 1);
+  return src.slice(start, end === -1 ? undefined : end);
+}
+
+test('CA36: the Timing Model has a composite-subdivision section', async () => {
+  const body = await compositeSection();
+  for (const needle of ['1/16', 'Tempo Mult 1.25', '0.25 ÷ 1.25 = 0.2', '/02b-central-africa/']) {
+    assert.ok(body.includes(needle), `the composite-subdivision section does not say "${needle}"`);
+  }
+});
+
+test('CA36: the worked arithmetic holds', async () => {
+  const body = await compositeSection();
+  const m = body.match(/(\d+(?:\.\d+)?) ÷ (\d+(?:\.\d+)?) = (\d+(?:\.\d+)?)/);
+  assert.ok(m, 'no "a ÷ b = c" expression in the section');
+  const [a, b, c] = m.slice(1).map(Number);
+  assert.equal(a, 4.0 / 16, 'the step of a 1/16 lane is stepPpq = 4.0 / 16');
+  assert.ok(Math.abs(a / b - c) < 1e-12, `${a} ÷ ${b} is ${a / b}, not ${c}`);
+  const words = { three: 3, four: 4, five: 5, six: 6 };
+  const per = body.match(/\b(three|four|five|six) steps fill one quarter note/);
+  assert.ok(per, 'the section does not say how many steps fill one quarter note');
+  assert.equal(words[per[1]], Math.round(1 / c), `${per[1]} steps of ${c} do not fill a quarter`);
+  assert.ok(Math.abs(words[per[1]] * c - 1) < 1e-12);
+});
