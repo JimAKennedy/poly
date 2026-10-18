@@ -268,6 +268,10 @@ are in the rows below. Not in `vision.md`: the Central Africa presets are
 what exposed these defects, and the chapter is only as good as the cards it
 asks the reader to play.
 
+Slice S07 was added on 2026-10-18 at the owner's request. It covers the
+site-wide banner, which tells every reader of a guide that is still being
+corrected that the guide is "complete and verified".
+
 ### Slice M006/S01 — Edits reach the playing engine
 
 **Validation:** format, webui-e2e, site-unit, e2e
@@ -378,6 +382,22 @@ asks the reader to play.
 |---|---|---|---|---|---|
 | CA50 | The site's audio gate plays a sample of cards. Nothing opens every card, so a preset added to a chapter is not tested in Try it until a reader finds it broken | `coverage` | `site/tests-e2e/` | A spec that enumerates every `PolyPreviewCard` in the built site, plays each in Try it at 1440×900, and asserts notes render, no lane card overflows, and the console is clean; its preset list is derived from the pages, never written out | `open` |
 
+### Slice M006/S07 — The banner does not claim the guide is finished
+
+**Validation:** format, site-unit, doc-discipline
+**Evidence:** evidence/M006-S07.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] The site banner no longer says the guide is complete and verified, and
+      tells the reader that its music theory is still being revised and to
+      check the references
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| CA51 | The banner shown on every page ends "; the guide is complete and verified." The guide is still being revised, corrected and extended, as this ledger shows, so it should end ". The music theory in the guide is constantly being revised, corrected, and extended. It may contain errors from time to time. Always verify assumptions directly with the references." | `reframe` | `site/src/components/Banner.astro`, `site/tests/front-door.test.mjs` | `front-door.test.mjs` asserts the new sentences are present and "complete and verified" is absent, and is red on the current banner first; the existing pre-release and Releases-link assertions still pass | `open` |
+
 ## Sequencing
 
 **M001 and M002 are independent.** The record touches references only, and
@@ -396,7 +416,8 @@ chapter. They touch different files and are independent of each other.
 site's Try it frame, not the chapters. Its S01 comes first because S02, S03
 and S05 change or test the same host, and a fix there is not observable
 until edits reach the playing engine. S04 is independent. S06 goes last
-because it is the regression net over the rest.
+because it is the regression net over the rest. S07 touches only the site
+banner and is independent of the rest.
 
 ## Out of scope
 
