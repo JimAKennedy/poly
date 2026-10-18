@@ -33,3 +33,21 @@ class: gated
   source cited on the page supports co-prime cycles in any named tradition,
   and the gamelan chapter does not claim it either; the sentence says the
   layering is Poly's own.
+
+## 2026-10-18 — review of M005/S01, at the owner's request
+
+- **Q:** Check the Arom claims the report says repeat Chapter 2b but were not
+  re-read for this milestone, and ship if they check out. — **A:** checked
+  against M003's reading of the scan (`evidence/M003-S01.md`); the scan is
+  not on this machine
+- **Decision:** the Euclidean Reference's "works like a mould" (p. 298) stands
+  — **Why:** M003 found it verbatim on p. 298, and the sentence restates N8.
+- **Decision:** Chapter 1's note quotes "always stand in simple ratios" at
+  p. 231 and "the period of the longest figure" at p. 277, and drops the
+  example ratios "2:1 or 3:2" — **Why:** it credited both claims to p. 277,
+  but M003 recorded the first on p. 231, as the vision does; the examples
+  are recorded on no page.
+- **Decision:** the Timing Model no longer says "Simha Arom calls" five-value
+  division composite subdivision; it says Chapter 2b does — **Why:** no
+  record places the term on a page of the scan, so the attribution was
+  unverified.

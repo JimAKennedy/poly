@@ -86,12 +86,19 @@ const CLAIMS = [
       'ledger CA37, and M005-decisions.md. Cycle Independence presented co-prime cycles ' +
       'as what West African and Southeast Asian ensembles do. Locke 1982 supports only ' +
       'simple ratios for Ewe drumming (Chapter 2), and Arom gives periods in simple ' +
-      'ratios as a rule of Central African strict polyrhythm (R7, p. 277), so the ' +
-      'layering is Poly\'s own and the aside cites R7\'s page',
+      'ratios as a rule of Central African strict polyrhythm (R7, pp. 231 and 277), so the ' +
+      'layering is Poly\'s own and the aside quotes R7 from both pages',
     forbidden: [
       'exactly as it does in the interlocking percussion ensembles of West Africa and Southeast Asia',
     ],
-    present: ['/02b-central-africa/', '/appendix-references/#fr-arom-1991', 'p. 277'],
+    present: [
+      '/02b-central-africa/',
+      '/appendix-references/#fr-arom-1991',
+      'always stand in simple ratios',
+      'p. 231',
+      'the period of the longest figure',
+      'p. 277',
+    ],
   },
 ];
 
@@ -198,6 +205,6 @@ test('CA37: the Chapter 1 aside sits in Cycle Independence and its link resolves
   assert.ok(start !== -1, '01-foundations.mdx has no "## Cycle Independence" section');
   const body = src.slice(start, src.indexOf('\n## ', start + 1));
   assert.ok(body.includes('/02b-central-africa/'), 'Cycle Independence does not link to Chapter 2b');
-  assert.ok(body.includes('p. 277'), "Cycle Independence does not cite R7's page");
+  assert.ok(body.includes('p. 231') && body.includes('p. 277'), "Cycle Independence does not cite R7's pages");
   assert.ok(existsSync(join(DOCS, CENTRAL_AFRICA)), `${CENTRAL_AFRICA} does not exist`);
 });
