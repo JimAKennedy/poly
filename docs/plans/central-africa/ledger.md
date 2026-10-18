@@ -222,7 +222,7 @@ Central Africa chapter.
 the Central Africa chapter relies on.
 
 **Branch:** milestone/M005-appendices
-**Status:** in-progress
+**Status:** done
 
 ### Slice M005/S01 — Appendices
 
