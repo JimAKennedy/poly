@@ -8,13 +8,13 @@ class: gated
 > Central Africa chapter relies on.
 
 Ledger: `docs/plans/central-africa/ledger.md` · branch
-`milestone/M005-appendices` · 7 commits including this report and its update, **none untraced**
+`milestone/M005-appendices` · 10 commits including this report and its updates, **none untraced**
 
 ## Slices
 
 | Slice | Title | Rows | Status |
 |---|---|---|---|
-| M005/S01 | Appendices | CA35–CA37 | done |
+| M005/S01 | Appendices | CA35–CA37, CA52 | done |
 
 ## What changed
 
@@ -38,13 +38,17 @@ Ledger: `docs/plans/central-africa/ledger.md` · branch
   `:::note` cites Arom's simple-ratio rule (Arom 1991, p. 277), says co-prime
   lengths do not belong to that idiom, links to Chapter 2b, and points to
   Chapter 2's Ewe case.
-- **Tests.** `site/tests/appendices-catch-up.test.mjs` holds 10 cases. Each
+- **Chapter 2b's R7 (CA52, added at review).** It credited "simple ratios"
+  to p. 277 and listed 2:1, 3:1, 3:2 and 4:2. It now quotes "always stand in
+  simple ratios" at p. 231 and "the period of the longest figure" at p. 277,
+  and the list, which no recorded page gives, is gone.
+- **Tests.** `site/tests/appendices-catch-up.test.mjs` holds 11 cases. Each
   was red before its edit and red again under a recorded mutation. The
   rotations are checked against `bjorklund.ts`, against Chapter 2b's mould
   table and against the dì.kétɔ̀ lanes in `presets.json`, so the appendix
   cannot drift from either. The file is wired into
   `scripts/check-doc-conformance.sh` and `REQUIRED`. The site suite went from
-  431 tests to 441.
+  431 tests to 442.
 
 ## Definition of done
 
@@ -64,8 +68,8 @@ From `evidence/M005-S01.md`, on the slice's last task:
 | Token | Command | Result |
 |---|---|---|
 | `format` | `pre-commit run --all-files` | exit 0 |
-| `site-unit` | `npm --prefix site test` | exit 0, 441 tests, 0 failures |
-| `doc-conformance` | `bash scripts/check-doc-conformance.sh` | exit 0, 343 tests, 0 failures |
+| `site-unit` | `npm --prefix site test` | exit 0, 442 tests, 0 failures |
+| `doc-conformance` | `bash scripts/check-doc-conformance.sh` | exit 0, 344 tests, 0 failures |
 | `doc-discipline` | `bash scripts/check-doc-discipline.sh` | exit 0, generated-freshness: 4 generated doc(s) fresh |
 
 ## Look at twice
@@ -82,8 +86,9 @@ From `evidence/M005-S01.md`, on the slice's last task:
   "the period of the longest figure" on p. 277; it now quotes each with its
   page, and drops the example ratios "2:1 or 3:2", which no page records.
   The Timing Model no longer says Arom names "composite subdivision", since
-  no record places the term on a page. Chapter 2b's own R7 has the same
-  single p. 277 citation for its ratio list and is untouched here.
+  no record places the term on a page. Chapter 2b's own R7 had the same
+  single p. 277 citation and an unrecorded ratio list; at your request it is
+  fixed in this milestone as row CA52.
 - **The Chapter column now carries `2b`**, the first value in that column
   that is not a number. Nothing parses the column.
 - **A presence check that cannot catch a mutation on its own.** CA36's
@@ -102,8 +107,11 @@ From `evidence/M005-S01.md`, on the slice's last task:
 - `391148b` docs(site): Chapter 1 says co-prime cycles are Poly's, not a tradition's — Slice: M005/S01; Rows: CA37
 - `7711648` docs(plans): write the M005 report — Slice: M005/S01
 - `108cd26` docs(site): Chapter 1 quotes R7 from both of Arom's pages — Slice: M005/S01; Rows: CA37
+- `0eb7840` docs(plans): update the M005 report after the citation check — Slice: M005/S01
+- `71288c2` docs(changelog): central-africa M005, the reference appendices catch up — Slice: M005/S01
+- `11a1dd4` docs(site): Chapter 2b's R7 quotes the simple-ratio rule from p. 231 — Slice: M005/S01; Rows: CA52
 
-This report's update carries `Slice: M005/S01`.
+This report's updates carry `Slice: M005/S01`.
 
 Untraced commits: none.
 
@@ -158,3 +166,13 @@ Verbatim from `M005-decisions.md`, with headings demoted one level.
   division composite subdivision; it says Chapter 2b does — **Why:** no
   record places the term on a page of the scan, so the attribution was
   unverified.
+- **Q:** Fix Chapter 2b's R7, which has the same single p. 277 citation, in
+  this PR too? — **A:** yes, include it in this PR
+- **Decision:** a row, CA52, is added to M005/S01, already `done`, rather
+  than a commit with no row — **Why:** the change is outside CA35–CA37, and a
+  row keeps it traceable from the ledger; the slice's definition of done is
+  unchanged.
+- **Decision:** R7 drops the ratio list "2:1, 3:1, 3:2 or 4:2" — **Why:** the
+  record places it on no page, as with Chapter 1's examples; the chapter's
+  opening already quotes p. 231, and its "In Poly" sentence still gives
+  lane lengths that divide the longest.
