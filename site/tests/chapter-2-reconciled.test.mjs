@@ -17,6 +17,7 @@ import { readFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import presetsData from '../src/generated/presets.json' with { type: 'json' };
 import { registerClaimTests } from './helpers/prose-claims.mjs';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -93,4 +94,66 @@ test('CA34: the Central Africa link resolves to a page', async () => {
     // Starlight routes a page by its file name, so the file is the route.
     assert.ok(existsSync(join(DOCS, `${slug}.mdx`)), `${PAGE} links /${slug}/, but no ${slug}.mdx exists`);
   }
+});
+
+// --- CA32: the patch table is the preset it names -----------------------------
+
+const EWE_PRESET = 'Ewe Polymetric Ensemble';
+
+// The Polymetric Stacking <PolyPatch>: its preset attribute and its markdown
+// table as header-keyed rows.
+function ewePatch(src) {
+  const start = src.indexOf('<PolyPatch title="Ewe');
+  assert.ok(start !== -1, `${PAGE} has no Ewe <PolyPatch>`);
+  const block = src.slice(start, src.indexOf('</PolyPatch>', start));
+  const preset = block.match(/preset="([^"]+)"/)?.[1] ?? null;
+  const lines = block.split('\n').filter((l) => l.trim().startsWith('|'));
+  const cells = (l) => l.trim().replace(/^\||\|$/g, '').split('|').map((c) => c.trim());
+  const header = cells(lines[0]);
+  const rows = lines.slice(2).map((l) => Object.fromEntries(cells(l).map((c, i) => [header[i], c])));
+  return { block, preset, header, rows };
+}
+
+// The display mapping of src/lib/preset-table-data.mjs, re-derived here so a
+// change there cannot quietly move what this lock compares.
+const COLUMNS = {
+  Steps: (l) => String(l.cycleSteps),
+  Hits: (l) => String(l.hits),
+  Rotation: (l) => String(l.rotation),
+  Subdivision: (l) => `1/${l.subdivision}`,
+  Timeline: (l) => (l.timeline ? 'on' : 'off'),
+  Note: (l) => String(l.noteNumber),
+  Velocity: (l) => String(l.velocity),
+  Ghost: (l) => String(l.ghostFloor),
+  Kotekan: (l) => (l.kotekanSourceLane === -1 ? 'off' : `L${l.kotekanSourceLane + 1}`),
+};
+
+test('CA32: the Ewe table is the preset it names', async () => {
+  const src = await loadSource(PAGE);
+  const { preset, header, rows } = ewePatch(src);
+  assert.equal(preset, EWE_PRESET, `the Ewe <PolyPatch> names "${preset}", not the "${EWE_PRESET}" its card plays`);
+  const found = presetsData.presets.find((p) => p.name === preset);
+  assert.ok(found, `preset "${preset}" is not in src/generated/presets.json`);
+  assert.equal(rows.length, found.lanes.length, `the table has ${rows.length} rows; "${preset}" has ${found.lanes.length} lanes`);
+  for (const col of Object.keys(COLUMNS)) assert.ok(header.includes(col), `the table has no ${col} column`);
+  rows.forEach((row, i) => {
+    assert.equal(row.Lane, String(i + 1), `row ${i + 1} is numbered ${row.Lane}`);
+    for (const [col, want] of Object.entries(COLUMNS)) {
+      assert.equal(row[col], want(found.lanes[i]), `lane ${i + 1} ${col}: table ${row[col]}, preset ${want(found.lanes[i])}`);
+    }
+  });
+});
+
+test('CA32: the prose names the lane that carries the Kotekan setting', async () => {
+  const src = await loadSource(PAGE);
+  const { rows } = ewePatch(src);
+  const m = src.match(/Lane (\d+) uses the Kotekan setting `(L\d+)`/);
+  assert.ok(m, `${PAGE} no longer says which lane carries the Kotekan setting`);
+  const carriers = rows.filter((r) => r.Kotekan !== 'off');
+  assert.deepEqual(
+    carriers.map((r) => [r.Lane, r.Kotekan]),
+    [[m[1], m[2]]],
+    `the prose says Lane ${m[1]} carries ${m[2]}; the table's Kotekan lanes are ` +
+      JSON.stringify(carriers.map((r) => `${r.Lane}:${r.Kotekan}`)),
+  );
 });

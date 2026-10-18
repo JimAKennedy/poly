@@ -594,17 +594,25 @@ const CHECKLIST = [
   },
   {
     page: '02-sub-saharan-africa.mdx',
-    patch: 'Ewe-Inspired Polymetric Ensemble',
+    patch: 'Ewe Polymetric Ensemble',
     rules: [
       {
         id: 'ssa-dance-beat',
         description: 'construction step 2: a low drum lays the dance beat, 12 steps, 4 hits',
-        check: ({ rows }) => {
+        // central-africa M004/S01 (CA32) made the table the Ewe Polymetric
+        // Ensemble preset exactly, and that preset has no dance-beat lane. The
+        // step is still owed to the reader, so the patch may carry it as an
+        // instruction to add the lane instead of as a table row.
+        check: ({ rows }, { block }) => {
           const beat = rows.find((r) => r.steps === 12 && r.hits === 4);
-          return beat
+          const told = block
+            .split('\n')
+            .some((l) => /dance beat/i.test(l) && /\b12 steps\b/.test(l) && /\b4 hits\b/.test(l));
+          return beat || told
             ? null
-            : 'no lane at 12 steps / 4 hits — theory-sub-saharan-africa construction step 2 lays ' +
-                'the dance beat as E(4,12), every third pulse, and the parts are learned against it';
+            : 'no lane at 12 steps / 4 hits, and no instruction to add one — theory-sub-saharan-africa ' +
+                'construction step 2 lays the dance beat as E(4,12), every third pulse, and the parts ' +
+                'are learned against it';
         },
       },
       {

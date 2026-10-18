@@ -60,3 +60,12 @@ on the user's behalf during execution.
   with its own comment rather than "beside the central-africa entries" as the
   plan says — **Why:** M003 put its two tests in the runner only, so there
   were no central-africa entries in `REQUIRED` to sit beside.
+- **Judgment call:** the `theory-patch-conformance.test.mjs` checklist entry
+  for Chapter 2 is keyed by patch title, so retitling the patch "Ewe
+  Polymetric Ensemble" (plan Task 3 step 5) also changes that key from
+  "Ewe-Inspired Polymetric Ensemble" — **Why:** the harness fails closed on a
+  renamed patch; the key follows the title, and both rules still run against
+  the table.
+- **Judgment call:** `docs/audits/poly_theory_audit.md` still names the
+  "Ewe-Inspired Polymetric Ensemble" patch and is left as it is — **Why:** it
+  is a dated audit record describing the page as it was, not a live claim.
