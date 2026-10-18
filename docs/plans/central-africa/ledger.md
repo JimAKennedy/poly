@@ -250,6 +250,134 @@ the Central Africa chapter relies on.
 | CA37 | Chapter 1's Cycle Independence presents co-prime cycles without saying they are not the Central African norm | `docs` | `site/src/content/docs/01-foundations.mdx` | The link resolves in the site build; the aside cites R7's page | `done` |
 | CA52 | Chapter 2b's R7 credits the simple-ratio rule to p. 277 and lists the ratios 2:1, 3:1, 3:2 and 4:2. M003's reading of the scan puts "always stand in simple ratios" on p. 231, and records the ratio list on no page. **Added 2026-10-18 at the owner's request**, from the review of this slice's own Arom citations | `correct` | `site/src/content/docs/02b-central-africa.mdx` | A site test asserts R7 quotes "always stand in simple ratios" at p. 231 and "the period of the longest figure" at p. 277, and no longer lists the ratios; red on the current page first | `done` |
 
+## Milestone M006 — Try it plays what the editor shows
+
+**Vision:** Every control a reader can touch in the guide's Try it either
+changes what they hear, at once, or is visibly disabled with the reason; the
+editor fits a laptop screen; the playhead and the sound agree; and a test
+fails if any of that regresses.
+
+**Branch:** milestone/M006-try-it-works
+**Status:** planned
+
+Added 2026-10-18 at the owner's request, from three findings in Try it: Aka
+presets overflowing their lane cards, the VEL control having no audible
+effect, and Zande: Kponingbo's playhead running half a cycle from its sound.
+An audit of the browser host the same day traced 69 controls; its counts
+are in the rows below. Not in `vision.md`: the Central Africa presets are
+what exposed these defects, and the chapter is only as good as the cards it
+asks the reader to play.
+
+### Slice M006/S01 — Edits reach the playing engine
+
+**Validation:** format, webui-e2e, site-unit, e2e
+**Evidence:** evidence/M006-S01.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] Every control that changes the engine changes what is playing, without
+      Stop and Play
+- [ ] Choosing a preset while playing plays the new preset
+- [ ] A test edits controls during playback and fails if the sound does not
+      follow
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| CA38 | The browser host keeps two engine contexts: `engineCtx`, which the UI reads and edits, and `playbackCtx`, built from it by `_poly_copy_scenes` on each Play and the only one `schedule()` renders. Lane edits (`INT_EDITS`/`FLOAT_EDITS`), seed, and the step, Euclid, cells, micro-timing, envelope, accent, fitMidi and revertImport actions write `engineCtx` only, so 40 of 69 controls, VEL among them, act only after Stop and Play. Macros, morph, chain, mute and scene select already write both | `defect` | `webui/wasm-host.js` | A webui-e2e spec changes VEL and probability while playing and asserts the playback context's rendered output changes, red on the current host; no edit re-copies scenes, because `poly_copy_scenes` resets the chain to bar 0 | `open` |
+| CA39 | `applyPreset` while playing keeps playing the old preset | `defect` | `webui/wasm-host.js` | A webui-e2e spec switches preset during playback and asserts the playback context renders the new one | `open` |
+| CA40 | `control-audit.spec.ts` asserts edits through `engineCtx` and the dump path, so it is green while the sound ignores them. Tests can reach only `__polyModule` and `__polyEngineCtx` | `coverage` | `site/tests-e2e/control-audit.spec.ts`, `webui/wasm-host.js` | The playback context is exposed to tests, and the control audit asserts every engine-changing control against what plays; it is red for VEL on the pre-fix host | `open` |
+
+### Slice M006/S02 — The engine features the browser host drops
+
+**Depends:** M006/S01
+**Validation:** format, unit, wasm-freshness, webui-e2e, e2e
+**Evidence:** evidence/M006-S02.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] Fill Every N and Fill Now fill in the browser as they do in the plugin
+- [ ] Seed Lock holds the seed in the browser
+- [ ] − Lane and + Lane change the number of lanes that play
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| CA41 | Fill Every N (`fillEveryN`) is dropped by the host, and Fill Now (`manualFill`) is an unknown action, though the engine has `fillManualTrigger` | `capability` | `engine/src/wasm_api.cpp`, `webui/wasm-host.js` | New WASM entry points appended to the end of their enums; a webui-e2e spec asserts each changes the rendered output | `open` |
+| CA42 | Seed Lock has no effect in the browser host | `capability` | `webui/wasm-host.js`, `engine/src/wasm_api.cpp` | A webui-e2e spec asserts a locked seed survives an action that would otherwise reseed | `open` |
+| CA43 | − Lane and + Lane change the count display only: `activeLaneCount` is dropped by the host | `capability` | `engine/src/wasm_api.cpp`, `webui/wasm-host.js` | A webui-e2e spec asserts the number of lanes sounding follows the count | `open` |
+
+### Slice M006/S03 — Controls the browser cannot honour are disabled
+
+**Depends:** M006/S01
+**Validation:** format, webui-e2e, e2e
+**Evidence:** evidence/M006-S03.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] Every control that cannot work in the browser is disabled there and
+      says why, and stays enabled in the plugin
+- [ ] Lane rename works in the browser or is disabled there
+- [ ] A failed WASM load is visible to the reader rather than silently
+      replaced by the mock host
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| CA44 | Note Map, Capture bars, Arm, Channel and Duration do nothing in the browser: its audio ignores MIDI routing and note length, and capture is a no-op. `host.capabilities` exists but carries only `canExport` | `capability` | `webui/host-iface.js`, `webui/ui.js`, `webui/wasm-host.js` | New capability flags, false in the WASM host; a webui-e2e spec asserts each control is disabled with its reason in the WASM host and enabled in the plugin's | `open` |
+| CA45 | Lane rename sends `setLaneName`, which the browser host does not handle | `defect` | `webui/wasm-host.js` | A webui-e2e spec renames a lane in the WASM host and asserts the name holds, or asserts the control is disabled; which is decided at planning | `open` |
+| CA46 | When the WASM fails to load, `index.html` falls back to the mock host without telling the reader, and the mock behaves differently | `defect` | `webui/index.html`, `webui/ui.js` | A webui-e2e spec blocks the `.wasm` request and asserts a visible notice | `open` |
+
+### Slice M006/S04 — The editor fits a laptop
+
+**Validation:** format, webui-e2e, e2e
+**Evidence:** evidence/M006-S04.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] A 24-step lane's step stack stays inside its card at a laptop-sized
+      window
+- [ ] The Try it frame gives the editor the height it is laid out for, or
+      the editor is laid out for the frame it gets
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| CA47 | Each step bar has `min-height: 6px` and the stack (`.ladder`, `column-reverse`) has no overflow rule, so a 24-step lane needs about 213 px and, given less, spills upward over its title and dial. No WebUI test renders more than 16 steps, and all run at 1280×840 | `defect` | `webui/ui.css`, `webui/ui.js` | A webui-e2e spec at about 1200×520 with a 24-step lane asserts the top bar sits below the dial, red first | `open` |
+| CA48 | The Try it frame is `min(560px, 80vh)` while the editor is laid out for 760 px, so on a laptop the lanes are squashed | `defect` | `site/src/styles/custom.css` | An e2e check at a 1440×900 viewport asserts no lane card overflows inside the frame | `open` |
+
+### Slice M006/S05 — The playhead and the sound agree
+
+**Depends:** M006/S01
+**Validation:** format, webui-e2e, e2e
+**Evidence:** evidence/M006-S05.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] The playhead shows the step that is sounding, for every factory preset
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| CA49 | The browser host rounds a lane's step length to whole eighth notes (`stepLen = Math.round(8 / subdivision)`), so a 1/16 lane gets 1 rather than 0.5 and a 1/12 lane 1 rather than 2/3, and `pump()` also ignores `tempoMultiplier`. The audio is placed at the engine's own ppq and is right; the playhead's cycle is twice the audio's on a 1/16 lane, so on Zande: Kponingbo they agree only every other cycle, which reads as half a cycle out, and the step glyph shows "8 × ♪" for sixteenths. The mock host divides unrounded, so only the WASM host is wrong. Diagnosed 2026-10-18 in node against the shipped `.wasm`: 35 of 56 presets carry a lane at 1/16, 1/12 or a tempo multiplier other than 1. The preview's `laneHitAt` assumes a whole-eighth step and needs the same fix | `defect` | `webui/wasm-host.js`, `webui/groove-math.js`, `webui/ui.js` | A test walks every factory preset and asserts each lane's playhead cycle equals the engine's (`steps × 8 / subdivision / tempoMultiplier` eighths), red on 35 presets first; a webui-e2e spec on the WASM host loads Zande: Kponingbo, holds the clock at four eighths, and asserts lane 1 is at step 0 | `open` |
+
+### Slice M006/S06 — Every card plays
+
+**Depends:** M006/S01, M006/S02, M006/S03, M006/S04, M006/S05
+**Validation:** format, site-unit, e2e
+**Evidence:** evidence/M006-S06.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] A test opens every preset card on the published site at a laptop
+      viewport, plays it, and fails if it does not sound, overflows, or
+      throws
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| CA50 | The site's audio gate plays a sample of cards. Nothing opens every card, so a preset added to a chapter is not tested in Try it until a reader finds it broken | `coverage` | `site/tests-e2e/` | A spec that enumerates every `PolyPreviewCard` in the built site, plays each in Try it at 1440×900, and asserts notes render, no lane card overflows, and the console is clean; its preset list is derived from the pages, never written out | `open` |
+
 ## Sequencing
 
 **M001 and M002 are independent.** The record touches references only, and
@@ -263,6 +391,12 @@ its cards name the presets and its test reads them from `presets.json`, and on
 
 **M004/S01 and M005/S01 depend on M003/S01** because each links to the new
 chapter. They touch different files and are independent of each other.
+
+**M006 is independent of M004 and M005.** It touches the WebUI and the
+site's Try it frame, not the chapters. Its S01 comes first because S02, S03
+and S05 change or test the same host, and a fix there is not observable
+until edits reach the playing engine. S04 is independent. S06 goes last
+because it is the regression net over the rest.
 
 ## Out of scope
 
