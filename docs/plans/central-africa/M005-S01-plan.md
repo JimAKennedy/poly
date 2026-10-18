@@ -10,7 +10,7 @@ class: gated
 
 ## Task status
 
-- [ ] 1. The Euclidean Reference has a 24-step section and the bòndò row
+- [x] 1. The Euclidean Reference has a 24-step section and the bòndò row
 - [ ] 2. The Timing Model explains composite subdivision
 - [ ] 3. Chapter 1 says co-prime cycles are Poly's, not the Central African norm
 
