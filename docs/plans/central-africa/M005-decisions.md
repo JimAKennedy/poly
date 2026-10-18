@@ -51,3 +51,13 @@ class: gated
   division composite subdivision; it says Chapter 2b does — **Why:** no
   record places the term on a page of the scan, so the attribution was
   unverified.
+- **Q:** Fix Chapter 2b's R7, which has the same single p. 277 citation, in
+  this PR too? — **A:** yes, include it in this PR
+- **Decision:** a row, CA52, is added to M005/S01, already `done`, rather
+  than a commit with no row — **Why:** the change is outside CA35–CA37, and a
+  row keeps it traceable from the ledger; the slice's definition of done is
+  unchanged.
+- **Decision:** R7 drops the ratio list "2:1, 3:1, 3:2 or 4:2" — **Why:** the
+  record places it on no page, as with Chapter 1's examples; the chapter's
+  opening already quotes p. 231, and its "In Poly" sentence still gives
+  lane lengths that divide the longest.

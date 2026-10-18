@@ -208,3 +208,12 @@ test('CA37: the Chapter 1 aside sits in Cycle Independence and its link resolves
   assert.ok(body.includes('p. 231') && body.includes('p. 277'), "Cycle Independence does not cite R7's pages");
   assert.ok(existsSync(join(DOCS, CENTRAL_AFRICA)), `${CENTRAL_AFRICA} does not exist`);
 });
+
+test("CA52: Chapter 2b's R7 quotes each half of the rule from its own page", async () => {
+  const src = await loadSource(CENTRAL_AFRICA);
+  const r7 = src.split('\n').find((line) => line.startsWith('**R7.'));
+  assert.ok(r7, `${CENTRAL_AFRICA} has no R7 paragraph`);
+  assert.match(r7, /"always stand in simple ratios" \(p\. 231\)/, 'R7 does not quote p. 231');
+  assert.match(r7, /"the period of the longest figure" \(p\. 277\)/, 'R7 does not quote p. 277');
+  assert.ok(!r7.includes('3:1, 3:2 or 4:2'), 'R7 still lists ratios no recorded page gives');
+});
