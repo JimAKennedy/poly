@@ -8,7 +8,7 @@ class: gated
 > Central Africa chapter relies on.
 
 Ledger: `docs/plans/central-africa/ledger.md` · branch
-`milestone/M005-appendices` · 5 commits including this report, **none untraced**
+`milestone/M005-appendices` · 7 commits including this report and its update, **none untraced**
 
 ## Slices
 
@@ -74,10 +74,16 @@ From `evidence/M005-S01.md`, on the slice's last task:
   asked only for an aside. The aside would have contradicted the sentence
   beside it, so that sentence was reworded as well. "Southeast Asia" went with
   it, because no source cited on the page supports co-prime cycles in gamelan.
-- **New citations of Arom on two pages.** p. 298 on the Euclidean Reference
-  and p. 277 on Chapter 1. Both quote or paraphrase what Chapter 2b already
-  states from those pages. Neither was re-read against the scan for this
-  milestone.
+- **The Arom citations, checked after review.** At your request the new
+  citations were checked against M003's reading of the scan
+  (`evidence/M003-S01.md`); the scan is not on this machine. "Works like a
+  mould" (p. 298) stands. Chapter 1's note had credited "simple ratios" to
+  p. 277, but the record puts "always stand in simple ratios" on p. 231 and
+  "the period of the longest figure" on p. 277; it now quotes each with its
+  page, and drops the example ratios "2:1 or 3:2", which no page records.
+  The Timing Model no longer says Arom names "composite subdivision", since
+  no record places the term on a page. Chapter 2b's own R7 has the same
+  single p. 277 citation for its ratio list and is untouched here.
 - **The Chapter column now carries `2b`**, the first value in that column
   that is not a number. Nothing parses the column.
 - **A presence check that cannot catch a mutation on its own.** CA36's
@@ -94,8 +100,10 @@ From `evidence/M005-S01.md`, on the slice's last task:
 - `74c7a24` docs(site): the Euclidean Reference has the dì.kétɔ̀ mould and the bòndò bell — Slice: M005/S01; Rows: CA35
 - `788e115` docs(site): the Timing Model explains five steps to a beat — Slice: M005/S01; Rows: CA36
 - `391148b` docs(site): Chapter 1 says co-prime cycles are Poly's, not a tradition's — Slice: M005/S01; Rows: CA37
+- `7711648` docs(plans): write the M005 report — Slice: M005/S01
+- `108cd26` docs(site): Chapter 1 quotes R7 from both of Arom's pages — Slice: M005/S01; Rows: CA37
 
-This report's own commit carries `Slice: M005/S01`.
+This report's update carries `Slice: M005/S01`.
 
 Untraced commits: none.
 
@@ -132,3 +140,21 @@ Verbatim from `M005-decisions.md`, with headings demoted one level.
   source cited on the page supports co-prime cycles in any named tradition,
   and the gamelan chapter does not claim it either; the sentence says the
   layering is Poly's own.
+
+### 2026-10-18 — review of M005/S01, at the owner's request
+
+- **Q:** Check the Arom claims the report says repeat Chapter 2b but were not
+  re-read for this milestone, and ship if they check out. — **A:** checked
+  against M003's reading of the scan (`evidence/M003-S01.md`); the scan is
+  not on this machine
+- **Decision:** the Euclidean Reference's "works like a mould" (p. 298) stands
+  — **Why:** M003 found it verbatim on p. 298, and the sentence restates N8.
+- **Decision:** Chapter 1's note quotes "always stand in simple ratios" at
+  p. 231 and "the period of the longest figure" at p. 277, and drops the
+  example ratios "2:1 or 3:2" — **Why:** it credited both claims to p. 277,
+  but M003 recorded the first on p. 231, as the vision does; the examples
+  are recorded on no page.
+- **Decision:** the Timing Model no longer says "Simha Arom calls" five-value
+  division composite subdivision; it says Chapter 2b does — **Why:** no
+  record places the term on a page of the scan, so the attribution was
+  unverified.
