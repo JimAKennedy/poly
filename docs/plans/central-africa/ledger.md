@@ -277,21 +277,21 @@ corrected that the guide is "complete and verified".
 **Plan:** M006-S01-plan.md
 **Validation:** format, webui-e2e, site-unit, e2e
 **Evidence:** evidence/M006-S01.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Every control that changes the engine changes what is playing, without
+- [x] Every control that changes the engine changes what is playing, without
       Stop and Play
-- [ ] Choosing a preset while playing plays the new preset
-- [ ] A test edits controls during playback and fails if the sound does not
+- [x] Choosing a preset while playing plays the new preset
+- [x] A test edits controls during playback and fails if the sound does not
       follow
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
 | CA38 | The browser host keeps two engine contexts: `engineCtx`, which the UI reads and edits, and `playbackCtx`, built from it by `_poly_copy_scenes` on each Play and the only one `schedule()` renders. Lane edits (`INT_EDITS`/`FLOAT_EDITS`), seed, and the step, Euclid, cells, micro-timing, envelope, accent, fitMidi and revertImport actions write `engineCtx` only, so 40 of 69 controls, VEL among them, act only after Stop and Play. Macros, morph, chain, mute and scene select already write both | `defect` | `webui/wasm-host.js` | A webui-e2e spec changes VEL and probability while playing and asserts the playback context's rendered output changes, red on the current host; no edit re-copies scenes, because `poly_copy_scenes` resets the chain to bar 0 | `done` |
 | CA39 | `applyPreset` while playing keeps playing the old preset | `defect` | `webui/wasm-host.js` | A webui-e2e spec switches preset during playback and asserts the playback context renders the new one | `done` |
-| CA40 | `control-audit.spec.ts` asserts edits through `engineCtx` and the dump path, so it is green while the sound ignores them. Tests can reach only `__polyModule` and `__polyEngineCtx` | `coverage` | `site/tests-e2e/control-audit.spec.ts`, `webui/wasm-host.js` | The playback context is exposed to tests, and the control audit asserts every engine-changing control against what plays; it is red for VEL on the pre-fix host | `open` |
+| CA40 | `control-audit.spec.ts` asserts edits through `engineCtx` and the dump path, so it is green while the sound ignores them. Tests can reach only `__polyModule` and `__polyEngineCtx` | `coverage` | `site/tests-e2e/control-audit.spec.ts`, `webui/wasm-host.js` | The playback context is exposed to tests, and the control audit asserts every engine-changing control against what plays; it is red for VEL on the pre-fix host | `done` |
 
 ### Slice M006/S02 — The engine features the browser host drops
 

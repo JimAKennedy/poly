@@ -13,16 +13,16 @@ class: gated
 - [x] 1. The playback context is visible to tests, and a spec proves edits do not reach it
 - [x] 2. Every edit and lane action reaches the playing engine
 - [x] 3. Choosing a preset while playing plays it
-- [ ] 4. The control audit asserts against what plays
+- [x] 4. The control audit asserts against what plays
 
 ## Definition of Done
 
 Copied verbatim from the slice:
 
-- [ ] Every control that changes the engine changes what is playing, without
+- [x] Every control that changes the engine changes what is playing, without
       Stop and Play
-- [ ] Choosing a preset while playing plays the new preset
-- [ ] A test edits controls during playback and fails if the sound does not
+- [x] Choosing a preset while playing plays the new preset
+- [x] A test edits controls during playback and fails if the sound does not
       follow
 
 ## Validation

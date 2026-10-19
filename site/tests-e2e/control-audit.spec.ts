@@ -608,3 +608,88 @@ for (const chapter of AUDIT_CHAPTERS) {
     });
   });
 }
+
+// -------------------- M006/S01: lane controls reach what plays --------------------
+//
+// The Try it host edits __polyEngineCtx and plays __polyPlaybackCtx. The macro
+// audit above reads the edited context, so it stayed green while VEL, among
+// 40 lane controls, did nothing until Stop and Play (central-africa CA40).
+// These cases read the playing context.
+
+const LANE_CONTROLS: Array<[string, number]> = [
+  ['velocity', 0.2],
+  ['probability', 0.3],
+  ['hits', 0.03],
+  ['rotation', 0.3],
+  ['ghostFloor', 0.5],
+  ['swing', 0.4],
+  ['humanize', 0.3],
+  ['mutationRate', 0.5],
+  ['tempoMult', 0.5],
+];
+
+// Lane 0's fields in the playing and the edited context, and the velocities
+// a scratch copy of the playing context renders over 8 quarters.
+async function iframePlaybackState(page: Page): Promise<{ playing: string; edited: string; velocities: string }> {
+  return page.evaluate(() => {
+    const frames = Array.from(document.querySelectorAll('iframe.poly-modal-frame'));
+    for (const f of frames) {
+      const w = (f as HTMLIFrameElement).contentWindow as any;
+      if (!w?.__polyModule || !w.__polyPlaybackCtx) continue;
+      const M = w.__polyModule;
+      const fields = (ctx: number) => {
+        const out: number[] = [];
+        for (let i = 0; i < 15; i++) out.push(M._poly_lane_int(ctx, 0, i));
+        for (let i = 0; i < 14; i++) out.push(Math.round(M._poly_lane_float(ctx, 0, i) * 1e6) / 1e6);
+        return JSON.stringify(out);
+      };
+      const scratch = M._poly_create();
+      M._poly_copy_scenes(scratch, w.__polyPlaybackCtx);
+      for (let i = 0; i < 6; i++) M._poly_set_macro(scratch, i, M._poly_macro_value(w.__polyPlaybackCtx, i));
+      const vels: string[] = [];
+      for (let q = 0; q < 8; q++) {
+        const n = M._poly_render(scratch, q, q + 1, 120, 44100, 512, 1, 0, 0, 0, q === 0 ? 1 : 0);
+        const base = M._poly_event_buffer(scratch) >> 3;
+        for (let i = 0; i < n; i++) {
+          if ((M.HEAPF64[base + i * 6 + 5] | 0) === 0) vels.push(M.HEAPF64[base + i * 6 + 2].toFixed(3));
+        }
+      }
+      M._poly_destroy(scratch);
+      return { playing: fields(w.__polyPlaybackCtx), edited: fields(w.__polyEngineCtx), velocities: vels.join(' ') };
+    }
+    throw new Error('no playing Try it host found');
+  });
+}
+
+for (const chapter of AUDIT_CHAPTERS) {
+  test.describe(`M006/S01 — lane controls reach what plays [${chapter.preset}]`, () => {
+    test(`[${chapter.preset}] every lane control edit reaches the playing engine`, async ({ page }) => {
+      await page.goto(chapter.path);
+      const frame = await openTryItModal(
+        page,
+        `.poly-preview[data-poly-preset="${chapter.preset}"]`,
+        chapter.preset,
+      );
+      await frame.locator('#play').click();
+      await page.waitForFunction(
+        () =>
+          Array.from(document.querySelectorAll('iframe.poly-modal-frame')).some(
+            (f) => !!((f as HTMLIFrameElement).contentWindow as any)?.__polyPlaybackCtx,
+          ),
+        null,
+        { timeout: 5000, polling: 100 },
+      );
+      const initial = await iframePlaybackState(page);
+      for (const [field, value] of LANE_CONTROLS) {
+        await iframeEdit(page, `lane.0.${field}`, value);
+        const s = await iframePlaybackState(page);
+        expect(s.playing, `${chapter.preset}: lane.0.${field} did not reach the playing engine`).toBe(s.edited);
+      }
+      const after = await iframePlaybackState(page);
+      expect(
+        after.velocities,
+        `${chapter.preset}: VEL and the other edits did not change the velocities the playing engine renders`,
+      ).not.toBe(initial.velocities);
+    });
+  });
+}

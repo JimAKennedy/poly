@@ -77,3 +77,14 @@ class: gated
 - **Judgment call:** every S01 case first asserts the edit changed the edited
   lane — **Why:** the first red run had three cases pass because their values
   left the lane as it was; a case that cannot fail proves nothing.
+- **Finding:** `astro preview` (Astro 7.3.8) runs as a background server
+  that outlives the shell that started it, and refuses to start a second
+  one. A server on port 4322, the port `site-verify-local.sh` uses, was found
+  still running from an earlier session. While one runs, the script's own
+  preview is refused and its readiness check passes against the old server.
+  Checked on 2026-10-18: a running server serves `dist/` as it is at request
+  time (a line appended to a built file was served at once), so the `e2e`
+  runs it served tested the fresh build, and their passes stand. The
+  script's cleanup kills its own wrapper process, not the background server
+  — **Why recorded:** a reviewer should know the gate can run against a
+  server it did not start; fixing the script is outside this slice.
