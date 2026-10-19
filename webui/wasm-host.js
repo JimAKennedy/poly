@@ -1555,6 +1555,13 @@
     // ui.js or bridge code.
     window.__polyModule = Module;
     window.__polyEngineCtx = engineCtx;
+    // central-africa M006/S01: the context schedule() renders, recreated on
+    // every Play. A getter, so tests read the live handle rather than a copy
+    // taken before the first Play.
+    Object.defineProperty(window, '__polyPlaybackCtx', {
+      get: () => playbackCtx,
+      configurable: true,
+    });
     // M045 S01 T02: browser-console inspection hook. Returns a shallow copy of
     // state with each lane's emissions ring rewritten in oldest→newest order,
     // filtering out unwritten slots. Not consumed by ui.js — debug only.

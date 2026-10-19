@@ -67,3 +67,13 @@ class: gated
   milestone merges and deploys — **Why:** M002/S01 met the same limit; the
   slice's own proof that the artifacts carry the change is `e2e` (which
   rebuilds them) and the webui-e2e specs that call the new entry points.
+
+## 2026-10-18 — executing M006/S01
+
+- **Judgment call:** the page helpers live in
+  `webui/tests/wasm-playback-helpers.mjs`, imported by S01's spec and the
+  later M006 specs, rather than copied into each — **Why:** S02's plan says
+  to copy them; one shared copy cannot drift between specs.
+- **Judgment call:** every S01 case first asserts the edit changed the edited
+  lane — **Why:** the first red run had three cases pass because their values
+  left the lane as it was; a case that cannot fail proves nothing.
