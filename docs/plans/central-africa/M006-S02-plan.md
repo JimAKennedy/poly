@@ -12,15 +12,15 @@ class: gated
 ## Task status
 
 - [x] 1. The WASM API carries fill, seed lock, lane count and manual fill
-- [ ] 2. The browser host uses them, and the rebuilt engine ships
+- [x] 2. The browser host uses them, and the rebuilt engine ships
 
 ## Definition of Done
 
 Copied verbatim from the slice:
 
-- [ ] Fill Every N and Fill Now fill in the browser as they do in the plugin
-- [ ] Seed Lock holds the seed in the browser
-- [ ] − Lane and + Lane change the number of lanes that play
+- [x] Fill Every N and Fill Now fill in the browser as they do in the plugin
+- [x] Seed Lock holds the seed in the browser
+- [x] − Lane and + Lane change the number of lanes that play
 
 ## Validation
 

@@ -299,19 +299,19 @@ corrected that the guide is "complete and verified".
 **Plan:** M006-S02-plan.md
 **Validation:** format, unit, wasm-freshness, webui-e2e, e2e
 **Evidence:** evidence/M006-S02.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] Fill Every N and Fill Now fill in the browser as they do in the plugin
-- [ ] Seed Lock holds the seed in the browser
-- [ ] − Lane and + Lane change the number of lanes that play
+- [x] Fill Every N and Fill Now fill in the browser as they do in the plugin
+- [x] Seed Lock holds the seed in the browser
+- [x] − Lane and + Lane change the number of lanes that play
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| CA41 | Fill Every N (`fillEveryN`) is dropped by the host, and Fill Now (`manualFill`) is an unknown action, though the engine has `fillManualTrigger` | `capability` | `engine/src/wasm_api.cpp`, `webui/wasm-host.js` | New WASM entry points appended to the end of their enums; a webui-e2e spec asserts each changes the rendered output | `open` |
-| CA42 | Seed Lock has no effect in the browser host | `capability` | `webui/wasm-host.js`, `engine/src/wasm_api.cpp` | A webui-e2e spec asserts a locked seed survives an action that would otherwise reseed | `open` |
-| CA43 | − Lane and + Lane change the count display only: `activeLaneCount` is dropped by the host | `capability` | `engine/src/wasm_api.cpp`, `webui/wasm-host.js` | A webui-e2e spec asserts the number of lanes sounding follows the count | `open` |
+| CA41 | Fill Every N (`fillEveryN`) is dropped by the host, and Fill Now (`manualFill`) is an unknown action, though the engine has `fillManualTrigger` | `capability` | `engine/src/wasm_api.cpp`, `webui/wasm-host.js` | New WASM entry points appended to the end of their enums; a webui-e2e spec asserts each changes the rendered output | `done` |
+| CA42 | Seed Lock has no effect in the browser host | `capability` | `webui/wasm-host.js`, `engine/src/wasm_api.cpp` | A webui-e2e spec asserts a locked seed survives an action that would otherwise reseed | `done` |
+| CA43 | − Lane and + Lane change the count display only: `activeLaneCount` is dropped by the host | `capability` | `engine/src/wasm_api.cpp`, `webui/wasm-host.js` | A webui-e2e spec asserts the number of lanes sounding follows the count | `done` |
 
 ### Slice M006/S03 — Controls the browser cannot honour are disabled
 

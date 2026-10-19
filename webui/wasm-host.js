@@ -21,6 +21,8 @@
     Timeline: 10, EnvelopeCount: 11, CellCount: 12,
     // M002 S01: appended in engine/src/wasm_api.cpp; indices must match.
     KotekanMode: 13, KotekanOverlap: 14,
+    // central-africa M006/S02: appended in wasm_api.cpp.
+    FillEveryNBars: 15, SeedLocked: 16,
   };
 
   const LaneFieldFloat = {
@@ -202,6 +204,8 @@
       kotekanSource: li(engineCtx, laneIdx, LaneFieldInt.KotekanSource),
       kotekanMode: li(engineCtx, laneIdx, LaneFieldInt.KotekanMode),
       kotekanOverlap: li(engineCtx, laneIdx, LaneFieldInt.KotekanOverlap),
+      fillEveryN: li(engineCtx, laneIdx, LaneFieldInt.FillEveryNBars),
+      seedLocked: li(engineCtx, laneIdx, LaneFieldInt.SeedLocked) !== 0,
       accents,
     };
   }
@@ -1266,6 +1270,14 @@
       return;
     }
 
+    // M006/S02: - Lane / + Lane, normalised as the plugin's kActiveLaneCount.
+    if (paramId === 'activeLaneCount') {
+      forBoth((c) => Module._poly_set_active_lane_count(c, 1 + Math.round(value * 7)));
+      syncStateFromWasm();
+      emitState();
+      return;
+    }
+
     if (paramId === 'seed') {
       forBoth((c) => Module._poly_set_seed(c, Math.round(value * 999999)));
       syncStateFromWasm();
@@ -1302,6 +1314,9 @@
       kotekanOverlap:v => forBoth((c) => Module._poly_edit_lane_int(c, laneIdx, LaneFieldInt.KotekanOverlap, Math.round(v * 64))),
       timeline:     v => forBoth((c) => Module._poly_edit_lane_int(c, laneIdx, LaneFieldInt.Timeline, v >= 0.5 ? 1 : 0)),
       cellCount:    v => forBoth((c) => Module._poly_edit_lane_int(c, laneIdx, LaneFieldInt.CellCount, Math.round(v * 64))),
+      // M006/S02: the UI's norms are fillEveryN / 64 and a 0/1 lock.
+      fillEveryN:   v => forBoth((c) => Module._poly_edit_lane_int(c, laneIdx, LaneFieldInt.FillEveryNBars, Math.round(v * 64))),
+      seedLock:     v => forBoth((c) => Module._poly_edit_lane_int(c, laneIdx, LaneFieldInt.SeedLocked, v >= 0.5 ? 1 : 0)),
     };
 
     const FLOAT_EDITS = {
@@ -1505,6 +1520,11 @@
         }
         break;
       }
+      case 'manualFill':
+        // M006/S02: Fill Now makes the next render pass of the playing
+        // context a fill, as the plugin's kFillManualTrigger does.
+        Module._poly_trigger_manual_fill(playbackCtx || engineCtx);
+        break;
       case 'setAccent':
         forBoth((c) => Module._poly_action_set_accent(c, payload.lane, payload.step, payload.value));
         break;
