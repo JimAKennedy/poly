@@ -11,15 +11,15 @@ class: gated
 ## Task status
 
 - [x] 1. A 24-step ladder stays inside its card
-- [ ] 2. The Try it frame gives the editor its height
+- [x] 2. The Try it frame gives the editor its height
 
 ## Definition of Done
 
 Copied verbatim from the slice:
 
-- [ ] A 24-step lane's step stack stays inside its card at a laptop-sized
+- [x] A 24-step lane's step stack stays inside its card at a laptop-sized
       window
-- [ ] The Try it frame gives the editor the height it is laid out for, or
+- [x] The Try it frame gives the editor the height it is laid out for, or
       the editor is laid out for the frame it gets
 
 ## Validation

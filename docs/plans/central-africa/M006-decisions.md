@@ -96,3 +96,12 @@ class: gated
   24-step ladder at 1200×520 still overlapped its dial by 8 px, because 23
   gaps of 3 px take 69 px; `overflow: hidden` would have hidden the top steps
   rather than fit them.
+- **Judgment call:** the frame is `min(760px, calc(96vh - 3rem))` and the
+  modal's `max-height` rises from 90vh to 96vh, rather than the decided
+  `min(760px, 92vh)` — **Why:** the modal clips at its own max-height, so a
+  92vh frame plus the modal's title bar would have been cut off; at 1440×900
+  this gives the full 760 px, and below that the editor scrolls in the frame.
+- **Judgment call:** `scripts/site-verify-local.sh` gains a 14th gate, "M006
+  Try it", running `try-it-frame.spec.ts` (S06 adds its spec there) — **Why:**
+  the script, which is both the `e2e` token and CI's site-e2e job, runs only
+  the specs it names; without the gate the new site specs would run nowhere.

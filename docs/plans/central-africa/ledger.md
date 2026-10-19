@@ -340,19 +340,19 @@ corrected that the guide is "complete and verified".
 **Plan:** M006-S04-plan.md
 **Validation:** format, webui-e2e, e2e
 **Evidence:** evidence/M006-S04.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] A 24-step lane's step stack stays inside its card at a laptop-sized
+- [x] A 24-step lane's step stack stays inside its card at a laptop-sized
       window
-- [ ] The Try it frame gives the editor the height it is laid out for, or
+- [x] The Try it frame gives the editor the height it is laid out for, or
       the editor is laid out for the frame it gets
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
 | CA47 | Each step bar has `min-height: 6px` and the stack (`.ladder`, `column-reverse`) has no overflow rule, so a 24-step lane needs about 213 px and, given less, spills upward over its title and dial. No WebUI test renders more than 16 steps, and all run at 1280×840 | `defect` | `webui/ui.css`, `webui/ui.js` | A webui-e2e spec at about 1200×520 with a 24-step lane asserts the top bar sits below the dial, red first | `done` |
-| CA48 | The Try it frame is `min(560px, 80vh)` while the editor is laid out for 760 px, so on a laptop the lanes are squashed | `defect` | `site/src/styles/custom.css` | An e2e check at a 1440×900 viewport asserts no lane card overflows inside the frame | `open` |
+| CA48 | The Try it frame is `min(560px, 80vh)` while the editor is laid out for 760 px, so on a laptop the lanes are squashed | `defect` | `site/src/styles/custom.css` | An e2e check at a 1440×900 viewport asserts no lane card overflows inside the frame | `done` |
 
 ### Slice M006/S05 — The playhead and the sound agree
 
