@@ -258,7 +258,7 @@ editor fits a laptop screen; the playhead and the sound agree; and a test
 fails if any of that regresses.
 
 **Branch:** milestone/M006-try-it-works
-**Status:** planned
+**Status:** in-progress
 
 Added 2026-10-18 at the owner's request, from three findings in Try it: Aka
 presets overflowing their lane cards, the VEL control having no audible
@@ -274,9 +274,10 @@ corrected that the guide is "complete and verified".
 
 ### Slice M006/S01 — Edits reach the playing engine
 
+**Plan:** M006-S01-plan.md
 **Validation:** format, webui-e2e, site-unit, e2e
 **Evidence:** evidence/M006-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
@@ -295,6 +296,7 @@ corrected that the guide is "complete and verified".
 ### Slice M006/S02 — The engine features the browser host drops
 
 **Depends:** M006/S01
+**Plan:** M006-S02-plan.md
 **Validation:** format, unit, wasm-freshness, webui-e2e, e2e
 **Evidence:** evidence/M006-S02.md
 **Status:** open
@@ -314,6 +316,7 @@ corrected that the guide is "complete and verified".
 ### Slice M006/S03 — Controls the browser cannot honour are disabled
 
 **Depends:** M006/S01
+**Plan:** M006-S03-plan.md
 **Validation:** format, webui-e2e, e2e
 **Evidence:** evidence/M006-S03.md
 **Status:** open
@@ -334,6 +337,7 @@ corrected that the guide is "complete and verified".
 
 ### Slice M006/S04 — The editor fits a laptop
 
+**Plan:** M006-S04-plan.md
 **Validation:** format, webui-e2e, e2e
 **Evidence:** evidence/M006-S04.md
 **Status:** open
@@ -353,6 +357,7 @@ corrected that the guide is "complete and verified".
 ### Slice M006/S05 — The playhead and the sound agree
 
 **Depends:** M006/S01
+**Plan:** M006-S05-plan.md
 **Validation:** format, webui-e2e, e2e
 **Evidence:** evidence/M006-S05.md
 **Status:** open
@@ -368,6 +373,7 @@ corrected that the guide is "complete and verified".
 ### Slice M006/S06 — Every card plays
 
 **Depends:** M006/S01, M006/S02, M006/S03, M006/S04, M006/S05
+**Plan:** M006-S06-plan.md
 **Validation:** format, site-unit, e2e
 **Evidence:** evidence/M006-S06.md
 **Status:** open
@@ -384,6 +390,7 @@ corrected that the guide is "complete and verified".
 
 ### Slice M006/S07 — The banner does not claim the guide is finished
 
+**Plan:** M006-S07-plan.md
 **Validation:** format, site-unit, doc-discipline
 **Evidence:** evidence/M006-S07.md
 **Status:** open
