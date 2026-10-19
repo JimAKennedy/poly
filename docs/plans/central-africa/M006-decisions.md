@@ -105,3 +105,15 @@ class: gated
   Try it", running `try-it-frame.spec.ts` (S06 adds its spec there) — **Why:**
   the script, which is both the `e2e` token and CI's site-e2e job, runs only
   the specs it names; without the gate the new site specs would run nowhere.
+
+## 2026-10-18 — executing M006/S05
+
+- **Judgment call:** the plan's Task 2 said "callers in the WASM and mock
+  hosts" of `laneHitAt`; it has one caller, the mock host's scheduler (the
+  WASM host plays the engine's own events). That scheduler now walks integer
+  sixths of an eighth, a grid both a 1/16 step and a 1/12 step land on, and
+  `laneHitAt` matches the nearest step within 1e-6 — **Why:** the obviously
+  right reading of the step; a whole-eighth walk skips every other 1/16 step.
+- **Judgment call:** the preview case uses a 1/12 lane, not the plan's 1/16 —
+  **Why:** 0.5 is exact in floating point, so a 1/16 lane passed under the old
+  modulo test and proved nothing; 2/3 is not, and failed.

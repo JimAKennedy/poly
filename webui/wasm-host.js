@@ -451,7 +451,14 @@
   const PLAYBACK_SAMPLE_RATE = 44100;
   const PLAYBACK_BLOCK_SIZE = 512;
   const PLAYBACK_LOOKAHEAD_SEC = 0.14;
-  const now8 = () => (audible && ctx ? (ctx.currentTime - startAt) / eighthSec() : 0);
+  // M006/S05 test hook: a spec may hold the clock at a given eighth so the
+  // playhead can be checked at a known position. Unset in normal use.
+  const now8 = () =>
+    typeof window.__polyHoldClock8 === 'number'
+      ? window.__polyHoldClock8
+      : audible && ctx
+        ? (ctx.currentTime - startAt) / eighthSec()
+        : 0;
 
   // Sample-backed playback (M043 S09, sample-selection parity fix).
   // Both surfaces resolve samples by (MIDI note, preferred role) — mirrors

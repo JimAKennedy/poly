@@ -47,3 +47,45 @@ test.describe('M006/S05 — the playhead and the sound agree', () => {
     );
   });
 });
+
+test.describe('M006/S05 — the playhead lands on the sounding step', () => {
+  test('Zande: Kponingbo at four eighths shows lane 1 back at step 0', async ({ page }) => {
+    await openWasmHost(page, baseUrl, '&preset=Zande%3A%20Kponingbo');
+    await page.waitForFunction(() => window.PolyHost.getState().preset === 'Zande: Kponingbo');
+    const step = await page.evaluate(
+      () =>
+        new Promise((resolve) => {
+          window.__polyHoldClock8 = 4; // an 8-step 1/16 lane completes one cycle every 4 eighths
+          window.PolyHost.onFrame((f) => resolve({ t8: f.t8, step: f.lanes[0].step }));
+        }),
+    );
+    expect(step.t8, 'the clock was not held at four eighths, so this case proves nothing').toBe(4);
+    expect(step.step, 'the playhead is half a cycle from the sound').toBe(0);
+  });
+
+  // A 1/12 step is 2/3 of an eighth, which floating point cannot hold exactly,
+  // so a modulo test misses most of its steps; 1/16's 0.5 is exact.
+  test('the preview finds a hit on every step of a 1/12 lane', async ({ page }) => {
+    await openWasmHost(page, baseUrl);
+    const steps = await page.evaluate(() => {
+      const { laneHitAt, stepEighths } = window.PolyGrooveMath;
+      const lane = { steps: 12, stepLen: stepEighths(12), pattern: new Array(12).fill(1) };
+      const found = [];
+      for (let i = 0; i < 12; i++) {
+        const hit = laneHitAt(lane, i * lane.stepLen);
+        if (hit) found.push(hit.step);
+      }
+      return found;
+    });
+    expect(steps, 'laneHitAt skipped steps of a sub-eighth lane').toEqual([...Array(12).keys()]);
+  });
+
+  test("a 1/16 lane's step glyph is not the eighth note", async ({ page }) => {
+    await openWasmHost(page, baseUrl, '&preset=Zande%3A%20Kponingbo');
+    await page.waitForFunction(() => window.PolyHost.getState().preset === 'Zande: Kponingbo');
+    await page.locator('.strip .ex').first().click();
+    const glyph = await page.locator('.stepper .v').first().textContent();
+    expect(glyph, 'the Steps row shows a 1/16 lane as eighths').not.toContain('♪');
+    expect(glyph).toContain('8 ×');
+  });
+});

@@ -75,8 +75,12 @@
       const idx = os.indexOf(tin);
       return idx < 0 ? null : { step: idx, acc: idx === 0 };
     }
-    if (tick % l.stepLen) return null;
-    const step = (tick / l.stepLen) % l.steps;
+    // M006/S05: a step may be a fraction of an eighth (0.5 at 1/16, 2/3 at
+    // 1/12), which a modulo test misses, so match the nearest step exactly.
+    const pos = tin / l.stepLen;
+    const near = Math.round(pos);
+    if (Math.abs(pos - near) > 1e-6) return null;
+    const step = near % l.steps;
     return l.pattern[step] ? { step, acc: step === 0 } : null;
   }
   function hitVelocity(l, li, tick, hit) {

@@ -1052,6 +1052,11 @@
       for (let i = 0; i < l.steps; i++) put(i / l.steps, !!l.pattern[i], i === 0);
     }
   }
+  // M006/S05: the Steps row names the step by subdivision, not by a rounded
+  // step length, so a 1/16 lane no longer reads as eighths.
+  function stepGlyph(subdivision) {
+    return { 1: '𝅝', 2: '𝅗𝅥', 4: '♩', 8: '♪', 12: '♪³', 16: '𝅘𝅥𝅯' }[subdivision] || `1/${subdivision}`;
+  }
   function buildLadder(li) {
     const l = S.lanes[li], lad = ladders[li];
     lad.innerHTML = '';
@@ -1087,7 +1092,7 @@
         <div class="hint">Fixed pattern — immune to macros. The bell is law. Edit steps on the ladder above.</div>`;
     } else {
       html += `<div class="prow"><label>Timeline mode</label><span class="switch"><button data-tl aria-label="Timeline mode"><i></i></button></span></div>
-        <div class="prow"><label>Steps</label><span class="stepper"><button data-st="-1">−</button><span class="v">${l.steps} × ${l.stepLen === 2 ? '♩' : '♪'}</span><button data-st="1">+</button></span></div>
+        <div class="prow"><label>Steps</label><span class="stepper"><button data-st="-1">−</button><span class="v">${l.steps} × ${stepGlyph(l.subdivision)}</span><button data-st="1">+</button></span></div>
         <div class="prow"><label>Hits</label><span class="stepper"><button data-ht="-1">−</button><span class="v">E(${l.hits},${l.steps})</span><button data-ht="1">+</button></span></div>
         <div class="prow"><label>Rotation</label><span class="stepper"><button data-rt="-1">−</button><span class="v">${l.rot}</span><button data-rt="1">+</button></span></div>
         <div class="prow"><label>Additive cells</label><span class="switch"><button ${l.cells ? 'class="on"' : ''} data-cl aria-label="Additive cells"><i></i></button></span></div>`;

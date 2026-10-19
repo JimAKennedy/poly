@@ -678,6 +678,11 @@
 
   /* ---------- WebAudio preview voices ---------- */
   let ctx = null, playing = false, startAt = 0, schedTimer = null, nextTick = 0, _nb = null;
+  // M006/S05: the scheduler walks sixths of an eighth, a grid on which both a
+  // 1/16 step (3 sixths) and a 1/12 step (4 sixths) land, counted as an integer
+  // so the position never drifts.
+  const SUBTICKS_PER_EIGHTH = 6;
+  let nextSub = 0;
   const now8 = () => (playing && ctx ? (ctx.currentTime - startAt) / eighthSec() : 0);
   function noiseBuf() {
     if (_nb) return _nb;
@@ -743,16 +748,18 @@
       const step = (((idx + drift) % n) + n) % n;
       return { step, acc: step === 0 };
     }
-    if (tick % l.stepLen) return null;
+    const pos = tick / l.stepLen;
+    if (Math.abs(pos - Math.round(pos)) > 1e-6) return null;
     const n = l.steps;
-    const raw = (((tick / l.stepLen) % n) + n) % n;
+    const raw = ((Math.round(pos) % n) + n) % n;
     const step = (((raw + drift) % n) + n) % n;
     return l.pattern[step] ? { step, acc: step === 0 } : null;
   }
   function schedule() {
     const ahead = ctx.currentTime + 0.14;
     const step = eighthSec();
-    while (startAt + nextTick * step < ahead) {
+    while (startAt + (nextSub / SUBTICKS_PER_EIGHTH) * step < ahead) {
+      nextTick = nextSub / SUBTICKS_PER_EIGHTH;
       state.lanes.forEach((l, li) => {
         if (!l.active) return;
         const drift = driftOffset(l, nextTick / 8);
@@ -771,7 +778,7 @@
         const shiftedPpq = gridPpq + (shiftMs / 1000) / step / 2;
         recordEmission(li, gridPpq, shiftedPpq, hit.step, 'base');
       });
-      nextTick++;
+      nextSub++;
     }
   }
   function togglePlay() {
@@ -785,6 +792,7 @@
     if (playing) {
       startAt = ctx ? ctx.currentTime + 0.06 : 0;
       nextTick = 0;
+      nextSub = 0;
       if (ctx) schedTimer = setInterval(schedule, 30);
     } else {
       clearInterval(schedTimer);

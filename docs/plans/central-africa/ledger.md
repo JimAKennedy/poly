@@ -360,15 +360,15 @@ corrected that the guide is "complete and verified".
 **Plan:** M006-S05-plan.md
 **Validation:** format, webui-e2e, e2e
 **Evidence:** evidence/M006-S05.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The playhead shows the step that is sounding, for every factory preset
+- [x] The playhead shows the step that is sounding, for every factory preset
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| CA49 | The browser host rounds a lane's step length to whole eighth notes (`stepLen = Math.round(8 / subdivision)`), so a 1/16 lane gets 1 rather than 0.5 and a 1/12 lane 1 rather than 2/3, and `pump()` also ignores `tempoMultiplier`. The audio is placed at the engine's own ppq and is right; the playhead's cycle is twice the audio's on a 1/16 lane, so on Zande: Kponingbo they agree only every other cycle, which reads as half a cycle out, and the step glyph shows "8 × ♪" for sixteenths. The mock host divides unrounded, so only the WASM host is wrong. Diagnosed 2026-10-18 in node against the shipped `.wasm`: 35 of 56 presets carry a lane at 1/16, 1/12 or a tempo multiplier other than 1. The preview's `laneHitAt` assumes a whole-eighth step and needs the same fix | `defect` | `webui/wasm-host.js`, `webui/groove-math.js`, `webui/ui.js` | A test walks every factory preset and asserts each lane's playhead cycle equals the engine's (`steps × 8 / subdivision / tempoMultiplier` eighths), red on 35 presets first; a webui-e2e spec on the WASM host loads Zande: Kponingbo, holds the clock at four eighths, and asserts lane 1 is at step 0 | `open` |
+| CA49 | The browser host rounds a lane's step length to whole eighth notes (`stepLen = Math.round(8 / subdivision)`), so a 1/16 lane gets 1 rather than 0.5 and a 1/12 lane 1 rather than 2/3, and `pump()` also ignores `tempoMultiplier`. The audio is placed at the engine's own ppq and is right; the playhead's cycle is twice the audio's on a 1/16 lane, so on Zande: Kponingbo they agree only every other cycle, which reads as half a cycle out, and the step glyph shows "8 × ♪" for sixteenths. The mock host divides unrounded, so only the WASM host is wrong. Diagnosed 2026-10-18 in node against the shipped `.wasm`: 35 of 56 presets carry a lane at 1/16, 1/12 or a tempo multiplier other than 1. The preview's `laneHitAt` assumes a whole-eighth step and needs the same fix | `defect` | `webui/wasm-host.js`, `webui/groove-math.js`, `webui/ui.js` | A test walks every factory preset and asserts each lane's playhead cycle equals the engine's (`steps × 8 / subdivision / tempoMultiplier` eighths), red on 35 presets first; a webui-e2e spec on the WASM host loads Zande: Kponingbo, holds the clock at four eighths, and asserts lane 1 is at step 0 | `done` |
 
 ### Slice M006/S06 — Every card plays
 
