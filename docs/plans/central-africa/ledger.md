@@ -258,7 +258,7 @@ editor fits a laptop screen; the playhead and the sound agree; and a test
 fails if any of that regresses.
 
 **Branch:** milestone/M006-try-it-works
-**Status:** in-progress
+**Status:** done
 
 Added 2026-10-18 at the owner's request, from three findings in Try it: Aka
 presets overflowing their lane cards, the VEL control having no audible
