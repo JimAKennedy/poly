@@ -34,6 +34,10 @@ struct Context {
     // chainState_.reset() init. Advances at bar boundaries during poly_render
     // when scenes.chain.enabled && scenes.chain.entryCount > 0.
     poly::SceneChainState chainState{};
+    // central-africa M006/S02: Fill Now. Set by poly_trigger_manual_fill and
+    // consumed by the next poly_render, so the fill covers exactly one render
+    // pass, as the plugin's kFillManualTrigger latch does.
+    bool manualFillPending = false;
     poly::NoteEventBuffer eventBuffer{};
     poly::EmissionEventBuffer emissionBuffer{};
     std::array<double, poly::kMaxEventsPerBlock * kFieldsPerEvent> flatEvents{};
@@ -105,6 +109,9 @@ enum class LaneFieldInt {
     // numeric index, so inserting would silently re-point every field after it.
     KotekanMode,
     KotekanOverlap,
+    // central-africa M006/S02: appended for the same reason.
+    FillEveryNBars,
+    SeedLocked,
 };
 
 enum class LaneFieldFloat {
@@ -210,6 +217,8 @@ int poly_render(PolyContext ctx, double ppqStart, double ppqEnd, double tempo, d
     // there is a single source of truth.
     const poly::GrooveState& base = c->readState();
     poly::GrooveState resolved = poly::resolveConstraints(base, poly::resolveMacros(base));
+    resolved.fillManualTrigger = c->manualFillPending;
+    c->manualFillPending = false;
     c->engine.renderRange(tc, resolved, c->eventBuffer, &c->emissionBuffer);
 
     for (size_t i = 0; i < c->eventBuffer.count; ++i) {
@@ -351,6 +360,19 @@ void poly_edit_lane_int(PolyContext ctx, int lane, int field, int value) {
     case LaneFieldInt::KotekanOverlap:
         cfg.kotekanOverlap = std::clamp(value, 0, cfg.cycle.steps > 0 ? cfg.cycle.steps : 0);
         break;
+    case LaneFieldInt::FillEveryNBars:
+        cfg.fillEveryNBars = std::clamp(value, 0, 1024);
+        break;
+    case LaneFieldInt::SeedLocked: {
+        // Mirrors processor.cpp kCoreSeedLock: the false->true edge captures
+        // the current global seed, so a later reroll leaves this lane as it is.
+        // Unlock keeps laneSeed; it only applies while seedLocked is true.
+        const bool next = (value != 0);
+        if (next && !cfg.seedLocked)
+            cfg.laneSeed = c->state().seed;
+        cfg.seedLocked = next;
+        break;
+    }
     case LaneFieldInt::Timeline:
         cfg.timeline = (value != 0);
         break;
@@ -449,6 +471,10 @@ int poly_lane_int(PolyContext ctx, int lane, int field) {
         return static_cast<int>(cfg.kotekanMode);
     case LaneFieldInt::KotekanOverlap:
         return cfg.kotekanOverlap;
+    case LaneFieldInt::FillEveryNBars:
+        return cfg.fillEveryNBars;
+    case LaneFieldInt::SeedLocked:
+        return cfg.seedLocked ? 1 : 0;
     case LaneFieldInt::Timeline:
         return cfg.timeline ? 1 : 0;
     case LaneFieldInt::EnvelopeCount:
@@ -794,6 +820,17 @@ uint64_t poly_seed(PolyContext ctx) {
 
 void poly_set_seed(PolyContext ctx, uint64_t seed) {
     static_cast<Context*>(ctx)->state().seed = seed;
+}
+
+// central-africa M006/S02: - Lane / + Lane. Mirrors processor.cpp's
+// kActiveLaneCount handler on the current scene, clamped to 1..kMaxLanes.
+void poly_set_active_lane_count(PolyContext ctx, int count) {
+    static_cast<Context*>(ctx)->state().activeLaneCount = std::clamp(count, 1, poly::kMaxLanes);
+}
+
+// central-africa M006/S02: Fill Now, for the next render pass only.
+void poly_trigger_manual_fill(PolyContext ctx) {
+    static_cast<Context*>(ctx)->manualFillPending = true;
 }
 
 // --- Scene chain edits (M044 S07) ------------------------------------------

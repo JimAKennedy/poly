@@ -275,6 +275,8 @@ if(EMSCRIPTEN)
         "_poly_action_remove_envelope"
         "_poly_seed"
         "_poly_set_seed"
+        "_poly_set_active_lane_count"
+        "_poly_trigger_manual_fill"
         "_poly_set_chain_enabled"
         "_poly_chain_enabled"
         "_poly_set_chain_mode"

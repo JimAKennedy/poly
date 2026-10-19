@@ -43,6 +43,7 @@ add_executable(poly_tests
     state_migration_tests.cpp
     smf_writer_tests.cpp
     wasm_api_envelope_gap_slot_tests.cpp
+    wasm_api_m006_tests.cpp
     fixed_pattern_wrap_tests.cpp
     write_envelope_body_version_tests.cpp
     state_io_header_hygiene_tests.cpp

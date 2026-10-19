@@ -11,7 +11,7 @@ class: gated
 
 ## Task status
 
-- [ ] 1. The WASM API carries fill, seed lock, lane count and manual fill
+- [x] 1. The WASM API carries fill, seed lock, lane count and manual fill
 - [ ] 2. The browser host uses them, and the rebuilt engine ships
 
 ## Definition of Done

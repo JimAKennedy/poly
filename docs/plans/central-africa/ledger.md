@@ -299,7 +299,7 @@ corrected that the guide is "complete and verified".
 **Plan:** M006-S02-plan.md
 **Validation:** format, unit, wasm-freshness, webui-e2e, e2e
 **Evidence:** evidence/M006-S02.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
