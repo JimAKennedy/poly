@@ -4,7 +4,7 @@ class: gated
 
 # Guide parity — delivery ledger
 
-Status: current (2026-09-18)
+Status: current (2026-10-19)
 
 Assessed from `docs/plans/guide-parity/vision.md` on 2026-09-18. That document
 is research; this file is the plan of record.
@@ -442,9 +442,41 @@ milestone-level row, and is `accepted` rather than sliced — see its row.
 | GP12 | #142's 23 nightly failures are two groups, established by M005/S01. **Group A**, 22 occurrences 2026-07-26 → 08-16, was a real TSan data race on the two-slot host→RT exchange, already fixed by `076f545` on 2026-08-16. **Group B**, the single 2026-09-16 occurrence, is a defect in the test: assertion 3 encodes `noteMap` values up to 32767 while `readSceneState` clamps them to `[0,127]`, so the invariant it checks is destroyed by sanitize rather than by tearing — reproduced single-threaded, failing for 99.61% of writeIds. No outstanding product defect | `defect` | `tests/host/host_tests.cpp` | The invariant is re-encoded to survive the round trip, proved to accept clean maps and still detect a genuine two-writeId tear | `done` |
 | GP13 | `tests-e2e/reich-play.spec.ts` asserts `lastFireTime > 2.5` against a 3 s Playwright wait, which is too tight and flakes locally while CI stays green. Carried in this slice's table because the ledger format has no home for a milestone-level row, but deliberately **not sliced**: it is a one-line threshold change, and a definition of done would be more ceremony than the change earns. To be landed as an ordinary pull request referencing #89 | `defect` | `site/tests-e2e/reich-play.spec.ts` | Accepted without a slice; the fix is an ordinary PR | `accepted` |
 
+## Milestone M006 — The e2e gate tests the server it started
+
+**Vision:** `scripts/site-verify-local.sh` either serves the site it just built
+or refuses to run, and leaves nothing listening when it exits.
+
+**Branch:** milestone/M006-preview-server
+**Status:** planned
+
+Added 2026-10-19 at the owner's request, from a finding recorded in
+central-africa M006's decisions and seen again at that milestone's ship: an
+`astro preview` the script started was still listening on port 4322 after the
+script exited. Not in `vision.md`; it sits here because this programme already
+carries test-tooling rows (GP14).
+
+### Slice M006/S01 — The preview server is the script's own
+
+**Validation:** format, e2e, guards
+**Evidence:** evidence/M006-S01.md
+**Status:** open
+
+**Definition of Done**
+
+- [ ] The script refuses to start when its preview port is already in use,
+      naming the process that holds it
+- [ ] No preview server is left listening after the script exits, whether it
+      passes, fails or is interrupted
+- [ ] A test fails if either regresses
+
+| ID | Item | Kind | Lands in | Verification | Status |
+|---|---|---|---|---|---|
+| GP15 | `site-verify-local.sh` starts `npx astro preview` inside a subshell and its `cleanup` kills that subshell's PID, not the server, so the server outlives the script: one started by central-africa M006's ship was still on port 4322 after the run. A later run's preview is then refused, and its readiness `curl` passes against the leftover server. That is harmless while the leftover serves this checkout's `dist/`, which central-africa M006 checked it does at request time, but a server left by another checkout or worktree would put the whole `e2e` gate on a different build without failing | `tooling` | `scripts/site-verify-local.sh` | A test holds the preview port with a dummy listener and asserts the script exits non-zero naming it, and runs the script and asserts nothing is listening on the port afterwards; both red on the current script first | `open` |
+
 ## Sequencing
 
-The graph is almost flat. M001, M002, M003, M004 and M005 are mutually independent:
+The graph is almost flat. M001, M002, M003, M004, M005 and M006 are mutually independent:
 they touch different code, and none produces anything another needs.
 
 Three slice-level dependencies are real:
