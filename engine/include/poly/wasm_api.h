@@ -107,6 +107,11 @@ POLY_EXPORT void poly_action_remove_envelope(PolyContext ctx, int lane, int inde
 POLY_EXPORT uint64_t poly_seed(PolyContext ctx);
 POLY_EXPORT void poly_set_seed(PolyContext ctx, uint64_t seed);
 
+// central-africa M006/S02: the active lane count (- Lane / + Lane), clamped
+// to 1..kMaxLanes, and Fill Now, which makes the next render pass a fill.
+POLY_EXPORT void poly_set_active_lane_count(PolyContext ctx, int count);
+POLY_EXPORT void poly_trigger_manual_fill(PolyContext ctx);
+
 // M044 S07: scene chain wiring. JS chain edits reach the render path so
 // enabling a chain in Try It / modal actually drives scene selection during
 // playback, matching the plugin.

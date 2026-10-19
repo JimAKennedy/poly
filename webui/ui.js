@@ -15,6 +15,42 @@
   // via the ?export=1 seam so the per-lane-export spec can exercise the trigger
   // contract without a native build.
   const CAN_EXPORT = !!(host.capabilities && host.capabilities.canExport);
+  // central-africa M006/S03: a host that cannot honour a control declares it;
+  // a missing flag counts as supported, so older hosts keep every control.
+  const CAN = (flag) => !host.capabilities || host.capabilities[flag] !== false;
+  const REASONS = {
+    canMapNotes: 'Note Map: the browser plays its own sounds, so MIDI note mapping has no effect here',
+    canCapture: 'Capture: recording MIDI needs the plugin in a DAW, not the browser',
+    canRouteChannels: 'Channel: the browser does not route MIDI channels',
+    canSetDuration: "Duration: the browser's sounds play their full length",
+  };
+  // Disable a control the host cannot honour: say why, and swallow its input
+  // in the capture phase so its own handlers never send an edit or action.
+  function disableFor(el, reason) {
+    if (!el) return;
+    el.setAttribute('aria-disabled', 'true');
+    el.setAttribute('title', reason);
+    el.classList.add('disabled-reason');
+    const stop = (e) => {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    };
+    for (const type of ['click', 'pointerdown', 'mousedown', 'contextmenu', 'wheel', 'keydown', 'dblclick'])
+      el.addEventListener(type, stop, { capture: true, passive: false });
+  }
+
+  // central-africa M006/S03: when the WASM engine failed to load, the page
+  // runs the mock host instead; say so on screen rather than in the console.
+  if (window.__POLY_WASM_FAILED__) {
+    const win = document.getElementById('win');
+    const notice = document.createElement('div');
+    notice.className = 'wasm-fallback';
+    notice.setAttribute('data-wasm-fallback', '');
+    notice.setAttribute('role', 'status');
+    notice.textContent =
+      'The Poly engine did not load in this browser, so this is a simplified preview. It may not sound like the plugin.';
+    if (win) win.insertBefore(notice, win.firstChild);
+  }
 
   let S = null; // latest state snapshot
   let lastFrame = { t8: 0, playing: false, convLeft: CONV, lanes: [] };
@@ -343,6 +379,10 @@
       host.action((lastFrame.capState | 0) === 0 ? 'armCapture' : 'resetCapture', {});
     });
   }
+  if (!CAN('canCapture')) {
+    disableFor(capBarsBtn, REASONS.canCapture);
+    disableFor(armBtn, REASONS.canCapture);
+  }
   // Reflect the capture machine onto the header chips. Called every frame from
   // onFrame so the labels/classes track host truth without a second timer.
   function updateCaptureChips() {
@@ -472,6 +512,7 @@
     if (noteMapModal) { noteMapModal.remove(); noteMapModal = null; }
     if (noteMapDismiss) { document.removeEventListener('click', noteMapDismiss); noteMapDismiss = null; }
   }
+  if (!CAN('canMapNotes')) disableFor(document.getElementById('noteMapBtn'), REASONS.canMapNotes);
   document.getElementById('noteMapBtn').addEventListener('click', (e) => {
     e.stopPropagation();
     buildNoteMapModal();
@@ -1011,10 +1052,17 @@
       for (let i = 0; i < l.steps; i++) put(i / l.steps, !!l.pattern[i], i === 0);
     }
   }
+  // M006/S05: the Steps row names the step by subdivision, not by a rounded
+  // step length, so a 1/16 lane no longer reads as eighths.
+  function stepGlyph(subdivision) {
+    return { 1: '𝅝', 2: '𝅗𝅥', 4: '♩', 8: '♪', 12: '♪³', 16: '𝅘𝅥𝅯' }[subdivision] || `1/${subdivision}`;
+  }
   function buildLadder(li) {
     const l = S.lanes[li], lad = ladders[li];
     lad.innerHTML = '';
     const n = l.cells ? l.cells.length : l.steps;
+    // M006/S04: past 16 steps the 3px gaps alone outgrow a laptop-height card.
+    lad.classList.toggle('dense', n > 16);
     for (let i = 0; i < n; i++) {
       const b = document.createElement('button');
       b.style.flexGrow = l.cells ? String(l.cells[i]) : '1';
@@ -1044,7 +1092,7 @@
         <div class="hint">Fixed pattern — immune to macros. The bell is law. Edit steps on the ladder above.</div>`;
     } else {
       html += `<div class="prow"><label>Timeline mode</label><span class="switch"><button data-tl aria-label="Timeline mode"><i></i></button></span></div>
-        <div class="prow"><label>Steps</label><span class="stepper"><button data-st="-1">−</button><span class="v">${l.steps} × ${l.stepLen === 2 ? '♩' : '♪'}</span><button data-st="1">+</button></span></div>
+        <div class="prow"><label>Steps</label><span class="stepper"><button data-st="-1">−</button><span class="v">${l.steps} × ${stepGlyph(l.subdivision)}</span><button data-st="1">+</button></span></div>
         <div class="prow"><label>Hits</label><span class="stepper"><button data-ht="-1">−</button><span class="v">E(${l.hits},${l.steps})</span><button data-ht="1">+</button></span></div>
         <div class="prow"><label>Rotation</label><span class="stepper"><button data-rt="-1">−</button><span class="v">${l.rot}</span><button data-rt="1">+</button></span></div>
         <div class="prow"><label>Additive cells</label><span class="switch"><button ${l.cells ? 'class="on"' : ''} data-cl aria-label="Additive cells"><i></i></button></span></div>`;
@@ -1377,6 +1425,8 @@
     ).join('');
     expr.querySelectorAll('.slider-track').forEach((track) => {
       const field = track.dataset.field;
+      if (field === 'channel' && !CAN('canRouteChannels')) disableFor(track, REASONS.canRouteChannels);
+      if (field === 'duration' && !CAN('canSetDuration')) disableFor(track, REASONS.canSetDuration);
       const p = PARAMS.find((x) => x.field === field);
       const paramId = `lane.${li}.${field}`;
       const fill = track.querySelector('i');

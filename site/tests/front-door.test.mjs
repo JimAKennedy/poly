@@ -36,6 +36,22 @@ test('the banner is a pre-release notice linking the Releases page', () => {
   assert.ok(banner.includes('https://github.com/JimAKennedy/poly/releases'), 'Banner.astro does not link the Releases page (OS26)');
 });
 
+// central-africa M006/S07 (CA51): the banner no longer calls a guide that is
+// still being corrected "complete and verified"; it says the theory is being
+// revised and sends the reader to the references. The owner's wording, word
+// for word.
+test('the banner says the music theory is still being revised (CA51)', () => {
+  const banner = readFileSync(resolve(SRC, 'components/Banner.astro'), 'utf8');
+  assert.ok(!banner.includes('complete and verified'), 'Banner.astro still says the guide is complete and verified (CA51)');
+  for (const sentence of [
+    'The music theory in the guide is constantly being revised, corrected, and extended.',
+    'It may contain errors from time to time.',
+    'Always verify assumptions directly with the references.',
+  ]) {
+    assert.ok(banner.includes(sentence), `Banner.astro does not say: ${sentence} (CA51)`);
+  }
+});
+
 // The hero's actions, read from index.mdx's frontmatter: each `- text:` with
 // the `link:` that follows it, in order.
 function heroActions() {

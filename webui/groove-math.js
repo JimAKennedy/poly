@@ -23,6 +23,10 @@
     const n = a.length;
     return a.map((_, i) => a[(((i - r) % n) + n) % n]);
   }
+  // central-africa M006/S05: a lane's step in eighth notes, as the engine
+  // times it (stepPpq = 4 / subdivision / tempoMultiplier quarters). Not
+  // rounded: a 1/16 step is 0.5, a 1/12 step 2/3.
+  const stepEighths = (subdivision, tempoMultiplier = 1) => 8 / subdivision / (tempoMultiplier || 1);
   const cyc8 = (l) => (l.cells ? l.cells.reduce((a, b) => a + b, 0) : l.steps * l.stepLen);
   const onsets = (l) => {
     const o = [];
@@ -71,8 +75,12 @@
       const idx = os.indexOf(tin);
       return idx < 0 ? null : { step: idx, acc: idx === 0 };
     }
-    if (tick % l.stepLen) return null;
-    const step = (tick / l.stepLen) % l.steps;
+    // M006/S05: a step may be a fraction of an eighth (0.5 at 1/16, 2/3 at
+    // 1/12), which a modulo test misses, so match the nearest step exactly.
+    const pos = tin / l.stepLen;
+    const near = Math.round(pos);
+    if (Math.abs(pos - near) > 1e-6) return null;
+    const step = near % l.steps;
     return l.pattern[step] ? { step, acc: step === 0 } : null;
   }
   function hitVelocity(l, li, tick, hit) {
@@ -94,5 +102,5 @@
     vel *= envVelFactor(l, tick);
     return Math.min(1, vel);
   }
-  window.PolyGrooveMath = { euclid, rotArr, cyc8, onsets, driftOffset, shade, envVelFactor, laneHitAt, hitVelocity };
+  window.PolyGrooveMath = { stepEighths, euclid, rotArr, cyc8, onsets, driftOffset, shade, envVelFactor, laneHitAt, hitVelocity };
 })();

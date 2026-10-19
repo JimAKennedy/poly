@@ -49,6 +49,11 @@
      and B), so the dropdown is disabled. Opacity/cursor only — no box-model
      change, so its vertical height stays identical to the enabled state. */
   #presetName[aria-disabled="true"] { opacity: .4; cursor: default; pointer-events: none; }
+  /* M006/S03: a control the host cannot honour. Still hoverable, so its title
+     gives the reason; input is swallowed by ui.js disableFor. */
+  .disabled-reason { opacity: .4; cursor: not-allowed; }
+  /* M006/S03: shown when the WASM engine failed to load and the mock host runs. */
+  .wasm-fallback { padding: 6px 12px; font-size: 12px; color: #1c1b19; background: #E8B04A; border-bottom: 1px solid #A87A22; }
   #presetName[aria-disabled="true"]:hover { background: rgba(240,234,223,.06); border-color: rgba(240,234,223,.12); }
   /* Morph mode: hide the entire preset group (label + dropdown + seed) so the
      morph slider has room in the nowrap chrome — otherwise the seed overlaps
@@ -143,8 +148,11 @@
   .strip .lex.dragging { cursor: grabbing; color: var(--accent); border-color: var(--accent); }
   .strip .core { display: flex; flex-direction: column; align-items: center; gap: 9px; flex: 1; min-height: 0; width: 100%; }
   .strip svg.ring { width: 64px; height: 64px; flex: none; }
-  .ladder { display: flex; flex-direction: column-reverse; gap: 3px; width: 100%; flex: 1; min-height: 0; }
-  .ladder button { border-radius: 2px; background: var(--surface2); border: 0; padding: 0; min-height: 6px; position: relative; }
+  /* M006/S04: bars may shrink to 1px and the stack clips, so a 24-step lane
+     fits a short card instead of spilling up over its title and dial. */
+  .ladder { display: flex; flex-direction: column-reverse; gap: 3px; width: 100%; flex: 1; min-height: 0; overflow: hidden; }
+  .ladder button { border-radius: 2px; background: var(--surface2); border: 0; padding: 0; min-height: 1px; position: relative; }
+  .ladder.dense { gap: 1px; }
   .ladder button.hit { background: var(--c); opacity: .82; }
   .ladder button.now { outline: 1.5px solid var(--text); opacity: 1; }
   /* M045 S01 T03: truthful emission overlay. Reflects what the engine actually
