@@ -116,3 +116,28 @@ test.describe('M006/S01 — edits reach the playing engine', () => {
     });
   }
 });
+
+test.describe('M006/S01 — choosing a preset while playing', () => {
+  test('the playing context plays the newly chosen preset', async ({ page }) => {
+    await playing(page);
+    await applyPresetByName(page, 'Aka: Ngbolu');
+    expect(await laneConfig(page, 'playback', 2), 'the playing engine kept the old preset').toBe(
+      await laneConfig(page, 'engine', 2),
+    );
+    const lanes = await page.evaluate(() => window.__polyModule._poly_active_lane_count(window.__polyPlaybackCtx));
+    expect(lanes, 'Aka: Ngbolu has three lanes').toBe(3);
+    // What the playing context renders equals a fresh context holding only
+    // that preset.
+    const fresh = await page.evaluate(() => {
+      const M = window.__polyModule;
+      const idx = window.PolyHost.getState().presets.findIndex((p) => p.name === 'Aka: Ngbolu');
+      const ctx = M._poly_create();
+      M._poly_action_apply_preset_to_scene(ctx, idx, 0);
+      for (let i = 0; i < 6; i++) M._poly_set_macro(ctx, i, M._poly_macro_value(window.__polyEngineCtx, i));
+      const sig = window.__m006.renderSignature(ctx);
+      M._poly_destroy(ctx);
+      return sig;
+    });
+    expect(await renderSignature(page, 'playback')).toBe(fresh);
+  });
+});

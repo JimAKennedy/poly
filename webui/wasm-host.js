@@ -352,7 +352,7 @@
     const targetScene = sceneTargetFromState();
     let nextNames, nextRoles, nextLabels;
     if (index === -1) {
-      Module._poly_action_apply_preset_to_scene(engineCtx, 0, targetScene);
+      forBoth((c) => Module._poly_action_apply_preset_to_scene(c, 0, targetScene));
       currentPresetIndex = -1;
       nextNames = ['Lane 1', 'Lane 2', 'Lane 3', 'Lane 4'];
       nextRoles = ['Anchor pulse', 'Backbeat', 'Shimmer', 'Ghost'];
@@ -376,7 +376,9 @@
       probe.engineChainEntryCount = 0;
       state.noteMap = identityNoteMap();
     } else if (index >= 0 && index < Module._poly_preset_count()) {
-      Module._poly_action_apply_preset_to_scene(engineCtx, index, targetScene);
+      // M006/S01: into the playing context too, so a preset chosen while
+      // playing is the one heard.
+      forBoth((c) => Module._poly_action_apply_preset_to_scene(c, index, targetScene));
       currentPresetIndex = index;
       const engineName = Module.UTF8ToString(Module._poly_preset_name(index));
       const entry = presetsById && presetsById[index];
