@@ -1056,6 +1056,8 @@
     const l = S.lanes[li], lad = ladders[li];
     lad.innerHTML = '';
     const n = l.cells ? l.cells.length : l.steps;
+    // M006/S04: past 16 steps the 3px gaps alone outgrow a laptop-height card.
+    lad.classList.toggle('dense', n > 16);
     for (let i = 0; i < n; i++) {
       const b = document.createElement('button');
       b.style.flexGrow = l.cells ? String(l.cells[i]) : '1';

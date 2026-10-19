@@ -88,3 +88,11 @@ class: gated
   script's cleanup kills its own wrapper process, not the background server
   — **Why recorded:** a reviewer should know the gate can run against a
   server it did not start; fixing the script is outside this slice.
+
+## 2026-10-18 — executing M006/S04
+
+- **Judgment call:** a ladder of more than 16 steps also gets a 1 px gap
+  (`.ladder.dense`) — **Why:** with the plan's `min-height: 1px` alone, a
+  24-step ladder at 1200×520 still overlapped its dial by 8 px, because 23
+  gaps of 3 px take 69 px; `overflow: hidden` would have hidden the top steps
+  rather than fit them.

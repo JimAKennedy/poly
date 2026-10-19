@@ -10,7 +10,7 @@ class: gated
 
 ## Task status
 
-- [ ] 1. A 24-step ladder stays inside its card
+- [x] 1. A 24-step ladder stays inside its card
 - [ ] 2. The Try it frame gives the editor its height
 
 ## Definition of Done

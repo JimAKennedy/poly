@@ -148,8 +148,11 @@
   .strip .lex.dragging { cursor: grabbing; color: var(--accent); border-color: var(--accent); }
   .strip .core { display: flex; flex-direction: column; align-items: center; gap: 9px; flex: 1; min-height: 0; width: 100%; }
   .strip svg.ring { width: 64px; height: 64px; flex: none; }
-  .ladder { display: flex; flex-direction: column-reverse; gap: 3px; width: 100%; flex: 1; min-height: 0; }
-  .ladder button { border-radius: 2px; background: var(--surface2); border: 0; padding: 0; min-height: 6px; position: relative; }
+  /* M006/S04: bars may shrink to 1px and the stack clips, so a 24-step lane
+     fits a short card instead of spilling up over its title and dial. */
+  .ladder { display: flex; flex-direction: column-reverse; gap: 3px; width: 100%; flex: 1; min-height: 0; overflow: hidden; }
+  .ladder button { border-radius: 2px; background: var(--surface2); border: 0; padding: 0; min-height: 1px; position: relative; }
+  .ladder.dense { gap: 1px; }
   .ladder button.hit { background: var(--c); opacity: .82; }
   .ladder button.now { outline: 1.5px solid var(--text); opacity: 1; }
   /* M045 S01 T03: truthful emission overlay. Reflects what the engine actually
