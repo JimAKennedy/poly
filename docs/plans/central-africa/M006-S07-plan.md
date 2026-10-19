@@ -10,13 +10,13 @@ class: gated
 
 ## Task status
 
-- [ ] 1. The banner says the theory is still being revised
+- [x] 1. The banner says the theory is still being revised
 
 ## Definition of Done
 
 Copied verbatim from the slice:
 
-- [ ] The site banner no longer says the guide is complete and verified, and
+- [x] The site banner no longer says the guide is complete and verified, and
       tells the reader that its music theory is still being revised and to
       check the references
 

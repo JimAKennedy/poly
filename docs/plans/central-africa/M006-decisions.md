@@ -117,3 +117,12 @@ class: gated
 - **Judgment call:** the preview case uses a 1/12 lane, not the plan's 1/16 —
   **Why:** 0.5 is exact in floating point, so a 1/16 lane passed under the old
   modulo test and proved nothing; 2/3 is not, and failed.
+
+## 2026-10-18 — executing M006/S07
+
+- **Judgment call:** S07's commit carries `Docs-Not-Affected:` for
+  `docs/testing-strategy.md` — **Why:** `doc-drift` flagged S02's edit to
+  `tests/CMakeLists.txt` (S02 did not owe `doc-discipline`, so S07's run is
+  the first to see it). The edit adds `wasm_api_m006_tests.cpp` to the existing
+  `poly_tests` binary, which the drift map's own reason says does not change
+  the test taxonomy.

@@ -393,17 +393,17 @@ corrected that the guide is "complete and verified".
 **Plan:** M006-S07-plan.md
 **Validation:** format, site-unit, doc-discipline
 **Evidence:** evidence/M006-S07.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The site banner no longer says the guide is complete and verified, and
+- [x] The site banner no longer says the guide is complete and verified, and
       tells the reader that its music theory is still being revised and to
       check the references
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| CA51 | The banner shown on every page ends "; the guide is complete and verified." The guide is still being revised, corrected and extended, as this ledger shows, so it should end ". The music theory in the guide is constantly being revised, corrected, and extended. It may contain errors from time to time. Always verify assumptions directly with the references." | `reframe` | `site/src/components/Banner.astro`, `site/tests/front-door.test.mjs` | `front-door.test.mjs` asserts the new sentences are present and "complete and verified" is absent, and is red on the current banner first; the existing pre-release and Releases-link assertions still pass | `open` |
+| CA51 | The banner shown on every page ends "; the guide is complete and verified." The guide is still being revised, corrected and extended, as this ledger shows, so it should end ". The music theory in the guide is constantly being revised, corrected, and extended. It may contain errors from time to time. Always verify assumptions directly with the references." | `reframe` | `site/src/components/Banner.astro`, `site/tests/front-door.test.mjs` | `front-door.test.mjs` asserts the new sentences are present and "complete and verified" is absent, and is red on the current banner first; the existing pre-release and Releases-link assertions still pass | `done` |
 
 ## Sequencing
 
