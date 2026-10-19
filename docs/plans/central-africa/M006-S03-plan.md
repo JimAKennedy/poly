@@ -10,7 +10,7 @@ class: gated
 
 ## Task status
 
-- [ ] 1. Note Map, Capture, Channel and Duration are disabled in the browser, with the reason
+- [x] 1. Note Map, Capture, Channel and Duration are disabled in the browser, with the reason
 - [ ] 2. Lane rename works in the browser
 - [ ] 3. A failed WASM load is visible
 

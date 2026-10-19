@@ -15,6 +15,29 @@
   // via the ?export=1 seam so the per-lane-export spec can exercise the trigger
   // contract without a native build.
   const CAN_EXPORT = !!(host.capabilities && host.capabilities.canExport);
+  // central-africa M006/S03: a host that cannot honour a control declares it;
+  // a missing flag counts as supported, so older hosts keep every control.
+  const CAN = (flag) => !host.capabilities || host.capabilities[flag] !== false;
+  const REASONS = {
+    canMapNotes: 'Note Map: the browser plays its own sounds, so MIDI note mapping has no effect here',
+    canCapture: 'Capture: recording MIDI needs the plugin in a DAW, not the browser',
+    canRouteChannels: 'Channel: the browser does not route MIDI channels',
+    canSetDuration: "Duration: the browser's sounds play their full length",
+  };
+  // Disable a control the host cannot honour: say why, and swallow its input
+  // in the capture phase so its own handlers never send an edit or action.
+  function disableFor(el, reason) {
+    if (!el) return;
+    el.setAttribute('aria-disabled', 'true');
+    el.setAttribute('title', reason);
+    el.classList.add('disabled-reason');
+    const stop = (e) => {
+      e.preventDefault();
+      e.stopImmediatePropagation();
+    };
+    for (const type of ['click', 'pointerdown', 'mousedown', 'contextmenu', 'wheel', 'keydown', 'dblclick'])
+      el.addEventListener(type, stop, { capture: true, passive: false });
+  }
 
   let S = null; // latest state snapshot
   let lastFrame = { t8: 0, playing: false, convLeft: CONV, lanes: [] };
@@ -343,6 +366,10 @@
       host.action((lastFrame.capState | 0) === 0 ? 'armCapture' : 'resetCapture', {});
     });
   }
+  if (!CAN('canCapture')) {
+    disableFor(capBarsBtn, REASONS.canCapture);
+    disableFor(armBtn, REASONS.canCapture);
+  }
   // Reflect the capture machine onto the header chips. Called every frame from
   // onFrame so the labels/classes track host truth without a second timer.
   function updateCaptureChips() {
@@ -472,6 +499,7 @@
     if (noteMapModal) { noteMapModal.remove(); noteMapModal = null; }
     if (noteMapDismiss) { document.removeEventListener('click', noteMapDismiss); noteMapDismiss = null; }
   }
+  if (!CAN('canMapNotes')) disableFor(document.getElementById('noteMapBtn'), REASONS.canMapNotes);
   document.getElementById('noteMapBtn').addEventListener('click', (e) => {
     e.stopPropagation();
     buildNoteMapModal();
@@ -1377,6 +1405,8 @@
     ).join('');
     expr.querySelectorAll('.slider-track').forEach((track) => {
       const field = track.dataset.field;
+      if (field === 'channel' && !CAN('canRouteChannels')) disableFor(track, REASONS.canRouteChannels);
+      if (field === 'duration' && !CAN('canSetDuration')) disableFor(track, REASONS.canSetDuration);
       const p = PARAMS.find((x) => x.field === field);
       const paramId = `lane.${li}.${field}`;
       const fill = track.querySelector('i');

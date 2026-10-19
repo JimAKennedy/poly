@@ -1273,7 +1273,7 @@
 
   window.PolyMockHost = {
     schemaVersion: window.POLY_SCHEMA_VERSION,
-    capabilities: { canExport },
+    capabilities: { canExport, canMapNotes: true, canCapture: true, canRouteChannels: true, canSetDuration: true },
     getState: () => state,
     onState: (cb) => stateSubs.push(cb),
     edit: (paramId, value, gesture) => {

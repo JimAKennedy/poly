@@ -75,6 +75,12 @@
  *   // --- capabilities ---
  *   capabilities: {
  *     canExport: boolean,          // true only in plugin mode (MIDI/SMF export)
+ *     // central-africa M006/S03: false in the WASM host, which plays its own
+ *     // samples; the UI disables the matching controls and says why.
+ *     canMapNotes: boolean,        // Note Map remaps MIDI output notes
+ *     canCapture: boolean,         // Capture bars + Arm record MIDI
+ *     canRouteChannels: boolean,   // per-lane MIDI channel
+ *     canSetDuration: boolean,     // per-lane note length
  *   }
  *
  *   // --- feedback (~30-60 Hz visual frame; never authoritative) ---

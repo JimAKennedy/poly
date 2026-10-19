@@ -319,7 +319,7 @@ corrected that the guide is "complete and verified".
 **Plan:** M006-S03-plan.md
 **Validation:** format, webui-e2e, e2e
 **Evidence:** evidence/M006-S03.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
@@ -331,7 +331,7 @@ corrected that the guide is "complete and verified".
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| CA44 | Note Map, Capture bars, Arm, Channel and Duration do nothing in the browser: its audio ignores MIDI routing and note length, and capture is a no-op. `host.capabilities` exists but carries only `canExport` | `capability` | `webui/host-iface.js`, `webui/ui.js`, `webui/wasm-host.js` | New capability flags, false in the WASM host; a webui-e2e spec asserts each control is disabled with its reason in the WASM host and enabled in the plugin's | `open` |
+| CA44 | Note Map, Capture bars, Arm, Channel and Duration do nothing in the browser: its audio ignores MIDI routing and note length, and capture is a no-op. `host.capabilities` exists but carries only `canExport` | `capability` | `webui/host-iface.js`, `webui/ui.js`, `webui/wasm-host.js` | New capability flags, false in the WASM host; a webui-e2e spec asserts each control is disabled with its reason in the WASM host and enabled in the plugin's | `done` |
 | CA45 | Lane rename sends `setLaneName`, which the browser host does not handle | `defect` | `webui/wasm-host.js` | A webui-e2e spec renames a lane in the WASM host and asserts the name holds, or asserts the control is disabled; which is decided at planning | `open` |
 | CA46 | When the WASM fails to load, `index.html` falls back to the mock host without telling the reader, and the mock behaves differently | `defect` | `webui/index.html`, `webui/ui.js` | A webui-e2e spec blocks the `.wasm` request and asserts a visible notice | `open` |
 

@@ -1625,7 +1625,15 @@
 
     window.PolyWasmHost = {
       schemaVersion: window.POLY_SCHEMA_VERSION,
-      capabilities: { canExport: false },
+      // M006/S03: the browser plays its own samples, so MIDI mapping, capture,
+      // channels and note length have nothing to act on here.
+      capabilities: {
+        canExport: false,
+        canMapNotes: false,
+        canCapture: false,
+        canRouteChannels: false,
+        canSetDuration: false,
+      },
       getState: () => state,
       onState: (cb) => stateSubs.push(cb),
       edit,
