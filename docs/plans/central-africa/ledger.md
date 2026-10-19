@@ -360,7 +360,7 @@ corrected that the guide is "complete and verified".
 **Plan:** M006-S05-plan.md
 **Validation:** format, webui-e2e, e2e
 **Evidence:** evidence/M006-S05.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 

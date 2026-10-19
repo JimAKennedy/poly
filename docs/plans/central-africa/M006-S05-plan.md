@@ -10,7 +10,7 @@ class: gated
 
 ## Task status
 
-- [ ] 1. One step length for every factory preset
+- [x] 1. One step length for every factory preset
 - [ ] 2. The WASM host's playhead lands on the sounding step
 
 ## Definition of Done

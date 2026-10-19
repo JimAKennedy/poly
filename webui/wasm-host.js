@@ -9,7 +9,7 @@
  * is identical — ui.js doesn't know or care which host is active.
  */
 (function () {
-  const { euclid, rotArr, cyc8, onsets, driftOffset, laneHitAt, hitVelocity } = window.PolyGrooveMath;
+  const { stepEighths, euclid, rotArr, cyc8, onsets, driftOffset, laneHitAt, hitVelocity } = window.PolyGrooveMath;
 
   const HUES = ['#F5B54A', '#E4604E', '#5AC8DA', '#9BC46B', '#B48AE0', '#E8A33D', '#4EBBE0', '#D47AB8'];
   const ROLES = ['Anchor pulse', 'Backbeat', 'Shimmer', 'Accent', 'Ghost', 'Ornament', 'Fill', 'Custom'];
@@ -119,7 +119,7 @@
     const hits = li(engineCtx, laneIdx, LaneFieldInt.HitCount);
     const rot = li(engineCtx, laneIdx, LaneFieldInt.Rotation);
     const subdivision = li(engineCtx, laneIdx, LaneFieldInt.Subdivision);
-    const stepLen = Math.round(8 / subdivision);
+    const stepLen = stepEighths(subdivision, lf(engineCtx, laneIdx, LaneFieldFloat.TempoMultiplier));
     const cellCount = li(engineCtx, laneIdx, LaneFieldInt.CellCount);
     const timeline = li(engineCtx, laneIdx, LaneFieldInt.Timeline) !== 0;
 
