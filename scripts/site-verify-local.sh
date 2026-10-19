@@ -205,18 +205,19 @@ capture_or_synthesize \
     "site/tests-e2e/console-error-gate.spec.ts"
 
 echo "=== [14/14] Running M006 Try it gates ==="
-# central-africa M006: the Try it frame at a laptop viewport. Not every gate
+# central-africa M006: the Try it frame at a laptop viewport, and every
+# preview card on the built site played in Try it. Not every gate
 # writes a summary file; capture_or_synthesize records the exit code either way.
 M006_EXIT=0
 (cd "${SITE_DIR}" \
     && POLY_SITE_URL="${PREVIEW_URL}" \
-       npx playwright test tests-e2e/try-it-frame.spec.ts --project=chromium) \
+       npx playwright test tests-e2e/try-it-frame.spec.ts tests-e2e/every-card-plays.spec.ts --project=chromium) \
     || M006_EXIT=$?
 capture_or_synthesize \
     "${SITE_DIR}/test-results/m006-try-it-summary.json" \
     "${ARTIFACTS_DIR}/M006-try-it-local-verify.json" \
     "M006-try-it" "${PREVIEW_URL}" "${M006_EXIT}" \
-    "site/tests-e2e/try-it-frame.spec.ts"
+    "site/tests-e2e/try-it-frame.spec.ts site/tests-e2e/every-card-plays.spec.ts"
 
 # Combine exit codes so any gate failing fails the script.
 GATE_EXIT=$(( S10_EXIT | S11_EXIT | S13_EXIT | SAMPLE_EQ_EXIT | S15_EXIT | S06_EXIT | S14_EXIT | S18_CTRL_EXIT | S18_CONSOLE_EXIT | M006_EXIT ))

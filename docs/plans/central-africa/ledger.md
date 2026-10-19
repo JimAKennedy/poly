@@ -376,17 +376,17 @@ corrected that the guide is "complete and verified".
 **Plan:** M006-S06-plan.md
 **Validation:** format, site-unit, e2e
 **Evidence:** evidence/M006-S06.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] A test opens every preset card on the published site at a laptop
+- [x] A test opens every preset card on the published site at a laptop
       viewport, plays it, and fails if it does not sound, overflows, or
       throws
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| CA50 | The site's audio gate plays a sample of cards. Nothing opens every card, so a preset added to a chapter is not tested in Try it until a reader finds it broken | `coverage` | `site/tests-e2e/` | A spec that enumerates every `PolyPreviewCard` in the built site, plays each in Try it at 1440×900, and asserts notes render, no lane card overflows, and the console is clean; its preset list is derived from the pages, never written out | `open` |
+| CA50 | The site's audio gate plays a sample of cards. Nothing opens every card, so a preset added to a chapter is not tested in Try it until a reader finds it broken | `coverage` | `site/tests-e2e/` | A spec that enumerates every `PolyPreviewCard` in the built site, plays each in Try it at 1440×900, and asserts notes render, no lane card overflows, and the console is clean; its preset list is derived from the pages, never written out | `done` |
 
 ### Slice M006/S07 — The banner does not claim the guide is finished
 

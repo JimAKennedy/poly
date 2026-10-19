@@ -10,13 +10,13 @@ class: gated
 
 ## Task status
 
-- [ ] 1. A spec plays every preview card in Try it
+- [x] 1. A spec plays every preview card in Try it
 
 ## Definition of Done
 
 Copied verbatim from the slice:
 
-- [ ] A test opens every preset card on the published site at a laptop
+- [x] A test opens every preset card on the published site at a laptop
       viewport, plays it, and fails if it does not sound, overflows, or
       throws
 

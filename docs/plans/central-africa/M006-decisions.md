@@ -126,3 +126,14 @@ class: gated
   the first to see it). The edit adds `wasm_api_m006_tests.cpp` to the existing
   `poly_tests` binary, which the drift map's own reason says does not change
   the test taxonomy.
+
+## 2026-10-18 — executing M006/S06
+
+- **Judgment call:** the plan's overflow mutation (restoring `min-height:
+  6px` on the step bars) does not fail any card at 1440×900, because S04's
+  760 px frame gives a 24-step ladder room even with the old rule. The
+  overflow check was proved instead with S04's whole fix reverted (the old
+  bar rule, no dense gap, the 560 px frame): 24 cards fail on "a lane card
+  overflows" — **Why:** the point of the step is to show the check can fail
+  at the viewport it runs at; a voice() that never starts a note proved the
+  sound check the same way (39 cards fail).
