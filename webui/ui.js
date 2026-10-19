@@ -39,6 +39,19 @@
       el.addEventListener(type, stop, { capture: true, passive: false });
   }
 
+  // central-africa M006/S03: when the WASM engine failed to load, the page
+  // runs the mock host instead; say so on screen rather than in the console.
+  if (window.__POLY_WASM_FAILED__) {
+    const win = document.getElementById('win');
+    const notice = document.createElement('div');
+    notice.className = 'wasm-fallback';
+    notice.setAttribute('data-wasm-fallback', '');
+    notice.setAttribute('role', 'status');
+    notice.textContent =
+      'The Poly engine did not load in this browser, so this is a simplified preview. It may not sound like the plugin.';
+    if (win) win.insertBefore(notice, win.firstChild);
+  }
+
   let S = null; // latest state snapshot
   let lastFrame = { t8: 0, playing: false, convLeft: CONV, lanes: [] };
   let expanded = -1;

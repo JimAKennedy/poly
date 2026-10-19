@@ -12,16 +12,16 @@ class: gated
 
 - [x] 1. Note Map, Capture, Channel and Duration are disabled in the browser, with the reason
 - [x] 2. Lane rename works in the browser
-- [ ] 3. A failed WASM load is visible
+- [x] 3. A failed WASM load is visible
 
 ## Definition of Done
 
 Copied verbatim from the slice:
 
-- [ ] Every control that cannot work in the browser is disabled there and
+- [x] Every control that cannot work in the browser is disabled there and
       says why, and stays enabled in the plugin
-- [ ] Lane rename works in the browser or is disabled there
-- [ ] A failed WASM load is visible to the reader rather than silently
+- [x] Lane rename works in the browser or is disabled there
+- [x] A failed WASM load is visible to the reader rather than silently
       replaced by the mock host
 
 ## Validation

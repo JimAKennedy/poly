@@ -52,6 +52,8 @@
   /* M006/S03: a control the host cannot honour. Still hoverable, so its title
      gives the reason; input is swallowed by ui.js disableFor. */
   .disabled-reason { opacity: .4; cursor: not-allowed; }
+  /* M006/S03: shown when the WASM engine failed to load and the mock host runs. */
+  .wasm-fallback { padding: 6px 12px; font-size: 12px; color: #1c1b19; background: #E8B04A; border-bottom: 1px solid #A87A22; }
   #presetName[aria-disabled="true"]:hover { background: rgba(240,234,223,.06); border-color: rgba(240,234,223,.12); }
   /* Morph mode: hide the entire preset group (label + dropdown + seed) so the
      morph slider has room in the nowrap chrome — otherwise the seed overlaps

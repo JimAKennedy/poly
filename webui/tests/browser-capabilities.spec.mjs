@@ -110,3 +110,20 @@ test.describe('M006/S03 — lane rename in the browser', () => {
     expect(await name(page), 'a 16-character name was accepted; the limit is 15').toBe('Bell');
   });
 });
+
+test.describe('M006/S03 — a failed WASM load is visible', () => {
+  test('blocking the engine shows a notice', async ({ page }) => {
+    await page.route('**/poly_engine.wasm', (route) => route.abort());
+    await page.goto(`${baseUrl}/index.html?host=wasm`);
+    await page.waitForFunction(() => window.PolyHost && window.PolyHost.getState());
+    const notice = page.locator('[data-wasm-fallback]');
+    await expect(notice, 'the reader is not told the engine failed to load').toBeVisible();
+    await expect(notice).toContainText(/did not load/i);
+    await expect(notice).toContainText(/simplified preview/i);
+  });
+
+  test('no notice when the engine loads', async ({ page }) => {
+    await openWasmHost(page, baseUrl);
+    await expect(page.locator('[data-wasm-fallback]')).toHaveCount(0);
+  });
+});

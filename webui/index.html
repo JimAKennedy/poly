@@ -101,6 +101,8 @@
           console.info('[poly] Using WASM host');
         } catch (e) {
           console.warn('[poly] WASM host failed, falling back to mock-host:', e.message);
+          // central-africa M006/S03: ui.js shows the reader a notice.
+          window.__POLY_WASM_FAILED__ = e.message || 'unknown error';
           window.PolyHost = window.PolyMockHost;
         }
         const s = document.createElement('script');
