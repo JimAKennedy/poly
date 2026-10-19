@@ -87,3 +87,26 @@ test.describe('M006/S03 — controls the browser cannot honour', () => {
     }
   });
 });
+
+test.describe('M006/S03 — lane rename in the browser', () => {
+  const name = (page) => page.evaluate(() => window.PolyHost.getState().lanes[0].name);
+  const rename = (page, n) => page.evaluate((x) => window.PolyHost.action('setLaneName', { lane: 0, name: x }), n);
+
+  test('a lane can be renamed, and keeps its name across a scene switch', async ({ page }) => {
+    await openWasmHost(page, baseUrl);
+    await rename(page, 'Bell');
+    expect(await name(page), 'setLaneName did not rename the lane').toBe('Bell');
+    await page.evaluate(() => window.PolyHost.action('selectScene', { scene: 'B' }));
+    await page.evaluate(() => window.PolyHost.action('selectScene', { scene: 'A' }));
+    expect(await name(page), 'the name was lost across a scene switch').toBe('Bell');
+  });
+
+  test('an empty or over-long name is ignored', async ({ page }) => {
+    await openWasmHost(page, baseUrl);
+    await rename(page, 'Bell');
+    await rename(page, '');
+    expect(await name(page)).toBe('Bell');
+    await rename(page, 'x'.repeat(16));
+    expect(await name(page), 'a 16-character name was accepted; the limit is 15').toBe('Bell');
+  });
+});

@@ -1520,6 +1520,19 @@
         }
         break;
       }
+      case 'setLaneName': {
+        // M006/S03: lane names are host-side labels in the browser, kept per
+        // scene. The same 1-15 character rule as the native bridge and the mock
+        // host; anything else is dropped silently.
+        const nm = typeof payload.name === 'string' ? payload.name : '';
+        const lane = payload.lane;
+        if (nm.length < 1 || nm.length > 15 || !(lane >= 0 && lane < 8)) return;
+        const toB = state.scene === 'B' || (state.scene === 'Morph' && (state.morph ?? 0) >= 0.5);
+        const names = toB ? laneNamesB : laneNamesA;
+        names[lane] = nm;
+        activateLabelsForScene(state.scene, state.morph);
+        break;
+      }
       case 'manualFill':
         // M006/S02: Fill Now makes the next render pass of the playing
         // context a fill, as the plugin's kFillManualTrigger does.
