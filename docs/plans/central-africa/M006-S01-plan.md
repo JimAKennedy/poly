@@ -11,7 +11,7 @@ class: gated
 ## Task status
 
 - [x] 1. The playback context is visible to tests, and a spec proves edits do not reach it
-- [ ] 2. Every edit and lane action reaches the playing engine
+- [x] 2. Every edit and lane action reaches the playing engine
 - [ ] 3. Choosing a preset while playing plays it
 - [ ] 4. The control audit asserts against what plays
 

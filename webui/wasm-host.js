@@ -1171,6 +1171,14 @@
   }
   requestAnimationFrame(pump);
 
+  // M006/S01: apply a write to the context the UI edits and, while playing,
+  // to the one schedule() renders, so an edit is heard without Stop and Play.
+  // Re-copying scenes instead would reset the chain to bar 0.
+  function forBoth(fn) {
+    fn(engineCtx);
+    if (playbackCtx) fn(playbackCtx);
+  }
+
   /* ---------- edit handler ---------- */
   function edit(paramId, value, gesture) {
     if (gesture === 'begin') return;
@@ -1257,7 +1265,7 @@
     }
 
     if (paramId === 'seed') {
-      Module._poly_set_seed(engineCtx, Math.round(value * 999999));
+      forBoth((c) => Module._poly_set_seed(c, Math.round(value * 999999)));
       syncStateFromWasm();
       emitState();
       return;
@@ -1269,48 +1277,45 @@
     const field = m[2];
 
     const INT_EDITS = {
-      note:         v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.MidiNote, Math.round(v * 127)),
-      channel:      v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.MidiChannel, Math.round(v * 16) - 1),
-      velocity:     v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.BaseVelocity, Math.round(v * 127)),
-      ghostFloor:   v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.GhostFloor, Math.round(v * 127)),
+      note:         v => forBoth((c) => Module._poly_edit_lane_int(c, laneIdx, LaneFieldInt.MidiNote, Math.round(v * 127))),
+      channel:      v => forBoth((c) => Module._poly_edit_lane_int(c, laneIdx, LaneFieldInt.MidiChannel, Math.round(v * 16) - 1)),
+      velocity:     v => forBoth((c) => Module._poly_edit_lane_int(c, laneIdx, LaneFieldInt.BaseVelocity, Math.round(v * 127))),
+      ghostFloor:   v => forBoth((c) => Module._poly_edit_lane_int(c, laneIdx, LaneFieldInt.GhostFloor, Math.round(v * 127))),
       active:       v => {
         const iv = v >= 0.5 ? 1 : 0;
-        Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.Active, iv);
-        // M043 S14 T03: mirror into playbackCtx so mid-play mutes stop audio
-        // immediately. Without this, the engine keeps rendering events on the
-        // muted lane because playbackCtx is a separate ctx seeded from
-        // engineCtx at Play-click time (see _poly_copy_scenes in togglePlay).
-        if (playbackCtx) Module._poly_edit_lane_int(playbackCtx, laneIdx, LaneFieldInt.Active, iv);
+        // M043 S14 T03: mirrored into playbackCtx so mid-play mutes stop audio
+        // immediately; M006/S01 routes every lane edit the same way.
+        forBoth((c) => Module._poly_edit_lane_int(c, laneIdx, LaneFieldInt.Active, iv));
         console.info(`[wasm-host] lane ${laneIdx} active=${iv}`);
       },
-      steps:        v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.CycleSteps, Math.round(v * 63) + 1),
-      hits:         v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.HitCount, Math.round(v * 64)),
-      rotation:     v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.Rotation, Math.round(v * 63)),
+      steps:        v => forBoth((c) => Module._poly_edit_lane_int(c, laneIdx, LaneFieldInt.CycleSteps, Math.round(v * 63) + 1)),
+      hits:         v => forBoth((c) => Module._poly_edit_lane_int(c, laneIdx, LaneFieldInt.HitCount, Math.round(v * 64))),
+      rotation:     v => forBoth((c) => Module._poly_edit_lane_int(c, laneIdx, LaneFieldInt.Rotation, Math.round(v * 63))),
       subdivision:  v => {
         const subs = [1, 2, 4, 8, 16];
-        Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.Subdivision, subs[Math.round(v * 4)] || 4);
+        forBoth((c) => Module._poly_edit_lane_int(c, laneIdx, LaneFieldInt.Subdivision, subs[Math.round(v * 4)] || 4));
       },
-      kotekanSource:v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.KotekanSource, Math.round(v * 8) - 1),
-      kotekanMode:v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.KotekanMode, Math.round(v * 2)),
-      kotekanOverlap:v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.KotekanOverlap, Math.round(v * 64)),
-      timeline:     v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.Timeline, v >= 0.5 ? 1 : 0),
-      cellCount:    v => Module._poly_edit_lane_int(engineCtx, laneIdx, LaneFieldInt.CellCount, Math.round(v * 64)),
+      kotekanSource:v => forBoth((c) => Module._poly_edit_lane_int(c, laneIdx, LaneFieldInt.KotekanSource, Math.round(v * 8) - 1)),
+      kotekanMode:v => forBoth((c) => Module._poly_edit_lane_int(c, laneIdx, LaneFieldInt.KotekanMode, Math.round(v * 2))),
+      kotekanOverlap:v => forBoth((c) => Module._poly_edit_lane_int(c, laneIdx, LaneFieldInt.KotekanOverlap, Math.round(v * 64))),
+      timeline:     v => forBoth((c) => Module._poly_edit_lane_int(c, laneIdx, LaneFieldInt.Timeline, v >= 0.5 ? 1 : 0)),
+      cellCount:    v => forBoth((c) => Module._poly_edit_lane_int(c, laneIdx, LaneFieldInt.CellCount, Math.round(v * 64))),
     };
 
     const FLOAT_EDITS = {
-      probability:  v => Module._poly_edit_lane_float(engineCtx, laneIdx, LaneFieldFloat.Probability, v),
-      emphasisProb: v => Module._poly_edit_lane_float(engineCtx, laneIdx, LaneFieldFloat.EmphasisProb, v),
-      spread:       v => Module._poly_edit_lane_float(engineCtx, laneIdx, LaneFieldFloat.VelocitySpread, v),
-      swing:        v => Module._poly_edit_lane_float(engineCtx, laneIdx, LaneFieldFloat.SwingAmount, v),
-      humanize:     v => Module._poly_edit_lane_float(engineCtx, laneIdx, LaneFieldFloat.HumanizeMs, v * 50),
-      duration:     v => Module._poly_edit_lane_float(engineCtx, laneIdx, LaneFieldFloat.NoteDuration, v * 4),
-      mutationRate: v => Module._poly_edit_lane_float(engineCtx, laneIdx, LaneFieldFloat.MutationRate, v),
-      driftRate:    v => Module._poly_edit_lane_float(engineCtx, laneIdx, LaneFieldFloat.DriftRate, v * 8 - 4),
-      timingOffset: v => Module._poly_edit_lane_float(engineCtx, laneIdx, LaneFieldFloat.TimingOffsetMs, v * 40 - 20),
-      phraseLength: v => Module._poly_edit_lane_float(engineCtx, laneIdx, LaneFieldFloat.PhraseLength, v * v * 968),
-      phraseGap:    v => Module._poly_edit_lane_float(engineCtx, laneIdx, LaneFieldFloat.PhraseGap, v * v * 968),
-      phraseOffset: v => Module._poly_edit_lane_float(engineCtx, laneIdx, LaneFieldFloat.PhraseOffset, v * v * 968),
-      tempoMult:    v => Module._poly_edit_lane_float(engineCtx, laneIdx, LaneFieldFloat.TempoMultiplier, v),
+      probability:  v => forBoth((c) => Module._poly_edit_lane_float(c, laneIdx, LaneFieldFloat.Probability, v)),
+      emphasisProb: v => forBoth((c) => Module._poly_edit_lane_float(c, laneIdx, LaneFieldFloat.EmphasisProb, v)),
+      spread:       v => forBoth((c) => Module._poly_edit_lane_float(c, laneIdx, LaneFieldFloat.VelocitySpread, v)),
+      swing:        v => forBoth((c) => Module._poly_edit_lane_float(c, laneIdx, LaneFieldFloat.SwingAmount, v)),
+      humanize:     v => forBoth((c) => Module._poly_edit_lane_float(c, laneIdx, LaneFieldFloat.HumanizeMs, v * 50)),
+      duration:     v => forBoth((c) => Module._poly_edit_lane_float(c, laneIdx, LaneFieldFloat.NoteDuration, v * 4)),
+      mutationRate: v => forBoth((c) => Module._poly_edit_lane_float(c, laneIdx, LaneFieldFloat.MutationRate, v)),
+      driftRate:    v => forBoth((c) => Module._poly_edit_lane_float(c, laneIdx, LaneFieldFloat.DriftRate, v * 8 - 4)),
+      timingOffset: v => forBoth((c) => Module._poly_edit_lane_float(c, laneIdx, LaneFieldFloat.TimingOffsetMs, v * 40 - 20)),
+      phraseLength: v => forBoth((c) => Module._poly_edit_lane_float(c, laneIdx, LaneFieldFloat.PhraseLength, v * v * 968)),
+      phraseGap:    v => forBoth((c) => Module._poly_edit_lane_float(c, laneIdx, LaneFieldFloat.PhraseGap, v * v * 968)),
+      phraseOffset: v => forBoth((c) => Module._poly_edit_lane_float(c, laneIdx, LaneFieldFloat.PhraseOffset, v * v * 968)),
+      tempoMult:    v => forBoth((c) => Module._poly_edit_lane_float(c, laneIdx, LaneFieldFloat.TempoMultiplier, v)),
     };
 
     if (INT_EDITS[field]) INT_EDITS[field](value);
@@ -1337,7 +1342,11 @@
     if (!ptr) return false;
     try {
       Module.HEAPU8.set(view, ptr);
-      return Module._poly_import_midi(engineCtx, lane, ptr, len) !== 0;
+      const ok = Module._poly_import_midi(engineCtx, lane, ptr, len) !== 0;
+      // M006/S01: the same bytes into the playing context, so a dropped loop
+      // is heard at once; it fits identically, being the same parse.
+      if (ok && playbackCtx) Module._poly_import_midi(playbackCtx, lane, ptr, len);
+      return ok;
     } finally {
       Module._free(ptr);
     }
@@ -1351,7 +1360,9 @@
   function revertImport(lane) {
     if (!Module || !Module._poly_revert_import) return false;
     if (typeof lane !== 'number' || lane < 0) return false;
-    return Module._poly_revert_import(engineCtx, lane) !== 0;
+    const ok = Module._poly_revert_import(engineCtx, lane) !== 0;
+    if (ok && playbackCtx) Module._poly_revert_import(playbackCtx, lane);
+    return ok;
   }
 
   /* ---------- action handler ---------- */
@@ -1365,13 +1376,13 @@
         togglePlay();
         return;
       case 'toggleStep':
-        Module._poly_action_toggle_step(engineCtx, payload.lane, payload.step);
+        forBoth((c) => Module._poly_action_toggle_step(c, payload.lane, payload.step));
         break;
       case 'setEuclid':
-        Module._poly_action_set_euclid(
-          engineCtx, payload.lane,
+        forBoth((c) => Module._poly_action_set_euclid(
+          c, payload.lane,
           payload.steps ?? -1, payload.hits ?? -1, payload.rotation ?? 0
-        );
+        ));
         break;
       case 'fitMidi': {
         // M035 S02 T02: drop a .mid onto a lane -> populate it from the
@@ -1404,30 +1415,30 @@
           const buf = Module._malloc(payload.cells.length * 4);
           for (let i = 0; i < payload.cells.length; i++)
             Module.HEAP32[(buf >> 2) + i] = payload.cells[i];
-          Module._poly_action_set_cells(engineCtx, payload.lane, buf, payload.cells.length);
+          forBoth((c) => Module._poly_action_set_cells(c, payload.lane, buf, payload.cells.length));
           Module._free(buf);
         } else {
-          Module._poly_action_clear_cells(engineCtx, payload.lane);
+          forBoth((c) => Module._poly_action_clear_cells(c, payload.lane));
         }
         break;
       }
       case 'setFixedStep':
-        Module._poly_action_set_fixed_step(engineCtx, payload.lane, payload.step, payload.on ? 1 : 0);
+        forBoth((c) => Module._poly_action_set_fixed_step(c, payload.lane, payload.step, payload.on ? 1 : 0));
         break;
       case 'setMicroTiming':
-        Module._poly_action_set_micro_timing(engineCtx, payload.lane, payload.step, payload.ms);
+        forBoth((c) => Module._poly_action_set_micro_timing(c, payload.lane, payload.step, payload.ms));
         break;
       case 'setEnvelope':
         if (payload.envelope === null) {
-          Module._poly_action_remove_envelope(engineCtx, payload.lane, payload.index);
+          forBoth((c) => Module._poly_action_remove_envelope(c, payload.lane, payload.index));
         } else {
           const targetIdx = ENV_TARGETS.indexOf(payload.envelope.target);
-          Module._poly_action_set_envelope(
-            engineCtx, payload.lane, payload.index,
+          forBoth((c) => Module._poly_action_set_envelope(
+            c, payload.lane, payload.index,
             targetIdx >= 0 ? targetIdx : 0,
             payload.envelope.period, payload.envelope.depth,
             payload.envelope.on ? 1 : 0
-          );
+          ));
         }
         break;
       case 'selectScene': {
@@ -1493,7 +1504,7 @@
         break;
       }
       case 'setAccent':
-        Module._poly_action_set_accent(engineCtx, payload.lane, payload.step, payload.value);
+        forBoth((c) => Module._poly_action_set_accent(c, payload.lane, payload.step, payload.value));
         break;
       case 'setNoteMap': {
         const ni = payload.note;

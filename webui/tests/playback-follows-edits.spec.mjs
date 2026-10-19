@@ -18,9 +18,6 @@ import {
   renderSignature,
 } from './wasm-playback-helpers.mjs';
 
-// Red until M006/S01 Task 2 mirrors edits into the playing context.
-const RED_UNTIL_TASK_2 = true;
-
 let server;
 let baseUrl;
 
@@ -73,7 +70,6 @@ const ACTIONS = [
 test.describe('M006/S01 — edits reach the playing engine', () => {
   for (const [paramId, value] of EDITS) {
     test(`edit ${paramId} reaches the playing context`, async ({ page }) => {
-      test.fail(RED_UNTIL_TASK_2, 'edits do not reach the playing context yet');
       await playing(page);
       const before = await laneConfig(page, 'engine', 0);
       const v =
@@ -88,7 +84,6 @@ test.describe('M006/S01 — edits reach the playing engine', () => {
 
   for (const [name, payload] of ACTIONS) {
     test(`action ${name} reaches the playing context`, async ({ page }) => {
-      test.fail(RED_UNTIL_TASK_2, 'edits do not reach the playing context yet');
       await playing(page);
       const before = await laneConfig(page, 'engine', 0);
       await page.evaluate(([n, p]) => window.PolyHost.action(n, p), [name, payload]);
@@ -100,7 +95,6 @@ test.describe('M006/S01 — edits reach the playing engine', () => {
   }
 
   test('a seed change reaches the playing context', async ({ page }) => {
-    test.fail(RED_UNTIL_TASK_2, 'edits do not reach the playing context yet');
     await playing(page);
     await page.evaluate(() => window.PolyHost.edit('seed', 0.42, 'perform'));
     const seeds = await page.evaluate(() => [
@@ -115,7 +109,6 @@ test.describe('M006/S01 — edits reach the playing engine', () => {
     ['lane.0.probability', 0.3],
   ]) {
     test(`${paramId} changes what is playing`, async ({ page }) => {
-      test.fail(RED_UNTIL_TASK_2, 'edits do not reach the playing context yet');
       await playing(page);
       const before = await renderSignature(page, 'playback');
       await page.evaluate(([p, v]) => window.PolyHost.edit(p, v, 'perform'), [paramId, value]);
