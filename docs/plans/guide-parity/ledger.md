@@ -448,7 +448,7 @@ milestone-level row, and is `accepted` rather than sliced — see its row.
 or refuses to run, and leaves nothing listening when it exits.
 
 **Branch:** milestone/M006-preview-server
-**Status:** planned
+**Status:** in-progress
 
 Added 2026-10-19 at the owner's request, from a finding recorded in
 central-africa M006's decisions and seen again at that milestone's ship: an
@@ -456,11 +456,21 @@ central-africa M006's decisions and seen again at that milestone's ship: an
 script exited. Not in `vision.md`; it sits here because this programme already
 carries test-tooling rows (GP14).
 
+**Corrected at planning, 2026-10-20, by measuring rather than reading the
+report.** The row first said the script's `cleanup` kills the subshell rather
+than the server. With the server in the foreground it does kill it: the leak
+is Astro 7.3.8 detaching `astro preview` into a locked background server
+whenever it detects an AI agent, so the subshell the script tracks has already
+exited. Nobody running the script by hand, and no CI job, sees it. The row
+below carries the measured cause, and its verification was replaced at the
+owner's decision (`M006-decisions.md`).
+
 ### Slice M006/S01 — The preview server is the script's own
 
+**Plan:** M006-S01-plan.md
 **Validation:** format, e2e, guards
 **Evidence:** evidence/M006-S01.md
-**Status:** open
+**Status:** in-progress
 
 **Definition of Done**
 
@@ -472,7 +482,7 @@ carries test-tooling rows (GP14).
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| GP15 | `site-verify-local.sh` starts `npx astro preview` inside a subshell and its `cleanup` kills that subshell's PID, not the server, so the server outlives the script: one started by central-africa M006's ship was still on port 4322 after the run. A later run's preview is then refused, and its readiness `curl` passes against the leftover server. That is harmless while the leftover serves this checkout's `dist/`, which central-africa M006 checked it does at request time, but a server left by another checkout or worktree would put the whole `e2e` gate on a different build without failing | `tooling` | `scripts/site-verify-local.sh` | A test holds the preview port with a dummy listener and asserts the script exits non-zero naming it, and runs the script and asserts nothing is listening on the port afterwards; both red on the current script first | `open` |
+| GP15 | `site-verify-local.sh` tracks the PID of the subshell that runs `npx astro preview`, and under an AI agent Astro 7.3.8 detaches the server into its own process group with a lock file (`isRunByAgent()`, skipped by `--ignore-lock`), so the subshell exits at once and `cleanup` has nothing to stop: one started by central-africa M006's ship was still on port 4322 afterwards. A later run's preview is then refused, and its readiness `curl` passes against the leftover server. That is harmless while the leftover serves this checkout's `dist/`, which central-africa M006 checked it does at request time, but a server left by another checkout or worktree would put the whole `e2e` gate on a different build without failing | `tooling` | `scripts/site-verify-local.sh`, `scripts/lib/preview-server.sh` | A test holds a port with a listener and asserts the helper refuses it naming the holder; a live test starts and stops a real `astro preview` through the helper with agent variables set and asserts nothing is listening afterwards, skipped with its reason when `site/dist` is absent; the e2e script fails if anything is on its port after cleanup; each red first | `open` |
 
 ## Sequencing
 
