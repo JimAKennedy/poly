@@ -7,7 +7,7 @@ class: gated
 > `scripts/site-verify-local.sh` either serves the site it just built or refuses to run, and leaves nothing listening when it exits.
 
 Ledger: `docs/plans/guide-parity/ledger.md` · branch
-`milestone/M006-preview-server` · 5 commits including this report, **none untraced**
+`milestone/M006-preview-server` · 9 commits including this report, **none untraced**
 
 ## Slices
 
@@ -25,6 +25,13 @@ Ledger: `docs/plans/guide-parity/ledger.md` · branch
   subshell's last command, while the script's `/bin/bash` forks it, so the
   PID the script held was never the server's, for anyone. The ledger,
   plan and decisions record both causes and the correction.
+- **A third cause, found by CI on the ship's PR (Task 4).** `site-e2e`
+  passed every gate, then the new cleanup check failed: the server was still
+  listening. On Linux npm runs the bin as `sh -c 'astro' …`, and dash forks
+  it where macOS's `sh` execs it, so the SIGTERM `npm exec` forwarded killed
+  that shell and orphaned the server to PID 1. Reproduced under Debian in a
+  container; `preview_stop` now signals the whole tree, collected before the
+  first signal, and counts a zombie as stopped.
 - **`scripts/lib/preview-server.sh`** starts the preview with
   `exec npx astro preview … --ignore-lock`, stops it, and names whatever
   holds a port (`lsof`, with a `curl` fallback).
@@ -33,12 +40,15 @@ Ledger: `docs/plans/guide-parity/ledger.md` · branch
   cleanup fails the run if anything is still listening. Cleanup now runs on
   EXIT, with INT and TERM exiting 130 and 143, so an interrupted run cannot
   report success.
-- **`scripts/lib/preview-server.test.mjs`**, 5 cases, runs in
+- **`scripts/lib/preview-server.test.mjs`**, 6 cases, runs in
   `check-guards.sh` (25 invocations, from 24) and in CI's code-quality job.
   Its live case sets `CLAUDECODE=1` and is red with either `exec` or
   `--ignore-lock` removed. It skips with its reason where `site/dist` is not
   built, which is CI's code-quality job. Its contract case is red if the
-  script starts astro itself or drops either check.
+  script starts astro itself or drops either check. A sixth case, added in
+  Task 4, puts a listener below a forking shell on every OS and asserts the
+  port is free the moment `preview_stop` returns; it needs no `site/dist`, so
+  it runs in CI's code-quality job.
 - **`CLAUDE.md`** gains "A Backgrounded Server Must Be the Process You Stop"
   in Key Conventions.
 
@@ -64,6 +74,9 @@ From `evidence/M006-S01.md`, each task's last run:
 | 3 | `e2e` | exit 0, every gate PASS, 4322 free afterwards |
 | 3 | `e2e`, SIGINT mid-gate | exit 130, 4322 free afterwards |
 | 3 | `format` · `guards` · `doc-discipline` | exit 0 · exit 0 · exit 0 |
+| 4 | helper test, macOS · Linux | forking case red first on macOS; it and the live case red under Linux against the Task 1 helper; 6 pass on both after |
+| 4 | `e2e` | exit 0, every gate PASS, 4322 free afterwards |
+| 4 | `format` · `guards` · `doc-discipline` | exit 0 · exit 0, 25 invocations · exit 0 |
 
 ## Look at twice
 
@@ -83,9 +96,19 @@ From `evidence/M006-S01.md`, each task's last run:
   build the site, so the case skips there with its reason. It runs wherever
   `site/dist` exists, and the e2e self-check runs in CI's site-e2e job on
   every push.
-- **`lsof` on CI's Ubuntu runner.** The held-port and holder cases need it
-  to name a PID; without it the helper falls back to `unknown (lsof not
-  found)` and those two cases would fail. The first CI run will show it.
+- **Task 4 landed after you reviewed this report**, at your decision to fix
+  on the PR's branch rather than re-ship. It is the one change to read
+  again: `preview_stop` and the new test case.
+- **The zombie check is a judgment call** made while verifying Task 4: in a
+  container whose PID 1 never reaps, the stopped orphan stayed a zombie that
+  `kill -0` called alive, so every stop waited 5 s and sent SIGKILL. A real
+  runner reaps; the check makes the stop right in either.
+- **The Linux evidence is from a container**, `node:24-bookworm` under
+  podman, not CI's Ubuntu runner. The PR's next `site-e2e` run is the
+  measurement on the runner itself.
+- **`lsof` on CI's Ubuntu runner** is present: the first CI run's
+  code-quality job passed the held-port and holder cases, and `site-e2e`'s
+  failure named the leftover's PID through it.
 - **Windows:** Astro never auto-backgrounds there, and the script is
   bash-only. No change.
 
@@ -95,8 +118,12 @@ From `evidence/M006-S01.md`, each task's last run:
 - `37513a3` test(scripts): the preview server the e2e gate starts is its own — Slice: M006/S01; Rows: GP15
 - `bac18fe` fix(scripts): the e2e gate refuses a held port and leaves nothing listening — Slice: M006/S01; Rows: GP15
 - `6afe0e1` docs: a backgrounded server must be the process you stop — Slice: M006/S01; Rows: GP15
+- `50d8d6a` docs(plans): write the guide-parity M006 report — Slice: M006/S01
+- `53e0566` docs(plans): close guide-parity M006 in the ledger and record it in the changelog — Slice: M006/S01
+- `c3954e8` docs(plans): add M006/S01 Task 4 — preview_stop stops the whole tree — Slice: M006/S01; Rows: GP15
+- `980c307` fix(scripts): preview_stop stops every process it started — Slice: M006/S01; Rows: GP15
 
-This report's own commit carries `Slice: M006/S01`.
+This report's update carries `Slice: M006/S01`.
 
 Untraced commits: none.
 
@@ -187,3 +214,29 @@ Verbatim from `M006-decisions.md`, with headings demoted one level.
   `$?` it was entered with, and on an interrupt that is whatever the
   interrupted command last returned, so an interrupted run could have exited
   0; the slice's definition of done names the interrupted case.
+
+### 2026-10-20 — shipping M006, CI failure
+
+- **Finding:** PR #389's `site-e2e` passed every gate, then failed the new
+  cleanup check: `node …/astro preview --port 4322 --ignore-lock` was still
+  listening. Reproduced under Debian (`node:24-bookworm`): npm runs the bin
+  as `sh -c 'astro' preview …`; dash forks `astro` (macOS's `sh`, bash 3.2,
+  execs it), so the SIGTERM `npm exec` forwards reaches only that `sh`, and
+  the server is orphaned to PID 1 and still listening 3 s later. A third
+  cause, invisible on macOS.
+- **Q:** Fix on this branch as a new task in M006/S01 and push to #389, close
+  #389 and re-ship, or look first? — **A:** fix on this branch
+- **Decision:** `preview_stop` signals `PREVIEW_PID` and every descendant,
+  collected before the first signal, rather than killing whatever holds the
+  port — **Why:** it stops what the script started and nothing else; the
+  port check after cleanup stays as the backstop.
+- **Decision:** the slice and milestone go back to `in-progress` for Task 4
+  and return to `done` in its commit — **Why:** the ledger must not say done
+  while a plan box is open.
+- **Judgment call:** `preview_stop` counts a zombie as stopped — **Why:**
+  measured under Linux, an orphan in a container whose PID 1 never reaps
+  stays a zombie that `kill -0` reports alive, so every stop waited its full
+  5 s and sent SIGKILL to a dead process; a zombie holds no port.
+- **Judgment call:** `CLAUDE.md`'s convention gains the Linux cause as a
+  third bullet — **Why:** it is the same gotcha's third form, and the one no
+  macOS measurement can show.
