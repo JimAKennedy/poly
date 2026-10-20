@@ -12,7 +12,7 @@ replaced, row corrected, `CLAUDE.md` gotcha approved
 
 - [x] Task 1 — `scripts/lib/preview-server.sh` and its test
 - [x] Task 2 — `site-verify-local.sh` uses the helper and checks its own port
-- [ ] Task 3 — the gotcha in `CLAUDE.md`, and the gate run under an agent
+- [x] Task 3 — the gotcha in `CLAUDE.md`, and the gate run under an agent
 
 ## Definition of Done
 

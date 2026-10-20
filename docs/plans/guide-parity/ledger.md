@@ -474,19 +474,19 @@ carries both, and its verification was replaced at the owner's decision
 **Plan:** M006-S01-plan.md
 **Validation:** format, e2e, guards
 **Evidence:** evidence/M006-S01.md
-**Status:** in-progress
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The script refuses to start when its preview port is already in use,
+- [x] The script refuses to start when its preview port is already in use,
       naming the process that holds it
-- [ ] No preview server is left listening after the script exits, whether it
+- [x] No preview server is left listening after the script exits, whether it
       passes, fails or is interrupted
-- [ ] A test fails if either regresses
+- [x] A test fails if either regresses
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| GP15 | `site-verify-local.sh` tracks the PID of the subshell that runs `npx astro preview`. Bash forks that command, so killing the subshell orphans `npm exec` and the server; and under an AI agent Astro 7.3.8 also detaches the server into its own process group with a lock file (`isRunByAgent()`, skipped by `--ignore-lock`), so even the right PID exits at once: one started by central-africa M006's ship was still on port 4322 afterwards. A later run's preview is then refused, and its readiness `curl` passes against the leftover server. That is harmless while the leftover serves this checkout's `dist/`, which central-africa M006 checked it does at request time, but a server left by another checkout or worktree would put the whole `e2e` gate on a different build without failing | `tooling` | `scripts/site-verify-local.sh`, `scripts/lib/preview-server.sh` | A test holds a port with a listener and asserts the helper refuses it naming the holder; a live test starts and stops a real `astro preview` through the helper with agent variables set and asserts nothing is listening afterwards, skipped with its reason when `site/dist` is absent; the e2e script fails if anything is on its port after cleanup; each red first | `open` |
+| GP15 | `site-verify-local.sh` tracks the PID of the subshell that runs `npx astro preview`. Bash forks that command, so killing the subshell orphans `npm exec` and the server; and under an AI agent Astro 7.3.8 also detaches the server into its own process group with a lock file (`isRunByAgent()`, skipped by `--ignore-lock`), so even the right PID exits at once: one started by central-africa M006's ship was still on port 4322 afterwards. A later run's preview is then refused, and its readiness `curl` passes against the leftover server. That is harmless while the leftover serves this checkout's `dist/`, which central-africa M006 checked it does at request time, but a server left by another checkout or worktree would put the whole `e2e` gate on a different build without failing | `tooling` | `scripts/site-verify-local.sh`, `scripts/lib/preview-server.sh` | A test holds a port with a listener and asserts the helper refuses it naming the holder; a live test starts and stops a real `astro preview` through the helper with agent variables set and asserts nothing is listening afterwards, skipped with its reason when `site/dist` is absent; the e2e script fails if anything is on its port after cleanup; each red first | `done` |
 
 ## Sequencing
 
