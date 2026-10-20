@@ -84,3 +84,9 @@ M006, its answer, and every choice made on the owner's behalf.
 - **Judgment call:** the plan's Background and Task 1 step 3 are corrected
   for `exec` while Task 1 is in flight — **Why:** a plan left wrong misleads
   whoever reads it next; the evidence is the record of what ran.
+- **Judgment call:** `site-verify-local.sh` traps `cleanup` on EXIT only,
+  with INT and TERM traps that `exit 130` and `exit 143`, rather than
+  `trap cleanup EXIT INT TERM` — **Why:** Task 2's `cleanup` exits with the
+  `$?` it was entered with, and on an interrupt that is whatever the
+  interrupted command last returned, so an interrupted run could have exited
+  0; the slice's definition of done names the interrupted case.

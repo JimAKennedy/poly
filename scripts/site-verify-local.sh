@@ -8,13 +8,15 @@ set -euo pipefail
 #   2. Build WASM (scripts/build-wasm.sh).
 #   3. Copy poly_engine.{js,wasm} into webui/ so `npm run copy-webui` finds them.
 #   4. Build the Astro site (npm run copy-webui + npm run build).
-#   5. Start `npx astro preview` in the background on POLY_PREVIEW_PORT (4322).
+#   5. Refuse to run if POLY_PREVIEW_PORT (4322) is already held, naming the
+#      holder, then start `astro preview` on it through lib/preview-server.sh.
 #   6. Poll until the preview URL responds.
 #   7. Run each Playwright gate in turn, capturing its summary JSON into
 #      .gsd/artifacts/ immediately after — Playwright clears test-results/ at
 #      the start of every invocation, so late captures would clobber earlier
 #      ones.
-#   8. Tear down the preview server. Exit with the OR'd exit codes.
+#   8. Tear down the preview server, and fail if anything is still listening
+#      on the port. Exit with the OR'd exit codes.
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
@@ -25,6 +27,8 @@ PREVIEW_URL="http://localhost:${PREVIEW_PORT}"
 
 # shellcheck disable=SC1091
 source "${SCRIPT_DIR}/lib/ensure-emsdk.sh"
+# shellcheck disable=SC1091
+source "${SCRIPT_DIR}/lib/preview-server.sh"
 
 echo "=== [1/5] Building WASM ==="
 bash "${SCRIPT_DIR}/build-wasm.sh"
@@ -37,24 +41,26 @@ echo "=== [3/5] Building Astro site ==="
 (cd "${SITE_DIR}" && npm run copy-webui && npm run build)
 
 echo "=== [4/5] Starting astro preview on :${PREVIEW_PORT} ==="
+preview_require_free_port "${PREVIEW_PORT}" || exit 1
 PREVIEW_LOG="$(mktemp -t poly-preview.XXXXXX)"
-(cd "${SITE_DIR}" && npx astro preview --port "${PREVIEW_PORT}" >"${PREVIEW_LOG}" 2>&1) &
-PREVIEW_PID=$!
+preview_start "${SITE_DIR}" "${PREVIEW_PORT}" "${PREVIEW_LOG}"
 
 cleanup() {
-    if kill -0 "${PREVIEW_PID}" 2>/dev/null; then
-        kill "${PREVIEW_PID}" 2>/dev/null || true
-        # Give it a beat to die cleanly, then reap.
-        for _ in 1 2 3 4 5; do
-            kill -0 "${PREVIEW_PID}" 2>/dev/null || break
-            sleep 0.2
-        done
-        kill -9 "${PREVIEW_PID}" 2>/dev/null || true
-        wait "${PREVIEW_PID}" 2>/dev/null || true
+    local rc=$? holder
+    preview_stop
+    holder="$(preview_port_holder "${PREVIEW_PORT}")"
+    if [ -n "${holder}" ]; then
+        echo "=== FAIL: a preview server is still listening on :${PREVIEW_PORT} after cleanup: ${holder} ===" >&2
+        rc=1
     fi
     rm -f "${PREVIEW_LOG}"
+    exit "${rc}"
 }
-trap cleanup EXIT INT TERM
+# INT and TERM exit non-zero, so the EXIT trap's cleanup reports an
+# interrupted run as a failure rather than with whatever $? last held.
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
 READY=0
 for _ in $(seq 1 60); do

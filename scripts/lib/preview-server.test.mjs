@@ -18,7 +18,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { createServer } from 'node:net';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -118,3 +118,23 @@ test(
     }
   },
 );
+
+test('site-verify-local.sh starts and stops its preview only through the helper', () => {
+  const src = readFileSync(join(ROOT, 'scripts', 'site-verify-local.sh'), 'utf8');
+  const at = (needle) => {
+    const i = src.indexOf(needle);
+    assert.ok(i >= 0, `site-verify-local.sh does not contain ${needle}`);
+    return i;
+  };
+  at('lib/preview-server.sh');
+  assert.ok(!/npx astro preview/.test(src), 'starts astro preview itself, bypassing the helper');
+  const require = at('preview_require_free_port "${PREVIEW_PORT}"');
+  const start = at('preview_start "${SITE_DIR}" "${PREVIEW_PORT}"');
+  const playwright = at('npx playwright');
+  assert.ok(require < start && start < playwright, 'the port is not checked before the preview starts');
+  const cleanup = src.slice(at('cleanup() {'), src.indexOf('\n}', at('cleanup() {')));
+  const stop = cleanup.indexOf('preview_stop');
+  const holder = cleanup.indexOf('preview_port_holder "${PREVIEW_PORT}"');
+  assert.ok(stop >= 0 && holder > stop, 'cleanup does not stop the preview and then check its port');
+  assert.match(cleanup, /rc=1/, 'cleanup does not fail the run when something is still listening');
+});
