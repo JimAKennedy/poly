@@ -24,7 +24,9 @@ a development Mac.
 - `build-wasm.sh` — emscripten build of the engine to `poly_engine.{js,wasm}`
   for the guide site and webui.
 - `lib/` — sourceable helpers shared by other scripts, not entry points
-  (`lib/ensure-emsdk.sh` guarantees the pinned emcc toolchain is on PATH).
+  (`lib/ensure-emsdk.sh` guarantees the pinned emcc toolchain is on PATH;
+  `lib/preview-server.sh` starts and stops the e2e gate's `astro preview` and
+  checks its port).
 
 ## Site verification pipelines
 

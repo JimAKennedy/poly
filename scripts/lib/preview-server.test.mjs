@@ -1,0 +1,165 @@
+#!/usr/bin/env node
+// preview-server.test.mjs — the preview server the e2e gate starts is its own,
+// and nothing is left listening once it is stopped.
+//
+// guide-parity M006/S01, GP15. Astro 7.3.8 detaches `astro preview` into a
+// locked background server whenever it detects an AI agent, so the subshell
+// site-verify-local.sh tracked had already exited and its cleanup stopped
+// nothing: a server stayed on port 4322, and the next run's readiness check
+// passed against it. The helper starts the server with `--ignore-lock`, which
+// keeps it in the foreground, and checks the port itself before and after.
+//
+// The live case sets CLAUDECODE=1 for the child, so it exercises the agent
+// path whoever runs it, and is skipped with its reason when site/dist has not
+// been built — as in CI's code-quality job.
+//
+// Run: `node --test scripts/lib/preview-server.test.mjs` (wired into
+// check-guards.sh).
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { createServer } from 'node:net';
+import { tmpdir } from 'node:os';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const ROOT = resolve(HERE, '..', '..');
+const HELPER = join(ROOT, 'scripts', 'lib', 'preview-server.sh');
+const SITE = join(ROOT, 'site');
+
+function helper(body, env = process.env) {
+  return spawnSync('bash', ['-c', `source "${HELPER}"; ${body}`], {
+    cwd: ROOT,
+    env,
+    encoding: 'utf8',
+    timeout: 60_000,
+  });
+}
+
+function listen(port = 0) {
+  return new Promise((ok, fail) => {
+    const server = createServer();
+    server.once('error', fail);
+    server.listen(port, () => ok(server));
+  });
+}
+
+async function freePort() {
+  const server = await listen();
+  const { port } = server.address();
+  await new Promise((ok) => server.close(ok));
+  return port;
+}
+
+test('a free port is accepted silently', async () => {
+  const port = await freePort();
+  const r = helper(`preview_require_free_port ${port}`);
+  assert.equal(r.status, 0, r.stderr);
+  assert.equal(r.stdout + r.stderr, '');
+});
+
+test('a held port is refused, naming the process that holds it', async () => {
+  const server = await listen();
+  try {
+    const { port } = server.address();
+    const r = helper(`preview_require_free_port ${port}`);
+    assert.equal(r.status, 1);
+    assert.match(r.stderr, /already in use/);
+    assert.ok(r.stderr.includes(String(process.pid)), r.stderr);
+  } finally {
+    await new Promise((ok) => server.close(ok));
+  }
+});
+
+test('the holder is printed as its PID and command', async () => {
+  const server = await listen();
+  try {
+    const { port } = server.address();
+    const r = helper(`preview_port_holder ${port}`);
+    assert.equal(r.status, 0, r.stderr);
+    assert.ok(r.stdout.startsWith(`${process.pid} `), r.stdout);
+  } finally {
+    await new Promise((ok) => server.close(ok));
+  }
+});
+
+// On Linux npm runs a bin as `sh -c 'astro' …`, and dash forks it, so the
+// server sits below a shell that dies on SIGTERM without passing it on. The
+// trailing `:` makes bash fork node the same way on every OS.
+test('a server below a forking shell is stopped too', async () => {
+  const port = await freePort();
+  const serve = `require('net').createServer().listen(${port})`;
+  try {
+    const r = helper(
+      [
+        `(exec bash -c 'node -e "$SERVE" >/dev/null 2>&1; :') &`,
+        'PREVIEW_PID=$!',
+        `for _ in $(seq 1 50); do [ -n "$(preview_port_holder ${port})" ] && break; sleep 0.1; done`,
+        `[ -n "$(preview_port_holder ${port})" ] || exit 3`,
+        'preview_stop',
+        `preview_port_holder ${port}`,
+      ].join('\n'),
+      { ...process.env, SERVE: serve },
+    );
+    assert.equal(r.status, 0, `the server never listened (exit ${r.status}): ${r.stderr}`);
+    assert.equal(r.stdout.trim(), '', `still listening on :${port} after preview_stop: ${r.stdout}`);
+  } finally {
+    const left = helper(`preview_port_holder ${port}`).stdout.trim();
+    if (left) spawnSync('kill', [left.split(' ')[0]]);
+  }
+});
+
+const DIST = join(SITE, 'dist', 'index.html');
+test(
+  'a preview started under an agent is gone once stopped',
+  {
+    skip: existsSync(DIST)
+      ? false
+      : 'site/dist/index.html absent — run the e2e gate or npm --prefix site run build first',
+  },
+  async () => {
+    const port = await freePort();
+    const dir = mkdtempSync(join(tmpdir(), 'poly-preview-test-'));
+    const log = join(dir, 'preview.log');
+    try {
+      const r = helper(
+        [
+          `preview_start "${SITE}" ${port} "${log}"`,
+          `for _ in $(seq 1 60); do curl -sf -o /dev/null http://localhost:${port}/ && break; sleep 0.5; done`,
+          `curl -sf -o /dev/null http://localhost:${port}/ || exit 3`,
+          'preview_stop',
+        ].join('; '),
+        { ...process.env, CLAUDECODE: '1' },
+      );
+      assert.equal(r.status, 0, `the preview never served (exit ${r.status}): ${r.stderr}`);
+      const left = helper(`preview_port_holder ${port}`).stdout.trim();
+      assert.equal(left, '', `still listening on :${port} after preview_stop: ${left}`);
+    } finally {
+      const left = helper(`preview_port_holder ${port}`).stdout.trim();
+      if (left) spawnSync('kill', [left.split(' ')[0]]);
+      rmSync(dir, { recursive: true, force: true });
+    }
+  },
+);
+
+test('site-verify-local.sh starts and stops its preview only through the helper', () => {
+  const src = readFileSync(join(ROOT, 'scripts', 'site-verify-local.sh'), 'utf8');
+  const at = (needle) => {
+    const i = src.indexOf(needle);
+    assert.ok(i >= 0, `site-verify-local.sh does not contain ${needle}`);
+    return i;
+  };
+  at('lib/preview-server.sh');
+  assert.ok(!/npx astro preview/.test(src), 'starts astro preview itself, bypassing the helper');
+  const require = at('preview_require_free_port "${PREVIEW_PORT}"');
+  const start = at('preview_start "${SITE_DIR}" "${PREVIEW_PORT}"');
+  const playwright = at('npx playwright');
+  assert.ok(require < start && start < playwright, 'the port is not checked before the preview starts');
+  const cleanup = src.slice(at('cleanup() {'), src.indexOf('\n}', at('cleanup() {')));
+  const stop = cleanup.indexOf('preview_stop');
+  const holder = cleanup.indexOf('preview_port_holder "${PREVIEW_PORT}"');
+  assert.ok(stop >= 0 && holder > stop, 'cleanup does not stop the preview and then check its port');
+  assert.match(cleanup, /rc=1/, 'cleanup does not fail the run when something is still listening');
+});

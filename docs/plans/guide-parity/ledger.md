@@ -448,7 +448,7 @@ milestone-level row, and is `accepted` rather than sliced — see its row.
 or refuses to run, and leaves nothing listening when it exits.
 
 **Branch:** milestone/M006-preview-server
-**Status:** planned
+**Status:** done
 
 Added 2026-10-19 at the owner's request, from a finding recorded in
 central-africa M006's decisions and seen again at that milestone's ship: an
@@ -456,23 +456,39 @@ central-africa M006's decisions and seen again at that milestone's ship: an
 script exited. Not in `vision.md`; it sits here because this programme already
 carries test-tooling rows (GP14).
 
+**Corrected at planning, 2026-10-20, by measuring rather than reading the
+report, then corrected again in execution.** The row first said only that
+the script's `cleanup` kills the subshell rather than the server. Measured
+under `/bin/bash`, there are two causes. Bash forks a subshell's last command,
+so the PID the script holds is a bash whose death orphans `npm exec` and the
+server, for every caller. And Astro 7.3.8 detaches `astro preview` into a
+locked background server whenever it detects an AI agent, so under an agent
+even the right PID has already exited. Planning first replaced the row with
+the second cause alone, from a measurement taken in zsh, which execs a
+subshell's last command; the helper's live test caught it. The row below
+carries both, and its verification was replaced at the owner's decision
+(`M006-decisions.md`). CI on the ship's PR then found a third, Linux only:
+npm runs the bin as `sh -c`, and dash forks it, so the server sat below a
+shell the forwarded SIGTERM killed instead; Task 4 stops the whole tree.
+
 ### Slice M006/S01 — The preview server is the script's own
 
+**Plan:** M006-S01-plan.md
 **Validation:** format, e2e, guards
 **Evidence:** evidence/M006-S01.md
-**Status:** open
+**Status:** done
 
 **Definition of Done**
 
-- [ ] The script refuses to start when its preview port is already in use,
+- [x] The script refuses to start when its preview port is already in use,
       naming the process that holds it
-- [ ] No preview server is left listening after the script exits, whether it
+- [x] No preview server is left listening after the script exits, whether it
       passes, fails or is interrupted
-- [ ] A test fails if either regresses
+- [x] A test fails if either regresses
 
 | ID | Item | Kind | Lands in | Verification | Status |
 |---|---|---|---|---|---|
-| GP15 | `site-verify-local.sh` starts `npx astro preview` inside a subshell and its `cleanup` kills that subshell's PID, not the server, so the server outlives the script: one started by central-africa M006's ship was still on port 4322 after the run. A later run's preview is then refused, and its readiness `curl` passes against the leftover server. That is harmless while the leftover serves this checkout's `dist/`, which central-africa M006 checked it does at request time, but a server left by another checkout or worktree would put the whole `e2e` gate on a different build without failing | `tooling` | `scripts/site-verify-local.sh` | A test holds the preview port with a dummy listener and asserts the script exits non-zero naming it, and runs the script and asserts nothing is listening on the port afterwards; both red on the current script first | `open` |
+| GP15 | `site-verify-local.sh` tracks the PID of the subshell that runs `npx astro preview`. Bash forks that command, so killing the subshell orphans `npm exec` and the server, and on Linux npm's `sh -c` (dash) forks the server again below that; and under an AI agent Astro 7.3.8 also detaches the server into its own process group with a lock file (`isRunByAgent()`, skipped by `--ignore-lock`), so even the right PID exits at once: one started by central-africa M006's ship was still on port 4322 afterwards. A later run's preview is then refused, and its readiness `curl` passes against the leftover server. That is harmless while the leftover serves this checkout's `dist/`, which central-africa M006 checked it does at request time, but a server left by another checkout or worktree would put the whole `e2e` gate on a different build without failing | `tooling` | `scripts/site-verify-local.sh`, `scripts/lib/preview-server.sh` | A test holds a port with a listener and asserts the helper refuses it naming the holder; a live test starts and stops a real `astro preview` through the helper with agent variables set and asserts nothing is listening afterwards, skipped with its reason when `site/dist` is absent; the e2e script fails if anything is on its port after cleanup; each red first | `done` |
 
 ## Sequencing
 
