@@ -54,6 +54,8 @@ jobs:
         run: |
           node --test scripts/check-reference-links-workflow.mjs
           node --test scripts/reference-links.test.mjs
+      - name: Preview-server helper refuses a held port and leaves nothing listening
+        run: node --test scripts/lib/preview-server.test.mjs
 
   build:
     strategy:

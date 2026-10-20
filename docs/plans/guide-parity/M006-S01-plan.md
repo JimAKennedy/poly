@@ -10,7 +10,7 @@ replaced, row corrected, `CLAUDE.md` gotcha approved
 
 ## Task status
 
-- [ ] Task 1 — `scripts/lib/preview-server.sh` and its test
+- [x] Task 1 — `scripts/lib/preview-server.sh` and its test
 - [ ] Task 2 — `site-verify-local.sh` uses the helper and checks its own port
 - [ ] Task 3 — the gotcha in `CLAUDE.md`, and the gate run under an agent
 
@@ -41,10 +41,13 @@ lock file, whenever it detects an AI agent (`isRunByAgent()` in
 `site/node_modules/astro/dist/cli/agent.js`, which reads variables such as
 `CLAUDECODE` and `AI_AGENT`), unless `--ignore-lock` is passed or the platform
 is Windows. `scripts/site-verify-local.sh` tracks the PID of the subshell that
-ran `npx astro preview`; under an agent that subshell exits at once, so
-`cleanup` has nothing to kill and the server stays on port 4322. With
-`--ignore-lock` the server is the subshell's child, and killing the subshell
-stops it (measured 2026-10-20, `M006-decisions.md`). `--ignore-lock` also
+ran `npx astro preview`, and there are two causes (both measured 2026-10-20
+under `/bin/bash`, `M006-decisions.md`). Bash forks the subshell's last
+command, so that PID is a bash whose death orphans `npm exec` and the server,
+for every caller; `exec` in the subshell makes the PID `npm exec`, which
+forwards SIGTERM. Under an agent, Astro also detaches the server, which
+`--ignore-lock` prevents. Planning first recorded only the second cause, from
+a measurement taken in zsh; corrected during Task 1. `--ignore-lock` also
 skips Astro's own one-server check, so the script must check the port itself:
 otherwise Vite may move to the next port while the readiness `curl` on 4322
 answers from someone else's server.
@@ -67,9 +70,10 @@ The helper is sourced, never executed, and defines:
   to stderr, plus `stop it, or set POLY_PREVIEW_PORT to another port`, and
   returns 1.
 - `preview_start <site_dir> <port> <log>` — runs
-  `(cd "<site_dir>" && npx astro preview --port "<port>" --ignore-lock >"<log>" 2>&1) &`
-  and sets `PREVIEW_PID` to `$!`. A comment above it says why `--ignore-lock`
-  is there, citing Astro's agent auto-backgrounding.
+  `(cd "<site_dir>" && exec npx astro preview --port "<port>" --ignore-lock >"<log>" 2>&1) &`
+  and sets `PREVIEW_PID` to `$!`. A comment above it says why `exec` and
+  `--ignore-lock` are there: bash forks a subshell's last command, and Astro
+  backgrounds its server under an agent.
 - `preview_stop` — the body of today's `cleanup` minus the log removal: kill
   `PREVIEW_PID`, wait up to a second, `kill -9`, reap.
 
@@ -103,9 +107,10 @@ Steps:
 4. Run the test again. Expected: all pass, the live case included (this
    checkout has `site/dist/` from earlier `e2e` runs; if not, run
    `npm --prefix site run build` first so the live case is not skipped).
-5. Mutation: remove `--ignore-lock` from `preview_start`, re-run. Expected:
-   the live case fails on a leftover holder. Record the failure line in the
-   evidence, restore the flag, and confirm the leftover was stopped
+5. Mutations, one at a time: remove `exec`, then remove `--ignore-lock`,
+   from `preview_start`, re-running after each. Expected: the live case fails
+   on a leftover holder both times. Record the failure lines in the evidence,
+   restore the line, and confirm each leftover was stopped
    (`lsof -nP -iTCP:<port> -sTCP:LISTEN` empty).
 6. Wire it in:
    - `scripts/check-guards.sh`: `run_guard "preview-server helper" node --test scripts/lib/preview-server.test.mjs`

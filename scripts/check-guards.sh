@@ -99,6 +99,11 @@ run_guard "front-door contract"        node --test scripts/check-front-door.mjs
 # document and directory under docs/ and nothing that is gone.
 run_guard "docs-index"                 node --test scripts/check-docs-index.mjs
 
+# guide-parity M006/S01 (GP15): the e2e gate's preview server is the one it
+# started and is gone when it exits — under bash and under an AI agent, where
+# Astro detaches it. The live case skips with its reason without site/dist.
+run_guard "preview-server helper"      node --test scripts/lib/preview-server.test.mjs
+
 echo
 if [ "${#FAILED[@]}" -eq 0 ]; then
     echo "=== check-guards.sh: ${RAN} guard invocation(s) passed ==="

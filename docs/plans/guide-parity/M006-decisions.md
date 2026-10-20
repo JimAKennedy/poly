@@ -57,3 +57,30 @@ M006, its answer, and every choice made on the owner's behalf.
   other `node --test scripts/…` contract steps — **Why:** `check-guards.sh`
   mirrors those steps, and a guard only `check-guards.sh` runs is the gap
   M007 closed.
+
+## 2026-10-20 — executing M006/S01
+
+- **Finding, correcting the planning finding above:** "with `--ignore-lock`,
+  or with those variables unset, the server was the wrapper's child and the
+  script's existing `kill` of the wrapper stopped it" is wrong for the
+  script. That measurement ran in zsh, which execs the last command of a
+  subshell; the script runs under `/bin/bash` 3.2, which forks it. Measured
+  under bash with `--ignore-lock`: the PID held is a bash subshell, its child
+  is `npm exec`, and that child's is the server; killing the subshell left
+  the server listening. With `exec` in the subshell, the PID held is
+  `npm exec`, which forwards SIGTERM, and the server stopped. So there are two
+  causes, and the original row's "kills that subshell's PID, not the server"
+  was right about the first: it leaks for everyone who runs the script, and
+  under an agent Astro's detaching would defeat even the right PID. The
+  helper uses both `exec` and `--ignore-lock`, and the ledger's correction
+  paragraph and GP15 now say so. Caught by the live test, which went red with
+  `--ignore-lock` alone.
+- **Judgment call:** `preview_start` runs `exec npx astro preview …` in its
+  subshell, beyond the approved design's `--ignore-lock` — **Why:** without
+  it the approved design does not meet the slice's definition of done
+  (measured above); it changes one word inside a function the design already
+  named, and both mutations (no `exec`; no `--ignore-lock`) turn the live
+  case red.
+- **Judgment call:** the plan's Background and Task 1 step 3 are corrected
+  for `exec` while Task 1 is in flight — **Why:** a plan left wrong misleads
+  whoever reads it next; the evidence is the record of what ran.
