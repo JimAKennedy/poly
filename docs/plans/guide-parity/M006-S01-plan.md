@@ -13,6 +13,7 @@ replaced, row corrected, `CLAUDE.md` gotcha approved
 - [x] Task 1 — `scripts/lib/preview-server.sh` and its test
 - [x] Task 2 — `site-verify-local.sh` uses the helper and checks its own port
 - [x] Task 3 — the gotcha in `CLAUDE.md`, and the gate run under an agent
+- [ ] Task 4 — `preview_stop` stops the whole tree it started
 
 ## Definition of Done
 
@@ -199,6 +200,47 @@ Steps:
 6. Commit: `docs: Astro backgrounds its servers when an agent runs it` with
    the slice's trailers and `Rows: GP15`; tick Task 3; append evidence; set
    GP15 and the DoD boxes in the ledger, and the slice to `done`.
+
+**Check:** `e2e`, `format`, `guards`.
+
+## Task 4 — `preview_stop` stops the whole tree it started
+
+Added 2026-10-20, after the slice was done: CI's `site-e2e` on the ship's PR
+failed the Task 2 self-check, with `node …/astro preview --port 4322
+--ignore-lock` still listening after cleanup. Reproduced under Debian
+(`node:24-bookworm`): npm runs the bin as `sh -c 'astro' preview …`, and
+dash forks `astro` where macOS's `sh` (bash) execs it, so `npm exec`
+forwards SIGTERM to that `sh`, which dies and orphans the server to PID 1.
+`exec` in the subshell is necessary but not sufficient; the stop must reach
+every process below the PID held.
+
+**Modifies:** `scripts/lib/preview-server.sh`,
+`scripts/lib/preview-server.test.mjs`
+**Consumes:** Task 1's helper.
+
+Steps:
+
+1. Add a test case, `a server below a forking shell is stopped too`, that
+   needs no `site/dist`: in the helper's shell, start
+   `(exec bash -c 'node -e "<listen on port>"; :') &`, set `PREVIEW_PID=$!`,
+   wait for the port, call `preview_stop`, and assert immediately, with no
+   sleep, that `preview_port_holder` prints nothing. The trailing `:` makes
+   bash fork `node` on every OS, which is the Linux shape. Drop the live
+   case's 1 s sleep, so it checks when the script does.
+2. Run `node --test scripts/lib/preview-server.test.mjs` and watch the new
+   case fail with the node PID still listening.
+3. In `preview_stop`, collect `PREVIEW_PID` and its descendants
+   (`pgrep -P`, recursively) before signalling, since an orphan is
+   reparented and no longer findable; send SIGTERM to all of them, wait up
+   to 5 s for all to exit, then SIGKILL any left, then `wait`.
+4. Run the test file (all pass), then the step 1 reproduction of the CI
+   failure in the Debian container (nothing listening immediately after
+   `preview_stop`), and `bash scripts/site-verify-local.sh` from this session
+   (exit 0, 4322 free). Restore the WASM artifacts.
+5. Run `pre-commit run --all-files` and `bash scripts/check-guards.sh`.
+6. Commit: `fix(scripts): preview_stop stops every process it started` with
+   the slice's trailers and `Rows: GP15`; tick Task 4; append evidence; set
+   the slice back to `done`.
 
 **Check:** `e2e`, `format`, `guards`.
 

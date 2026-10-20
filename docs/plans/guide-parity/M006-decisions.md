@@ -90,3 +90,22 @@ M006, its answer, and every choice made on the owner's behalf.
   `$?` it was entered with, and on an interrupt that is whatever the
   interrupted command last returned, so an interrupted run could have exited
   0; the slice's definition of done names the interrupted case.
+
+## 2026-10-20 — shipping M006, CI failure
+
+- **Finding:** PR #389's `site-e2e` passed every gate, then failed the new
+  cleanup check: `node …/astro preview --port 4322 --ignore-lock` was still
+  listening. Reproduced under Debian (`node:24-bookworm`): npm runs the bin
+  as `sh -c 'astro' preview …`; dash forks `astro` (macOS's `sh`, bash 3.2,
+  execs it), so the SIGTERM `npm exec` forwards reaches only that `sh`, and
+  the server is orphaned to PID 1 and still listening 3 s later. A third
+  cause, invisible on macOS.
+- **Q:** Fix on this branch as a new task in M006/S01 and push to #389, close
+  #389 and re-ship, or look first? — **A:** fix on this branch
+- **Decision:** `preview_stop` signals `PREVIEW_PID` and every descendant,
+  collected before the first signal, rather than killing whatever holds the
+  port — **Why:** it stops what the script started and nothing else; the
+  port check after cleanup stays as the backstop.
+- **Decision:** the slice and milestone go back to `in-progress` for Task 4
+  and return to `done` in its commit — **Why:** the ledger must not say done
+  while a plan box is open.
