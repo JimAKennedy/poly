@@ -85,6 +85,32 @@ test('the holder is printed as its PID and command', async () => {
   }
 });
 
+// On Linux npm runs a bin as `sh -c 'astro' …`, and dash forks it, so the
+// server sits below a shell that dies on SIGTERM without passing it on. The
+// trailing `:` makes bash fork node the same way on every OS.
+test('a server below a forking shell is stopped too', async () => {
+  const port = await freePort();
+  const serve = `require('net').createServer().listen(${port})`;
+  try {
+    const r = helper(
+      [
+        `(exec bash -c 'node -e "$SERVE" >/dev/null 2>&1; :') &`,
+        'PREVIEW_PID=$!',
+        `for _ in $(seq 1 50); do [ -n "$(preview_port_holder ${port})" ] && break; sleep 0.1; done`,
+        `[ -n "$(preview_port_holder ${port})" ] || exit 3`,
+        'preview_stop',
+        `preview_port_holder ${port}`,
+      ].join('\n'),
+      { ...process.env, SERVE: serve },
+    );
+    assert.equal(r.status, 0, `the server never listened (exit ${r.status}): ${r.stderr}`);
+    assert.equal(r.stdout.trim(), '', `still listening on :${port} after preview_stop: ${r.stdout}`);
+  } finally {
+    const left = helper(`preview_port_holder ${port}`).stdout.trim();
+    if (left) spawnSync('kill', [left.split(' ')[0]]);
+  }
+});
+
 const DIST = join(SITE, 'dist', 'index.html');
 test(
   'a preview started under an agent is gone once stopped',
@@ -108,7 +134,6 @@ test(
         { ...process.env, CLAUDECODE: '1' },
       );
       assert.equal(r.status, 0, `the preview never served (exit ${r.status}): ${r.stderr}`);
-      await new Promise((ok) => setTimeout(ok, 1000));
       const left = helper(`preview_port_holder ${port}`).stdout.trim();
       assert.equal(left, '', `still listening on :${port} after preview_stop: ${left}`);
     } finally {

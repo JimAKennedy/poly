@@ -17,7 +17,9 @@
 # (`isRunByAgent()`, which reads CLAUDECODE, AI_AGENT and similar), so even
 # the right PID has exited at once. `exec` fixes the first and `--ignore-lock`
 # the second — which also skips Astro's own one-server check, so the port is
-# checked here instead. guide-parity M006/S01, GP15; measurements in
+# checked here instead. A third, on Linux only: npm runs the bin under dash,
+# which forks it too, so preview_stop signals the whole tree. guide-parity
+# M006/S01, GP15; measurements in
 # docs/plans/guide-parity/M006-decisions.md.
 
 # Prints "<pid> <command>" for the process listening on TCP <port>, or nothing
@@ -56,17 +58,40 @@ preview_start() {
     PREVIEW_PID=$!
 }
 
-# Stops the server preview_start started, if it is still running.
+# Prints <pid> and every process below it, parents first.
+preview_tree() {
+    local child
+    echo "$1"
+    for child in $(pgrep -P "$1" 2>/dev/null); do
+        preview_tree "${child}"
+    done
+}
+
+# Stops the server preview_start started, and every process below it.
 preview_stop() {
     [ -n "${PREVIEW_PID:-}" ] || return 0
-    if kill -0 "${PREVIEW_PID}" 2>/dev/null; then
-        kill "${PREVIEW_PID}" 2>/dev/null || true
-        # Give it a beat to die cleanly, then reap.
-        for _ in 1 2 3 4 5; do
-            kill -0 "${PREVIEW_PID}" 2>/dev/null || break
-            sleep 0.2
+    local pids pid alive
+    # Collected before the first signal: on Linux npm runs the bin as
+    # `sh -c 'astro' …` and dash forks it, so the SIGTERM npm exec forwards
+    # kills only that sh, and the server it orphans is reparented to PID 1
+    # and no longer findable from PREVIEW_PID.
+    pids="$(preview_tree "${PREVIEW_PID}")"
+    # shellcheck disable=SC2086 # one PID per word
+    kill ${pids} 2>/dev/null || true
+    for _ in $(seq 1 25); do
+        alive=""
+        for pid in ${pids}; do
+            # A zombie has stopped; one is left when PID 1 never reaps the
+            # orphan, as in a container started without an init.
+            case "$(ps -o stat= -p "${pid}" 2>/dev/null)" in
+                "" | Z*) ;;
+                *) alive="${alive} ${pid}" ;;
+            esac
         done
-        kill -9 "${PREVIEW_PID}" 2>/dev/null || true
-        wait "${PREVIEW_PID}" 2>/dev/null || true
-    fi
+        [ -n "${alive}" ] || break
+        sleep 0.2
+    done
+    # shellcheck disable=SC2086
+    [ -z "${alive}" ] || kill -9 ${alive} 2>/dev/null || true
+    wait "${PREVIEW_PID}" 2>/dev/null || true
 }

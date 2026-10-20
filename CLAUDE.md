@@ -87,8 +87,8 @@ Tracked as [#282](https://github.com/JimAKennedy/poly/issues/282).
 
 ### A Backgrounded Server Must Be the Process You Stop
 
-Two things leave a server running after the script that started it, and
-`scripts/site-verify-local.sh` had both until guide-parity M006 — the symptom
+Three things leave a server running after the script that started it, and
+`scripts/site-verify-local.sh` had all three until guide-parity M006 — the symptom
 was an `astro preview` still listening on 4322 after `e2e`, which the next
 run's readiness check then answered from.
 
@@ -102,8 +102,14 @@ run's readiness check then answered from.
   `--ignore-lock`, which keeps the server in the foreground — and skips
   Astro's one-server check, so the script must check the port itself.
 
-`scripts/lib/preview-server.sh` does all three, and its test fails if either
-word is dropped. To clear a leftover by hand: `npx astro preview stop` from
+- **On Linux, npm runs a bin as `sh -c '<bin>' …`, and dash forks it**
+  (macOS's `sh` is bash, which execs it), so the SIGTERM `npm exec` forwards
+  kills that `sh` and orphans the server to PID 1. Signal the whole tree,
+  collected before the first signal. macOS never shows this; guide-parity
+  M006's ship found it in CI.
+
+`scripts/lib/preview-server.sh` does all of this, and its test fails if
+either word or the tree stop is dropped. To clear a leftover by hand: `npx astro preview stop` from
 `site/` for a detached one, or `kill` the PID `lsof -nP -iTCP:4322
 -sTCP:LISTEN -t` prints.
 

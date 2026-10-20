@@ -109,3 +109,10 @@ M006, its answer, and every choice made on the owner's behalf.
 - **Decision:** the slice and milestone go back to `in-progress` for Task 4
   and return to `done` in its commit — **Why:** the ledger must not say done
   while a plan box is open.
+- **Judgment call:** `preview_stop` counts a zombie as stopped — **Why:**
+  measured under Linux, an orphan in a container whose PID 1 never reaps
+  stays a zombie that `kill -0` reports alive, so every stop waited its full
+  5 s and sent SIGKILL to a dead process; a zombie holds no port.
+- **Judgment call:** `CLAUDE.md`'s convention gains the Linux cause as a
+  third bullet — **Why:** it is the same gotcha's third form, and the one no
+  macOS measurement can show.
