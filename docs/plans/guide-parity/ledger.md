@@ -448,7 +448,7 @@ milestone-level row, and is `accepted` rather than sliced — see its row.
 or refuses to run, and leaves nothing listening when it exits.
 
 **Branch:** milestone/M006-preview-server
-**Status:** in-progress
+**Status:** done
 
 Added 2026-10-19 at the owner's request, from a finding recorded in
 central-africa M006's decisions and seen again at that milestone's ship: an
