@@ -290,7 +290,7 @@ jobs:
       - name: Generate coverage
         run: |
           lcov --capture --directory build --output-file coverage.info \
-               --ignore-errors mismatch
+               --ignore-errors mismatch,inconsistent
           lcov --remove coverage.info '/usr/*' '*/build/_deps/*' '*/tests/*' \
                --output-file coverage.filtered.info
           genhtml coverage.filtered.info --output-directory coverage-report
@@ -353,7 +353,7 @@ jobs:
       - name: Generate plugin-scoped coverage
         run: |
           lcov --capture --directory build --output-file coverage-plugin.info \
-               --ignore-errors mismatch
+               --ignore-errors mismatch,inconsistent
           lcov --extract coverage-plugin.info '*/plugin/source/*' \
                --output-file coverage-plugin.filtered.info \
                --ignore-errors empty
