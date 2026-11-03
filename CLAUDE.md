@@ -35,6 +35,10 @@ planned work is the delivery ledgers under `docs/plans/`, and shipped work is
 - Derive envelope/cycle phase from absolute PPQ position (`projectTimeMusic`), never accumulate
 - Same `(patch, seed, transport)` inputs must produce identical output every time
 - Golden tests enforce determinism in CI
+- `poly_engine` compiles with `-ffp-contract=off` (PUBLIC, non-MSVC) — keep it. GCC
+  contracts `a*b+c` into an FMA whenever the target has one, so the same source
+  rounds differently per compiler and CPU; ubuntu-26.04's GCC 15.2 broke the
+  fitter's exact-zero round-trip that way while every other build passed
 
 ### Code Formatting
 - clang-format is pinned via `pre-commit/mirrors-clang-format` in `.pre-commit-config.yaml` — do not change version without verifying CI compatibility
