@@ -20,7 +20,7 @@ import assert from 'node:assert/strict';
 import { readFile, readdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import yaml from 'js-yaml';
+import { load as loadYaml } from 'js-yaml';
 
 import {
   parsePattern,
@@ -39,7 +39,7 @@ function parseFrontmatter(src) {
   if (end < 0) return null;
   const yamlSrc = src.slice(4, end);
   try {
-    return yaml.load(yamlSrc);
+    return loadYaml(yamlSrc);
   } catch (e) {
     throw new Error(`YAML parse error: ${e.message}`);
   }
