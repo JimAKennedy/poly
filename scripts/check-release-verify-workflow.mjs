@@ -47,13 +47,13 @@ test('holds least privilege: top-level contents: read and nothing more', () => {
 });
 
 test('one job per shipping platform, on fresh hosted runners', () => {
-  assert.match(wf, /runs-on: macos-14/, 'no macos-14 job');
+  assert.match(wf, /runs-on: macos-15/, 'no macos-15 job');
   assert.match(wf, /runs-on: windows-2022/, 'no windows-2022 job');
   assert.doesNotMatch(wf, /self-hosted/, 'the verifier must run on hosted runners, which are fresh VMs');
 });
 
 for (const [runner, zip, sum] of [
-  ['macos-14', 'macos-universal', 'shasum -a 256'],
+  ['macos-15', 'macos-universal', 'shasum -a 256'],
   ['windows-2022', 'windows-x64', 'sha256sum'],
 ]) {
   test(`${runner}: downloads the tag's ${zip} zip and SHA256SUMS, verifies the digest and the provenance attestation`, () => {
@@ -67,7 +67,7 @@ for (const [runner, zip, sum] of [
 }
 
 test('macOS: installs into the user VST3 folder, applies the quarantine attribute a browser would, and records xattr, codesign and spctl verdicts', () => {
-  const j = job('macos-14');
+  const j = job('macos-15');
   assert.ok(j.includes('Library/Audio/Plug-Ins/VST3'), 'must install into ~/Library/Audio/Plug-Ins/VST3');
   assert.match(j, /xattr -w com\.apple\.quarantine/, 'must apply the quarantine attribute as a browser download would');
   assert.match(j, /xattr -l/, 'must record the attribute');
@@ -82,7 +82,7 @@ test('Windows: installs into the user VST3 folder and records the Mark-of-the-We
   assert.match(j, /Get-AuthenticodeSignature/, 'must record the Authenticode status');
 });
 
-for (const runner of ['macos-14', 'windows-2022']) {
+for (const runner of ['macos-15', 'windows-2022']) {
   test(`${runner}: runs pluginval 1.0.4, digest-verified, at strictness 8 against the installed bundle, and uploads a report`, () => {
     const j = job(runner);
     assert.match(j, /pluginval\/releases\/download\/v1\.0\.4\//, 'pluginval must be pinned to v1.0.4');

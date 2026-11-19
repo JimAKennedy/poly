@@ -60,12 +60,12 @@ test('triggers ONLY on push of v*.*.* tags — not branches or PRs', () => {
   );
 });
 
-test('build matrix has exactly two shipping legs: macos-14 and windows-2022', () => {
+test('build matrix has exactly two shipping legs: macos-15 and windows-2022', () => {
   const legs = matrixLegs(wf);
   assert.equal(legs.length, 2, `expected 2 build legs, found ${legs.length}: ${legs}`);
   assert.deepEqual(
     [...legs].sort(),
-    ['macos-14', 'windows-2022'],
+    ['macos-15', 'windows-2022'],
     `unexpected build legs: ${legs}`,
   );
 });

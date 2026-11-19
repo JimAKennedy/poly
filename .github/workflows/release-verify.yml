@@ -36,7 +36,7 @@ env:
 jobs:
   verify-macos:
     name: Verify install (macOS)
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - name: Download the Release assets as a stranger would
         run: |
@@ -73,7 +73,7 @@ jobs:
             echo "# Release verify — macOS"
             echo
             echo "- tag: $TAG"
-            echo "- runner: macos-14, $(sw_vers -productName) $(sw_vers -productVersion) ($(uname -m))"
+            echo "- runner: macos-15, $(sw_vers -productName) $(sw_vers -productVersion) ($(uname -m))"
             echo "- installed to: $B"
             echo
             echo "## Quarantine attribute, as a browser download carries it"
