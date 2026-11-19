@@ -55,7 +55,7 @@ jobs:
           # packaging — mirroring ci.yml's build-leg flag on the exact release
           # binary. scripts/check-release-workflow.mjs asserts this flag stays on
           # both legs.
-          - os: macos-14
+          - os: macos-15
             asset: macos-universal
             cmake-args: -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES="arm64;x86_64" -DSMTG_RUN_VST_VALIDATOR=ON
           - os: windows-2022

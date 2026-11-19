@@ -62,7 +62,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-14
+          - os: macos-15
             cmake-args: -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_ARCHITECTURES=arm64 -DSMTG_RUN_VST_VALIDATOR=ON
           # D029 (M054 S02): Poly ships no Linux VST3, so the Linux leg builds the
           # portable engine only (-DPOLY_ENGINE_ONLY=ON, no VST3 SDK / editor).
@@ -127,19 +127,19 @@ jobs:
   # the VST3 alone; M010/S02 revisits Logic with a wrapper spike. The decision
   # is in docs/plans/open-source-launch/M003-decisions.md.
   build-au-macos:
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
       - name: Cache VST3 SDK
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: build-au/_deps/vst3sdk-src
-          key: vst3sdk-au-macos-14-${{ hashFiles('CMakeLists.txt') }}
+          key: vst3sdk-au-macos-15-${{ hashFiles('CMakeLists.txt') }}
       - name: Cache AudioUnitSDK
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: build-au/_deps/audiounitsdk-src
-          key: audiounitsdk-au-macos-14-${{ hashFiles('CMakeLists.txt') }}
+          key: audiounitsdk-au-macos-15-${{ hashFiles('CMakeLists.txt') }}
       - name: Configure (Xcode generator, AUv2 enabled)
         run: cmake -S . -B build-au -G Xcode -DCMAKE_OSX_ARCHITECTURES=arm64
       - name: Build AU (poly_au target)
@@ -168,7 +168,7 @@ jobs:
       - name: Upload AU component
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: poly-au-macos-14
+          name: poly-au-macos-15
           path: build-au/**/*.component
           retention-days: 14
 
@@ -448,12 +448,12 @@ jobs:
 
   pluginval-macos:
     needs: build
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - name: Download plugin artifact
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          name: plugin-macos-14
+          name: plugin-macos-15
           path: plugin
       - name: Find VST3 bundle
         id: find-vst3
@@ -503,13 +503,13 @@ jobs:
   # Mac the DoD asks for. Unsigned until M007/S02.
   package-macos:
     needs: build
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v5
       - name: Download plugin artifact
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          name: plugin-macos-14
+          name: plugin-macos-15
           path: plugin
       - name: Package contents test (built and expanded, not installed)
         run: node --test scripts/packaging/build-macos-pkg.test.mjs
