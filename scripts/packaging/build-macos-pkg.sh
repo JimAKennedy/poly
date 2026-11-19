@@ -35,6 +35,10 @@ mkdir -p "$WORK/root"
 # macOS stamps it on every file a process writes and nothing can remove it; it
 # is not quarantine.)
 ditto --norsrc --noextattr --noqtn "$BUNDLE" "$WORK/root/poly_plugin.vst3"
+# ditto's flags are not enough on their own: on macOS 27.2 `--noqtn
+# --noextattr` copy com.apple.quarantine through unchanged (macOS 14 and 15
+# strip it). Remove it explicitly; -d on a file without it is not an error.
+xattr -dr com.apple.quarantine "$WORK/root/poly_plugin.vst3"
 
 pkgbuild --analyze --root "$WORK/root" "$WORK/component.plist" >/dev/null
 # Every bundle pkgbuild finds is relocatable by default; turn that off for all.
