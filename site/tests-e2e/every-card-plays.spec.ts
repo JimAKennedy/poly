@@ -33,8 +33,14 @@ function findCards(dir: string): Card[] {
         const html = fs.readFileSync(p, 'utf8');
         const route = '/' + path.relative(DIST, path.dirname(p)).split(path.sep).join('/');
         const page = route === '/' ? '/' : `${route}/`;
-        for (const m of html.matchAll(/class="poly-preview [^"]*" data-poly-preset="([^"]+)"/g)) {
-          out.push({ page, preset: m[1].replace(/&amp;/g, '&').replace(/&#39;/g, "'") });
+        // Match the card's opening tag by its attributes, not their spelling:
+        // Astro 7.4.13 moved style scoping from an extra `astro-*` class to a
+        // `data-astro-cid-*` attribute, which left `class="poly-preview"` bare
+        // and silently broke a regex that expected a second class after it.
+        for (const tag of html.matchAll(/<[a-z][^>]*\sdata-poly-preset="([^"]+)"[^>]*>/g)) {
+          const cls = /\sclass="([^"]*)"/.exec(tag[0]);
+          if (!cls || !cls[1].split(/\s+/).includes('poly-preview')) continue;
+          out.push({ page, preset: tag[1].replace(/&amp;/g, '&').replace(/&#39;/g, "'") });
         }
       }
     }
